@@ -243,8 +243,36 @@ export function smhiWindowMapping([west, south, east, north], width, height) {
   return map;
 }
 
+/** SMHI's logo sits in the grid's top-left corner, over open sea. */
+const LOGO_COLS = 120;
+const LOGO_ROWS = 60;
+/** The drawn edge of radar coverage: a light, mostly opaque line. */
+const COVERAGE_EDGE = Object.freeze([230, 238, 245, 235]);
+/** Line half-width in output pixels. */
+const EDGE_RADIUS = 2;
+
 /**
- * Resample one decoded frame into a window, keeping precipitation only.
+ * Whether SMHI measured at a grid pixel: clear or precipitating, not its
+ * faint black outside-coverage veil, and not its logo.
+ */
+function isCovered(data, source) {
+  const i = source * 4;
+  if (isPrecipitation(data, i)) return true;
+  const alpha = data[i + 3];
+  if (alpha === 0) return true;
+  const veil = alpha < 40 && !data[i] && !data[i + 1] && !data[i + 2];
+  if (veil) return false;
+  const col = source % SMHI_GRID.width;
+  const row = (source - col) / SMHI_GRID.width;
+  // Opaque grey elsewhere marks isolated echoes inside coverage.
+  return !(col < LOGO_COLS && row < LOGO_ROWS);
+}
+
+/**
+ * Resample one decoded frame into a window: precipitation in SMHI's colours,
+ * plus a thin line along the edge of radar coverage so that "no echo" inside
+ * it reads apart from "no data" outside it. The window's own border is never
+ * drawn as an edge.
  * @param {{data: Uint8Array}} frame Decoded SMHI frame.
  * @param {Int32Array} mapping From smhiWindowMapping.
  * @param {number} width
@@ -253,15 +281,38 @@ export function smhiWindowMapping([west, south, east, north], width, height) {
  */
 export function renderSmhiWindow(frame, mapping, width, height) {
   const out = new Uint8Array(width * height * 4);
+  const covered = new Uint8Array(width * height);
+  for (let p = 0; p < mapping.length; p++)
+    if (mapping[p] >= 0 && isCovered(frame.data, mapping[p])) covered[p] = 1;
   for (let p = 0; p < mapping.length; p++) {
     const source = mapping[p];
     if (source < 0) continue;
     const i = source * 4;
-    if (!isPrecipitation(frame.data, i)) continue;
-    out[p * 4] = frame.data[i];
-    out[p * 4 + 1] = frame.data[i + 1];
-    out[p * 4 + 2] = frame.data[i + 2];
-    out[p * 4 + 3] = 255;
+    if (isPrecipitation(frame.data, i)) {
+      out[p * 4] = frame.data[i];
+      out[p * 4 + 1] = frame.data[i + 1];
+      out[p * 4 + 2] = frame.data[i + 2];
+      out[p * 4 + 3] = 255;
+      continue;
+    }
+    if (!covered[p]) continue;
+    // Any uncovered pixel within EDGE_RADIUS makes this one part of the line,
+    // so it stays continuous where one image pixel is under one screen pixel.
+    const x = p % width;
+    const y = (p - x) / width;
+    let edge = false;
+    for (let dy = -EDGE_RADIUS; dy <= EDGE_RADIUS && !edge; dy++) {
+      const yy = y + dy;
+      if (yy < 0 || yy >= height) continue;
+      for (let dx = -EDGE_RADIUS; dx <= EDGE_RADIUS; dx++) {
+        const xx = x + dx;
+        if (xx >= 0 && xx < width && !covered[yy * width + xx]) {
+          edge = true;
+          break;
+        }
+      }
+    }
+    if (edge) out.set(COVERAGE_EDGE, p * 4);
   }
   return encodePng(width, height, out);
 }

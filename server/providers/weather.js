@@ -49,7 +49,7 @@ const PRODUCTS = Object.freeze({
       legend: SMHI_RADAR_LEGEND,
       extent: SMHI_RADAR_BOUNDS,
       coverage: 'Nordics',
-      info: 'SMHI radar echoes indicate precipitation patterns, not rain rate, a storm warning or a future forecast. Native source approximately 2 km on SWEREF 99 TM, resampled to latitude/longitude; frames every 5 minutes. Colour classes are SMHI’s own; dBZ from the published values (0.4 × value − 30).',
+      info: 'SMHI radar echoes indicate precipitation patterns, not rain rate, a storm warning or a future forecast. Native source approximately 2 km on SWEREF 99 TM, resampled to latitude/longitude; frames every 5 minutes. The thin light line marks the edge of SMHI radar coverage: outside it there is no data, not no rain. Colour classes are SMHI’s own; dBZ from the published values (0.4 × value − 30).',
     }),
     metadataTtlMs: 60_000,
     image: Object.freeze({ width: 2048, height: 1024 }),

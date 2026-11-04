@@ -50,6 +50,13 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-04 (radarns täckningsgräns)
+- En tunn ljus linje markerar kanten på SMHI:s radartäckning. Innanför betyder
+  "inget" uppehåll; utanför (t.ex. Norges väst- och nordkust, östra Finland) finns
+  ingen data. Jämfört med MET Norways nordiska radarbild: över Sverige stämmer
+  SMHI-bilden (nästan torrt 2026-11-04 förmiddag); skurarna längs norska kusten
+  ligger utanför SMHI:s räckvidd.
+
 ### 2026-11-04 (SMHI-radar)
 - Ny radarprodukt "Rain radar · Nordics" från SMHI:s öppna radarkomposit, standard
   i radarlagret (knapp för USA finns kvar). Servern räknar om SMHI:s bild från
