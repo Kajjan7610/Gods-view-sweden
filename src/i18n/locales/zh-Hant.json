@@ -3275,5 +3275,17 @@
   "Arrows show the power flowing now on each link to and between the four bidding zones, as thick as the flow. Click a zone for its import, export and Sweden’s production by type.": "箭頭顯示目前每條通往四個電價區及其之間聯絡線上的潮流，粗細與潮流成正比。點擊電價區查看其輸入、輸出及瑞典分類型發電量。",
   "Malformed power grid snapshot": "電網快照格式錯誤",
   "Power Grid (Sweden)": "電網（瑞典）",
-  "{mw} MW": "{mw} MW"
+  "{mw} MW": "{mw} MW",
+  "until {date}": "至 {date}",
+  "+{count} more": "另有 {count} 則",
+  "DISRUPTION · {stop}": "營運中斷 · {stop}",
+  "Stop closed or not served": "站點關閉或不停靠",
+  "Stop moved": "站點遷移",
+  "Other disruption": "其他中斷",
+  "Transit disruptions unavailable": "大眾運輸中斷資訊無法使用",
+  "Stops are still loading for {count} operators; their disruptions appear within a few minutes.": "仍在載入 {count} 家業者的站點，其中斷資訊將在幾分鐘內顯示。",
+  "Points are stops with an active disruption from the regional operators (Trafiklab GTFS Regional). Click a stop for the operator’s message.": "圓點是地區業者發布目前中斷資訊的站點（Trafiklab GTFS Regional）。點擊站點查看業者公告。",
+  "Transit disruptions need TRAFIKLAB_GTFS_RT_KEY": "大眾運輸中斷資訊需要 TRAFIKLAB_GTFS_RT_KEY",
+  "Malformed transit disruption snapshot": "大眾運輸中斷快照格式錯誤",
+  "Transit Disruptions (Sweden)": "大眾運輸中斷（瑞典）"
 }

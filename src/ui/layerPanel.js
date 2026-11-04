@@ -82,6 +82,7 @@ const PANEL_GROUPS = [
       'trafikverket-weather',
       'polisen-events',
       'sr-traffic',
+      'transit-alerts',
       'gnss-integrity',
       's2-ghostmaps',
     ],

@@ -1,11 +1,11 @@
 import { createTransitService } from '../../src/sources/transitService.js';
-import { createTrafiklabStatic } from './trafiklabStatic.js';
+import { sharedTrafiklabStatic } from './trafiklabStatic.js';
 export { fetchTransitFeed } from '../../src/sources/transitService.js';
 
 /** Connect the reusable transit request service to development and preview. */
 export function transitProxy(options = {}) {
   // Route numbers for the Trafiklab feeds, joined from static GTFS.
-  const trafiklabStatic = createTrafiklabStatic();
+  const trafiklabStatic = sharedTrafiklabStatic();
   const service = createTransitService({
     enrichVehicles: trafiklabStatic.enrichVehicles,
     ...options,

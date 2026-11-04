@@ -3425,5 +3425,17 @@
   "Arrows show the power flowing now on each link to and between the four bidding zones, as thick as the flow. Click a zone for its import, export and Sweden’s production by type.": "Las flechas muestran la potencia que fluye ahora por cada enlace hacia y entre las cuatro zonas de oferta, tan gruesas como el flujo. Haz clic en una zona para ver su importación, exportación y la producción sueca por tipo.",
   "Malformed power grid snapshot": "Instantánea de la red eléctrica mal formada",
   "Power Grid (Sweden)": "Red eléctrica (Suecia)",
-  "{mw} MW": "{mw} MW"
+  "{mw} MW": "{mw} MW",
+  "until {date}": "hasta el {date}",
+  "+{count} more": "+{count} más",
+  "DISRUPTION · {stop}": "INCIDENCIA · {stop}",
+  "Stop closed or not served": "Parada cerrada o sin servicio",
+  "Stop moved": "Parada trasladada",
+  "Other disruption": "Otra incidencia",
+  "Transit disruptions unavailable": "Incidencias del transporte no disponibles",
+  "Stops are still loading for {count} operators; their disruptions appear within a few minutes.": "Aún se cargan las paradas de {count} operadores; sus incidencias aparecerán en unos minutos.",
+  "Points are stops with an active disruption from the regional operators (Trafiklab GTFS Regional). Click a stop for the operator’s message.": "Los puntos son paradas con una incidencia activa de los operadores regionales (Trafiklab GTFS Regional). Haz clic en una parada para ver el aviso del operador.",
+  "Transit disruptions need TRAFIKLAB_GTFS_RT_KEY": "Las incidencias del transporte requieren TRAFIKLAB_GTFS_RT_KEY",
+  "Malformed transit disruption snapshot": "Instantánea de incidencias del transporte mal formada",
+  "Transit Disruptions (Sweden)": "Incidencias del transporte (Suecia)"
 }

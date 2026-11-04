@@ -3500,5 +3500,17 @@
   "Arrows show the power flowing now on each link to and between the four bidding zones, as thick as the flow. Click a zone for its import, export and Sweden’s production by type.": "Стрілки показують поточний перетік потужності кожною лінією до чотирьох цінових зон і між ними; товщина — за величиною потоку. Натисніть на зону, щоб побачити її імпорт, експорт і виробництво Швеції за типами.",
   "Malformed power grid snapshot": "Некоректний знімок енергосистеми",
   "Power Grid (Sweden)": "Енергосистема (Швеція)",
-  "{mw} MW": "{mw} МВт"
+  "{mw} MW": "{mw} МВт",
+  "until {date}": "до {date}",
+  "+{count} more": "ще {count}",
+  "DISRUPTION · {stop}": "ПОРУШЕННЯ · {stop}",
+  "Stop closed or not served": "Зупинку закрито або не обслуговується",
+  "Stop moved": "Зупинку перенесено",
+  "Other disruption": "Інше порушення",
+  "Transit disruptions unavailable": "Порушення роботи транспорту недоступні",
+  "Stops are still loading for {count} operators; their disruptions appear within a few minutes.": "Зупинки ще завантажуються для {count} перевізників; їхні порушення з’являться за кілька хвилин.",
+  "Points are stops with an active disruption from the regional operators (Trafiklab GTFS Regional). Click a stop for the operator’s message.": "Точки — зупинки з чинним порушенням від регіональних перевізників (Trafiklab GTFS Regional). Натисніть на зупинку, щоб побачити повідомлення перевізника.",
+  "Transit disruptions need TRAFIKLAB_GTFS_RT_KEY": "Для порушень роботи транспорту потрібен TRAFIKLAB_GTFS_RT_KEY",
+  "Malformed transit disruption snapshot": "Некоректний знімок порушень роботи транспорту",
+  "Transit Disruptions (Sweden)": "Порушення роботи транспорту (Швеція)"
 }

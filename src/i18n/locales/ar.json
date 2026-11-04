@@ -3650,5 +3650,17 @@
   "Arrows show the power flowing now on each link to and between the four bidding zones, as thick as the flow. Click a zone for its import, export and Sweden’s production by type.": "تُظهر الأسهم الطاقة المتدفقة الآن على كل وصلة إلى مناطق العطاءات الأربع وبينها، بسماكة تتناسب مع التدفق. انقر على منطقة لعرض استيرادها وتصديرها وإنتاج السويد حسب النوع.",
   "Malformed power grid snapshot": "لقطة شبكة الكهرباء مشوّهة",
   "Power Grid (Sweden)": "شبكة الكهرباء (السويد)",
-  "{mw} MW": "{mw} MW"
+  "{mw} MW": "{mw} MW",
+  "until {date}": "حتى {date}",
+  "+{count} more": "+{count} أخرى",
+  "DISRUPTION · {stop}": "اضطراب · {stop}",
+  "Stop closed or not served": "المحطة مغلقة أو لا تُخدم",
+  "Stop moved": "المحطة نُقلت",
+  "Other disruption": "اضطراب آخر",
+  "Transit disruptions unavailable": "اضطرابات النقل غير متاحة",
+  "Stops are still loading for {count} operators; their disruptions appear within a few minutes.": "لا تزال محطات {count} مشغّلين قيد التحميل؛ ستظهر اضطراباتهم خلال دقائق.",
+  "Points are stops with an active disruption from the regional operators (Trafiklab GTFS Regional). Click a stop for the operator’s message.": "النقاط هي محطات بها اضطراب قائم من المشغّلين الإقليميين (Trafiklab GTFS Regional). انقر على محطة لعرض رسالة المشغّل.",
+  "Transit disruptions need TRAFIKLAB_GTFS_RT_KEY": "تتطلب اضطرابات النقل TRAFIKLAB_GTFS_RT_KEY",
+  "Malformed transit disruption snapshot": "لقطة اضطرابات النقل مشوّهة",
+  "Transit Disruptions (Sweden)": "اضطرابات النقل العام (السويد)"
 }

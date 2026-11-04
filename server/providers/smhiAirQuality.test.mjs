@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -116,8 +117,9 @@ test('the first request warms up; active series are found once and kept on disk'
   const first = await request();
   assert.equal(first.status, 503);
   assert.equal(first.json().error, 'warming_up');
-  // Let the background discovery finish.
-  await new Promise((resolve) => setTimeout(resolve, 20));
+  // Let the background discovery finish, however busy the machine is.
+  for (let waited = 0; !existsSync(cachePath) && waited < 5000; waited += 10)
+    await new Promise((resolve) => setTimeout(resolve, 10));
   const saved = JSON.parse(await readFile(cachePath, 'utf8'));
   assert.deepEqual(
     saved.series.map((one) => one.id),

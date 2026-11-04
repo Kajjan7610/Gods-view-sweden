@@ -18,6 +18,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk), samt VMA och krisnyheter som punkter | SMHI, IBWW-varningar (CC BY 4.0) och Krisinformation.se (MSB); ingen nyckel | Weather Warnings (Sweden), under Weather |
 | Polisens händelser (de 500 senaste notiserna, ca 10 dagar), placerade vid kommunens centralort | Polismyndigheten, `polisen.se/api/events` (öppna data, ange källan) | Police Events (Sweden), under Events |
 | Trafikmeddelanden från Sveriges Radio (ca 150 st, färg och storlek efter prioritet) | Sveriges Radios öppna API, ingen nyckel | Traffic Reports (Sweden) / Trafikmeddelanden (SR), under Events |
+| Kollektivtrafikstörningar: de regionala trafikbolagens aktuella störningar vid de hållplatser de gäller (stängd/trafikeras inte, flyttad, övrigt) | Trafiklab GTFS Regional ServiceAlerts (befintlig nyckel `TRAFIKLAB_GTFS_RT_KEY`) | Transit Disruptions (Sweden) / Kollektivtrafikstörningar, under Events |
 | Sjöväder: ca 160 stationer längs kusten, i Vänern, Vättern, Mälaren och kanalerna (vind, byvind, vattenstånd, vattentemperatur, vågor) | Sjöfartsverket ViVa, ingen nyckel | Sea Weather (Sweden) / Sjöväder, under Weather |
 | Norrskensprognos: chans för norrsken rakt ovanför (NOAA OVATION) som lysande band på 110 km höjd, Kp-index och chansen över nio svenska orter | NOAA SWPC (fri data, ingen nyckel) | Aurora Forecast / Norrskensprognos, under Weather |
 | Väder nu: ca 185 SMHI-stationer (temperatur, vind, byar, nederbörd senaste timmen) och SMHI:s prognos för platsen vid klick | SMHI metobs och prognos snow1g (CC BY 4.0, ingen nyckel) | Weather Now (Sweden) / Väder nu, under Weather |
@@ -62,6 +63,26 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-05 (kollektivtrafikstörningar från Trafiklab)
+- Nytt lager "Kollektivtrafikstörningar (Sverige)" under Events: de 16
+  regionala trafikbolagens aktuella störningar (GTFS-RT ServiceAlerts) som
+  punkter vid de hållplatser de gäller. Rött = hållplats stängd eller
+  trafikeras inte, gult = flyttad, blått = annan störning. Klick visar
+  trafikbolagets meddelande och hur länge det gäller.
+- Använder den befintliga nyckeln `TRAFIKLAB_GTFS_RT_KEY` (ingen ny nyckel).
+  Hämtas högst var 15:e minut och bara när lagret är på, ca 64 anrop i timmen
+  av nyckelns månadskvot.
+- Hållplatsernas lägen kommer ur trafikbolagens statiska GTFS (`stops.txt`) i
+  samma nedladdning som linjenumren, så lagret kostar inga extra statiska
+  nedladdningar framöver. De statiska nedladdningarna görs nu en i taget
+  (Trafiklab svarade 429 på många samtidiga), och en tom koordinat i
+  `stops.txt` räknas som saknad i stället för 0.
+- Hallandstrafiken har inget störningsflöde (404) och visas därför utan
+  störningar. Delningskod `0q`.
+- Första körningen: Trafiklab svarade 429 på de statiska nedladdningarna för
+  Skåne, Dalarna, Gävleborg och Västernorrland (nyckelns kvot). De behåller
+  sina linjenummer och försöker igen efter 6 timmar; deras störningar syns
+  när hållplatserna är hämtade.
 ### 2026-11-04 (kraftsystemet från Svenska kraftnät)
 - Nytt lager "Kraftsystemet (Sverige)" under Infrastructure: en pil på var och
   en av de 14 förbindelserna till och mellan elområdena SE1–SE4 (och till

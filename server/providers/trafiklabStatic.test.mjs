@@ -232,3 +232,46 @@ test('a failed download waits six hours and never logs the key', async (t) => {
     false,
   );
 });
+
+const STOPS =
+  'stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station\n' +
+  'A,Hagaskolan,58.599512,16.161094,1,\n' +
+  'A1,Hagaskolan,58.5996,16.1612,0,A\n' +
+  'BAD,Utan läge,,16,0,\n';
+
+test('stops are kept from the same download, asked for once, one at a time', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  const cacheDir = tempDir(t);
+  const zip = makeZip([
+    { name: 'routes.txt', text: ROUTES },
+    { name: 'trips.txt', text: TRIPS },
+    { name: 'stops.txt', text: STOPS, deflate: true },
+  ]);
+  let open = 0;
+  let most = 0;
+  const requested = [];
+  const fetchImpl = async (url) => {
+    requested.push(String(url));
+    open += 1;
+    most = Math.max(most, open);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    open -= 1;
+    return new Response(zip);
+  };
+  const loader = createTrafiklabStatic({
+    env: { TRAFIKLAB_GTFS_STATIC_KEY: 'static-key' },
+    fetchImpl,
+    cacheDir,
+  });
+  t.after(loader.close);
+  assert.equal(loader.stopsFor('sl'), null, 'not on hand yet');
+  assert.equal(loader.stopsFor('ul'), null);
+  await Promise.all([loader.ready('sl'), loader.ready('ul')]);
+  assert.equal(most, 1, 'downloads never overlap');
+  const stops = loader.stopsFor('sl');
+  assert.deepEqual(stops.get('A1'), [16.1612, 58.5996, 'Hagaskolan', 'A']);
+  assert.deepEqual(stops.get('A'), [16.16109, 58.59951, 'Hagaskolan', '']);
+  assert.equal(stops.has('BAD'), false);
+  assert.ok(fs.existsSync(path.join(cacheDir, 'stops-sl.json')));
+  assert.equal(requested.length, 2);
+});

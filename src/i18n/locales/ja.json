@@ -3275,5 +3275,17 @@
   "Arrows show the power flowing now on each link to and between the four bidding zones, as thick as the flow. Click a zone for its import, export and Sweden’s production by type.": "矢印は 4 つの入札区域へ、また区域間の各連系線を今流れている電力を示し、太さは潮流の大きさです。区域をクリックすると輸出入とスウェーデンの電源別発電量を表示。",
   "Malformed power grid snapshot": "電力網スナップショットが不正です",
   "Power Grid (Sweden)": "電力網（スウェーデン）",
-  "{mw} MW": "{mw} MW"
+  "{mw} MW": "{mw} MW",
+  "until {date}": "{date} まで",
+  "+{count} more": "ほか {count} 件",
+  "DISRUPTION · {stop}": "運行障害 · {stop}",
+  "Stop closed or not served": "停留所閉鎖または通過",
+  "Stop moved": "停留所移設",
+  "Other disruption": "その他の障害",
+  "Transit disruptions unavailable": "公共交通の運行障害を利用できません",
+  "Stops are still loading for {count} operators; their disruptions appear within a few minutes.": "{count} 事業者の停留所を読み込み中です。数分以内に運行障害が表示されます。",
+  "Points are stops with an active disruption from the regional operators (Trafiklab GTFS Regional). Click a stop for the operator’s message.": "点は地域の交通事業者から現在の運行障害が出ている停留所です（Trafiklab GTFS Regional）。停留所をクリックで事業者のお知らせを表示。",
+  "Transit disruptions need TRAFIKLAB_GTFS_RT_KEY": "運行障害には TRAFIKLAB_GTFS_RT_KEY が必要です",
+  "Malformed transit disruption snapshot": "運行障害スナップショットが不正です",
+  "Transit Disruptions (Sweden)": "公共交通の運行障害（スウェーデン）"
 }

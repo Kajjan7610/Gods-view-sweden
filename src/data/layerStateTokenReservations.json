@@ -39,6 +39,7 @@
   ["trafikverket-roads", "9"],
   ["trafikverket-weather", "0z"],
   ["transit", "j"],
+  ["transit-alerts", "0q"],
   ["weather-cyclones", "y"],
   ["weather-lightning", "l"],
   ["weather-radar", "v"],

@@ -3350,5 +3350,17 @@
   "Arrows show the power flowing now on each link to and between the four bidding zones, as thick as the flow. Click a zone for its import, export and Sweden’s production by type.": "Pfeile zeigen den aktuellen Lastfluss auf jeder Verbindung zu und zwischen den vier Gebotszonen, so dick wie der Fluss. Eine Zone anklicken für Import, Export und Schwedens Erzeugung nach Art.",
   "Malformed power grid snapshot": "Fehlerhafter Stromnetz-Snapshot",
   "Power Grid (Sweden)": "Stromnetz (Schweden)",
-  "{mw} MW": "{mw} MW"
+  "{mw} MW": "{mw} MW",
+  "until {date}": "bis {date}",
+  "+{count} more": "+{count} weitere",
+  "DISRUPTION · {stop}": "STÖRUNG · {stop}",
+  "Stop closed or not served": "Haltestelle geschlossen oder nicht bedient",
+  "Stop moved": "Haltestelle verlegt",
+  "Other disruption": "Andere Störung",
+  "Transit disruptions unavailable": "ÖPNV-Störungen nicht verfügbar",
+  "Stops are still loading for {count} operators; their disruptions appear within a few minutes.": "Haltestellen für {count} Verkehrsbetriebe werden noch geladen; ihre Störungen erscheinen in wenigen Minuten.",
+  "Points are stops with an active disruption from the regional operators (Trafiklab GTFS Regional). Click a stop for the operator’s message.": "Punkte sind Haltestellen mit einer aktuellen Störung der regionalen Verkehrsbetriebe (Trafiklab GTFS Regional). Für die Meldung des Betreibers eine Haltestelle anklicken.",
+  "Transit disruptions need TRAFIKLAB_GTFS_RT_KEY": "ÖPNV-Störungen benötigen TRAFIKLAB_GTFS_RT_KEY",
+  "Malformed transit disruption snapshot": "Fehlerhafter Snapshot der ÖPNV-Störungen",
+  "Transit Disruptions (Sweden)": "ÖPNV-Störungen (Schweden)"
 }

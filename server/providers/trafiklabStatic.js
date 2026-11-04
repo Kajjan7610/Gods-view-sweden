@@ -11,6 +11,10 @@ import zlib from 'node:zlib';
  * vehicle's routeId as `<mode>:<short name>` (`bus:4`, `tram:7`), which the
  * Transit registry's Trafiklab `routeMode`/`routeLabel` hooks read back.
  *
+ * The same download also keeps each stop's position and name
+ * (`stops.txt`), which the Swedish fork's transit-disruption layer places
+ * its alerts by.
+ *
  * Static downloads are rationed: the default Bronze key allows 50 a month,
  * so each operator's join is cached on disk for a week and a failed download
  * waits six hours before the next try. Everything here runs in the
@@ -202,6 +206,40 @@ export function buildTripRouteIndex(routesCsv, tripsCsv) {
 }
 
 /**
+ * Stops by id: `[lon, lat, name, parentId]`, where parentId is the stop
+ * area a platform belongs to ('' for none).
+ * @param {string} stopsCsv stops.txt
+ * @returns {Map<string, [number, number, string, string]>}
+ */
+export function buildStopIndex(stopsCsv) {
+  const stops = new Map();
+  let col = null;
+  parseCsv(stopsCsv, (fields, header) => {
+    col ??= {
+      id: header.indexOf('stop_id'),
+      name: header.indexOf('stop_name'),
+      lat: header.indexOf('stop_lat'),
+      lon: header.indexOf('stop_lon'),
+      parent: header.indexOf('parent_station'),
+    };
+    const id = col.id >= 0 ? fields[col.id] : '';
+    // An empty coordinate is missing, not zero.
+    const lat = fields[col.lat] ? Number(fields[col.lat]) : NaN;
+    const lon = fields[col.lon] ? Number(fields[col.lon]) : NaN;
+    if (!id || !Number.isFinite(lat) || !Number.isFinite(lon)) return;
+    stops.set(id, [
+      Math.round(lon * 1e5) / 1e5,
+      Math.round(lat * 1e5) / 1e5,
+      String(fields[col.name] ?? '')
+        .trim()
+        .slice(0, 80),
+      col.parent >= 0 ? String(fields[col.parent] ?? '').trim() : '',
+    ]);
+  });
+  return stops;
+}
+
+/**
  * Background loader and vehicle enricher for every Trafiklab feed.
  *
  * @param {{env?: object, fetchImpl?: typeof fetch, cacheDir?: string,
@@ -221,9 +259,50 @@ export function createTrafiklabStatic({
   const controllers = new Set();
   let keylessLogged = false;
   let closed = false;
+  // One download at a time: Trafiklab answers a burst of archive requests
+  // with HTTP 429, and a refused download waits six hours.
+  let downloads = Promise.resolve();
+  const queued = (task) => {
+    const run = downloads.then(task, task);
+    downloads = run.catch(() => {});
+    return run;
+  };
 
   const cacheFile = (operator) =>
     path.join(cacheDir, `static-${operator}.json`);
+  const stopsFile = (operator) => path.join(cacheDir, `stops-${operator}.json`);
+
+  function readStops(operator) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(stopsFile(operator), 'utf8'));
+      if (parsed?.version !== CACHE_VERSION || parsed.operator !== operator)
+        return null;
+      return new Map(Object.entries(parsed.stops || {}));
+    } catch {
+      return null;
+    }
+  }
+
+  function writeStops(operator, fetchedAt, stops) {
+    try {
+      fs.mkdirSync(cacheDir, { recursive: true });
+      const temp = `${stopsFile(operator)}.${process.pid}.tmp`;
+      fs.writeFileSync(
+        temp,
+        JSON.stringify({
+          version: CACHE_VERSION,
+          operator,
+          fetchedAt,
+          stops: Object.fromEntries(stops),
+        }),
+      );
+      fs.renameSync(temp, stopsFile(operator));
+    } catch (error) {
+      console.warn(
+        `[trafiklab-static] could not cache ${operator} stops: ${error?.message || error}`,
+      );
+    }
+  }
 
   function readCache(operator) {
     try {
@@ -292,13 +371,22 @@ export function createTrafiklabStatic({
       const zip = Buffer.from(await response.arrayBuffer());
       if (zip.length > TRAFIKLAB_STATIC_MAX_ZIP_BYTES)
         throw new Error('archive too large');
-      const members = readZipMembers(zip, ['routes.txt', 'trips.txt']);
+      const members = readZipMembers(zip, [
+        'routes.txt',
+        'trips.txt',
+        'stops.txt',
+      ]);
       if (!members.has('routes.txt') || !members.has('trips.txt'))
         throw new Error('archive has no routes.txt/trips.txt');
-      return buildTripRouteIndex(
-        members.get('routes.txt').toString('utf8'),
-        members.get('trips.txt').toString('utf8'),
-      );
+      return {
+        trips: buildTripRouteIndex(
+          members.get('routes.txt').toString('utf8'),
+          members.get('trips.txt').toString('utf8'),
+        ),
+        stops: members.has('stops.txt')
+          ? buildStopIndex(members.get('stops.txt').toString('utf8'))
+          : new Map(),
+      };
     } finally {
       clearTimeout(timer);
       controllers.delete(controller);
@@ -308,7 +396,14 @@ export function createTrafiklabStatic({
   async function load(operator, entry) {
     const t = now();
     const cached = readCache(operator);
-    if (cached && t - cached.fetchedAt < TRAFIKLAB_STATIC_MAX_AGE_MS) {
+    const cachedStops = readStops(operator);
+    if (cachedStops) entry.stops = cachedStops;
+    // A fresh join without stops is enough unless someone asked for stops.
+    if (
+      cached &&
+      t - cached.fetchedAt < TRAFIKLAB_STATIC_MAX_AGE_MS &&
+      (cachedStops || !entry.wantStops)
+    ) {
       Object.assign(entry, { trips: cached.trips, loadedAt: cached.fetchedAt });
       return;
     }
@@ -325,12 +420,13 @@ export function createTrafiklabStatic({
       return;
     }
     try {
-      const trips = await download(operator, key);
+      const { trips, stops } = await queued(() => download(operator, key));
       if (closed) return;
       writeCache(operator, t, trips);
-      Object.assign(entry, { trips, loadedAt: t, retryAt: 0 });
+      writeStops(operator, t, stops);
+      Object.assign(entry, { trips, stops, loadedAt: t, retryAt: 0 });
       console.log(
-        `[trafiklab-static] ${operator}: ${trips.size} trips joined to routes`,
+        `[trafiklab-static] ${operator}: ${trips.size} trips joined to routes, ${stops.size} stops`,
       );
     } catch (error) {
       // Keep any older join rather than losing route numbers to an outage;
@@ -344,16 +440,26 @@ export function createTrafiklabStatic({
     }
   }
 
-  function ensure(operator) {
+  function ensure(operator, { wantStops = false } = {}) {
     if (closed || !OPERATOR_RE.test(operator)) return null;
     let entry = state.get(operator);
     if (!entry) {
-      entry = { trips: null, loadedAt: 0, retryAt: 0, loading: null };
+      entry = {
+        trips: null,
+        stops: null,
+        wantStops: false,
+        loadedAt: 0,
+        retryAt: 0,
+        loading: null,
+      };
       state.set(operator, entry);
     }
+    if (wantStops) entry.wantStops = true;
     const t = now();
     const fresh =
-      entry.trips && t - entry.loadedAt < TRAFIKLAB_STATIC_MAX_AGE_MS;
+      entry.trips &&
+      (entry.stops || !entry.wantStops) &&
+      t - entry.loadedAt < TRAFIKLAB_STATIC_MAX_AGE_MS;
     if (!fresh && !entry.loading && t >= entry.retryAt) {
       entry.loading = load(operator, entry).finally(() => {
         entry.loading = null;
@@ -373,6 +479,16 @@ export function createTrafiklabStatic({
         return token ? { ...vehicle, routeId: token } : vehicle;
       });
     },
+    /**
+     * The operator's stops, or null until its static GTFS is on hand. The
+     * first ask starts a download when no stop list is cached, which also
+     * renews the route join (one download serves both).
+     * @param {string} operator
+     * @returns {Map<string, [number, number, string, string]>|null}
+     */
+    stopsFor(operator) {
+      return ensure(operator, { wantStops: true })?.stops ?? null;
+    },
     /** Resolves when the operator's current load attempt settles. Tests. */
     async ready(operator) {
       await ensure(operator)?.loading;
@@ -384,4 +500,11 @@ export function createTrafiklabStatic({
       state.clear();
     },
   };
+}
+
+let shared = null;
+/** One loader per server process, shared by the transit and alert routes. */
+export function sharedTrafiklabStatic() {
+  shared ??= createTrafiklabStatic();
+  return shared;
 }

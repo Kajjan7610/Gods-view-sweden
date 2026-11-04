@@ -3350,5 +3350,17 @@
   "Arrows show the power flowing now on each link to and between the four bidding zones, as thick as the flow. Click a zone for its import, export and Sweden’s production by type.": "Pilarna visar effekten som flödar just nu på varje förbindelse till och mellan de fyra elområdena, lika tjocka som flödet. Klicka på ett elområde för dess import, export och Sveriges produktion per kraftslag.",
   "Malformed power grid snapshot": "Felaktig ögonblicksbild av kraftsystemet",
   "Power Grid (Sweden)": "Kraftsystemet (Sverige)",
-  "{mw} MW": "{mw} MW"
+  "{mw} MW": "{mw} MW",
+  "until {date}": "till {date}",
+  "+{count} more": "+{count} till",
+  "DISRUPTION · {stop}": "STÖRNING · {stop}",
+  "Stop closed or not served": "Hållplats stängd eller trafikeras inte",
+  "Stop moved": "Hållplats flyttad",
+  "Other disruption": "Annan störning",
+  "Transit disruptions unavailable": "Kollektivtrafikstörningar otillgängliga",
+  "Stops are still loading for {count} operators; their disruptions appear within a few minutes.": "Hållplatser laddas fortfarande för {count} trafikbolag; deras störningar visas inom några minuter.",
+  "Points are stops with an active disruption from the regional operators (Trafiklab GTFS Regional). Click a stop for the operator’s message.": "Punkterna är hållplatser med en aktuell störning från de regionala trafikbolagen (Trafiklab GTFS Regional). Klicka på en hållplats för trafikbolagets meddelande.",
+  "Transit disruptions need TRAFIKLAB_GTFS_RT_KEY": "Kollektivtrafikstörningar kräver TRAFIKLAB_GTFS_RT_KEY",
+  "Malformed transit disruption snapshot": "Felaktig ögonblicksbild av kollektivtrafikstörningar",
+  "Transit Disruptions (Sweden)": "Kollektivtrafikstörningar (Sverige)"
 }

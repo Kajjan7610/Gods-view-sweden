@@ -3425,5 +3425,17 @@
   "Arrows show the power flowing now on each link to and between the four bidding zones, as thick as the flow. Click a zone for its import, export and Sweden’s production by type.": "Le frecce mostrano la potenza che scorre ora su ogni collegamento verso e tra le quattro zone di offerta, spesse quanto il flusso. Clicca su una zona per import, export e produzione svedese per fonte.",
   "Malformed power grid snapshot": "Snapshot della rete elettrica non valido",
   "Power Grid (Sweden)": "Rete elettrica (Svezia)",
-  "{mw} MW": "{mw} MW"
+  "{mw} MW": "{mw} MW",
+  "until {date}": "fino al {date}",
+  "+{count} more": "+{count} altre",
+  "DISRUPTION · {stop}": "DISSERVIZIO · {stop}",
+  "Stop closed or not served": "Fermata chiusa o non servita",
+  "Stop moved": "Fermata spostata",
+  "Other disruption": "Altro disservizio",
+  "Transit disruptions unavailable": "Disservizi del trasporto non disponibili",
+  "Stops are still loading for {count} operators; their disruptions appear within a few minutes.": "Le fermate di {count} operatori sono ancora in caricamento; i loro disservizi compariranno tra pochi minuti.",
+  "Points are stops with an active disruption from the regional operators (Trafiklab GTFS Regional). Click a stop for the operator’s message.": "I punti sono fermate con un disservizio in corso degli operatori regionali (Trafiklab GTFS Regional). Clicca su una fermata per il messaggio dell’operatore.",
+  "Transit disruptions need TRAFIKLAB_GTFS_RT_KEY": "I disservizi del trasporto richiedono TRAFIKLAB_GTFS_RT_KEY",
+  "Malformed transit disruption snapshot": "Snapshot dei disservizi del trasporto non valido",
+  "Transit Disruptions (Sweden)": "Disservizi del trasporto (Svezia)"
 }

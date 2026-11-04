@@ -422,6 +422,12 @@ export const DATA_CREDITS = [
       '<a href="https://www.svk.se/om-kraftsystemet/kontrollrummet/" target="_blank" rel="noopener">Svenska kraftnät, Kontrollrummet</a>',
   },
   {
+    key: 'transit-alerts',
+    html:
+      'Public-transport disruptions (Sweden): ' +
+      '<a href="https://www.trafiklab.se/api/gtfs-datasets/gtfs-regional/" target="_blank" rel="noopener">Trafiklab / Samtrafiken GTFS Regional</a> (CC0 1.0)',
+  },
+  {
     key: 'smhi-air-quality',
     html:
       'Air quality (Sweden): ' +

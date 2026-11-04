@@ -482,6 +482,8 @@ export const VOICE_OFF_LAYERS = Object.freeze({
   aurora: 'aurora forecast; no room in the prompt budget',
   'smhi-weather': 'Swedish weather stations; no room in the prompt budget',
   'power-grid': 'Swedish power flows; no room in the prompt budget',
+  'transit-alerts':
+    'Swedish public-transport disruptions; no room in the prompt budget',
 });
 
 const TYPE_NAMES = Object.freeze({
