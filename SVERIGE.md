@@ -17,6 +17,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Vägväder: ca 830 väderstationer längs vägarna (vägbanans och luftens temperatur, daggpunkt, vind, sikt, nederbörd; halkrisk markeras) | Trafikverket, objekt `WeatherMeasurepoint` | Road Weather (Sweden), under Events |
 | Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk) | SMHI, IBWW-varningar (CC BY 4.0, ingen nyckel) | Weather Warnings (Sweden), under Weather |
 | Polisens händelser (de 500 senaste notiserna, ca 10 dagar), placerade vid kommunens centralort | Polismyndigheten, `polisen.se/api/events` (öppna data, ange källan) | Police Events (Sweden), under Events |
+| Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
 Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s radar och varningar samt OPERA:s radar är CC BY 4.0 (källa: SMHI respektive EUMETNET OPERA). Källor, villkor och tekniska detaljer står i
 [DATA_SOURCES.md](DATA_SOURCES.md).
@@ -53,6 +54,20 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-04 (svenskt gränssnitt)
+- Appen finns nu på svenska: alla ca 3 000 texter i `src/i18n/locales/sv.json`.
+  Webbläsare på svenska får svenska direkt; annars väljs Svenska under
+  språkknappen (globen nere till höger) eller med `?lang=sv` i adressen.
+- Stil och ordlista står i `docs/translations/sv.md` (t.ex. lager, flöde, luftfartyg,
+  fartyg, tagning, förval, väglag, notis). Imperativ utan "du", sammansatta ord
+  ihop, decimalkomma och mellanslag före enheter och %. Siffror och datum
+  formateras svenskt av webbläsaren (−0,8 °C).
+- Med svenska som språk visar SMHI-varningarna SMHI:s egen svenska text.
+- 157 texter är medvetet samma som på engelska (koder som HDG och FOV,
+  produktnamn, städer, musikgenrer, ord som stavas likadant); de står under
+  `sv` i `src/i18n/same-as-english.json`.
+- Några långa etiketter kortades så att de får plats, t.ex. VISUELLA FÖRVAL.
 
 ### 2026-11-04 (Polisens händelser)
 - Nytt lager "Police Events (Sweden)" under Events: Polisens 500 senaste
