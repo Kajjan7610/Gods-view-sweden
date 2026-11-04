@@ -49,6 +49,13 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-04 (synk med originalet)
+- Hämtade 51 nya commits från bilawalsidhu/gods-eye-view: bl.a. lagret
+  "Prohibited & Restricted Airspace" (FAA, drönarluftrum), kamerakällan Houston
+  (TranStar, avstängd utan TxDOT:s tillstånd) och skriven AI-chatt.
+- Originalets drönarlager tog delningslänk-token 8, så "Road Conditions (Sweden)"
+  flyttade till token 9. Testernas låsta antal och token-fixturer följer med.
+
 ### 2026-11-04
 - Kamerabilder: Trafikverket har bytt bildadresser till
   `…/v2/Images/data/road.infrastructure.camera/…`; valideringen följer nu det nya
@@ -69,5 +76,5 @@ git merge origin/main
 - Trafikverkets tåg och Trafiklabs regionala kollektivtrafik i kollektivtrafiklagret,
   med nycklar på serversidan och täckning i tre cirklar så att Oslo och Helsingfors
   inte hämtar svensk data.
-- Nytt lager "Road Conditions (Sweden)" (delningslänk-token 8), översatt till appens
+- Nytt lager "Road Conditions (Sweden)" (delningslänk-token 9; var 8 tills originalets drönarlager tog den), översatt till appens
   11 språk.

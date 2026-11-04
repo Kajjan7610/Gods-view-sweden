@@ -51,7 +51,7 @@ const conditionWidth = (code) => ({ 3: 6, 2: 4, 4: 4, 1: 2 })[code] || 3;
 /**
  * Own one Swedish road display: winter road condition per stretch and live
  * incidents from Trafikverket, with click-to-card selection. Share links
- * carry it as token 8.
+ * carry it as token 9.
  */
 export function createTrafikverketRoadsLayer({
   source,
