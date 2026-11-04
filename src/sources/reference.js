@@ -8,6 +8,7 @@ import { createTrafikverketRoadsSource } from '../layers/roadConditions/source.j
 import { createTrafikverketWeatherSource } from '../layers/roadWeather/source.js';
 import { createSmhiWarningsSource } from '../layers/smhiWarnings/source.js';
 import { createPolisenEventsSource } from '../layers/policeEvents/source.js';
+import { createElectricityPricesSource } from '../layers/electricity/source.js';
 
 /** Construct the existing reference feeds independently of application setup. */
 export function createReferenceSources() {
@@ -22,5 +23,6 @@ export function createReferenceSources() {
     'trafikverket-weather': createTrafikverketWeatherSource(),
     'smhi-warnings': createSmhiWarningsSource(),
     'polisen-events': createPolisenEventsSource(),
+    'electricity-prices': createElectricityPricesSource(),
   };
 }

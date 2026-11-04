@@ -385,6 +385,12 @@ export const DATA_CREDITS = [
       '<a href="https://www.krisinformation.se/" target="_blank" rel="noopener">Krisinformation.se</a> (MSB)',
   },
   {
+    key: 'electricity-prices',
+    html:
+      'Electricity prices (Sweden): ' +
+      '<a href="https://www.elprisetjustnu.se/elpris-api" target="_blank" rel="noopener">Elpriset just nu.se</a> (Nord Pool day-ahead prices)',
+  },
+  {
     key: 'polisen-events',
     html:
       'Police events (Sweden): ' +

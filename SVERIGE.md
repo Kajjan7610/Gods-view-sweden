@@ -17,6 +17,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Vägväder: ca 830 väderstationer längs vägarna (vägbanans och luftens temperatur, daggpunkt, vind, sikt, nederbörd; halkrisk markeras) | Trafikverket, objekt `WeatherMeasurepoint` | Road Weather (Sweden), under Events |
 | Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk), samt VMA och krisnyheter som punkter | SMHI, IBWW-varningar (CC BY 4.0) och Krisinformation.se (MSB); ingen nyckel | Weather Warnings (Sweden), under Weather |
 | Polisens händelser (de 500 senaste notiserna, ca 10 dagar), placerade vid kommunens centralort | Polismyndigheten, `polisen.se/api/events` (öppna data, ange källan) | Police Events (Sweden), under Events |
+| Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
 Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s radar och varningar samt OPERA:s radar är CC BY 4.0 (källa: SMHI respektive EUMETNET OPERA). Källor, villkor och tekniska detaljer står i
@@ -54,6 +55,20 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-04 (elpris per elområde)
+- Nytt lager "Electricity Prices (Sweden)" (svenska: Elpris) under Infrastructure:
+  de fyra elområdena SE1 Luleå, SE2 Sundsvall, SE3 Stockholm och SE4 Malmö som
+  färgade punkter med pris, t.ex. "SE3 · 1,31 kr". Knappar: NU (kvarten nu,
+  standard), IDAG (dagens snitt) och IMORGON (morgondagens snitt, när auktionen
+  publicerat det).
+- Färger: grönt upp till 0,50 kr/kWh, gulgrönt till 1, gult till 2, orange till 3,
+  rött över 3. Klick ger kort med priset nu, dagens lägsta/högsta med klockslag,
+  snitt och morgondagen.
+- Spotpris per kvart från elprisetjustnu.se (Nord Pool, gratis, ingen nyckel),
+  utan moms, nätavgift och energiskatt. Ingen öppen karta över elområdenas
+  gränser används; varje område är en punkt inne i området.
+- Delningskod `0w`; röststyrningen hoppar över lagret.
 
 ### 2026-11-04 (VMA och krisinformation)
 - Varningslagret "Weather Warnings (Sweden)" visar nu också Krisinformation.se:

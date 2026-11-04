@@ -1062,7 +1062,8 @@
     "{value} KM/H",
     "{value} KM/S",
     "ΔN",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "{zone} · {price} kr"
   ],
   "uk": [
     "AIS: --",

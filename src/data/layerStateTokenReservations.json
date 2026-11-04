@@ -9,6 +9,7 @@
   ["directions", "n"],
   ["drone-airspace", "8"],
   ["earthquakes", "e"],
+  ["electricity-prices", "0w"],
   ["fire-perimeters", "2"],
   ["flights", "f"],
   ["gnss-integrity", "3"],

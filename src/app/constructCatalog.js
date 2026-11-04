@@ -32,6 +32,7 @@ import { createApplicationTrafikverketRoads } from './layers/trafikverketRoads.j
 import { createApplicationTrafikverketWeather } from './layers/trafikverketWeather.js';
 import { createApplicationSmhiWarnings } from './layers/smhiWarnings.js';
 import { createApplicationPolisenEvents } from './layers/polisenEvents.js';
+import { createApplicationElectricityPrices } from './layers/electricityPrices.js';
 import { createApplicationGhostMaps } from './layers/ghostMaps.js';
 import { createApplicationDroneAirspace } from './layers/droneAirspace.js';
 import { createApplicationCables } from './layers/submarineCables.js';
@@ -148,6 +149,9 @@ export function createApplicationCatalog({
         }),
         createApplicationPolisenEvents({
           source: sources['polisen-events'],
+        }),
+        createApplicationElectricityPrices({
+          source: sources['electricity-prices'],
         }),
         createApplicationGhostMaps({ source: sources['s2-ghostmaps'] }),
         createApplicationDroneAirspace({
