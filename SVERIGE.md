@@ -58,6 +58,13 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-04 (synk med originalet, sen kväll)
+- 34 nya commits: bränder (NASA FIRMS) visas som värmekarta på avstånd, med färg
+  från glöd till vitglödgad, filter för brandintensitet (FRP) och säkerhet, och en
+  reglage för fläckstorlek; arabisk chatt-autokomplettering. De nya brandtexterna
+  översattes till svenska. Bara listan över texter som är samma som engelska
+  krockade; den slogs ihop per språk.
+
 ### 2026-11-04 (sjöväder från Sjöfartsverket)
 - Nytt lager "Sjöväder (Sverige)" under Weather: Sjöfartsverkets ViVa-stationer
   (ca 160 med mätvärden: egna, SMHI:s och hamnarnas) längs kusten, i Vänern,

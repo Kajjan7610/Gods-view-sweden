@@ -204,7 +204,8 @@
     "▲ {frp} MW",
     "USA",
     "Wind {speed} m/s",
-    "Information"
+    "Information",
+    "≥ {value} MW"
   ],
   "es": [
     "1090 MHz",
@@ -336,7 +337,9 @@
     "ΔN",
     "▲ {frp} MW",
     "INCL. NORMAL",
-    "24 H"
+    "24 H",
+    "fire confidence filter|Nominal+",
+    "≥ {value} MW"
   ],
   "fr": [
     "1090 MHz",
@@ -530,7 +533,8 @@
     "Air {air}",
     "AIR",
     "24 H",
-    "Information"
+    "Information",
+    "≥ {value} MW"
   ],
   "it": [
     "1090 MHz",
@@ -705,7 +709,8 @@
     "ΔE",
     "ΔN",
     "▲ {frp} MW",
-    "USA"
+    "USA",
+    "≥ {value} MW"
   ],
   "ja": [
     "1090 MHz",
@@ -754,7 +759,8 @@
     "{type}  SPD: {speed}  HDG: {heading}",
     "ΔE",
     "ΔN",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "≥ {value} MW"
   ],
   "pt": [
     "1090 MHz",
@@ -887,7 +893,9 @@
     "ΔN",
     "▲ {frp} MW",
     "INCL. NORMAL",
-    "24 H"
+    "24 H",
+    "fire confidence filter|Nominal+",
+    "≥ {value} MW"
   ],
   "ru": [
     "AIS: --",
@@ -1066,7 +1074,8 @@
     "ΔN",
     "▲ {frp} MW",
     "{zone} · {price} kr",
-    "Information"
+    "Information",
+    "≥ {value} MW"
   ],
   "uk": [
     "AIS: --",
@@ -1136,7 +1145,8 @@
     "{value} KM/S",
     "ΔE",
     "ΔN",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "≥ {value} MW"
   ],
   "zh-Hant": [
     "1090 MHz",
@@ -1193,6 +1203,7 @@
     "{value} KM/S",
     "ΔE",
     "ΔN",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "≥ {value} MW"
   ]
 }
