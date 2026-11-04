@@ -3330,5 +3330,22 @@
   "Colour zones by tomorrow’s mean price, once the day-ahead auction has published it": "Colorear las zonas según el precio medio de mañana, cuando la subasta diaria lo haya publicado",
   "Points are the four bidding zones (SE1 Luleå, SE2 Sundsvall, SE3 Stockholm, SE4 Malmö), coloured by spot price excluding VAT, grid fee and energy tax. Click a zone for today’s range and tomorrow.": "Los puntos son las cuatro zonas de oferta (SE1 Luleå, SE2 Sundsvall, SE3 Stockholm, SE4 Malmö), coloreadas por precio spot sin IVA, peaje de red ni impuesto sobre la energía. Haz clic en una zona para ver el rango de hoy y mañana.",
   "Malformed electricity price snapshot": "Instantánea de precios de la electricidad mal formada",
-  "Electricity Prices (Sweden)": "Precios de la electricidad (Suecia)"
+  "Electricity Prices (Sweden)": "Precios de la electricidad (Suecia)",
+  "Very serious": "Muy grave",
+  "Major incident": "Incidente mayor",
+  "Disruption": "Alteración",
+  "Information": "Información",
+  "Minor disruption": "Alteración menor",
+  "Sveriges Radio traffic report": "Aviso de tráfico de Sveriges Radio",
+  "SR traffic messages unavailable": "Avisos de tráfico de SR no disponibles",
+  "ROAD TRAFFIC": "TRÁFICO VIAL",
+  "Road incidents and closures": "Incidentes y cortes de carretera",
+  "PUBLIC TRANSPORT": "TRANSPORTE PÚBLICO",
+  "Train, bus and ferry disruptions": "Alteraciones de trenes, autobuses y ferris",
+  "PLANNED": "PREVISTO",
+  "Planned works and disruptions announced in advance": "Obras y alteraciones anunciadas con antelación",
+  "Other traffic information": "Otra información de tráfico",
+  "Dots are the traffic reports Sveriges Radio publishes, coloured and sized by priority. Click a dot for the report, in Swedish.": "Los puntos son los avisos de tráfico de Sveriges Radio, coloreados y dimensionados según la prioridad. Haz clic en un punto para ver el aviso (en sueco).",
+  "Malformed SR traffic snapshot": "Instantánea de tráfico de SR mal formada",
+  "Traffic Reports (Sweden)": "Avisos de tráfico (Suecia)"
 }

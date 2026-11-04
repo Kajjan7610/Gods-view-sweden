@@ -700,6 +700,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     disposition: 'enabled-only',
   }),
   Object.freeze({
+    id: 'sr-traffic',
+    token: '0v',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'street-level',
     token: '0',
     disposition: 'enabled+options',

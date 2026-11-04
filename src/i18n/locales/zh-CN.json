@@ -3180,5 +3180,22 @@
   "Colour zones by tomorrow’s mean price, once the day-ahead auction has published it": "日前拍卖公布后，按明日均价为区域着色",
   "Points are the four bidding zones (SE1 Luleå, SE2 Sundsvall, SE3 Stockholm, SE4 Malmö), coloured by spot price excluding VAT, grid fee and energy tax. Click a zone for today’s range and tomorrow.": "圆点为四个竞价区（SE1 Luleå、SE2 Sundsvall、SE3 Stockholm、SE4 Malmö），按不含增值税、电网费和能源税的现货价格着色。点击区域查看今日区间和明日价格。",
   "Malformed electricity price snapshot": "电价快照格式错误",
-  "Electricity Prices (Sweden)": "电价（瑞典）"
+  "Electricity Prices (Sweden)": "电价（瑞典）",
+  "Very serious": "非常严重",
+  "Major incident": "重大事件",
+  "Disruption": "干扰",
+  "Information": "信息",
+  "Minor disruption": "轻微干扰",
+  "Sveriges Radio traffic report": "Sveriges Radio 交通信息",
+  "SR traffic messages unavailable": "SR 交通信息不可用",
+  "ROAD TRAFFIC": "道路交通",
+  "Road incidents and closures": "道路事件与封闭",
+  "PUBLIC TRANSPORT": "公共交通",
+  "Train, bus and ferry disruptions": "火车、巴士和渡轮的干扰",
+  "PLANNED": "计划内",
+  "Planned works and disruptions announced in advance": "提前公布的施工与干扰",
+  "Other traffic information": "其他交通信息",
+  "Dots are the traffic reports Sveriges Radio publishes, coloured and sized by priority. Click a dot for the report, in Swedish.": "圆点是 Sveriges Radio 发布的交通信息，按优先级着色并调整大小。点击圆点查看信息（瑞典语）。",
+  "Malformed SR traffic snapshot": "SR 交通快照格式错误",
+  "Traffic Reports (Sweden)": "交通信息（瑞典）"
 }

@@ -3405,5 +3405,22 @@
   "Colour zones by tomorrow’s mean price, once the day-ahead auction has published it": "Фарбувати зони за середньою ціною на завтра, коли аукціон її опублікує",
   "Points are the four bidding zones (SE1 Luleå, SE2 Sundsvall, SE3 Stockholm, SE4 Malmö), coloured by spot price excluding VAT, grid fee and energy tax. Click a zone for today’s range and tomorrow.": "Точки — чотири цінові зони (SE1 Luleå, SE2 Sundsvall, SE3 Stockholm, SE4 Malmö), пофарбовані за спотовою ціною без ПДВ, мережевого тарифу й податку на енергію. Натисніть на зону, щоб побачити діапазон на сьогодні й завтра.",
   "Malformed electricity price snapshot": "Некоректний знімок цін на електроенергію",
-  "Electricity Prices (Sweden)": "Ціни на електроенергію (Швеція)"
+  "Electricity Prices (Sweden)": "Ціни на електроенергію (Швеція)",
+  "Very serious": "Дуже серйозно",
+  "Major incident": "Велика подія",
+  "Disruption": "Порушення руху",
+  "Information": "Інформація",
+  "Minor disruption": "Незначне порушення",
+  "Sveriges Radio traffic report": "Повідомлення про рух від Sveriges Radio",
+  "SR traffic messages unavailable": "Повідомлення SR про рух недоступні",
+  "ROAD TRAFFIC": "ДОРОГИ",
+  "Road incidents and closures": "Події та перекриття доріг",
+  "PUBLIC TRANSPORT": "ГРОМАДСЬКИЙ ТРАНСПОРТ",
+  "Train, bus and ferry disruptions": "Збої потягів, автобусів і поромів",
+  "PLANNED": "ЗАПЛАНОВАНО",
+  "Planned works and disruptions announced in advance": "Планові роботи та заздалегідь оголошені збої",
+  "Other traffic information": "Інша інформація про рух",
+  "Dots are the traffic reports Sveriges Radio publishes, coloured and sized by priority. Click a dot for the report, in Swedish.": "Точки — повідомлення про рух Sveriges Radio, колір і розмір за пріоритетом. Натисніть на точку, щоб прочитати повідомлення (шведською).",
+  "Malformed SR traffic snapshot": "Некоректний знімок повідомлень SR",
+  "Traffic Reports (Sweden)": "Повідомлення про рух (Швеція)"
 }

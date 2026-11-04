@@ -391,6 +391,12 @@ export const DATA_CREDITS = [
       '<a href="https://www.elprisetjustnu.se/elpris-api" target="_blank" rel="noopener">Elpriset just nu.se</a> (Nord Pool day-ahead prices)',
   },
   {
+    key: 'sr-traffic',
+    html:
+      'Traffic reports (Sweden): ' +
+      '<a href="https://www.sverigesradio.se/trafik" target="_blank" rel="noopener">Sveriges Radio</a> (open API)',
+  },
+  {
     key: 'polisen-events',
     html:
       'Police events (Sweden): ' +

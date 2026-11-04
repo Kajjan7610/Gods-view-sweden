@@ -17,6 +17,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Vägväder: ca 830 väderstationer längs vägarna (vägbanans och luftens temperatur, daggpunkt, vind, sikt, nederbörd; halkrisk markeras) | Trafikverket, objekt `WeatherMeasurepoint` | Road Weather (Sweden), under Events |
 | Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk), samt VMA och krisnyheter som punkter | SMHI, IBWW-varningar (CC BY 4.0) och Krisinformation.se (MSB); ingen nyckel | Weather Warnings (Sweden), under Weather |
 | Polisens händelser (de 500 senaste notiserna, ca 10 dagar), placerade vid kommunens centralort | Polismyndigheten, `polisen.se/api/events` (öppna data, ange källan) | Police Events (Sweden), under Events |
+| Trafikmeddelanden från Sveriges Radio (ca 150 st, färg och storlek efter prioritet) | Sveriges Radios öppna API, ingen nyckel | Traffic Reports (Sweden) / Trafikmeddelanden (SR), under Events |
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
@@ -55,6 +56,16 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-04 (Sveriges Radios trafikmeddelanden)
+- Nytt lager "Trafikmeddelanden (SR)" under Events: de meddelanden SR:s
+  trafikredaktioner publicerar (ca 150 i kväll) som punkter, färg och storlek
+  efter prioritet: mycket allvarlig (röd), stor händelse (orange), störning (gul),
+  information (blå), mindre störning (grå). Knappar VÄGTRAFIK, KOLLEKTIVTRAFIK,
+  PLANERAT (av från början) och ÖVRIGT.
+- Klick ger kort med typ och väg, plats, meddelandet och tid.
+- Sveriges Radios öppna API, ingen nyckel; innehållet visas som SR publicerar det,
+  med SR som källa. Hämtas var 3:e minut. Delningskod `0v`.
 
 ### 2026-11-04 (elpris per elområde)
 - Nytt lager "Electricity Prices (Sweden)" (svenska: Elpris) under Infrastructure:

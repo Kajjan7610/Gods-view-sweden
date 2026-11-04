@@ -53,6 +53,7 @@ export const CATALOG_SOURCE_CONTRACTS = Object.freeze({
   'smhi-warnings': contract(['smhi-warnings'], ['getSnapshot']),
   'polisen-events': contract(['polisen-events'], ['getSnapshot']),
   'electricity-prices': contract(['electricity-prices'], ['getSnapshot']),
+  'sr-traffic': contract(['sr-traffic'], ['getSnapshot']),
   's2-ghostmaps': contract(['s2-ghostmaps'], ['getCatalog', 'getFile']),
   'drone-airspace': contract(['drone-airspace'], ['getSnapshot']),
   cables: contract(['telegeography-submarine-cables'], ['fetch']),

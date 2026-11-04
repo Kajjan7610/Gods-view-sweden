@@ -80,6 +80,7 @@ const PANEL_GROUPS = [
       'trafikverket-roads',
       'trafikverket-weather',
       'polisen-events',
+      'sr-traffic',
       'gnss-integrity',
       's2-ghostmaps',
     ],

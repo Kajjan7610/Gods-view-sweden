@@ -477,6 +477,7 @@ export const VOICE_OFF_LAYERS = Object.freeze({
   'polisen-events': 'Swedish police notices; no room in the prompt budget',
   'electricity-prices':
     'Swedish electricity prices; no room in the prompt budget',
+  'sr-traffic': 'Swedish traffic reports; no room in the prompt budget',
 });
 
 const TYPE_NAMES = Object.freeze({
