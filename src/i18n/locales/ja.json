@@ -3239,5 +3239,19 @@
   "{town} {chance} %": "{town} {chance} %",
   "The glowing band is NOAA’s OVATION chance of aurora overhead in the next half hour, drawn at aurora height. You need a dark, clear sky; aurora is often seen low in the north from well south of the band.": "光る帯は NOAA OVATION による今後 30 分の天頂オーロラ確率で、オーロラの高さに描いています。暗く晴れた空が必要です。帯より南でも北の低い空に見えることがよくあります。",
   "Malformed aurora snapshot": "オーロラ予報スナップショットが不正です",
-  "Aurora Forecast": "オーロラ予報"
+  "Aurora Forecast": "オーロラ予報",
+  "wind {speed} m/s, gusts {gust}": "風 {speed} m/s、最大瞬間 {gust}",
+  "wind {speed} m/s": "風 {speed} m/s",
+  "{amount} mm last hour": "過去 1 時間 {amount} mm",
+  "Now: {weather}": "現在: {weather}",
+  "Loading SMHI forecast …": "SMHI 予報を読み込み中 …",
+  "SMHI forecast unavailable": "SMHI 予報を利用できません",
+  "Next 24 h: {emoji} {min} to {max}, gusts up to {gust} m/s, {rain} mm": "今後 24 時間: {emoji} {min}〜{max}、最大瞬間 {gust} m/s、{rain} mm",
+  "Measured {time} · SMHI": "{time} 観測 · SMHI",
+  "WEATHER · {station}": "天気 · {station}",
+  "SMHI weather unavailable": "SMHI の天気を利用できません",
+  "TEMPERATURE": "気温",
+  "Dots are SMHI’s weather stations with their latest hourly reading. Click a station for the reading and SMHI’s forecast for the spot.": "点は SMHI の気象観測所で、最新の毎時観測値を示します。観測所をクリックで観測値とその地点の SMHI 予報を表示。",
+  "Malformed SMHI weather snapshot": "SMHI 天気スナップショットが不正です",
+  "Weather Now (Sweden)": "現在の天気（スウェーデン）"
 }

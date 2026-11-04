@@ -20,6 +20,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Trafikmeddelanden från Sveriges Radio (ca 150 st, färg och storlek efter prioritet) | Sveriges Radios öppna API, ingen nyckel | Traffic Reports (Sweden) / Trafikmeddelanden (SR), under Events |
 | Sjöväder: ca 160 stationer längs kusten, i Vänern, Vättern, Mälaren och kanalerna (vind, byvind, vattenstånd, vattentemperatur, vågor) | Sjöfartsverket ViVa, ingen nyckel | Sea Weather (Sweden) / Sjöväder, under Weather |
 | Norrskensprognos: chans för norrsken rakt ovanför (NOAA OVATION) som lysande band på 110 km höjd, Kp-index och chansen över nio svenska orter | NOAA SWPC (fri data, ingen nyckel) | Aurora Forecast / Norrskensprognos, under Weather |
+| Väder nu: ca 185 SMHI-stationer (temperatur, vind, byar, nederbörd senaste timmen) och SMHI:s prognos för platsen vid klick | SMHI metobs och prognos snow1g (CC BY 4.0, ingen nyckel) | Weather Now (Sweden) / Väder nu, under Weather |
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
@@ -58,6 +59,18 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-04 (väder nu och prognos från SMHI)
+- Nytt lager "Väder nu (Sverige)" under Weather: SMHI:s ca 185 väderstationer med
+  senaste timvärdet, färgade efter lufttemperatur (knapp VIND byter till
+  medelvind). De kallaste (eller blåsigaste) värdena skrivs ut (knapp VÄRDEN).
+- Klick på en station: "Nu: +2,7 °C, vind 1,0 m/s, byar 2,0, 0,0 mm senaste
+  timmen", sedan SMHI:s prognos för platsen – närmaste dygnet med väderikon,
+  lägsta/högsta temperatur, byar och nederbörd – och de tre följande dagarna.
+- Data: SMHI metobs (fyra parametrar, var 10:e minut) och SMHI:s nya
+  punktprognos snow1g (som ersatt pmp3g), båda CC BY 4.0 utan nyckel. Prognosen
+  hämtas först när man klickar och sparas en halvtimme per plats.
+- Delningskod `0s`. Punkt 2 och 3 från listan blev samma lager.
 
 ### 2026-11-04 (norrskensprognos)
 - Nytt lager "Norrskensprognos" under Weather: NOAA:s OVATION-modell, chansen för

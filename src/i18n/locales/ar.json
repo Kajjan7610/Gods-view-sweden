@@ -3614,5 +3614,19 @@
   "{town} {chance} %": "{town} {chance} %",
   "The glowing band is NOAA’s OVATION chance of aurora overhead in the next half hour, drawn at aurora height. You need a dark, clear sky; aurora is often seen low in the north from well south of the band.": "الشريط المضيء هو احتمال OVATION من NOAA لظهور الشفق فوق الرأس خلال نصف الساعة القادمة، مرسومًا على ارتفاع الشفق. يلزم سماء مظلمة وصافية؛ وكثيرًا ما يُرى الشفق منخفضًا نحو الشمال جنوب الشريط بمسافة.",
   "Malformed aurora snapshot": "لقطة توقعات الشفق مشوّهة",
-  "Aurora Forecast": "توقعات الشفق القطبي"
+  "Aurora Forecast": "توقعات الشفق القطبي",
+  "wind {speed} m/s, gusts {gust}": "رياح {speed} م/ث، هبّات {gust}",
+  "wind {speed} m/s": "رياح {speed} م/ث",
+  "{amount} mm last hour": "{amount} مم في الساعة الأخيرة",
+  "Now: {weather}": "الآن: {weather}",
+  "Loading SMHI forecast …": "جارٍ تحميل توقعات SMHI …",
+  "SMHI forecast unavailable": "توقعات SMHI غير متاحة",
+  "Next 24 h: {emoji} {min} to {max}, gusts up to {gust} m/s, {rain} mm": "الـ24 ساعة القادمة: {emoji} من {min} إلى {max}، هبّات حتى {gust} م/ث، {rain} مم",
+  "Measured {time} · SMHI": "قيس في {time} · SMHI",
+  "WEATHER · {station}": "الطقس · {station}",
+  "SMHI weather unavailable": "طقس SMHI غير متاح",
+  "TEMPERATURE": "درجة الحرارة",
+  "Dots are SMHI’s weather stations with their latest hourly reading. Click a station for the reading and SMHI’s forecast for the spot.": "النقاط هي محطات الطقس التابعة لـ SMHI مع آخر قراءة كل ساعة. انقر على محطة لعرض القراءة وتوقعات SMHI للمكان.",
+  "Malformed SMHI weather snapshot": "لقطة طقس SMHI مشوّهة",
+  "Weather Now (Sweden)": "الطقس الآن (السويد)"
 }

@@ -36,6 +36,7 @@ import { createApplicationElectricityPrices } from './layers/electricityPrices.j
 import { createApplicationSrTraffic } from './layers/srTraffic.js';
 import { createApplicationSeaWeather } from './layers/seaWeather.js';
 import { createApplicationAurora } from './layers/aurora.js';
+import { createApplicationSmhiWeather } from './layers/smhiWeather.js';
 import { createApplicationGhostMaps } from './layers/ghostMaps.js';
 import { createApplicationDroneAirspace } from './layers/droneAirspace.js';
 import { createApplicationCables } from './layers/submarineCables.js';
@@ -164,6 +165,9 @@ export function createApplicationCatalog({
         }),
         createApplicationAurora({
           source: sources.aurora,
+        }),
+        createApplicationSmhiWeather({
+          source: sources['smhi-weather'],
         }),
         createApplicationGhostMaps({ source: sources['s2-ghostmaps'] }),
         createApplicationDroneAirspace({

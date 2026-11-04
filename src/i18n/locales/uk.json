@@ -3464,5 +3464,19 @@
   "{town} {chance} %": "{town} {chance} %",
   "The glowing band is NOAA’s OVATION chance of aurora overhead in the next half hour, drawn at aurora height. You need a dark, clear sky; aurora is often seen low in the north from well south of the band.": "Сяюча смуга — імовірність OVATION від NOAA побачити сяйво в зеніті найближчі півгодини, на висоті сяйв. Потрібне темне ясне небо; сяйво часто видно низько на півночі й помітно південніше смуги.",
   "Malformed aurora snapshot": "Некоректний знімок прогнозу сяйв",
-  "Aurora Forecast": "Прогноз полярних сяйв"
+  "Aurora Forecast": "Прогноз полярних сяйв",
+  "wind {speed} m/s, gusts {gust}": "вітер {speed} м/с, пориви {gust}",
+  "wind {speed} m/s": "вітер {speed} м/с",
+  "{amount} mm last hour": "{amount} мм за останню годину",
+  "Now: {weather}": "Зараз: {weather}",
+  "Loading SMHI forecast …": "Завантаження прогнозу SMHI …",
+  "SMHI forecast unavailable": "Прогноз SMHI недоступний",
+  "Next 24 h: {emoji} {min} to {max}, gusts up to {gust} m/s, {rain} mm": "Найближчі 24 год: {emoji} від {min} до {max}, пориви до {gust} м/с, {rain} мм",
+  "Measured {time} · SMHI": "Виміряно о {time} · SMHI",
+  "WEATHER · {station}": "ПОГОДА · {station}",
+  "SMHI weather unavailable": "Погода SMHI недоступна",
+  "TEMPERATURE": "ТЕМПЕРАТУРА",
+  "Dots are SMHI’s weather stations with their latest hourly reading. Click a station for the reading and SMHI’s forecast for the spot.": "Точки — метеостанції SMHI з останнім погодинним вимірюванням. Натисніть на станцію, щоб побачити вимірювання та прогноз SMHI для цього місця.",
+  "Malformed SMHI weather snapshot": "Некоректний знімок погоди SMHI",
+  "Weather Now (Sweden)": "Погода зараз (Швеція)"
 }

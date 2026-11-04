@@ -3314,5 +3314,19 @@
   "{town} {chance} %": "{town} {chance} %",
   "The glowing band is NOAA’s OVATION chance of aurora overhead in the next half hour, drawn at aurora height. You need a dark, clear sky; aurora is often seen low in the north from well south of the band.": "Das leuchtende Band ist die OVATION-Wahrscheinlichkeit der NOAA für Polarlicht im Zenit in der nächsten halben Stunde, in Polarlichthöhe gezeichnet. Nötig ist ein dunkler, klarer Himmel; Polarlicht ist oft tief im Norden auch deutlich südlich des Bandes zu sehen.",
   "Malformed aurora snapshot": "Fehlerhafter Polarlicht-Snapshot",
-  "Aurora Forecast": "Polarlichtvorhersage"
+  "Aurora Forecast": "Polarlichtvorhersage",
+  "wind {speed} m/s, gusts {gust}": "Wind {speed} m/s, Böen {gust}",
+  "wind {speed} m/s": "Wind {speed} m/s",
+  "{amount} mm last hour": "{amount} mm in der letzten Stunde",
+  "Now: {weather}": "Jetzt: {weather}",
+  "Loading SMHI forecast …": "SMHI-Vorhersage wird geladen …",
+  "SMHI forecast unavailable": "SMHI-Vorhersage nicht verfügbar",
+  "Next 24 h: {emoji} {min} to {max}, gusts up to {gust} m/s, {rain} mm": "Nächste 24 h: {emoji} {min} bis {max}, Böen bis {gust} m/s, {rain} mm",
+  "Measured {time} · SMHI": "Gemessen {time} · SMHI",
+  "WEATHER · {station}": "WETTER · {station}",
+  "SMHI weather unavailable": "SMHI-Wetter nicht verfügbar",
+  "TEMPERATURE": "TEMPERATUR",
+  "Dots are SMHI’s weather stations with their latest hourly reading. Click a station for the reading and SMHI’s forecast for the spot.": "Punkte sind die Wetterstationen der SMHI mit dem letzten Stundenwert. Für den Messwert und die SMHI-Vorhersage für den Ort eine Station anklicken.",
+  "Malformed SMHI weather snapshot": "Fehlerhafter SMHI-Wetter-Snapshot",
+  "Weather Now (Sweden)": "Wetter jetzt (Schweden)"
 }

@@ -409,6 +409,13 @@ export const DATA_CREDITS = [
       '<a href="https://www.swpc.noaa.gov/products/aurora-30-minute-forecast" target="_blank" rel="noopener">NOAA SWPC OVATION</a> and planetary K index (public domain)',
   },
   {
+    key: 'smhi-weather',
+    html:
+      'Weather now and forecast (Sweden): ' +
+      '<a href="https://www.smhi.se/data/om-smhis-data/villkor-for-anvandning" target="_blank" rel="noopener">SMHI open data</a> ' +
+      '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>)',
+  },
+  {
     key: 'polisen-events',
     html:
       'Police events (Sweden): ' +

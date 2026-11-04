@@ -3239,5 +3239,19 @@
   "{town} {chance} %": "{town} {chance}%",
   "The glowing band is NOAA’s OVATION chance of aurora overhead in the next half hour, drawn at aurora height. You need a dark, clear sky; aurora is often seen low in the north from well south of the band.": "發光帶是 NOAA OVATION 提供的未來半小時頭頂出現極光的機率，繪製於極光高度。需要黑暗晴朗的天空；在發光帶以南較遠處也常能在北方低空看到極光。",
   "Malformed aurora snapshot": "極光預報快照格式錯誤",
-  "Aurora Forecast": "極光預報"
+  "Aurora Forecast": "極光預報",
+  "wind {speed} m/s, gusts {gust}": "風 {speed} m/s，陣風 {gust}",
+  "wind {speed} m/s": "風 {speed} m/s",
+  "{amount} mm last hour": "過去一小時 {amount} mm",
+  "Now: {weather}": "目前：{weather}",
+  "Loading SMHI forecast …": "正在載入 SMHI 預報 …",
+  "SMHI forecast unavailable": "SMHI 預報無法使用",
+  "Next 24 h: {emoji} {min} to {max}, gusts up to {gust} m/s, {rain} mm": "未來 24 小時：{emoji} {min} 至 {max}，陣風最高 {gust} m/s，{rain} mm",
+  "Measured {time} · SMHI": "{time} 量測 · SMHI",
+  "WEATHER · {station}": "天氣 · {station}",
+  "SMHI weather unavailable": "SMHI 天氣無法使用",
+  "TEMPERATURE": "氣溫",
+  "Dots are SMHI’s weather stations with their latest hourly reading. Click a station for the reading and SMHI’s forecast for the spot.": "圓點是 SMHI 的氣象站及其最新整點讀數。點擊測站查看讀數及該地的 SMHI 預報。",
+  "Malformed SMHI weather snapshot": "SMHI 天氣快照格式錯誤",
+  "Weather Now (Sweden)": "目前天氣（瑞典）"
 }

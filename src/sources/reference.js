@@ -12,6 +12,7 @@ import { createElectricityPricesSource } from '../layers/electricity/source.js';
 import { createSrTrafficSource } from '../layers/srTraffic/source.js';
 import { createSeaWeatherSource } from '../layers/seaWeather/source.js';
 import { createAuroraSource } from '../layers/aurora/source.js';
+import { createSmhiWeatherSource } from '../layers/smhiWeather/source.js';
 
 /** Construct the existing reference feeds independently of application setup. */
 export function createReferenceSources() {
@@ -30,5 +31,6 @@ export function createReferenceSources() {
     'sr-traffic': createSrTrafficSource(),
     'sea-weather': createSeaWeatherSource(),
     aurora: createAuroraSource(),
+    'smhi-weather': createSmhiWeatherSource(),
   };
 }
