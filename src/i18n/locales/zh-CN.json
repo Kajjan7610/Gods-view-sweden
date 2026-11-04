@@ -3105,5 +3105,21 @@
   "Show only stations where frost, precipitation on a frozen road, or measured ice makes the road slippery": "仅显示因结霜、冻结路面上的降水或测得冰而路面湿滑的站点",
   "Dots are Trafikverket road weather stations coloured by temperature; a white ring marks a risk of ice. Click a station for its readings.": "圆点是按温度着色的 Trafikverket 道路气象站；白圈表示有结冰风险。点击站点查看读数。",
   "Malformed Trafikverket road weather snapshot": "Trafikverket 道路天气快照格式错误",
-  "Road Weather (Sweden)": "道路天气（瑞典）"
+  "Road Weather (Sweden)": "道路天气（瑞典）",
+  "Message": "通知",
+  "Yellow warning": "黄色预警",
+  "Orange warning": "橙色预警",
+  "Red warning": "红色预警",
+  "Published {time} · SMHI": "{time} 发布 · SMHI",
+  "SMHI ↗ · click card to open": "SMHI ↗ · 点击卡片打开",
+  "Open {title} at SMHI": "在 SMHI 打开 {title}",
+  "SMHI warnings unavailable": "SMHI 预警不可用",
+  "No warnings in effect": "当前没有生效的预警",
+  "MESSAGES": "通知",
+  "Also show SMHI messages, such as risk of water shortage, high flows or fire risk": "同时显示 SMHI 通知，例如缺水风险、高流量或火灾风险",
+  "UPCOMING": "即将生效",
+  "Also show warnings that have yet to start, drawn paler": "同时以较浅颜色显示尚未开始的预警",
+  "Areas are SMHI’s impact-based weather warnings, coloured by level; paler areas start later. Click an area for what happens and what to think about.": "区域为 SMHI 基于影响的天气预警，按级别着色；颜色较浅的区域稍后开始。点击区域查看将会发生什么以及注意事项。",
+  "Malformed SMHI warnings snapshot": "SMHI 预警快照格式错误",
+  "Weather Warnings (Sweden)": "天气预警（瑞典）"
 }

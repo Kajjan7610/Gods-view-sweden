@@ -3255,5 +3255,21 @@
   "Show only stations where frost, precipitation on a frozen road, or measured ice makes the road slippery": "Mostrar só as estações onde geada, precipitação em pista congelada ou gelo medido deixam a estrada escorregadia",
   "Dots are Trafikverket road weather stations coloured by temperature; a white ring marks a risk of ice. Click a station for its readings.": "Os pontos são estações meteorológicas rodoviárias da Trafikverket coloridas pela temperatura; um anel branco indica risco de gelo. Clique em uma estação para ver as leituras.",
   "Malformed Trafikverket road weather snapshot": "Snapshot de tempo na estrada da Trafikverket malformado",
-  "Road Weather (Sweden)": "Tempo na estrada (Suécia)"
+  "Road Weather (Sweden)": "Tempo na estrada (Suécia)",
+  "Message": "Comunicado",
+  "Yellow warning": "Alerta amarelo",
+  "Orange warning": "Alerta laranja",
+  "Red warning": "Alerta vermelho",
+  "Published {time} · SMHI": "Publicado {time} · SMHI",
+  "SMHI ↗ · click card to open": "SMHI ↗ · clique no cartão para abrir",
+  "Open {title} at SMHI": "Abrir {title} no SMHI",
+  "SMHI warnings unavailable": "Alertas do SMHI indisponíveis",
+  "No warnings in effect": "Nenhum alerta em vigor",
+  "MESSAGES": "COMUNICADOS",
+  "Also show SMHI messages, such as risk of water shortage, high flows or fire risk": "Mostrar também os comunicados do SMHI, como risco de falta de água, vazões altas ou risco de incêndio",
+  "UPCOMING": "PRÓXIMOS",
+  "Also show warnings that have yet to start, drawn paler": "Mostrar também os alertas que ainda não começaram, mais claros",
+  "Areas are SMHI’s impact-based weather warnings, coloured by level; paler areas start later. Click an area for what happens and what to think about.": "As áreas são os alertas meteorológicos do SMHI baseados em impacto, coloridos por nível; áreas mais claras começam depois. Clique em uma área para ver o que acontece e no que prestar atenção.",
+  "Malformed SMHI warnings snapshot": "Snapshot de alertas do SMHI malformado",
+  "Weather Warnings (Sweden)": "Alertas meteorológicos (Suécia)"
 }

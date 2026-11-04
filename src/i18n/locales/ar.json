@@ -3480,5 +3480,21 @@
   "Show only stations where frost, precipitation on a frozen road, or measured ice makes the road slippery": "عرض المحطات التي يجعل فيها الصقيع أو الهطول على طريق متجمد أو الجليد المرصود الطريقَ زلقًا فقط",
   "Dots are Trafikverket road weather stations coloured by temperature; a white ring marks a risk of ice. Click a station for its readings.": "النقاط هي محطات طقس الطرق التابعة لـ Trafikverket ملوّنة حسب درجة الحرارة؛ وتشير الحلقة البيضاء إلى خطر الجليد. انقر على محطة لعرض قراءاتها.",
   "Malformed Trafikverket road weather snapshot": "لقطة طقس الطرق من Trafikverket مشوّهة",
-  "Road Weather (Sweden)": "طقس الطرق (السويد)"
+  "Road Weather (Sweden)": "طقس الطرق (السويد)",
+  "Message": "رسالة",
+  "Yellow warning": "تحذير أصفر",
+  "Orange warning": "تحذير برتقالي",
+  "Red warning": "تحذير أحمر",
+  "Published {time} · SMHI": "نُشر في {time} · SMHI",
+  "SMHI ↗ · click card to open": "SMHI ↗ · انقر على البطاقة لفتحها",
+  "Open {title} at SMHI": "فتح {title} على SMHI",
+  "SMHI warnings unavailable": "تحذيرات SMHI غير متاحة",
+  "No warnings in effect": "لا توجد تحذيرات سارية",
+  "MESSAGES": "الرسائل",
+  "Also show SMHI messages, such as risk of water shortage, high flows or fire risk": "عرض رسائل SMHI أيضًا، مثل خطر شح المياه أو ارتفاع التدفقات أو خطر الحرائق",
+  "UPCOMING": "القادمة",
+  "Also show warnings that have yet to start, drawn paler": "عرض التحذيرات التي لم تبدأ بعد أيضًا، بلون أفتح",
+  "Areas are SMHI’s impact-based weather warnings, coloured by level; paler areas start later. Click an area for what happens and what to think about.": "المناطق هي تحذيرات الطقس من SMHI المبنية على الأثر، ملوّنة حسب المستوى؛ والمناطق الأفتح تبدأ لاحقًا. انقر على منطقة لمعرفة ما سيحدث وما ينبغي مراعاته.",
+  "Malformed SMHI warnings snapshot": "لقطة تحذيرات SMHI مشوّهة",
+  "Weather Warnings (Sweden)": "تحذيرات الطقس (السويد)"
 }

@@ -15,8 +15,9 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Nederbördsradar, Norden (var 5:e minut, senaste timmen) | SMHI, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Nordics) |
 | Nederbördsradar, Europa inkl. Norge, Finland, Danmark och Baltikum (var 5:e minut) | EUMETNET OPERA, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Europe) |
 | Vägväder: ca 830 väderstationer längs vägarna (vägbanans och luftens temperatur, daggpunkt, vind, sikt, nederbörd; halkrisk markeras) | Trafikverket, objekt `WeatherMeasurepoint` | Road Weather (Sweden), under Events |
+| Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk) | SMHI, IBWW-varningar (CC BY 4.0, ingen nyckel) | Weather Warnings (Sweden), under Weather |
 
-Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s och OPERA:s radar är CC BY 4.0 (källa: SMHI respektive EUMETNET OPERA). Källor, villkor och tekniska detaljer står i
+Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s radar och varningar samt OPERA:s radar är CC BY 4.0 (källa: SMHI respektive EUMETNET OPERA). Källor, villkor och tekniska detaljer står i
 [DATA_SOURCES.md](DATA_SOURCES.md).
 
 ## Nycklar (`.env`, checkas aldrig in)
@@ -51,6 +52,20 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-04 (SMHI:s vädervarningar)
+- Nytt lager "Weather Warnings (Sweden)" under Weather, direkt under Rain radar: SMHI:s
+  konsekvensbaserade vädervarningar (CC BY 4.0, ingen nyckel) som ytor i gult, orange
+  och rött. Varningar som inte börjat än ritas blekare med streckad kant (knapp UPCOMING).
+  SMHI:s meddelanden, t.ex. risk för vattenbrist, höga flöden och brandrisk, ligger bakom
+  knappen MESSAGES eftersom de ofta täcker hela län i veckor.
+- Klick på en yta ger ett kort med nivå och händelse, område och län, tidsfönster,
+  "Vad händer?" och första rådet ur "Vad ska jag tänka på?". Texten är på svenska när
+  appen är på svenska och annars på engelska (SMHI skriver båda). Klick på kortet öppnar
+  SMHI:s varningssida.
+- Servern hämtar SMHI:s varnings-JSON var 5:e minut (`/api/smhi-warnings`) och visar
+  senaste läget som inaktuellt i upp till en timme om SMHI inte svarar.
+- Delningskod `0y`. Röststyrningen hoppar över lagret, som för vägvädret.
 
 ### 2026-11-04 (vägväder)
 - Nytt lager "Road Weather (Sweden)" under Events, direkt under väglaget: Trafikverkets

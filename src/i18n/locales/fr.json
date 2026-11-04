@@ -3255,5 +3255,21 @@
   "Show only stations where frost, precipitation on a frozen road, or measured ice makes the road slippery": "N’afficher que les stations où le givre, des précipitations sur chaussée gelée ou de la glace mesurée rendent la route glissante",
   "Dots are Trafikverket road weather stations coloured by temperature; a white ring marks a risk of ice. Click a station for its readings.": "Les points sont les stations météo routières de Trafikverket, colorées selon la température ; un anneau blanc signale un risque de verglas. Cliquez sur une station pour voir ses mesures.",
   "Malformed Trafikverket road weather snapshot": "Instantané météo routière Trafikverket mal formé",
-  "Road Weather (Sweden)": "Météo routière (Suède)"
+  "Road Weather (Sweden)": "Météo routière (Suède)",
+  "Message": "Avis",
+  "Yellow warning": "Vigilance jaune",
+  "Orange warning": "Vigilance orange",
+  "Red warning": "Vigilance rouge",
+  "Published {time} · SMHI": "Publié le {time} · SMHI",
+  "SMHI ↗ · click card to open": "SMHI ↗ · cliquez sur la carte pour ouvrir",
+  "Open {title} at SMHI": "Ouvrir {title} sur SMHI",
+  "SMHI warnings unavailable": "Avertissements SMHI indisponibles",
+  "No warnings in effect": "Aucune vigilance en cours",
+  "MESSAGES": "AVIS",
+  "Also show SMHI messages, such as risk of water shortage, high flows or fire risk": "Afficher aussi les avis du SMHI, par exemple risque de pénurie d’eau, débits élevés ou risque d’incendie",
+  "UPCOMING": "À VENIR",
+  "Also show warnings that have yet to start, drawn paler": "Afficher aussi les vigilances qui n’ont pas encore commencé, en plus pâle",
+  "Areas are SMHI’s impact-based weather warnings, coloured by level; paler areas start later. Click an area for what happens and what to think about.": "Les zones sont les vigilances météo du SMHI fondées sur les impacts, colorées selon le niveau ; les zones plus pâles commencent plus tard. Cliquez sur une zone pour savoir ce qui se passe et à quoi penser.",
+  "Malformed SMHI warnings snapshot": "Instantané des vigilances SMHI mal formé",
+  "Weather Warnings (Sweden)": "Vigilances météo (Suède)"
 }

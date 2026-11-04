@@ -88,6 +88,7 @@ const PANEL_GROUPS = [
       'air-quality',
       'wind',
       'weather-radar',
+      'smhi-warnings',
       'weather-satellite',
       'weather-lightning',
       'weather-cyclones',

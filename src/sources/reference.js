@@ -6,6 +6,7 @@ import { createBundledCableSource } from '../layers/submarineCables/bundledSourc
 import { createAdsbGnssSource } from '../layers/gnss/source.js';
 import { createTrafikverketRoadsSource } from '../layers/roadConditions/source.js';
 import { createTrafikverketWeatherSource } from '../layers/roadWeather/source.js';
+import { createSmhiWarningsSource } from '../layers/smhiWarnings/source.js';
 
 /** Construct the existing reference feeds independently of application setup. */
 export function createReferenceSources() {
@@ -18,5 +19,6 @@ export function createReferenceSources() {
     'gnss-integrity': createAdsbGnssSource(),
     'trafikverket-roads': createTrafikverketRoadsSource(),
     'trafikverket-weather': createTrafikverketWeatherSource(),
+    'smhi-warnings': createSmhiWarningsSource(),
   };
 }

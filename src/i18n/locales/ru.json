@@ -3330,5 +3330,21 @@
   "Show only stations where frost, precipitation on a frozen road, or measured ice makes the road slippery": "Показывать только станции, где иней, осадки на замёрзшей дороге или измеренный лёд делают дорогу скользкой",
   "Dots are Trafikverket road weather stations coloured by temperature; a white ring marks a risk of ice. Click a station for its readings.": "Точки — дорожные метеостанции Trafikverket, окрашенные по температуре; белое кольцо означает риск гололёда. Нажмите на станцию, чтобы увидеть показания.",
   "Malformed Trafikverket road weather snapshot": "Некорректный снимок дорожной погоды Trafikverket",
-  "Road Weather (Sweden)": "Погода на дорогах (Швеция)"
+  "Road Weather (Sweden)": "Погода на дорогах (Швеция)",
+  "Message": "Сообщение",
+  "Yellow warning": "Жёлтое предупреждение",
+  "Orange warning": "Оранжевое предупреждение",
+  "Red warning": "Красное предупреждение",
+  "Published {time} · SMHI": "Опубликовано {time} · SMHI",
+  "SMHI ↗ · click card to open": "SMHI ↗ · нажмите на карточку, чтобы открыть",
+  "Open {title} at SMHI": "Открыть {title} на сайте SMHI",
+  "SMHI warnings unavailable": "Предупреждения SMHI недоступны",
+  "No warnings in effect": "Действующих предупреждений нет",
+  "MESSAGES": "СООБЩЕНИЯ",
+  "Also show SMHI messages, such as risk of water shortage, high flows or fire risk": "Показывать также сообщения SMHI, например о риске нехватки воды, высоком стоке или пожароопасности",
+  "UPCOMING": "ПРЕДСТОЯЩИЕ",
+  "Also show warnings that have yet to start, drawn paler": "Показывать также ещё не начавшиеся предупреждения, бледнее",
+  "Areas are SMHI’s impact-based weather warnings, coloured by level; paler areas start later. Click an area for what happens and what to think about.": "Области — предупреждения SMHI о погоде с учётом последствий, окрашенные по уровню; бледные области начнутся позже. Нажмите на область, чтобы узнать, что произойдёт и на что обратить внимание.",
+  "Malformed SMHI warnings snapshot": "Некорректный снимок предупреждений SMHI",
+  "Weather Warnings (Sweden)": "Предупреждения о погоде (Швеция)"
 }

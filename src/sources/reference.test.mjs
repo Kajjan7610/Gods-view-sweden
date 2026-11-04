@@ -21,6 +21,7 @@ test('reference factories retain compatibility without starting acquisition or s
     'gnss-integrity',
     'trafikverket-roads',
     'trafikverket-weather',
+    'smhi-warnings',
   ]);
   assert.notEqual(first.earthquakes, second.earthquakes);
   assert.notEqual(first['air-quality'], second['air-quality']);
@@ -33,6 +34,7 @@ test('reference factories retain compatibility without starting acquisition or s
     first['trafikverket-weather'],
     second['trafikverket-weather'],
   );
+  assert.notEqual(first['smhi-warnings'], second['smhi-warnings']);
   assert.equal(typeof first.earthquakes.getSnapshot, 'function');
   assert.equal(typeof first['air-quality'].getSnapshot, 'function');
   assert.equal(typeof first['fire-perimeters'].getSnapshot, 'function');

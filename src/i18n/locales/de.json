@@ -3180,5 +3180,21 @@
   "Show only stations where frost, precipitation on a frozen road, or measured ice makes the road slippery": "Nur Stationen zeigen, an denen Reif, Niederschlag auf gefrorener Fahrbahn oder gemessenes Eis die Fahrbahn glatt macht",
   "Dots are Trafikverket road weather stations coloured by temperature; a white ring marks a risk of ice. Click a station for its readings.": "Punkte sind Straßenwetterstationen von Trafikverket, eingefärbt nach Temperatur; ein weißer Ring markiert Glättegefahr. Für Messwerte eine Station anklicken.",
   "Malformed Trafikverket road weather snapshot": "Fehlerhafter Trafikverket-Straßenwetter-Snapshot",
-  "Road Weather (Sweden)": "Straßenwetter (Schweden)"
+  "Road Weather (Sweden)": "Straßenwetter (Schweden)",
+  "Message": "Meldung",
+  "Yellow warning": "Gelbe Warnung",
+  "Orange warning": "Orange Warnung",
+  "Red warning": "Rote Warnung",
+  "Published {time} · SMHI": "Veröffentlicht {time} · SMHI",
+  "SMHI ↗ · click card to open": "SMHI ↗ · Karte anklicken zum Öffnen",
+  "Open {title} at SMHI": "{title} bei SMHI öffnen",
+  "SMHI warnings unavailable": "SMHI-Warnungen nicht verfügbar",
+  "No warnings in effect": "Keine Warnungen in Kraft",
+  "MESSAGES": "MELDUNGEN",
+  "Also show SMHI messages, such as risk of water shortage, high flows or fire risk": "Auch SMHI-Meldungen zeigen, etwa zu Wasserknappheit, hohen Abflüssen oder Waldbrandgefahr",
+  "UPCOMING": "BEVORSTEHEND",
+  "Also show warnings that have yet to start, drawn paler": "Auch Warnungen zeigen, die noch nicht begonnen haben, blasser gezeichnet",
+  "Areas are SMHI’s impact-based weather warnings, coloured by level; paler areas start later. Click an area for what happens and what to think about.": "Flächen sind die auswirkungsbasierten Wetterwarnungen von SMHI, eingefärbt nach Stufe; blassere Flächen beginnen später. Für Ablauf und Verhaltenshinweise eine Fläche anklicken.",
+  "Malformed SMHI warnings snapshot": "Fehlerhafter SMHI-Warnungs-Snapshot",
+  "Weather Warnings (Sweden)": "Wetterwarnungen (Schweden)"
 }

@@ -3255,5 +3255,21 @@
   "Show only stations where frost, precipitation on a frozen road, or measured ice makes the road slippery": "Mostra solo le stazioni dove brina, precipitazioni su carreggiata gelata o ghiaccio misurato rendono scivolosa la strada",
   "Dots are Trafikverket road weather stations coloured by temperature; a white ring marks a risk of ice. Click a station for its readings.": "I punti sono le stazioni meteo stradali di Trafikverket colorate per temperatura; un anello bianco segnala rischio ghiaccio. Clicca su una stazione per le sue letture.",
   "Malformed Trafikverket road weather snapshot": "Snapshot meteo stradale Trafikverket non valido",
-  "Road Weather (Sweden)": "Meteo stradale (Svezia)"
+  "Road Weather (Sweden)": "Meteo stradale (Svezia)",
+  "Message": "Comunicazione",
+  "Yellow warning": "Allerta gialla",
+  "Orange warning": "Allerta arancione",
+  "Red warning": "Allerta rossa",
+  "Published {time} · SMHI": "Pubblicato {time} · SMHI",
+  "SMHI ↗ · click card to open": "SMHI ↗ · clicca la scheda per aprire",
+  "Open {title} at SMHI": "Apri {title} su SMHI",
+  "SMHI warnings unavailable": "Allerte SMHI non disponibili",
+  "No warnings in effect": "Nessuna allerta in vigore",
+  "MESSAGES": "COMUNICAZIONI",
+  "Also show SMHI messages, such as risk of water shortage, high flows or fire risk": "Mostra anche le comunicazioni SMHI, come rischio di carenza idrica, portate elevate o rischio incendi",
+  "UPCOMING": "IN ARRIVO",
+  "Also show warnings that have yet to start, drawn paler": "Mostra anche le allerte non ancora iniziate, più tenui",
+  "Areas are SMHI’s impact-based weather warnings, coloured by level; paler areas start later. Click an area for what happens and what to think about.": "Le aree sono le allerte meteo SMHI basate sugli impatti, colorate per livello; le aree più tenui iniziano più tardi. Clicca su un’area per cosa succede e a cosa fare attenzione.",
+  "Malformed SMHI warnings snapshot": "Snapshot delle allerte SMHI non valido",
+  "Weather Warnings (Sweden)": "Allerte meteo (Svezia)"
 }

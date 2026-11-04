@@ -473,6 +473,7 @@ export const VOICE_OFF_LAYERS = Object.freeze({
   // Swedish fork layers: the prompt budget has no room for them either.
   'trafikverket-weather':
     'Swedish road weather stations; no room in the prompt budget',
+  'smhi-warnings': 'Swedish weather warnings; no room in the prompt budget',
 });
 
 const TYPE_NAMES = Object.freeze({

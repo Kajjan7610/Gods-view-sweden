@@ -372,6 +372,13 @@ export const DATA_CREDITS = [
       '(<a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a>)',
   },
   {
+    key: 'smhi-warnings',
+    html:
+      'Weather warnings (Sweden): ' +
+      '<a href="https://www.smhi.se/data/om-smhis-data/villkor-for-anvandning" target="_blank" rel="noopener">SMHI open data</a> ' +
+      '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>)',
+  },
+  {
     key: 'trafikverket-cctv',
     html:
       'Road cameras (Sweden): ' +

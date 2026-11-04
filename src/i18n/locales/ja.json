@@ -3105,5 +3105,21 @@
   "Show only stations where frost, precipitation on a frozen road, or measured ice makes the road slippery": "霜、凍結路面への降水、または検出された氷で路面が滑りやすい観測所のみ表示",
   "Dots are Trafikverket road weather stations coloured by temperature; a white ring marks a risk of ice. Click a station for its readings.": "点は温度で色分けした Trafikverket の道路気象観測所です。白い輪は凍結の危険を示します。観測所をクリックで観測値を表示。",
   "Malformed Trafikverket road weather snapshot": "Trafikverket の道路気象スナップショットが不正です",
-  "Road Weather (Sweden)": "道路気象（スウェーデン）"
+  "Road Weather (Sweden)": "道路気象（スウェーデン）",
+  "Message": "お知らせ",
+  "Yellow warning": "黄色警報",
+  "Orange warning": "オレンジ警報",
+  "Red warning": "赤色警報",
+  "Published {time} · SMHI": "{time} 発表 · SMHI",
+  "SMHI ↗ · click card to open": "SMHI ↗ · カードをクリックして開く",
+  "Open {title} at SMHI": "SMHI で {title} を開く",
+  "SMHI warnings unavailable": "SMHI の警報を利用できません",
+  "No warnings in effect": "発表中の警報はありません",
+  "MESSAGES": "お知らせ",
+  "Also show SMHI messages, such as risk of water shortage, high flows or fire risk": "SMHI のお知らせ（渇水の危険、高水位の河川流量、火災の危険など）も表示",
+  "UPCOMING": "予定",
+  "Also show warnings that have yet to start, drawn paler": "まだ始まっていない警報も淡い色で表示",
+  "Areas are SMHI’s impact-based weather warnings, coloured by level; paler areas start later. Click an area for what happens and what to think about.": "エリアは影響に基づく SMHI の気象警報で、レベル別に色分けしています。淡いエリアは後から始まります。エリアをクリックで、何が起きるか、何に注意すべきかを表示。",
+  "Malformed SMHI warnings snapshot": "SMHI の警報スナップショットが不正です",
+  "Weather Warnings (Sweden)": "気象警報（スウェーデン）"
 }

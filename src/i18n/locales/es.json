@@ -3255,5 +3255,21 @@
   "Show only stations where frost, precipitation on a frozen road, or measured ice makes the road slippery": "Mostrar solo las estaciones donde la escarcha, la precipitación sobre calzada helada o el hielo medido vuelven resbaladiza la carretera",
   "Dots are Trafikverket road weather stations coloured by temperature; a white ring marks a risk of ice. Click a station for its readings.": "Los puntos son estaciones meteorológicas viales de Trafikverket coloreadas por temperatura; un anillo blanco indica riesgo de hielo. Haz clic en una estación para ver sus lecturas.",
   "Malformed Trafikverket road weather snapshot": "Instantánea de tiempo en carretera de Trafikverket mal formada",
-  "Road Weather (Sweden)": "Tiempo en carretera (Suecia)"
+  "Road Weather (Sweden)": "Tiempo en carretera (Suecia)",
+  "Message": "Aviso informativo",
+  "Yellow warning": "Aviso amarillo",
+  "Orange warning": "Aviso naranja",
+  "Red warning": "Aviso rojo",
+  "Published {time} · SMHI": "Publicado {time} · SMHI",
+  "SMHI ↗ · click card to open": "SMHI ↗ · haz clic en la tarjeta para abrir",
+  "Open {title} at SMHI": "Abrir {title} en SMHI",
+  "SMHI warnings unavailable": "Avisos de SMHI no disponibles",
+  "No warnings in effect": "No hay avisos en vigor",
+  "MESSAGES": "AVISOS INFORMATIVOS",
+  "Also show SMHI messages, such as risk of water shortage, high flows or fire risk": "Mostrar también los avisos informativos de SMHI, como riesgo de escasez de agua, caudales altos o riesgo de incendio",
+  "UPCOMING": "PRÓXIMOS",
+  "Also show warnings that have yet to start, drawn paler": "Mostrar también los avisos que aún no han empezado, más tenues",
+  "Areas are SMHI’s impact-based weather warnings, coloured by level; paler areas start later. Click an area for what happens and what to think about.": "Las zonas son los avisos meteorológicos de SMHI basados en impactos, coloreados por nivel; las zonas más tenues empiezan más tarde. Haz clic en una zona para ver qué ocurre y qué tener en cuenta.",
+  "Malformed SMHI warnings snapshot": "Instantánea de avisos de SMHI mal formada",
+  "Weather Warnings (Sweden)": "Avisos meteorológicos (Suecia)"
 }

@@ -3330,5 +3330,21 @@
   "Show only stations where frost, precipitation on a frozen road, or measured ice makes the road slippery": "Показувати лише станції, де іній, опади на замерзлій дорозі або виміряний лід роблять дорогу слизькою",
   "Dots are Trafikverket road weather stations coloured by temperature; a white ring marks a risk of ice. Click a station for its readings.": "Точки — дорожні метеостанції Trafikverket, пофарбовані за температурою; біле кільце позначає ризик ожеледиці. Натисніть на станцію, щоб побачити показники.",
   "Malformed Trafikverket road weather snapshot": "Некоректний знімок дорожньої погоди Trafikverket",
-  "Road Weather (Sweden)": "Погода на дорогах (Швеція)"
+  "Road Weather (Sweden)": "Погода на дорогах (Швеція)",
+  "Message": "Повідомлення",
+  "Yellow warning": "Жовте попередження",
+  "Orange warning": "Помаранчеве попередження",
+  "Red warning": "Червоне попередження",
+  "Published {time} · SMHI": "Опубліковано {time} · SMHI",
+  "SMHI ↗ · click card to open": "SMHI ↗ · натисніть картку, щоб відкрити",
+  "Open {title} at SMHI": "Відкрити {title} на сайті SMHI",
+  "SMHI warnings unavailable": "Попередження SMHI недоступні",
+  "No warnings in effect": "Чинних попереджень немає",
+  "MESSAGES": "ПОВІДОМЛЕННЯ",
+  "Also show SMHI messages, such as risk of water shortage, high flows or fire risk": "Показувати також повідомлення SMHI, наприклад про ризик нестачі води, високий стік чи пожежну небезпеку",
+  "UPCOMING": "МАЙБУТНІ",
+  "Also show warnings that have yet to start, drawn paler": "Показувати також попередження, що ще не почалися, блідіше",
+  "Areas are SMHI’s impact-based weather warnings, coloured by level; paler areas start later. Click an area for what happens and what to think about.": "Області — попередження SMHI про погоду з урахуванням наслідків, пофарбовані за рівнем; бліді області почнуться пізніше. Натисніть на область, щоб дізнатися, що станеться і на що зважати.",
+  "Malformed SMHI warnings snapshot": "Некоректний знімок попереджень SMHI",
+  "Weather Warnings (Sweden)": "Попередження про погоду (Швеція)"
 }
