@@ -18,6 +18,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk), samt VMA och krisnyheter som punkter | SMHI, IBWW-varningar (CC BY 4.0) och Krisinformation.se (MSB); ingen nyckel | Weather Warnings (Sweden), under Weather |
 | Polisens händelser (de 500 senaste notiserna, ca 10 dagar), placerade vid kommunens centralort | Polismyndigheten, `polisen.se/api/events` (öppna data, ange källan) | Police Events (Sweden), under Events |
 | Trafikmeddelanden från Sveriges Radio (ca 150 st, färg och storlek efter prioritet) | Sveriges Radios öppna API, ingen nyckel | Traffic Reports (Sweden) / Trafikmeddelanden (SR), under Events |
+| Sjöväder: ca 160 stationer längs kusten, i Vänern, Vättern, Mälaren och kanalerna (vind, byvind, vattenstånd, vattentemperatur, vågor) | Sjöfartsverket ViVa, ingen nyckel | Sea Weather (Sweden) / Sjöväder, under Weather |
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
@@ -56,6 +57,19 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-04 (sjöväder från Sjöfartsverket)
+- Nytt lager "Sjöväder (Sverige)" under Weather: Sjöfartsverkets ViVa-stationer
+  (ca 160 med mätvärden: egna, SMHI:s och hamnarnas) längs kusten, i Vänern,
+  Vättern, Mälaren och kanalerna. Färg efter medelvind (upp till 4, 4–8, 8–13,
+  13–20 kuling, över 20 storm m/s) eller, med knappen VATTENSTÅND, efter
+  vattenstånd mot medelvattenstånd. Värdena skrivs ut för de stationer som
+  sticker ut mest (knapp VÄRDEN). Grå prick = stationen mäter inte det som visas.
+- Klick ger kort med vind, byvind och riktning, vattenstånd, vatten- och
+  lufttemperatur, våghöjd och mättid.
+- ViVa svarar en station per anrop, så servern går igenom alla, sex åt gången
+  (ca 2,5 s), högst var 10:e minut och bara när lagret är på. Ingen nyckel.
+  Delningskod `0u`. I kväll blåser det mest i Bottenviken, ca 12 m/s.
 
 ### 2026-11-04 (Sveriges Radios trafikmeddelanden)
 - Nytt lager "Trafikmeddelanden (SR)" under Events: de meddelanden SR:s

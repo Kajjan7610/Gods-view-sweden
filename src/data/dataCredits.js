@@ -397,6 +397,12 @@ export const DATA_CREDITS = [
       '<a href="https://www.sverigesradio.se/trafik" target="_blank" rel="noopener">Sveriges Radio</a> (open API)',
   },
   {
+    key: 'sea-weather',
+    html:
+      'Sea weather (Sweden): ' +
+      '<a href="https://viva.sjofartsverket.se/" target="_blank" rel="noopener">Sjöfartsverket ViVa</a>',
+  },
+  {
     key: 'polisen-events',
     html:
       'Police events (Sweden): ' +

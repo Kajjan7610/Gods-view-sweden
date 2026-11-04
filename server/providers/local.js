@@ -33,6 +33,7 @@ import { smhiWarningsProxy } from './smhiWarnings.js';
 import { polisenEventsProxy } from './polisenEvents.js';
 import { electricityPricesProxy } from './electricityPrices.js';
 import { srTrafficProxy } from './srTraffic.js';
+import { seaWeatherProxy } from './seaWeather.js';
 import { ghostMapsProxy } from './ghostMaps.js';
 import { droneAirspaceProxy } from './droneAirspace.js';
 import { cycloneProxy } from './cyclones.js';
@@ -91,6 +92,7 @@ function localProviderPlugins({
     polisenEventsProxy(),
     electricityPricesProxy(),
     srTrafficProxy(),
+    seaWeatherProxy(),
     ghostMapsProxy(),
     droneAirspaceProxy(),
     keySetupEndpoint(),

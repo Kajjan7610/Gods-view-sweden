@@ -10,6 +10,7 @@ import { createSmhiWarningsSource } from '../layers/smhiWarnings/source.js';
 import { createPolisenEventsSource } from '../layers/policeEvents/source.js';
 import { createElectricityPricesSource } from '../layers/electricity/source.js';
 import { createSrTrafficSource } from '../layers/srTraffic/source.js';
+import { createSeaWeatherSource } from '../layers/seaWeather/source.js';
 
 /** Construct the existing reference feeds independently of application setup. */
 export function createReferenceSources() {
@@ -26,5 +27,6 @@ export function createReferenceSources() {
     'polisen-events': createPolisenEventsSource(),
     'electricity-prices': createElectricityPricesSource(),
     'sr-traffic': createSrTrafficSource(),
+    'sea-weather': createSeaWeatherSource(),
   };
 }
