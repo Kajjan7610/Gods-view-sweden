@@ -269,35 +269,18 @@ function isCovered(data, source) {
 }
 
 /**
- * Resample one decoded frame into a window: precipitation in SMHI's colours,
- * plus a thin line along the edge of radar coverage so that "no echo" inside
- * it reads apart from "no data" outside it. The window's own border is never
- * drawn as an edge.
- * @param {{data: Uint8Array}} frame Decoded SMHI frame.
- * @param {Int32Array} mapping From smhiWindowMapping.
+ * Draw the coverage edge into a window's still-transparent covered pixels:
+ * any uncovered pixel within EDGE_RADIUS makes one part of the line, so it
+ * stays continuous where one image pixel is under one screen pixel. Shared
+ * with the OPERA radar (operaRadar.js).
+ * @param {Uint8Array} out RGBA window pixels.
+ * @param {Uint8Array} covered 1 where the radar measured.
  * @param {number} width
  * @param {number} height
- * @returns {Buffer} PNG bytes.
  */
-export function renderSmhiWindow(frame, mapping, width, height) {
-  const out = new Uint8Array(width * height * 4);
-  const covered = new Uint8Array(width * height);
-  for (let p = 0; p < mapping.length; p++)
-    if (mapping[p] >= 0 && isCovered(frame.data, mapping[p])) covered[p] = 1;
-  for (let p = 0; p < mapping.length; p++) {
-    const source = mapping[p];
-    if (source < 0) continue;
-    const i = source * 4;
-    if (isPrecipitation(frame.data, i)) {
-      out[p * 4] = frame.data[i];
-      out[p * 4 + 1] = frame.data[i + 1];
-      out[p * 4 + 2] = frame.data[i + 2];
-      out[p * 4 + 3] = 255;
-      continue;
-    }
-    if (!covered[p]) continue;
-    // Any uncovered pixel within EDGE_RADIUS makes this one part of the line,
-    // so it stays continuous where one image pixel is under one screen pixel.
+export function paintCoverageEdge(out, covered, width, height) {
+  for (let p = 0; p < covered.length; p++) {
+    if (!covered[p] || out[p * 4 + 3]) continue;
     const x = p % width;
     const y = (p - x) / width;
     let edge = false;
@@ -314,6 +297,35 @@ export function renderSmhiWindow(frame, mapping, width, height) {
     }
     if (edge) out.set(COVERAGE_EDGE, p * 4);
   }
+}
+
+/**
+ * Resample one decoded frame into a window: precipitation in SMHI's colours,
+ * plus a thin line along the edge of radar coverage so that "no echo" inside
+ * it reads apart from "no data" outside it. The window's own border is never
+ * drawn as an edge.
+ * @param {{data: Uint8Array}} frame Decoded SMHI frame.
+ * @param {Int32Array} mapping From smhiWindowMapping.
+ * @param {number} width
+ * @param {number} height
+ * @returns {Buffer} PNG bytes.
+ */
+export function renderSmhiWindow(frame, mapping, width, height) {
+  const out = new Uint8Array(width * height * 4);
+  const covered = new Uint8Array(width * height);
+  for (let p = 0; p < mapping.length; p++) {
+    const source = mapping[p];
+    if (source < 0 || !isCovered(frame.data, source)) continue;
+    covered[p] = 1;
+    const i = source * 4;
+    if (isPrecipitation(frame.data, i)) {
+      out[p * 4] = frame.data[i];
+      out[p * 4 + 1] = frame.data[i + 1];
+      out[p * 4 + 2] = frame.data[i + 2];
+      out[p * 4 + 3] = 255;
+    }
+  }
+  paintCoverageEdge(out, covered, width, height);
   return encodePng(width, height, out);
 }
 

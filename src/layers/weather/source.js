@@ -7,6 +7,7 @@ const msg = (text) => text;
 const WEATHER_PRODUCTS = Object.freeze([
   'radar',
   'radar-nordic',
+  'radar-europe',
   'clouds',
   'clouds-regional',
   'lightning',
@@ -53,6 +54,7 @@ export function validateWeatherSnapshot(value, product) {
 export const WEATHER_IMAGE_SIZES = Object.freeze({
   radar: Object.freeze({ width: 4096, height: 2048 }),
   'radar-nordic': Object.freeze({ width: 2048, height: 1024 }),
+  'radar-europe': Object.freeze({ width: 4096, height: 2048 }),
   'clouds-regional': Object.freeze({ width: 4096, height: 2048 }),
   clouds: Object.freeze({ width: 2048, height: 1024 }),
   lightning: Object.freeze({ width: 4096, height: 2048 }),

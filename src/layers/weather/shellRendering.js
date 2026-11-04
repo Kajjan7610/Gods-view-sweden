@@ -10,6 +10,7 @@ export const WEATHER_SHELL_HEIGHTS = Object.freeze({
   'clouds-regional': 5_800,
   radar: 6_200,
   'radar-nordic': 6_200,
+  'radar-europe': 6_200,
   lightning: 6_600,
 });
 // Decoded canvases per renderer, full-extent and detail images alike: the shown

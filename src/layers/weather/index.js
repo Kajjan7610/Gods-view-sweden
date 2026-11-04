@@ -26,6 +26,7 @@ function presentWeatherProblem(problem) {
   return t(problem);
 }
 
+const RADAR_PRODUCTS = Object.freeze(['radar', 'radar-nordic', 'radar-europe']);
 const STOPS = [
   [10, '#00ecec'],
   [20, '#0000f6'],
@@ -58,7 +59,8 @@ export function createWeatherLayer({
   clock,
   id = 'weather-radar',
   // Which radar the layer opens on: NOAA's CONUS mosaic upstream, SMHI's
-  // Nordic composite in the Swedish fork (src/app/constructCatalog.js).
+  // Nordic composite in the Swedish fork (src/app/constructCatalog.js), which
+  // also offers EUMETNET OPERA's European composite.
   radarProduct = 'radar',
   cesium = Cesium,
   createRendering = createWeatherRendering,
@@ -72,7 +74,7 @@ export function createWeatherLayer({
   const lightning = id === 'weather-lightning';
   const satellite = !radar && !lightning;
   let product = radar
-    ? ['radar', 'radar-nordic'].includes(radarProduct)
+    ? RADAR_PRODUCTS.includes(radarProduct)
       ? radarProduct
       : 'radar'
     : lightning
@@ -449,7 +451,7 @@ export function createWeatherLayer({
       if (
         ((satellite &&
           ['clouds', 'clouds-regional'].includes(params.product)) ||
-          (radar && ['radar', 'radar-nordic'].includes(params.product))) &&
+          (radar && RADAR_PRODUCTS.includes(params.product))) &&
         params.product !== product
       ) {
         product = params.product;
@@ -681,7 +683,9 @@ export function createWeatherLayer({
           label: radar
             ? product === 'radar-nordic'
               ? t('Rain radar · Nordics')
-              : t('Rain radar · US')
+              : product === 'radar-europe'
+                ? t('Rain radar · Europe')
+                : t('Rain radar · US')
             : lightning
               ? t('Lightning density · 15 min')
               : t('Satellite clouds'),
@@ -720,6 +724,7 @@ export function createWeatherLayer({
           ...(radar
             ? [
                 ['radar-nordic', t('Nordics')],
+                ['radar-europe', t('Europe')],
                 ['radar', t('USA')],
               ].map(([value, label]) => ({
                 id: value,
@@ -729,7 +734,11 @@ export function createWeatherLayer({
                 title:
                   value === 'radar'
                     ? t('NOAA MRMS radar over the contiguous United States')
-                    : t('SMHI Nordic radar composite; 5-minute updates'),
+                    : value === 'radar-europe'
+                      ? t(
+                          'EUMETNET OPERA European radar composite; 5-minute updates',
+                        )
+                      : t('SMHI Nordic radar composite; 5-minute updates'),
               }))
             : []),
           ...(satellite

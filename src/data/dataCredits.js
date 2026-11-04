@@ -351,6 +351,13 @@ export const DATA_CREDITS = [
       '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>); resampled to latitude/longitude',
   },
   {
+    key: 'opera-radar',
+    html:
+      'Rain radar (Europe): ' +
+      '<a href="https://www.eumetnet.eu/observations/weather-radar-network/" target="_blank" rel="noopener">EUMETNET OPERA</a> ' +
+      '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>); strongest echo per 2 km, resampled to latitude/longitude',
+  },
+  {
     key: 'trafikverket-roads',
     html:
       'Road conditions &amp; incidents (Sweden): ' +

@@ -12,9 +12,10 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Tåg i realtid | Trafikverket, objekt `TrainPosition` | Transit |
 | Bussar, tunnelbana, spårvagn, pendeltåg (16 regionbolag, med linjenummer) | Trafiklab GTFS Regional | Transit |
 | Väglag och händelser (olyckor, avstängda vägar, vägarbeten, hinder, färjor) | Trafikverket, `RoadCondition` och `Situation` | Road Conditions (Sweden), under Events |
-| Nederbördsradar, Norden (var 5:e minut, senaste timmen) | SMHI, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Nordics/USA) |
+| Nederbördsradar, Norden (var 5:e minut, senaste timmen) | SMHI, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Nordics) |
+| Nederbördsradar, Europa inkl. Norge, Finland, Danmark och Baltikum (var 5:e minut) | EUMETNET OPERA, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Europe) |
 
-Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s radar är CC BY 4.0 (källa: SMHI). Källor, villkor och tekniska detaljer står i
+Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s och OPERA:s radar är CC BY 4.0 (källa: SMHI respektive EUMETNET OPERA). Källor, villkor och tekniska detaljer står i
 [DATA_SOURCES.md](DATA_SOURCES.md).
 
 ## Nycklar (`.env`, checkas aldrig in)
@@ -49,6 +50,22 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-04 (OPERA-radar för Europa)
+- Ny radarknapp "Europe" i Rain radar: EUMETNETs OPERA-komposit av ett 150-tal
+  europeiska väderradarer (CC BY 4.0, ingen nyckel), var 5:e minut med ~4 minuters
+  fördröjning. Fyller luckorna utanför SMHI:s täckning – norska kusten, Finland,
+  Danmark, Baltikum – och resten av Europa. Nordics (SMHI) är fortfarande standard.
+- Servern läser OPERA:s GeoTIFF (1 km, Lambert azimutal ytriktig projektion),
+  krymper till 2 km med starkaste ekot per ruta och räknar om till
+  latitud/longitud; samma färgklasser som SMHI från 5 dBZ och samma tunna
+  täckningslinje.
+- Skillnad mot SMHI: OPERA visar starkaste ekot på någon höjd, så nederbörd i
+  luften som inte når marken syns också (t.ex. runt fronter) och bilden kan se
+  blötare ut. I fjällen ser norska radarer också skurar som svenska radarer
+  skjuter över. OPERA:s regnintensitetsprodukt (RATE) provades men kommer bara
+  var 15:e minut och stämde inte bättre med SMHI.
+- Delningslänk: `lo=v.p.e` (Europe), `v.p.n` (Nordics), `v.p.u` (USA).
 
 ### 2026-11-04 (radarns täckningsgräns)
 - En tunn ljus linje markerar kanten på SMHI:s radartäckning. Innanför betyder

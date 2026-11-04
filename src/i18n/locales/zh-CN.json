@@ -3055,5 +3055,8 @@
   "USA": "美国",
   "NOAA MRMS radar over the contiguous United States": "美国本土的 NOAA MRMS 雷达",
   "SMHI Nordic radar composite; 5-minute updates": "SMHI 北欧雷达拼图；每 5 分钟更新",
-  "Rain radar · Nordics": "降雨雷达 · 北欧"
+  "Rain radar · Nordics": "降雨雷达 · 北欧",
+  "Europe": "欧洲",
+  "EUMETNET OPERA European radar composite; 5-minute updates": "EUMETNET OPERA 欧洲雷达拼图；每 5 分钟更新",
+  "Rain radar · Europe": "降雨雷达 · 欧洲"
 }

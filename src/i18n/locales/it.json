@@ -3205,5 +3205,8 @@
   "USA": "USA",
   "NOAA MRMS radar over the contiguous United States": "Radar MRMS della NOAA sugli Stati Uniti contigui",
   "SMHI Nordic radar composite; 5-minute updates": "Composito radar nordico SMHI; aggiornamenti ogni 5 minuti",
-  "Rain radar · Nordics": "Radar pioggia · Paesi nordici"
+  "Rain radar · Nordics": "Radar pioggia · Paesi nordici",
+  "Europe": "Europa",
+  "EUMETNET OPERA European radar composite; 5-minute updates": "Composito radar europeo EUMETNET OPERA; aggiornamenti ogni 5 minuti",
+  "Rain radar · Europe": "Radar pioggia · Europa"
 }

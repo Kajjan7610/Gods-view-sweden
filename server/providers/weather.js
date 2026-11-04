@@ -5,6 +5,11 @@ import {
   SMHI_RADAR_BOUNDS,
   SMHI_RADAR_LEGEND,
 } from './smhiRadar.js';
+import {
+  createOperaRadar,
+  OPERA_RADAR_BOUNDS,
+  OPERA_RADAR_LEGEND,
+} from './operaRadar.js';
 
 const BASE = 'https://nowcoast.noaa.gov/geoserver/observations/';
 const HOUR = 3600_000;
@@ -53,6 +58,29 @@ const PRODUCTS = Object.freeze({
     }),
     metadataTtlMs: 60_000,
     image: Object.freeze({ width: 2048, height: 1024 }),
+  }),
+  // Not WMS: EUMETNET OPERA's published composite, resampled here
+  // (operaRadar.js).
+  'radar-europe': Object.freeze({
+    provider: 'opera',
+    title: 'European radar reflectivity (EUMETNET OPERA)',
+    coverage:
+      'Europe from Iceland to the Black Sea and from the Mediterranean to North Cape, within reach of the OPERA radar network; gaps do not establish absence of precipitation.',
+    description:
+      'Observed EUMETNET OPERA maximum-reflectivity composite of European weather radars (dBZ), approximately 1 km and 5-minute updates, reduced to 2 km and resampled from Lambert azimuthal equal-area to latitude/longitude; not a rainfall forecast.',
+    source: 'EUMETNET OPERA',
+    attribution:
+      'EUMETNET OPERA (CC BY 4.0), reduced to 2 km and resampled to latitude/longitude',
+    display: Object.freeze({
+      credit: 'EUMETNET OPERA · CC BY 4.0 · resampled',
+      units: 'dBZ',
+      legend: OPERA_RADAR_LEGEND,
+      extent: OPERA_RADAR_BOUNDS,
+      coverage: 'Europe',
+      info: 'OPERA radar echoes indicate precipitation patterns, not rain rate, a storm warning or a future forecast. Each pixel is the strongest echo at any height above it, so precipitation aloft that never reaches the ground (around fronts, for example) shows too, and the picture can look wetter than the Nordic product. Native source approximately 1 km, shown as the strongest echo per 2 km; frames every 5 minutes. The thin light line marks the edge of radar coverage: outside it there is no data, not no rain. Colour classes follow the Nordic product from 5 dBZ.',
+    }),
+    metadataTtlMs: 60_000,
+    image: Object.freeze({ width: 4096, height: 2048 }),
   }),
   clouds: Object.freeze({
     service: 'satellite',
@@ -272,7 +300,11 @@ export function weatherProxy({
   const pending = [];
   const tiles = new Map();
   const tileFailures = new Map();
-  const smhi = createSmhiRadar({ fetchImpl, now });
+  // Published composites resampled here rather than fetched over WMS.
+  const resampled = {
+    smhi: createSmhiRadar({ fetchImpl, now }),
+    opera: createOperaRadar({ fetchImpl, now }),
+  };
   let tileBytes = 0;
   let active = 0;
 
@@ -369,34 +401,34 @@ export function weatherProxy({
     if (old && now() - old.fetchedAt < (spec.metadataTtlMs ?? 120_000))
       return { ...old, stale: false };
     try {
-      const metadataKey =
-        spec.provider === 'smhi' ? 'metadata:smhi' : `metadata:${spec.service}`;
+      const metadataKey = spec.provider
+        ? `metadata:${spec.provider}`
+        : `metadata:${spec.service}`;
       if (
         now() - (attempts.get(product) ?? -Infinity) < 30_000 &&
         !operations.has(metadataKey)
       )
         throw failure('weather_upstream_unavailable');
       attempts.set(product, now());
-      const fresh =
-        spec.provider === 'smhi'
-          ? await shared(
+      const fresh = spec.provider
+        ? await shared(
+            metadataKey,
+            (activeSignal) => resampled[spec.provider].metadata(activeSignal),
+            signal,
+          )
+        : parseWeatherCapabilities(
+            await shared(
               metadataKey,
-              (activeSignal) => smhi.metadata(activeSignal),
+              (activeSignal) =>
+                upstream(
+                  `${BASE}${spec.service}/ows?service=WMS&version=1.3.0&request=GetCapabilities`,
+                  activeSignal,
+                ),
               signal,
-            )
-          : parseWeatherCapabilities(
-              await shared(
-                metadataKey,
-                (activeSignal) =>
-                  upstream(
-                    `${BASE}${spec.service}/ows?service=WMS&version=1.3.0&request=GetCapabilities`,
-                    activeSignal,
-                  ),
-                signal,
-              ),
-              product,
-              now(),
-            );
+            ),
+            product,
+            now(),
+          );
       const value = { ...fresh, fetchedAt: now() };
       metadata.set(product, value);
       return { ...value, stale: false };
@@ -602,8 +634,15 @@ export function weatherProxy({
         try {
           const bytes = await shared(
             `image:${key}`,
-            spec.provider === 'smhi'
-              ? (signal) => smhi.render(time, bbox, width, height, signal)
+            spec.provider
+              ? (signal) =>
+                  resampled[spec.provider].render(
+                    time,
+                    bbox,
+                    width,
+                    height,
+                    signal,
+                  )
               : (signal) => upstream(upstreamUrl.href, signal, imageShape),
             controller.signal,
           );
