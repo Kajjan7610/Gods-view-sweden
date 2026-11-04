@@ -1,5 +1,10 @@
 import { readResponseTextCapped } from './common/http.js';
 import { readWindBody as readBytesCapped } from '../../src/sources/windBody.js';
+import {
+  createSmhiRadar,
+  SMHI_RADAR_BOUNDS,
+  SMHI_RADAR_LEGEND,
+} from './smhiRadar.js';
 
 const BASE = 'https://nowcoast.noaa.gov/geoserver/observations/';
 const HOUR = 3600_000;
@@ -27,6 +32,27 @@ const PRODUCTS = Object.freeze({
     description:
       'Observed MRMS radar base reflectivity (dBZ), approximately 1 km and 4-minute updates; not a rainfall forecast.',
     image: Object.freeze({ width: 4096, height: 2048 }),
+  }),
+  // Not WMS: SMHI's published composite, resampled here (smhiRadar.js).
+  'radar-nordic': Object.freeze({
+    provider: 'smhi',
+    title: 'Nordic radar reflectivity (SMHI)',
+    coverage:
+      'Sweden with neighbouring Norway, Finland, Denmark and the Baltic Sea, within reach of the Nordic radar network; gaps do not establish absence of precipitation.',
+    description:
+      'Observed SMHI composite of the Nordic weather radars (dBZ), approximately 2 km and 5-minute updates, resampled from SWEREF 99 TM to latitude/longitude; not a rainfall forecast.',
+    source: 'SMHI',
+    attribution: 'SMHI (CC BY 4.0), resampled to latitude/longitude',
+    display: Object.freeze({
+      credit: 'SMHI · CC BY 4.0 · resampled',
+      units: 'dBZ',
+      legend: SMHI_RADAR_LEGEND,
+      extent: SMHI_RADAR_BOUNDS,
+      coverage: 'Nordics',
+      info: 'SMHI radar echoes indicate precipitation patterns, not rain rate, a storm warning or a future forecast. Native source approximately 2 km on SWEREF 99 TM, resampled to latitude/longitude; frames every 5 minutes. Colour classes are SMHI’s own; dBZ from the published values (0.4 × value − 30).',
+    }),
+    metadataTtlMs: 60_000,
+    image: Object.freeze({ width: 2048, height: 1024 }),
   }),
   clouds: Object.freeze({
     service: 'satellite',
@@ -246,6 +272,7 @@ export function weatherProxy({
   const pending = [];
   const tiles = new Map();
   const tileFailures = new Map();
+  const smhi = createSmhiRadar({ fetchImpl, now });
   let tileBytes = 0;
   let active = 0;
 
@@ -342,22 +369,35 @@ export function weatherProxy({
     if (old && now() - old.fetchedAt < (spec.metadataTtlMs ?? 120_000))
       return { ...old, stale: false };
     try {
+      const metadataKey =
+        spec.provider === 'smhi' ? 'metadata:smhi' : `metadata:${spec.service}`;
       if (
         now() - (attempts.get(product) ?? -Infinity) < 30_000 &&
-        !operations.has(`metadata:${spec.service}`)
+        !operations.has(metadataKey)
       )
         throw failure('weather_upstream_unavailable');
       attempts.set(product, now());
-      const url = `${BASE}${spec.service}/ows?service=WMS&version=1.3.0&request=GetCapabilities`;
-      const xml = await shared(
-        `metadata:${spec.service}`,
-        (activeSignal) => upstream(url, activeSignal),
-        signal,
-      );
-      const value = {
-        ...parseWeatherCapabilities(xml, product, now()),
-        fetchedAt: now(),
-      };
+      const fresh =
+        spec.provider === 'smhi'
+          ? await shared(
+              metadataKey,
+              (activeSignal) => smhi.metadata(activeSignal),
+              signal,
+            )
+          : parseWeatherCapabilities(
+              await shared(
+                metadataKey,
+                (activeSignal) =>
+                  upstream(
+                    `${BASE}${spec.service}/ows?service=WMS&version=1.3.0&request=GetCapabilities`,
+                    activeSignal,
+                  ),
+                signal,
+              ),
+              product,
+              now(),
+            );
+      const value = { ...fresh, fetchedAt: now() };
       metadata.set(product, value);
       return { ...value, stale: false };
     } catch (error) {
@@ -388,8 +428,9 @@ export function weatherProxy({
       title: spec.title,
       coverage: spec.coverage,
       description: spec.description,
-      source: 'NOAA nowCOAST',
+      source: spec.source ?? 'NOAA nowCOAST',
       attribution: spec.attribution ?? 'NOAA/NWS/NESDIS nowCOAST',
+      ...(spec.display ? { display: spec.display } : {}),
       bounds: value?.bounds ?? null,
       times: value?.times ?? [],
       latest: time,
@@ -543,7 +584,7 @@ export function weatherProxy({
         if (now() - (tileFailures.get(key) ?? -Infinity) < 30_000)
           throw failure('weather_upstream_unavailable');
         const spec = PRODUCTS[product];
-        const upstreamUrl = new URL(`${BASE}${spec.service}/ows`);
+        const upstreamUrl = new URL(`${BASE}${spec.service ?? 'none'}/ows`);
         upstreamUrl.search = new URLSearchParams({
           service: 'WMS',
           version: '1.1.1',
@@ -561,7 +602,9 @@ export function weatherProxy({
         try {
           const bytes = await shared(
             `image:${key}`,
-            (signal) => upstream(upstreamUrl.href, signal, imageShape),
+            spec.provider === 'smhi'
+              ? (signal) => smhi.render(time, bbox, width, height, signal)
+              : (signal) => upstream(upstreamUrl.href, signal, imageShape),
             controller.signal,
           );
           rememberTile(key, bytes);

@@ -3275,5 +3275,10 @@
   "Speed limits and lane closures": "Обмеження швидкості та закриття смуг",
   "INCL. MINOR": "ВКЛ. ДРІБНІ",
   "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "Показувати також обмеження швидкості, закриття смуг, заборони обгону та обмеження маси на дорожніх роботах",
-  "Flying to {place}...": "Летимо до {place}..."
+  "Flying to {place}...": "Летимо до {place}...",
+  "Nordics": "Північні країни",
+  "USA": "США",
+  "NOAA MRMS radar over the contiguous United States": "Радар NOAA MRMS над континентальною частиною США",
+  "SMHI Nordic radar composite; 5-minute updates": "Композит північних радарів SMHI; оновлення кожні 5 хвилин",
+  "Rain radar · Nordics": "Радар опадів · Північні країни"
 }

@@ -3200,5 +3200,10 @@
   "Speed limits and lane closures": "Limites de velocidade e faixas fechadas",
   "INCL. MINOR": "INCL. MENORES",
   "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "Mostrar também limites de velocidade, faixas fechadas, proibições de ultrapassagem e limites de peso em obras",
-  "Flying to {place}...": "Voando para {place}..."
+  "Flying to {place}...": "Voando para {place}...",
+  "Nordics": "Países nórdicos",
+  "USA": "EUA",
+  "NOAA MRMS radar over the contiguous United States": "Radar MRMS da NOAA sobre os Estados Unidos contíguos",
+  "SMHI Nordic radar composite; 5-minute updates": "Composto de radar nórdico do SMHI; atualizações a cada 5 minutos",
+  "Rain radar · Nordics": "Radar de chuva · Países nórdicos"
 }

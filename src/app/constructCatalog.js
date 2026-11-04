@@ -169,6 +169,8 @@ export function createApplicationCatalog({
         createWeatherLayer({
           feed: sources.weather,
           id: 'weather-radar',
+          // Swedish fork: open on SMHI's Nordic composite.
+          radarProduct: 'radar-nordic',
           clock: weatherClock,
         }),
         createWeatherLayer({

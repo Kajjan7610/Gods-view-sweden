@@ -201,7 +201,8 @@
     "{value} KM/S",
     "ΔN",
     "Ⅱ PAUSE",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "USA"
   ],
   "es": [
     "1090 MHz",
@@ -694,7 +695,8 @@
     "{value} conf",
     "ΔE",
     "ΔN",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "USA"
   ],
   "ja": [
     "1090 MHz",

@@ -3125,5 +3125,10 @@
   "Speed limits and lane closures": "Tempolimits und Fahrstreifensperrungen",
   "INCL. MINOR": "INKL. KLEINERE",
   "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "Auch Tempolimits, Fahrstreifensperrungen, Überholverbote und Gewichtsbeschränkungen an Baustellen zeigen",
-  "Flying to {place}...": "Flug nach {place}..."
+  "Flying to {place}...": "Flug nach {place}...",
+  "Nordics": "Nordeuropa",
+  "USA": "USA",
+  "NOAA MRMS radar over the contiguous United States": "NOAA-MRMS-Radar über den angrenzenden Vereinigten Staaten",
+  "SMHI Nordic radar composite; 5-minute updates": "Nordisches SMHI-Radarkomposit; Aktualisierung alle 5 Minuten",
+  "Rain radar · Nordics": "Regenradar · Nordeuropa"
 }

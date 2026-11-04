@@ -12,8 +12,9 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Tåg i realtid | Trafikverket, objekt `TrainPosition` | Transit |
 | Bussar, tunnelbana, spårvagn, pendeltåg (16 regionbolag, med linjenummer) | Trafiklab GTFS Regional | Transit |
 | Väglag och händelser (olyckor, avstängda vägar, vägarbeten, hinder, färjor) | Trafikverket, `RoadCondition` och `Situation` | Road Conditions (Sweden), under Events |
+| Nederbördsradar, Norden (var 5:e minut, senaste timmen) | SMHI, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Nordics/USA) |
 
-All data är CC0 1.0. Källor, villkor och tekniska detaljer står i
+Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s radar är CC BY 4.0 (källa: SMHI). Källor, villkor och tekniska detaljer står i
 [DATA_SOURCES.md](DATA_SOURCES.md).
 
 ## Nycklar (`.env`, checkas aldrig in)
@@ -48,6 +49,13 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-04 (SMHI-radar)
+- Ny radarprodukt "Rain radar · Nordics" från SMHI:s öppna radarkomposit, standard
+  i radarlagret (knapp för USA finns kvar). Servern räknar om SMHI:s bild från
+  SWEREF 99 TM till latitud/longitud, tar bara med färgade nederbördspixlar och
+  bygger tidslinjen av de senaste 13 bilderna (en timme, var 5:e minut).
+- Teckenförklaring från SMHI:s färgklasser (5–55+ dBZ); källangivelse SMHI (CC BY 4.0).
 
 ### 2026-11-04 (kamerapanelens startkamera)
 - Kamerapanelen startar på kameran närmast vyn (t.ex. Vallbymotet i Västerås) i

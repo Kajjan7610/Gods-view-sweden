@@ -3425,5 +3425,10 @@
   "Speed limits and lane closures": "حدود السرعة وإغلاق المسارات",
   "INCL. MINOR": "بما فيها الثانوية",
   "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "إظهار حدود السرعة وإغلاق المسارات وحظر التجاوز وحدود الوزن عند أعمال الطرق أيضًا",
-  "Flying to {place}...": "جارٍ الانتقال إلى {place}..."
+  "Flying to {place}...": "جارٍ الانتقال إلى {place}...",
+  "Nordics": "دول الشمال",
+  "USA": "الولايات المتحدة",
+  "NOAA MRMS radar over the contiguous United States": "رادار NOAA MRMS فوق الولايات المتحدة المتجاورة",
+  "SMHI Nordic radar composite; 5-minute updates": "تركيب رادار الشمال من SMHI؛ تحديث كل 5 دقائق",
+  "Rain radar · Nordics": "رادار الأمطار · دول الشمال"
 }

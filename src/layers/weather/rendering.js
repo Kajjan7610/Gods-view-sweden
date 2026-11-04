@@ -294,7 +294,8 @@ function createGlobeRendering({
         priority:
           snapshot.product === 'lightning'
             ? 3
-            : snapshot.product === 'radar'
+            : snapshot.product === 'radar' ||
+                snapshot.product === 'radar-nordic'
               ? 2
               : 1,
         product: snapshot.product,

@@ -57,6 +57,9 @@ export function createWeatherLayer({
   feed,
   clock,
   id = 'weather-radar',
+  // Which radar the layer opens on: NOAA's CONUS mosaic upstream, SMHI's
+  // Nordic composite in the Swedish fork (src/app/constructCatalog.js).
+  radarProduct = 'radar',
   cesium = Cesium,
   createRendering = createWeatherRendering,
   documentRef = globalThis.document,
@@ -68,7 +71,13 @@ export function createWeatherLayer({
   const radar = id === 'weather-radar';
   const lightning = id === 'weather-lightning';
   const satellite = !radar && !lightning;
-  let product = radar ? 'radar' : lightning ? 'lightning' : 'clouds-regional';
+  let product = radar
+    ? ['radar', 'radar-nordic'].includes(radarProduct)
+      ? radarProduct
+      : 'radar'
+    : lightning
+      ? 'lightning'
+      : 'clouds-regional';
   let opacity = 'strong';
   let infrared = 100;
   let viewer = null,
@@ -438,8 +447,9 @@ export function createWeatherLayer({
         rendering?.setAlpha(opacity === 'light' ? 0.4 : satellite ? 0.7 : 0.8);
       }
       if (
-        satellite &&
-        ['clouds', 'clouds-regional'].includes(params.product) &&
+        ((satellite &&
+          ['clouds', 'clouds-regional'].includes(params.product)) ||
+          (radar && ['radar', 'radar-nordic'].includes(params.product))) &&
         params.product !== product
       ) {
         product = params.product;
@@ -523,7 +533,7 @@ export function createWeatherLayer({
     },
     getParams() {
       return radar
-        ? { opacity }
+        ? { product, opacity }
         : satellite
           ? { product, opacity, infrared }
           : { product, opacity };
@@ -669,7 +679,9 @@ export function createWeatherLayer({
         readout: true,
         summary: {
           label: radar
-            ? t('Rain radar · US')
+            ? product === 'radar-nordic'
+              ? t('Rain radar · Nordics')
+              : t('Rain radar · US')
             : lightning
               ? t('Lightning density · 15 min')
               : t('Satellite clouds'),
@@ -705,6 +717,21 @@ export function createWeatherLayer({
           ...(display.units !== undefined ? { unitsVerbatim: true } : {}),
         },
         chips: [
+          ...(radar
+            ? [
+                ['radar-nordic', t('Nordics')],
+                ['radar', t('USA')],
+              ].map(([value, label]) => ({
+                id: value,
+                label,
+                active: product === value,
+                params: { product: value },
+                title:
+                  value === 'radar'
+                    ? t('NOAA MRMS radar over the contiguous United States')
+                    : t('SMHI Nordic radar composite; 5-minute updates'),
+              }))
+            : []),
           ...(satellite
             ? [
                 ['clouds-regional', t('N. America')],
@@ -794,6 +821,15 @@ export function createWeatherLayer({
                 )),
       };
       controls.summary.settings = [
+        ...(radar
+          ? [
+              {
+                id: 'region',
+                label: t('REGION'),
+                chips: controls.chips.filter(({ params }) => params.product),
+              },
+            ]
+          : []),
         ...(satellite
           ? [
               {

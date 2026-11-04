@@ -3050,5 +3050,10 @@
   "Speed limits and lane closures": "限速和车道封闭",
   "INCL. MINOR": "含次要",
   "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "同时显示施工路段的限速、车道封闭、禁止超车和限重",
-  "Flying to {place}...": "正在飞往 {place}..."
+  "Flying to {place}...": "正在飞往 {place}...",
+  "Nordics": "北欧",
+  "USA": "美国",
+  "NOAA MRMS radar over the contiguous United States": "美国本土的 NOAA MRMS 雷达",
+  "SMHI Nordic radar composite; 5-minute updates": "SMHI 北欧雷达拼图；每 5 分钟更新",
+  "Rain radar · Nordics": "降雨雷达 · 北欧"
 }

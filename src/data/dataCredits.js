@@ -344,6 +344,13 @@ export const DATA_CREDITS = [
       'modified: heights over water set to 0 m and rounded to 0.1 m',
   },
   {
+    key: 'smhi-radar',
+    html:
+      'Rain radar (Nordics): ' +
+      '<a href="https://www.smhi.se/data/om-smhis-data/villkor-for-anvandning" target="_blank" rel="noopener">SMHI</a> ' +
+      '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>); resampled to latitude/longitude',
+  },
+  {
     key: 'trafikverket-roads',
     html:
       'Road conditions &amp; incidents (Sweden): ' +

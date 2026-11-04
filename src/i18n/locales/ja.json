@@ -3050,5 +3050,10 @@
   "Speed limits and lane closures": "速度制限と車線規制",
   "INCL. MINOR": "軽微を含む",
   "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "道路工事に伴う速度制限、車線規制、追い越し禁止、重量制限も表示",
-  "Flying to {place}...": "{place} へ移動中..."
+  "Flying to {place}...": "{place} へ移動中...",
+  "Nordics": "北欧",
+  "USA": "米国",
+  "NOAA MRMS radar over the contiguous United States": "米国本土の NOAA MRMS レーダー",
+  "SMHI Nordic radar composite; 5-minute updates": "SMHI 北欧レーダー合成；5 分ごとに更新",
+  "Rain radar · Nordics": "雨雲レーダー · 北欧"
 }
