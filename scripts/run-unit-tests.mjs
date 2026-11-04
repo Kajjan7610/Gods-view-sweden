@@ -77,6 +77,30 @@ export const UNIT_TEST_NODE_FLAGS = Object.freeze([
   '--import=./build/registerVue.js',
 ]);
 
+/**
+ * Windows refuses a command line over 32,767 characters, and the suite's file
+ * list outgrew that: the parallel files run in batches that each fit.
+ */
+export const MAX_TEST_ARGS_CHARS = 24_000;
+
+/** Split test files into batches whose joined length stays under the cap. */
+export function batchTestFiles(files, maxChars = MAX_TEST_ARGS_CHARS) {
+  const batches = [];
+  let batch = [];
+  let length = 0;
+  for (const file of files) {
+    if (batch.length && length + file.length + 1 > maxChars) {
+      batches.push(batch);
+      batch = [];
+      length = 0;
+    }
+    batch.push(file);
+    length += file.length + 1;
+  }
+  if (batch.length) batches.push(batch);
+  return batches;
+}
+
 function runTests(args) {
   const result = spawnSync(process.execPath, [...UNIT_TEST_NODE_FLAGS, ...args], {
     cwd: process.cwd(),
@@ -89,7 +113,12 @@ function runTests(args) {
 
 export function runUnitTests() {
   const plan = buildUnitTestPlan(discoverUnitTestFiles());
-  const parallelStatus = runTests(['--test', ...plan.parallel]);
+  // Every batch runs, so one failure does not hide the next batch's.
+  let parallelStatus = 0;
+  for (const batch of batchTestFiles(plan.parallel)) {
+    const status = runTests(['--test', ...batch]);
+    if (status !== 0 && parallelStatus === 0) parallelStatus = status;
+  }
   if (parallelStatus !== 0) return parallelStatus;
 
   // The GC-bracketed budgets are calibrated on Node 24 and are meaningless on

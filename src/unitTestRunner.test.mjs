@@ -8,6 +8,7 @@ import {
   UNIT_TEST_ROOTS,
   allocationTestArgs,
   assertNode24AllocationRuntime,
+  batchTestFiles,
   buildUnitTestPlan,
   discoverUnitTestFiles,
   isCalibratedAllocationRuntime,
@@ -114,4 +115,19 @@ test('npm test stays green on every supported engine, not only the calibrated on
   const runner = readFileSync(new URL('../scripts/run-unit-tests.mjs', import.meta.url), 'utf8');
   assert.match(runner, /GEV_REQUIRE_ALLOCATION_GATE/);
   assert.match(runner, /SKIPPED .*allocation microbenchmarks/);
+});
+
+test('parallel test files run in batches that fit a Windows command line', () => {
+  assert.deepEqual(batchTestFiles(['aaaa', 'bbbb', 'cccc'], 10), [
+    ['aaaa', 'bbbb'],
+    ['cccc'],
+  ]);
+  assert.deepEqual(batchTestFiles(['a-very-long-name'], 4), [
+    ['a-very-long-name'],
+  ]);
+  assert.deepEqual(batchTestFiles([]), []);
+  const plan = buildUnitTestPlan(discoverUnitTestFiles());
+  const batches = batchTestFiles(plan.parallel);
+  assert.deepEqual(batches.flat(), plan.parallel, 'every file, once, in order');
+  for (const batch of batches) assert.ok(batch.join(' ').length < 30_000);
 });
