@@ -31,7 +31,8 @@
     "dB",
     "hPa",
     "{source} HTTP {status}",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "{town} {chance} %"
   ],
   "de": [
     "1090 MHz",
@@ -205,7 +206,8 @@
     "USA",
     "Wind {speed} m/s",
     "Information",
-    "≥ {value} MW"
+    "≥ {value} MW",
+    "{town} {chance} %"
   ],
   "es": [
     "1090 MHz",
@@ -339,7 +341,8 @@
     "INCL. NORMAL",
     "24 H",
     "fire confidence filter|Nominal+",
-    "≥ {value} MW"
+    "≥ {value} MW",
+    "{town} {chance} %"
   ],
   "fr": [
     "1090 MHz",
@@ -534,7 +537,8 @@
     "AIR",
     "24 H",
     "Information",
-    "≥ {value} MW"
+    "≥ {value} MW",
+    "{town} {chance} %"
   ],
   "it": [
     "1090 MHz",
@@ -710,7 +714,8 @@
     "ΔN",
     "▲ {frp} MW",
     "USA",
-    "≥ {value} MW"
+    "≥ {value} MW",
+    "{town} {chance} %"
   ],
   "ja": [
     "1090 MHz",
@@ -760,7 +765,8 @@
     "ΔE",
     "ΔN",
     "▲ {frp} MW",
-    "≥ {value} MW"
+    "≥ {value} MW",
+    "{town} {chance} %"
   ],
   "pt": [
     "1090 MHz",
@@ -895,7 +901,8 @@
     "INCL. NORMAL",
     "24 H",
     "fire confidence filter|Nominal+",
-    "≥ {value} MW"
+    "≥ {value} MW",
+    "{town} {chance} %"
   ],
   "ru": [
     "AIS: --",
@@ -913,7 +920,8 @@
     "S2 GhostMaps",
     "S2 · {name}",
     "VS",
-    "WHOT/BHOT"
+    "WHOT/BHOT",
+    "{town} {chance} %"
   ],
   "sv": [
     "1090 MHz",
@@ -1075,7 +1083,8 @@
     "▲ {frp} MW",
     "{zone} · {price} kr",
     "Information",
-    "≥ {value} MW"
+    "≥ {value} MW",
+    "{town} {chance} %"
   ],
   "uk": [
     "AIS: --",
@@ -1088,7 +1097,8 @@
     "NVG",
     "REC",
     "S2 GhostMaps",
-    "WHOT/BHOT"
+    "WHOT/BHOT",
+    "{town} {chance} %"
   ],
   "zh-CN": [
     "1090 MHz",

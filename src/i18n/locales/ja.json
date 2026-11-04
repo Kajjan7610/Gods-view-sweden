@@ -3233,5 +3233,11 @@
   "Write the value beside the stations that stand out most": "最も目立つ観測所の横に値を表示",
   "Dots are Sjöfartsverket’s ViVa stations along the coast, lakes and canals. Grey dots do not measure what is shown. Click a station for wind, water level, temperatures and waves.": "点は沿岸・湖・運河にある Sjöfartsverket の ViVa 観測所です。灰色の点は表示中の項目を観測していません。観測所をクリックで風、水位、気温・水温、波を表示。",
   "Malformed sea weather snapshot": "海上気象スナップショットが不正です",
-  "Sea Weather (Sweden)": "海上気象（スウェーデン）"
+  "Sea Weather (Sweden)": "海上気象（スウェーデン）",
+  "Aurora forecast unavailable": "オーロラ予報を利用できません",
+  "Kp index {kp} (0 calm, 9 extreme storm)": "Kp 指数 {kp}（0 静穏、9 極端な嵐）",
+  "{town} {chance} %": "{town} {chance} %",
+  "The glowing band is NOAA’s OVATION chance of aurora overhead in the next half hour, drawn at aurora height. You need a dark, clear sky; aurora is often seen low in the north from well south of the band.": "光る帯は NOAA OVATION による今後 30 分の天頂オーロラ確率で、オーロラの高さに描いています。暗く晴れた空が必要です。帯より南でも北の低い空に見えることがよくあります。",
+  "Malformed aurora snapshot": "オーロラ予報スナップショットが不正です",
+  "Aurora Forecast": "オーロラ予報"
 }

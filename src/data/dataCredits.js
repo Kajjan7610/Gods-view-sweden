@@ -403,6 +403,12 @@ export const DATA_CREDITS = [
       '<a href="https://viva.sjofartsverket.se/" target="_blank" rel="noopener">Sjöfartsverket ViVa</a>',
   },
   {
+    key: 'aurora',
+    html:
+      'Aurora forecast: ' +
+      '<a href="https://www.swpc.noaa.gov/products/aurora-30-minute-forecast" target="_blank" rel="noopener">NOAA SWPC OVATION</a> and planetary K index (public domain)',
+  },
+  {
     key: 'polisen-events',
     html:
       'Police events (Sweden): ' +

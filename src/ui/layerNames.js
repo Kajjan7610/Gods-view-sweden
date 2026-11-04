@@ -43,6 +43,7 @@ export const LAYER_NAME_KEYS = Object.freeze({
   'electricity-prices': msg('Electricity Prices (Sweden)'),
   'sr-traffic': msg('Traffic Reports (Sweden)'),
   'sea-weather': msg('Sea Weather (Sweden)'),
+  aurora: msg('Aurora Forecast'),
   's2-ghostmaps': msg('S2 GhostMaps'),
   wind: msg('Wind'),
   'weather-radar': msg('Rain radar'),

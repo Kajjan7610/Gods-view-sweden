@@ -19,6 +19,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Polisens händelser (de 500 senaste notiserna, ca 10 dagar), placerade vid kommunens centralort | Polismyndigheten, `polisen.se/api/events` (öppna data, ange källan) | Police Events (Sweden), under Events |
 | Trafikmeddelanden från Sveriges Radio (ca 150 st, färg och storlek efter prioritet) | Sveriges Radios öppna API, ingen nyckel | Traffic Reports (Sweden) / Trafikmeddelanden (SR), under Events |
 | Sjöväder: ca 160 stationer längs kusten, i Vänern, Vättern, Mälaren och kanalerna (vind, byvind, vattenstånd, vattentemperatur, vågor) | Sjöfartsverket ViVa, ingen nyckel | Sea Weather (Sweden) / Sjöväder, under Weather |
+| Norrskensprognos: chans för norrsken rakt ovanför (NOAA OVATION) som lysande band på 110 km höjd, Kp-index och chansen över nio svenska orter | NOAA SWPC (fri data, ingen nyckel) | Aurora Forecast / Norrskensprognos, under Weather |
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
@@ -57,6 +58,16 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-04 (norrskensprognos)
+- Nytt lager "Norrskensprognos" under Weather: NOAA:s OVATION-modell, chansen för
+  norrsken rakt ovanför den närmaste halvtimmen, som ett mjukt lysande band på
+  110 km höjd (där norrskenet lyser) över norra halvklotet. Grönt från ca 5 %,
+  gult från 30 %, rött från 50 %.
+- Panelen visar Kp-index (0 lugnt – 9 extrem storm) och chansen över Kiruna,
+  Luleå, Umeå, Östersund, Sundsvall, Västerås, Stockholm, Göteborg och Malmö.
+- Fri amerikansk data (NOAA SWPC), ingen nyckel, uppdateras var 10:e minut.
+  Delningskod `0t`. I kväll: Kp 1,7, 22 % över Kiruna.
 
 ### 2026-11-04 (synk med originalet, sen kväll)
 - 34 nya commits: bränder (NASA FIRMS) visas som värmekarta på avstånd, med färg
