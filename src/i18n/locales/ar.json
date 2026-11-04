@@ -3518,5 +3518,11 @@
   "Also show county-wide night and evening summaries": "عرض ملخصات الليل والمساء على مستوى المقاطعة أيضًا",
   "Dots are Polisen’s event notices, often published hours later. Polisen names only the municipality, so dots are spread around its centre; a white ring marks a county-wide notice. Click a dot for the notice.": "النقاط هي إشعارات الأحداث من Polisen، وكثيرًا ما تُنشر بعد ساعات. لا تذكر Polisen إلا البلدية، لذا تتوزع النقاط حول مركزها؛ وتشير الحلقة البيضاء إلى إشعار على مستوى المقاطعة. انقر على نقطة لعرض الإشعار.",
   "Malformed Polisen events snapshot": "لقطة أحداث Polisen مشوّهة",
-  "Police Events (Sweden)": "أحداث الشرطة (السويد)"
+  "Police Events (Sweden)": "أحداث الشرطة (السويد)",
+  "{minutes} min late": "متأخر {minutes} د",
+  "{minutes} min early": "مبكر {minutes} د",
+  "On time": "في الموعد",
+  "departed {station}": "غادر {station}",
+  "at {station}": "في {station}",
+  "Towards {destination}": "باتجاه {destination}"
 }

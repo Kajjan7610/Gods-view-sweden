@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { setLocale, t } from '../../i18n/index.js';
-import { buildTransitSelectionCopy } from './policy.js';
+import { buildTransitSelectionCopy, transitDelayBand } from './policy.js';
 
 const feed = { name: 'Metro Transit', region: 'Minneapolis–St Paul, MN' };
 const now = 1_788_936_960_000;
@@ -93,3 +93,39 @@ for (const locale of ['es', 'ru']) {
     }
   });
 }
+
+test('a Trafikverket train card leads with its delay, last call and destination', () => {
+  setLocale('en');
+  const train = {
+    ...record,
+    status: null,
+    stopId: null,
+    occupancy: null,
+    delayMinutes: 7,
+    lastStation: 'Stockholm C',
+    lastStationDeparted: true,
+    destination: 'Uppsala C',
+  };
+  const { details } = buildTransitSelectionCopy(feed, train, 'rail', now);
+  // After the mode line and the report age, which the builder splices in.
+  assert.equal(details[2], '7 min late · departed Stockholm C');
+  assert.equal(details[3], 'Towards Uppsala C');
+  const early = buildTransitSelectionCopy(
+    feed,
+    { ...train, delayMinutes: -2, lastStationDeparted: false },
+    'rail',
+    now,
+  );
+  assert.equal(early.details[2], '2 min early · at Stockholm C');
+  const onTime = buildTransitSelectionCopy(
+    feed,
+    { ...train, delayMinutes: 0, lastStation: null, destination: null },
+    'rail',
+    now,
+  );
+  assert.equal(onTime.details[2], 'On time');
+  assert.equal(transitDelayBand({ delayMinutes: 2 }), null);
+  assert.equal(transitDelayBand({ delayMinutes: 3 }), 'late');
+  assert.equal(transitDelayBand({ delayMinutes: 15 }), 'very-late');
+  assert.equal(transitDelayBand(record), null);
+});

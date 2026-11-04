@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  foldTrainCalls,
+  resetTrainDelays,
+  trafikverketDelayQuery,
   trafikverketTrainQuery,
   trafikverketTrainToVehicle,
   trafikverketTrainsToVehicles,
@@ -30,6 +33,38 @@ const RECORD = {
 const payload = (records) => ({
   RESPONSE: { RESULT: [{ TrainPosition: records }] },
 });
+// Station calls (TrainAnnouncement 1.9) and the station list (TrainStation 1.4).
+// The call is ten minutes old: calls older than three hours are forgotten.
+const CALLED = Date.now() - 10 * 60_000;
+const DELAYS = {
+  RESPONSE: {
+    RESULT: [
+      {
+        TrainAnnouncement: [
+          {
+            OperationalTrainNumber: '541',
+            LocationSignature: 'Cst',
+            ActivityType: 'Avgang',
+            AdvertisedTimeAtLocation: new Date(
+              CALLED - 7 * 60_000,
+            ).toISOString(),
+            TimeAtLocation: new Date(CALLED).toISOString(),
+            ToLocation: [{ LocationName: 'U', Priority: 1, Order: 0 }],
+          },
+        ],
+      },
+      {
+        TrainStation: [
+          {
+            LocationSignature: 'Cst',
+            AdvertisedShortLocationName: 'Stockholm C',
+          },
+          { LocationSignature: 'U', AdvertisedShortLocationName: 'Uppsala C' },
+        ],
+      },
+    ],
+  },
+};
 const request = (path) => ({
   url: `https://example.test${path}`,
   method: 'GET',
@@ -173,12 +208,15 @@ test('without a key the proxy answers "not configured" and never fetches', async
 });
 
 test('with a key the proxy POSTs the query and serves vehicles', async (t) => {
+  resetTrainDelays();
   const calls = [];
   const service = createTransitService({
     env: { TRAFIKVERKET_API_KEY: ' secret-key ' },
     fetchImpl: async (url, init) => {
       calls.push({ url: String(url), init });
-      return Response.json(payload([RECORD]));
+      return Response.json(
+        /TrainAnnouncement/.test(init.body) ? DELAYS : payload([RECORD]),
+      );
     },
   });
   t.after(service.close);
@@ -191,7 +229,11 @@ test('with a key the proxy POSTs the query and serves vehicles', async (t) => {
   assert.equal(snapshot.count, 1);
   assert.equal(snapshot.vehicles[0].label, 'Tåg 541');
   assert.equal(snapshot.vehicles[0].timestampSource, 'vehicle');
-  assert.equal(calls.length, 1);
+  // The second POST is the delay refresh, joined on the train number.
+  assert.equal(calls.length, 2);
+  assert.equal(snapshot.vehicles[0].delayMinutes, 7);
+  assert.equal(snapshot.vehicles[0].lastStation, 'Stockholm C');
+  assert.equal(snapshot.vehicles[0].destination, 'Uppsala C');
   assert.equal(
     calls[0].url,
     'https://api.trafikinfo.trafikverket.se/v2/data.json',
@@ -201,7 +243,7 @@ test('with a key the proxy POSTs the query and serves vehicles', async (t) => {
   assert.equal(JSON.stringify(snapshot).includes('secret-key'), false);
   // Served from the 15 s cache: no second upstream request.
   await service.handle(request('/api/transit/vehicles/trafikverket-trains'));
-  assert.equal(calls.length, 1);
+  assert.equal(calls.length, 2);
 });
 
 test('Trafiklab feeds send their key as ?key= and cover their own county', async (t) => {
@@ -259,5 +301,49 @@ test('a refused key is a 502 with a cooldown, and the key is never logged', asyn
   assert.equal(
     lines.some((line) => line.includes('secret-key')),
     false,
+  );
+});
+
+test('station calls fold into the newest call per train, with its delay', () => {
+  const byTrain = new Map();
+  foldTrainCalls(
+    [
+      {
+        OperationalTrainNumber: '541',
+        LocationSignature: 'Sod',
+        ActivityType: 'Ankomst',
+        AdvertisedTimeAtLocation: '2026-11-03T19:20:00+01:00',
+        TimeAtLocation: '2026-11-03T19:23:00+01:00',
+      },
+      {
+        OperationalTrainNumber: '541',
+        LocationSignature: 'Cst',
+        ActivityType: 'Avgang',
+        AdvertisedTimeAtLocation: '2026-11-03T19:30:00+01:00',
+        TimeAtLocation: '2026-11-03T19:28:00+01:00',
+        ToLocation: [{ LocationName: 'U', Order: 0 }],
+      },
+      { OperationalTrainNumber: '9', TimeAtLocation: 'never' },
+    ],
+    byTrain,
+  );
+  assert.deepEqual([...byTrain.keys()], ['541']);
+  assert.deepEqual(
+    { ...byTrain.get('541'), at: undefined },
+    {
+      at: undefined,
+      delayMinutes: -2,
+      station: 'Cst',
+      departed: true,
+      destination: 'U',
+    },
+  );
+  const query = trafikverketDelayQuery('k"', '2026-11-03T18:00:00.000Z', true);
+  assert.match(query, /authenticationkey="k&quot;"/);
+  assert.match(query, /objecttype="TrainAnnouncement"/);
+  assert.match(query, /objecttype="TrainStation"/);
+  assert.doesNotMatch(
+    trafikverketDelayQuery('k', '2026-11-03T18:00:00.000Z', false),
+    /TrainStation/,
   );
 });

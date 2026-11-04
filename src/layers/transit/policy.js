@@ -359,6 +359,37 @@ function occupancyText(occupancy, t) {
 }
 
 /**
+ * How late a train is, for its colour: 'late' from 3 minutes, 'very-late'
+ * from 15, null when on time or when the feed gives no delay (Trafikverket's
+ * station calls are the only source that does).
+ * @param {object} record Normalized vehicle record.
+ * @returns {'late'|'very-late'|null}
+ */
+export function transitDelayBand(record) {
+  const minutes = record?.delayMinutes;
+  if (!Number.isFinite(minutes)) return null;
+  if (minutes >= 15) return 'very-late';
+  return minutes >= 3 ? 'late' : null;
+}
+
+/** The delay line of a card: lateness and the last station call. */
+function delayLine(record, t) {
+  const minutes = record.delayMinutes;
+  const delay =
+    minutes >= 1
+      ? t('{minutes} min late', { minutes })
+      : minutes <= -1
+        ? t('{minutes} min early', { minutes: -minutes })
+        : t('On time');
+  if (!record.lastStation) return delay;
+  return `${delay} · ${
+    record.lastStationDeparted
+      ? t('departed {station}', { station: record.lastStation })
+      : t('at {station}', { station: record.lastStation })
+  }`;
+}
+
+/**
  * Build the human lines of the selection card from a vehicle record.
  * @param {object} feed Registry entry.
  * @param {object} record Normalized vehicle record.
@@ -392,6 +423,11 @@ export function buildTransitSelectionCopy(
     feed?.modeWords?.[mode]?.word ||
     t(TRANSIT_MODE_WORD[mode] || TRANSIT_MODE_WORD.unknown);
   const details = [`${kindWord} · ${feed.name} · ${feed.region}`];
+  if (Number.isFinite(record.delayMinutes)) details.push(delayLine(record, t));
+  if (record.destination && record.destination !== record.lastStation)
+    details.push(
+      t('Towards {destination}', { destination: record.destination }),
+    );
   const motion = [];
   // What the SCREEN is doing leads, because that is what the reader can check.
   const shown = entry ? displayMotion(entry, nowMs) : null;

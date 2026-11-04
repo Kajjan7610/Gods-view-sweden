@@ -36,6 +36,28 @@ const TRAIN_FIELDS = [
   'Deleted',
 ];
 
+/**
+ * Delays come from TrainAnnouncement: each station call a train has made,
+ * with its timetabled and actual time. One query covers the minutes since the
+ * last refresh (at most DELAY_WINDOW_MS), at most once per DELAY_REFRESH_MS,
+ * and the newest call per train is kept for DELAY_KEEP_MS, so a position poll
+ * costs nothing extra between refreshes. Station names (TrainStation) are
+ * fetched once a day.
+ */
+export const DELAY_REFRESH_MS = 60_000;
+const DELAY_WINDOW_MS = 30 * 60_000;
+const DELAY_KEEP_MS = 3 * 60 * 60_000;
+const STATIONS_REFRESH_MS = 24 * 60 * 60_000;
+const DELAY_MAX_BODY_BYTES = 16 * 1024 * 1024;
+const ANNOUNCEMENT_FIELDS = [
+  'OperationalTrainNumber',
+  'LocationSignature',
+  'AdvertisedTimeAtLocation',
+  'TimeAtLocation',
+  'ActivityType',
+  'ToLocation',
+];
+
 /** Escape a value for an XML attribute. */
 function xmlAttr(text) {
   return String(text ?? '')
@@ -179,6 +201,171 @@ export function trafikverketTrainsToVehicles(payload) {
 }
 
 /**
+ * The XML query for station calls since `sinceIso`, plus the station list
+ * when `withStations`.
+ * @param {string} key
+ * @param {string} sinceIso
+ * @param {boolean} withStations
+ * @returns {string}
+ */
+export function trafikverketDelayQuery(key, sinceIso, withStations) {
+  const include = (fields) =>
+    fields.map((f) => `<INCLUDE>${f}</INCLUDE>`).join('');
+  return (
+    '<REQUEST>' +
+    `<LOGIN authenticationkey="${xmlAttr(key)}" />` +
+    '<QUERY objecttype="TrainAnnouncement" schemaversion="1.9">' +
+    '<FILTER><AND>' +
+    `<GT name="TimeAtLocation" value="${xmlAttr(sinceIso)}" />` +
+    '<EXISTS name="AdvertisedTimeAtLocation" value="true" />' +
+    '</AND></FILTER>' +
+    include(ANNOUNCEMENT_FIELDS) +
+    '</QUERY>' +
+    (withStations
+      ? '<QUERY objecttype="TrainStation" schemaversion="1.4">' +
+        '<FILTER><EQ name="Advertised" value="true" /></FILTER>' +
+        include(['LocationSignature', 'AdvertisedShortLocationName']) +
+        '</QUERY>'
+      : '') +
+    '</REQUEST>'
+  );
+}
+
+/**
+ * Fold station calls into the newest call per operational train number.
+ * @param {object[]} records TrainAnnouncement records.
+ * @param {Map<string, object>} byTrain Updated in place.
+ */
+export function foldTrainCalls(records, byTrain) {
+  for (const record of Array.isArray(records) ? records : []) {
+    const train = trainNumber(record?.OperationalTrainNumber);
+    const actual = Date.parse(String(record?.TimeAtLocation ?? ''));
+    const planned = Date.parse(String(record?.AdvertisedTimeAtLocation ?? ''));
+    if (!train || !Number.isFinite(actual) || !Number.isFinite(planned))
+      continue;
+    const previous = byTrain.get(train);
+    if (previous && previous.at > actual) continue;
+    const to = Array.isArray(record.ToLocation) ? record.ToLocation : [];
+    byTrain.set(train, {
+      at: actual,
+      delayMinutes: Math.round((actual - planned) / 60_000),
+      station: String(record.LocationSignature ?? '').slice(0, 12) || null,
+      departed: /avg/i.test(String(record.ActivityType ?? '')),
+      destination:
+        String(
+          [...to].sort((a, b) => (a?.Order ?? 0) - (b?.Order ?? 0)).at(-1)
+            ?.LocationName ?? '',
+        ).slice(0, 12) || null,
+    });
+  }
+}
+
+/** Per-process delay state; one refresh in flight at a time. */
+const delayState = {
+  refreshedAt: 0,
+  byTrain: new Map(),
+  stations: new Map(),
+  stationsAt: 0,
+  inFlight: null,
+};
+
+/** Forget every delay and station (tests). */
+export function resetTrainDelays() {
+  delayState.refreshedAt = 0;
+  delayState.byTrain = new Map();
+  delayState.stations = new Map();
+  delayState.stationsAt = 0;
+  delayState.inFlight = null;
+}
+
+async function refreshTrainDelays({ key, fetchImpl, now, signal }) {
+  const withStations = now - delayState.stationsAt > STATIONS_REFRESH_MS;
+  const since = new Date(
+    Math.max(now - DELAY_WINDOW_MS, delayState.refreshedAt - 2 * 60_000),
+  ).toISOString();
+  const response = await fetchImpl(TRAFIKVERKET_API_URL, {
+    method: 'POST',
+    signal,
+    redirect: 'manual',
+    headers: {
+      'Content-Type': 'text/xml; charset=utf-8',
+      Accept: 'application/json',
+    },
+    body: trafikverketDelayQuery(key, since, withStations),
+  });
+  if (!response.ok) {
+    try {
+      await response.body?.cancel();
+    } catch {
+      /* no-op */
+    }
+    throw new Error(`delays upstream HTTP ${response.status}`);
+  }
+  const bytes = await readResponseBytesCapped(response, DELAY_MAX_BODY_BYTES);
+  const results = JSON.parse(new TextDecoder().decode(bytes))?.RESPONSE?.RESULT;
+  if (!Array.isArray(results) || results.some((result) => result?.ERROR))
+    throw new Error('delays query refused');
+  foldTrainCalls(results[0]?.TrainAnnouncement, delayState.byTrain);
+  const stations = results[1]?.TrainStation;
+  if (withStations && Array.isArray(stations)) {
+    delayState.stations = new Map(
+      stations
+        .filter((row) => row?.LocationSignature)
+        .map((row) => [
+          String(row.LocationSignature),
+          String(row.AdvertisedShortLocationName || row.LocationSignature),
+        ]),
+    );
+    delayState.stationsAt = now;
+  }
+  for (const [train, call] of delayState.byTrain)
+    if (now - call.at > DELAY_KEEP_MS) delayState.byTrain.delete(train);
+  delayState.refreshedAt = now;
+}
+
+/**
+ * Add the newest delay, station and destination to each train that has one.
+ * A failed delay refresh keeps the last known delays; positions never wait
+ * on it for longer than the one request.
+ * @param {object[]} vehicles From trafikverketTrainsToVehicles.
+ * @returns {object[]}
+ */
+export async function withTrainDelays(
+  vehicles,
+  { key, fetchImpl = fetch, now = Date.now(), signal } = {},
+) {
+  if (now - delayState.refreshedAt >= DELAY_REFRESH_MS) {
+    delayState.inFlight ??= refreshTrainDelays({
+      key,
+      fetchImpl,
+      now,
+      signal,
+    }).finally(() => {
+      delayState.inFlight = null;
+    });
+    try {
+      await delayState.inFlight;
+    } catch (error) {
+      console.warn(`[trafikverket-trains] ${error?.message || error}`);
+      delayState.refreshedAt = now;
+    }
+  }
+  const name = (signature) =>
+    signature ? delayState.stations.get(signature) || signature : null;
+  return vehicles.map((vehicle) => {
+    const call = delayState.byTrain.get(vehicle.id.split('-')[0]);
+    if (!call) return vehicle;
+    return {
+      ...vehicle,
+      delayMinutes: call.delayMinutes,
+      lastStation: name(call.station),
+      lastStationDeparted: call.departed,
+      destination: name(call.destination),
+    };
+  });
+}
+
+/**
  * Fetch one snapshot, in the shape `buildTransitSnapshot` produces.
  *
  * @param {object} feed Registry entry.
@@ -217,8 +404,17 @@ export async function fetchTrafikverketTrainSnapshot(
     TRAFIKVERKET_TRAINS_MAX_BODY_BYTES,
   );
   const payload = JSON.parse(new TextDecoder().decode(bytes));
-  const { vehicles, entityCount, truncated } =
-    trafikverketTrainsToVehicles(payload);
+  const {
+    vehicles: positions,
+    entityCount,
+    truncated,
+  } = trafikverketTrainsToVehicles(payload);
+  const vehicles = await withTrainDelays(positions, {
+    key,
+    fetchImpl,
+    now,
+    signal,
+  });
   return {
     host: new URL(TRAFIKVERKET_API_URL).hostname,
     snapshot: {

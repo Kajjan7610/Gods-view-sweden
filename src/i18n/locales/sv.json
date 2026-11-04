@@ -3218,5 +3218,11 @@
   "Also show county-wide night and evening summaries": "Visa även sammanfattningar för natt och kväll som gäller hela länet",
   "Dots are Polisen’s event notices, often published hours later. Polisen names only the municipality, so dots are spread around its centre; a white ring marks a county-wide notice. Click a dot for the notice.": "Punkterna är Polisens händelsenotiser, ofta publicerade flera timmar i efterhand. Polisen anger bara kommunen, så punkterna sprids runt dess centrum; en vit ring markerar en notis för hela länet. Klicka på en punkt för att läsa notisen.",
   "Malformed Polisen events snapshot": "Felaktig ögonblicksbild av Polisens händelser",
-  "Police Events (Sweden)": "Polishändelser (Sverige)"
+  "Police Events (Sweden)": "Polishändelser (Sverige)",
+  "{minutes} min late": "{minutes} min sen",
+  "{minutes} min early": "{minutes} min före",
+  "On time": "I tid",
+  "departed {station}": "avgick från {station}",
+  "at {station}": "vid {station}",
+  "Towards {destination}": "Mot {destination}"
 }

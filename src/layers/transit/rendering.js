@@ -25,6 +25,7 @@ import {
   VISIBILITY_REFRESH_MS,
   SELECTED_PIXEL_SIZE,
   TRANSIT_MODE_COLORS,
+  transitDelayBand,
   vehicleNearView,
 } from './policy.js';
 
@@ -34,6 +35,15 @@ export const MODE_CESIUM_COLORS = Object.fromEntries(
     Cesium.Color.fromCssColorString(css),
   ]),
 );
+
+/**
+ * Trains running late (Trafikverket delays) turn pink, then magenta: hues no
+ * transit mode uses (tram is amber, subway red).
+ */
+const DELAY_COLORS = Object.freeze({
+  late: Cesium.Color.fromCssColorString('#ff8fe0'),
+  'very-late': Cesium.Color.fromCssColorString('#ff2bd6'),
+});
 
 /**
  * Billboards and the per-frame glide.
@@ -246,10 +256,13 @@ export function createRendering({ state, services, parts }) {
       entry.detectContact.bracketHalfHeight = Math.ceil(px / 2) + 2;
     }
     const preset = presetColor(style, entry.mode);
+    const late = preset ? null : transitDelayBand(entry.record);
     if (preset) marker.color = preset;
+    else if (late) marker.color = DELAY_COLORS[late];
     else
       marker.color =
         MODE_CESIUM_COLORS[entry.mode] || MODE_CESIUM_COLORS.unknown;
+    entry.delayBand = late;
   }
 
   function addMarker(key, entry) {

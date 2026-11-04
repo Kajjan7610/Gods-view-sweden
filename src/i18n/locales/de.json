@@ -3218,5 +3218,11 @@
   "Also show county-wide night and evening summaries": "Auch provinzweite Nacht- und Abendzusammenfassungen zeigen",
   "Dots are Polisen’s event notices, often published hours later. Polisen names only the municipality, so dots are spread around its centre; a white ring marks a county-wide notice. Click a dot for the notice.": "Punkte sind Ereignismeldungen von Polisen, oft Stunden später veröffentlicht. Polisen nennt nur die Gemeinde, daher sind die Punkte um deren Zentrum verteilt; ein weißer Ring markiert eine provinzweite Meldung. Für die Meldung einen Punkt anklicken.",
   "Malformed Polisen events snapshot": "Fehlerhafter Polisen-Ereignis-Snapshot",
-  "Police Events (Sweden)": "Polizeimeldungen (Schweden)"
+  "Police Events (Sweden)": "Polizeimeldungen (Schweden)",
+  "{minutes} min late": "{minutes} min verspätet",
+  "{minutes} min early": "{minutes} min zu früh",
+  "On time": "Pünktlich",
+  "departed {station}": "abgefahren in {station}",
+  "at {station}": "in {station}",
+  "Towards {destination}": "Richtung {destination}"
 }

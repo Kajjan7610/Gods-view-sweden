@@ -10,6 +10,7 @@ import {
   MAX_VEHICLES_TOTAL,
   MISSED_POLLS_TO_DROP,
   isStaleVehicleFix,
+  transitDelayBand,
   transitVehicleKey,
   vehicleReportTimeMs,
 } from './policy.js';
@@ -370,6 +371,12 @@ export function createIngestion({ state, services, parts, source }) {
         if (entry.courseDeg !== null) state._rotationDirty = true;
       }
       entry.record = record;
+      // A train whose delay crosses a band (on time, late, very late) recolours.
+      if (
+        entry.marker &&
+        transitDelayBand(record) !== (entry.delayBand ?? null)
+      )
+        parts.rendering.applySpriteStyle(entry);
       entry.fetchedAt = fetchedAt;
       entry.pollSeq = pollSeq;
       seen += 1;

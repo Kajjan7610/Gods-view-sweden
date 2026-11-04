@@ -3143,5 +3143,11 @@
   "Also show county-wide night and evening summaries": "同时显示全省夜间和傍晚汇总",
   "Dots are Polisen’s event notices, often published hours later. Polisen names only the municipality, so dots are spread around its centre; a white ring marks a county-wide notice. Click a dot for the notice.": "圆点是 Polisen 的事件通知，常在数小时后发布。Polisen 只提供市镇名称，因此圆点分布在其中心周围；白圈表示全省通知。点击圆点查看通知。",
   "Malformed Polisen events snapshot": "Polisen 事件快照格式错误",
-  "Police Events (Sweden)": "警方事件（瑞典）"
+  "Police Events (Sweden)": "警方事件（瑞典）",
+  "{minutes} min late": "晚点 {minutes} 分钟",
+  "{minutes} min early": "提前 {minutes} 分钟",
+  "On time": "准点",
+  "departed {station}": "已从 {station} 出发",
+  "at {station}": "在 {station}",
+  "Towards {destination}": "开往 {destination}"
 }

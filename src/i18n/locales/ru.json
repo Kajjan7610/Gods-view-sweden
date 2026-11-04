@@ -3368,5 +3368,11 @@
   "Also show county-wide night and evening summaries": "Показывать также ночные и вечерние сводки по ленам",
   "Dots are Polisen’s event notices, often published hours later. Polisen names only the municipality, so dots are spread around its centre; a white ring marks a county-wide notice. Click a dot for the notice.": "Точки — сообщения Polisen о происшествиях, часто публикуемые через несколько часов. Polisen указывает только муниципалитет, поэтому точки разнесены вокруг его центра; белое кольцо означает сообщение по всему лену. Нажмите на точку, чтобы открыть сообщение.",
   "Malformed Polisen events snapshot": "Некорректный снимок событий Polisen",
-  "Police Events (Sweden)": "Полицейские сообщения (Швеция)"
+  "Police Events (Sweden)": "Полицейские сообщения (Швеция)",
+  "{minutes} min late": "опаздывает на {minutes} мин",
+  "{minutes} min early": "раньше на {minutes} мин",
+  "On time": "По расписанию",
+  "departed {station}": "отправился из {station}",
+  "at {station}": "на станции {station}",
+  "Towards {destination}": "В направлении {destination}"
 }

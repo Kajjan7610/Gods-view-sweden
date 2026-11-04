@@ -9,7 +9,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Del | Källa | Var i appen |
 |---|---|---|
 | Vägkameror (1 553 st, livebilder i 3D) | Trafikverket, objekt `Camera` | Cameras / CCTV |
-| Tåg i realtid | Trafikverket, objekt `TrainPosition` | Transit |
+| Tåg i realtid, färgade efter försening (rosa 3–14 min, magenta 15+ min) | Trafikverket, objekt `TrainPosition` och `TrainAnnouncement` | Transit |
 | Bussar, tunnelbana, spårvagn, pendeltåg (16 regionbolag, med linjenummer) | Trafiklab GTFS Regional | Transit |
 | Väglag och händelser (olyckor, avstängda vägar, vägarbeten, hinder, färjor) | Trafikverket, `RoadCondition` och `Situation` | Road Conditions (Sweden), under Events |
 | Nederbördsradar, Norden (var 5:e minut, senaste timmen) | SMHI, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Nordics) |
@@ -54,6 +54,18 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-04 (tågförseningar)
+- Tågen i Transit färgas efter försening: lila som förut när de går i tid,
+  rosa vid 3–14 minuter sent och magenta vid 15 minuter eller mer (färger som
+  inget annat trafikslag använder).
+- Tågkortet visar förseningen överst, t.ex. "7 min sen · avgick från Stockholm C",
+  och slutstationen ("Mot Uppsala C").
+- Data: Trafikverkets `TrainAnnouncement` (samma nyckel). Servern hämtar
+  stationsanropen sedan förra hämtningen, högst en gång per minut, och sparar
+  det senaste per tåg i tre timmar; stationsnamnen hämtas en gång per dygn.
+  Misslyckas en hämtning behålls de senaste förseningarna och positionerna
+  påverkas inte. I kväll hade 199 av 203 tåg en försening kopplad.
 
 ### 2026-11-04 (svenskt gränssnitt)
 - Appen finns nu på svenska: alla ca 3 000 texter i `src/i18n/locales/sv.json`.

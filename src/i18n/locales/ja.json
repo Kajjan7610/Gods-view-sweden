@@ -3143,5 +3143,11 @@
   "Also show county-wide night and evening summaries": "県全域の夜間・夕方のまとめも表示",
   "Dots are Polisen’s event notices, often published hours later. Polisen names only the municipality, so dots are spread around its centre; a white ring marks a county-wide notice. Click a dot for the notice.": "点は Polisen の事件通知で、多くは数時間後に公開されます。Polisen は自治体名しか示さないため、点はその中心の周りに配置されます。白い輪は県全域の通知を示します。点をクリックで通知を表示。",
   "Malformed Polisen events snapshot": "Polisen の事件スナップショットが不正です",
-  "Police Events (Sweden)": "警察の事件情報（スウェーデン）"
+  "Police Events (Sweden)": "警察の事件情報（スウェーデン）",
+  "{minutes} min late": "{minutes} 分遅れ",
+  "{minutes} min early": "{minutes} 分早着",
+  "On time": "定刻",
+  "departed {station}": "{station} を発車",
+  "at {station}": "{station} に停車",
+  "Towards {destination}": "{destination} 方面"
 }

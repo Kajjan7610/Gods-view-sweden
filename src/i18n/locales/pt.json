@@ -3293,5 +3293,11 @@
   "Also show county-wide night and evening summaries": "Mostrar também os resumos noturnos e vespertinos por condado",
   "Dots are Polisen’s event notices, often published hours later. Polisen names only the municipality, so dots are spread around its centre; a white ring marks a county-wide notice. Click a dot for the notice.": "Os pontos são os avisos de ocorrências da Polisen, muitas vezes publicados horas depois. A Polisen informa só o município, então os pontos ficam espalhados em torno do seu centro; um anel branco marca um aviso para todo o condado. Clique em um ponto para ver o aviso.",
   "Malformed Polisen events snapshot": "Snapshot de ocorrências da Polisen malformado",
-  "Police Events (Sweden)": "Ocorrências policiais (Suécia)"
+  "Police Events (Sweden)": "Ocorrências policiais (Suécia)",
+  "{minutes} min late": "{minutes} min atrasado",
+  "{minutes} min early": "{minutes} min adiantado",
+  "On time": "No horário",
+  "departed {station}": "partiu de {station}",
+  "at {station}": "em {station}",
+  "Towards {destination}": "Sentido {destination}"
 }
