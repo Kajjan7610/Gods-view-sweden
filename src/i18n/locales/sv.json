@@ -3328,5 +3328,8 @@
   "TEMPERATURE": "TEMPERATUR",
   "Dots are SMHI’s weather stations with their latest hourly reading. Click a station for the reading and SMHI’s forecast for the spot.": "Punkterna är SMHI:s väderstationer med senaste timvärdet. Klicka på en station för mätningen och SMHI:s prognos för platsen.",
   "Malformed SMHI weather snapshot": "Felaktig ögonblicksbild av SMHI-väder",
-  "Weather Now (Sweden)": "Väder nu (Sverige)"
+  "Weather Now (Sweden)": "Väder nu (Sverige)",
+  "Canada (ECCC AQHI) and Sweden (SMHI, European EAQI)": "Kanada (ECCC AQHI) och Sverige (SMHI, europeiskt EAQI)",
+  "Sweden · SMHI measurements on the European EAQI": "Sverige · SMHI:s mätningar på europeiska EAQI",
+  "Malformed SMHI air-quality response": "Felaktigt svar om luftkvalitet från SMHI"
 }

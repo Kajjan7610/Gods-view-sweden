@@ -416,6 +416,13 @@ export const DATA_CREDITS = [
       '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>)',
   },
   {
+    key: 'smhi-air-quality',
+    html:
+      'Air quality (Sweden): ' +
+      '<a href="https://datavardluft.smhi.se/" target="_blank" rel="noopener">SMHI Datavärdskap luft</a> ' +
+      '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>)',
+  },
+  {
     key: 'polisen-events',
     html:
       'Police events (Sweden): ' +

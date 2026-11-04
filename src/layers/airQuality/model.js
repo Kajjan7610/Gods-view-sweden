@@ -12,8 +12,9 @@
  * network can be added without retrofitting a shared numeric meaning that does
  * not exist.
  *
- * Only ECCC's AQHI is implemented here; `AIR_QUALITY_PROVIDERS` is the seam a
- * later provider registers against.
+ * ECCC's AQHI (Canada) and, in the Swedish fork, SMHI's measurements scored on
+ * the European EAQI (Sweden) are implemented; `AIR_QUALITY_PROVIDERS` is the
+ * seam a further provider registers against.
  */
 // A portable export (package.json): no i18n here. The labels stay English data;
 // the Weather card (index.js) shows them translated.
@@ -123,7 +124,100 @@ export const AIR_QUALITY_PROVIDERS = Object.freeze({
       Object.freeze({ id: 'very-high', max: Infinity }),
     ]),
   }),
+  smhi: Object.freeze({
+    id: 'smhi',
+    scale: 'EAQI',
+    label: msg('Air quality'),
+    network: 'SMHI (Sweden)',
+    coverage: msg('Sweden · SMHI measurements on the European EAQI'),
+    /**
+     * EAQI levels 1–6 (good, fair, moderate, poor, very poor, extremely
+     * poor) folded into the four shared bands.
+     */
+    bands: Object.freeze([
+      Object.freeze({ id: 'low', max: 2 }),
+      Object.freeze({ id: 'moderate', max: 3 }),
+      Object.freeze({ id: 'high', max: 4 }),
+      Object.freeze({ id: 'very-high', max: Infinity }),
+    ]),
+  }),
 });
+
+/**
+ * The European Environment Agency's EAQI level limits in µg/m³, the upper
+ * bound of levels 1–5 (above the last is level 6). Applied to hourly values;
+ * the EEA scores PM on 24-hour means, so a single hour reads a little high.
+ */
+export const EAQI_LIMITS = Object.freeze({
+  NO2: Object.freeze([40, 90, 120, 230, 340]),
+  PM10: Object.freeze([20, 40, 50, 100, 150]),
+  'PM2.5': Object.freeze([10, 20, 25, 50, 75]),
+  O3: Object.freeze([50, 100, 130, 240, 380]),
+});
+
+/** EAQI level 1–6 for one pollutant concentration, or null. */
+export function eaqiLevel(pollutant, value) {
+  const limits = EAQI_LIMITS[pollutant];
+  if (!limits || !Number.isFinite(value) || value < 0) return null;
+  const index = limits.findIndex((limit) => value <= limit);
+  return index === -1 ? 6 : index + 1;
+}
+
+/**
+ * SMHI stations from the proxy to provider-shaped rows: the station's EAQI
+ * is its worst pollutant's level, and the note names each measurement.
+ * @param {object[]} stations [{id, name, lat, lon, pollutants: {NO2: {value, at}}}]
+ * @param {number} [now=Date.now()]
+ * @returns {Array<object>}
+ */
+export function normalizeSmhiReadings(stations, now = Date.now()) {
+  const provider = AIR_QUALITY_PROVIDERS.smhi;
+  const rows = [];
+  for (const station of Array.isArray(stations) ? stations : []) {
+    const lat = Number(station?.lat);
+    const lon = Number(station?.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || !station?.id)
+      continue;
+    let value = null;
+    let observedMs = null;
+    const parts = [];
+    for (const [pollutant, sample] of Object.entries(
+      station.pollutants || {},
+    )) {
+      const at = Number(sample?.at);
+      const measured = Number(sample?.value);
+      if (!Number.isFinite(at) || now - at > OBSERVATION_MAX_AGE_MS) continue;
+      const level = eaqiLevel(pollutant, measured);
+      if (level === null) continue;
+      value = Math.max(value ?? 0, level);
+      observedMs = Math.max(observedMs ?? 0, at);
+      parts.push(`${pollutant} ${Math.round(measured * 10) / 10}`);
+    }
+    if (value === null) continue;
+    const band = bandForValue(provider.id, value);
+    const stationId = String(station.id).slice(0, 40);
+    rows.push({
+      id: `${provider.id}:${stationId}`,
+      provider: provider.id,
+      scale: provider.scale,
+      value,
+      band,
+      stationId,
+      name: String(station.name || stationId).trim(),
+      zone: 'se',
+      lat,
+      lon,
+      observedMs,
+      color: airQualityColor(band),
+      label: valueLabel(provider.id, value),
+      risk: bandRiskText(band),
+      note: `${parts.join(' · ')} µg/m³`,
+    });
+  }
+  return rows.sort(
+    (a, b) => b.value - a.value || a.stationId.localeCompare(b.stationId),
+  );
+}
 
 /** Band descriptor for an id, or null. */
 export function airQualityBandById(bandId) {

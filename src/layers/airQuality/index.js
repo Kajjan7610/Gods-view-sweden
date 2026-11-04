@@ -15,12 +15,20 @@ import {
   selectAirQualityOverlayCohort,
 } from './model.js';
 export * from './model.js';
-export { createEcccAirQualitySource } from './source.js';
+export {
+  createCombinedAirQualitySource,
+  createEcccAirQualitySource,
+  createSmhiAirQualitySource,
+} from './source.js';
 
 /** Station markers are a point reading, not an extent. */
 const STATION_MARKER_RADIUS_M = 6_000;
 /** Readings listed in the readout card. */
 const READOUT_LIMIT = 5;
+/** Coverage line when more than one network reports. */
+const MULTI_NETWORK_COVERAGE = msg(
+  'Canada (ECCC AQHI) and Sweden (SMHI, European EAQI)',
+);
 
 /** Own one air-quality display, its refresh lifecycle, and its readout card. */
 export function createAirQualityLayer({ source, overlayHost } = {}) {
@@ -210,7 +218,15 @@ export function createAirQualityLayer({ source, overlayHost } = {}) {
      * the rest. Coverage is stated plainly because this layer is not global.
      */
     getRowControls() {
-      const provider = AIR_QUALITY_PROVIDERS.eccc;
+      // The networks behind the current readings (all of them before any
+      // arrive): one network keeps its own coverage line, several share one.
+      const present = Object.values(AIR_QUALITY_PROVIDERS).filter((provider) =>
+        _readings.some((reading) => reading.provider === provider.id),
+      );
+      const providers = present.length
+        ? present
+        : Object.values(AIR_QUALITY_PROVIDERS);
+      const [provider] = providers;
       const inView = readingsInView(_readings, viewRectangle(), READOUT_LIMIT);
       const newest = _readings.reduce(
         (max, reading) => Math.max(max, reading.observedMs || 0),
@@ -223,9 +239,14 @@ export function createAirQualityLayer({ source, overlayHost } = {}) {
         readout: true,
         summary: {
           label: t(provider.label),
-          coverage: t(provider.coverage),
+          coverage:
+            providers.length === 1
+              ? t(provider.coverage)
+              : t(MULTI_NETWORK_COVERAGE),
           validTime: newest ? new Date(newest).toISOString() : undefined,
-          detail: `${provider.network} · ${provider.scale}`,
+          detail: providers
+            .map((one) => `${one.network} · ${one.scale}`)
+            .join(' · '),
           status: _lastError
             ? translateFeedError(_lastError)
             : _count === 0
@@ -237,7 +258,7 @@ export function createAirQualityLayer({ source, overlayHost } = {}) {
                   '{count} station reporting',
                   '{count} stations reporting',
                 ),
-          units: provider.scale,
+          units: providers.map((one) => one.scale).join(' / '),
         },
         legend: AIR_QUALITY_BANDS.map((band) => ({
           color: band.color,

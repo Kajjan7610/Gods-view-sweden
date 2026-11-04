@@ -3253,5 +3253,8 @@
   "TEMPERATURE": "気温",
   "Dots are SMHI’s weather stations with their latest hourly reading. Click a station for the reading and SMHI’s forecast for the spot.": "点は SMHI の気象観測所で、最新の毎時観測値を示します。観測所をクリックで観測値とその地点の SMHI 予報を表示。",
   "Malformed SMHI weather snapshot": "SMHI 天気スナップショットが不正です",
-  "Weather Now (Sweden)": "現在の天気（スウェーデン）"
+  "Weather Now (Sweden)": "現在の天気（スウェーデン）",
+  "Canada (ECCC AQHI) and Sweden (SMHI, European EAQI)": "カナダ（ECCC AQHI）とスウェーデン（SMHI、欧州 EAQI）",
+  "Sweden · SMHI measurements on the European EAQI": "スウェーデン · 欧州 EAQI による SMHI の測定",
+  "Malformed SMHI air-quality response": "SMHI の大気質応答が不正です"
 }

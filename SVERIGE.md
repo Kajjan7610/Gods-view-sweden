@@ -21,6 +21,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Sjöväder: ca 160 stationer längs kusten, i Vänern, Vättern, Mälaren och kanalerna (vind, byvind, vattenstånd, vattentemperatur, vågor) | Sjöfartsverket ViVa, ingen nyckel | Sea Weather (Sweden) / Sjöväder, under Weather |
 | Norrskensprognos: chans för norrsken rakt ovanför (NOAA OVATION) som lysande band på 110 km höjd, Kp-index och chansen över nio svenska orter | NOAA SWPC (fri data, ingen nyckel) | Aurora Forecast / Norrskensprognos, under Weather |
 | Väder nu: ca 185 SMHI-stationer (temperatur, vind, byar, nederbörd senaste timmen) och SMHI:s prognos för platsen vid klick | SMHI metobs och prognos snow1g (CC BY 4.0, ingen nyckel) | Weather Now (Sweden) / Väder nu, under Weather |
+| Luftkvalitet: ca 75 SMHI-mätstationer (NO2, PM10, PM2.5, O3) på europeiska EAQI-skalan, tillsammans med Kanadas stationer | SMHI Datavärdskap luft (CC BY 4.0, ingen nyckel) | Air quality / Luftkvalitet, under Weather |
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
@@ -60,6 +61,21 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-04 (luftkvalitet i Sverige från SMHI)
+- Lagret "Air quality" (Luftkvalitet) under Weather visar nu även svenska
+  mätstationer, inte bara Kanada. Varje station får det europeiska
+  luftkvalitetsindexet EAQI (1–6) efter sitt sämsta ämne av NO2, PM10, PM2.5
+  och O3, och färgas med lagrets fyra band (1–2 låg, 3 måttlig, 4 hög, 5–6
+  mycket hög). Kortet visar halterna, t.ex. "NO2 23,7 · PM10 12 µg/m³".
+- Data: SMHI:s Datavärdskap luft (öppna data, CC BY 4.0, ingen nyckel) via
+  `/api/air-quality-se`. SMHI har ca 1 300 serier för de fyra ämnena men de
+  flesta är nedlagda, så servern letar upp de aktiva en gång i veckan (tar ett par
+  minuter, sparas i `.gev-cache/smhi-air-quality-series.json`)
+  och hämtar sedan bara dem, högst var 15:e minut. Första gången lagret slås
+  på visas Kanada direkt och Sverige när sökningen är klar.
+- EAQI räknas här på timvärden för alla fyra ämnena (EEA använder
+  dygnsmedel för partiklar), så partikelvärdena kan slå något snabbare.
+- Kanada (ECCC AQHI) ligger kvar. Faller ett av nätverken visas det andra.
 ### 2026-11-04 (väder nu och prognos från SMHI)
 - Nytt lager "Väder nu (Sverige)" under Weather: SMHI:s ca 185 väderstationer med
   senaste timvärdet, färgade efter lufttemperatur (knapp VIND byter till

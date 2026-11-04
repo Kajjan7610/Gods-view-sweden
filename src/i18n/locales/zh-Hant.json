@@ -3253,5 +3253,8 @@
   "TEMPERATURE": "氣溫",
   "Dots are SMHI’s weather stations with their latest hourly reading. Click a station for the reading and SMHI’s forecast for the spot.": "圓點是 SMHI 的氣象站及其最新整點讀數。點擊測站查看讀數及該地的 SMHI 預報。",
   "Malformed SMHI weather snapshot": "SMHI 天氣快照格式錯誤",
-  "Weather Now (Sweden)": "目前天氣（瑞典）"
+  "Weather Now (Sweden)": "目前天氣（瑞典）",
+  "Canada (ECCC AQHI) and Sweden (SMHI, European EAQI)": "加拿大（ECCC AQHI）和瑞典（SMHI，歐洲 EAQI）",
+  "Sweden · SMHI measurements on the European EAQI": "瑞典 · SMHI 量測，依歐洲 EAQI",
+  "Malformed SMHI air-quality response": "SMHI 空氣品質回應格式錯誤"
 }

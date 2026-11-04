@@ -1,5 +1,9 @@
 import { readResponseJsonCapped } from '../../sources/httpBody.js';
-import { normalizeAqhiStations, normalizeAqhiObservations } from './model.js';
+import {
+  normalizeAqhiStations,
+  normalizeAqhiObservations,
+  normalizeSmhiReadings,
+} from './model.js';
 
 // A portable export (package.json): no i18n here. Failures stay English data;
 // the Layers panel and the Weather card show them translated.
@@ -105,6 +109,64 @@ export function createEcccAirQualitySource({
       if (!readings)
         throw new Error(msg('Malformed AQHI observation response'));
       return readings;
+    },
+  };
+}
+
+/**
+ * SMHI's Swedish air-quality stations through the same-origin proxy
+ * (/api/air-quality-se), scored on the European EAQI. The proxy answers 503
+ * while it is still discovering which of SMHI's series are active.
+ * @param {object} [options]
+ * @param {Function} [options.fetchImpl]
+ * @param {() => number} [options.now]
+ * @returns {{getSnapshot: Function}}
+ */
+export function createSmhiAirQualitySource({
+  fetchImpl = (...args) => globalThis.fetch(...args),
+  now = () => Date.now(),
+} = {}) {
+  return {
+    async getSnapshot({ signal } = {}) {
+      signal?.throwIfAborted();
+      const response = await fetchImpl('/api/air-quality-se', { signal });
+      if (!response.ok) {
+        try {
+          await response.body?.cancel();
+        } catch {
+          /* no-op */
+        }
+        throw new Error(`SMHI air quality HTTP ${response.status}`);
+      }
+      const payload = await readResponseJsonCapped(
+        response,
+        MAX_RESPONSE_BYTES,
+        signal,
+      );
+      if (!Array.isArray(payload?.stations))
+        throw new Error(msg('Malformed SMHI air-quality response'));
+      return normalizeSmhiReadings(payload.stations, now());
+    },
+  };
+}
+
+/**
+ * Several networks as one source: their readings side by side. A network
+ * that fails is left out while another answers; only when every network
+ * fails does the snapshot fail, with the first error.
+ * @param {Array<{getSnapshot: Function}>} sources
+ * @returns {{getSnapshot: Function}}
+ */
+export function createCombinedAirQualitySource(sources) {
+  return {
+    async getSnapshot(options = {}) {
+      const results = await Promise.allSettled(
+        sources.map((source) => source.getSnapshot(options)),
+      );
+      options.signal?.throwIfAborted();
+      const ok = results.filter((result) => result.status === 'fulfilled');
+      if (!ok.length) throw results[0].reason;
+      return ok.flatMap((result) => result.value);
     },
   };
 }

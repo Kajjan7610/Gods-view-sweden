@@ -3628,5 +3628,8 @@
   "TEMPERATURE": "درجة الحرارة",
   "Dots are SMHI’s weather stations with their latest hourly reading. Click a station for the reading and SMHI’s forecast for the spot.": "النقاط هي محطات الطقس التابعة لـ SMHI مع آخر قراءة كل ساعة. انقر على محطة لعرض القراءة وتوقعات SMHI للمكان.",
   "Malformed SMHI weather snapshot": "لقطة طقس SMHI مشوّهة",
-  "Weather Now (Sweden)": "الطقس الآن (السويد)"
+  "Weather Now (Sweden)": "الطقس الآن (السويد)",
+  "Canada (ECCC AQHI) and Sweden (SMHI, European EAQI)": "كندا (ECCC AQHI) والسويد (SMHI، مؤشر EAQI الأوروبي)",
+  "Sweden · SMHI measurements on the European EAQI": "السويد · قياسات SMHI وفق مؤشر EAQI الأوروبي",
+  "Malformed SMHI air-quality response": "استجابة جودة الهواء من SMHI مشوّهة"
 }
