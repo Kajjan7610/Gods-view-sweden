@@ -202,7 +202,8 @@
     "ΔN",
     "Ⅱ PAUSE",
     "▲ {frp} MW",
-    "USA"
+    "USA",
+    "Wind {speed} m/s"
   ],
   "es": [
     "1090 MHz",
@@ -523,7 +524,9 @@
     "Obstacle",
     "Restriction",
     "INCIDENTS",
-    "Europe"
+    "Europe",
+    "Air {air}",
+    "AIR"
   ],
   "it": [
     "1090 MHz",

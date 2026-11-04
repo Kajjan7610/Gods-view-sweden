@@ -365,6 +365,13 @@ export const DATA_CREDITS = [
       '(<a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a>)',
   },
   {
+    key: 'trafikverket-weather',
+    html:
+      'Road weather stations (Sweden): ' +
+      '<a href="https://www.trafikverket.se/e-tjanster/trafikverkets-oppna-api-for-trafikinformation/" target="_blank" rel="noopener">Trafikverket open API</a> ' +
+      '(<a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a>)',
+  },
+  {
     key: 'trafikverket-cctv',
     html:
       'Road cameras (Sweden): ' +

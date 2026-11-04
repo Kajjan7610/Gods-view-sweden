@@ -28,6 +28,7 @@ import { weatherProxy } from './weather.js';
 import { firePerimetersProxy } from './firePerimeters.js';
 import { gnssIntegrityProxy } from './gnssIntegrity.js';
 import { trafikverketRoadsProxy } from './trafikverketRoads.js';
+import { trafikverketWeatherProxy } from './trafikverketWeather.js';
 import { ghostMapsProxy } from './ghostMaps.js';
 import { droneAirspaceProxy } from './droneAirspace.js';
 import { cycloneProxy } from './cyclones.js';
@@ -81,6 +82,7 @@ function localProviderPlugins({
     firePerimetersProxy(),
     gnssIntegrityProxy(),
     trafikverketRoadsProxy(),
+    trafikverketWeatherProxy(),
     ghostMapsProxy(),
     droneAirspaceProxy(),
     keySetupEndpoint(),

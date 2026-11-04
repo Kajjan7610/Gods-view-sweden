@@ -470,6 +470,9 @@ export const VOICE_OFF_LAYERS = Object.freeze({
   // query for this layer wait until there is room.
   'drone-airspace':
     'informational airspace layer; no room in the prompt budget',
+  // Swedish fork layers: the prompt budget has no room for them either.
+  'trafikverket-weather':
+    'Swedish road weather stations; no room in the prompt budget',
 });
 
 const TYPE_NAMES = Object.freeze({

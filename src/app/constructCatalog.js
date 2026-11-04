@@ -29,6 +29,7 @@ import { createApplicationAirQuality } from './layers/airQuality.js';
 import { createApplicationFirePerimeters } from './layers/perimeters.js';
 import { createApplicationGnssIntegrity } from './layers/gnss.js';
 import { createApplicationTrafikverketRoads } from './layers/trafikverketRoads.js';
+import { createApplicationTrafikverketWeather } from './layers/trafikverketWeather.js';
 import { createApplicationGhostMaps } from './layers/ghostMaps.js';
 import { createApplicationDroneAirspace } from './layers/droneAirspace.js';
 import { createApplicationCables } from './layers/submarineCables.js';
@@ -136,6 +137,9 @@ export function createApplicationCatalog({
         }),
         createApplicationTrafikverketRoads({
           source: sources['trafikverket-roads'],
+        }),
+        createApplicationTrafikverketWeather({
+          source: sources['trafikverket-weather'],
         }),
         createApplicationGhostMaps({ source: sources['s2-ghostmaps'] }),
         createApplicationDroneAirspace({

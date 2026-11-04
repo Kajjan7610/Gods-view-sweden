@@ -14,6 +14,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Väglag och händelser (olyckor, avstängda vägar, vägarbeten, hinder, färjor) | Trafikverket, `RoadCondition` och `Situation` | Road Conditions (Sweden), under Events |
 | Nederbördsradar, Norden (var 5:e minut, senaste timmen) | SMHI, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Nordics) |
 | Nederbördsradar, Europa inkl. Norge, Finland, Danmark och Baltikum (var 5:e minut) | EUMETNET OPERA, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Europe) |
+| Vägväder: ca 830 väderstationer längs vägarna (vägbanans och luftens temperatur, daggpunkt, vind, sikt, nederbörd; halkrisk markeras) | Trafikverket, objekt `WeatherMeasurepoint` | Road Weather (Sweden), under Events |
 
 Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s och OPERA:s radar är CC BY 4.0 (källa: SMHI respektive EUMETNET OPERA). Källor, villkor och tekniska detaljer står i
 [DATA_SOURCES.md](DATA_SOURCES.md).
@@ -50,6 +51,32 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-04 (vägväder)
+- Nytt lager "Road Weather (Sweden)" under Events, direkt under väglaget: Trafikverkets
+  ca 830 vägväderstationer (samma nyckel som kamerorna, CC0). Prickarna färgas efter
+  vägbanans temperatur (knapp AIR byter till lufttemperatur) i klasserna ≤ −10, −10…−5,
+  −5…0, 0…+3, +3…+8 och över +8 °C. Inzoomat skrivs temperaturen bredvid varje station
+  (knapp VALUES).
+- Vit ring = halkrisk, appens egen bedömning: vägbanan ≤ 0 °C och kallare än daggpunkten
+  (rimfrost) eller nederbörd på den, eller is/snö uppmätt av en vägbanesensor när vägen
+  är högst +1 °C. Knappen ICE RISK ONLY visar bara de stationerna.
+- Klick på en station ger ett kort med vägbana, luft, daggpunkt, fukt, vind och byar,
+  nederbörd senaste 30 min, sikt under 10 km, vägbanesensorns läge och friktion (där den
+  finns) och mättid. Data uppdateras var 5:e minut; stationer utan mätning på 6 timmar
+  visas inte.
+- Svenska lager får delningskoder bakifrån i serien `00`–`0z`: vägväder är `0z`, nästa blir
+  `0y`, `0x` … Originalets nästa lager tar `00`, `01` …, så de krockar inte på länge.
+  (Koder längre bak, som `zz`, skulle göra varje delningslänk ~170 byte längre.)
+- Röststyrningen hoppar över vägvädret: originalets röstprompt är redan vid sin
+  storleksgräns, precis som för deras eget luftrumslager.
+- Trafikverkets gemensamma serverdel (nyckel, cache, stale-läge) ligger nu i
+  `server/providers/trafikverketProxy.js` och delas av väglag och vägväder.
+
+### 2026-11-04 (synk med originalet, kväll)
+- 28 nya commits från originalet: kameradata för Bosch MIC, infrastrukturlagrets
+  markprovtagning och rättade översättningar för textchatten. Språkfilerna krockade
+  bara där båda sidor lagt till texter sist; de slogs ihop nyckel för nyckel.
 
 ### 2026-11-04 (OPERA-radar för Europa)
 - Ny radarknapp "Europe" i Rain radar: EUMETNETs OPERA-komposit av ett 150-tal
