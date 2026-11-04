@@ -29,6 +29,17 @@ export function createState({ services }) {
 
   layerState._activeCameraId = null;
 
+  // True while the active camera is the layer's own default pick (nearest the
+  // view) rather than one the person chose; enable() may then re-pick it.
+
+  layerState._activeCameraAuto = false;
+
+  // Until this time (epoch ms) a default pick follows the settling view.
+
+  layerState._defaultPickUntil = 0;
+
+  layerState._defaultPickTimer = null;
+
   layerState._coverageMode = 'on';
   // 'off' | 'on' (wireframes) | 'viewshed' (color-coded volumes)
 

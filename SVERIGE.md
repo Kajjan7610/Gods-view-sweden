@@ -49,6 +49,12 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-04 (kamerapanelens startkamera)
+- Kamerapanelen startar på kameran närmast vyn (t.ex. Vallbymotet i Västerås) i
+  stället för katalogens första kamera i Austin. Under 30 s efter start följer valet
+  med när vyn sätter sig (inflygning, sparad vy); en kamera du själv väljer
+  (klick, PREV/NEXT, listan, NEAREST, delningslänk) ändras aldrig.
+
 ### 2026-11-04 (startvy)
 - Ny laddning utan delningslänk flyger till Västerås i stället för Austin, TX
   (`HOME_VIEW` i `src/camera.js`); laddningstexten "Flying to {place}..." översatt

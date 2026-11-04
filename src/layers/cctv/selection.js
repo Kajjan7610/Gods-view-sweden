@@ -82,6 +82,7 @@ export function createSelection({
       return CCTV_ACTIVATION_RESULT.UNCHANGED;
     }
     layerState._activeCameraId = cameraId;
+    layerState._activeCameraAuto = false;
     layerState._autoHopSuspended = false;
     // A real activation creates projection work — wake the self-stopping loop.
     parts.projection.startProjectionLoop();

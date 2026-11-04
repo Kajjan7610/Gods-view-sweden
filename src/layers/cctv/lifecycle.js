@@ -14,6 +14,8 @@ import {
 } from './policy.js';
 
 const MIN_TURN_COS = Math.cos((VIEW_MOTION_MIN_TURN_DEG * Math.PI) / 180);
+/** How long a default camera pick follows the settling start view. */
+const DEFAULT_PICK_FOLLOW_MS = 30_000;
 
 export function createLifecycle({
   state: layerState,
@@ -34,6 +36,7 @@ export function createLifecycle({
    * set changed since they were last told, including by motion passes.
    */
   function settleView() {
+    followViewWithDefaultPick();
     const changed = parts.rendering.refreshHorizonCulling();
     noteViewPose();
     parts.geometryQueue.enqueueViewGeometry();
@@ -101,9 +104,63 @@ export function createLifecycle({
 
   /** Resets all module-scoped runtime state to initial values. */
 
+  /**
+   * Default the active camera to the one nearest the current view (the
+   * catalog's first camera only when the view is unknown), marked as an
+   * automatic pick so a later enable() can follow the view again. Any explicit
+   * activation clears the mark (selection.setActiveCamera).
+   */
+  function pickDefaultCamera() {
+    if (!layerState._records.length) return;
+    layerState._activeCameraId =
+      parts.navigation?.nearestCameraIdToViewer?.() ||
+      layerState._records[0].camera.id;
+    layerState._activeCameraAuto = true;
+    layerState._defaultPickUntil = Date.now() + DEFAULT_PICK_FOLLOW_MS;
+    // A share-link restore may move the camera without a moveEnd reaching
+    // this layer, so the window also polls once a second.
+    stopDefaultPickFollow();
+    layerState._defaultPickTimer = setInterval(() => {
+      if (
+        !layerState._activeCameraAuto ||
+        Date.now() > layerState._defaultPickUntil
+      ) {
+        stopDefaultPickFollow();
+        return;
+      }
+      followViewWithDefaultPick();
+    }, 1000);
+    // Never keep a Node process (tests, tooling) alive for the window.
+    layerState._defaultPickTimer.unref?.();
+  }
+
+  function stopDefaultPickFollow() {
+    clearInterval(layerState._defaultPickTimer);
+    layerState._defaultPickTimer = null;
+  }
+
+  /**
+   * The catalog and enable() can both run before the start view exists (the
+   * fly-in, a share-link restore), when the camera still hangs over Cesium's
+   * default view of North America. For a short window after a default pick,
+   * each settled view re-picks the nearest camera, through the full
+   * activation path; a camera the person chose ends the window at once.
+   */
+  function followViewWithDefaultPick() {
+    if (!layerState._enabled || !layerState._activeCameraAuto) return;
+    if (Date.now() > (layerState._defaultPickUntil || 0)) return;
+    const nearest = parts.navigation?.nearestCameraIdToViewer?.();
+    if (!nearest || nearest === layerState._activeCameraId) return;
+    parts.selection.setActiveCamera(nearest);
+    // Still the layer's own pick, so the window keeps following.
+    layerState._activeCameraAuto = true;
+    parts.presentation.notifyListeners();
+  }
+
   function clearRuntimeState() {
     parts.geometryQueue.stopGeometryLoadQueue();
     stopViewMotionTimer();
+    stopDefaultPickFollow();
     // Idempotent — also covers a re-init without a prior destroy().
     parts.cards.teardownAmbientCards();
     parts.projection.clearProjectionOverlay();
@@ -302,7 +359,7 @@ export function createLifecycle({
       if (layerState._records.length > 0) {
         // Projection runtime + first frame fetch are deferred to enable() so
         // initializing the catalog stays render-cheap.
-        layerState._activeCameraId = layerState._records[0].camera.id;
+        pickDefaultCamera();
       }
 
       // Task 5: if the prior batch lost init's bounded race, apply it post-hoc
@@ -507,8 +564,13 @@ export function createLifecycle({
           );
         return Boolean(coverage && layerState._recordById.has(coverage[1]));
       });
-      if (!layerState._activeCameraId && layerState._records.length) {
-        layerState._activeCameraId = layerState._records[0].camera.id;
+      // An automatic pick follows the view to wherever the person is looking
+      // now; a camera they chose stays chosen.
+      if (
+        (!layerState._activeCameraId || layerState._activeCameraAuto) &&
+        layerState._records.length
+      ) {
+        pickDefaultCamera();
         layerState._autoHopSuspended = false;
       }
       const activeRecord = parts.selection.getActiveRecord();
@@ -542,6 +604,7 @@ export function createLifecycle({
     disable() {
       services.credits?.hideOsmCredit?.(layerState._viewer, 'cctv');
       layerState._enabled = false;
+      stopDefaultPickFollow();
       unregisterPickOwner('cctv');
       // ADJUST mode does not survive a layer toggle — predictable re-entry.
       layerState._calibrationMode = false;
