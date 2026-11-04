@@ -32,7 +32,9 @@
     "hPa",
     "{source} HTTP {status}",
     "▲ {frp} MW",
-    "{town} {chance} %"
+    "{town} {chance} %",
+    "Svenska kraftnät · {time}",
+    "{mw} MW"
   ],
   "de": [
     "1090 MHz",
@@ -207,7 +209,9 @@
     "Wind {speed} m/s",
     "Information",
     "≥ {value} MW",
-    "{town} {chance} %"
+    "{town} {chance} %",
+    "Svenska kraftnät · {time}",
+    "{mw} MW"
   ],
   "es": [
     "1090 MHz",
@@ -342,7 +346,10 @@
     "24 H",
     "fire confidence filter|Nominal+",
     "≥ {value} MW",
-    "{town} {chance} %"
+    "{town} {chance} %",
+    "Svenska kraftnät · {time}",
+    "nuclear",
+    "{mw} MW"
   ],
   "fr": [
     "1090 MHz",
@@ -538,7 +545,10 @@
     "24 H",
     "Information",
     "≥ {value} MW",
-    "{town} {chance} %"
+    "{town} {chance} %",
+    "Svenska kraftnät · {time}",
+    "Import {import} MW · export {export} MW",
+    "{mw} MW"
   ],
   "it": [
     "1090 MHz",
@@ -715,7 +725,10 @@
     "▲ {frp} MW",
     "USA",
     "≥ {value} MW",
-    "{town} {chance} %"
+    "{town} {chance} %",
+    "Svenska kraftnät · {time}",
+    "Import {import} MW · export {export} MW",
+    "{mw} MW"
   ],
   "ja": [
     "1090 MHz",
@@ -766,7 +779,9 @@
     "ΔN",
     "▲ {frp} MW",
     "≥ {value} MW",
-    "{town} {chance} %"
+    "{town} {chance} %",
+    "Svenska kraftnät · {time}",
+    "{mw} MW"
   ],
   "pt": [
     "1090 MHz",
@@ -902,7 +917,10 @@
     "24 H",
     "fire confidence filter|Nominal+",
     "≥ {value} MW",
-    "{town} {chance} %"
+    "{town} {chance} %",
+    "Svenska kraftnät · {time}",
+    "nuclear",
+    "{mw} MW"
   ],
   "ru": [
     "AIS: --",
@@ -921,7 +939,8 @@
     "S2 · {name}",
     "VS",
     "WHOT/BHOT",
-    "{town} {chance} %"
+    "{town} {chance} %",
+    "Svenska kraftnät · {time}"
   ],
   "sv": [
     "1090 MHz",
@@ -1084,7 +1103,10 @@
     "{zone} · {price} kr",
     "Information",
     "≥ {value} MW",
-    "{town} {chance} %"
+    "{town} {chance} %",
+    "Svenska kraftnät · {time}",
+    "Import {import} MW · export {export} MW",
+    "{mw} MW"
   ],
   "uk": [
     "AIS: --",
@@ -1098,7 +1120,8 @@
     "REC",
     "S2 GhostMaps",
     "WHOT/BHOT",
-    "{town} {chance} %"
+    "{town} {chance} %",
+    "Svenska kraftnät · {time}"
   ],
   "zh-CN": [
     "1090 MHz",
@@ -1156,7 +1179,9 @@
     "ΔE",
     "ΔN",
     "▲ {frp} MW",
-    "≥ {value} MW"
+    "≥ {value} MW",
+    "Svenska kraftnät · {time}",
+    "{mw} MW"
   ],
   "zh-Hant": [
     "1090 MHz",
@@ -1214,6 +1239,8 @@
     "ΔE",
     "ΔN",
     "▲ {frp} MW",
-    "≥ {value} MW"
+    "≥ {value} MW",
+    "Svenska kraftnät · {time}",
+    "{mw} MW"
   ]
 }

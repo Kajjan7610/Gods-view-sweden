@@ -13,6 +13,7 @@ import { createTrafikverketWeatherSource } from '../layers/roadWeather/source.js
 import { createSmhiWarningsSource } from '../layers/smhiWarnings/source.js';
 import { createPolisenEventsSource } from '../layers/policeEvents/source.js';
 import { createElectricityPricesSource } from '../layers/electricity/source.js';
+import { createPowerGridSource } from '../layers/powerGrid/source.js';
 import { createSrTrafficSource } from '../layers/srTraffic/source.js';
 import { createSeaWeatherSource } from '../layers/seaWeather/source.js';
 import { createAuroraSource } from '../layers/aurora/source.js';
@@ -36,6 +37,7 @@ export function createReferenceSources() {
     'smhi-warnings': createSmhiWarningsSource(),
     'polisen-events': createPolisenEventsSource(),
     'electricity-prices': createElectricityPricesSource(),
+    'power-grid': createPowerGridSource(),
     'sr-traffic': createSrTrafficSource(),
     'sea-weather': createSeaWeatherSource(),
     aurora: createAuroraSource(),

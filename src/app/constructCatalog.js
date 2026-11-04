@@ -33,6 +33,7 @@ import { createApplicationTrafikverketWeather } from './layers/trafikverketWeath
 import { createApplicationSmhiWarnings } from './layers/smhiWarnings.js';
 import { createApplicationPolisenEvents } from './layers/polisenEvents.js';
 import { createApplicationElectricityPrices } from './layers/electricityPrices.js';
+import { createApplicationPowerGrid } from './layers/powerGrid.js';
 import { createApplicationSrTraffic } from './layers/srTraffic.js';
 import { createApplicationSeaWeather } from './layers/seaWeather.js';
 import { createApplicationAurora } from './layers/aurora.js';
@@ -156,6 +157,9 @@ export function createApplicationCatalog({
         }),
         createApplicationElectricityPrices({
           source: sources['electricity-prices'],
+        }),
+        createApplicationPowerGrid({
+          source: sources['power-grid'],
         }),
         createApplicationSrTraffic({
           source: sources['sr-traffic'],

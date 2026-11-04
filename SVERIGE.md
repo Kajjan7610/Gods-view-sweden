@@ -23,6 +23,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Väder nu: ca 185 SMHI-stationer (temperatur, vind, byar, nederbörd senaste timmen) och SMHI:s prognos för platsen vid klick | SMHI metobs och prognos snow1g (CC BY 4.0, ingen nyckel) | Weather Now (Sweden) / Väder nu, under Weather |
 | Luftkvalitet: ca 75 SMHI-mätstationer (NO2, PM10, PM2.5, O3) på europeiska EAQI-skalan, tillsammans med Kanadas stationer | SMHI Datavärdskap luft (CC BY 4.0, ingen nyckel) | Air quality / Luftkvalitet, under Weather |
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
+| Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (pilar i flödesriktningen, MW), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
 | Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
 Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s radar och varningar samt OPERA:s radar är CC BY 4.0 (källa: SMHI respektive EUMETNET OPERA). Källor, villkor och tekniska detaljer står i
@@ -61,6 +62,19 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-04 (kraftsystemet från Svenska kraftnät)
+- Nytt lager "Kraftsystemet (Sverige)" under Infrastructure: en pil på var och
+  en av de 14 förbindelserna till och mellan elområdena SE1–SE4 (och till
+  Norge, Finland, Danmark, Tyskland, Polen och Litauen), i flödesriktningen och
+  lika tjock som flödet, med MW utskrivet. Blått = mellan svenska elområden,
+  grönt = in till Sverige, orange = ut från Sverige.
+- Klick på ett elområde: import och export, varje förbindelses flöde, och
+  Sveriges produktion (kärnkraft, vatten, vind, övrigt) och förbrukning just nu.
+- Data: Svenska kraftnäts kontrollrum (samma tjänst som sidan
+  svk.se/om-kraftsystemet/kontrollrummet använder, ingen nyckel) via
+  `/api/power-grid`, högst var 5:e minut. Tjänsten är odokumenterad och har
+  ingen publicerad licens; källan anges som Svenska kraftnät.
+- Delningskod `0r`.
 ### 2026-11-04 (luftkvalitet i Sverige från SMHI)
 - Lagret "Air quality" (Luftkvalitet) under Weather visar nu även svenska
   mätstationer, inte bara Kanada. Varje station får det europeiska

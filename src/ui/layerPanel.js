@@ -66,6 +66,7 @@ const PANEL_GROUPS = [
       'telegeography-submarine-cables',
       'local-dams',
       'electricity-prices',
+      'power-grid',
       'sea-marks',
       'ski-pistes',
     ],

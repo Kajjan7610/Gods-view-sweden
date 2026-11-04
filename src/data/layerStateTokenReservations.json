@@ -21,6 +21,7 @@
   ["military-awareness", "g"],
   ["military-installations", "i"],
   ["polisen-events", "0x"],
+  ["power-grid", "0r"],
   ["radio", "r"],
   ["recent-imagery", "1"],
   ["rocket-launches", "x"],

@@ -37,6 +37,7 @@ import { seaWeatherProxy } from './seaWeather.js';
 import { auroraProxy } from './aurora.js';
 import { smhiWeatherProxy } from './smhiWeather.js';
 import { smhiAirQualityProxy } from './smhiAirQuality.js';
+import { powerGridProxy } from './powerGrid.js';
 import { ghostMapsProxy } from './ghostMaps.js';
 import { droneAirspaceProxy } from './droneAirspace.js';
 import { cycloneProxy } from './cyclones.js';
@@ -99,6 +100,7 @@ function localProviderPlugins({
     auroraProxy(),
     smhiWeatherProxy(),
     smhiAirQualityProxy(),
+    powerGridProxy(),
     ghostMapsProxy(),
     droneAirspaceProxy(),
     keySetupEndpoint(),
