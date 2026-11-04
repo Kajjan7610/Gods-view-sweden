@@ -3374,5 +3374,14 @@
   "On time": "По расписанию",
   "departed {station}": "отправился из {station}",
   "at {station}": "на станции {station}",
-  "Towards {destination}": "В направлении {destination}"
+  "Towards {destination}": "В направлении {destination}",
+  "Applies to all of Sweden": "Касается всей Швеции",
+  "{place} · drawn at the county centre": "{place} · показано в центре лена",
+  "krisinformation.se ↗ · click card to open": "krisinformation.se ↗ · нажмите на карточку, чтобы открыть",
+  "CRISIS INFORMATION": "КРИЗИСНАЯ ИНФОРМАЦИЯ",
+  "Open {title} at krisinformation.se": "Открыть {title} на krisinformation.se",
+  "VMA (important public announcement)": "VMA (важное сообщение для населения)",
+  "Crisis information": "Кризисная информация",
+  "CRISIS INFO": "КРИЗИС. ИНФО",
+  "Also show VMAs and crisis news from Krisinformation.se (in Swedish), placed at the municipality or county they name": "Показывать также VMA и кризисные новости Krisinformation.se (на шведском) в указанном муниципалитете или лене"
 }

@@ -81,10 +81,10 @@ test('one GET serves normalized warning areas, then the 5-minute cache', async (
   assert.equal(calls[0].url, SMHI_WARNINGS_URL);
   clock += 4 * 60_000;
   await request();
-  assert.equal(calls.length, 1, 'served from the cache');
+  assert.equal(calls.length, 3, 'served from the cache (SMHI, VMAs, news)');
   clock += 2 * 60_000;
   await request();
-  assert.equal(calls.length, 2, 'refreshed after 5 minutes');
+  assert.equal(calls.length, 6, 'refreshed after 5 minutes');
   assert.equal((await request('POST')).status, 405);
   assert.equal((await request('GET', '/other')).status, 404);
 });
@@ -109,4 +109,46 @@ test('a failed refresh serves the last snapshot marked stale, then gives up', as
   const gone = await request();
   assert.equal(gone.status, 502);
   assert.equal(gone.json().error, 'smhi_warnings_unavailable');
+});
+
+test('Krisinformation rides along, and its failure leaves the warnings serving', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  const warnings = [];
+  t.mock.method(console, 'warn', (...args) => warnings.push(args.join(' ')));
+  let clock = Date.parse('2026-11-04T17:00:00Z');
+  let crisisDown = false;
+  const request = harness({
+    now: () => clock,
+    fetchImpl: async (url) => {
+      if (String(url).includes('krisinformation')) {
+        if (crisisDown) return new Response('down', { status: 503 });
+        return Response.json(
+          String(url).includes('/vmas')
+            ? []
+            : [
+                {
+                  identifier: '1238',
+                  headline: 'Cyberangrepp',
+                  published: '2026-11-03T12:33:06+01:00',
+                  area: [{ type: 'Country', description: 'Sverige' }],
+                },
+              ],
+        );
+      }
+      return Response.json(PAYLOAD);
+    },
+  });
+  const first = (await request()).json();
+  assert.equal(first.areas.length, 1);
+  assert.deepEqual(
+    first.crisis.map((row) => [row.id, row.scope]),
+    [['news:1238', 'country']],
+  );
+  crisisDown = true;
+  clock += 6 * 60_000;
+  const second = (await request()).json();
+  assert.equal(second.areas.length, 1, 'warnings unaffected');
+  assert.equal(second.crisis.length, 1, 'last crisis list kept');
+  assert.equal(second.crisisStale, true);
+  assert.ok(warnings.some((line) => line.includes('krisinformation')));
 });

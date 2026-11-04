@@ -1,6 +1,7 @@
 /** Card model for a selected SMHI warning area. Pure — no Cesium types. */
 import { getLocale, msg, t } from '../../i18n/index.js';
 import { levelColor } from './records.js';
+import { CRISIS_KINDS } from './crisis.js';
 
 export const SMHI_WARNINGS_OVERLAY_SOURCE_ID = 'smhi-warnings';
 /** SMHI's own page with every warning and message in full. */
@@ -122,5 +123,48 @@ export function buildWarningCard(
     title,
     details,
     accent: levelColor(row.level),
+  };
+}
+
+/**
+ * Card for one Krisinformation.se message; a linked card opens it there.
+ * The texts are Swedish only, as MSB publishes them.
+ * @param {object} row A normalized crisis item.
+ * @param {{linkable?: boolean}} [options]
+ */
+export function buildCrisisCard(row, { linkable = false } = {}) {
+  const details = [];
+  const where =
+    row.scope === 'country'
+      ? t('Applies to all of Sweden')
+      : row.scope === 'county'
+        ? t('{place} · drawn at the county centre', { place: row.place })
+        : row.place;
+  if (where) details.push(where);
+  if (row.preamble) details.push(...foldText(row.preamble, 4));
+  const stamp = [
+    Number.isFinite(row.published) ? when(row.published) : null,
+    row.sender,
+  ].filter(Boolean);
+  if (stamp.length) details.push(stamp.join(' · '));
+  const link = linkable && row.link;
+  if (link) details.push(t('krisinformation.se ↗ · click card to open'));
+  const title =
+    `${row.kind === 'vma' ? 'VMA' : t('CRISIS INFORMATION')} · ${row.headline}`.toUpperCase();
+  return {
+    ...CARD_BASE,
+    id: `krisinformation-card:${row.id}`,
+    interactive: Boolean(link),
+    ...(link
+      ? {
+          accessibilityLabel: t('Open {title} at krisinformation.se', {
+            title,
+          }),
+        }
+      : undefined),
+    title,
+    details,
+    accent:
+      CRISIS_KINDS.find((kind) => kind.id === row.kind)?.color || '#40c4ff',
   };
 }

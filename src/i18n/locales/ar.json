@@ -3524,5 +3524,14 @@
   "On time": "في الموعد",
   "departed {station}": "غادر {station}",
   "at {station}": "في {station}",
-  "Towards {destination}": "باتجاه {destination}"
+  "Towards {destination}": "باتجاه {destination}",
+  "Applies to all of Sweden": "يشمل السويد كلها",
+  "{place} · drawn at the county centre": "{place} · مرسوم في مركز المقاطعة",
+  "krisinformation.se ↗ · click card to open": "krisinformation.se ↗ · انقر على البطاقة لفتحها",
+  "CRISIS INFORMATION": "معلومات الأزمات",
+  "Open {title} at krisinformation.se": "فتح {title} على krisinformation.se",
+  "VMA (important public announcement)": "VMA (رسالة مهمة إلى الجمهور)",
+  "Crisis information": "معلومات الأزمات",
+  "CRISIS INFO": "معلومات الأزمات",
+  "Also show VMAs and crisis news from Krisinformation.se (in Swedish), placed at the municipality or county they name": "عرض رسائل VMA وأخبار الأزمات من Krisinformation.se (بالسويدية) أيضًا، في البلدية أو المقاطعة المذكورة"
 }

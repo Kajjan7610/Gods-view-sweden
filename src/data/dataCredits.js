@@ -379,6 +379,12 @@ export const DATA_CREDITS = [
       '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>)',
   },
   {
+    key: 'krisinformation',
+    html:
+      'Crisis information (Sweden): ' +
+      '<a href="https://www.krisinformation.se/" target="_blank" rel="noopener">Krisinformation.se</a> (MSB)',
+  },
+  {
     key: 'polisen-events',
     html:
       'Police events (Sweden): ' +

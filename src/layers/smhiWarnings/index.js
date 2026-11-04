@@ -1,17 +1,26 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { WARNING_LEVELS, levelColor, warningLevel } from './records.js';
+import { CRISIS_KINDS } from './crisis.js';
+import { spreadAroundPlaces } from '../policeEvents/records.js';
 import {
   LEVEL_TITLES,
   SMHI_WARNINGS_OVERLAY_SOURCE_ID,
   SMHI_WARNINGS_PAGE,
+  buildCrisisCard,
   buildWarningCard,
 } from './cards.js';
 export * from './records.js';
 export * from './cards.js';
+export * from './crisis.js';
 export { createSmhiWarningsSource } from './source.js';
 
 const PICK_PREFIX = 'se-smhiwarn:';
+const CRISIS_PICK_PREFIX = 'se-krisinfo:';
+const CRISIS_LABELS = Object.freeze({
+  vma: msg('VMA (important public announcement)'),
+  news: msg('Crisis information'),
+});
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
   collisionCapacity: 1,
@@ -34,7 +43,8 @@ function anchorOf(row) {
 /**
  * Own one Swedish weather warning display: SMHI's impact-based warnings as
  * areas coloured by level (yellow, orange, red; messages behind a toggle),
- * paler while they have yet to start, with click-to-card selection. Share
+ * paler while they have yet to start, plus Krisinformation.se's VMAs and
+ * crisis news as points (KRISINFO), with click-to-card selection. Share
  * links carry it as token 0y.
  */
 export function createSmhiWarningsLayer({
@@ -60,8 +70,14 @@ export function createSmhiWarningsLayer({
   let _selectedId = null;
   let _selectedCardId = null;
   let _areas = [];
-  const _show = { messages: false, upcoming: true };
+  let _crisis = [];
+  const _show = { messages: false, upcoming: true, crisis: true };
   const _areaById = new Map();
+  const _crisisById = new Map();
+  /** Crisis items sharing a place (often the whole country) spread ~20 km apart. */
+  let _crisisPositions = new Map();
+  const crisisPoint = (row) => _crisisPositions.get(row.id) || row.point;
+  const visibleCrisis = () => (_show.crisis ? _crisis : []);
 
   const canSelect = () =>
     overlayHost && screenSpaceEventHandlerFactory && picking;
@@ -74,6 +90,24 @@ export function createSmhiWarningsLayer({
 
   function publishSelectedCard() {
     if (!canSelect()) return;
+    const crisis = _selectedId ? _crisisById.get(_selectedId) : null;
+    if (crisis) {
+      const card = buildCrisisCard(crisis, { linkable: Boolean(openExternal) });
+      card.position = Cesium.Cartesian3.fromDegrees(...crisisPoint(crisis));
+      if (card.interactive) {
+        card.activate = () => {
+          openExternal(crisis.link);
+          return true;
+        };
+      }
+      _selectedCardId = card.id;
+      overlayHost.setEntries(
+        SMHI_WARNINGS_OVERLAY_SOURCE_ID,
+        [card],
+        CARD_HOST_OPTIONS,
+      );
+      return;
+    }
     const row = _selectedId ? _areaById.get(_selectedId) : null;
     const anchor = row && anchorOf(row);
     if (!row || !anchor) {
@@ -105,6 +139,10 @@ export function createSmhiWarningsLayer({
   /** Resolve a scene pick to an area id of this layer, or null. */
   function pickedArea(picked) {
     const pickId = picking.resolvePickId(picked);
+    if (typeof pickId === 'string' && pickId.startsWith(CRISIS_PICK_PREFIX)) {
+      const crisisId = pickId.slice(CRISIS_PICK_PREFIX.length);
+      return _crisisById.has(crisisId) ? crisisId : null;
+    }
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     // Area ids are "<warning>:<area>"; the entity suffix is the last segment.
@@ -129,7 +167,9 @@ export function createSmhiWarningsLayer({
         { sourceId: SMHI_WARNINGS_OVERLAY_SOURCE_ID },
       );
       if (cardHit && cardHit.entryId === _selectedCardId) {
-        if (openExternal) openExternal(SMHI_WARNINGS_PAGE);
+        const crisis = _crisisById.get(_selectedId);
+        const link = crisis ? crisis.link : SMHI_WARNINGS_PAGE;
+        if (openExternal && link) openExternal(link);
         return;
       }
       const picked = _viewer.scene.pick(click.position);
@@ -211,6 +251,26 @@ export function createSmhiWarningsLayer({
           });
         });
       }
+      // Crisis messages on top of the areas: a VMA large, news smaller.
+      _crisisPositions = spreadAroundPlaces(visibleCrisis(), 20_000);
+      for (const row of visibleCrisis()) {
+        const vma = row.kind === 'vma';
+        entities.add({
+          id: `${CRISIS_PICK_PREFIX}${row.id}`,
+          position: Cesium.Cartesian3.fromDegrees(...crisisPoint(row)),
+          point: {
+            pixelSize: vma ? 16 : 11,
+            color: Cesium.Color.fromCssColorString(
+              CRISIS_KINDS.find((kind) => kind.id === row.kind)?.color ||
+                '#40c4ff',
+            ),
+            outlineColor: Cesium.Color.WHITE,
+            outlineWidth: vma ? 3 : 2,
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          },
+        });
+      }
     } finally {
       entities.resumeEvents();
     }
@@ -220,7 +280,11 @@ export function createSmhiWarningsLayer({
 
   function toggle(key) {
     _show[key] = !_show[key];
-    if (_selectedId && !visibleAreas().some((row) => row.id === _selectedId))
+    if (
+      _selectedId &&
+      !visibleAreas().some((row) => row.id === _selectedId) &&
+      !visibleCrisis().some((row) => row.id === _selectedId)
+    )
       _selectedId = null;
     render();
     if (!_selectedId) publishSelectedCard();
@@ -275,23 +339,30 @@ export function createSmhiWarningsLayer({
             : Date.now();
         _lastError = null;
         const signature = JSON.stringify(
-          snapshot.areas.map((row) => [
-            row.id,
-            row.level,
-            row.start,
-            row.end,
-            row.upcoming,
-            row.published,
-          ]),
+          snapshot.areas
+            .map((row) => [
+              row.id,
+              row.level,
+              row.start,
+              row.end,
+              row.upcoming,
+              row.published,
+            ])
+            .concat(
+              (snapshot.crisis || []).map((row) => [row.id, row.updated]),
+            ),
         );
         if (signature !== _signature) {
           _signature = signature;
           _areas = snapshot.areas;
           _areaById.clear();
           for (const row of _areas) _areaById.set(row.id, row);
+          _crisis = snapshot.crisis || [];
+          _crisisById.clear();
+          for (const row of _crisis) _crisisById.set(row.id, row);
           render();
           console.log(
-            `[Data:SmhiWarnings] Updated: ${_areas.length} warning areas`,
+            `[Data:SmhiWarnings] Updated: ${_areas.length} warning areas, ${_crisis.length} crisis messages`,
           );
         } else if (_selectedId) publishSelectedCard();
         _rowListener?.();
@@ -315,6 +386,8 @@ export function createSmhiWarningsLayer({
       layer.disable();
       _areaById.clear();
       _areas = [];
+      _crisisById.clear();
+      _crisis = [];
       _signature = null;
       if (_dataSource) {
         viewer.dataSources.remove(_dataSource, true);
@@ -340,6 +413,11 @@ export function createSmhiWarningsLayer({
           count: shown.filter((row) => row.level === code).length,
         }))
         .filter((item) => item.count > 0);
+      for (const { id, color } of [...CRISIS_KINDS].reverse()) {
+        const count = visibleCrisis().filter((row) => row.kind === id).length;
+        if (count)
+          legend.unshift({ label: t(CRISIS_LABELS[id]), color, count });
+      }
       if (!legend.length)
         legend.push({
           label: t('No warnings in effect'),
@@ -364,6 +442,15 @@ export function createSmhiWarningsLayer({
             title: t('Also show warnings that have yet to start, drawn paler'),
             onClick: () => toggle('upcoming'),
           },
+          {
+            id: 'crisis',
+            label: t('CRISIS INFO'),
+            active: _show.crisis,
+            title: t(
+              'Also show VMAs and crisis news from Krisinformation.se (in Swedish), placed at the municipality or county they name',
+            ),
+            onClick: () => toggle('crisis'),
+          },
         ],
         legend: legend.map((item, index) =>
           index === 0
@@ -385,6 +472,7 @@ export function createSmhiWarningsLayer({
         areas: _areas.length,
         red: shown.filter((row) => row.level === 'RED').length,
         orange: shown.filter((row) => row.level === 'ORANGE').length,
+        vma: visibleCrisis().filter((row) => row.kind === 'vma').length,
         lastUpdate: _lastUpdate,
         error: _lastError,
         stale: _stale,

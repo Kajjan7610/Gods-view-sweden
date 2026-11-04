@@ -3299,5 +3299,14 @@
   "On time": "No horário",
   "departed {station}": "partiu de {station}",
   "at {station}": "em {station}",
-  "Towards {destination}": "Sentido {destination}"
+  "Towards {destination}": "Sentido {destination}",
+  "Applies to all of Sweden": "Vale para toda a Suécia",
+  "{place} · drawn at the county centre": "{place} · posicionado no centro do condado",
+  "krisinformation.se ↗ · click card to open": "krisinformation.se ↗ · clique no cartão para abrir",
+  "CRISIS INFORMATION": "INFORMAÇÃO DE CRISE",
+  "Open {title} at krisinformation.se": "Abrir {title} no krisinformation.se",
+  "VMA (important public announcement)": "VMA (aviso importante ao público)",
+  "Crisis information": "Informação de crise",
+  "CRISIS INFO": "INFO CRISE",
+  "Also show VMAs and crisis news from Krisinformation.se (in Swedish), placed at the municipality or county they name": "Mostrar também os VMA e as notícias de crise do Krisinformation.se (em sueco), posicionados no município ou condado indicado"
 }

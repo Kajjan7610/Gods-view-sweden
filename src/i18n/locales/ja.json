@@ -3149,5 +3149,14 @@
   "On time": "定刻",
   "departed {station}": "{station} を発車",
   "at {station}": "{station} に停車",
-  "Towards {destination}": "{destination} 方面"
+  "Towards {destination}": "{destination} 方面",
+  "Applies to all of Sweden": "スウェーデン全土が対象",
+  "{place} · drawn at the county centre": "{place} · 県の中心に表示",
+  "krisinformation.se ↗ · click card to open": "krisinformation.se ↗ · カードをクリックして開く",
+  "CRISIS INFORMATION": "危機情報",
+  "Open {title} at krisinformation.se": "krisinformation.se で {title} を開く",
+  "VMA (important public announcement)": "VMA（市民への重要なお知らせ）",
+  "Crisis information": "危機情報",
+  "CRISIS INFO": "危機情報",
+  "Also show VMAs and crisis news from Krisinformation.se (in Swedish), placed at the municipality or county they name": "Krisinformation.se の VMA と危機ニュース（スウェーデン語）も、対象の自治体または県に表示"
 }

@@ -3224,5 +3224,14 @@
   "On time": "I tid",
   "departed {station}": "avgick från {station}",
   "at {station}": "vid {station}",
-  "Towards {destination}": "Mot {destination}"
+  "Towards {destination}": "Mot {destination}",
+  "Applies to all of Sweden": "Gäller hela Sverige",
+  "{place} · drawn at the county centre": "{place} · visas i länets mitt",
+  "krisinformation.se ↗ · click card to open": "krisinformation.se ↗ · klicka på kortet för att öppna",
+  "CRISIS INFORMATION": "KRISINFORMATION",
+  "Open {title} at krisinformation.se": "Öppna {title} på krisinformation.se",
+  "VMA (important public announcement)": "VMA (viktigt meddelande till allmänheten)",
+  "Crisis information": "Krisinformation",
+  "CRISIS INFO": "KRISINFO",
+  "Also show VMAs and crisis news from Krisinformation.se (in Swedish), placed at the municipality or county they name": "Visa även VMA och krisnyheter från Krisinformation.se, placerade i den kommun eller det län de gäller"
 }

@@ -3149,5 +3149,14 @@
   "On time": "準點",
   "departed {station}": "已從 {station} 出發",
   "at {station}": "在 {station}",
-  "Towards {destination}": "開往 {destination}"
+  "Towards {destination}": "開往 {destination}",
+  "Applies to all of Sweden": "適用於瑞典全境",
+  "{place} · drawn at the county centre": "{place} · 繪製於省中心",
+  "krisinformation.se ↗ · click card to open": "krisinformation.se ↗ · 點擊卡片開啟",
+  "CRISIS INFORMATION": "危機資訊",
+  "Open {title} at krisinformation.se": "在 krisinformation.se 開啟 {title}",
+  "VMA (important public announcement)": "VMA（重要公眾通告）",
+  "Crisis information": "危機資訊",
+  "CRISIS INFO": "危機資訊",
+  "Also show VMAs and crisis news from Krisinformation.se (in Swedish), placed at the municipality or county they name": "同時顯示 Krisinformation.se 的 VMA 與危機新聞（瑞典文），位於所涉及的市鎮或省"
 }

@@ -10,7 +10,7 @@ export function createSmhiWarningsSource({
 } = {}) {
   return {
     /**
-     * @returns {Promise<{areas: object[], stale: boolean,
+     * @returns {Promise<{areas: object[], crisis: object[], stale: boolean,
      *   fetchedAt: number|null}>}
      */
     async getSnapshot({ signal } = {}) {
@@ -37,6 +37,7 @@ export function createSmhiWarningsSource({
         throw new Error(msg('Malformed SMHI warnings snapshot'));
       return {
         areas: payload.areas,
+        crisis: Array.isArray(payload.crisis) ? payload.crisis : [],
         stale: payload.stale === true,
         fetchedAt: Number.isFinite(payload.fetchedAt)
           ? payload.fetchedAt

@@ -15,7 +15,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Nederbördsradar, Norden (var 5:e minut, senaste timmen) | SMHI, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Nordics) |
 | Nederbördsradar, Europa inkl. Norge, Finland, Danmark och Baltikum (var 5:e minut) | EUMETNET OPERA, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Europe) |
 | Vägväder: ca 830 väderstationer längs vägarna (vägbanans och luftens temperatur, daggpunkt, vind, sikt, nederbörd; halkrisk markeras) | Trafikverket, objekt `WeatherMeasurepoint` | Road Weather (Sweden), under Events |
-| Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk) | SMHI, IBWW-varningar (CC BY 4.0, ingen nyckel) | Weather Warnings (Sweden), under Weather |
+| Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk), samt VMA och krisnyheter som punkter | SMHI, IBWW-varningar (CC BY 4.0) och Krisinformation.se (MSB); ingen nyckel | Weather Warnings (Sweden), under Weather |
 | Polisens händelser (de 500 senaste notiserna, ca 10 dagar), placerade vid kommunens centralort | Polismyndigheten, `polisen.se/api/events` (öppna data, ange källan) | Police Events (Sweden), under Events |
 | Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
@@ -54,6 +54,20 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-04 (VMA och krisinformation)
+- Varningslagret "Weather Warnings (Sweden)" visar nu också Krisinformation.se:
+  VMA (viktigt meddelande till allmänheten) som stora röda punkter och
+  myndigheternas krisnyheter från de senaste tre dygnen som blå punkter.
+  Knappen KRISINFO slår av och på; den är på från början.
+- Meddelandena anger ett område men sällan en koordinat: en kommun hamnar vid
+  centralorten, ett län i snittet av länets centralorter och "hela Sverige" mitt
+  i landet (Flataklocken). Kortet säger vilket, visar ingressen, tid och avsändare
+  och öppnar meddelandet på krisinformation.se. Texten är svenska, som MSB
+  publicerar den.
+- Hämtas tillsammans med SMHI:s varningar var 5:e minut (ingen nyckel). Om
+  Krisinformation inte svarar fungerar varningarna ändå och senaste listan behålls.
+- I kväll: ingen VMA, två krisnyheter för hela landet.
 
 ### 2026-11-04 (tågförseningar)
 - Tågen i Transit färgas efter försening: lila som förut när de går i tid,

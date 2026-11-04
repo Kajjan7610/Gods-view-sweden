@@ -1,4 +1,10 @@
 import { normalizeWarnings } from '../../src/layers/smhiWarnings/records.js';
+import {
+  createCountyLookup,
+  normalizeCrisisItems,
+} from '../../src/layers/smhiWarnings/crisis.js';
+import { createPlaceLookup } from '../../src/layers/policeEvents/records.js';
+import { SWEDISH_MUNICIPALITIES } from './polisen/municipalities.js';
 import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 
@@ -6,6 +12,14 @@ import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 // document with every warning in effect or upcoming, polygons included.
 export const SMHI_WARNINGS_URL =
   'https://opendata-download-warnings.smhi.se/ibww/api/version/1/warning.json';
+// Krisinformation.se (MSB, no key): VMAs in effect and recent crisis news,
+// fetched with the warnings so everything serious sits in one layer.
+export const KRIS_VMAS_URL = 'https://api.krisinformation.se/v3/vmas';
+export const KRIS_NEWS_URL = 'https://api.krisinformation.se/v3/news?days=3';
+const crisisLookups = {
+  places: createPlaceLookup(SWEDISH_MUNICIPALITIES),
+  counties: createCountyLookup(SWEDISH_MUNICIPALITIES),
+};
 const TTL_MS = 5 * 60_000;
 /** Longest a failed refresh keeps serving the last snapshot, marked stale. */
 const STALE_MAX_MS = 60 * 60_000;
@@ -21,26 +35,57 @@ export function smhiWarningsProxy({
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 600 });
 
+  async function getJson(url, signal) {
+    const response = await fetchImpl(url, {
+      signal,
+      redirect: 'manual',
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) {
+      try {
+        await response.body?.cancel();
+      } catch {
+        /* no-op */
+      }
+      throw new Error(
+        `upstream HTTP ${response.status} (${new URL(url).host})`,
+      );
+    }
+    return readResponseJsonCapped(response, MAX_BODY_BYTES);
+  }
+
   async function load() {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
-      const response = await fetchImpl(SMHI_WARNINGS_URL, {
-        signal: controller.signal,
-        redirect: 'manual',
-        headers: { Accept: 'application/json' },
-      });
-      if (!response.ok) {
-        try {
-          await response.body?.cancel();
-        } catch {
-          /* no-op */
-        }
-        throw new Error(`upstream HTTP ${response.status}`);
-      }
-      const payload = await readResponseJsonCapped(response, MAX_BODY_BYTES);
+      const [warnings, vmas, news] = await Promise.allSettled([
+        getJson(SMHI_WARNINGS_URL, controller.signal),
+        getJson(KRIS_VMAS_URL, controller.signal),
+        getJson(KRIS_NEWS_URL, controller.signal),
+      ]);
+      if (warnings.status === 'rejected') throw warnings.reason;
       const fetchedAt = now();
-      return { ...normalizeWarnings(payload, fetchedAt), fetchedAt };
+      // Crisis messages are an addition: when Krisinformation fails, the
+      // warnings still serve and the last crisis list is kept.
+      const crisisOk =
+        vmas.status === 'fulfilled' && news.status === 'fulfilled';
+      if (!crisisOk)
+        console.warn(
+          `[smhi-warnings] krisinformation failed: ${
+            (vmas.reason || news.reason)?.message || 'error'
+          }`,
+        );
+      return {
+        ...normalizeWarnings(warnings.value, fetchedAt),
+        crisis: crisisOk
+          ? normalizeCrisisItems(
+              { vmas: vmas.value, news: news.value },
+              crisisLookups,
+            )
+          : (cached?.value?.crisis ?? []),
+        crisisStale: !crisisOk,
+        fetchedAt,
+      };
     } finally {
       clearTimeout(timer);
     }
@@ -69,7 +114,9 @@ export function smhiWarningsProxy({
       const { promise } = coalesceProxyRequest(inFlight, 'warnings', load);
       const value = await promise;
       cached = { value, savedAt: now() };
-      console.log(`[smhi-warnings] ${value.areas.length} warning areas`);
+      console.log(
+        `[smhi-warnings] ${value.areas.length} warning areas, ${value.crisis.length} crisis messages`,
+      );
       return json(200, value);
     } catch (error) {
       console.warn(
