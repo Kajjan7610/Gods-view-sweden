@@ -49,6 +49,11 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-04 (startvy)
+- Ny laddning utan delningslänk flyger till Västerås i stället för Austin, TX
+  (`HOME_VIEW` i `src/camera.js`); laddningstexten "Flying to {place}..." översatt
+  till alla 11 språk. En sparad vy i adressfältet vinner fortfarande.
+
 ### 2026-11-04 (synk med originalet)
 - Hämtade 51 nya commits från bilawalsidhu/gods-eye-view: bl.a. lagret
   "Prohibited & Restricted Airspace" (FAA, drönarluftrum), kamerakällan Houston

@@ -18,7 +18,6 @@
   "Board cleared.": "Tableau effacé.",
   "{owner} is using the pointer — close it first.": "Pointeur utilisé par : {owner}. Fermez d'abord cet outil.",
   "{label} · Detailed outline unavailable": "{label} · Contour détaillé indisponible",
-  "Flying to Austin, TX...": "En route vers Austin, Texas…",
   "Restoring shared view...": "Restauration de la vue partagée…",
   "Configuring viewer...": "Configuration de la vue…",
   "Loading Google 3D Tiles...": "Chargement de Google 3D Tiles…",
@@ -3200,5 +3199,6 @@
   "Road closed": "Route fermée",
   "Speed limits and lane closures": "Limitations de vitesse et fermetures de voies",
   "INCL. MINOR": "Y C. MINEURS",
-  "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "Afficher aussi les limitations de vitesse, fermetures de voies, interdictions de dépasser et limites de poids sur les chantiers"
+  "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "Afficher aussi les limitations de vitesse, fermetures de voies, interdictions de dépasser et limites de poids sur les chantiers",
+  "Flying to {place}...": "En route vers {place}…"
 }

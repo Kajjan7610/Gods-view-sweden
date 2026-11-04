@@ -19,7 +19,6 @@
   "Board cleared.": "Дошку очищено.",
   "{owner} is using the pointer — close it first.": "Вказівник зайнятий: «{owner}». Спершу закрийте його.",
   "{label} · Detailed outline unavailable": "{label} · Докладний контур недоступний",
-  "Flying to Austin, TX...": "Переліт до Остіна, Техас...",
   "Restoring shared view...": "Відновлення спільного вигляду...",
   "Configuring viewer...": "Налаштування переглядача...",
   "Loading Google 3D Tiles...": "Завантаження Google 3D Tiles...",
@@ -3275,5 +3274,6 @@
   "Road closed": "Дорогу перекрито",
   "Speed limits and lane closures": "Обмеження швидкості та закриття смуг",
   "INCL. MINOR": "ВКЛ. ДРІБНІ",
-  "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "Показувати також обмеження швидкості, закриття смуг, заборони обгону та обмеження маси на дорожніх роботах"
+  "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "Показувати також обмеження швидкості, закриття смуг, заборони обгону та обмеження маси на дорожніх роботах",
+  "Flying to {place}...": "Летимо до {place}..."
 }

@@ -1,5 +1,4 @@
 {
-  "Flying to Austin, TX...": "Перелёт в Остин, Техас...",
   "Restoring shared view...": "Восстановление общего вида...",
   "Initializing systems...": "Инициализация систем...",
   "Configuring viewer...": "Настройка просмотрщика...",
@@ -3275,5 +3274,6 @@
   "Road closed": "Дорога перекрыта",
   "Speed limits and lane closures": "Ограничения скорости и закрытие полос",
   "INCL. MINOR": "ВКЛ. МЕЛКИЕ",
-  "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "Показывать также ограничения скорости, закрытие полос, запреты обгона и ограничения массы на дорожных работах"
+  "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "Показывать также ограничения скорости, закрытие полос, запреты обгона и ограничения массы на дорожных работах",
+  "Flying to {place}...": "Летим в {place}..."
 }

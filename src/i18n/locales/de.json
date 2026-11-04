@@ -1,5 +1,4 @@
 {
-  "Flying to Austin, TX...": "Flug nach Austin, TX...",
   "Restoring shared view...": "Geteilte Ansicht wird wiederhergestellt...",
   "Configuring viewer...": "Viewer wird konfiguriert...",
   "Loading Google 3D Tiles...": "Google 3D Tiles werden geladen...",
@@ -3125,5 +3124,6 @@
   "Road closed": "Straße gesperrt",
   "Speed limits and lane closures": "Tempolimits und Fahrstreifensperrungen",
   "INCL. MINOR": "INKL. KLEINERE",
-  "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "Auch Tempolimits, Fahrstreifensperrungen, Überholverbote und Gewichtsbeschränkungen an Baustellen zeigen"
+  "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "Auch Tempolimits, Fahrstreifensperrungen, Überholverbote und Gewichtsbeschränkungen an Baustellen zeigen",
+  "Flying to {place}...": "Flug nach {place}..."
 }

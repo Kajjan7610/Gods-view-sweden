@@ -16,7 +16,6 @@
   "Board cleared.": "ボードを消去しました。",
   "{owner} is using the pointer — close it first.": "{owner}がポインターを使用中です。先に閉じてください。",
   "{label} · Detailed outline unavailable": "{label} · 詳細な輪郭を取得できません",
-  "Flying to Austin, TX...": "テキサス州オースティンへ移動中…",
   "Restoring shared view...": "共有ビューを復元中…",
   "Configuring viewer...": "ビューアーを設定中…",
   "Loading Google 3D Tiles...": "Google 3D Tilesを読み込み中…",
@@ -3050,5 +3049,6 @@
   "Road closed": "通行止め",
   "Speed limits and lane closures": "速度制限と車線規制",
   "INCL. MINOR": "軽微を含む",
-  "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "道路工事に伴う速度制限、車線規制、追い越し禁止、重量制限も表示"
+  "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "道路工事に伴う速度制限、車線規制、追い越し禁止、重量制限も表示",
+  "Flying to {place}...": "{place} へ移動中..."
 }

@@ -3,7 +3,6 @@
   "Initializing photorealistic world...": "جارٍ تهيئة العالم الواقعي…",
   "Configuring viewer...": "جارٍ إعداد العارض…",
   "Google 3D Tiles unavailable ({detail}). Loading the keyless globe...": "بلاطات Google 3D Tiles غير متاحة ({detail}). جارٍ تحميل الكرة الأرضية بلا مفتاح…",
-  "Flying to Austin, TX...": "جارٍ الانتقال إلى أوستن، تكساس…",
   "Restoring shared view...": "جارٍ استعادة العرض المشترك…",
   "LOADING LIVE DATA": "جارٍ تحميل البيانات المباشرة",
   "LOAD COMPLETE": "اكتمل التحميل",
@@ -3425,5 +3424,6 @@
   "Road closed": "الطريق مغلق",
   "Speed limits and lane closures": "حدود السرعة وإغلاق المسارات",
   "INCL. MINOR": "بما فيها الثانوية",
-  "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "إظهار حدود السرعة وإغلاق المسارات وحظر التجاوز وحدود الوزن عند أعمال الطرق أيضًا"
+  "Also show speed limits, lane closures, overtaking bans and weight limits at roadworks": "إظهار حدود السرعة وإغلاق المسارات وحظر التجاوز وحدود الوزن عند أعمال الطرق أيضًا",
+  "Flying to {place}...": "جارٍ الانتقال إلى {place}..."
 }
