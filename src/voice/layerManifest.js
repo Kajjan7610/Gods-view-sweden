@@ -44,6 +44,19 @@ const AIRCRAFT_FIELDS = {
 
 const layers = [
   {
+    id: 'trafikverket-roads',
+    aliases: [
+      'road conditions',
+      'swedish road conditions',
+      'road incidents',
+      'roadworks',
+      'trafikverket',
+      'väglag',
+    ],
+    context: false,
+    noQuery: 'road stretches and incidents; no countable analyst records',
+  },
+  {
     id: 'gnss-integrity',
     aliases: [
       'gnss integrity',

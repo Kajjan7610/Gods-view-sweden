@@ -75,6 +75,7 @@ const PANEL_GROUPS = [
       'earthquakes',
       'local-firms',
       'fire-perimeters',
+      'trafikverket-roads',
       'gnss-integrity',
       's2-ghostmaps',
     ],

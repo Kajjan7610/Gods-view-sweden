@@ -102,6 +102,18 @@ import {
   DEFAULT_VEGVESEN_MAX_SOURCES,
   VEGVESEN_MAX_CATALOG_BYTES,
   NORWAY_ANCHORS,
+  TRAFIKVERKET_API_URL,
+  TRAFIKVERKET_IMAGE_ORIGIN,
+  TRAFIKVERKET_IMAGE_PATH_RE,
+  DEFAULT_TRAFIKVERKET_MAX_SOURCES,
+  TRAFIKVERKET_MAX_CATALOG_BYTES,
+  TRAFIKVERKET_GROUND_ELEVATION_M,
+  TRAFIKVERKET_ROAD_SNAP_MAX_M,
+  TRAFIKVERKET_BEARING_BATCH,
+  TRAFIKVERKET_BEARING_WAIT_MS,
+  TRAFIKVERKET_BEARING_NONE_TTL_MS,
+  TRAFIKVERKET_BEARING_MAX_BODY_BYTES,
+  SWEDEN_ANCHORS,
   KARTVERKET_HEIGHT_URL,
   KARTVERKET_MAX_POINTS,
   KARTVERKET_CONCURRENCY,
@@ -149,12 +161,14 @@ import {
   isLikelyNycCoordinate,
   isLikelyHongKongCoordinate,
   isLikelyNorwayCoordinate,
+  isLikelySwedenCoordinate,
   isLikelyTorontoCoordinate,
   isLikelyA22Coordinate,
   cameraDisplayCode,
   rowArrayToObject,
   prioritizeSources,
   pinnedCameraUrl,
+  escapeXml,
 } from './normalize.js';
 import { directionToHeading } from '../../../src/data/directionText.js';
 import {
@@ -2820,6 +2834,503 @@ export async function loadVegvesenSourcesFromOpenData() {
     );
     return [];
   }
+}
+
+let trafikverketKeyMissingLogged = false;
+
+/** Test seam: let the next keyless call log the missing-key line again. */
+export function _resetTrafikverketKeyWarningForTest() {
+  trafikverketKeyMissingLogged = false;
+}
+
+/** The fields one camera needs; INCLUDE keeps the national body small. */
+const TRAFIKVERKET_CAMERA_FIELDS = [
+  'Id',
+  'Name',
+  'Description',
+  'Location',
+  'Type',
+  'Direction',
+  'Active',
+  'Deleted',
+  'Status',
+  'Geometry.WGS84',
+  'PhotoUrl',
+  'HasFullSizePhoto',
+];
+
+/**
+ * The XML query for every active camera. The key goes into an attribute, so it
+ * is escaped like any other attribute value.
+ *
+ * @param {string} key - The caller's Trafikverket API key.
+ * @returns {string}
+ */
+export function trafikverketCameraQuery(key) {
+  const include = TRAFIKVERKET_CAMERA_FIELDS.map(
+    (field) => `<INCLUDE>${field}</INCLUDE>`,
+  ).join('');
+  return (
+    '<REQUEST>' +
+    `<LOGIN authenticationkey="${escapeXml(key)}" />` +
+    '<QUERY objecttype="Camera" namespace="Road.Infrastructure" schemaversion="1.1">' +
+    '<FILTER><EQ name="Active" value="true" /><EQ name="Deleted" value="false" /></FILTER>' +
+    include +
+    '</QUERY>' +
+    '</REQUEST>'
+  );
+}
+
+/** `POINT (17.4869976 59.592)` -> {lon, lat}, or null. */
+function parseWgs84Point(text) {
+  const match = /^\s*POINT\s*\(\s*(-?[\d.]+)\s+(-?[\d.]+)\s*\)\s*$/i.exec(
+    String(text ?? ''),
+  );
+  if (!match) return null;
+  return { lon: toFiniteNumber(match[1]), lat: toFiniteNumber(match[2]) };
+}
+
+/**
+ * One Trafikverket `Camera` record -> one catalog source, or null.
+ *
+ * `Direction` is a compass bearing in degrees when present, so those cameras
+ * get a high-confidence pose; the rest take the shared id-hash fallback at low
+ * confidence, like Vegvesen. Inactive, deleted and faulty cameras are dropped.
+ * The frame URL is rebuilt from the official image origin and a validated
+ * image path rather than read through, which pins the frame proxy to Trafikverket's
+ * image host by construction.
+ *
+ * @param {object} record - One element of RESULT[0].Camera.
+ * @returns {?object}
+ */
+export function trafikverketCameraToSource(record) {
+  if (!record || typeof record !== 'object') return null;
+  if (record.Active !== true || record.Deleted === true) return null;
+  const status = String(record.Status ?? '').trim();
+  if (status && status !== 'videoOrImagesAvailable') return null;
+
+  const point = parseWgs84Point(record.Geometry?.WGS84);
+  if (!point || !isLikelySwedenCoordinate(point.lat, point.lon)) return null;
+
+  const rawId = String(record.Id ?? '').trim();
+  if (!/^[A-Za-z0-9_-]{1,80}$/.test(rawId)) return null;
+  const photo = pinnedCameraUrl(record.PhotoUrl, TRAFIKVERKET_IMAGE_ORIGIN);
+  if (!photo) return null;
+  const file = new URL(photo).pathname.slice(
+    new URL(TRAFIKVERKET_IMAGE_ORIGIN).pathname.length,
+  );
+  if (!TRAFIKVERKET_IMAGE_PATH_RE.test(file)) return null;
+  const imageUrl = `${TRAFIKVERKET_IMAGE_ORIGIN}${file}`;
+  // The full-size still is the same frame at a resolution that holds up when
+  // projected into the scene; the 385x290 default is the fallback.
+  const frameUrl =
+    record.HasFullSizePhoto === true ? `${imageUrl}?type=fullsize` : imageUrl;
+
+  const cameraId = `se-trafikverket-${rawId.toLowerCase()}`;
+  const place =
+    String(record.Name ?? '').trim() ||
+    String(record.Location ?? '').trim() ||
+    `Kamera ${rawId}`;
+  const description = String(record.Description ?? '').trim();
+  const name =
+    description && description !== place ? `${place} - ${description}` : place;
+  const direction = toFiniteNumber(record.Direction, NaN);
+  const hasHeading = Number.isFinite(direction);
+  // Traffic-flow cameras watch motorway lanes from gantries and poles;
+  // road-condition cameras sit on weather-station masts and look along a
+  // rural road, so they get the wider, shorter view.
+  const isFlow = /trafikfl/i.test(String(record.Type ?? ''));
+
+  return {
+    id: cameraId,
+    name,
+    // One country-wide category in the camera picker, like Norway and
+    // Finland; the place itself is already in the name.
+    city: 'Sweden',
+    cityId: 'sweden',
+    provider: 'Trafikverket',
+    lat: point.lat,
+    lon: point.lon,
+    headingDeg: hasHeading
+      ? ((direction % 360) + 360) % 360
+      : fallbackHeadingFromId(cameraId),
+    headingConfidence: hasHeading ? 'high' : 'low',
+    pitchDeg: hasHeading ? (isFlow ? -22 : -14) : -18,
+    fovDeg: hasHeading ? (isFlow ? 50 : 58) : 44,
+    rangeM: hasHeading ? (isFlow ? 220 : 160) : 145,
+    mountHeightM: isFlow ? 10 : 8,
+    groundElevationM: TRAFIKVERKET_GROUND_ELEVATION_M,
+    feedType: 'image',
+    url: frameUrl,
+    snapshotUrl: frameUrl,
+    sourceKind: 'trafikverket-open-api',
+    license: 'Trafikverket open data (CC0 1.0)',
+    code: cameraDisplayCode(place.toUpperCase()),
+  };
+}
+
+/**
+ * Fetch Trafikverket (Sweden) road cameras from the open traffic API. The
+ * catalog needs a free key, read from TRAFIKVERKET_API_KEY; without one the
+ * pack is skipped with a single log line. Frames are public stills on the
+ * API's own image host.
+ *
+ * @param {object} [_options] The catalog's loader options (unused).
+ * @param {object} [env] Environment to read the key and the source cap from.
+ * @returns {Promise<Array<object>>} Normalized camera source objects.
+ */
+export async function loadTrafikverketSourcesFromOpenData(
+  _options = {},
+  env = process.env,
+) {
+  const key = String(env.TRAFIKVERKET_API_KEY ?? '').trim();
+  if (!key) {
+    if (!trafikverketKeyMissingLogged) {
+      trafikverketKeyMissingLogged = true;
+      console.warn(
+        '[CCTV] Trafikverket cameras skipped: the open API needs a free key (set TRAFIKVERKET_API_KEY)',
+      );
+    }
+    return [];
+  }
+  try {
+    const resp = await fetch(TRAFIKVERKET_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/xml; charset=utf-8',
+        Accept: 'application/json',
+      },
+      body: trafikverketCameraQuery(key),
+      redirect: 'manual',
+      signal: AbortSignal.timeout(CCTV_SOURCE_FETCH_TIMEOUT_MS),
+    });
+    if (!resp.ok) {
+      try {
+        await resp.body?.cancel();
+      } catch {
+        /* no-op */
+      }
+      // The API answers 401 "Invalid authentication" to a wrong key.
+      const keyHint =
+        resp.status === 401 || resp.status === 403
+          ? ' (check TRAFIKVERKET_API_KEY)'
+          : '';
+      console.warn(
+        `[CCTV] Trafikverket camera download failed: ${resp.status}${keyHint}`,
+      );
+      return [];
+    }
+    const payload = await readResponseJsonCapped(
+      resp,
+      TRAFIKVERKET_MAX_CATALOG_BYTES,
+    );
+    const result = payload?.RESPONSE?.RESULT?.[0];
+    if (result?.ERROR) {
+      console.warn(
+        '[CCTV] Trafikverket camera query refused:',
+        String(result.ERROR.MESSAGE || result.ERROR.SOURCE || 'error').slice(
+          0,
+          200,
+        ),
+      );
+      return [];
+    }
+    const records = Array.isArray(result?.Camera) ? result.Camera : [];
+    const cameras = [];
+    const seen = new Set();
+    for (const record of records) {
+      const camera = trafikverketCameraToSource(record);
+      if (!camera || seen.has(camera.id)) continue;
+      seen.add(camera.id);
+      cameras.push(camera);
+    }
+    const maxRaw = Number(
+      env.CCTV_TRAFIKVERKET_MAX_SOURCES || DEFAULT_TRAFIKVERKET_MAX_SOURCES,
+    );
+    const maxCount = Number.isFinite(maxRaw)
+      ? Math.max(8, Math.min(2000, Math.floor(maxRaw)))
+      : DEFAULT_TRAFIKVERKET_MAX_SOURCES;
+    if (String(env.CCTV_TRAFIKVERKET_ROAD_BEARINGS ?? '1').trim() !== '0') {
+      await applyTrafikverketRoadBearings(cameras, { key, env });
+    }
+    const prioritized = prioritizeSources(cameras, maxCount, SWEDEN_ANCHORS);
+    console.log(
+      `[CCTV] Loaded Trafikverket camera sources: ${cameras.length} of ${records.length} active (using nearest ${prioritized.length})`,
+    );
+    return prioritized;
+  } catch (error) {
+    console.warn(
+      '[CCTV] Trafikverket camera download error:',
+      error?.message || error,
+    );
+    return [];
+  }
+}
+
+/**
+ * Bearing (degrees clockwise from north, in the line's own drawing direction)
+ * of the road segment nearest a point, with the distance to it. Flat-earth
+ * maths: exact enough over the tens of metres between a mast and its road.
+ *
+ * @param {string} wkt - LINESTRING or MULTILINESTRING, optionally with Z.
+ * @param {number} lon
+ * @param {number} lat
+ * @returns {{bearing: number, distanceM: number}|null}
+ */
+export function roadBearingAt(wkt, lon, lat) {
+  const match = /^\s*(?:MULTI)?LINESTRING\s*(?:Z|M|ZM)?\s*\((.*)\)\s*$/i.exec(
+    String(wkt ?? ''),
+  );
+  if (!match) return null;
+  const kx = 111320 * Math.cos((lat * Math.PI) / 180);
+  const ky = 110540;
+  let best = null;
+  for (const part of match[1].split(/\)\s*,\s*\(/)) {
+    const points = part
+      .replace(/[()]/g, '')
+      .split(',')
+      .map((pair) => pair.trim().split(/\s+/).slice(0, 2).map(Number))
+      .filter(([x, y]) => Number.isFinite(x) && Number.isFinite(y))
+      .map(([x, y]) => [(x - lon) * kx, (y - lat) * ky]);
+    for (let i = 1; i < points.length; i++) {
+      const [ax, ay] = points[i - 1];
+      const [bx, by] = points[i];
+      const dx = bx - ax;
+      const dy = by - ay;
+      const length2 = dx * dx + dy * dy;
+      if (!length2) continue;
+      const t = Math.max(0, Math.min(1, -(ax * dx + ay * dy) / length2));
+      const distanceM = Math.hypot(ax + t * dx, ay + t * dy);
+      if (!best || distanceM < best.distanceM) {
+        const bearing = ((Math.atan2(dx, dy) * 180) / Math.PI + 360) % 360;
+        best = { bearing, distanceM };
+      }
+    }
+  }
+  return best;
+}
+
+/**
+ * One REQUEST with a nearest-numbered-road query per camera.
+ * @param {string} key
+ * @param {Array<{lon: number, lat: number}>} points
+ * @returns {string}
+ */
+export function trafikverketBearingQuery(key, points) {
+  const queries = points
+    .map(
+      ({ lon, lat }) =>
+        '<QUERY objecttype="Vägnummer" namespace="Vägdata.NVDB_DK_O" schemaversion="1.2" limit="1">' +
+        `<FILTER><NEAR name="Geometry.WKT-WGS84-3D" value="${lon} ${lat}" mindistance="0" maxdistance="${TRAFIKVERKET_ROAD_SNAP_MAX_M}" /></FILTER>` +
+        '<INCLUDE>Huvudnummer</INCLUDE><INCLUDE>Geometry.WKT-WGS84-3D</INCLUDE>' +
+        '</QUERY>',
+    )
+    .join('');
+  return `<REQUEST><LOGIN authenticationkey="${escapeXml(key)}" />${queries}</REQUEST>`;
+}
+
+const COMPASS_SUFFIX = Object.freeze({
+  norr: 0,
+  nord: 0,
+  ost: 90,
+  öst: 90,
+  syd: 180,
+  söder: 180,
+  vast: 270,
+  väst: 270,
+});
+
+/**
+ * Face a road-condition camera along its road. The road gives an axis, not a
+ * direction: a compass word at the end of the id (`…_Norr`) settles it and
+ * earns 'medium' confidence; otherwise cameras K1, K3 … look along the road's
+ * drawing direction and K2, K4 … the other way, so a station's pair faces
+ * apart, and the pose stays 'low' (drawn dashed, labelled ESTIMATED).
+ *
+ * @param {object} camera - Catalog source from trafikverketCameraToSource.
+ * @param {number} roadBearing - Degrees, the road's drawing direction.
+ * @returns {object} The same camera, updated.
+ */
+export function orientCameraAlongRoad(camera, roadBearing) {
+  const id = String(camera.id || '').toLowerCase();
+  const suffix = /_([a-zåäö]+)$/.exec(id)?.[1];
+  const compass = suffix ? COMPASS_SUFFIX[suffix] : undefined;
+  const options = [roadBearing, (roadBearing + 180) % 360];
+  let heading;
+  if (compass !== undefined) {
+    const off = (h) => Math.abs(((h - compass + 540) % 360) - 180);
+    heading = off(options[0]) <= off(options[1]) ? options[0] : options[1];
+    camera.headingConfidence = 'medium';
+  } else {
+    const k = Number(/_k(\d+)$/.exec(id)?.[1] || 1);
+    heading = options[k % 2 === 1 ? 0 : 1];
+  }
+  camera.headingDeg = Math.round(heading * 10) / 10;
+  camera.headingSource = 'nvdb-road';
+  return camera;
+}
+
+let bearingLookup = null;
+let bearingWarned = false;
+
+/**
+ * Give road-condition cameras (no published facing) the axis of their road.
+ * Results are cached on disk by position, so only new or moved cameras are
+ * ever looked up; a first load waits TRAFIKVERKET_BEARING_WAIT_MS and lets
+ * the rest finish in the background for the next catalog load.
+ *
+ * @param {Array<object>} cameras - Mutated in place.
+ * @param {{key: string, env?: object, fetchImpl?: typeof fetch,
+ *   cacheFile?: string, waitMs?: number, now?: () => number}} options
+ * @returns {Promise<number>} Cameras aligned to a road.
+ */
+export async function applyTrafikverketRoadBearings(
+  cameras,
+  {
+    key,
+    env = process.env,
+    fetchImpl = (...args) => globalThis.fetch(...args),
+    cacheFile = env.CCTV_TRAFIKVERKET_BEARING_CACHE ||
+      path.join(
+        process.cwd(),
+        '.gev-cache',
+        'trafikverket-camera-bearings.json',
+      ),
+    waitMs = TRAFIKVERKET_BEARING_WAIT_MS,
+    now = () => Date.now(),
+  } = {},
+) {
+  const posKey = (camera) =>
+    `${camera.lon.toFixed(5)},${camera.lat.toFixed(5)}`;
+  let cache = {};
+  try {
+    const parsed = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+    if (parsed?.version === 1 && parsed.points) cache = parsed.points;
+  } catch {
+    /* no cache yet */
+  }
+  const fresh = (entry) =>
+    entry &&
+    (Number.isFinite(entry.bearing) ||
+      now() - (entry.at || 0) < TRAFIKVERKET_BEARING_NONE_TTL_MS);
+  const targets = cameras.filter(
+    (camera) => camera.headingConfidence === 'low',
+  );
+  const missing = targets.filter((camera) => !fresh(cache[posKey(camera)]));
+
+  if (missing.length && !bearingLookup) {
+    bearingLookup = (async () => {
+      let changed = false;
+      try {
+        for (let i = 0; i < missing.length; i += TRAFIKVERKET_BEARING_BATCH) {
+          const batch = missing.slice(i, i + TRAFIKVERKET_BEARING_BATCH);
+          const response = await fetchImpl(TRAFIKVERKET_API_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'text/xml; charset=utf-8',
+              Accept: 'application/json',
+            },
+            body: trafikverketBearingQuery(key, batch),
+            redirect: 'manual',
+            signal: AbortSignal.timeout(CCTV_SOURCE_FETCH_TIMEOUT_MS),
+          });
+          if (!response.ok) {
+            try {
+              await response.body?.cancel();
+            } catch {
+              /* no-op */
+            }
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const payload = await readResponseJsonCapped(
+            response,
+            TRAFIKVERKET_BEARING_MAX_BODY_BYTES,
+          );
+          const results = payload?.RESPONSE?.RESULT;
+          if (!Array.isArray(results)) throw new Error('malformed answer');
+          batch.forEach((camera, index) => {
+            const result = results[index];
+            // Only a well-formed answer is remembered; anything else is
+            // asked again next time rather than cached as "no road".
+            if (!Array.isArray(result?.Vägnummer)) return;
+            const road = result.Vägnummer[0];
+            const found = road
+              ? roadBearingAt(
+                  road.Geometry?.['WKT-WGS84-3D'],
+                  camera.lon,
+                  camera.lat,
+                )
+              : null;
+            cache[posKey(camera)] = found
+              ? {
+                  bearing: Math.round(found.bearing * 10) / 10,
+                  road: Number.isInteger(road.Huvudnummer)
+                    ? road.Huvudnummer
+                    : null,
+                  at: now(),
+                }
+              : { at: now() };
+            changed = true;
+          });
+        }
+      } catch (error) {
+        if (!bearingWarned) {
+          bearingWarned = true;
+          console.warn(
+            `[CCTV] Trafikverket road bearings incomplete: ${error?.message || error}`,
+          );
+        }
+      } finally {
+        if (changed) {
+          try {
+            fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
+            const temp = `${cacheFile}.${process.pid}.tmp`;
+            fs.writeFileSync(
+              temp,
+              JSON.stringify({ version: 1, points: cache }),
+            );
+            fs.renameSync(temp, cacheFile);
+          } catch (error) {
+            console.warn(
+              '[CCTV] could not save Trafikverket road bearings:',
+              error?.message || error,
+            );
+          }
+        }
+        bearingLookup = null;
+      }
+    })();
+  }
+  if (bearingLookup) {
+    let timer;
+    await Promise.race([
+      bearingLookup,
+      new Promise((resolve) => {
+        timer = setTimeout(resolve, waitMs);
+        timer.unref?.();
+      }),
+    ]);
+    clearTimeout(timer);
+  }
+
+  let aligned = 0;
+  for (const camera of targets) {
+    const entry = cache[posKey(camera)];
+    if (!Number.isFinite(entry?.bearing)) continue;
+    orientCameraAlongRoad(camera, entry.bearing);
+    aligned += 1;
+  }
+  if (targets.length)
+    console.log(
+      `[CCTV] Trafikverket road bearings: ${aligned}/${targets.length} cameras without a published facing aligned to their road`,
+    );
+  return aligned;
+}
+
+/** Test seam: forget an in-flight lookup and the one-time warning. */
+export function _resetTrafikverketBearingsForTest() {
+  bearingLookup = null;
+  bearingWarned = false;
 }
 
 /**

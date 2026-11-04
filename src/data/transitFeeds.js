@@ -377,6 +377,83 @@ function burlingtonRouteLabel(routeId) {
 }
 
 /**
+ * Trafiklab (Samtrafiken) GTFS Regional vehicles carry trip ids only. The
+ * server joins each trip to its route from the operator's static GTFS
+ * (server/providers/trafiklabStatic.js) and writes the route as
+ * `<mode>:<short name>`, e.g. `tram:7`; an unjoined trip keeps whatever the
+ * feed sent. These two read that form back.
+ */
+const TRAFIKLAB_ROUTE_RE = /^(bus|tram|subway|rail|ferry):(.{1,32})$/;
+
+function trafiklabRouteMode(routeId) {
+  const match = TRAFIKLAB_ROUTE_RE.exec(String(routeId ?? ''));
+  return match ? match[1] : null;
+}
+
+function trafiklabRouteLabel(routeId) {
+  const match = TRAFIKLAB_ROUTE_RE.exec(String(routeId ?? ''));
+  return match ? match[2] : null;
+}
+
+/**
+ * Swedish regional operators whose GTFS Regional feed publishes
+ * VehiclePositions, per Trafiklab's coverage table (2026-11-03). Centres and
+ * radii hold each county's network; neighbouring counties overlap a little,
+ * which costs one extra poll at the border and nothing else.
+ */
+const TRAFIKLAB_OPERATORS = [
+  // SL and UL are drawn tight so central Stockholm and Uppsala each poll
+  // only their own county: every poll spends the shared monthly quota.
+  ['sl', 'SL', 'Stockholm', 59.33, 18.07, 62],
+  ['ul', 'UL', 'Uppsala', 60.05, 17.75, 65],
+  ['vastmanland', 'VL', 'Västmanland', 59.61, 16.55, 62],
+  ['orebro', 'Länstrafiken Örebro', 'Örebro', 59.27, 15.21, 85],
+  ['otraf', 'Östgötatrafiken', 'Östergötland', 58.45, 15.8, 90],
+  ['jlt', 'JLT', 'Jönköping', 57.78, 14.16, 90],
+  ['krono', 'Länstrafiken Kronoberg', 'Kronoberg', 56.88, 14.81, 75],
+  ['klt', 'KLT', 'Kalmar', 57.1, 16.4, 110],
+  ['blekinge', 'Blekingetrafiken', 'Blekinge', 56.2, 15.2, 60],
+  ['skane', 'Skånetrafiken', 'Skåne', 55.85, 13.6, 100],
+  ['halland', 'Hallandstrafiken', 'Halland', 56.9, 12.6, 80],
+  ['gotland', 'Region Gotland', 'Gotland', 57.47, 18.5, 90],
+  ['varm', 'Värmlandstrafik', 'Värmland', 59.8, 13.2, 130],
+  ['dt', 'Dalatrafik', 'Dalarna', 60.9, 14.6, 160],
+  ['xt', 'X-trafik', 'Gävleborg', 61.3, 16.4, 140],
+  ['dintur', 'Din Tur', 'Västernorrland', 62.8, 17.6, 130],
+];
+
+const TRAFIKLAB_FEEDS = TRAFIKLAB_OPERATORS.map(
+  ([operator, name, county, lat, lon, radiusKm]) =>
+    Object.freeze({
+      id: `trafiklab-${operator}`,
+      name,
+      operator: `${name} (GTFS Regional, via Trafiklab / Samtrafiken)`,
+      region: `${county}, Sweden`,
+      center: Object.freeze({ lat, lon }),
+      loadRadiusKm: radiusKm,
+      url: `https://opendata.samtrafiken.se/gtfs-rt/${operator}/VehiclePositions.pb`,
+      // Server-side key, appended as `?key=` by the proxy; it never reaches
+      // the browser. Without it the proxy answers "not configured".
+      requiresKey: 'TRAFIKLAB_GTFS_RT_KEY',
+      keyParam: 'key',
+      // The operator's static GTFS, for route numbers and modes.
+      staticOperator: operator,
+      license: 'CC0 1.0',
+      licenseUrl: 'https://www.trafiklab.se/api/gtfs-datasets/gtfs-regional/',
+      attribution: 'Trafiklab / Samtrafiken GTFS Regional (CC0 1.0)',
+      defaultEnabled: true,
+      terms: Object.freeze({
+        quote:
+          'Data from the GTFS Regional API is available under the CC0 1.0 Universal (CC0 1.0) Public Domain Dedication license.',
+        note: 'An exception to the keyless admission rule above: the feed needs a free Trafiklab key (TRAFIKLAB_GTFS_RT_KEY), kept server-side. The default Bronze key allows 30,000 calls a month; the 15 s proxy cache spends about 240 an hour per county while someone watches it, so heavy use wants the free Silver upgrade. Stress tests are not allowed.',
+      }),
+      defaultMode: 'bus',
+      routeMode: trafiklabRouteMode,
+      routeLabel: trafiklabRouteLabel,
+    }),
+);
+
+/**
  * Registry of feeds. Order is presentation order in the stats/credit text.
  * `loadRadiusKm` is the distance from `center` inside which the feed is polled.
  * @type {ReadonlyArray<Readonly<{
@@ -512,6 +589,47 @@ export const TRANSIT_FEED_REGISTRY = Object.freeze([
     defaultMode: 'bus',
     routeMode: enturRouteMode,
   }),
+  Object.freeze({
+    id: 'trafikverket-trains',
+    name: 'Trafikverket',
+    operator: 'Trafikverket (Swedish national train positions)',
+    region: 'Sweden',
+    // Sweden is long and thin: one circle holding Trelleborg and Riksgränsen
+    // would also reach Oslo and Helsinki. Three circles (south, middle,
+    // north) cover the country instead; `center`/`loadRadiusKm` stay the
+    // outer bound for the public catalog.
+    center: Object.freeze({ lat: 62.0, lon: 16.5 }),
+    loadRadiusKm: 790,
+    coverage: Object.freeze([
+      Object.freeze({ lat: 57.3, lon: 14.5, radiusKm: 300 }),
+      Object.freeze({ lat: 59.9, lon: 16.0, radiusKm: 260 }),
+      Object.freeze({ lat: 64.8, lon: 19.0, radiusKm: 430 }),
+    ]),
+    url: 'https://api.trafikinfo.trafikverket.se/v2/data.json',
+    // Not GTFS-Realtime: the server fetches it through its own adapter
+    // (src/sources/trafikverketTrains.js), POSTing an XML query.
+    kind: 'trafikverket-trainposition',
+    // Server-side environment variable holding the free API key. Without it
+    // the proxy answers "not configured" and never contacts Trafikverket.
+    requiresKey: 'TRAFIKVERKET_API_KEY',
+    license: 'CC0 1.0',
+    licenseUrl:
+      'https://www.trafikverket.se/e-tjanster/trafikverkets-oppna-api-for-trafikinformation/',
+    attribution: 'Trafikverket open API (CC0 1.0)',
+    defaultEnabled: true,
+    terms: Object.freeze({
+      quote:
+        'API ... en tjänst för öppna data för trafikinformation väg och järnväg i realtid. ... Licens - senaste versionen [CC0 1.0 Universal].',
+      note: 'An exception to the keyless admission rule above: the API needs a free key, issued after registering at data.trafikverket.se and accepting the CC0 licence. The key stays server-side (TRAFIKVERKET_API_KEY) and only travels in the request body. Trafikverket asks consumers to stay within the limits in its documentation; the 15 s proxy cache keeps this to about four requests a minute while someone is watching Sweden. Not every train reports a position.',
+    }),
+    defaultMode: 'rail',
+    // Every vehicle here is a train, so the mode is a fact, not a fleet
+    // default: it earns the rail speed ceiling. Under the permissive default
+    // ceiling (~200 km/h) GPS jitter on 200 km/h services read as impossible
+    // travel and those trains were placed instead of animated.
+    routeMode: () => 'rail',
+  }),
+  ...TRAFIKLAB_FEEDS,
   Object.freeze({
     id: 'translink-seq',
     name: 'TransLink',
@@ -797,13 +915,36 @@ export function haversineKm(aLat, aLon, bLat, bLon) {
  */
 export function transitFeedsInRange(lat, lon, slackKm = 0) {
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return [];
-  return TRANSIT_ENABLED_FEEDS.map((feed) => ({
-    feed,
-    km: haversineKm(lat, lon, feed.center.lat, feed.center.lon),
-  }))
-    .filter(({ feed, km }) => km <= feed.loadRadiusKm + Math.max(0, slackKm))
+  const slack = Math.max(0, slackKm);
+  return TRANSIT_ENABLED_FEEDS.map((feed) => feedRange(feed, lat, lon, slack))
+    .filter(({ inside }) => inside)
     .sort((a, b) => a.km - b.km)
     .map(({ feed }) => feed);
+}
+
+/**
+ * How far a point is from a feed, and whether the feed covers it. Most feeds
+ * cover one circle (`center`, `loadRadiusKm`); a feed for a long, thin country
+ * lists several `coverage` circles instead, so it can hold the whole country
+ * without one huge circle reaching into its neighbours.
+ * @param {object} feed Registry entry.
+ * @param {number} lat
+ * @param {number} lon
+ * @param {number} slackKm Extra radius, for hysteresis.
+ * @returns {{feed: object, km: number, inside: boolean}}
+ */
+function feedRange(feed, lat, lon, slackKm) {
+  const circles = feed.coverage || [
+    { lat: feed.center.lat, lon: feed.center.lon, radiusKm: feed.loadRadiusKm },
+  ];
+  let km = Infinity;
+  let inside = false;
+  for (const circle of circles) {
+    const distance = haversineKm(lat, lon, circle.lat, circle.lon);
+    km = Math.min(km, distance);
+    if (distance <= circle.radiusKm + slackKm) inside = true;
+  }
+  return { feed, km, inside };
 }
 
 /**

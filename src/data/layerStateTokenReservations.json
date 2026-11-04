@@ -27,6 +27,7 @@
   ["street-level", "0"],
   ["telegeography-submarine-cables", "u"],
   ["traffic", "t"],
+  ["trafikverket-roads", "8"],
   ["transit", "j"],
   ["weather-cyclones", "y"],
   ["weather-lightning", "l"],

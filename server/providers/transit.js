@@ -1,9 +1,19 @@
 import { createTransitService } from '../../src/sources/transitService.js';
+import { createTrafiklabStatic } from './trafiklabStatic.js';
 export { fetchTransitFeed } from '../../src/sources/transitService.js';
 
 /** Connect the reusable transit request service to development and preview. */
 export function transitProxy(options = {}) {
-  const service = createTransitService(options);
+  // Route numbers for the Trafiklab feeds, joined from static GTFS.
+  const trafiklabStatic = createTrafiklabStatic();
+  const service = createTransitService({
+    enrichVehicles: trafiklabStatic.enrichVehicles,
+    ...options,
+  });
+  const close = () => {
+    service.close();
+    trafiklabStatic.close();
+  };
   function install(server) {
     server.middlewares.use('/api/transit', async (req, res) => {
       const response = await service.handle({
@@ -13,11 +23,11 @@ export function transitProxy(options = {}) {
       res.writeHead(response.status, Object.fromEntries(response.headers));
       res.end(await response.text());
     });
-    server.httpServer?.once('close', service.close);
+    server.httpServer?.once('close', close);
   }
   return {
     name: 'transit-proxy',
-    closeBundle: service.close,
+    closeBundle: close,
     configureServer: install,
     configurePreviewServer: install,
   };

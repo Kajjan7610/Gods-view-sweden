@@ -25,6 +25,7 @@ import {
   loadKingCountySourcesFromOpenData,
   loadWsdotSourcesFromOpenData,
   loadVegvesenSourcesFromOpenData,
+  loadTrafikverketSourcesFromOpenData,
   loadNycSourcesFromOpenData,
   loadTorontoSourcesFromOpenData,
   loadFloridaSourcesFromOpenData,
@@ -133,6 +134,13 @@ const LIVE_PACKS = [
     name: 'vegvesen',
     enabled: () => envEnabled('CCTV_VEGVESEN_ENABLED'),
     load: loadVegvesenSourcesFromOpenData,
+  },
+  {
+    // Needs a free key (TRAFIKVERKET_API_KEY); skipped with one log line
+    // without it, like Ontario.
+    name: 'trafikverket',
+    enabled: () => envEnabled('CCTV_TRAFIKVERKET_ENABLED'),
+    load: loadTrafikverketSourcesFromOpenData,
   },
   {
     // NYC DOT requires a data-sharing agreement for this feed, so the pack is

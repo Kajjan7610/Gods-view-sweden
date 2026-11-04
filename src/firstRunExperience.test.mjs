@@ -1038,11 +1038,12 @@ test('the voice TOOL SCHEMA matches the pinned contract — the mission mapping 
   // The layer alias hint leaves out aliases the layer id already spells.
   // The Utilities panel adds one set_panel_open target; Sea Marks and Ski
   // Pistes extend the generated layer enums and alias hint; voice geometry
-  // adds the analyst area scopes and the osm-places layer.
-  assert.equal(block.length, 31318, 'serialized tool schema length drifted');
+  // adds the analyst area scopes and the osm-places layer; Trafikverket
+  // road conditions (Sweden) extends the generated layer enums.
+  assert.equal(block.length, 31419, 'serialized tool schema length drifted');
   assert.equal(
     crypto.createHash('sha256').update(block).digest('hex'),
-    'f5b42f41c2f575838f979e88a1dbff615a77ccd85fdf8fcd0a0a47d02f7d3ddc',
+    '9f14f40177200faf15b4936f9e83684783dd23aeab7df84aa835d10c09af619f',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
   const instructions = fs.readFileSync(

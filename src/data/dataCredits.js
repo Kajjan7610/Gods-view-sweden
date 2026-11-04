@@ -329,6 +329,20 @@ export const DATA_CREDITS = [
       'modified: heights over water set to 0 m and rounded to 0.1 m',
   },
   {
+    key: 'trafikverket-roads',
+    html:
+      'Road conditions &amp; incidents (Sweden): ' +
+      '<a href="https://www.trafikverket.se/e-tjanster/trafikverkets-oppna-api-for-trafikinformation/" target="_blank" rel="noopener">Trafikverket open API</a> ' +
+      '(<a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a>)',
+  },
+  {
+    key: 'trafikverket-cctv',
+    html:
+      'Road cameras (Sweden): ' +
+      '<a href="https://www.trafikverket.se/e-tjanster/trafikverkets-oppna-api-for-trafikinformation/" target="_blank" rel="noopener">Trafikverket open API</a> ' +
+      '(<a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a>)',
+  },
+  {
     key: 'nyc-cctv',
     html:
       'CCTV cameras &amp; frames (New York City, when enabled): ' +

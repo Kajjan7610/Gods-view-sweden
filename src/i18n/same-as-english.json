@@ -327,7 +327,8 @@
     "{value} KM/S",
     "ΔE",
     "ΔN",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "INCL. NORMAL"
   ],
   "fr": [
     "1090 MHz",
@@ -508,7 +509,12 @@
     "ΔE",
     "ΔN",
     "Ⅱ PAUSE",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "Incident",
+    "Accident",
+    "Obstacle",
+    "Restriction",
+    "INCIDENTS"
   ],
   "it": [
     "1090 MHz",
@@ -858,7 +864,8 @@
     "{value} KM/H",
     "{value} KM/S",
     "ΔN",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "INCL. NORMAL"
   ],
   "ru": [
     "AIS: --",

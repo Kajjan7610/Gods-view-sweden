@@ -370,6 +370,59 @@ export const NORWAY_ANCHORS = [
   { lat: 69.6492, lon: 18.9553 }, // Tromsø
 ];
 
+/** Trafikverket (Sweden) open API: one POST for the whole national `Camera`
+ * table (~1,600 road-condition and traffic-flow cameras). The catalog needs a
+ * free key (TRAFIKVERKET_API_KEY, from data.trafikverket.se); the frames do
+ * not. Data is CC0 1.0. */
+export const TRAFIKVERKET_API_URL =
+  'https://api.trafikinfo.trafikverket.se/v2/data.json';
+/** The only origin Trafikverket camera frames may come from. */
+export const TRAFIKVERKET_IMAGE_ORIGIN =
+  'https://api.trafikinfo.trafikverket.se/v2/Images/';
+/** Frame paths under TRAFIKVERKET_IMAGE_ORIGIN as the API publishes them,
+ * e.g. `data/road.infrastructure.camera/RoadConditionCamera_VViS_2353_K1.jpg`
+ * or `data/road.infrastructure.camera/TrafficFlowCamera_39636048.jpg`; the
+ * older flat form (`RoadConditionCamera_39635739.Jpeg`) still answers. */
+export const TRAFIKVERKET_IMAGE_PATH_RE =
+  /^(?:data\/road\.infrastructure\.camera\/)?[A-Za-z0-9_%-]{1,120}\.jpe?g$/i;
+/** Above the ~1,600 cameras so the pack keeps them all on its own. The
+ * catalog-wide DEFAULT_CCTV_MAX_SOURCES cap still applies across packs and is
+ * filled round-robin, so a full default install may thin this pack. */
+export const DEFAULT_TRAFIKVERKET_MAX_SOURCES = 1800;
+/** Hard ceiling on the catalog body. The whole country, trimmed to the
+ * INCLUDE list, is well under 2 MB. */
+export const TRAFIKVERKET_MAX_CATALOG_BYTES = 8 * 1024 * 1024;
+/** The feed's points are 2D, so the client resolves each camera's ground
+ * through /api/terrain/heights; this prior only stands until that lands.
+ * 33 m is the median real ground height of the network (1,553 cameras,
+ * 2026-11-04; range about -4 to 947 m). */
+export const TRAFIKVERKET_GROUND_ELEVATION_M = 33;
+/** Prioritization anchors: the largest cities from south to north, so a cap
+ * keeps national coverage rather than just the capital region. */
+/** Road-condition cameras publish no facing, but they sit on weather-station
+ * masts and look along the road. The nearest numbered road from NVDB (same
+ * API and key, `Vägnummer`, Vägdata.NVDB_DK_O 1.2) gives the axis. */
+export const TRAFIKVERKET_ROAD_SNAP_MAX_M = 80;
+/** Cameras per request: one NEAR query each in a single REQUEST. */
+export const TRAFIKVERKET_BEARING_BATCH = 50;
+/** How long a catalog load waits for new lookups; the rest finish in the
+ * background, land in the disk cache and apply on the next load. */
+export const TRAFIKVERKET_BEARING_WAIT_MS = 20 * 1000;
+/** A camera with no road in reach is asked again after this long. */
+export const TRAFIKVERKET_BEARING_NONE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+export const TRAFIKVERKET_BEARING_MAX_BODY_BYTES = 16 * 1024 * 1024;
+export const SWEDEN_ANCHORS = [
+  { lat: 59.3293, lon: 18.0686 }, // Stockholm
+  { lat: 57.7089, lon: 11.9746 }, // Göteborg
+  { lat: 55.605, lon: 13.0038 }, // Malmö
+  { lat: 59.8586, lon: 17.6389 }, // Uppsala
+  { lat: 58.4108, lon: 15.6214 }, // Linköping
+  { lat: 59.2741, lon: 15.2066 }, // Örebro
+  { lat: 62.3908, lon: 17.3069 }, // Sundsvall
+  { lat: 63.8258, lon: 20.263 }, // Umeå
+  { lat: 65.5848, lon: 22.1547 }, // Luleå
+];
+
 /** Kartverket's keyless point-height API (CC BY 4.0): terrain height above
  * sea level (NN2000), used as the Vegvesen cameras' ground prior because the
  * camera feed's points are 2D. */

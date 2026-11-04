@@ -9,6 +9,10 @@ import { createTransitHistory } from './transitHistoryStore.js';
 
 import { coalesceProxyRequest, readResponseBytesCapped } from './httpBody.js';
 import { makeRateLimiter } from './rateLimit.js';
+import {
+  TRAFIKVERKET_TRAINS_KIND,
+  fetchTrafikverketTrainSnapshot,
+} from './trafikverketTrains.js';
 import { publicTransitCatalog } from '../data/transitFeeds.js';
 import {
   TRANSIT_ADMISSION_MAX_GLOBAL,
@@ -104,10 +108,23 @@ export async function fetchTransitFeed(
  * re-asked once per poll for a whole session: consecutive failures push the
  * next permitted attempt out to five minutes, and one success resets it.
  *
- * @param {{fetchImpl?: typeof fetch}} [options]
+ * A feed with `requiresKey` reads that key from `env` on every request, so a
+ * key added to .env takes effect without a restart; without one the proxy
+ * answers "not configured" and never contacts the operator.
+ *
+ * `enrichVehicles(feed, vehicles)`, when given, may rewrite each decoded
+ * vehicle before it is cached (the Trafiklab trip-to-route join); it must be
+ * synchronous and must not throw away vehicles it cannot enrich.
+ *
+ * @param {{fetchImpl?: typeof fetch, env?: Record<string, string|undefined>,
+ *   enrichVehicles?: (feed: object, vehicles: object[]) => object[]}} [options]
  * @returns {{handle: (request: Request) => Promise<Response>, close: () => void}}
  */
-export function createTransitService({ fetchImpl = fetch } = {}) {
+export function createTransitService({
+  fetchImpl = fetch,
+  env = globalThis.process?.env ?? {},
+  enrichVehicles = null,
+} = {}) {
   /** @type {Map<string, {at:number, body:string, host:string}>} feedId → snapshot */
   const cache = new Map();
   const history = createTransitHistory();
@@ -127,6 +144,35 @@ export function createTransitService({ fetchImpl = fetch } = {}) {
     globalMax: TRANSIT_ADMISSION_MAX_GLOBAL,
   });
   const ttlSeconds = Math.ceil(TRANSIT_PROXY_TTL_MS / 1000);
+  /** Feeds whose missing key has been logged, so the line appears once. */
+  const missingKeyLogged = new Set();
+
+  /** The configured key for a feed that needs one, or ''. */
+  function feedKey(feed) {
+    return feed.requiresKey ? String(env[feed.requiresKey] ?? '').trim() : '';
+  }
+
+  /** The feed as fetched: a `keyParam` feed carries its key in the query. */
+  function requestFeed(feed) {
+    if (!feed.keyParam) return feed;
+    const url = new URL(feed.url);
+    url.searchParams.set(feed.keyParam, feedKey(feed));
+    return { ...feed, url: url.href };
+  }
+
+  /** Apply the optional enrichment hook, keeping the snapshot on failure. */
+  function enrich(feed, snapshot) {
+    if (typeof enrichVehicles !== 'function') return snapshot;
+    try {
+      const vehicles = enrichVehicles(feed, snapshot.vehicles);
+      return Array.isArray(vehicles) ? { ...snapshot, vehicles } : snapshot;
+    } catch (error) {
+      console.warn(
+        `[transit-proxy] ${feed.id} enrichment failed: ${error?.message || error}`,
+      );
+      return snapshot;
+    }
+  }
 
   function reply(status, body, headers) {
     return new Response(body, { status, headers });
@@ -149,8 +195,29 @@ export function createTransitService({ fetchImpl = fetch } = {}) {
     );
     const previous = cache.get(feed.id);
     try {
+      if (feed.kind === TRAFIKVERKET_TRAINS_KIND) {
+        const { snapshot, host } = await fetchTrafikverketTrainSnapshot(feed, {
+          key: feedKey(feed),
+          signal: controller.signal,
+          fetchImpl,
+          now,
+        });
+        if (closed) throw new Error('Transit provider closed');
+        history.ingest(feed, snapshot.vehicles, Date.now());
+        const entry = {
+          at: snapshot.fetchedAt,
+          contactedAt: snapshot.fetchedAt,
+          body: JSON.stringify(snapshot),
+          host,
+          etag: null,
+          lastModified: null,
+        };
+        cache.set(feed.id, entry);
+        cooldown.delete(feed.id);
+        return entry;
+      }
       const { response, finalUrl } = await fetchTransitFeed(
-        feed,
+        requestFeed(feed),
         controller.signal,
         fetchImpl,
         previous
@@ -188,7 +255,7 @@ export function createTransitService({ fetchImpl = fetch } = {}) {
         response,
         TRANSIT_PROXY_MAX_BODY_BYTES,
       );
-      const snapshot = buildTransitSnapshot(feed, bytes, now);
+      const snapshot = enrich(feed, buildTransitSnapshot(feed, bytes, now));
       if (closed) throw new Error('Transit provider closed');
       history.ingest(feed, snapshot.vehicles, Date.now());
       const entry = {
@@ -263,6 +330,29 @@ export function createTransitService({ fetchImpl = fetch } = {}) {
         200,
         JSON.stringify(history.get(feed.id, route.vehicleId, now)),
         { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+      );
+    }
+    if (feed.requiresKey && !feedKey(feed)) {
+      if (!missingKeyLogged.has(feed.id)) {
+        missingKeyLogged.add(feed.id);
+        console.warn(
+          `[transit-proxy] ${feed.id} skipped: set ${feed.requiresKey} to enable it`,
+        );
+      }
+      return reply(
+        503,
+        JSON.stringify({
+          error: 'Transit feed not configured',
+          feedId: feed.id,
+          retryInSec: 3600,
+        }),
+        {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store',
+          'X-GEV-Cache': 'NONE',
+          'Retry-After': '3600',
+          'X-Transit-Backoff': 'not-configured',
+        },
       );
     }
     const cached = cache.get(feed.id);

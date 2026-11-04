@@ -421,6 +421,18 @@ export function isLikelyNorwayCoordinate(lat, lon) {
   );
 }
 
+/** Sweden, Smygehuk to Treriksröset; the west edge sits just past the Koster
+ * islands (10.96° E), so Oslo stays out. */
+export function isLikelySwedenCoordinate(lat, lon) {
+  return (
+    isPlausibleLatLon(lat, lon) &&
+    lat >= 55.0 &&
+    lat <= 69.2 &&
+    lon >= 10.9 &&
+    lon <= 24.3
+  );
+}
+
 /** The A22 corridor, Brenner Pass to Modena, with slack either side. */
 export function isLikelyA22Coordinate(lat, lon) {
   return (
