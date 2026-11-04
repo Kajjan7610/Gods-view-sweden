@@ -78,6 +78,7 @@ const PANEL_GROUPS = [
       'fire-perimeters',
       'trafikverket-roads',
       'trafikverket-weather',
+      'polisen-events',
       'gnss-integrity',
       's2-ghostmaps',
     ],

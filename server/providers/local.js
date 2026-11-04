@@ -30,6 +30,7 @@ import { gnssIntegrityProxy } from './gnssIntegrity.js';
 import { trafikverketRoadsProxy } from './trafikverketRoads.js';
 import { trafikverketWeatherProxy } from './trafikverketWeather.js';
 import { smhiWarningsProxy } from './smhiWarnings.js';
+import { polisenEventsProxy } from './polisenEvents.js';
 import { ghostMapsProxy } from './ghostMaps.js';
 import { droneAirspaceProxy } from './droneAirspace.js';
 import { cycloneProxy } from './cyclones.js';
@@ -85,6 +86,7 @@ function localProviderPlugins({
     trafikverketRoadsProxy(),
     trafikverketWeatherProxy(),
     smhiWarningsProxy(),
+    polisenEventsProxy(),
     ghostMapsProxy(),
     droneAirspaceProxy(),
     keySetupEndpoint(),

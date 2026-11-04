@@ -379,6 +379,13 @@ export const DATA_CREDITS = [
       '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>)',
   },
   {
+    key: 'polisen-events',
+    html:
+      'Police events (Sweden): ' +
+      '<a href="https://polisen.se/om-polisen/om-webbplatsen/oppna-data/" target="_blank" rel="noopener">Polismyndigheten open data</a>; ' +
+      'municipality positions from <a href="https://www.wikidata.org/" target="_blank" rel="noopener">Wikidata</a> (CC0)',
+  },
+  {
     key: 'trafikverket-cctv',
     html:
       'Road cameras (Sweden): ' +

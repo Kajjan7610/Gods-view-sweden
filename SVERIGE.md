@@ -16,6 +16,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Nederbördsradar, Europa inkl. Norge, Finland, Danmark och Baltikum (var 5:e minut) | EUMETNET OPERA, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Europe) |
 | Vägväder: ca 830 väderstationer längs vägarna (vägbanans och luftens temperatur, daggpunkt, vind, sikt, nederbörd; halkrisk markeras) | Trafikverket, objekt `WeatherMeasurepoint` | Road Weather (Sweden), under Events |
 | Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk) | SMHI, IBWW-varningar (CC BY 4.0, ingen nyckel) | Weather Warnings (Sweden), under Weather |
+| Polisens händelser (de 500 senaste notiserna, ca 10 dagar), placerade vid kommunens centralort | Polismyndigheten, `polisen.se/api/events` (öppna data, ange källan) | Police Events (Sweden), under Events |
 
 Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s radar och varningar samt OPERA:s radar är CC BY 4.0 (källa: SMHI respektive EUMETNET OPERA). Källor, villkor och tekniska detaljer står i
 [DATA_SOURCES.md](DATA_SOURCES.md).
@@ -52,6 +53,24 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-04 (Polisens händelser)
+- Nytt lager "Police Events (Sweden)" under Events: Polisens 500 senaste
+  händelsenotiser (öppna data, ingen nyckel, källa Polismyndigheten) som prickar
+  färgade efter kategori: våld och hot, trafik, bränder och olyckor, stöld och
+  skadegörelse, narkotika och fylleri, försvunna personer, övrigt. Knappar för
+  24 H (standard), 3 DAYS och ALL (ca 10 dagar); länens natt- och
+  kvällssammanfattningar ligger bakom SUMMARIES.
+- Polisens API ger bara länets mittkoordinat. Kommunen står däremot sist i
+  rubriken ("… Trafikolycka, Göteborg"), så servern placerar varje notis vid
+  kommunens centralort ur en tabell över alla 290 kommuner (genererad från
+  Wikidata, CC0). Flera notiser på samma ort sprids i en spiral runt centralorten
+  så att alla går att klicka på; notiser för hela länet har vit ring och ligger i
+  länets mitt. Kortet säger rakt ut att platsen är ungefärlig.
+- Klick på en prick ger rubrik, sammanfattning, tid och länk till notisen på
+  polisen.se. Notiserna är preliminära och publiceras ofta några timmar efteråt.
+- Delningskod `0x`. Röststyrningen hoppar över lagret, som för de andra svenska
+  lagren.
 
 ### 2026-11-04 (SMHI:s vädervarningar)
 - Nytt lager "Weather Warnings (Sweden)" under Weather, direkt under Rain radar: SMHI:s

@@ -334,7 +334,8 @@
     "ΔE",
     "ΔN",
     "▲ {frp} MW",
-    "INCL. NORMAL"
+    "INCL. NORMAL",
+    "24 H"
   ],
   "fr": [
     "1090 MHz",
@@ -526,7 +527,8 @@
     "INCIDENTS",
     "Europe",
     "Air {air}",
-    "AIR"
+    "AIR",
+    "24 H"
   ],
   "it": [
     "1090 MHz",
@@ -882,7 +884,8 @@
     "{value} KM/S",
     "ΔN",
     "▲ {frp} MW",
-    "INCL. NORMAL"
+    "INCL. NORMAL",
+    "24 H"
   ],
   "ru": [
     "AIS: --",

@@ -7,6 +7,7 @@ import { createAdsbGnssSource } from '../layers/gnss/source.js';
 import { createTrafikverketRoadsSource } from '../layers/roadConditions/source.js';
 import { createTrafikverketWeatherSource } from '../layers/roadWeather/source.js';
 import { createSmhiWarningsSource } from '../layers/smhiWarnings/source.js';
+import { createPolisenEventsSource } from '../layers/policeEvents/source.js';
 
 /** Construct the existing reference feeds independently of application setup. */
 export function createReferenceSources() {
@@ -20,5 +21,6 @@ export function createReferenceSources() {
     'trafikverket-roads': createTrafikverketRoadsSource(),
     'trafikverket-weather': createTrafikverketWeatherSource(),
     'smhi-warnings': createSmhiWarningsSource(),
+    'polisen-events': createPolisenEventsSource(),
   };
 }
