@@ -58,6 +58,7 @@ import {
   createDefaultProject,
   normalizeShot,
   normalizeProject,
+  refreshUneditedBuiltInScenes,
 } from './project.js';
 import {
   parseSceneDocument,
@@ -309,6 +310,8 @@ export class SceneDirector {
         installed.add(recipe.id);
         migrated = true;
       }
+      // Swedish fork: unedited saved tours gain the recipe's new shots.
+      if (refreshUneditedBuiltInScenes(project, SCENE_RECIPES)) migrated = true;
       if (migrated) {
         project.installedBuiltInSceneIds = [...installed];
         try {

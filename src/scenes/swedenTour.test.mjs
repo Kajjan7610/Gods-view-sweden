@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { REGISTERED_LAYER_IDS } from '../data/layerState.js';
-import { recipeToScene } from './project.js';
+import { recipeToScene, refreshUneditedBuiltInScenes } from './project.js';
 import { SCENE_RECIPES } from './recipes.js';
 import sv from '../i18n/locales/sv.json' with { type: 'json' };
 
@@ -30,6 +30,8 @@ test('each shot turns on its own Swedish layers and turns the others off', () =>
     ['power-grid'],
     ['aurora'],
     ['sea-weather'],
+    ['river-flow'],
+    ['gamma-radiation'],
     ['flights'],
   ]);
   for (const shot of scene.shots) {
@@ -37,4 +39,21 @@ test('each shot turns on its own Swedish layers and turns the others off', () =>
       assert.ok(REGISTERED_LAYER_IDS.includes(id), id);
     assert.ok(sv[shot.title], `untranslated shot title ${shot.title}`);
   }
+});
+
+test('a saved tour gains new shots only while nobody edited it', () => {
+  const scene = recipeToScene(tour);
+  const saved = (shots) => ({
+    scenes: [{ ...scene, shots: shots.map((shot) => structuredClone(shot)) }],
+  });
+  const older = saved(scene.shots.slice(0, 7));
+  assert.equal(refreshUneditedBuiltInScenes(older, SCENE_RECIPES), true);
+  assert.equal(older.scenes[0].shots.length, tour.cameraPath.length);
+  const edited = saved([
+    ...scene.shots.slice(0, 6),
+    { ...scene.shots[6], title: 'My own shot' },
+  ]);
+  assert.equal(refreshUneditedBuiltInScenes(edited, SCENE_RECIPES), false);
+  const current = saved(scene.shots);
+  assert.equal(refreshUneditedBuiltInScenes(current, SCENE_RECIPES), false);
 });

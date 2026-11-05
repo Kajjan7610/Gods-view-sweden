@@ -88,6 +88,35 @@ function normalizeBloomState(
 }
 
 /**
+ * Refresh saved copies of built-in scenes marked `refreshWhenUnedited` that
+ * gained shots: only while every saved shot still carries one of the
+ * recipe's own titles, so a scene someone edited is left alone (Swedish fork).
+ * @param {{scenes: Object[]}} project Changed in place.
+ * @param {Object[]} recipes
+ * @returns {boolean} Whether any scene was replaced.
+ */
+export function refreshUneditedBuiltInScenes(project, recipes) {
+  let changed = false;
+  for (const recipe of recipes) {
+    if (!recipe.refreshWhenUnedited) continue;
+    const index = project.scenes.findIndex((scene) => scene.id === recipe.id);
+    if (index < 0) continue;
+    const recipeTitles = recipe.cameraPath.map((frame) => frame.title);
+    const savedTitles = (project.scenes[index].shots || []).map(
+      (shot) => shot.title,
+    );
+    if (
+      savedTitles.length < recipeTitles.length &&
+      savedTitles.every((title) => recipeTitles.includes(title))
+    ) {
+      project.scenes[index] = recipeToScene(recipe);
+      changed = true;
+    }
+  }
+  return changed;
+}
+
+/**
  * Convert a static scene recipe (from recipes.js) into a mutable scene object
  * with fully normalized shots. Each keyframe in the recipe's cameraPath becomes
  * one shot, inheriting the recipe's style, post, and layer configuration.

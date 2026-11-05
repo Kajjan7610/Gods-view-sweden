@@ -503,3 +503,36 @@
 body.cockpit-mode .city-arrival {
   display: none;
 }
+
+/* ── Phones: the CITY panel belongs to the Context sheet, like Recent
+   Imagery (mobile-shell.css hides the rails until a sheet opens). ───── */
+body.mobile-shell #right-context-rail > #city-panel {
+  display: none;
+}
+body.mobile-shell[data-mobile-sheet='context']
+  #right-context-rail
+  > #city-panel:not([hidden]) {
+  position: relative;
+  inset: auto;
+  display: block;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  transform: none;
+}
+/* In the sheet the panel takes its own height; the sheet itself scrolls. */
+body.mobile-shell[data-mobile-sheet='context']
+  #right-context-rail
+  > #city-panel:not([hidden]) {
+  flex: 0 0 auto;
+  height: auto;
+  max-height: none;
+}
+body.mobile-shell #city-panel .city-panel-inner,
+body.mobile-shell #city-panel-body {
+  height: auto;
+  max-height: none;
+}
+body.mobile-shell .city-arrival {
+  bottom: calc(var(--mobile-tab-space, 64px) + 150px);
+}

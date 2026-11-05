@@ -66,6 +66,18 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-05 (synk, utökad tur och mobil)
+- Synk med originalet: 18 nya commits (bussar och BRT i Rio de Janeiro,
+  leverantörens namn i Kontakter- och Cockpit-räknarna). Konflikterna i
+  README och kollektivtrafikens flödeslista löstes genom att behålla båda.
+- Turen "Sverige just nu" har två nya bilder före Arlanda: vattenföring i
+  Norrland och strålningsövervakning (nu nio bilder, ca 85 s). Ett sparat
+  scenprojekt där turen inte redigerats får de nya bilderna automatiskt;
+  en redigerad tur lämnas orörd.
+- Mobil: panelen STAD visas nu i Kontext-bladet (den saknade regler och
+  blev osynlig på telefon) och tar sin egen höjd där; titelkortet vid
+  ankomst ligger ovanför flikraden.
+
 ### 2026-11-05 (besökspass och filmisk ankomst)
 - Stadsdossiern har en femte flik, PASS. Varje svensk ort du besöker får
   en stämpel som sparas i webbläsaren, och fliken visar hur många av de

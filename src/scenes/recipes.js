@@ -630,6 +630,8 @@ const SWEDEN_TOUR_LAYERS = Object.freeze([
   'power-grid',
   'aurora',
   'sea-weather',
+  'river-flow',
+  'gamma-radiation',
   'flights',
 ]);
 const swedenTourLayers = (...on) =>
@@ -639,7 +641,7 @@ const swedenTourLayers = (...on) =>
 const SWEDEN_NOW_RECIPE = Object.freeze({
   id: 'sweden-now',
   title: msg('Sweden Right Now'),
-  durationSec: 65,
+  durationSec: 85,
   style: 'normal',
   ui: { hidePanels: true, hudMode: 'minimal', safeFrame: '16:9' },
   // Room for the Swedish layers: the global feeds stay out of the picture.
@@ -647,6 +649,8 @@ const SWEDEN_NOW_RECIPE = Object.freeze({
   post: { bloom: 24, sharpen: true, detectionMode: 'OFF' },
   // Existing projects gain the tour after the last original scene.
   installAlongsideSceneId: 'omniscience-pullback',
+  // Saved copies that nobody edited gain new shots (director._loadProject).
+  refreshWhenUnedited: true,
   cameraPath: [
     {
       title: msg('Warnings in Effect'),
@@ -719,6 +723,30 @@ const SWEDEN_NOW_RECIPE = Object.freeze({
       duration: 6,
       hold: 3,
       layers: swedenTourLayers('sea-weather'),
+    },
+    {
+      title: msg('River Flows in Norrland'),
+      lat: 59.8,
+      lon: 18.5,
+      alt: 900000,
+      heading: 0,
+      pitch: -45,
+      roll: 0,
+      duration: 6,
+      hold: 4,
+      layers: swedenTourLayers('river-flow'),
+    },
+    {
+      title: msg('Radiation Monitoring'),
+      lat: 53.6,
+      lon: 16.5,
+      alt: 1700000,
+      heading: 0,
+      pitch: -62,
+      roll: 0,
+      duration: 6,
+      hold: 4,
+      layers: swedenTourLayers('gamma-radiation'),
     },
     {
       title: msg('Arrivals at Arlanda'),
