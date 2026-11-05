@@ -3601,5 +3601,15 @@
   "No queues right now": "Зараз заторів немає",
   "{km} km": "{km} км",
   "+{minutes} min": "+{minutes} хв",
-  "Queues around the town": "Затори довкола міста"
+  "Queues around the town": "Затори довкола міста",
+  "PASSPORT": "ПАСПОРТ",
+  "{count} of {total} municipalities visited": "Відвідано комун: {count} з {total}",
+  "All 21 county seats": "Усі 21 адміністративний центр лену",
+  "A town in every county": "По населеному пункту в кожному лені",
+  "Three towns north of the Arctic Circle": "Три міста за Полярним колом",
+  "Every municipality in Sweden": "Усі комуни Швеції",
+  "Show my journey on the map": "Показати мою подорож на мапі",
+  "Cinematic arrival": "Кінематографічне прибуття",
+  "{count} inhabitants": "Мешканців: {count}",
+  "founded {year}": "засновано в {year}"
 }

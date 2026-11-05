@@ -66,6 +66,23 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-05 (besökspass och filmisk ankomst)
+- Stadsdossiern har en femte flik, PASS. Varje svensk ort du besöker får
+  en stämpel som sparas i webbläsaren, och fliken visar hur många av de
+  290 kommunerna du besökt, fyra utmaningar med förloppsstapel (alla 21
+  residensstäder, en ort i varje län, tre orter norr om polcirkeln, alla
+  kommuner) och de senaste stämplarna med datum.
+- "Visa min resa på kartan" ritar stämplarna som guldpunkter på globen,
+  sammanbundna i den ordning du besökte dem.
+- Filmisk ankomst: första besöket i en ort ger ett titelkort (namn,
+  invånare, grundår, län) och kameran cirklar långsamt ett varv runt
+  centrum. Ett klick, en tangent, scrollhjul, en annan flygning, en scen
+  eller cockpit avbryter direkt. Kan stängas av i PASS-fliken.
+- Startvyn och delade länkar räknas inte som resor: under appens första
+  20 sekunder ges ingen stämpel och ingen ankomst.
+- Dossierns faktadel sparas bara tio minuter (i stället för ett dygn) när
+  någon källa inte svarade, och servern loggar vilken.
+
 ### 2026-11-05 (tåg och köer i stadsdossiern)
 - Fliken NU visar nu de sex nästa avgångarna från stadens station
   (Trafikverket: centralstationen före andra, inom 8 km) med destination,

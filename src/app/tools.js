@@ -132,6 +132,8 @@ export function createApplicationTools({
     dataManager,
     publish: (view) => cityDossierStore.publish(view),
     connect: (actions) => cityDossierStore.connect(actions),
+    // A playing scene owns the camera; a first visit then gets no orbit.
+    isCameraBusy: () => sceneDirector.getPlaybackStatus?.()?.running === true,
   });
   defer(() => cityDossier.destroy());
   if (startChrome)

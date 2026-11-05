@@ -3373,5 +3373,15 @@
   "No queues right now": "目前没有拥堵",
   "{km} km": "{km} 公里",
   "+{minutes} min": "+{minutes} 分钟",
-  "Queues around the town": "城市周边拥堵"
+  "Queues around the town": "城市周边拥堵",
+  "PASSPORT": "护照",
+  "{count} of {total} municipalities visited": "已访问 {count}/{total} 个市镇",
+  "All 21 county seats": "全部 21 个省府",
+  "A town in every county": "每个省一个城镇",
+  "Three towns north of the Arctic Circle": "北极圈以北三个城镇",
+  "Every municipality in Sweden": "瑞典所有市镇",
+  "Show my journey on the map": "在地图上显示我的旅程",
+  "Cinematic arrival": "电影式抵达",
+  "{count} inhabitants": "{count} 名居民",
+  "founded {year}": "建于 {year} 年"
 }

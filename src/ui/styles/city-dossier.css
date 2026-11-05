@@ -118,7 +118,7 @@
 }
 .city-dossier-tabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 3px;
 }
 .city-dossier-tabs button {
@@ -389,4 +389,117 @@
 .city-dossier-radio[disabled] {
   opacity: 0.6;
   cursor: progress;
+}
+
+/* ── Visit passport ───────────────────────────────────────── */
+.city-dossier-pass-summary {
+  color: #ffc94d;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.city-dossier-challenge {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 8px;
+  font-size: 9px;
+}
+.city-dossier-challenge small {
+  color: rgba(220, 238, 255, 0.6);
+}
+.city-dossier-challenge i {
+  grid-column: 1 / -1;
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(244, 251, 255, 0.08);
+  overflow: hidden;
+}
+.city-dossier-challenge b {
+  display: block;
+  height: 100%;
+  background: #ffc94d;
+}
+.city-dossier-challenge.done span::after {
+  content: ' ✓';
+  color: #69f0ae;
+}
+.city-dossier-pass-toggles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+.city-dossier-pass-toggles button {
+  min-height: 26px;
+  border: 1px solid rgba(255, 201, 77, 0.35);
+  border-radius: 4px;
+  background: rgba(2, 12, 20, 0.6);
+  color: rgba(220, 238, 255, 0.7);
+  font: 700 7px/1.2 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.city-dossier-pass-toggles button[aria-pressed='true'] {
+  border-color: #ffc94d;
+  color: #fff;
+}
+.city-dossier-stamps {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.city-dossier-stamps li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 7px;
+  border-left: 2px solid #ffc94d;
+  background: rgba(0, 7, 12, 0.76);
+}
+.city-dossier-stamps small {
+  color: rgba(220, 238, 255, 0.5);
+  font-size: 7px;
+}
+
+/* ── Arrival title card (first visit) ─────────────────────── */
+.city-arrival {
+  position: fixed;
+  z-index: 120;
+  left: 50%;
+  bottom: 22vh;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  text-align: center;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.85);
+}
+.city-arrival strong {
+  color: #fff;
+  font: 300 clamp(28px, 5vw, 56px) / 1 var(--font-mono);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+.city-arrival span {
+  color: #ffc94d;
+  font: 600 clamp(10px, 1.2vw, 13px) / 1.2 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.city-arrival-enter-active,
+.city-arrival-leave-active {
+  transition:
+    opacity 1.2s ease,
+    letter-spacing 2.4s ease;
+}
+.city-arrival-enter-from,
+.city-arrival-leave-to {
+  opacity: 0;
+}
+body.cockpit-mode .city-arrival {
+  display: none;
 }

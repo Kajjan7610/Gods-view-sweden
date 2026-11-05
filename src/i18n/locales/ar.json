@@ -3753,5 +3753,15 @@
   "No queues right now": "لا ازدحام الآن",
   "{km} km": "{km} كم",
   "+{minutes} min": "+{minutes} د",
-  "Queues around the town": "الازدحام حول المدينة"
+  "Queues around the town": "الازدحام حول المدينة",
+  "PASSPORT": "جواز السفر",
+  "{count} of {total} municipalities visited": "تمت زيارة {count} من {total} بلدية",
+  "All 21 county seats": "جميع عواصم المقاطعات الـ21",
+  "A town in every county": "بلدة في كل مقاطعة",
+  "Three towns north of the Arctic Circle": "ثلاث بلدات شمال الدائرة القطبية",
+  "Every municipality in Sweden": "جميع بلديات السويد",
+  "Show my journey on the map": "عرض رحلتي على الخريطة",
+  "Cinematic arrival": "وصول سينمائي",
+  "{count} inhabitants": "{count} نسمة",
+  "founded {year}": "تأسست عام {year}"
 }

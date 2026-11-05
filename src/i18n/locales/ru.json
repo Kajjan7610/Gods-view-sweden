@@ -3601,5 +3601,15 @@
   "No queues right now": "Сейчас пробок нет",
   "{km} km": "{km} км",
   "+{minutes} min": "+{minutes} мин",
-  "Queues around the town": "Пробки вокруг города"
+  "Queues around the town": "Пробки вокруг города",
+  "PASSPORT": "ПАСПОРТ",
+  "{count} of {total} municipalities visited": "Посещено коммун: {count} из {total}",
+  "All 21 county seats": "Все 21 административный центр лена",
+  "A town in every county": "По населённому пункту в каждом лене",
+  "Three towns north of the Arctic Circle": "Три города за Полярным кругом",
+  "Every municipality in Sweden": "Все коммуны Швеции",
+  "Show my journey on the map": "Показать моё путешествие на карте",
+  "Cinematic arrival": "Кинематографичное прибытие",
+  "{count} inhabitants": "Жителей: {count}",
+  "founded {year}": "основан в {year}"
 }

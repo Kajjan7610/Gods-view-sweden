@@ -25,6 +25,15 @@ import {
   sparklinePoints,
   sunTimes,
 } from './cityDossierModel.js';
+import {
+  MUNICIPALITY_COUNT,
+  challengeProgress,
+  loadPassport,
+  savePassport,
+  stampVisit,
+  stampsInOrder,
+} from './visitPassport.js';
+import { OrbitController } from '../orbit.js';
 
 const PANEL_ID = 'city-panel';
 /** Higher than this the view is looking at a region, not visiting a town. */
@@ -42,7 +51,20 @@ const TABS = Object.freeze([
   ['people', msg('POPULATION')],
   ['society', msg('SOCIETY')],
   ['now', msg('NOW')],
+  ['pass', msg('PASSPORT')],
 ]);
+const CHALLENGE_LABELS = Object.freeze({
+  seats: msg('All 21 county seats'),
+  counties: msg('A town in every county'),
+  arctic: msg('Three towns north of the Arctic Circle'),
+  all: msg('Every municipality in Sweden'),
+});
+/** A first visit circles the town once, unless something interrupts. */
+const ARRIVAL_ORBIT_S = 30;
+const ARRIVAL_TITLE_MS = 7000;
+/** The start view (or a shared link) is a visit too, but not an arrival. */
+const STARTUP_QUIET_MS = 20_000;
+const STAMP_COLOR = '#ffc94d';
 const PARTY_COLORS = Object.freeze({
   S: '#ed1b34',
   V: '#af0000',
@@ -91,8 +113,18 @@ export function createCityDossier({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
   documentRef = globalThis.document,
+  storage = globalThis.localStorage,
+  // Scenes and other camera owners: no arrival orbit while they hold it.
+  isCameraBusy = () => false,
 }) {
   let destroyed = false;
+  const createdAt = now();
+  const passport = loadPassport(storage);
+  let arrival = null;
+  let arrivalTimer = null;
+  let orbit = null;
+  let orbitWatch = null;
+  let journey = null;
   let timer = null;
   let request = null;
   let liveRequest = null;
@@ -153,6 +185,14 @@ export function createCityDossier({
         status = body.error ? 'error' : 'ready';
         live = null;
         liveAt = 0;
+        // The start view (or a shared link) is shown, not travelled to: no
+        // stamp and no arrival while the page is still starting.
+        if (now() - createdAt >= STARTUP_QUIET_MS) {
+          const firstVisit = stampVisit(passport, city, now());
+          savePassport(storage, passport);
+          renderJourney();
+          if (firstVisit && passport.cinematic) arrive(city, facts);
+        }
         render();
         openOnFirstVisit();
       }
@@ -207,6 +247,170 @@ export function createCityDossier({
       ),
     ]);
     if (current()) liveRequest = null;
+  }
+
+  // ---- arrival and passport ------------------------------------------------
+  /** The first visit's slow circle and title card. */
+  function arrive(town, townFacts) {
+    if (
+      isCameraBusy() ||
+      documentRef?.body?.classList?.contains('cockpit-mode')
+    )
+      return;
+    const [lon, lat] = town.point;
+    const target = Cesium.Cartesian3.fromDegrees(lon, lat, 0);
+    const distance = Cesium.Cartesian3.distance(
+      viewer.camera.positionWC,
+      target,
+    );
+    stopOrbit();
+    orbit = new OrbitController(viewer);
+    orbit.start(target, {
+      radius: Math.min(12_000, Math.max(2_500, distance)),
+      pitch: -32,
+      speed: 360 / ARRIVAL_ORBIT_S,
+    });
+    const started = now();
+    // Any input, a camera owner taking over or one full turn ends it.
+    const interrupt = () => stopOrbit();
+    for (const type of ['pointerdown', 'wheel', 'keydown', 'touchstart'])
+      documentRef?.addEventListener?.(type, interrupt, {
+        capture: true,
+        once: true,
+      });
+    orbitWatch = setInterval(() => {
+      if (
+        now() - started > ARRIVAL_ORBIT_S * 1000 ||
+        isCameraBusy() ||
+        documentRef?.body?.classList?.contains('cockpit-mode') ||
+        // A flight someone else started (search, voice, a link) wins.
+        viewer.camera._currentFlight
+      )
+        stopOrbit();
+    }, 100);
+    orbit.interrupt = interrupt;
+    const town$ = townFacts?.town;
+    arrival = {
+      key: `${town.code}:${started}`,
+      name: town.name,
+      line: [
+        Number.isFinite(town$?.population)
+          ? t('{count} inhabitants', { count: whole(town$.population) })
+          : null,
+        Number.isFinite(town$?.founded)
+          ? t('founded {year}', { year: town$.founded })
+          : null,
+        town.county,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    };
+    clearTimeout(arrivalTimer);
+    arrivalTimer = setTimeout(() => {
+      arrival = null;
+      render();
+    }, ARRIVAL_TITLE_MS);
+  }
+
+  function stopOrbit() {
+    if (orbitWatch) clearInterval(orbitWatch);
+    orbitWatch = null;
+    if (!orbit) return;
+    for (const type of ['pointerdown', 'wheel', 'keydown', 'touchstart'])
+      documentRef?.removeEventListener?.(type, orbit.interrupt, {
+        capture: true,
+      });
+    if (orbit.active) orbit.stop();
+    orbit = null;
+  }
+
+  /** The stamped towns on the globe, joined in the order they were visited. */
+  function renderJourney() {
+    if (!passport.showMap) {
+      if (journey) {
+        viewer.dataSources.remove(journey, true);
+        journey = null;
+      }
+      return;
+    }
+    if (!journey) {
+      journey = new Cesium.CustomDataSource('visit-passport');
+      viewer.dataSources.add(journey);
+    }
+    const entities = journey.entities;
+    entities.suspendEvents();
+    try {
+      entities.removeAll();
+      const stamps = stampsInOrder(passport).filter((stamp) =>
+        Array.isArray(stamp.point),
+      );
+      const gold = Cesium.Color.fromCssColorString(STAMP_COLOR);
+      for (const stamp of stamps)
+        entities.add({
+          id: `visit-passport:${stamp.code}`,
+          position: Cesium.Cartesian3.fromDegrees(...stamp.point),
+          point: {
+            pixelSize: 9,
+            color: gold,
+            outlineColor: Cesium.Color.BLACK.withAlpha(0.6),
+            outlineWidth: 1.5,
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          },
+        });
+      if (stamps.length > 1)
+        entities.add({
+          id: 'visit-passport:route',
+          polyline: {
+            positions: stamps.map((stamp) =>
+              Cesium.Cartesian3.fromDegrees(...stamp.point),
+            ),
+            width: 2,
+            arcType: Cesium.ArcType.GEODESIC,
+            clampToGround: true,
+            material: new Cesium.PolylineDashMaterialProperty({
+              color: gold.withAlpha(0.8),
+              dashLength: 14,
+            }),
+          },
+        });
+    } finally {
+      entities.resumeEvents();
+    }
+    viewer.scene.requestRender?.();
+  }
+
+  function passView() {
+    const stamps = stampsInOrder(passport);
+    const day = new Intl.DateTimeFormat(getLocale(), {
+      day: 'numeric',
+      month: 'short',
+    });
+    return {
+      summary: t('{count} of {total} municipalities visited', {
+        count: stamps.length,
+        total: MUNICIPALITY_COUNT,
+      }),
+      challenges: challengeProgress(passport).map((row) => ({
+        id: row.id,
+        label: t(CHALLENGE_LABELS[row.id]),
+        progress: `${row.done} / ${row.total}`,
+        done: row.done >= row.total,
+        width: `${Math.round((row.done / row.total) * 100)}%`,
+      })),
+      recent: stamps
+        .slice(-8)
+        .reverse()
+        .map((stamp) => ({
+          key: stamp.code,
+          name: stamp.name,
+          detail: [stamp.county, day.format(stamp.first)]
+            .filter(Boolean)
+            .join(' · '),
+        })),
+      showMap: passport.showMap,
+      cinematic: passport.cinematic,
+    };
   }
 
   function openOnFirstVisit() {
@@ -578,6 +782,8 @@ export function createCityDossier({
       people: facts ? peopleView() : null,
       society: facts ? societyView() : null,
       now: nowView(),
+      pass: passView(),
+      arrival,
       source:
         'SCB · Kolada (RKA) · Valmyndigheten · Wikidata · Wikipedia · SMHI · Polisen', // i18n-ignore: provider names
     });
@@ -591,8 +797,21 @@ export function createCityDossier({
       render();
     },
     playRadio,
+    toggleCinematic() {
+      passport.cinematic = !passport.cinematic;
+      if (!passport.cinematic) stopOrbit();
+      savePassport(storage, passport);
+      render();
+    },
+    togglePassMap() {
+      passport.showMap = !passport.showMap;
+      savePassport(storage, passport);
+      renderJourney();
+      render();
+    },
   });
 
+  renderJourney();
   const removeLocaleListener = onLocaleChange(render);
   const removeMoveEnd = viewer.camera.moveEnd.addEventListener(() => {
     if (timer) clearTimeout(timer);
@@ -614,6 +833,10 @@ export function createCityDossier({
       liveRequest?.abort();
       removeMoveEnd();
       removeLocaleListener();
+      stopOrbit();
+      clearTimeout(arrivalTimer);
+      if (journey) viewer.dataSources.remove(journey, true);
+      journey = null;
       disconnect();
       publish(null);
     },

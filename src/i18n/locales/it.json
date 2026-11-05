@@ -3525,5 +3525,15 @@
   "No queues right now": "Nessuna coda al momento",
   "{km} km": "{km} km",
   "+{minutes} min": "+{minutes} min",
-  "Queues around the town": "Code intorno alla città"
+  "Queues around the town": "Code intorno alla città",
+  "PASSPORT": "PASSAPORTO",
+  "{count} of {total} municipalities visited": "{count} comuni visitati su {total}",
+  "All 21 county seats": "Tutti i 21 capoluoghi di contea",
+  "A town in every county": "Una località in ogni contea",
+  "Three towns north of the Arctic Circle": "Tre località a nord del circolo polare",
+  "Every municipality in Sweden": "Tutti i comuni della Svezia",
+  "Show my journey on the map": "Mostra il mio viaggio sulla mappa",
+  "Cinematic arrival": "Arrivo cinematografico",
+  "{count} inhabitants": "{count} abitanti",
+  "founded {year}": "fondata nel {year}"
 }

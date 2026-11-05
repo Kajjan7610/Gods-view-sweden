@@ -98,8 +98,31 @@ const { view: d } = storeToRefs(store);
             </button>
           </template>
         </section>
+        <section v-else-if="d.tab === 'pass'" class="city-dossier-section" role="tabpanel">
+          <strong class="city-dossier-pass-summary">{{ d.pass.summary }}</strong>
+          <div v-for="row in d.pass.challenges" :key="row.id" class="city-dossier-challenge" :class="{ done: row.done }">
+            <span>{{ row.label }}</span><small>{{ row.progress }}</small>
+            <i><b :style="{ width: row.width }"></b></i>
+          </div>
+          <div class="city-dossier-pass-toggles">
+            <button type="button" :aria-pressed="String(d.pass.showMap)" @click="store.act('togglePassMap')">{{ t('Show my journey on the map') }}</button>
+            <button type="button" :aria-pressed="String(d.pass.cinematic)" @click="store.act('toggleCinematic')">{{ t('Cinematic arrival') }}</button>
+          </div>
+          <ol class="city-dossier-stamps">
+            <li v-for="stamp in d.pass.recent" :key="stamp.key"><strong>{{ stamp.name }}</strong><small>{{ stamp.detail }}</small></li>
+          </ol>
+        </section>
         <footer class="city-dossier-source">{{ d.source }}</footer>
       </template>
     </div>
   </RailPanel>
+  <!-- A first visit's title card, over the map while the camera circles. -->
+  <Teleport to="body">
+    <Transition name="city-arrival">
+      <div v-if="d?.arrival" :key="d.arrival.key" class="city-arrival" aria-live="polite">
+        <strong>{{ d.arrival.name }}</strong>
+        <span>{{ d.arrival.line }}</span>
+      </div>
+    </Transition>
+  </Teleport>
 </template>

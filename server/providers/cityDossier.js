@@ -22,6 +22,7 @@ const USER_AGENT =
 /** Within this distance of a seat the view is visiting that town. */
 export const VISIT_RADIUS_KM = 20;
 const FACTS_TTL_MS = 24 * 60 * 60_000;
+const PARTIAL_FACTS_TTL_MS = 10 * 60_000;
 const FACTS_CACHE_MAX = 120;
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
@@ -337,6 +338,18 @@ export function cityDossierProxy({
         population.municipalityPopulation(seat.code),
         results.forMunicipality(seat.code),
       ]);
+    // Each source may fail alone; say which, so a quiet gap is explained.
+    for (const [label, result] of [
+      ['kolada', kolada],
+      ['wikidata', wikidata],
+      ['scb town', scbTown],
+      ['scb month', scbMonthly],
+      ['election', latestElection],
+    ])
+      if (result.status === 'rejected')
+        console.warn(
+          `[city-dossier] ${seat.locality} ${label}: ${result.reason?.message || result.reason}`,
+        );
     const town = mergeTown(value(wikidata), value(scbTown));
     let wikipedia = null;
     try {
@@ -356,7 +369,15 @@ export function cityDossierProxy({
     );
     if (!municipality && !town && !wikipedia)
       throw new Error('no dossier source answered');
-    return { municipality, town, wikipedia, fetchedAt: now() };
+    // A source that failed is asked again soon instead of after a day.
+    const partial = [
+      kolada,
+      wikidata,
+      scbTown,
+      scbMonthly,
+      latestElection,
+    ].some((result) => result.status === 'rejected');
+    return { municipality, town, wikipedia, partial, fetchedAt: now() };
   }
 
   async function handler(req, res) {
@@ -388,7 +409,11 @@ export function cityDossierProxy({
       point: seat.point,
     };
     const hit = facts.get(seat.code);
-    if (hit && now() - hit.savedAt < FACTS_TTL_MS)
+    if (
+      hit &&
+      now() - hit.savedAt <
+        (hit.value.partial ? PARTIAL_FACTS_TTL_MS : FACTS_TTL_MS)
+    )
       return json(200, { city, ...hit.value });
     if (!allow(clientKey(req)))
       return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });

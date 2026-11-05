@@ -3373,5 +3373,15 @@
   "No queues right now": "現在渋滞なし",
   "{km} km": "{km} km",
   "+{minutes} min": "+{minutes} 分",
-  "Queues around the town": "市内周辺の渋滞"
+  "Queues around the town": "市内周辺の渋滞",
+  "PASSPORT": "パスポート",
+  "{count} of {total} municipalities visited": "{total} 自治体中 {count} を訪問",
+  "All 21 county seats": "21 の県都すべて",
+  "A town in every county": "各県に一つの町",
+  "Three towns north of the Arctic Circle": "北極圏以北の町を三つ",
+  "Every municipality in Sweden": "スウェーデンの全自治体",
+  "Show my journey on the map": "旅の軌跡を地図に表示",
+  "Cinematic arrival": "映画のような到着",
+  "{count} inhabitants": "人口 {count} 人",
+  "founded {year}": "{year} 年創設"
 }
