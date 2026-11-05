@@ -58,23 +58,42 @@ const SEAT_RADIUS_KM = 50;
  * @param {Array<[string, string, string, number, number]>} [rows]
  */
 export function swedishPlaceAt(point, rows = SWEDISH_MUNICIPALITIES) {
+  const seat = nearestSeat(point, SEAT_RADIUS_KM, rows);
+  if (!seat) return null;
+  return {
+    label: [seat.locality, seat.county].filter(Boolean).join(', '),
+    locality: seat.locality,
+    region: seat.county,
+    country: 'Sverige',
+    countryCode: 'SE',
+    source: 'Wikidata',
+  };
+}
+
+/**
+ * The municipality whose seat is nearest a point, within `maxKm`, or null.
+ * `municipality` is the list's name, often genitive ("Stockholms"); the
+ * seat is the town ("Stockholm").
+ * @param {{latitude: number, longitude: number}} point
+ * @param {number} maxKm
+ * @param {Array<[string, string, string, number, number]>} [rows]
+ */
+export function nearestSeat(point, maxKm, rows = SWEDISH_MUNICIPALITIES) {
   const here = { lat: point.latitude, lon: point.longitude };
   let best = null;
   for (const row of rows) {
     const km = greatCircleKm(here, { lat: row[4], lon: row[3] });
-    if (km <= SEAT_RADIUS_KM && (!best || km < best.km)) best = { row, km };
+    if (km <= maxKm && (!best || km < best.km)) best = { row, km };
   }
   if (!best) return null;
-  const [code, name, seat] = best.row;
-  const locality = seat || name;
-  const region = SWEDISH_COUNTIES[code.slice(0, 2)] || null;
+  const [code, municipality, seat, lon, lat] = best.row;
   return {
-    label: [locality, region].filter(Boolean).join(', '),
-    locality,
-    region,
-    country: 'Sverige',
-    countryCode: 'SE',
-    source: 'Wikidata',
+    code,
+    municipality,
+    locality: seat || municipality,
+    county: SWEDISH_COUNTIES[code.slice(0, 2)] || null,
+    point: [lon, lat],
+    km: Math.round(best.km * 10) / 10,
   };
 }
 

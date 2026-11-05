@@ -27,6 +27,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (pilar i flödesriktningen, MW), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, flöde i m³/s var 15:e minut och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
+| Stadsdossier: när vyn stannar lågt över en svensk ort visar panelen STAD i högerkanten stadsvapen, foto och inledning, tätortens och kommunens folkmängd med kurva, skattesats, inkomst, arbetslöshet och kommunvalet, samt läget just nu (väder, luft, varningar, Polisen, sol) och en knapp för lokalradio | Kolada (RKA), Wikidata (CC0), Wikipedia (CC BY-SA 4.0), SMHI, Polisen; ingen nyckel | Panelen STAD i högerkanten (dyker upp vid första besöket) |
 | Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
 Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s radar och varningar samt OPERA:s radar är CC BY 4.0 (källa: SMHI respektive EUMETNET OPERA). Källor, villkor och tekniska detaljer står i
@@ -64,6 +65,29 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-05 (stadsdossier)
+- Ny panel STAD i högerkanten. När kameran stannar under 80 km höjd och
+  mitten av vyn ligger inom 2 mil från en svensk kommuns centralort visar
+  den orten i fyra flikar:
+  - OM STADEN: stadsvapen, foto och inledning från Wikipedia (med
+    källangivelse och länk), grundår och höjd över havet (Wikidata).
+  - BEFOLKNING: tätortens och kommunens folkmängd, kvinnor/män,
+    medelålder och en kurva över de senaste tio åren (Kolada).
+  - SAMHÄLLE: skattesats, medianinkomst, arbetslöshet, valdeltagande och
+    partiernas andelar i senaste kommunvalet som staplar (Kolada).
+  - NU: väder och varningar (SMHI och Krisinformation via cockpitens
+    genomgång), närmaste luftmätning, Polisens händelser i kommunen senaste
+    dygnet, sol upp och ned (midnattssol och polarnatt i norr) och en knapp
+    som spelar lokalradio.
+- Panelen öppnas av sig själv första gången, som Senaste bilder.
+  Faktadelen hämtas via `/api/city-dossier` och sparas ett dygn per kommun.
+- Lokalradion söker först "P4 <stad>", sedan "P4 <län>" och tar annars
+  närmaste svenska station. Radiokatalogen innehåller bara P4 Stockholm
+  och P4 Göteborg, så de flesta städer får närmaste av dem.
+- Wikidata-uppslaget tar den föredragna folkmängdsuppgiften (Stockholm har
+  en per kommundel) och provar flera namn på centralorten (t.ex.
+  "Salemstaden" och "Salem").
 
 ### 2026-11-05 (vattenföring från SMHI)
 - Nytt lager "Vattenföring (Sverige)" (delningstoken `0o`), under Väder:

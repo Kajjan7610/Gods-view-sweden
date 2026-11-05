@@ -6,6 +6,8 @@ import { useDisplayStore } from '../ui/stores/display.js';
 import { applicationPinia } from '../ui/vueRuntime.js';
 import { initImageryBoxTool } from '../ui/imageryBoxTool.js';
 import { createRecentImageryPanel } from '../ui/recentImagery.js';
+import { createCityDossier } from '../ui/cityDossier.js';
+import { useCityDossierStore } from '../ui/stores/cityDossier.js';
 import { initGevVoiceCommands } from '../voice/gevRealtime.js';
 import { installViews, isEmbeddedInline } from './embed.js';
 import { installScopeMask, destroyScopeMask } from '../scopeMask.js';
@@ -123,6 +125,15 @@ export function createApplicationTools({
       imageryBoxTool?.destroy();
     });
   }
+  // The CITY panel follows the town the view settles over (Swedish fork).
+  const cityDossierStore = useCityDossierStore(applicationPinia());
+  const cityDossier = createCityDossier({
+    viewer,
+    dataManager,
+    publish: (view) => cityDossierStore.publish(view),
+    connect: (actions) => cityDossierStore.connect(actions),
+  });
+  defer(() => cityDossier.destroy());
   if (startChrome)
     defer(startChrome({ loadingScreen, styleManager, dataManager, signal }));
   // Idle render governor: flips the scene into requestRenderMode whenever

@@ -1,0 +1,333 @@
+/* ── City dossier (right rail, Swedish fork) ───────────────── */
+/* Laid out by the rail like Recent Imagery: the rail itself lets clicks
+   through, so the panel takes them back; only the body scrolls. */
+#right-context-rail > #city-panel {
+  position: relative;
+  inset: auto;
+  flex: 0 0 auto;
+  width: 100%;
+  max-height: 100%;
+  pointer-events: auto;
+}
+#right-context-rail > #city-panel:not(.collapsed) {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 1;
+  min-height: 0;
+}
+#right-context-rail #city-panel.collapsed {
+  width: var(--right-display-collapsed-width);
+  margin-inline-start: auto;
+}
+#right-context-rail #city-panel.collapsed .city-panel-inner {
+  height: 50px;
+  min-height: 50px;
+  box-sizing: border-box;
+}
+#right-context-rail.layout-focus > #city-panel:not(.collapsed) {
+  flex: 0 1 var(--right-panel-allocated-height);
+  height: var(--right-panel-allocated-height);
+  min-height: 0;
+  max-height: var(--right-panel-allocated-height);
+}
+#right-context-rail.layout-focus
+  > #city-panel:not(.collapsed)
+  .city-panel-inner {
+  height: 100%;
+  box-sizing: border-box;
+}
+#right-context-rail[data-rail-measuring]
+  > #city-panel:not(.collapsed)
+  > .city-panel-inner {
+  height: auto !important;
+  max-height: none !important;
+}
+.city-panel-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  max-height: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--panel-radius);
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+#city-panel .panel-header {
+  flex: 0 0 auto;
+}
+#city-panel-name {
+  color: var(--text-secondary);
+  font: 9px var(--font-mono);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+#city-panel-body {
+  min-height: 0;
+  max-height: calc(var(--right-stack-max-height, 50svh) - 64px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#city-panel.collapsed #city-panel-body,
+#city-panel.collapsed #city-panel-name,
+#city-panel[hidden],
+#city-panel [hidden] {
+  display: none !important;
+}
+#city-panel.collapsed .panel-header {
+  margin-bottom: 2px;
+}
+.city-dossier {
+  display: grid;
+  gap: 8px;
+  color: #dceeff;
+  font: 500 10px/1.45 var(--font-mono);
+}
+.city-dossier-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.city-dossier-arms {
+  width: 34px;
+  height: 40px;
+  object-fit: contain;
+  flex: none;
+}
+.city-dossier-name {
+  display: block;
+  color: #fff;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.city-dossier-sub {
+  display: block;
+  color: rgba(220, 238, 255, 0.6);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.city-dossier-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3px;
+}
+.city-dossier-tabs button {
+  min-height: 24px;
+  padding: 3px 2px;
+  border: 1px solid rgba(116, 219, 255, 0.25);
+  border-radius: 4px;
+  background: rgba(2, 12, 20, 0.6);
+  color: rgba(220, 238, 255, 0.7);
+  font: 700 7px/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+.city-dossier-tabs button.active,
+.city-dossier-tabs button:hover,
+.city-dossier-tabs button:focus-visible {
+  border-color: #00dcff;
+  color: #fff;
+  outline: none;
+}
+.city-dossier-section {
+  display: grid;
+  gap: 7px;
+}
+.city-dossier-photo {
+  width: 100%;
+  max-height: 130px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.city-dossier-text {
+  margin: 0;
+  color: rgba(244, 251, 255, 0.86);
+  font-family: var(--font-sans, inherit);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.city-dossier-rows {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  background: rgba(244, 251, 255, 0.07);
+}
+.city-dossier-rows > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 5px 7px;
+  background: rgba(0, 7, 12, 0.76);
+}
+.city-dossier-rows dt {
+  color: var(--cockpit-accent, #00dcff);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  align-self: center;
+}
+.city-dossier-rows dd {
+  margin: 0;
+  color: #fff;
+  font-size: 11px;
+  text-align: right;
+}
+.city-dossier-rows small,
+.city-dossier-note,
+.city-dossier-source {
+  color: rgba(220, 238, 255, 0.5);
+  font-size: 7px;
+  letter-spacing: 0.06em;
+}
+.city-dossier-note {
+  margin: 0;
+}
+.city-dossier-credit {
+  color: rgba(182, 226, 241, 0.72);
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.city-dossier-spark {
+  margin: 0;
+  color: #69f0ae;
+}
+.city-dossier-spark.falling {
+  color: #ff8a65;
+}
+.city-dossier-spark svg {
+  display: block;
+  width: 100%;
+  height: 44px;
+}
+.city-dossier-spark polyline {
+  stroke: currentColor;
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+.city-dossier-spark figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  color: rgba(220, 238, 255, 0.55);
+  font-size: 7px;
+}
+.city-dossier-spark figcaption strong {
+  color: currentColor;
+  font-weight: 600;
+}
+.city-dossier-election {
+  display: grid;
+  gap: 3px;
+}
+.city-dossier-election > strong {
+  color: rgba(220, 238, 255, 0.75);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.city-dossier-party {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 6px;
+  font-size: 8px;
+}
+.city-dossier-party i {
+  display: block;
+  height: 7px;
+  border-radius: 2px;
+}
+.city-dossier-party small {
+  color: rgba(220, 238, 255, 0.7);
+  text-align: right;
+}
+.city-dossier-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-radius: 50%;
+}
+.city-dossier-alerts {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.city-dossier-alerts li {
+  display: grid;
+  gap: 2px;
+  padding: 5px 8px;
+  border-left: 2px solid #90caf9;
+  background: rgba(0, 7, 12, 0.76);
+}
+.city-dossier-alerts li[data-level='YELLOW'] {
+  border-left-color: #ffd600;
+}
+.city-dossier-alerts li[data-level='ORANGE'] {
+  border-left-color: #ff9100;
+}
+.city-dossier-alerts li[data-level='RED'],
+.city-dossier-alerts li[data-level='VMA'] {
+  border-left-color: #ff1744;
+}
+.city-dossier-alerts span {
+  color: rgba(220, 238, 255, 0.55);
+  font-size: 7px;
+  text-transform: uppercase;
+}
+.city-dossier-police {
+  display: grid;
+  gap: 3px;
+}
+.city-dossier-police a {
+  overflow: hidden;
+  color: rgba(244, 251, 255, 0.85);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.city-dossier-police small {
+  color: rgba(220, 238, 255, 0.5);
+}
+.city-dossier-radio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 30px;
+  border: 1px solid rgba(0, 220, 255, 0.5);
+  border-radius: 6px;
+  background: rgba(2, 12, 18, 0.85);
+  color: #dceeff;
+  font: 700 8px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.city-dossier-radio:hover,
+.city-dossier-radio:focus-visible {
+  border-color: #00dcff;
+  color: #fff;
+  outline: none;
+}
+.city-dossier-radio .material-symbols-outlined {
+  color: #00dcff;
+  font-size: 15px;
+}
+.city-dossier-radio[disabled] {
+  opacity: 0.6;
+  cursor: progress;
+}

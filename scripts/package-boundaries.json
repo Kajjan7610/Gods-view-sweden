@@ -18,6 +18,8 @@
   "application": {
     "exports": ["./application"],
     "modules": [
+      "src/ui/views/panels/CityDossierPanel.vue",
+      "src/ui/stores/cityDossier.js",
       "src/app/application.js",
       "src/ui/vueRuntime.js",
       "src/ui/views/index.js",
@@ -2297,6 +2299,9 @@
       "./standalone/catalog"
     ],
     "modules": [
+      "src/ui/cityDossier.js",
+      "src/ui/cityDossierModel.js",
+      "src/ui/stores/cityDossier.js",
       "src/sources/adsbFields.js",
       "src/data/headingDegrees.js",
       "src/data/distanceFormat.js",

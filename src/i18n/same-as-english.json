@@ -555,7 +555,8 @@
     "Import {import} MW · export {export} MW",
     "{mw} MW",
     "{from}–{to} µSv/h",
-    "{flow} m³/s"
+    "{flow} m³/s",
+    "POPULATION"
   ],
   "it": [
     "1090 MHz",
