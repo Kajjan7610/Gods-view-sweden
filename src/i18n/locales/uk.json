@@ -3518,5 +3518,13 @@
   "Enter cockpit view": "Увійти у вигляд з кабіни",
   "PUBLIC ALERT": "ОПОВІЩЕННЯ НАСЕЛЕННЯ",
   "Warnings in effect here": "Чинні тут попередження",
-  "Weather data by SMHI": "Дані про погоду від SMHI"
+  "Weather data by SMHI": "Дані про погоду від SMHI",
+  "Sweden Right Now": "Швеція зараз",
+  "Warnings in Effect": "Чинні попередження",
+  "Weather Now": "Погода зараз",
+  "Trains and Disruptions around Stockholm": "Поїзди та збої довкола Стокгольма",
+  "Power Flows between Bidding Zones": "Перетоки електроенергії між ціновими зонами",
+  "Aurora over Kiruna": "Полярне сяйво над Кіруною",
+  "Sea Weather in the Archipelago": "Морська погода в шхерах",
+  "Arrivals at Arlanda": "Прибуття до Арланди"
 }

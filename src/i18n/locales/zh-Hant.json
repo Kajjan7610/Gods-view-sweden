@@ -3293,5 +3293,13 @@
   "Enter cockpit view": "進入駕駛艙視圖",
   "PUBLIC ALERT": "公共警報",
   "Warnings in effect here": "此處生效的預警",
-  "Weather data by SMHI": "天氣資料來自 SMHI"
+  "Weather data by SMHI": "天氣資料來自 SMHI",
+  "Sweden Right Now": "此刻的瑞典",
+  "Warnings in Effect": "生效中的預警",
+  "Weather Now": "目前天氣",
+  "Trains and Disruptions around Stockholm": "斯德哥爾摩周邊的列車與營運中斷",
+  "Power Flows between Bidding Zones": "電價區之間的電力潮流",
+  "Aurora over Kiruna": "基律納上空的極光",
+  "Sea Weather in the Archipelago": "群島海域天氣",
+  "Arrivals at Arlanda": "抵達阿蘭達機場的航班"
 }

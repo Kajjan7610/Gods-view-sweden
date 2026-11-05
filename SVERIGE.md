@@ -63,6 +63,18 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-05 (scenen "Sverige just nu")
+- Scener: ny inbyggd tur, "Sverige just nu" (ca 65 s, sju bilder), sist i
+  scenlistan. Den visar SMHI:s varningar över landet, väder nu, tåg och
+  störningar runt Stockholm, elflöden mellan elområdena, norrsken över
+  Kiruna, sjöväder i skärgården och till sist planen runt Arlanda. Varje
+  bild tänder sitt eget lager och släcker de andra. Ett sparat scenprojekt
+  får turen automatiskt efter "Omniscience Pullback". Scener kan inte följa
+  ett plan eller gå in i cockpit (originalets scenspelare stänger av
+  spårning under uppspelning), så turen slutar ovanför Arlanda. Bilden med
+  tåg väntar några sekunder första gången medan kollektivtrafiken laddas,
+  och norrskenet syns bara när det är mörkt.
+
 ### 2026-11-05 (svensk lägesbild i cockpiten)
 - Cockpit: när planet är inom 50 km från en svensk kommuns centralort
   hämtar genomgången svenska källor. Plats blir orten och länet (t.ex.

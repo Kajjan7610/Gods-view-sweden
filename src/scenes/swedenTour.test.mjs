@@ -1,0 +1,40 @@
+// The Swedish fork's "Sweden Right Now" tour: registered layers only, one
+// Swedish layer per shot, and every shot title translated.
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { REGISTERED_LAYER_IDS } from '../data/layerState.js';
+import { recipeToScene } from './project.js';
+import { SCENE_RECIPES } from './recipes.js';
+import sv from '../i18n/locales/sv.json' with { type: 'json' };
+
+const tour = SCENE_RECIPES.find((recipe) => recipe.id === 'sweden-now');
+
+test('the tour follows the original scenes and installs into saved projects', () => {
+  assert.ok(tour);
+  assert.equal(SCENE_RECIPES.at(-1), tour);
+  assert.equal(tour.installAlongsideSceneId, 'omniscience-pullback');
+  assert.equal(sv[tour.title], 'Sverige just nu');
+});
+
+test('each shot turns on its own Swedish layers and turns the others off', () => {
+  const scene = recipeToScene(tour);
+  const enabled = scene.shots.map((shot) =>
+    Object.entries(shot.layers)
+      .filter(([, target]) => target.enabled)
+      .map(([id]) => id),
+  );
+  assert.deepEqual(enabled, [
+    ['smhi-warnings'],
+    ['smhi-weather'],
+    ['transit', 'transit-alerts'],
+    ['power-grid'],
+    ['aurora'],
+    ['sea-weather'],
+    ['flights'],
+  ]);
+  for (const shot of scene.shots) {
+    for (const id of Object.keys(shot.layers))
+      assert.ok(REGISTERED_LAYER_IDS.includes(id), id);
+    assert.ok(sv[shot.title], `untranslated shot title ${shot.title}`);
+  }
+});

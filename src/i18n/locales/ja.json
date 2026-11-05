@@ -3293,5 +3293,13 @@
   "Enter cockpit view": "コックピットビューに入る",
   "PUBLIC ALERT": "住民向け警報",
   "Warnings in effect here": "この地点で有効な警報",
-  "Weather data by SMHI": "SMHI の気象データ"
+  "Weather data by SMHI": "SMHI の気象データ",
+  "Sweden Right Now": "今のスウェーデン",
+  "Warnings in Effect": "発表中の警報",
+  "Weather Now": "現在の天気",
+  "Trains and Disruptions around Stockholm": "ストックホルム周辺の列車と運行障害",
+  "Power Flows between Bidding Zones": "価格区域間の電力潮流",
+  "Aurora over Kiruna": "キルナ上空のオーロラ",
+  "Sea Weather in the Archipelago": "群島の海上気象",
+  "Arrivals at Arlanda": "アーランダ空港への到着便"
 }

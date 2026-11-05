@@ -619,6 +619,123 @@ const BHOTE_KOSHI_NEPAL_BOOTSTRAP_RECIPE = BHOTE_KOSHI_NEPAL_APPEND_RECIPE
 
 const EVENT_RECIPES = [BHOTE_KOSHI_NEPAL_BOOTSTRAP_RECIPE].filter(Boolean);
 
+// The Swedish fork's tour: one Swedish layer per shot. A shot only touches
+// the layers it names, so each one names every tour layer and turns on its
+// own; the tour leaves them off when it ends on Arlanda's flights.
+const SWEDEN_TOUR_LAYERS = Object.freeze([
+  'smhi-warnings',
+  'smhi-weather',
+  'transit',
+  'transit-alerts',
+  'power-grid',
+  'aurora',
+  'sea-weather',
+  'flights',
+]);
+const swedenTourLayers = (...on) =>
+  Object.fromEntries(SWEDEN_TOUR_LAYERS.map((id) => [id, on.includes(id)]));
+
+// Keyframes place the camera south of its subject, looking north.
+const SWEDEN_NOW_RECIPE = Object.freeze({
+  id: 'sweden-now',
+  title: msg('Sweden Right Now'),
+  durationSec: 65,
+  style: 'normal',
+  ui: { hidePanels: true, hudMode: 'minimal', safeFrame: '16:9' },
+  // Room for the Swedish layers: the global feeds stay out of the picture.
+  layers: { satellites: false, earthquakes: false, traffic: false },
+  post: { bloom: 24, sharpen: true, detectionMode: 'OFF' },
+  // Existing projects gain the tour after the last original scene.
+  installAlongsideSceneId: 'omniscience-pullback',
+  cameraPath: [
+    {
+      title: msg('Warnings in Effect'),
+      lat: 52.5,
+      lon: 16.5,
+      alt: 1900000,
+      heading: 0,
+      pitch: -60,
+      roll: 0,
+      duration: 5,
+      hold: 3,
+      layers: swedenTourLayers('smhi-warnings'),
+    },
+    {
+      title: msg('Weather Now'),
+      lat: 55.1,
+      lon: 16.0,
+      alt: 700000,
+      heading: 0,
+      pitch: -55,
+      roll: 0,
+      duration: 5,
+      hold: 3,
+      layers: swedenTourLayers('smhi-weather'),
+    },
+    {
+      title: msg('Trains and Disruptions around Stockholm'),
+      lat: 58.93,
+      lon: 18.07,
+      alt: 45000,
+      heading: 0,
+      pitch: -45,
+      roll: 0,
+      duration: 6,
+      hold: 3,
+      layers: swedenTourLayers('transit', 'transit-alerts'),
+    },
+    {
+      title: msg('Power Flows between Bidding Zones'),
+      lat: 54.3,
+      lon: 16.0,
+      alt: 1600000,
+      heading: 0,
+      pitch: -65,
+      roll: 0,
+      duration: 6,
+      hold: 3,
+      layers: swedenTourLayers('power-grid'),
+    },
+    {
+      title: msg('Aurora over Kiruna'),
+      lat: 63.5,
+      lon: 20.2,
+      alt: 350000,
+      heading: 0,
+      pitch: -30,
+      roll: 0,
+      duration: 6,
+      hold: 3,
+      layers: swedenTourLayers('aurora'),
+    },
+    {
+      title: msg('Sea Weather in the Archipelago'),
+      lat: 58.27,
+      lon: 18.9,
+      alt: 150000,
+      heading: 0,
+      pitch: -50,
+      roll: 0,
+      duration: 6,
+      hold: 3,
+      layers: swedenTourLayers('sea-weather'),
+    },
+    {
+      title: msg('Arrivals at Arlanda'),
+      lat: 59.26,
+      lon: 17.92,
+      alt: 30000,
+      heading: 0,
+      pitch: -35,
+      roll: 0,
+      duration: 5,
+      // Long enough for the flight feed to fill the view it just loaded.
+      hold: 8,
+      layers: swedenTourLayers('flights'),
+    },
+  ],
+});
+
 const PUBLIC_SCENE_RECIPES = [
   {
     id: 'flights-radar',
@@ -991,6 +1108,7 @@ const PUBLIC_SCENE_RECIPES = [
       },
     ],
   },
+  SWEDEN_NOW_RECIPE,
 ];
 
 /** Build the recipe list without mutating stored user-authored projects. */
@@ -1035,6 +1153,7 @@ const BUILTIN_SHOT_TITLES = new Set([
   msg('Dandagaun viewpoint restaurant'),
   msg('Devighat / Taadi Khola Bridge'),
   msg('Final view'),
+  ...SWEDEN_NOW_RECIPE.cameraPath.map(({ title }) => title),
 ]);
 
 /**

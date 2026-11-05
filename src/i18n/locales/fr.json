@@ -3443,5 +3443,13 @@
   "Enter cockpit view": "Entrer dans la vue cockpit",
   "PUBLIC ALERT": "ALERTE PUBLIQUE",
   "Warnings in effect here": "Alertes en vigueur ici",
-  "Weather data by SMHI": "Données météo de SMHI"
+  "Weather data by SMHI": "Données météo de SMHI",
+  "Sweden Right Now": "La Suède en ce moment",
+  "Warnings in Effect": "Alertes en vigueur",
+  "Weather Now": "Météo actuelle",
+  "Trains and Disruptions around Stockholm": "Trains et perturbations autour de Stockholm",
+  "Power Flows between Bidding Zones": "Flux électriques entre zones de prix",
+  "Aurora over Kiruna": "Aurore boréale au-dessus de Kiruna",
+  "Sea Weather in the Archipelago": "Météo marine dans l'archipel",
+  "Arrivals at Arlanda": "Arrivées à Arlanda"
 }
