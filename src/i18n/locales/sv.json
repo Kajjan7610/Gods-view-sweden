@@ -3376,5 +3376,16 @@
   "Power Flows between Bidding Zones": "Elflöden mellan elområdena",
   "Aurora over Kiruna": "Norrsken över Kiruna",
   "Sea Weather in the Archipelago": "Sjöväder i skärgården",
-  "Arrivals at Arlanda": "Landningar på Arlanda"
+  "Arrivals at Arlanda": "Landningar på Arlanda",
+  "Radiation (Sweden)": "Strålning (Sverige)",
+  "Radiation data unavailable": "Strålningsdata otillgängliga",
+  "Malformed radiation snapshot": "Felaktig strålningsögonblicksbild",
+  "{from}–{to} µSv/h": "{from}–{to} µSv/h",
+  "Above {value} µSv/h": "Över {value} µSv/h",
+  "Station in service or maintenance": "Station i service eller underhåll",
+  "{value} µSv/h ambient dose rate": "{value} µSv/h omgivningsdosrat",
+  "Normal background in Sweden: {min}–{max} µSv/h": "Normal bakgrund i Sverige: {min}–{max} µSv/h",
+  "RADIATION · {station}": "STRÅLNING · {station}",
+  "Write the dose rate beside each station": "Skriv dosraten bredvid varje station",
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Punkterna är Strålsäkerhetsmyndighetens gammastationer, det nationella varningsnätet, med senaste timmens dosrat i mikrosievert per timme. Den naturliga bakgrunden i Sverige ligger normalt på 0,05–0,3 µSv/h. Klicka på en station för dess mätvärde."
 }

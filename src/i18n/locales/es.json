@@ -3451,5 +3451,16 @@
   "Power Flows between Bidding Zones": "Flujos eléctricos entre zonas de precio",
   "Aurora over Kiruna": "Aurora boreal sobre Kiruna",
   "Sea Weather in the Archipelago": "Tiempo marítimo en el archipiélago",
-  "Arrivals at Arlanda": "Llegadas a Arlanda"
+  "Arrivals at Arlanda": "Llegadas a Arlanda",
+  "Radiation (Sweden)": "Radiación (Suecia)",
+  "Radiation data unavailable": "Datos de radiación no disponibles",
+  "Malformed radiation snapshot": "Instantánea de radiación mal formada",
+  "{from}–{to} µSv/h": "{from}–{to} µSv/h",
+  "Above {value} µSv/h": "Por encima de {value} µSv/h",
+  "Station in service or maintenance": "Estación en mantenimiento",
+  "{value} µSv/h ambient dose rate": "{value} µSv/h de tasa de dosis ambiental",
+  "Normal background in Sweden: {min}–{max} µSv/h": "Fondo natural en Suecia: {min}–{max} µSv/h",
+  "RADIATION · {station}": "RADIACIÓN · {station}",
+  "Write the dose rate beside each station": "Escribir la tasa de dosis junto a cada estación",
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Los puntos son las estaciones gamma de la autoridad sueca de protección radiológica (Strålsäkerhetsmyndigheten), la red nacional de alerta temprana, con la última tasa de dosis horaria en microsieverts por hora. El fondo natural en Suecia suele estar entre 0,05 y 0,3 µSv/h. Haga clic en una estación para ver su lectura."
 }

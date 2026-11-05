@@ -25,6 +25,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Luftkvalitet: ca 75 SMHI-mätstationer (NO2, PM10, PM2.5, O3) på europeiska EAQI-skalan, tillsammans med Kanadas stationer | SMHI Datavärdskap luft (CC BY 4.0, ingen nyckel) | Air quality / Luftkvalitet, under Weather |
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (pilar i flödesriktningen, MW), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
+| Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
 | Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
 Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s radar och varningar samt OPERA:s radar är CC BY 4.0 (källa: SMHI respektive EUMETNET OPERA). Källor, villkor och tekniska detaljer står i
@@ -62,6 +63,19 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-05 (strålning från Strålsäkerhetsmyndigheten)
+- Nytt lager "Strålning (Sverige)" (delningstoken `0p`), under
+  Infrastruktur: Strålsäkerhetsmyndighetens gammastationer, det nationella
+  varningsnätet, med senaste timmens omgivningsdosrat i µSv/h. Färgerna är
+  SSM:s egen skala, värdet står bredvid varje station och ett klick ger ett
+  kort med värdet, den normala bakgrunden i Sverige (0,05–0,3 µSv/h) och
+  mättiden. Stationer i service visas grå; flyttade stationer som tystnat
+  i tre dagar tas bort (vid testet 23 aktiva, 2 i service).
+- Källan är det GeoJSON-dokument SSM:s öppna karta läser
+  (karttjanst.ssm.se/gammastationer). Ingen nyckel, men ingen licens anges,
+  så SSM anges som källa med länk. EURDEP valdes bort: där tillhör datan
+  varje land och kräver skriftligt tillstånd.
 
 ### 2026-11-05 (scenen "Sverige just nu")
 - Scener: ny inbyggd tur, "Sverige just nu" (ca 65 s, sju bilder), sist i

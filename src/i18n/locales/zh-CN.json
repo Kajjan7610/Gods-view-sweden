@@ -3301,5 +3301,16 @@
   "Power Flows between Bidding Zones": "电价区之间的电力潮流",
   "Aurora over Kiruna": "基律纳上空的极光",
   "Sea Weather in the Archipelago": "群岛海域天气",
-  "Arrivals at Arlanda": "抵达阿兰达机场的航班"
+  "Arrivals at Arlanda": "抵达阿兰达机场的航班",
+  "Radiation (Sweden)": "辐射（瑞典）",
+  "Radiation data unavailable": "辐射数据不可用",
+  "Malformed radiation snapshot": "辐射快照格式错误",
+  "{from}–{to} µSv/h": "{from}–{to} µSv/h",
+  "Above {value} µSv/h": "高于 {value} µSv/h",
+  "Station in service or maintenance": "站点维护中",
+  "{value} µSv/h ambient dose rate": "周围剂量率 {value} µSv/h",
+  "Normal background in Sweden: {min}–{max} µSv/h": "瑞典正常本底：{min}–{max} µSv/h",
+  "RADIATION · {station}": "辐射 · {station}",
+  "Write the dose rate beside each station": "在每个站点旁标注剂量率",
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "圆点是瑞典辐射安全局（Strålsäkerhetsmyndigheten）国家预警网络的伽马监测站，显示最近一小时的剂量率（微希沃特每小时）。瑞典的天然本底通常为 0.05–0.3 µSv/h。点击站点查看读数。"
 }

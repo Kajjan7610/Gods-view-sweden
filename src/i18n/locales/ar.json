@@ -3676,5 +3676,16 @@
   "Power Flows between Bidding Zones": "تدفقات الكهرباء بين مناطق الأسعار",
   "Aurora over Kiruna": "الشفق القطبي فوق كيرونا",
   "Sea Weather in the Archipelago": "الطقس البحري في الأرخبيل",
-  "Arrivals at Arlanda": "الرحلات القادمة إلى أرلاندا"
+  "Arrivals at Arlanda": "الرحلات القادمة إلى أرلاندا",
+  "Radiation (Sweden)": "الإشعاع (السويد)",
+  "Radiation data unavailable": "بيانات الإشعاع غير متاحة",
+  "Malformed radiation snapshot": "لقطة بيانات إشعاع غير صالحة",
+  "{from}–{to} µSv/h": "{from}–{to} µSv/h",
+  "Above {value} µSv/h": "أعلى من {value} µSv/h",
+  "Station in service or maintenance": "المحطة قيد الصيانة",
+  "{value} µSv/h ambient dose rate": "{value} µSv/h معدل الجرعة المحيطة",
+  "Normal background in Sweden: {min}–{max} µSv/h": "الخلفية الطبيعية في السويد: {min}–{max} µSv/h",
+  "RADIATION · {station}": "الإشعاع · {station}",
+  "Write the dose rate beside each station": "كتابة معدل الجرعة بجانب كل محطة",
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "النقاط هي محطات أشعة غاما التابعة لهيئة السلامة الإشعاعية السويدية (Strålsäkerhetsmyndigheten)، شبكة الإنذار المبكر الوطنية، مع آخر معدل جرعة كل ساعة بالميكروسيفرت في الساعة. تتراوح الخلفية الطبيعية في السويد عادة بين 0.05 و0.3 µSv/h. انقر على محطة لعرض قراءتها."
 }

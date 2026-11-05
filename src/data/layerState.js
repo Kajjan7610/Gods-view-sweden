@@ -651,6 +651,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     optionOwner: 'flights',
   }),
   Object.freeze({
+    id: 'gamma-radiation',
+    token: '0p',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'gnss-integrity',
     token: '3',
     disposition: 'enabled-only',

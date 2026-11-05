@@ -479,6 +479,8 @@ export const VOICE_OFF_LAYERS = Object.freeze({
     'Swedish electricity prices; no room in the prompt budget',
   'sr-traffic': 'Swedish traffic reports; no room in the prompt budget',
   'sea-weather': 'Swedish sea weather stations; no room in the prompt budget',
+  'gamma-radiation':
+    'Swedish gamma radiation stations; no room in the prompt budget',
   aurora: 'aurora forecast; no room in the prompt budget',
   'smhi-weather': 'Swedish weather stations; no room in the prompt budget',
   'power-grid': 'Swedish power flows; no room in the prompt budget',

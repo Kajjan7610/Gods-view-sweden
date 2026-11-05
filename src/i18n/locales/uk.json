@@ -3526,5 +3526,16 @@
   "Power Flows between Bidding Zones": "Перетоки електроенергії між ціновими зонами",
   "Aurora over Kiruna": "Полярне сяйво над Кіруною",
   "Sea Weather in the Archipelago": "Морська погода в шхерах",
-  "Arrivals at Arlanda": "Прибуття до Арланди"
+  "Arrivals at Arlanda": "Прибуття до Арланди",
+  "Radiation (Sweden)": "Радіація (Швеція)",
+  "Radiation data unavailable": "Дані про радіацію недоступні",
+  "Malformed radiation snapshot": "Некоректний знімок даних про радіацію",
+  "{from}–{to} µSv/h": "{from}–{to} мкЗв/год",
+  "Above {value} µSv/h": "Понад {value} мкЗв/год",
+  "Station in service or maintenance": "Станція на обслуговуванні",
+  "{value} µSv/h ambient dose rate": "{value} мкЗв/год — потужність амбієнтної дози",
+  "Normal background in Sweden: {min}–{max} µSv/h": "Нормальний фон у Швеції: {min}–{max} мкЗв/год",
+  "RADIATION · {station}": "РАДІАЦІЯ · {station}",
+  "Write the dose rate beside each station": "Підписувати потужність дози біля кожної станції",
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Точки — гамма-станції Шведського управління радіаційної безпеки (Strålsäkerhetsmyndigheten), національної мережі раннього попередження, з останньою погодинною потужністю дози в мікрозівертах на годину. Природний фон у Швеції зазвичай становить 0,05–0,3 мкЗв/год. Натисніть на станцію, щоб побачити показ."
 }

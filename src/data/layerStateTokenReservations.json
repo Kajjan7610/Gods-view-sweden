@@ -13,6 +13,7 @@
   ["electricity-prices", "0w"],
   ["fire-perimeters", "2"],
   ["flights", "f"],
+  ["gamma-radiation", "0p"],
   ["gnss-integrity", "3"],
   ["local-dams", "q"],
   ["local-datacenters", "d"],

@@ -403,6 +403,12 @@ export const DATA_CREDITS = [
       '<a href="https://viva.sjofartsverket.se/" target="_blank" rel="noopener">Sjöfartsverket ViVa</a>',
   },
   {
+    key: 'gamma-radiation',
+    html:
+      'Radiation (Sweden): ' +
+      '<a href="https://karttjanst.ssm.se/gammastationer" target="_blank" rel="noopener">Strålsäkerhetsmyndigheten</a> (gamma stations)',
+  },
+  {
     key: 'aurora',
     html:
       'Aurora forecast: ' +

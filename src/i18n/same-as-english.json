@@ -34,7 +34,8 @@
     "▲ {frp} MW",
     "{town} {chance} %",
     "Svenska kraftnät · {time}",
-    "{mw} MW"
+    "{mw} MW",
+    "{from}–{to} µSv/h"
   ],
   "de": [
     "1090 MHz",
@@ -211,7 +212,8 @@
     "≥ {value} MW",
     "{town} {chance} %",
     "Svenska kraftnät · {time}",
-    "{mw} MW"
+    "{mw} MW",
+    "{from}–{to} µSv/h"
   ],
   "es": [
     "1090 MHz",
@@ -349,7 +351,8 @@
     "{town} {chance} %",
     "Svenska kraftnät · {time}",
     "nuclear",
-    "{mw} MW"
+    "{mw} MW",
+    "{from}–{to} µSv/h"
   ],
   "fr": [
     "1090 MHz",
@@ -548,7 +551,8 @@
     "{town} {chance} %",
     "Svenska kraftnät · {time}",
     "Import {import} MW · export {export} MW",
-    "{mw} MW"
+    "{mw} MW",
+    "{from}–{to} µSv/h"
   ],
   "it": [
     "1090 MHz",
@@ -728,7 +732,8 @@
     "{town} {chance} %",
     "Svenska kraftnät · {time}",
     "Import {import} MW · export {export} MW",
-    "{mw} MW"
+    "{mw} MW",
+    "{from}–{to} µSv/h"
   ],
   "ja": [
     "1090 MHz",
@@ -781,7 +786,8 @@
     "≥ {value} MW",
     "{town} {chance} %",
     "Svenska kraftnät · {time}",
-    "{mw} MW"
+    "{mw} MW",
+    "{from}–{to} µSv/h"
   ],
   "pt": [
     "1090 MHz",
@@ -920,7 +926,8 @@
     "{town} {chance} %",
     "Svenska kraftnät · {time}",
     "nuclear",
-    "{mw} MW"
+    "{mw} MW",
+    "{from}–{to} µSv/h"
   ],
   "ru": [
     "AIS: --",
@@ -1106,7 +1113,8 @@
     "{town} {chance} %",
     "Svenska kraftnät · {time}",
     "Import {import} MW · export {export} MW",
-    "{mw} MW"
+    "{mw} MW",
+    "{from}–{to} µSv/h"
   ],
   "uk": [
     "AIS: --",
@@ -1181,7 +1189,8 @@
     "▲ {frp} MW",
     "≥ {value} MW",
     "Svenska kraftnät · {time}",
-    "{mw} MW"
+    "{mw} MW",
+    "{from}–{to} µSv/h"
   ],
   "zh-Hant": [
     "1090 MHz",
@@ -1241,6 +1250,7 @@
     "▲ {frp} MW",
     "≥ {value} MW",
     "Svenska kraftnät · {time}",
-    "{mw} MW"
+    "{mw} MW",
+    "{from}–{to} µSv/h"
   ]
 }
