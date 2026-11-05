@@ -3516,5 +3516,14 @@
   "Tuning in…": "Sintonizzazione…",
   "Play local radio": "Ascolta la radio locale",
   "Weather now": "Meteo adesso",
-  "Sun": "Sole"
+  "Sun": "Sole",
+  "Trains from {station}": "Treni da {station}",
+  "No departures in the next three hours": "Nessuna partenza nelle prossime tre ore",
+  "Cancelled": "Soppresso",
+  "{time} (+{minutes} min)": "{time} (+{minutes} min)",
+  "track {track}": "binario {track}",
+  "No queues right now": "Nessuna coda al momento",
+  "{km} km": "{km} km",
+  "+{minutes} min": "+{minutes} min",
+  "Queues around the town": "Code intorno alla città"
 }

@@ -3592,5 +3592,14 @@
   "Tuning in…": "Налаштування…",
   "Play local radio": "Слухати місцеве радіо",
   "Weather now": "Погода зараз",
-  "Sun": "Сонце"
+  "Sun": "Сонце",
+  "Trains from {station}": "Потяги зі станції {station}",
+  "No departures in the next three hours": "Немає відправлень у найближчі три години",
+  "Cancelled": "Скасовано",
+  "{time} (+{minutes} min)": "{time} (+{minutes} хв)",
+  "track {track}": "колія {track}",
+  "No queues right now": "Зараз заторів немає",
+  "{km} km": "{km} км",
+  "+{minutes} min": "+{minutes} хв",
+  "Queues around the town": "Затори довкола міста"
 }

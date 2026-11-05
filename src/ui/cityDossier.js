@@ -173,31 +173,40 @@ export function createCityDossier({
     const forCity = city;
     const [lon, lat] = forCity.point;
     liveAt = now();
-    const [brief, air, police] = await Promise.allSettled([
-      getJson(
-        `/api/regional-brief?latitude=${lat}&longitude=${lon}`,
-        controller.signal,
-      ),
-      getJson('/api/air-quality-se', controller.signal),
-      getJson('/api/polisen-events', controller.signal),
-    ]);
-    if (destroyed || liveRequest !== controller || city !== forCity) return;
-    live = {
-      brief: brief.status === 'fulfilled' ? brief.value : null,
-      air:
-        air.status === 'fulfilled'
-          ? nearestReading(
-              normalizeSmhiReadings(air.value?.stations, now()),
-              forCity.point,
-            )
-          : null,
-      police:
-        police.status === 'fulfilled'
-          ? policeEventsFor(police.value?.events, forCity, now())
-          : null,
-    };
-    liveRequest = null;
+    // Each part shows as soon as it answers: the briefing (weather and
+    // warnings) also gathers news and can take seconds.
+    live = { brief: null, air: null, police: null, transit: null, pending: 4 };
     render();
+    const current = () =>
+      !destroyed && liveRequest === controller && city === forCity;
+    const part = (url, field, shape = (value) => value) =>
+      getJson(url, controller.signal)
+        .then((value) => {
+          if (current()) live[field] = shape(value);
+        })
+        .catch(() => {})
+        .finally(() => {
+          if (!current()) return;
+          live.pending -= 1;
+          render();
+        });
+    await Promise.all([
+      part(`/api/regional-brief?latitude=${lat}&longitude=${lon}`, 'brief'),
+      part('/api/air-quality-se', 'air', (value) =>
+        nearestReading(
+          normalizeSmhiReadings(value?.stations, now()),
+          forCity.point,
+        ),
+      ),
+      part('/api/polisen-events', 'police', (value) =>
+        policeEventsFor(value?.events, forCity, now()),
+      ),
+      part(
+        `/api/city-transit?lat=${lat}&lon=${lon}&town=${encodeURIComponent(forCity.name)}`,
+        'transit',
+      ),
+    ]);
+    if (current()) liveRequest = null;
   }
 
   function openOnFirstVisit() {
@@ -403,6 +412,8 @@ export function createCityDossier({
     const police = live.police;
     return {
       loading: false,
+      // Parts still on their way, said once below what has arrived.
+      pending: live.pending > 0 ? t('Fetching the live picture…') : '',
       weather: weather
         ? {
             value: Number.isFinite(weather.temperatureC)
@@ -473,8 +484,69 @@ export function createCityDossier({
                 rise: clock(sun.rise),
                 set: clock(sun.set),
               }),
+      trains: trainsView(live.transit?.trains),
+      jams: jamsView(live.transit?.jams),
       radioLabel: radioBusy ? t('Tuning in…') : t('Play local radio'),
       radioBusy,
+    };
+  }
+
+  /** The town station's next departures; null without the Trafikverket key. */
+  function trainsView(trains) {
+    if (!trains?.station) return null;
+    return {
+      title: t('Trains from {station}', { station: trains.station }),
+      empty: trains.departures.length
+        ? ''
+        : t('No departures in the next three hours'),
+      items: trains.departures.map((row) => ({
+        key: `${row.train}:${row.planned}`,
+        time: clock(row.planned),
+        destination: row.destination || '—',
+        status: row.canceled
+          ? t('Cancelled')
+          : row.delayMinutes > 0
+            ? t('{time} (+{minutes} min)', {
+                time: clock(row.expected),
+                minutes: row.delayMinutes,
+              })
+            : '',
+        late: row.canceled || row.delayMinutes > 0,
+        detail: [
+          row.product,
+          row.track ? t('track {track}', { track: row.track }) : null,
+          row.note,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      })),
+    };
+  }
+
+  /** TomTom's jams around the town; null without the TomTom key. */
+  function jamsView(jams) {
+    if (!jams) return null;
+    return {
+      empty: jams.items.length ? '' : t('No queues right now'),
+      items: jams.items.map((row, index) => ({
+        key: `${index}:${row.from}`,
+        title: [row.roads.join('/'), row.description]
+          .filter(Boolean)
+          .join(' · '),
+        detail: [
+          Number.isFinite(row.lengthM)
+            ? t('{km} km', { km: oneDecimal(row.lengthM / 1000) })
+            : null,
+          row.delaySeconds > 0
+            ? t('+{minutes} min', {
+                minutes: Math.max(1, Math.round(row.delaySeconds / 60)),
+              })
+            : null,
+          [row.from, row.to].filter(Boolean).join(' → ') || null,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      })),
     };
   }
 

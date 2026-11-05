@@ -3364,5 +3364,14 @@
   "Tuning in…": "正在調台…",
   "Play local radio": "播放本地電台",
   "Weather now": "目前天氣",
-  "Sun": "太陽"
+  "Sun": "太陽",
+  "Trains from {station}": "從 {station} 出發的列車",
+  "No departures in the next three hours": "未來三小時無發車",
+  "Cancelled": "已取消",
+  "{time} (+{minutes} min)": "{time}（+{minutes} 分鐘）",
+  "track {track}": "{track} 月台",
+  "No queues right now": "目前沒有壅塞",
+  "{km} km": "{km} 公里",
+  "+{minutes} min": "+{minutes} 分鐘",
+  "Queues around the town": "城市周邊壅塞"
 }

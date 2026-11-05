@@ -3364,5 +3364,14 @@
   "Tuning in…": "選局中…",
   "Play local radio": "地元ラジオを再生",
   "Weather now": "現在の天気",
-  "Sun": "太陽"
+  "Sun": "太陽",
+  "Trains from {station}": "{station} 発の列車",
+  "No departures in the next three hours": "今後3時間の出発便なし",
+  "Cancelled": "運休",
+  "{time} (+{minutes} min)": "{time}（+{minutes} 分）",
+  "track {track}": "{track} 番線",
+  "No queues right now": "現在渋滞なし",
+  "{km} km": "{km} km",
+  "+{minutes} min": "+{minutes} 分",
+  "Queues around the town": "市内周辺の渋滞"
 }

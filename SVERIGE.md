@@ -66,6 +66,18 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-05 (tåg och köer i stadsdossiern)
+- Fliken NU visar nu de sex nästa avgångarna från stadens station
+  (Trafikverket: centralstationen före andra, inom 8 km) med destination,
+  spår, tågtyp, beräknad tid och försening samt Trafikverkets orsak, och
+  inställda tåg markerade. "Spår x" (ersättningsbuss) döljs.
+- Under "Köer runt staden" listas de tre köer inom 12 km som ger störst
+  fördröjning (TomTom Traffic Incidents): väg, längd, extra minuter och
+  sträcka. Kräver TomTom-nyckeln; utan den visas inget avsnitt.
+- Flikens delar visas var för sig så fort de kommer fram, i stället för
+  att vänta på genomgångens väder (som också hämtar nyheter och kan ta
+  över 10 sekunder).
+
 ### 2026-11-05 (stadsdossiern med senaste siffrorna)
 - Tätortens folkmängd kommer nu från SCB:s årliga tabell inom senaste
   tätortsgränsen, t.ex. Gävle 86 981 (2025) i stället för Wikidatas

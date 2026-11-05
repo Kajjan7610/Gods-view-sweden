@@ -3744,5 +3744,14 @@
   "Tuning in…": "جارٍ الضبط…",
   "Play local radio": "تشغيل الإذاعة المحلية",
   "Weather now": "الطقس الآن",
-  "Sun": "الشمس"
+  "Sun": "الشمس",
+  "Trains from {station}": "القطارات من {station}",
+  "No departures in the next three hours": "لا رحلات مغادرة خلال الساعات الثلاث القادمة",
+  "Cancelled": "أُلغيت",
+  "{time} (+{minutes} min)": "{time} (+{minutes} د)",
+  "track {track}": "الرصيف {track}",
+  "No queues right now": "لا ازدحام الآن",
+  "{km} km": "{km} كم",
+  "+{minutes} min": "+{minutes} د",
+  "Queues around the town": "الازدحام حول المدينة"
 }

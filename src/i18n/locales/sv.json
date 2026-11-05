@@ -3440,5 +3440,14 @@
   "Tuning in…": "Söker kanal…",
   "Play local radio": "Spela lokalradio",
   "Weather now": "Väder nu",
-  "Sun": "Sol"
+  "Sun": "Sol",
+  "Trains from {station}": "Tåg från {station}",
+  "No departures in the next three hours": "Inga avgångar de närmaste tre timmarna",
+  "Cancelled": "Inställt",
+  "{time} (+{minutes} min)": "{time} (+{minutes} min)",
+  "track {track}": "spår {track}",
+  "No queues right now": "Inga köer just nu",
+  "{km} km": "{km} km",
+  "+{minutes} min": "+{minutes} min",
+  "Queues around the town": "Köer runt staden"
 }

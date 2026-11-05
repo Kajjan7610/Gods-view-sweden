@@ -214,7 +214,8 @@
     "Svenska kraftnät · {time}",
     "{mw} MW",
     "{from}–{to} µSv/h",
-    "{flow} m³/s"
+    "{flow} m³/s",
+    "{km} km"
   ],
   "es": [
     "1090 MHz",
@@ -354,7 +355,10 @@
     "nuclear",
     "{mw} MW",
     "{from}–{to} µSv/h",
-    "{flow} m³/s"
+    "{flow} m³/s",
+    "{time} (+{minutes} min)",
+    "{km} km",
+    "+{minutes} min"
   ],
   "fr": [
     "1090 MHz",
@@ -556,7 +560,10 @@
     "{mw} MW",
     "{from}–{to} µSv/h",
     "{flow} m³/s",
-    "POPULATION"
+    "POPULATION",
+    "{time} (+{minutes} min)",
+    "{km} km",
+    "+{minutes} min"
   ],
   "it": [
     "1090 MHz",
@@ -738,7 +745,10 @@
     "Import {import} MW · export {export} MW",
     "{mw} MW",
     "{from}–{to} µSv/h",
-    "{flow} m³/s"
+    "{flow} m³/s",
+    "{time} (+{minutes} min)",
+    "{km} km",
+    "+{minutes} min"
   ],
   "ja": [
     "1090 MHz",
@@ -793,7 +803,8 @@
     "Svenska kraftnät · {time}",
     "{mw} MW",
     "{from}–{to} µSv/h",
-    "{flow} m³/s"
+    "{flow} m³/s",
+    "{km} km"
   ],
   "pt": [
     "1090 MHz",
@@ -934,7 +945,10 @@
     "nuclear",
     "{mw} MW",
     "{from}–{to} µSv/h",
-    "{flow} m³/s"
+    "{flow} m³/s",
+    "{time} (+{minutes} min)",
+    "{km} km",
+    "+{minutes} min"
   ],
   "ru": [
     "AIS: --",
@@ -1123,7 +1137,10 @@
     "{mw} MW",
     "{from}–{to} µSv/h",
     "{flow} m³/s",
-    "Under 1 m³/s"
+    "Under 1 m³/s",
+    "{time} (+{minutes} min)",
+    "{km} km",
+    "+{minutes} min"
   ],
   "uk": [
     "AIS: --",

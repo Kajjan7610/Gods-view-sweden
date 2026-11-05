@@ -296,6 +296,58 @@
   font-size: 7px;
   text-transform: uppercase;
 }
+.city-dossier-trains,
+.city-dossier-jams {
+  display: grid;
+  gap: 2px;
+}
+.city-dossier-trains > strong,
+.city-dossier-jams > strong,
+.city-dossier-police > strong {
+  color: rgba(220, 238, 255, 0.75);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.city-dossier-departure {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: baseline;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(244, 251, 255, 0.06);
+}
+.city-dossier-time {
+  color: #fff;
+  font-size: 10px;
+}
+.city-dossier-dest {
+  display: grid;
+  overflow: hidden;
+  color: rgba(244, 251, 255, 0.9);
+}
+.city-dossier-dest small,
+.city-dossier-jam small {
+  overflow: hidden;
+  color: rgba(220, 238, 255, 0.5);
+  font-size: 7px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.city-dossier-delay {
+  color: #69f0ae;
+  font-size: 8px;
+  white-space: nowrap;
+}
+.city-dossier-departure.late .city-dossier-delay {
+  color: #ffab40;
+}
+.city-dossier-jam {
+  display: grid;
+  gap: 1px;
+  padding: 3px 0 3px 7px;
+  border-left: 2px solid #ff5252;
+}
 .city-dossier-police {
   display: grid;
   gap: 3px;

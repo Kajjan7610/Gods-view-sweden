@@ -36,6 +36,7 @@ import { srTrafficProxy } from './srTraffic.js';
 import { seaWeatherProxy } from './seaWeather.js';
 import { riverFlowProxy } from './riverFlow.js';
 import { cityDossierProxy } from './cityDossier.js';
+import { cityTransitProxy } from './cityTransit.js';
 import { gammaRadiationProxy } from './gammaRadiation.js';
 import { auroraProxy } from './aurora.js';
 import { smhiWeatherProxy } from './smhiWeather.js';
@@ -103,6 +104,7 @@ function localProviderPlugins({
     seaWeatherProxy(),
     riverFlowProxy(),
     cityDossierProxy(),
+    cityTransitProxy(),
     gammaRadiationProxy(),
     auroraProxy(),
     smhiWeatherProxy(),

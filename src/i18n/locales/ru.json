@@ -3592,5 +3592,14 @@
   "Tuning in…": "Настройка…",
   "Play local radio": "Слушать местное радио",
   "Weather now": "Погода сейчас",
-  "Sun": "Солнце"
+  "Sun": "Солнце",
+  "Trains from {station}": "Поезда от станции {station}",
+  "No departures in the next three hours": "Нет отправлений в ближайшие три часа",
+  "Cancelled": "Отменён",
+  "{time} (+{minutes} min)": "{time} (+{minutes} мин)",
+  "track {track}": "путь {track}",
+  "No queues right now": "Сейчас пробок нет",
+  "{km} km": "{km} км",
+  "+{minutes} min": "+{minutes} мин",
+  "Queues around the town": "Пробки вокруг города"
 }

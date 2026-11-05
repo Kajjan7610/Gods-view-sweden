@@ -73,11 +73,26 @@ const { view: d } = storeToRefs(store);
               <li v-for="alert in d.now.alerts" :key="alert.key" :data-level="alert.level"><strong>{{ alert.title }}</strong><span>{{ alert.meta }}</span></li>
             </ul>
             <p v-else-if="d.now.alertsNote" class="city-dossier-note">{{ d.now.alertsNote }}</p>
+            <div v-if="d.now.trains" class="city-dossier-trains">
+              <strong>{{ d.now.trains.title }}</strong>
+              <p v-if="d.now.trains.empty" class="city-dossier-note">{{ d.now.trains.empty }}</p>
+              <div v-for="row in d.now.trains.items" :key="row.key" class="city-dossier-departure" :class="{ late: row.late }">
+                <span class="city-dossier-time">{{ row.time }}</span>
+                <span class="city-dossier-dest">{{ row.destination }}<small v-if="row.detail">{{ row.detail }}</small></span>
+                <span class="city-dossier-delay">{{ row.status }}</span>
+              </div>
+            </div>
+            <div v-if="d.now.jams" class="city-dossier-jams">
+              <strong>{{ t('Queues around the town') }}</strong>
+              <p v-if="d.now.jams.empty" class="city-dossier-note">{{ d.now.jams.empty }}</p>
+              <div v-for="row in d.now.jams.items" :key="row.key" class="city-dossier-jam"><span>{{ row.title }}</span><small>{{ row.detail }}</small></div>
+            </div>
             <div v-if="d.now.police" class="city-dossier-police">
               <strong>{{ d.now.police.summary }}</strong>
               <a v-for="item in d.now.police.items" :key="item.key" :href="item.url" target="_blank" rel="noopener noreferrer"><small>{{ item.time }}</small> {{ item.title }}</a>
             </div>
             <small v-if="d.now.air" class="city-dossier-note">{{ d.now.air.station }}</small>
+            <small v-if="d.now.pending" class="city-dossier-note">{{ d.now.pending }}</small>
             <button type="button" class="city-dossier-radio" :disabled="d.now.radioBusy" @click="store.act('playRadio')">
               <span class="material-symbols-outlined" aria-hidden="true">radio</span>{{ d.now.radioLabel }}
             </button>

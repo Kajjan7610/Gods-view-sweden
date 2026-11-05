@@ -3440,5 +3440,14 @@
   "Tuning in…": "Sender wird gesucht…",
   "Play local radio": "Lokalradio abspielen",
   "Weather now": "Wetter jetzt",
-  "Sun": "Sonne"
+  "Sun": "Sonne",
+  "Trains from {station}": "Züge ab {station}",
+  "No departures in the next three hours": "Keine Abfahrten in den nächsten drei Stunden",
+  "Cancelled": "Fällt aus",
+  "{time} (+{minutes} min)": "{time} (+{minutes} Min.)",
+  "track {track}": "Gleis {track}",
+  "No queues right now": "Derzeit keine Staus",
+  "{km} km": "{km} km",
+  "+{minutes} min": "+{minutes} Min.",
+  "Queues around the town": "Staus rund um die Stadt"
 }
