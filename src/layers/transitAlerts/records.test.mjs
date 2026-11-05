@@ -136,6 +136,28 @@ test('the card shows the heading, new text and the end date', () => {
   ]);
 });
 
+test('long operator prose is folded into short card lines', () => {
+  const card = buildStopCard({
+    id: 'sl:area-2',
+    name: 'Gåshaga brygga',
+    operatorName: 'SL',
+    kind: 'closed',
+    alerts: [
+      {
+        kind: 'closed',
+        header:
+          'Alla bussar ersätter spårvagnarna på Lidingöbanan mellan Käppala och Gåshaga brygga',
+        description:
+          'Bussar ersätter spårvagnarna mellan Käppala och Gåshaga brygga på vardagar under rusningstid pga underhållsarbete på spårvagnarna. Läs mer på sl.se.',
+        endsAt: Date.parse('2026-12-01T12:00:00Z'),
+      },
+    ],
+  });
+  assert.ok(card.details.length > 3, 'the prose spans several lines');
+  for (const line of card.details) assert.ok(line.length <= 80, line);
+  assert.match(card.details.join(' '), /Läs mer på sl\.se\./);
+});
+
 test('the layer draws one point per stop and counts them by kind', async () => {
   const added = [];
   const viewer = {

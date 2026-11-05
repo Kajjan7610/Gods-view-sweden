@@ -1,5 +1,6 @@
 /** Card model for a stop with disruptions. Pure — no Cesium types. */
 import { t } from '../../i18n/index.js';
+import { foldText } from '../smhiWarnings/cards.js';
 import { alertColor } from './records.js';
 
 export const TRANSIT_ALERTS_OVERLAY_SOURCE_ID = 'transit-alerts';
@@ -11,7 +12,8 @@ const DATE = new Intl.DateTimeFormat('sv-SE', {
   day: '2-digit',
 });
 const SHOWN_ALERTS = 3;
-const DESCRIPTION_CHARS = 180;
+const HEADER_LINES = 2;
+const DESCRIPTION_LINES = 3;
 
 const CARD_BASE = Object.freeze({
   selected: true,
@@ -21,13 +23,10 @@ const CARD_BASE = Object.freeze({
   placement: 'above',
 });
 
-function shorten(text, max) {
-  return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
-}
-
 /**
  * Card for one stop area: its most serious alerts, each with its heading,
- * the start of its text and when it ends.
+ * the start of its text and when it ends. Card lines never wrap, so the
+ * operators' prose is folded into short lines.
  * @param {object} row A placed stop row from the proxy.
  */
 export function buildStopCard(row) {
@@ -36,10 +35,12 @@ export function buildStopCard(row) {
     const end = Number.isFinite(alert.endsAt)
       ? t('until {date}', { date: DATE.format(alert.endsAt) })
       : t('until further notice');
-    details.push(`${alert.header || t('Disruption')} (${end})`);
+    details.push(
+      ...foldText(`${alert.header || t('Disruption')} (${end})`, HEADER_LINES),
+    );
     // The heading often opens the text; show the rest only when it adds.
     if (alert.description && !alert.description.startsWith(alert.header))
-      details.push(shorten(alert.description, DESCRIPTION_CHARS));
+      details.push(...foldText(alert.description, DESCRIPTION_LINES));
   }
   const more = row.alerts.length - SHOWN_ALERTS;
   if (more > 0) details.push(t('+{count} more', { count: more }));

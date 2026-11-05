@@ -63,6 +63,12 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-05 (störningskortet radbryts)
+- Kollektivtrafikstörningar: kortets rader radbryts inte av sig själva, så ett
+  långt meddelande blev en enda rad som gick utanför skärmen åt båda håll.
+  Rubrik och meddelandetext viks nu till rader om högst 80 tecken (rubrik högst
+  2, text högst 3 rader), som SMHI-varningarna och Polisens händelser redan gör.
+
 ### 2026-11-05 (kollektivtrafikstörningar från Trafiklab)
 - Nytt lager "Kollektivtrafikstörningar (Sverige)" under Events: de 16
   regionala trafikbolagens aktuella störningar (GTFS-RT ServiceAlerts) som
