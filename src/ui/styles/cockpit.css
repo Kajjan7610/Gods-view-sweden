@@ -1860,6 +1860,50 @@ html:not([lang='en']) #cockpit-brief-auto {
   font-size: 6px;
   letter-spacing: 0.07em;
 }
+/* Warnings and VMAs in effect below the aircraft (Swedish places only). */
+.cockpit-local-alerts {
+  display: grid;
+  gap: 1px;
+  margin: 5px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cockpit-local-alerts li {
+  display: grid;
+  gap: 2px;
+  padding: 5px 8px;
+  border-left: 2px solid #90caf9;
+  background: rgba(0, 7, 12, 0.76);
+}
+.cockpit-local-alerts li[data-level='YELLOW'] {
+  border-left-color: #ffd600;
+}
+.cockpit-local-alerts li[data-level='ORANGE'] {
+  border-left-color: #ff9100;
+}
+.cockpit-local-alerts li[data-level='RED'],
+.cockpit-local-alerts li[data-level='VMA'] {
+  border-left-color: #ff1744;
+}
+.cockpit-local-alerts strong {
+  overflow: hidden;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cockpit-local-alerts span,
+.cockpit-local-alerts-note {
+  color: rgba(244, 251, 255, 0.5);
+  font-size: 6px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cockpit-local-alerts-note {
+  margin: 5px 0 0;
+}
 
 .cockpit-weather-credit {
   display: inline-block;

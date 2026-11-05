@@ -3515,5 +3515,8 @@
   "Transit Disruptions (Sweden)": "Нарушения в работе транспорта (Швеция)",
   "AIR QUALITY · {station}": "КАЧЕСТВО ВОЗДУХА · {station}",
   "Measured {time}": "Измерено в {time}",
-  "Enter cockpit view": "Войти в вид из кабины"
+  "Enter cockpit view": "Войти в вид из кабины",
+  "PUBLIC ALERT": "ОПОВЕЩЕНИЕ НАСЕЛЕНИЯ",
+  "Warnings in effect here": "Действующие здесь предупреждения",
+  "Weather data by SMHI": "Данные о погоде от SMHI"
 }

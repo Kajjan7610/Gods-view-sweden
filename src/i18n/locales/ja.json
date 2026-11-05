@@ -3290,5 +3290,8 @@
   "Transit Disruptions (Sweden)": "公共交通の運行障害（スウェーデン）",
   "AIR QUALITY · {station}": "大気質 · {station}",
   "Measured {time}": "{time} 測定",
-  "Enter cockpit view": "コックピットビューに入る"
+  "Enter cockpit view": "コックピットビューに入る",
+  "PUBLIC ALERT": "住民向け警報",
+  "Warnings in effect here": "この地点で有効な警報",
+  "Weather data by SMHI": "SMHI の気象データ"
 }

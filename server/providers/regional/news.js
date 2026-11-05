@@ -57,15 +57,26 @@ function normalizeRssArticles(xml, limit = 5) {
   return articles;
 }
 
+// Over Sweden the local press writes in Swedish, so the search does too and
+// keeps to the last week, newest first.
+const SWEDISH_NEWS = Object.freeze({
+  hl: 'sv',
+  gl: 'SE',
+  ceid: 'SE:sv',
+  window: ' when:7d',
+  source: 'Google News (sv)',
+});
+
 async function fetchRegionalNews(place) {
   const query = place?.locality || place?.region || place?.country;
   if (!query)
     return { status: 'unavailable', query: null, articles: [], source: null };
+  const swedish = place?.countryCode === 'SE' ? SWEDISH_NEWS : null;
   const rssParams = new URLSearchParams({
-    q: String(query).replace(/["\\]/g, ' ').trim(),
-    hl: 'en-US',
-    gl: 'US',
-    ceid: 'US:en',
+    q: String(query).replace(/["\\]/g, ' ').trim() + (swedish?.window ?? ''),
+    hl: swedish?.hl ?? 'en-US',
+    gl: swedish?.gl ?? 'US',
+    ceid: swedish?.ceid ?? 'US:en',
   });
   try {
     const xml = await fetchRegionalText(
@@ -75,9 +86,22 @@ async function fetchRegionalNews(place) {
         timeoutMs: 12_000,
       },
     );
-    const articles = normalizeRssArticles(xml, 5);
+    const articles = swedish
+      ? normalizeRssArticles(xml, 20)
+          .sort((a, b) =>
+            String(b.publishedAt ?? '').localeCompare(
+              String(a.publishedAt ?? ''),
+            ),
+          )
+          .slice(0, 5)
+      : normalizeRssArticles(xml, 5);
     if (articles.length)
-      return { status: 'ready', query, articles, source: 'Google News RSS' };
+      return {
+        status: 'ready',
+        query,
+        articles,
+        source: swedish?.source ?? 'Google News RSS',
+      };
   } catch {
     /* fall through to the existing free index */
   }

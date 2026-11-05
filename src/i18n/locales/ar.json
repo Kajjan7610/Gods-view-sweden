@@ -3665,5 +3665,8 @@
   "Transit Disruptions (Sweden)": "اضطرابات النقل العام (السويد)",
   "AIR QUALITY · {station}": "جودة الهواء · {station}",
   "Measured {time}": "قيس الساعة {time}",
-  "Enter cockpit view": "الدخول إلى عرض قمرة القيادة"
+  "Enter cockpit view": "الدخول إلى عرض قمرة القيادة",
+  "PUBLIC ALERT": "تنبيه عام",
+  "Warnings in effect here": "التحذيرات السارية هنا",
+  "Weather data by SMHI": "بيانات الطقس من SMHI"
 }

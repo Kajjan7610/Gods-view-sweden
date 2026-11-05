@@ -3440,5 +3440,8 @@
   "Transit Disruptions (Sweden)": "Interrupções do transporte (Suécia)",
   "AIR QUALITY · {station}": "QUALIDADE DO AR · {station}",
   "Measured {time}": "Medido às {time}",
-  "Enter cockpit view": "Entrar na vista do cockpit"
+  "Enter cockpit view": "Entrar na vista do cockpit",
+  "PUBLIC ALERT": "ALERTA PÚBLICO",
+  "Warnings in effect here": "Avisos em vigor aqui",
+  "Weather data by SMHI": "Dados meteorológicos da SMHI"
 }

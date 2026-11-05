@@ -3365,5 +3365,8 @@
   "Transit Disruptions (Sweden)": "ÖPNV-Störungen (Schweden)",
   "AIR QUALITY · {station}": "LUFTQUALITÄT · {station}",
   "Measured {time}": "Gemessen {time}",
-  "Enter cockpit view": "Cockpitansicht öffnen"
+  "Enter cockpit view": "Cockpitansicht öffnen",
+  "PUBLIC ALERT": "BEVÖLKERUNGSWARNUNG",
+  "Warnings in effect here": "Hier geltende Warnungen",
+  "Weather data by SMHI": "Wetterdaten von SMHI"
 }

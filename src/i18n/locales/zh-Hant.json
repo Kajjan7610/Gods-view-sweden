@@ -3290,5 +3290,8 @@
   "Transit Disruptions (Sweden)": "大眾運輸中斷（瑞典）",
   "AIR QUALITY · {station}": "空氣品質 · {station}",
   "Measured {time}": "測於 {time}",
-  "Enter cockpit view": "進入駕駛艙視圖"
+  "Enter cockpit view": "進入駕駛艙視圖",
+  "PUBLIC ALERT": "公共警報",
+  "Warnings in effect here": "此處生效的預警",
+  "Weather data by SMHI": "天氣資料來自 SMHI"
 }

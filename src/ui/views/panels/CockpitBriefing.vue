@@ -72,12 +72,15 @@ function leaveSignals() {
           <small id="cockpit-local-coordinates">{{ b.local.coordinates }}</small>
         </div>
         <div class="cockpit-local-grid">
-          <div><span>{{ t('TEMP') }}</span><strong id="cockpit-local-temperature">{{ b.local.temperature }}</strong><small translate="no">OPEN-METEO</small></div>
+          <div><span>{{ t('TEMP') }}</span><strong id="cockpit-local-temperature">{{ b.local.temperature }}</strong><small translate="no">{{ b.local.weatherSource || 'OPEN-METEO' }}</small></div>
           <div><span>{{ t('WIND') }}</span><strong id="cockpit-local-wind">{{ b.local.wind }}</strong><small id="cockpit-local-wind-direction">{{ b.local.windDirection }}</small></div>
           <div><span>{{ t('SKY') }}</span><strong id="cockpit-local-condition">{{ b.local.condition }}</strong><small id="cockpit-local-cloud">{{ b.local.cloud }}</small></div>
           <div><span>{{ t('PRECIP') }}</span><strong id="cockpit-local-precipitation">{{ b.local.precipitation }}</strong><small>{{ t('MM') }}</small></div>
         </div>
-        <a class="cockpit-weather-credit" href="https://open-meteo.com/" target="_blank" rel="noopener">{{ t('Weather data by Open-Meteo.com') }}</a>
+        <ul v-if="b.local.alerts?.length" id="cockpit-local-alerts" class="cockpit-local-alerts" :aria-label="t('Warnings in effect here')"><li v-for="alert in b.local.alerts" :key="alert.key" :data-level="alert.level"><strong>{{ alert.title }}</strong><span>{{ alert.meta }}</span></li></ul>
+        <p v-else-if="b.local.alertsNote" id="cockpit-local-alerts-note" class="cockpit-local-alerts-note">{{ b.local.alertsNote }}</p>
+        <a v-if="b.local.weatherSource === 'SMHI'" class="cockpit-weather-credit" href="https://www.smhi.se/" target="_blank" rel="noopener">{{ t('Weather data by SMHI') }}</a>
+        <a v-else class="cockpit-weather-credit" href="https://open-meteo.com/" target="_blank" rel="noopener">{{ t('Weather data by Open-Meteo.com') }}</a>
       </section>
     </div>
     <footer class="cockpit-signal-footer">

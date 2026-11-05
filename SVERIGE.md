@@ -63,6 +63,22 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-05 (svensk lägesbild i cockpiten)
+- Cockpit: när planet är inom 50 km från en svensk kommuns centralort
+  hämtar genomgången svenska källor. Plats blir orten och länet (t.ex.
+  "Kopparberg, Örebro län") i stället för originalets grova naturområde
+  ("Northern European Plain"). Temperatur, vind, himmel och nederbörd
+  kommer från SMHI:s punktprognos för aktuell timme ("Väderdata från
+  SMHI"). Lokalt-sidan listar SMHI-varningar som gäller där planet är och
+  VMA i hela landet eller inom 10 mil, annars "Inga varningar gäller".
+  Nyheterna söks på svenska, senaste veckan och nyast först (SVT, SR,
+  lokaltidningar). Sveriges Radios eget API provades men har inga färska
+  lokala nyheter för de flesta P4-regioner. Utanför Sverige är allt som
+  i originalet.
+- Synk med originalet: inget nytt sedan förra synken. Hämtningen av
+  originalet tar nu bara `main`; originalets sidogrenar saknade objekt och
+  fick `git fetch` att avbrytas.
+
 ### 2026-11-05 (cockpit direkt från ett klickat plan)
 - Cockpit: när ett plan är valt visas en COCKPIT-knapp nere till höger vid
   kartan. Ett klick (eller `C`) slår på Kontakter om det är avstängt och går

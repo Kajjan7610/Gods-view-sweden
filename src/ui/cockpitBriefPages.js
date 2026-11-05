@@ -71,6 +71,10 @@ export function createBriefState() {
       condition: t('UNKNOWN'),
       cloud: '—',
       precipitation: '—',
+      weatherSource: 'OPEN-METEO',
+      // Warnings and VMAs in effect there; only Swedish places have them.
+      alerts: [],
+      alertsNote: '',
     },
   };
 }

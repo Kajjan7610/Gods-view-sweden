@@ -2,6 +2,12 @@ import { makeRateLimiter, clientKey } from '../common/rate-limit.js';
 import { fetchRegionalPlace } from './place.js';
 import { fetchRegionalWeather } from './weather.js';
 import { fetchRegionalNews } from './news.js';
+import {
+  fetchSmhiNow,
+  fetchSwedishAlerts,
+  maybeInSweden,
+  swedishPlaceAt,
+} from './sweden.js';
 import { validRegionalPoint } from './query.js';
 import { coalesceProxyRequest } from '../common/http.js';
 
@@ -19,7 +25,14 @@ function regionalBriefHasAnySource({ place, weather, news } = {}) {
   return Boolean(place || weather || (news && news.status !== 'unavailable'));
 }
 
-function regionalBriefProxy({ placeProvider = fetchRegionalPlace } = {}) {
+function regionalBriefProxy({
+  placeProvider = fetchRegionalPlace,
+  swedish = {
+    place: swedishPlaceAt,
+    weather: fetchSmhiNow,
+    alerts: fetchSwedishAlerts,
+  },
+} = {}) {
   const _regionalBriefCache = new Map();
 
   const _regionalBriefInFlight = new Map();
@@ -39,13 +52,27 @@ function regionalBriefProxy({ placeProvider = fetchRegionalPlace } = {}) {
   }
 
   async function refresh(point, key) {
-    const [placeResult, weatherResult] = await Promise.allSettled([
-      placeProvider(point),
-      fetchRegionalWeather(point),
-    ]);
+    // Near a Swedish municipality seat the place is that town and the
+    // Swedish sources answer; elsewhere the original sources do.
+    const swedishPlace = maybeInSweden(point) ? swedish.place(point) : null;
+    const inSweden = Boolean(swedishPlace);
+    const [placeResult, weatherResult, smhiResult, alertsResult] =
+      await Promise.allSettled([
+        swedishPlace || placeProvider(point),
+        fetchRegionalWeather(point),
+        inSweden ? swedish.weather(point) : null,
+        inSweden ? swedish.alerts(point) : null,
+      ]);
     const place = placeResult.status === 'fulfilled' ? placeResult.value : null;
+    const smhi =
+      inSweden && smhiResult.status === 'fulfilled' ? smhiResult.value : null;
     const weather =
-      weatherResult.status === 'fulfilled' ? weatherResult.value : null;
+      smhi ||
+      (weatherResult.status === 'fulfilled' ? weatherResult.value : null);
+    const alerts =
+      inSweden && alertsResult.status === 'fulfilled'
+        ? alertsResult.value
+        : null;
     const news = await fetchRegionalNews(place);
     if (!regionalBriefHasAnySource({ place, weather, news })) {
       throw new Error('All regional briefing sources unavailable');
@@ -59,6 +86,9 @@ function regionalBriefProxy({ placeProvider = fetchRegionalPlace } = {}) {
       placeStatus: place ? 'ready' : 'unavailable',
       weather,
       weatherStatus: weather ? 'ready' : 'unavailable',
+      weatherSource: weather ? (smhi ? 'SMHI' : 'Open-Meteo') : null,
+      // Swedish warnings and VMAs; absent outside Sweden.
+      ...(alerts ? { alertsStatus: alerts.status, alerts: alerts.alerts } : {}),
       newsStatus: news.status,
       newsQuery: news.query,
       newsSource: news.source,

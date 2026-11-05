@@ -1,5 +1,5 @@
 /** Regional briefing requests, pages and rotation for the Cockpit controller. */
-import { formatNumber, t, msg } from '../i18n/index.js';
+import { formatNumber, getLocale, t, msg } from '../i18n/index.js';
 import {
   COCKPIT_BRIEF_ROTATE_MS,
   COCKPIT_REGIONAL_REFRESH_MS,
@@ -31,13 +31,45 @@ const WEATHER_CONDITION_KEYS = Object.freeze({
   'MIXED CONDITIONS': msg('MIXED CONDITIONS'),
 });
 
+// What is in effect over Sweden: SMHI's warning levels and Krisinformation's
+// VMAs, as the briefing names them.
+const ALERT_LEVEL_KEYS = Object.freeze({
+  VMA: msg('PUBLIC ALERT'),
+  MESSAGE: msg('Message'),
+  YELLOW: msg('Yellow warning'),
+  ORANGE: msg('Orange warning'),
+  RED: msg('Red warning'),
+});
+
+/** Swedish sources write Swedish and English; other languages read English. */
+function alertText(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  return String(getLocale() || '').startsWith('sv') ? value.sv : value.en;
+}
+
+/** The alerts in effect where the aircraft is, as the Local page lists them. */
+function alertRows(alerts) {
+  return (Array.isArray(alerts) ? alerts : []).map((alert, index) => {
+    const levelKey = ALERT_LEVEL_KEYS[alert?.level];
+    return {
+      key: `${alert?.level}:${index}:${alertText(alert?.title)}`,
+      level: String(alert?.level || ''),
+      title: alertText(alert?.title) || (levelKey ? t(levelKey) : ''),
+      meta: [levelKey ? t(levelKey) : null, alertText(alert?.area) || null]
+        .filter(Boolean)
+        .join(' · '),
+    };
+  });
+}
+
 /** Hand a fresh copy of the briefing to the view. */
 export function publishBriefView() {
   const brief = this.brief;
   this.publishBrief({
     ...brief,
     news: { ...brief.news },
-    local: { ...brief.local },
+    local: { ...brief.local, alerts: [...(brief.local.alerts || [])] },
   });
 }
 
@@ -54,7 +86,10 @@ export function showBriefPage(index, { manual = false } = {}) {
     position: `${this.briefPageIndex + 1} / ${count}`,
     source: page.sourceKey
       ? t(page.sourceKey, { source: page.sourceName })
-      : page.source,
+      : page.id === 'local' && this.brief.local.weatherSource === 'SMHI'
+        ? // Over Sweden the place and conditions come from Swedish sources.
+          'WIKIDATA · SMHI · UTC' // i18n-ignore: provider names
+        : page.source,
   });
   this.publishBriefView();
   if (manual && this.briefAutoRotateEnabled)
@@ -282,8 +317,17 @@ export function renderRegionalBrief(payload, info) {
           maximumFractionDigits: 1,
         })
       : '—',
+    weatherSource: payload?.weatherSource === 'SMHI' ? 'SMHI' : 'OPEN-METEO',
+    alerts: alertRows(payload?.alerts),
+    // Only a place with warning data says that none is in effect.
+    alertsNote:
+      payload?.alertsStatus === 'ready' && !payload.alerts?.length
+        ? t('No warnings in effect')
+        : '',
   };
   this.brief.regionalStatus = payload?.status || 'partial';
+  if (COCKPIT_BRIEF_PAGES[this.briefPageIndex]?.id === 'local')
+    this.showBriefPage(this.briefPageIndex);
   if (this.briefPageIndex === 1) {
     this.brief.source = t('{source} · LOCATION QUERY', {
       source: String(payload?.newsSource || t('REGIONAL NEWS')).toUpperCase(),
