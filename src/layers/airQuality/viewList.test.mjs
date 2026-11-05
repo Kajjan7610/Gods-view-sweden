@@ -2,7 +2,7 @@
 // camera between the 20-minute data refreshes.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createAirQualityLayer } from './index.js';
+import { createAirQualityLayer, readingsInView } from './index.js';
 
 function fakeViewer() {
   const listeners = new Set();
@@ -46,4 +46,16 @@ test('a settled camera re-reads the card while the layer is on', () => {
   layer.enable();
   layer.destroy(viewer);
   assert.equal(viewer.listeners.size, 0, 'destroy lets go of the camera');
+});
+
+test('a visibility test picks the readings in view', () => {
+  const rows = [
+    { id: 'a', stationId: 'a', value: 2, lat: 64.75 },
+    { id: 'b', stationId: 'b', value: 5, lat: 66 },
+    { id: 'c', stationId: 'c', value: 4, lat: 60 },
+  ];
+  assert.deepEqual(
+    readingsInView(rows, (reading) => reading.lat < 65, 5).map((r) => r.id),
+    ['c', 'a'],
+  );
 });

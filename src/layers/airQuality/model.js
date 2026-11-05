@@ -435,14 +435,16 @@ export function selectAirQualityOverlayCohort(
 }
 
 /**
- * The worst readings inside a lon/lat rectangle, for the readout card.
+ * The worst readings in view, for the readout card: inside a lon/lat
+ * rectangle, or passing a visibility test when one is given instead.
  *
- * A null rectangle means the camera could not resolve one (a fully oblique or
+ * A null view means the camera could not resolve one (a fully oblique or
  * space-level view); everything is then in scope rather than nothing, so the
  * card degrades to the worst readings overall instead of going blank.
  *
  * @param {Array<object>} readings
- * @param {?{west:number, south:number, east:number, north:number}} rect - Degrees.
+ * @param {?({west:number, south:number, east:number, north:number}|((reading: object) => boolean))} rect
+ *   Degrees, or a predicate.
  * @param {number} [limit=5]
  * @returns {Array<object>}
  */
@@ -452,13 +454,16 @@ export function readingsInView(readings, rect, limit = 5) {
   if (cap === 0) return [];
   const inside = !rect
     ? readings
-    : readings.filter((reading) => {
-        if (reading.lat < rect.south || reading.lat > rect.north) return false;
-        // A rectangle crossing the antimeridian has west > east.
-        return rect.west <= rect.east
-          ? reading.lon >= rect.west && reading.lon <= rect.east
-          : reading.lon >= rect.west || reading.lon <= rect.east;
-      });
+    : typeof rect === 'function'
+      ? readings.filter(rect)
+      : readings.filter((reading) => {
+          if (reading.lat < rect.south || reading.lat > rect.north)
+            return false;
+          // A rectangle crossing the antimeridian has west > east.
+          return rect.west <= rect.east
+            ? reading.lon >= rect.west && reading.lon <= rect.east
+            : reading.lon >= rect.west || reading.lon <= rect.east;
+        });
   return inside
     .slice()
     .sort((a, b) => b.value - a.value || a.stationId.localeCompare(b.stationId))

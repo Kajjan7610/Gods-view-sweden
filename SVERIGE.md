@@ -63,6 +63,14 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-05 (luftkvalitetslistan räknar det som syns på skärmen)
+- Luftkvalitet: listan "sämsta mätningarna i vyn" missade stationer nära
+  skärmens överkant. Cesiums vyrektangel provar bara skärmens fyra hörn, och på
+  en glob når mitten av överkanten längre norrut än hörnen (vid testet slutade
+  rektangeln vid 64,9° N fast Luleå och Piteå på 65,3–65,6° N syntes). Listan
+  tar nu med de stationer vars punkt ligger inom bilden och på globens synliga
+  sida.
+
 ### 2026-11-05 (luftkvalitetslistan följer kameran)
 - Luftkvalitet: Väder-kortets lista "sämsta mätningarna i vyn" räknades bara om
   när ny data kom (var 20:e minut), så den kunde visa Stockholm när man tittade

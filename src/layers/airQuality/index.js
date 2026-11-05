@@ -57,6 +57,44 @@ export function createAirQualityLayer({ source, overlayHost } = {}) {
       : null;
   };
 
+  const scratchWindow = new Cesium.Cartesian2();
+
+  /**
+   * Whether a station is on screen: inside the canvas and on the near side of
+   * the globe. The view rectangle alone samples only the screen's corners, and
+   * on a globe the middle of the top edge reaches further poleward than they
+   * do, so stations there were left out of the list.
+   */
+  const viewTest = () => {
+    const scene = _viewer?.scene;
+    const width = scene?.canvas?.clientWidth;
+    const height = scene?.canvas?.clientHeight;
+    if (!width || !height) return viewRectangle();
+    const occluder =
+      scene.mode === Cesium.SceneMode.SCENE3D
+        ? new Cesium.EllipsoidalOccluder(
+            scene.globe?.ellipsoid ?? Cesium.Ellipsoid.WGS84,
+            _viewer.camera.positionWC,
+          )
+        : null;
+    return (reading) => {
+      const position = Cesium.Cartesian3.fromDegrees(reading.lon, reading.lat);
+      if (occluder && !occluder.isPointVisible(position)) return false;
+      const pixel = Cesium.SceneTransforms.worldToWindowCoordinates(
+        scene,
+        position,
+        scratchWindow,
+      );
+      return (
+        !!pixel &&
+        pixel.x >= 0 &&
+        pixel.x <= width &&
+        pixel.y >= 0 &&
+        pixel.y <= height
+      );
+    };
+  };
+
   /** The camera's lon/lat rectangle in degrees, or null when unresolvable. */
   const viewRectangle = () => {
     const rectangle = _viewer?.camera?.computeViewRectangle?.();
@@ -240,7 +278,7 @@ export function createAirQualityLayer({ source, overlayHost } = {}) {
         ? present
         : Object.values(AIR_QUALITY_PROVIDERS);
       const [provider] = providers;
-      const inView = readingsInView(_readings, viewRectangle(), READOUT_LIMIT);
+      const inView = readingsInView(_readings, viewTest(), READOUT_LIMIT);
       const newest = _readings.reduce(
         (max, reading) => Math.max(max, reading.observedMs || 0),
         0,
