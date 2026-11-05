@@ -54,7 +54,7 @@ const { view: d } = storeToRefs(store);
           <div v-if="d.society.election" class="city-dossier-election">
             <strong>{{ d.society.election.title }}</strong>
             <div v-for="row in d.society.election.parties" :key="row.party" class="city-dossier-party">
-              <span>{{ row.party }}</span>
+              <span :title="row.party">{{ row.party }}</span>
               <i :style="{ width: row.width, background: row.color }"></i>
               <small>{{ row.share }}</small>
             </div>

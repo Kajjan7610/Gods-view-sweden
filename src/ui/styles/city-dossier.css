@@ -239,10 +239,17 @@
 }
 .city-dossier-party {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 42px;
+  /* One fixed name column keeps every bar aligned; long local party names
+     end in an ellipsis and carry their full name as a tooltip. */
+  grid-template-columns: 72px minmax(0, 1fr) 42px;
   align-items: center;
   gap: 6px;
   font-size: 8px;
+}
+.city-dossier-party span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .city-dossier-party i {
   display: block;

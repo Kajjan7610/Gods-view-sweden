@@ -282,7 +282,20 @@ export function createCityDossier({
       rows.push({
         label: t('Municipality'),
         value: whole(municipality.population.value),
-        detail: String(municipality.population.year),
+        // SCB's monthly count names its month; Kolada's its year.
+        detail: Number.isFinite(municipality.population.month)
+          ? new Intl.DateTimeFormat(getLocale(), {
+              month: 'short',
+              year: 'numeric',
+              timeZone: 'UTC',
+            }).format(
+              Date.UTC(
+                municipality.population.year,
+                municipality.population.month - 1,
+                15,
+              ),
+            )
+          : String(municipality.population.year),
       });
     if (
       Number.isFinite(municipality?.population?.men) &&
@@ -350,8 +363,8 @@ export function createCityDossier({
     if (m?.turnout)
       rows.push({
         label: t('Turnout, municipal election'),
-        value: `${whole(m.turnout.value)} %`,
-        detail: '',
+        value: `${oneDecimal(m.turnout.value)} %`,
+        detail: m.turnout.year ? String(m.turnout.year) : '',
       });
     const parties = m?.election?.parties || [];
     const top = Math.max(1, ...parties.map((row) => row.share));
@@ -359,11 +372,18 @@ export function createCityDossier({
       rows,
       election: parties.length
         ? {
+            // Valmyndigheten names its election; Kolada's figures are dated
+            // by the year Kolada repeats them in.
             title: t('Municipal election {year}', {
-              year: electionYear(m.election.dataYear),
+              year: m.election.year ?? electionYear(m.election.dataYear),
             }),
             parties: parties.map((row) => ({
-              party: row.party === 'other' ? t('Other') : row.party,
+              party:
+                row.party === 'other'
+                  ? t('Other')
+                  : row.party === 'local'
+                    ? row.name
+                    : row.party,
               share: `${oneDecimal(row.share)} %`,
               width: `${Math.max(2, (row.share / top) * 100)}%`,
               color: PARTY_COLORS[row.party] || PARTY_COLORS.other,
@@ -486,7 +506,8 @@ export function createCityDossier({
       people: facts ? peopleView() : null,
       society: facts ? societyView() : null,
       now: nowView(),
-      source: 'Kolada (RKA) · Wikidata · Wikipedia · SMHI · Polisen', // i18n-ignore: provider names
+      source:
+        'SCB · Kolada (RKA) · Valmyndigheten · Wikidata · Wikipedia · SMHI · Polisen', // i18n-ignore: provider names
     });
   }
 

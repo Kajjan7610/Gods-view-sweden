@@ -1,12 +1,16 @@
 import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 import { nearestSeat } from './regional/sweden.js';
+import { createScbPopulation } from './cityDossierScb.js';
+import { createElectionResults } from './cityDossierElection.js';
 
 // The city dossier: facts about the Swedish town nearest a point, from three
 // open sources without keys. Kolada (RKA) has the municipality's key figures
 // year by year; Wikidata (CC0) the town itself — its own population, founding
 // and height — and the municipality's coat of arms; Swedish Wikipedia
-// (CC BY-SA 4.0, credited with a link) the introduction and a photo. Facts
+// (CC BY-SA 4.0, credited with a link) the introduction and a photo. SCB's
+// newer counts replace the town's and municipality's population where they
+// answer, and Valmyndigheten's final results the latest election. Facts
 // change yearly, so a municipality's answer is kept for a day.
 
 export const KOLADA_URL = 'https://api.kolada.se/v3/data/kpi';
@@ -196,27 +200,96 @@ export function townNames(seat) {
   return names;
 }
 
+/**
+ * The town's facts with SCB's yearly population when there is one: SCB
+ * counts the town every year inside its latest boundary, Wikidata only at
+ * each delimitation.
+ */
+export function mergeTown(wikidata, scbTown) {
+  if (!scbTown) return wikidata;
+  return {
+    ...(wikidata || {
+      town: null,
+      founded: null,
+      elevation: null,
+      articleTitle: null,
+      coatOfArms: null,
+    }),
+    population: scbTown.value,
+    populationYear: scbTown.year,
+    populationSource: 'SCB',
+  };
+}
+
+/**
+ * Kolada's figures with the municipality's population from SCB's latest
+ * month and the latest election from Valmyndigheten, where those answered.
+ */
+export function mergeMunicipality(kolada, monthly, election) {
+  if (!kolada && !monthly && !election) return null;
+  const base = kolada || {
+    population: null,
+    populationHistory: [],
+    taxRate: null,
+    medianIncome: null,
+    meanAge: null,
+    unemployment: null,
+    turnout: null,
+    election: null,
+  };
+  return {
+    ...base,
+    population: monthly
+      ? {
+          value: monthly.value,
+          year: monthly.year,
+          month: monthly.month,
+          men: monthly.men,
+          women: monthly.women,
+          source: 'SCB',
+        }
+      : base.population,
+    turnout:
+      election && Number.isFinite(election.turnout)
+        ? { value: election.turnout, year: election.year }
+        : base.turnout,
+    election: election
+      ? {
+          year: election.year,
+          parties: election.parties,
+          source: 'Valmyndigheten',
+        }
+      : base.election,
+  };
+}
+
 /** Bounded city dossier route for dev and preview. */
 export function cityDossierProxy({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
+  scb = null,
+  election = null,
 } = {}) {
   const facts = new Map();
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 300 });
 
-  async function getJson(url, headers = {}) {
+  /** One bounded JSON read; `body` makes it a JSON POST (SCB's queries). */
+  async function getJson(url, { headers = {}, method = 'GET', body } = {}) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
       const response = await fetchImpl(url, {
+        method,
         signal: controller.signal,
         redirect: 'follow',
         headers: {
           Accept: 'application/json',
           'User-Agent': USER_AGENT,
+          ...(body ? { 'Content-Type': 'application/json' } : {}),
           ...headers,
         },
+        ...(body ? { body: JSON.stringify(body) } : {}),
       });
       if (!response.ok) {
         try {
@@ -234,6 +307,9 @@ export function cityDossierProxy({
     }
   }
 
+  const population = scb || createScbPopulation(getJson);
+  const results = election || createElectionResults({ fetchImpl });
+
   async function loadFacts(seat) {
     const thisYear = new Date(now()).getUTCFullYear();
     const years = Array.from(
@@ -244,18 +320,24 @@ export function cityDossierProxy({
       ...Object.values(KOLADA_KPIS),
       ...PARTY_KPIS.map(([, id]) => id),
     ];
-    const [kolada, wikidata] = await Promise.allSettled([
-      getJson(
-        `${KOLADA_URL}/${kpis.join(',')}/municipality/${seat.code}/year/${years.join(',')}`,
-      ).then(normalizeKolada),
-      getJson(
-        `${WIKIDATA_SPARQL_URL}?format=json&query=${encodeURIComponent(
-          wikidataQuery(seat.code, townNames(seat)),
-        )}`,
-        { Accept: 'application/sparql-results+json' },
-      ).then(normalizeWikidata),
-    ]);
-    const town = wikidata.status === 'fulfilled' ? wikidata.value : null;
+    const value = (result) =>
+      result.status === 'fulfilled' ? result.value : null;
+    const [kolada, wikidata, scbTown, scbMonthly, latestElection] =
+      await Promise.allSettled([
+        getJson(
+          `${KOLADA_URL}/${kpis.join(',')}/municipality/${seat.code}/year/${years.join(',')}`,
+        ).then(normalizeKolada),
+        getJson(
+          `${WIKIDATA_SPARQL_URL}?format=json&query=${encodeURIComponent(
+            wikidataQuery(seat.code, townNames(seat)),
+          )}`,
+          { headers: { Accept: 'application/sparql-results+json' } },
+        ).then(normalizeWikidata),
+        population.townPopulation(seat.code, townNames(seat)),
+        population.municipalityPopulation(seat.code),
+        results.forMunicipality(seat.code),
+      ]);
+    const town = mergeTown(value(wikidata), value(scbTown));
     let wikipedia = null;
     try {
       const title = town?.articleTitle || seat.locality;
@@ -267,7 +349,11 @@ export function cityDossierProxy({
     } catch {
       wikipedia = null;
     }
-    const municipality = kolada.status === 'fulfilled' ? kolada.value : null;
+    const municipality = mergeMunicipality(
+      value(kolada),
+      value(scbMonthly),
+      value(latestElection),
+    );
     if (!municipality && !town && !wikipedia)
       throw new Error('no dossier source answered');
     return { municipality, town, wikipedia, fetchedAt: now() };

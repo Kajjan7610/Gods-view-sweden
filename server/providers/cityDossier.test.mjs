@@ -7,6 +7,8 @@ import {
   WIKIDATA_SPARQL_URL,
   WIKIPEDIA_SUMMARY_URL,
   cityDossierProxy,
+  mergeMunicipality,
+  mergeTown,
   normalizeKolada,
   normalizeWikidata,
   normalizeWikipedia,
@@ -123,6 +125,44 @@ test('Wikidata and Wikipedia answers become the town facts and introduction', ()
   );
 });
 
+test('newer SCB and Valmyndigheten figures replace older ones', () => {
+  const kolada = normalizeKolada({
+    values: [
+      { kpi: 'N01951', period: 2025, values: [{ gender: 'T', value: 104108 }] },
+      { kpi: 'N05401', period: 2025, values: [{ gender: 'T', value: 81 }] },
+      { kpi: 'N05801', period: 2025, values: [{ gender: 'T', value: 32.08 }] },
+    ],
+  });
+  const merged = mergeMunicipality(
+    kolada,
+    { value: 104008, men: 52083, women: 51924, year: 2026, month: 8 },
+    {
+      year: 2026,
+      turnout: 82.86,
+      parties: [{ party: 'S', share: 32.14 }],
+    },
+  );
+  assert.deepEqual(merged.population, {
+    value: 104008,
+    year: 2026,
+    month: 8,
+    men: 52083,
+    women: 51924,
+    source: 'SCB',
+  });
+  assert.deepEqual(merged.turnout, { value: 82.86, year: 2026 });
+  assert.equal(merged.election.year, 2026);
+  assert.deepEqual(merged.populationHistory, [{ year: 2025, value: 104108 }]);
+  // Without the newer sources Kolada stands.
+  assert.deepEqual(mergeMunicipality(kolada, null, null), kolada);
+  assert.equal(mergeMunicipality(null, null, null), null);
+  assert.equal(mergeTown(null, null), null);
+  assert.equal(
+    mergeTown(null, { value: 1, year: 2025 }).populationSource,
+    'SCB',
+  );
+});
+
 function route(options) {
   let handler = null;
   cityDossierProxy(options).configureServer({
@@ -147,6 +187,11 @@ test('the route answers the town near a point and caches its facts', async () =>
   const calls = [];
   const get = route({
     now: () => Date.parse('2026-11-05T18:00:00Z'),
+    scb: {
+      townPopulation: async () => ({ value: 86981, year: 2025 }),
+      municipalityPopulation: async () => null,
+    },
+    election: { forMunicipality: async () => null },
     fetchImpl: async (url) => {
       calls.push(url);
       if (url.startsWith(KOLADA_URL))
@@ -170,6 +215,11 @@ test('the route answers the town near a point and caches its facts', async () =>
     point: first.body.city.point,
   });
   assert.equal(first.body.municipality.population.value, 104108);
+  assert.deepEqual(
+    [first.body.town.population, first.body.town.populationYear],
+    [86981, 2025],
+    "SCB's yearly town count stands in for Wikidata's",
+  );
   assert.equal(first.body.wikipedia.extract, 'Gävle är en stad.');
   assert.match(
     calls[0],

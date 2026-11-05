@@ -66,6 +66,22 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-05 (stadsdossiern med senaste siffrorna)
+- Tätortens folkmängd kommer nu från SCB:s årliga tabell inom senaste
+  tätortsgränsen, t.ex. Gävle 86 981 (2025) i stället för Wikidatas
+  86 533 (2023).
+- Kommunens folkmängd, kvinnor och män kommer från SCB:s månadsstatistik,
+  t.ex. Gävle 104 008 (augusti 2026). Kolada är kvar som reserv och för
+  tioårskurvan.
+- Kommunvalet är 2026 års slutliga resultat från Valmyndigheten, med
+  valdeltagande. Lokala partier på minst 3 % visas med namn (t.ex.
+  Skärgårdspartiet i Värmdö), övriga summeras. Valmyndigheten har bara
+  Excel-filer, så servern hämtar den en gång (ca 11 MB), packar bara upp
+  de två kommunbladen och sparar resultatet i `.gev-cache/city-dossier/`.
+  SCB har ännu inte lagt in valet 2026 i sitt API.
+- Wikipedias inledning kan fortfarande nämna äldre siffror; den texten är
+  Wikipedias egen.
+
 ### 2026-11-05 (stadsdossier)
 - Ny panel STAD i högerkanten. När kameran stannar under 80 km höjd och
   mitten av vyn ligger inom 2 mil från en svensk kommuns centralort visar
