@@ -1,6 +1,6 @@
 /** Card model for a selected Polisen notice. Pure — no Cesium types. */
 import { t } from '../../i18n/index.js';
-import { foldText } from '../smhiWarnings/cards.js';
+import { foldText } from '../../ui/cardText.js';
 import { categoryColor } from './records.js';
 
 export const POLICE_OVERLAY_SOURCE_ID = 'polisen-events';

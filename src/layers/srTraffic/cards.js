@@ -1,6 +1,6 @@
 /** Card model for a selected SR traffic message. Pure — no Cesium types. */
 import { msg, t } from '../../i18n/index.js';
-import { foldText } from '../smhiWarnings/cards.js';
+import { foldText } from '../../ui/cardText.js';
 import { priorityColor } from './records.js';
 
 export const SR_TRAFFIC_OVERLAY_SOURCE_ID = 'sr-traffic';

@@ -3662,5 +3662,7 @@
   "Points are stops with an active disruption from the regional operators (Trafiklab GTFS Regional). Click a stop for the operator’s message.": "النقاط هي محطات بها اضطراب قائم من المشغّلين الإقليميين (Trafiklab GTFS Regional). انقر على محطة لعرض رسالة المشغّل.",
   "Transit disruptions need TRAFIKLAB_GTFS_RT_KEY": "تتطلب اضطرابات النقل TRAFIKLAB_GTFS_RT_KEY",
   "Malformed transit disruption snapshot": "لقطة اضطرابات النقل مشوّهة",
-  "Transit Disruptions (Sweden)": "اضطرابات النقل العام (السويد)"
+  "Transit Disruptions (Sweden)": "اضطرابات النقل العام (السويد)",
+  "AIR QUALITY · {station}": "جودة الهواء · {station}",
+  "Measured {time}": "قيس الساعة {time}"
 }

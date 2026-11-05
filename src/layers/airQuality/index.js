@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
-import { msg, t, tn } from '../../i18n/index.js';
+import { getLocale, msg, t, tn } from '../../i18n/index.js';
 import { translateFeedError } from '../../ui/statusText.js';
+import { foldText } from '../../ui/cardText.js';
 import {
   AIR_QUALITY_BANDS,
   AIR_QUALITY_OVERLAY_SOURCE_ID,
@@ -29,9 +30,58 @@ const READOUT_LIMIT = 5;
 const MULTI_NETWORK_COVERAGE = msg(
   'Canada (ECCC AQHI) and Sweden (SMHI, European EAQI)',
 );
+const PICK_PREFIX = 'air-quality:';
+const CARD_SOURCE_ID = 'air-quality-card';
+const CARD_HOST_OPTIONS = Object.freeze({
+  cohortLimit: 1,
+  collisionCapacity: 1,
+  moving: false,
+});
+const NOTE_LINES = 3;
+// The clock follows the app's language, not the browser's.
+const clock = (ms) =>
+  new Intl.DateTimeFormat(getLocale(), {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(ms);
 
-/** Own one air-quality display, its refresh lifecycle, and its readout card. */
-export function createAirQualityLayer({ source, overlayHost } = {}) {
+/**
+ * Card for one station: its index and risk, what was measured, and when.
+ * Card lines never wrap, so a network's note is folded into short lines.
+ */
+export function buildStationCard(reading) {
+  const details = [`${reading.scale} ${reading.label} · ${t(reading.risk)}`];
+  if (reading.note) details.push(...foldText(reading.note, NOTE_LINES));
+  if (Number.isFinite(reading.observedMs))
+    details.push(t('Measured {time}', { time: clock(reading.observedMs) }));
+  details.push(String(reading.provider).toUpperCase());
+  return {
+    id: `air-quality-card:${reading.id}`,
+    selected: true,
+    priority: Number.MAX_SAFE_INTEGER,
+    gapPx: 15,
+    verticalOnly: true,
+    placement: 'above',
+    interactive: false,
+    title: t('AIR QUALITY · {station}', {
+      station: reading.name.toUpperCase(),
+    }),
+    details,
+    accent: reading.color,
+  };
+}
+
+/**
+ * Own one air-quality display, its refresh lifecycle, its readout card, and
+ * the card of a clicked station.
+ */
+export function createAirQualityLayer({
+  source,
+  overlayHost,
+  screenSpaceEventHandlerFactory = null,
+  picking = null,
+  pointer = null,
+} = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Air quality requires a snapshot source');
   if (!overlayHost) throw new TypeError('Air quality requires an overlay host');
@@ -45,8 +95,78 @@ export function createAirQualityLayer({ source, overlayHost } = {}) {
   let _enabled = false;
   let rowControlsListener = null;
   let _removeMoveEnd = null;
+  let _clickHandler = null;
+  let _selectedId = null;
+  let _selectedCardId = null;
 
   const notify = () => rowControlsListener?.();
+  const canSelect = () => screenSpaceEventHandlerFactory && picking;
+
+  function publishSelectedCard() {
+    if (!canSelect()) return;
+    const reading = _selectedId
+      ? _readings.find((one) => one.id === _selectedId)
+      : null;
+    if (!reading) {
+      _selectedId = null;
+      _selectedCardId = null;
+      overlayHost.setEntries(CARD_SOURCE_ID, [], CARD_HOST_OPTIONS);
+      return;
+    }
+    const card = buildStationCard(reading);
+    card.position = Cesium.Cartesian3.fromDegrees(reading.lon, reading.lat);
+    _selectedCardId = card.id;
+    overlayHost.setEntries(CARD_SOURCE_ID, [card], CARD_HOST_OPTIONS);
+  }
+
+  function pickedStation(picked) {
+    const pickId = picking.resolvePickId(picked);
+    if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
+      return null;
+    const id = pickId.slice(PICK_PREFIX.length);
+    return _readings.some((reading) => reading.id === id) ? id : null;
+  }
+
+  function installClickHandler() {
+    if (!canSelect() || _clickHandler || !_viewer) return;
+    picking.registerPickOwner?.(layer.id, (pickId) =>
+      pickId.startsWith(PICK_PREFIX),
+    );
+    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
+    _clickHandler.setInputAction((click) => {
+      if (pointer && !pointer.isPointerFree()) return;
+      const cardHit = overlayHost.hitTest?.(
+        click.position?.x,
+        click.position?.y,
+        { sourceId: CARD_SOURCE_ID },
+      );
+      if (cardHit && cardHit.entryId === _selectedCardId) return;
+      const picked = _viewer.scene.pick(click.position);
+      const hit = picked ? pickedStation(picked) : null;
+      if (hit) {
+        _selectedId = hit;
+        publishSelectedCard();
+        return;
+      }
+      if (picked) {
+        const pickId = picking.resolvePickId(picked);
+        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
+      }
+      if (_selectedId) {
+        _selectedId = null;
+        publishSelectedCard();
+      }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+  }
+
+  function removeClickHandler() {
+    _clickHandler?.destroy();
+    _clickHandler = null;
+    picking?.unregisterPickOwner?.(layer.id);
+    _selectedId = null;
+    _selectedCardId = null;
+    overlayHost.clearSource(CARD_SOURCE_ID);
+  }
 
   // The card lists the worst readings in view, so a settled camera re-reads
   // it; data refreshes alone are 20 minutes apart.
@@ -133,7 +253,9 @@ export function createAirQualityLayer({ source, overlayHost } = {}) {
       _enabled = true;
       if (_dataSource) _dataSource.show = true;
       overlayHost.setVisible(AIR_QUALITY_OVERLAY_SOURCE_ID, true);
+      overlayHost.setVisible(CARD_SOURCE_ID, true);
       followCamera(true);
+      installClickHandler();
       notify();
     },
 
@@ -143,9 +265,11 @@ export function createAirQualityLayer({ source, overlayHost } = {}) {
       _request = null;
       _enabled = false;
       followCamera(false);
+      removeClickHandler();
       if (_dataSource) _dataSource.show = false;
       overlayHost.clearSource(AIR_QUALITY_OVERLAY_SOURCE_ID);
       overlayHost.setVisible(AIR_QUALITY_OVERLAY_SOURCE_ID, false);
+      overlayHost.setVisible(CARD_SOURCE_ID, false);
       notify();
     },
 
@@ -162,6 +286,9 @@ export function createAirQualityLayer({ source, overlayHost } = {}) {
           return false;
         _readings = readings;
         this._render();
+        // A refresh keeps the open card current, or closes it if the
+        // station stopped reporting.
+        if (_selectedId) publishSelectedCard();
         _count = _readings.length;
         _lastUpdate = Date.now();
         _lastError = null;
@@ -247,8 +374,10 @@ export function createAirQualityLayer({ source, overlayHost } = {}) {
       _request = null;
       _enabled = false;
       followCamera(false);
+      removeClickHandler();
       overlayHost.clearSource(AIR_QUALITY_OVERLAY_SOURCE_ID);
       overlayHost.setVisible(AIR_QUALITY_OVERLAY_SOURCE_ID, false);
+      overlayHost.setVisible(CARD_SOURCE_ID, false);
       if (_dataSource) {
         viewer?.dataSources?.remove(_dataSource, true);
         _dataSource = null;

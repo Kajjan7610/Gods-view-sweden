@@ -2,6 +2,9 @@
 import { getLocale, msg, t } from '../../i18n/index.js';
 import { levelColor } from './records.js';
 import { CRISIS_KINDS } from './crisis.js';
+import { foldText } from '../../ui/cardText.js';
+
+export { foldText };
 
 export const SMHI_WARNINGS_OVERLAY_SOURCE_ID = 'smhi-warnings';
 /** SMHI's own page with every warning and message in full. */
@@ -29,38 +32,6 @@ const when = (ms) => (Number.isFinite(ms) ? CLOCK.format(ms) : null);
 /** SMHI writes Swedish and English; other UI languages read the English. */
 export function warningLanguage(locale = getLocale()) {
   return String(locale || '').startsWith('sv') ? 'sv' : 'en';
-}
-
-/** Card lines never wrap, so long SMHI prose is folded into short ones. */
-const LINE_CHARS = 80;
-
-/**
- * Word-wrap text into at most `maxLines` lines of LINE_CHARS; an ellipsis
- * marks what was left out.
- */
-export function foldText(value, maxLines) {
-  const words = String(value ?? '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .split(' ')
-    .filter(Boolean);
-  const lines = [];
-  let line = '';
-  for (const word of words) {
-    const next = line ? `${line} ${word}` : word;
-    if (next.length <= LINE_CHARS || !line) {
-      line = next.slice(0, LINE_CHARS);
-      continue;
-    }
-    lines.push(line);
-    line = word.slice(0, LINE_CHARS);
-    if (lines.length === maxLines) {
-      lines[maxLines - 1] = `${lines[maxLines - 1].slice(0, LINE_CHARS - 1)}…`;
-      return lines;
-    }
-  }
-  if (line) lines.push(line);
-  return lines.slice(0, maxLines);
 }
 
 function validity(row) {

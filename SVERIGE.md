@@ -63,6 +63,17 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-05 (klickkort för luftkvalitetsstationer)
+- Luftkvalitet: ett klick på en stations ring öppnar nu ett kort med
+  stationens namn, EAQI-värde och hälsorisk, de uppmätta halterna
+  (t.ex. "NO2 4.9 · PM10 12.9 µg/m³"), mättiden och källan (SMHI eller ECCC).
+  Klick på tom mark stänger kortet; det uppdateras vid ny data och stängs om
+  stationen slutar rapportera. Originalet hade inget kort för stationerna.
+- Radbrytningen `foldText` ligger nu i `src/ui/cardText.js` så att
+  luftkvalitetspaketet kan använda den utan att dra med SMHI-varningarnas
+  moduler; SMHI-varningarna, Polisen, Sveriges Radio och störningslagret
+  importerar den därifrån.
+
 ### 2026-11-05 (luftkvalitetslistan räknar det som syns på skärmen)
 - Luftkvalitet: listan "sämsta mätningarna i vyn" missade stationer nära
   skärmens överkant. Cesiums vyrektangel provar bara skärmens fyra hörn, och på

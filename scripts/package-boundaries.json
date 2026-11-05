@@ -2974,6 +2974,7 @@
       "src/layers/smhiWarnings/index.js",
       "src/layers/smhiWarnings/records.js",
       "src/layers/smhiWarnings/cards.js",
+      "src/ui/cardText.js",
       "src/layers/smhiWarnings/crisis.js",
       "src/layers/smhiWarnings/source.js",
       "src/app/layers/smhiWarnings.js",
@@ -3781,6 +3782,7 @@
       "src/layers/smhiWarnings/index.js",
       "src/layers/smhiWarnings/records.js",
       "src/layers/smhiWarnings/cards.js",
+      "src/ui/cardText.js",
       "src/layers/smhiWarnings/crisis.js",
       "src/layers/smhiWarnings/source.js",
       "src/app/layers/smhiWarnings.js",
@@ -5182,6 +5184,7 @@
       "src/i18n/locales/uk.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
+      "src/ui/cardText.js",
       "src/ui/statusText.js",
       "src/ui/layerNames.js"
     ],

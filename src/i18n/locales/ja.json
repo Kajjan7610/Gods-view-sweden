@@ -3287,5 +3287,7 @@
   "Points are stops with an active disruption from the regional operators (Trafiklab GTFS Regional). Click a stop for the operator’s message.": "点は地域の交通事業者から現在の運行障害が出ている停留所です（Trafiklab GTFS Regional）。停留所をクリックで事業者のお知らせを表示。",
   "Transit disruptions need TRAFIKLAB_GTFS_RT_KEY": "運行障害には TRAFIKLAB_GTFS_RT_KEY が必要です",
   "Malformed transit disruption snapshot": "運行障害スナップショットが不正です",
-  "Transit Disruptions (Sweden)": "公共交通の運行障害（スウェーデン）"
+  "Transit Disruptions (Sweden)": "公共交通の運行障害（スウェーデン）",
+  "AIR QUALITY · {station}": "大気質 · {station}",
+  "Measured {time}": "{time} 測定"
 }

@@ -3287,5 +3287,7 @@
   "Points are stops with an active disruption from the regional operators (Trafiklab GTFS Regional). Click a stop for the operator’s message.": "圆点是地区运营商发布当前中断信息的站点（Trafiklab GTFS Regional）。点击站点查看运营商通知。",
   "Transit disruptions need TRAFIKLAB_GTFS_RT_KEY": "公共交通中断信息需要 TRAFIKLAB_GTFS_RT_KEY",
   "Malformed transit disruption snapshot": "公共交通中断快照格式错误",
-  "Transit Disruptions (Sweden)": "公共交通中断（瑞典）"
+  "Transit Disruptions (Sweden)": "公共交通中断（瑞典）",
+  "AIR QUALITY · {station}": "空气质量 · {station}",
+  "Measured {time}": "测于 {time}"
 }
