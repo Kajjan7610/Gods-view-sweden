@@ -17,6 +17,7 @@ import { createPowerGridSource } from '../layers/powerGrid/source.js';
 import { createTransitAlertsSource } from '../layers/transitAlerts/source.js';
 import { createSrTrafficSource } from '../layers/srTraffic/source.js';
 import { createSeaWeatherSource } from '../layers/seaWeather/source.js';
+import { createRiverFlowSource } from '../layers/riverFlow/source.js';
 import { createGammaRadiationSource } from '../layers/gammaRadiation/source.js';
 import { createAuroraSource } from '../layers/aurora/source.js';
 import { createSmhiWeatherSource } from '../layers/smhiWeather/source.js';
@@ -43,6 +44,7 @@ export function createReferenceSources() {
     'transit-alerts': createTransitAlertsSource(),
     'sr-traffic': createSrTrafficSource(),
     'sea-weather': createSeaWeatherSource(),
+    'river-flow': createRiverFlowSource(),
     'gamma-radiation': createGammaRadiationSource(),
     aurora: createAuroraSource(),
     'smhi-weather': createSmhiWeatherSource(),

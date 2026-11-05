@@ -3462,5 +3462,21 @@
   "Normal background in Sweden: {min}–{max} µSv/h": "Fondo naturale in Svezia: {min}–{max} µSv/h",
   "RADIATION · {station}": "RADIAZIONI · {station}",
   "Write the dose rate beside each station": "Scrivi il rateo di dose accanto a ogni stazione",
-  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "I punti sono le stazioni gamma dell’autorità svedese per la radioprotezione (Strålsäkerhetsmyndigheten), la rete nazionale di allerta precoce, con l’ultimo rateo di dose orario in microsievert all’ora. Il fondo naturale in Svezia è normalmente di 0,05–0,3 µSv/h. Fai clic su una stazione per la sua lettura."
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "I punti sono le stazioni gamma dell’autorità svedese per la radioprotezione (Strålsäkerhetsmyndigheten), la rete nazionale di allerta precoce, con l’ultimo rateo di dose orario in microsievert all’ora. Il fondo naturale in Svezia è normalmente di 0,05–0,3 µSv/h. Fai clic su una stazione per la sua lettura.",
+  "River Flow (Sweden)": "Portata dei fiumi (Svezia)",
+  "River flow unavailable": "Portata non disponibile",
+  "Malformed river flow snapshot": "Istantanea della portata non valida",
+  "Under 1 m³/s": "Meno di 1 m³/s",
+  "1 to 10 m³/s": "Da 1 a 10 m³/s",
+  "10 to 50 m³/s": "Da 10 a 50 m³/s",
+  "50 to 150 m³/s": "Da 50 a 150 m³/s",
+  "150 m³/s or more": "150 m³/s o più",
+  "Write the flow beside the largest rivers": "Scrivi la portata accanto ai fiumi più grandi",
+  "Dots are SMHI’s discharge stations, sized and coloured by the latest 15-minute flow in cubic metres per second. Click a station for its river, catchment and whether the flow is rising or falling.": "I punti sono le stazioni di portata di SMHI, dimensionate e colorate secondo l’ultima portata di 15 minuti in metri cubi al secondo. Fai clic su una stazione per fiume, bacino e andamento della portata.",
+  "{flow} m³/s": "{flow} m³/s",
+  "Rising {change} m³/s over the last hour": "In aumento di {change} m³/s nell’ultima ora",
+  "Falling {change} m³/s over the last hour": "In calo di {change} m³/s nell’ultima ora",
+  "Steady over the last hour": "Stabile nell’ultima ora",
+  "{river} · catchment {area} km²": "{river} · bacino di {area} km²",
+  "RIVER FLOW · {station}": "PORTATA · {station}"
 }

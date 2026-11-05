@@ -3462,5 +3462,21 @@
   "Normal background in Sweden: {min}–{max} µSv/h": "Fundo natural na Suécia: {min}–{max} µSv/h",
   "RADIATION · {station}": "RADIAÇÃO · {station}",
   "Write the dose rate beside each station": "Escrever a taxa de dose junto a cada estação",
-  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Os pontos são as estações gama da autoridade sueca de proteção radiológica (Strålsäkerhetsmyndigheten), a rede nacional de alerta precoce, com a última taxa de dose horária em microsieverts por hora. O fundo natural na Suécia é normalmente de 0,05–0,3 µSv/h. Clique numa estação para ver a leitura."
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Os pontos são as estações gama da autoridade sueca de proteção radiológica (Strålsäkerhetsmyndigheten), a rede nacional de alerta precoce, com a última taxa de dose horária em microsieverts por hora. O fundo natural na Suécia é normalmente de 0,05–0,3 µSv/h. Clique numa estação para ver a leitura.",
+  "River Flow (Sweden)": "Caudal dos rios (Suécia)",
+  "River flow unavailable": "Caudal indisponível",
+  "Malformed river flow snapshot": "Instantâneo de caudal malformado",
+  "Under 1 m³/s": "Menos de 1 m³/s",
+  "1 to 10 m³/s": "1 a 10 m³/s",
+  "10 to 50 m³/s": "10 a 50 m³/s",
+  "50 to 150 m³/s": "50 a 150 m³/s",
+  "150 m³/s or more": "150 m³/s ou mais",
+  "Write the flow beside the largest rivers": "Escrever o caudal junto aos maiores rios",
+  "Dots are SMHI’s discharge stations, sized and coloured by the latest 15-minute flow in cubic metres per second. Click a station for its river, catchment and whether the flow is rising or falling.": "Os pontos são as estações de caudal da SMHI, com tamanho e cor segundo o último caudal de 15 minutos em metros cúbicos por segundo. Clique numa estação para ver o rio, a bacia e se o caudal sobe ou desce.",
+  "{flow} m³/s": "{flow} m³/s",
+  "Rising {change} m³/s over the last hour": "A subir {change} m³/s na última hora",
+  "Falling {change} m³/s over the last hour": "A descer {change} m³/s na última hora",
+  "Steady over the last hour": "Estável na última hora",
+  "{river} · catchment {area} km²": "{river} · bacia de {area} km²",
+  "RIVER FLOW · {station}": "CAUDAL · {station}"
 }

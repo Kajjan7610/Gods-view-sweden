@@ -3387,5 +3387,21 @@
   "Normal background in Sweden: {min}–{max} µSv/h": "Normaler Hintergrund in Schweden: {min}–{max} µSv/h",
   "RADIATION · {station}": "STRAHLUNG · {station}",
   "Write the dose rate beside each station": "Dosisleistung neben jede Station schreiben",
-  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Punkte sind die Gammastationen der schwedischen Strahlenschutzbehörde (Strålsäkerhetsmyndigheten), das nationale Frühwarnnetz, mit der letzten stündlichen Dosisleistung in Mikrosievert pro Stunde. Der natürliche Hintergrund in Schweden liegt normalerweise bei 0,05–0,3 µSv/h. Klicken Sie auf eine Station für ihren Messwert."
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Punkte sind die Gammastationen der schwedischen Strahlenschutzbehörde (Strålsäkerhetsmyndigheten), das nationale Frühwarnnetz, mit der letzten stündlichen Dosisleistung in Mikrosievert pro Stunde. Der natürliche Hintergrund in Schweden liegt normalerweise bei 0,05–0,3 µSv/h. Klicken Sie auf eine Station für ihren Messwert.",
+  "River Flow (Sweden)": "Abfluss (Schweden)",
+  "River flow unavailable": "Abflussdaten nicht verfügbar",
+  "Malformed river flow snapshot": "Fehlerhafter Abfluss-Snapshot",
+  "Under 1 m³/s": "Unter 1 m³/s",
+  "1 to 10 m³/s": "1 bis 10 m³/s",
+  "10 to 50 m³/s": "10 bis 50 m³/s",
+  "50 to 150 m³/s": "50 bis 150 m³/s",
+  "150 m³/s or more": "150 m³/s oder mehr",
+  "Write the flow beside the largest rivers": "Abfluss neben die größten Flüsse schreiben",
+  "Dots are SMHI’s discharge stations, sized and coloured by the latest 15-minute flow in cubic metres per second. Click a station for its river, catchment and whether the flow is rising or falling.": "Punkte sind die Abflussmessstellen von SMHI, nach Größe und Farbe gemäß dem letzten 15-Minuten-Abfluss in Kubikmetern pro Sekunde. Klicken Sie auf eine Station für Fluss, Einzugsgebiet und ob der Abfluss steigt oder fällt.",
+  "{flow} m³/s": "{flow} m³/s",
+  "Rising {change} m³/s over the last hour": "Steigt um {change} m³/s in der letzten Stunde",
+  "Falling {change} m³/s over the last hour": "Fällt um {change} m³/s in der letzten Stunde",
+  "Steady over the last hour": "Unverändert in der letzten Stunde",
+  "{river} · catchment {area} km²": "{river} · Einzugsgebiet {area} km²",
+  "RIVER FLOW · {station}": "ABFLUSS · {station}"
 }

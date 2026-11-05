@@ -403,6 +403,12 @@ export const DATA_CREDITS = [
       '<a href="https://viva.sjofartsverket.se/" target="_blank" rel="noopener">Sjöfartsverket ViVa</a>',
   },
   {
+    key: 'river-flow',
+    html:
+      'River flow (Sweden): ' +
+      '<a href="https://www.smhi.se/data/hydrologi/vattenforing" target="_blank" rel="noopener">SMHI</a> (CC BY 4.0)',
+  },
+  {
     key: 'gamma-radiation',
     html:
       'Radiation (Sweden): ' +

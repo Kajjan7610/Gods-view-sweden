@@ -3462,5 +3462,21 @@
   "Normal background in Sweden: {min}–{max} µSv/h": "Fond naturel en Suède : {min}–{max} µSv/h",
   "RADIATION · {station}": "RADIOACTIVITÉ · {station}",
   "Write the dose rate beside each station": "Écrire le débit de dose à côté de chaque station",
-  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Les points sont les stations gamma de l’autorité suédoise de radioprotection (Strålsäkerhetsmyndigheten), le réseau national d’alerte précoce, avec le dernier débit de dose horaire en microsieverts par heure. Le fond naturel en Suède est normalement de 0,05 à 0,3 µSv/h. Cliquez sur une station pour sa mesure."
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Les points sont les stations gamma de l’autorité suédoise de radioprotection (Strålsäkerhetsmyndigheten), le réseau national d’alerte précoce, avec le dernier débit de dose horaire en microsieverts par heure. Le fond naturel en Suède est normalement de 0,05 à 0,3 µSv/h. Cliquez sur une station pour sa mesure.",
+  "River Flow (Sweden)": "Débit des rivières (Suède)",
+  "River flow unavailable": "Débit indisponible",
+  "Malformed river flow snapshot": "Instantané de débit mal formé",
+  "Under 1 m³/s": "Moins de 1 m³/s",
+  "1 to 10 m³/s": "1 à 10 m³/s",
+  "10 to 50 m³/s": "10 à 50 m³/s",
+  "50 to 150 m³/s": "50 à 150 m³/s",
+  "150 m³/s or more": "150 m³/s ou plus",
+  "Write the flow beside the largest rivers": "Écrire le débit à côté des plus grands cours d’eau",
+  "Dots are SMHI’s discharge stations, sized and coloured by the latest 15-minute flow in cubic metres per second. Click a station for its river, catchment and whether the flow is rising or falling.": "Les points sont les stations de débit de SMHI, dimensionnées et colorées selon le dernier débit sur 15 minutes en mètres cubes par seconde. Cliquez sur une station pour le cours d’eau, le bassin versant et l’évolution du débit.",
+  "{flow} m³/s": "{flow} m³/s",
+  "Rising {change} m³/s over the last hour": "En hausse de {change} m³/s sur la dernière heure",
+  "Falling {change} m³/s over the last hour": "En baisse de {change} m³/s sur la dernière heure",
+  "Steady over the last hour": "Stable sur la dernière heure",
+  "{river} · catchment {area} km²": "{river} · bassin versant {area} km²",
+  "RIVER FLOW · {station}": "DÉBIT · {station}"
 }

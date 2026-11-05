@@ -3462,5 +3462,21 @@
   "Normal background in Sweden: {min}–{max} µSv/h": "Fondo natural en Suecia: {min}–{max} µSv/h",
   "RADIATION · {station}": "RADIACIÓN · {station}",
   "Write the dose rate beside each station": "Escribir la tasa de dosis junto a cada estación",
-  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Los puntos son las estaciones gamma de la autoridad sueca de protección radiológica (Strålsäkerhetsmyndigheten), la red nacional de alerta temprana, con la última tasa de dosis horaria en microsieverts por hora. El fondo natural en Suecia suele estar entre 0,05 y 0,3 µSv/h. Haga clic en una estación para ver su lectura."
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Los puntos son las estaciones gamma de la autoridad sueca de protección radiológica (Strålsäkerhetsmyndigheten), la red nacional de alerta temprana, con la última tasa de dosis horaria en microsieverts por hora. El fondo natural en Suecia suele estar entre 0,05 y 0,3 µSv/h. Haga clic en una estación para ver su lectura.",
+  "River Flow (Sweden)": "Caudal de ríos (Suecia)",
+  "River flow unavailable": "Caudal no disponible",
+  "Malformed river flow snapshot": "Instantánea de caudal mal formada",
+  "Under 1 m³/s": "Menos de 1 m³/s",
+  "1 to 10 m³/s": "1 a 10 m³/s",
+  "10 to 50 m³/s": "10 a 50 m³/s",
+  "50 to 150 m³/s": "50 a 150 m³/s",
+  "150 m³/s or more": "150 m³/s o más",
+  "Write the flow beside the largest rivers": "Escribir el caudal junto a los ríos más grandes",
+  "Dots are SMHI’s discharge stations, sized and coloured by the latest 15-minute flow in cubic metres per second. Click a station for its river, catchment and whether the flow is rising or falling.": "Los puntos son las estaciones de caudal de SMHI, con tamaño y color según el último caudal de 15 minutos en metros cúbicos por segundo. Haga clic en una estación para ver el río, la cuenca y si el caudal sube o baja.",
+  "{flow} m³/s": "{flow} m³/s",
+  "Rising {change} m³/s over the last hour": "Sube {change} m³/s en la última hora",
+  "Falling {change} m³/s over the last hour": "Baja {change} m³/s en la última hora",
+  "Steady over the last hour": "Estable en la última hora",
+  "{river} · catchment {area} km²": "{river} · cuenca de {area} km²",
+  "RIVER FLOW · {station}": "CAUDAL · {station}"
 }

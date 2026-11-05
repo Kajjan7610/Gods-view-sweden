@@ -3387,5 +3387,21 @@
   "Normal background in Sweden: {min}–{max} µSv/h": "Normal bakgrund i Sverige: {min}–{max} µSv/h",
   "RADIATION · {station}": "STRÅLNING · {station}",
   "Write the dose rate beside each station": "Skriv dosraten bredvid varje station",
-  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Punkterna är Strålsäkerhetsmyndighetens gammastationer, det nationella varningsnätet, med senaste timmens dosrat i mikrosievert per timme. Den naturliga bakgrunden i Sverige ligger normalt på 0,05–0,3 µSv/h. Klicka på en station för dess mätvärde."
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Punkterna är Strålsäkerhetsmyndighetens gammastationer, det nationella varningsnätet, med senaste timmens dosrat i mikrosievert per timme. Den naturliga bakgrunden i Sverige ligger normalt på 0,05–0,3 µSv/h. Klicka på en station för dess mätvärde.",
+  "River Flow (Sweden)": "Vattenföring (Sverige)",
+  "River flow unavailable": "Vattenföring otillgänglig",
+  "Malformed river flow snapshot": "Felaktig ögonblicksbild av vattenföring",
+  "Under 1 m³/s": "Under 1 m³/s",
+  "1 to 10 m³/s": "1 till 10 m³/s",
+  "10 to 50 m³/s": "10 till 50 m³/s",
+  "50 to 150 m³/s": "50 till 150 m³/s",
+  "150 m³/s or more": "150 m³/s eller mer",
+  "Write the flow beside the largest rivers": "Skriv flödet bredvid de största vattendragen",
+  "Dots are SMHI’s discharge stations, sized and coloured by the latest 15-minute flow in cubic metres per second. Click a station for its river, catchment and whether the flow is rising or falling.": "Punkterna är SMHI:s mätstationer för vattenföring, storlek och färg efter senaste kvartens flöde i kubikmeter per sekund. Klicka på en station för vattendrag, avrinningsområde och om flödet stiger eller sjunker.",
+  "{flow} m³/s": "{flow} m³/s",
+  "Rising {change} m³/s over the last hour": "Stiger {change} m³/s senaste timmen",
+  "Falling {change} m³/s over the last hour": "Sjunker {change} m³/s senaste timmen",
+  "Steady over the last hour": "Oförändrat senaste timmen",
+  "{river} · catchment {area} km²": "{river} · avrinningsområde {area} km²",
+  "RIVER FLOW · {station}": "VATTENFÖRING · {station}"
 }

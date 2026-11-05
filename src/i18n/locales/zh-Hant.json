@@ -3312,5 +3312,21 @@
   "Normal background in Sweden: {min}–{max} µSv/h": "瑞典正常背景值：{min}–{max} µSv/h",
   "RADIATION · {station}": "輻射 · {station}",
   "Write the dose rate beside each station": "在每個站點旁標示劑量率",
-  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "圓點是瑞典輻射安全局（Strålsäkerhetsmyndigheten）國家預警網路的伽馬監測站，顯示最近一小時的劑量率（微西弗每小時）。瑞典的天然背景值通常為 0.05–0.3 µSv/h。點擊站點查看讀數。"
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "圓點是瑞典輻射安全局（Strålsäkerhetsmyndigheten）國家預警網路的伽馬監測站，顯示最近一小時的劑量率（微西弗每小時）。瑞典的天然背景值通常為 0.05–0.3 µSv/h。點擊站點查看讀數。",
+  "River Flow (Sweden)": "河流流量（瑞典）",
+  "River flow unavailable": "流量資料無法取得",
+  "Malformed river flow snapshot": "流量快照格式錯誤",
+  "Under 1 m³/s": "低於 1 m³/s",
+  "1 to 10 m³/s": "1 至 10 m³/s",
+  "10 to 50 m³/s": "10 至 50 m³/s",
+  "50 to 150 m³/s": "50 至 150 m³/s",
+  "150 m³/s or more": "150 m³/s 以上",
+  "Write the flow beside the largest rivers": "在最大河流旁標示流量",
+  "Dots are SMHI’s discharge stations, sized and coloured by the latest 15-minute flow in cubic metres per second. Click a station for its river, catchment and whether the flow is rising or falling.": "圓點是 SMHI 的流量監測站，大小和顏色依最近 15 分鐘的流量（立方公尺每秒）而定。點擊站點查看河流、集水區面積以及流量是漲是落。",
+  "{flow} m³/s": "{flow} m³/s",
+  "Rising {change} m³/s over the last hour": "過去一小時上漲 {change} m³/s",
+  "Falling {change} m³/s over the last hour": "過去一小時下降 {change} m³/s",
+  "Steady over the last hour": "過去一小時持平",
+  "{river} · catchment {area} km²": "{river} · 集水區面積 {area} km²",
+  "RIVER FLOW · {station}": "河流流量 · {station}"
 }

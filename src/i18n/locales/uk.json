@@ -3537,5 +3537,21 @@
   "Normal background in Sweden: {min}–{max} µSv/h": "Нормальний фон у Швеції: {min}–{max} мкЗв/год",
   "RADIATION · {station}": "РАДІАЦІЯ · {station}",
   "Write the dose rate beside each station": "Підписувати потужність дози біля кожної станції",
-  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Точки — гамма-станції Шведського управління радіаційної безпеки (Strålsäkerhetsmyndigheten), національної мережі раннього попередження, з останньою погодинною потужністю дози в мікрозівертах на годину. Природний фон у Швеції зазвичай становить 0,05–0,3 мкЗв/год. Натисніть на станцію, щоб побачити показ."
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "Точки — гамма-станції Шведського управління радіаційної безпеки (Strålsäkerhetsmyndigheten), національної мережі раннього попередження, з останньою погодинною потужністю дози в мікрозівертах на годину. Природний фон у Швеції зазвичай становить 0,05–0,3 мкЗв/год. Натисніть на станцію, щоб побачити показ.",
+  "River Flow (Sweden)": "Витрата води в річках (Швеція)",
+  "River flow unavailable": "Дані про витрату води недоступні",
+  "Malformed river flow snapshot": "Некоректний знімок даних про витрату води",
+  "Under 1 m³/s": "Менше 1 м³/с",
+  "1 to 10 m³/s": "Від 1 до 10 м³/с",
+  "10 to 50 m³/s": "Від 10 до 50 м³/с",
+  "50 to 150 m³/s": "Від 50 до 150 м³/с",
+  "150 m³/s or more": "150 м³/с і більше",
+  "Write the flow beside the largest rivers": "Підписувати витрату біля найбільших річок",
+  "Dots are SMHI’s discharge stations, sized and coloured by the latest 15-minute flow in cubic metres per second. Click a station for its river, catchment and whether the flow is rising or falling.": "Точки — гідрологічні пости SMHI; розмір і колір залежать від останньої 15-хвилинної витрати води в кубометрах за секунду. Натисніть на пост, щоб побачити річку, площу водозбору та чи зростає витрата.",
+  "{flow} m³/s": "{flow} м³/с",
+  "Rising {change} m³/s over the last hour": "Зростання на {change} м³/с за останню годину",
+  "Falling {change} m³/s over the last hour": "Зниження на {change} м³/с за останню годину",
+  "Steady over the last hour": "Без змін за останню годину",
+  "{river} · catchment {area} km²": "{river} · водозбір {area} км²",
+  "RIVER FLOW · {station}": "ВИТРАТА ВОДИ · {station}"
 }

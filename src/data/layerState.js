@@ -711,6 +711,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     optionOwner: 'recent-imagery',
   }),
   Object.freeze({
+    id: 'river-flow',
+    token: '0o',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'rocket-launches',
     token: 'x',
     disposition: 'enabled-only',

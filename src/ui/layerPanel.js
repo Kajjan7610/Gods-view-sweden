@@ -97,6 +97,7 @@ const PANEL_GROUPS = [
       'smhi-warnings',
       'smhi-weather',
       'sea-weather',
+      'river-flow',
       'aurora',
       'weather-satellite',
       'weather-lightning',

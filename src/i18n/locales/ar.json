@@ -3687,5 +3687,21 @@
   "Normal background in Sweden: {min}–{max} µSv/h": "الخلفية الطبيعية في السويد: {min}–{max} µSv/h",
   "RADIATION · {station}": "الإشعاع · {station}",
   "Write the dose rate beside each station": "كتابة معدل الجرعة بجانب كل محطة",
-  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "النقاط هي محطات أشعة غاما التابعة لهيئة السلامة الإشعاعية السويدية (Strålsäkerhetsmyndigheten)، شبكة الإنذار المبكر الوطنية، مع آخر معدل جرعة كل ساعة بالميكروسيفرت في الساعة. تتراوح الخلفية الطبيعية في السويد عادة بين 0.05 و0.3 µSv/h. انقر على محطة لعرض قراءتها."
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "النقاط هي محطات أشعة غاما التابعة لهيئة السلامة الإشعاعية السويدية (Strålsäkerhetsmyndigheten)، شبكة الإنذار المبكر الوطنية، مع آخر معدل جرعة كل ساعة بالميكروسيفرت في الساعة. تتراوح الخلفية الطبيعية في السويد عادة بين 0.05 و0.3 µSv/h. انقر على محطة لعرض قراءتها.",
+  "River Flow (Sweden)": "تدفق الأنهار (السويد)",
+  "River flow unavailable": "بيانات التدفق غير متاحة",
+  "Malformed river flow snapshot": "لقطة تدفق غير صالحة",
+  "Under 1 m³/s": "أقل من 1 م³/ث",
+  "1 to 10 m³/s": "من 1 إلى 10 م³/ث",
+  "10 to 50 m³/s": "من 10 إلى 50 م³/ث",
+  "50 to 150 m³/s": "من 50 إلى 150 م³/ث",
+  "150 m³/s or more": "150 م³/ث أو أكثر",
+  "Write the flow beside the largest rivers": "كتابة التدفق بجانب أكبر الأنهار",
+  "Dots are SMHI’s discharge stations, sized and coloured by the latest 15-minute flow in cubic metres per second. Click a station for its river, catchment and whether the flow is rising or falling.": "النقاط هي محطات قياس التدفق التابعة لـ SMHI، بحجم ولون حسب آخر تدفق خلال 15 دقيقة بالمتر المكعب في الثانية. انقر على محطة لعرض النهر وحوض التصريف وما إذا كان التدفق يرتفع أو ينخفض.",
+  "{flow} m³/s": "{flow} م³/ث",
+  "Rising {change} m³/s over the last hour": "ارتفاع {change} م³/ث خلال الساعة الأخيرة",
+  "Falling {change} m³/s over the last hour": "انخفاض {change} م³/ث خلال الساعة الأخيرة",
+  "Steady over the last hour": "ثابت خلال الساعة الأخيرة",
+  "{river} · catchment {area} km²": "{river} · حوض تصريف {area} كم²",
+  "RIVER FLOW · {station}": "تدفق النهر · {station}"
 }

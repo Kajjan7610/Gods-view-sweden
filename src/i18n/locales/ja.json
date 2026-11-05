@@ -3312,5 +3312,21 @@
   "Normal background in Sweden: {min}–{max} µSv/h": "スウェーデンの通常の自然放射線: {min}–{max} µSv/h",
   "RADIATION · {station}": "放射線 · {station}",
   "Write the dose rate beside each station": "各ステーションの横に線量率を表示",
-  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "点はスウェーデン放射線安全庁（Strålsäkerhetsmyndigheten）の国家早期警報網のガンマ線観測局で、直近1時間の線量率をマイクロシーベルト毎時で示します。スウェーデンの自然放射線は通常 0.05–0.3 µSv/h です。ステーションをクリックすると測定値を表示します。"
+  "Dots are Strålsäkerhetsmyndigheten’s gamma stations, the national early-warning network, with the latest hourly dose rate in microsievert per hour. The natural background in Sweden is normally 0.05–0.3 µSv/h. Click a station for its reading.": "点はスウェーデン放射線安全庁（Strålsäkerhetsmyndigheten）の国家早期警報網のガンマ線観測局で、直近1時間の線量率をマイクロシーベルト毎時で示します。スウェーデンの自然放射線は通常 0.05–0.3 µSv/h です。ステーションをクリックすると測定値を表示します。",
+  "River Flow (Sweden)": "河川流量（スウェーデン）",
+  "River flow unavailable": "流量データを取得できません",
+  "Malformed river flow snapshot": "流量スナップショットの形式が不正です",
+  "Under 1 m³/s": "1 m³/s 未満",
+  "1 to 10 m³/s": "1～10 m³/s",
+  "10 to 50 m³/s": "10～50 m³/s",
+  "50 to 150 m³/s": "50～150 m³/s",
+  "150 m³/s or more": "150 m³/s 以上",
+  "Write the flow beside the largest rivers": "大きな河川の横に流量を表示",
+  "Dots are SMHI’s discharge stations, sized and coloured by the latest 15-minute flow in cubic metres per second. Click a station for its river, catchment and whether the flow is rising or falling.": "点は SMHI の流量観測所で、直近15分の流量（立方メートル毎秒）に応じて大きさと色を変えています。観測所をクリックすると河川、流域、流量の増減を表示します。",
+  "{flow} m³/s": "{flow} m³/s",
+  "Rising {change} m³/s over the last hour": "直近1時間で {change} m³/s 増加",
+  "Falling {change} m³/s over the last hour": "直近1時間で {change} m³/s 減少",
+  "Steady over the last hour": "直近1時間は横ばい",
+  "{river} · catchment {area} km²": "{river} · 流域面積 {area} km²",
+  "RIVER FLOW · {station}": "河川流量 · {station}"
 }

@@ -25,6 +25,7 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Luftkvalitet: ca 75 SMHI-mätstationer (NO2, PM10, PM2.5, O3) på europeiska EAQI-skalan, tillsammans med Kanadas stationer | SMHI Datavärdskap luft (CC BY 4.0, ingen nyckel) | Air quality / Luftkvalitet, under Weather |
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (pilar i flödesriktningen, MW), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
+| Vattenföring: ca 150 SMHI-stationer i vattendragen, flöde i m³/s var 15:e minut och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
 | Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
@@ -63,6 +64,18 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-05 (vattenföring från SMHI)
+- Nytt lager "Vattenföring (Sverige)" (delningstoken `0o`), under Väder:
+  SMHI:s mätstationer i vattendragen (vid testet 154), med storlek och
+  färg efter senaste kvartens flöde (under 1, 1–10, 10–50, 50–150 och
+  150 m³/s eller mer) och flödet skrivet bredvid de största. Ett klick
+  ger ett kort med flödet, om det stigit, sjunkit eller legat still
+  senaste timmen, vattendrag och avrinningsområde samt mättid.
+- En enda förfrågan till SMHI:s hydrologi-API ger alla stationer, högst
+  var 15:e minut och bara när lagret frågar. Vattenstånd och
+  vattentemperatur finns inte för alla stationer på en gång i API:t och
+  visas därför inte.
 
 ### 2026-11-05 (strålning från Strålsäkerhetsmyndigheten)
 - Nytt lager "Strålning (Sverige)" (delningstoken `0p`), under
