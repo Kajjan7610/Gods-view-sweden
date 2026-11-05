@@ -3289,5 +3289,6 @@
   "Malformed transit disruption snapshot": "公共交通中断快照格式错误",
   "Transit Disruptions (Sweden)": "公共交通中断（瑞典）",
   "AIR QUALITY · {station}": "空气质量 · {station}",
-  "Measured {time}": "测于 {time}"
+  "Measured {time}": "测于 {time}",
+  "Enter cockpit view": "进入驾驶舱视图"
 }

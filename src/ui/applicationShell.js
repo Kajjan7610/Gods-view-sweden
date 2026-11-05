@@ -409,6 +409,7 @@ export class StyleManager extends ShellFacade {
         _stampNavigation: (...args) => this._stampNavigation(...args),
         getAircraftTrackingTarget: (...args) =>
           this.getAircraftTrackingTarget(...args),
+        enterTrackedCockpit: () => this.enterTrackedCockpit(),
         _scheduleRightPanelLayout: (...args) =>
           this._scheduleRightPanelLayout(...args),
       },
@@ -684,6 +685,53 @@ export class StyleManager extends ShellFacade {
   /** Return the aircraft tracker owned before a multi-step Cockpit transaction. */
   getAircraftTrackingTarget() {
     return aircraftTrackingTarget(this.cockpitView?.readAircraftInfo?.());
+  }
+
+  /**
+   * Enter Cockpit on the tracked aircraft from the map. Cockpit rides inside
+   * Contacts, so Contacts starts first when it is off, as the voice command
+   * does, and goes back off when entry fails.
+   */
+  async enterTrackedCockpit() {
+    if (this._disposed || this.cockpitView?.active) return false;
+    const priorTarget = this.getAircraftTrackingTarget();
+    const context = this.getContextModeState();
+    if (!priorTarget || !context || context.changing) return false;
+    const priorMode = context.mode || null;
+    let startedContacts = false;
+    if (priorMode !== 'flights') {
+      let result = null;
+      try {
+        // Cockpit's own precondition, not an operator Context request: it
+        // leaves a pending shared style or detection restore alone.
+        result = await this.setContextMode('contacts', {
+          claimVisualAuthority: false,
+        });
+      } catch {
+        result = null;
+      }
+      if (this._disposed) return false;
+      if (!result?.ok) {
+        if (!result?.cancelled)
+          this._showToast(
+            t(
+              'Contacts could not complete the requested transition; try again',
+            ),
+          );
+        return false;
+      }
+      startedContacts = true;
+    }
+    // Contacts keeps the tracked aircraft; should it have let go, track the
+    // one the operator clicked again.
+    const entry = await this.controlCockpit('enter', {
+      selectedTarget: this.getAircraftTrackingTarget() ? null : priorTarget,
+      rollbackTarget: priorTarget,
+    });
+    if (entry?.ok) return true;
+    if (startedContacts && !this._disposed)
+      await this.setContextMode(priorMode, { claimVisualAuthority: false });
+    return false;
   }
 
   /** Apply a temporary cockpit-only CRT/NVG/FLIR/NOIR post-process override. */

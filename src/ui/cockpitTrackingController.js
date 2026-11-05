@@ -83,8 +83,13 @@ export function syncEntry() {
   // Change-only publishes: this runs on a preUpdate cadence, and a fresh
   // presence every frame would re-render the views even when nothing
   // changed. (perf item 9)
-  if (this.presence.entryAvailable === available) return;
+  if (
+    this.presence.entryAvailable === available &&
+    this.presence.aircraftTracked === trackedContact
+  )
+    return;
   this.presence.entryAvailable = available;
+  this.presence.aircraftTracked = trackedContact;
   this.publishPresenceView();
 }
 
@@ -248,8 +253,9 @@ export function exit({ restoreTracking = true } = {}) {
   }
   this.syncEntry();
   const restoreTarget =
-    this.entryFocusOrigin === this.entry
-      ? this.entry
+    this.entryFocusOrigin === this.entry ||
+    (this.quickEntry && this.entryFocusOrigin === this.quickEntry)
+      ? this.entryFocusOrigin
       : this.entry || this.entryFocusOrigin;
   this.entryFocusOrigin = null;
   // The entry shows when Vue flushes the presence; read it after.

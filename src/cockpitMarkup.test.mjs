@@ -75,7 +75,9 @@ const voiceActions = fs.readFileSync(
 );
 
 test('Cockpit has one reset action beside its bottom exit path', () => {
-  assert.doesNotMatch(html, /id="cockpit-quick-entry"/);
+  // The Swedish fork keeps a map-side entry beside the exit path, shown only
+  // while an aircraft is tracked.
+  assert.equal((html.match(/id="cockpit-quick-entry"/g) || []).length, 1);
   assert.doesNotMatch(html, /id="cockpit-exit"/);
   assert.match(
     html,
@@ -110,6 +112,10 @@ test('Cockpit has one reset action beside its bottom exit path', () => {
     viewSwitcher[0],
     /id="reset-globe-view"/,
     'map-only reset must stay outside Cockpit',
+  );
+  assert.match(
+    viewSwitcher[0],
+    /id="cockpit-quick-entry"[^>]*aria-keyshortcuts="C"[^>]*title="Enter cockpit view"[^>]*hidden[\s\S]*?flight[\s\S]*?COCKPIT[\s\S]*?id="cockpit-reset-globe"/,
   );
   assert.match(
     viewSwitcher[0],

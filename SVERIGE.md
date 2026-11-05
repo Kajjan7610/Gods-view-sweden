@@ -63,6 +63,14 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-05 (cockpit direkt från ett klickat plan)
+- Cockpit: när ett plan är valt visas en COCKPIT-knapp nere till höger vid
+  kartan. Ett klick (eller `C`) slår på Kontakter om det är avstängt och går
+  direkt in i cockpit på samma plan, precis som röstkommandot "Enter
+  cockpit". Misslyckas det stängs Kontakter igen. I originalet låg knappen
+  bara i Kontext → Kontakter, och `C` gjorde ingenting förrän Kontakter var
+  på. Originalets test som kräver att knappen saknas är ändrat därefter.
+
 ### 2026-11-05 (klickkort för luftkvalitetsstationer)
 - Luftkvalitet: ett klick på en stations ring öppnar nu ett kort med
   stationens namn, EAQI-värde och hälsorisk, de uppmätta halterna

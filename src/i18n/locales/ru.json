@@ -3514,5 +3514,6 @@
   "Malformed transit disruption snapshot": "Некорректный снимок нарушений в работе транспорта",
   "Transit Disruptions (Sweden)": "Нарушения в работе транспорта (Швеция)",
   "AIR QUALITY · {station}": "КАЧЕСТВО ВОЗДУХА · {station}",
-  "Measured {time}": "Измерено в {time}"
+  "Measured {time}": "Измерено в {time}",
+  "Enter cockpit view": "Войти в вид из кабины"
 }

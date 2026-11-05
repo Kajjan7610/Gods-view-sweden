@@ -76,6 +76,7 @@ export class CockpitViewController {
       onEntered = null,
       onExited = null,
       restoreTrackingFrame = null,
+      requestEntry = null,
       publish = {},
     } = {},
   ) {
@@ -97,6 +98,7 @@ export class CockpitViewController {
     this.surfaceAcquiring = false;
     this.surfaceFallback = false;
     this.entry = document.getElementById('cockpit-entry');
+    this.quickEntry = document.getElementById('cockpit-quick-entry');
     this.tr3bToggle = document.getElementById('tr3b-toggle');
     this._tr3bSignature = null;
     this.mapViewButton = document.getElementById('map-view-switch');
@@ -120,6 +122,10 @@ export class CockpitViewController {
         : () => false;
     this.isEntryAllowed =
       typeof isEntryAllowed === 'function' ? isEntryAllowed : () => true;
+    // Entry from the map while Contacts is off: the owner starts Contacts
+    // first. Without one, only an open gate enters.
+    this.requestEntry =
+      typeof requestEntry === 'function' ? requestEntry : () => this.enter();
     this.isUtilityDisclosureOpen =
       typeof isUtilityDisclosureOpen === 'function'
         ? isUtilityDisclosureOpen
@@ -157,6 +163,8 @@ export class CockpitViewController {
     this.presence = {
       active: false,
       entryAvailable: false,
+      // An aircraft is tracked, whether or not Contacts has opened the gate.
+      aircraftTracked: false,
       tr3b: null,
       context: false,
       // The Contact and briefing cards' collapse, which their toggles show.
@@ -205,6 +213,7 @@ export class CockpitViewController {
       }),
     );
     this._listen(this.entry, 'click', () => this.enter());
+    this._listen(this.quickEntry, 'click', () => void this.requestEntry());
     this._listen(this.tr3bToggle, 'click', () => this.toggleTrackedTr3b());
     this._listen(this.mapViewButton, 'click', () => this.exit());
     this._listen(this.visionPrevious, 'click', () => this.cycleVisionMode(-1));

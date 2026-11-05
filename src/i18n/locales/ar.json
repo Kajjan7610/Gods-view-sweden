@@ -3664,5 +3664,6 @@
   "Malformed transit disruption snapshot": "لقطة اضطرابات النقل مشوّهة",
   "Transit Disruptions (Sweden)": "اضطرابات النقل العام (السويد)",
   "AIR QUALITY · {station}": "جودة الهواء · {station}",
-  "Measured {time}": "قيس الساعة {time}"
+  "Measured {time}": "قيس الساعة {time}",
+  "Enter cockpit view": "الدخول إلى عرض قمرة القيادة"
 }

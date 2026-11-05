@@ -3439,5 +3439,6 @@
   "Malformed transit disruption snapshot": "Snapshot dei disservizi del trasporto non valido",
   "Transit Disruptions (Sweden)": "Disservizi del trasporto (Svezia)",
   "AIR QUALITY · {station}": "QUALITÀ DELL’ARIA · {station}",
-  "Measured {time}": "Misurato alle {time}"
+  "Measured {time}": "Misurato alle {time}",
+  "Enter cockpit view": "Entra nella vista cabina"
 }

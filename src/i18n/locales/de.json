@@ -3364,5 +3364,6 @@
   "Malformed transit disruption snapshot": "Fehlerhafter Snapshot der ÖPNV-Störungen",
   "Transit Disruptions (Sweden)": "ÖPNV-Störungen (Schweden)",
   "AIR QUALITY · {station}": "LUFTQUALITÄT · {station}",
-  "Measured {time}": "Gemessen {time}"
+  "Measured {time}": "Gemessen {time}",
+  "Enter cockpit view": "Cockpitansicht öffnen"
 }

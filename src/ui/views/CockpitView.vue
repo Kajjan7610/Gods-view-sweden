@@ -200,6 +200,12 @@ const tickStyle = (tick) =>
   </section>
 
   <nav id="view-switcher" :aria-label="t('View switcher')">
+    <!-- Shown beside the map while an aircraft is tracked, so Cockpit is one
+         click from the plane instead of inside the Context rail. -->
+    <button id="cockpit-quick-entry" type="button" aria-keyshortcuts="C" :title="t('Enter cockpit view')" :hidden="active || !presence?.aircraftTracked">
+      <span class="material-symbols-outlined" aria-hidden="true">flight</span>
+      <span>{{ t('COCKPIT') }}</span>
+    </button>
     <button id="cockpit-reset-globe" type="button" :aria-label="resetBusy ? t('Resetting cockpit to full globe view') : t('Reset cockpit to full globe view')" :title="t('Exit cockpit and return to full globe view')" :hidden="!active" @click="globe.act('reset')">
       <span class="material-symbols-outlined" aria-hidden="true">public</span>
       <span>{{ t('RESET') }}</span>

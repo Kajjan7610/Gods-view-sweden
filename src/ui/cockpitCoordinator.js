@@ -86,6 +86,7 @@ export class CockpitCoordinator {
           militaryEnabled: !!this._dataManager?.isEnabled('military'),
         }),
       publish: this.publishCockpit,
+      requestEntry: () => this.enterTrackedCockpit?.() ?? false,
       isUtilityDisclosureOpen: () => !!this.readUtilityDisclosureOpen?.(),
       onEntered: () => this.enterPanels(),
       onExited: () => this.exitPanels(),

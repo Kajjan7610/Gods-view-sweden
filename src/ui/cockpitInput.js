@@ -55,7 +55,11 @@ export function onKeyDown(event) {
     }
     event.preventDefault();
     event.stopImmediatePropagation();
-    if (!this.active && !this.isEntryAllowed()) return;
+    if (!this.active && !this.isEntryAllowed()) {
+      // Contacts is off: let the owner start it, then enter.
+      void this.requestEntry();
+      return;
+    }
     if (this.active) this.exit();
     else this.enter();
     return;

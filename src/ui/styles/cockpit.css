@@ -902,6 +902,14 @@ html:not([lang='en']) .cockpit-roll-token.is-separator {
 #view-switcher .material-symbols-outlined {
   font-size: 16px;
 }
+#view-switcher #cockpit-quick-entry {
+  border-color: rgba(0, 220, 255, 0.6);
+  color: #dceeff;
+  box-shadow: 0 0 18px rgba(0, 220, 255, 0.16);
+}
+#cockpit-quick-entry .material-symbols-outlined {
+  color: #00dcff;
+}
 body.cockpit-mode #view-switcher {
   right: auto;
   bottom: max(clamp(128px, 15vh, 150px), env(safe-area-inset-bottom));
