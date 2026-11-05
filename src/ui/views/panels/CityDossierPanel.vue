@@ -87,6 +87,22 @@ const { view: d } = storeToRefs(store);
               <p v-if="d.now.jams.empty" class="city-dossier-note">{{ d.now.jams.empty }}</p>
               <div v-for="row in d.now.jams.items" :key="row.key" class="city-dossier-jam"><span>{{ row.title }}</span><small>{{ row.detail }}</small></div>
             </div>
+            <div v-for="airport in d.now.flights || []" :key="airport.key" class="city-dossier-trains city-dossier-flights">
+              <strong>{{ airport.title }}</strong>
+              <div v-if="airport.security.length" class="city-dossier-security">
+                <span class="city-dossier-board"><span class="material-symbols-outlined" aria-hidden="true">security</span>{{ t('Security queue') }}</span>
+                <span v-for="queue in airport.security" :key="queue.key" class="city-dossier-queue" :class="{ busy: queue.busy }"><small v-if="queue.label">{{ queue.label }}</small>{{ queue.value }}</span>
+              </div>
+              <template v-for="board in airport.boards" :key="board.key">
+                <span class="city-dossier-board"><span class="material-symbols-outlined" aria-hidden="true">{{ board.icon }}</span>{{ board.label }}</span>
+                <p v-if="!board.items.length" class="city-dossier-note">{{ board.empty }}</p>
+                <div v-for="row in board.items" :key="row.key" class="city-dossier-departure" :class="{ late: row.late }">
+                  <span class="city-dossier-time">{{ row.time }}<small v-if="row.tomorrow">{{ row.tomorrow }}</small></span>
+                  <span class="city-dossier-dest">{{ row.destination }}<small v-if="row.detail">{{ row.detail }}</small></span>
+                  <span class="city-dossier-delay">{{ row.status }}</span>
+                </div>
+              </template>
+            </div>
             <div v-if="d.now.police" class="city-dossier-police">
               <strong>{{ d.now.police.summary }}</strong>
               <a v-for="item in d.now.police.items" :key="item.key" :href="item.url" target="_blank" rel="noopener noreferrer"><small>{{ item.time }}</small> {{ item.title }}</a>

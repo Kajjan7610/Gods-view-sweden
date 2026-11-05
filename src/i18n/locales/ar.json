@@ -3765,5 +3765,14 @@
   "{count} inhabitants": "{count} نسمة",
   "founded {year}": "تأسست عام {year}",
   "River Flows in Norrland": "تدفق الأنهار في نورلاند",
-  "Radiation Monitoring": "رصد الإشعاع"
+  "Radiation Monitoring": "رصد الإشعاع",
+  "Flights at {airport}": "الرحلات في {airport}",
+  "Departures": "المغادرة",
+  "Arrivals": "الوصول",
+  "gate {gate}": "البوابة {gate}",
+  "No upcoming departures": "لا رحلات مغادرة قادمة",
+  "No upcoming arrivals": "لا رحلات وصول قادمة",
+  "{minutes} min": "{minutes} دقيقة",
+  "Security queue": "انتظار التفتيش الأمني",
+  "tomorrow": "غدًا"
 }

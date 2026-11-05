@@ -3385,5 +3385,14 @@
   "{count} inhabitants": "{count} 名居民",
   "founded {year}": "建於 {year} 年",
   "River Flows in Norrland": "諾爾蘭河流流量",
-  "Radiation Monitoring": "輻射監測"
+  "Radiation Monitoring": "輻射監測",
+  "Flights at {airport}": "{airport}航班",
+  "Departures": "出發",
+  "Arrivals": "抵達",
+  "gate {gate}": "登機門 {gate}",
+  "No upcoming departures": "暫無即將出發的航班",
+  "No upcoming arrivals": "暫無即將抵達的航班",
+  "{minutes} min": "{minutes} 分鐘",
+  "Security queue": "安檢排隊",
+  "tomorrow": "明天"
 }

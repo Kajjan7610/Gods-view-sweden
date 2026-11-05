@@ -91,6 +91,9 @@ const clock = (ms) =>
     hour: '2-digit',
     minute: '2-digit',
   }).format(ms);
+/** The Swedish calendar day of a moment, for telling today from tomorrow. */
+const day = (ms) =>
+  new Date(ms).toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
 const whole = (value) => formatNumber(Math.round(value));
 const oneDecimal = (value) =>
   formatNumber(value, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -690,6 +693,7 @@ export function createCityDossier({
               }),
       trains: trainsView(live.transit?.trains),
       jams: jamsView(live.transit?.jams),
+      flights: flightsView(live.transit?.flights),
       radioLabel: radioBusy ? t('Tuning in…') : t('Play local radio'),
       radioBusy,
     };
@@ -725,6 +729,72 @@ export function createCityDossier({
           .join(' · '),
       })),
     };
+  }
+
+  /**
+   * The nearby Swedavia airports' next departures and arrivals; null without
+   * the Swedavia key or when no Swedavia airport serves the town.
+   */
+  function flightsView(flights) {
+    const airports = flights?.airports ?? [];
+    if (!airports.length) return null;
+    // Late in the evening the board runs on into tomorrow's flights.
+    const today = day(now());
+    const rows = (list, kind) =>
+      list.map((row) => ({
+        key: `${kind}:${row.flight}:${row.planned}`,
+        time: clock(row.planned),
+        tomorrow: day(row.planned) !== today ? t('tomorrow') : '',
+        destination: bilingual(row.place) || '—',
+        status: row.canceled
+          ? t('Cancelled')
+          : row.delayMinutes > 0
+            ? t('{time} (+{minutes} min)', {
+                time: clock(row.expected),
+                minutes: row.delayMinutes,
+              })
+            : bilingual(row.status),
+        late: row.canceled || row.delayMinutes > 0,
+        detail: [
+          row.flight,
+          row.airline,
+          row.terminal,
+          row.gate ? t('gate {gate}', { gate: row.gate }) : null,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      }));
+    // Ordinary lanes only: fast track is for the few with a pass.
+    const queues = (security) =>
+      (security ?? [])
+        .filter((queue) => !queue.fastTrack)
+        .map((queue) => ({
+          key: queue.name,
+          label: queue.terminal || '',
+          value: t('{minutes} min', { minutes: queue.minutes }),
+          busy: queue.overflow || queue.minutes >= 15,
+        }));
+    return airports.map((airport) => ({
+      key: airport.iata,
+      title: t('Flights at {airport}', { airport: airport.name }),
+      security: queues(airport.security),
+      boards: [
+        {
+          key: 'departures',
+          label: t('Departures'),
+          icon: 'flight_takeoff',
+          empty: t('No upcoming departures'),
+          items: rows(airport.departures, 'departures'),
+        },
+        {
+          key: 'arrivals',
+          label: t('Arrivals'),
+          icon: 'flight_land',
+          empty: t('No upcoming arrivals'),
+          items: rows(airport.arrivals, 'arrivals'),
+        },
+      ],
+    }));
   }
 
   /** TomTom's jams around the town; null without the TomTom key. */
@@ -784,8 +854,15 @@ export function createCityDossier({
       now: nowView(),
       pass: passView(),
       arrival,
-      source:
+      // Provider names; the live transport ones only once they show.
+      source: [
         'SCB · Kolada (RKA) · Valmyndigheten · Wikidata · Wikipedia · SMHI · Polisen', // i18n-ignore: provider names
+        live?.transit?.trains?.station ? 'Trafikverket' : null, // i18n-ignore: provider name
+        live?.transit?.jams ? 'TomTom' : null, // i18n-ignore: provider name
+        live?.transit?.flights?.airports?.length ? 'Swedavia' : null, // i18n-ignore: provider name
+      ]
+        .filter(Boolean)
+        .join(' · '),
     });
   }
 

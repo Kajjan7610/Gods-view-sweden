@@ -66,6 +66,22 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-05 (flyg och säkerhetskontroll i stadsdossiern)
+- Fliken NU visar nu flyg för städer inom 45 km från någon av Swedavias tio
+  flygplatser (högst två, den största först – Stockholm får Arlanda och
+  Bromma): nästa fyra avgångar och ankomster med destination, tid,
+  Swedavias status (beräknad, planerad, inställt), flygbolag, terminal och
+  gate. Sent på kvällen fortsätter tavlan på morgondagens flyg, märkta
+  "i morgon".
+- På Arlanda, Landvetter och Bromma visas även beräknad kö i
+  säkerhetskontrollen per terminal (orange från 15 minuter).
+- Nycklar: `SWEDAVIA_FLIGHTINFO_KEY` och `SWEDAVIA_WAITTIME_KEY` (gratis på
+  apideveloper.swedavia.se, ca 10 000 anrop i månaden var). Svaren sparas
+  fem minuter per flygplats och varje nyckel stannar vid 320 anrop per dygn;
+  därefter visas senast hämtade tavla. Utan nyckel syns inget flyg.
+- Källraden i panelen nämner nu Trafikverket, TomTom och Swedavia när
+  deras uppgifter visas.
+
 ### 2026-11-05 (synk, utökad tur och mobil)
 - Synk med originalet: 18 nya commits (bussar och BRT i Rio de Janeiro,
   leverantörens namn i Kontakter- och Cockpit-räknarna). Konflikterna i

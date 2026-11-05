@@ -3613,5 +3613,14 @@
   "{count} inhabitants": "Жителей: {count}",
   "founded {year}": "основан в {year}",
   "River Flows in Norrland": "Расход рек в Норрланде",
-  "Radiation Monitoring": "Радиационный мониторинг"
+  "Radiation Monitoring": "Радиационный мониторинг",
+  "Flights at {airport}": "Рейсы в {airport}",
+  "Departures": "Вылеты",
+  "Arrivals": "Прилёты",
+  "gate {gate}": "выход {gate}",
+  "No upcoming departures": "Ближайших вылетов нет",
+  "No upcoming arrivals": "Ближайших прилётов нет",
+  "{minutes} min": "{minutes} мин",
+  "Security queue": "Очередь на досмотр",
+  "tomorrow": "завтра"
 }

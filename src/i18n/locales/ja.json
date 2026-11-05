@@ -3385,5 +3385,14 @@
   "{count} inhabitants": "人口 {count} 人",
   "founded {year}": "{year} 年創設",
   "River Flows in Norrland": "ノールランドの河川流量",
-  "Radiation Monitoring": "放射線モニタリング"
+  "Radiation Monitoring": "放射線モニタリング",
+  "Flights at {airport}": "{airport}のフライト",
+  "Departures": "出発",
+  "Arrivals": "到着",
+  "gate {gate}": "ゲート {gate}",
+  "No upcoming departures": "今後の出発便はありません",
+  "No upcoming arrivals": "今後の到着便はありません",
+  "{minutes} min": "{minutes}分",
+  "Security queue": "保安検査の待ち時間",
+  "tomorrow": "明日"
 }

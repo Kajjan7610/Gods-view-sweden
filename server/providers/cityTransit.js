@@ -2,12 +2,13 @@ import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 import { TRAFIKVERKET_API_URL, xmlAttr } from './trafikverketProxy.js';
 import { greatCircleKm } from '../../src/geoDistance.js';
+import { createSwedaviaFlights } from './cityFlights.js';
 
 // The city dossier's live transport: the next departures from the town's
 // railway station (Trafikverket, CC0, the existing TRAFIKVERKET_API_KEY) and
 // the traffic jams around it (TomTom Traffic Incidents, the existing
-// TOMTOM_API_KEY). Keys stay server-side; either part is simply absent
-// without its key. Stations are read once a day, departures every minute,
+// TOMTOM_API_KEY), plus the nearby Swedavia airports' flights (cityFlights.js).
+// Keys stay server-side; each part is simply absent without its key. Stations are read once a day, departures every minute,
 // jams every five minutes per town.
 
 export const TOMTOM_INCIDENTS_URL =
@@ -297,6 +298,8 @@ export function cityTransitProxy({
     };
   }
 
+  const flights = createSwedaviaFlights({ fetchJson, now, env });
+
   async function trafficJams(point, cacheKey) {
     const key = String(env.TOMTOM_API_KEY ?? '').trim();
     if (!key) return null;
@@ -339,13 +342,15 @@ export function cityTransitProxy({
     if (!allow(clientKey(req))) return json(429, { error: 'rate_limited' });
     const point = { latitude, longitude };
     const cell = `${latitude.toFixed(2)},${longitude.toFixed(2)}`;
-    const [rail, road] = await Promise.allSettled([
+    const [rail, road, air] = await Promise.allSettled([
       trains(point, town),
       trafficJams(point, cell),
+      flights(point),
     ]);
     for (const [label, result] of [
       ['trains', rail],
       ['jams', road],
+      ['flights', air],
     ])
       if (result.status === 'rejected')
         console.warn(`[city-transit] ${label}: ${result.reason?.message}`);
@@ -360,6 +365,12 @@ export function cityTransitProxy({
             ? null
             : { items: road.value }
           : { items: [], error: true },
+      flights:
+        air.status === 'fulfilled'
+          ? air.value === null
+            ? null
+            : { airports: air.value }
+          : { airports: [], error: true },
       fetchedAt: now(),
     });
   }

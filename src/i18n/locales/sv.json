@@ -3461,5 +3461,14 @@
   "{count} inhabitants": "{count} invånare",
   "founded {year}": "grundad {year}",
   "River Flows in Norrland": "Vattenföring i Norrland",
-  "Radiation Monitoring": "Strålningsövervakning"
+  "Radiation Monitoring": "Strålningsövervakning",
+  "Flights at {airport}": "Flyg på {airport}",
+  "Departures": "Avgångar",
+  "Arrivals": "Ankomster",
+  "gate {gate}": "gate {gate}",
+  "No upcoming departures": "Inga kommande avgångar",
+  "No upcoming arrivals": "Inga kommande ankomster",
+  "{minutes} min": "{minutes} min",
+  "Security queue": "Kö i säkerhetskontrollen",
+  "tomorrow": "i morgon"
 }

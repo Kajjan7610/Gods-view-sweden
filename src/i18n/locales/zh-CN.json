@@ -3385,5 +3385,14 @@
   "{count} inhabitants": "{count} 名居民",
   "founded {year}": "建于 {year} 年",
   "River Flows in Norrland": "诺尔兰河流流量",
-  "Radiation Monitoring": "辐射监测"
+  "Radiation Monitoring": "辐射监测",
+  "Flights at {airport}": "{airport}航班",
+  "Departures": "出发",
+  "Arrivals": "到达",
+  "gate {gate}": "登机口 {gate}",
+  "No upcoming departures": "暂无即将出发的航班",
+  "No upcoming arrivals": "暂无即将到达的航班",
+  "{minutes} min": "{minutes} 分钟",
+  "Security queue": "安检排队",
+  "tomorrow": "明天"
 }

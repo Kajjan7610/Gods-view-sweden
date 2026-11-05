@@ -3537,5 +3537,14 @@
   "{count} inhabitants": "{count} habitantes",
   "founded {year}": "fundada en {year}",
   "River Flows in Norrland": "Caudales de los ríos de Norrland",
-  "Radiation Monitoring": "Vigilancia de la radiación"
+  "Radiation Monitoring": "Vigilancia de la radiación",
+  "Flights at {airport}": "Vuelos en {airport}",
+  "Departures": "Salidas",
+  "Arrivals": "Llegadas",
+  "gate {gate}": "puerta {gate}",
+  "No upcoming departures": "No hay próximas salidas",
+  "No upcoming arrivals": "No hay próximas llegadas",
+  "{minutes} min": "{minutes} min",
+  "Security queue": "Espera en el control de seguridad",
+  "tomorrow": "mañana"
 }

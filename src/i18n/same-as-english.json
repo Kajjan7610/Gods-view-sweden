@@ -358,7 +358,8 @@
     "{flow} m³/s",
     "{time} (+{minutes} min)",
     "{km} km",
-    "+{minutes} min"
+    "+{minutes} min",
+    "{minutes} min"
   ],
   "fr": [
     "1090 MHz",
@@ -563,7 +564,8 @@
     "POPULATION",
     "{time} (+{minutes} min)",
     "{km} km",
-    "+{minutes} min"
+    "+{minutes} min",
+    "{minutes} min"
   ],
   "it": [
     "1090 MHz",
@@ -748,7 +750,9 @@
     "{flow} m³/s",
     "{time} (+{minutes} min)",
     "{km} km",
-    "+{minutes} min"
+    "+{minutes} min",
+    "{minutes} min",
+    "gate {gate}"
   ],
   "ja": [
     "1090 MHz",
@@ -948,7 +952,8 @@
     "{flow} m³/s",
     "{time} (+{minutes} min)",
     "{km} km",
-    "+{minutes} min"
+    "+{minutes} min",
+    "{minutes} min"
   ],
   "ru": [
     "AIS: --",
@@ -1140,7 +1145,9 @@
     "Under 1 m³/s",
     "{time} (+{minutes} min)",
     "{km} km",
-    "+{minutes} min"
+    "+{minutes} min",
+    "{minutes} min",
+    "gate {gate}"
   ],
   "uk": [
     "AIS: --",
