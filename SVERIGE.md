@@ -63,6 +63,12 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-05 (luftkvalitetslistan följer kameran)
+- Luftkvalitet: Väder-kortets lista "sämsta mätningarna i vyn" räknades bara om
+  när ny data kom (var 20:e minut), så den kunde visa Stockholm när man tittade
+  på Gävle. Listan räknas nu om varje gång kameran har stannat. (Felet finns i
+  originalet men märktes först när svenska stationer kom till.)
+
 ### 2026-11-05 (störningskortet radbryts)
 - Kollektivtrafikstörningar: kortets rader radbryts inte av sig själva, så ett
   långt meddelande blev en enda rad som gick utanför skärmen åt båda håll.

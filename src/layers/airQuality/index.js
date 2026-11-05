@@ -44,8 +44,18 @@ export function createAirQualityLayer({ source, overlayHost } = {}) {
   let _lastError = null;
   let _enabled = false;
   let rowControlsListener = null;
+  let _removeMoveEnd = null;
 
   const notify = () => rowControlsListener?.();
+
+  // The card lists the worst readings in view, so a settled camera re-reads
+  // it; data refreshes alone are 20 minutes apart.
+  const followCamera = (on) => {
+    _removeMoveEnd?.();
+    _removeMoveEnd = on
+      ? (_viewer?.camera?.moveEnd?.addEventListener?.(notify) ?? null)
+      : null;
+  };
 
   /** The camera's lon/lat rectangle in degrees, or null when unresolvable. */
   const viewRectangle = () => {
@@ -85,6 +95,7 @@ export function createAirQualityLayer({ source, overlayHost } = {}) {
       _enabled = true;
       if (_dataSource) _dataSource.show = true;
       overlayHost.setVisible(AIR_QUALITY_OVERLAY_SOURCE_ID, true);
+      followCamera(true);
       notify();
     },
 
@@ -93,6 +104,7 @@ export function createAirQualityLayer({ source, overlayHost } = {}) {
       _request?.abort();
       _request = null;
       _enabled = false;
+      followCamera(false);
       if (_dataSource) _dataSource.show = false;
       overlayHost.clearSource(AIR_QUALITY_OVERLAY_SOURCE_ID);
       overlayHost.setVisible(AIR_QUALITY_OVERLAY_SOURCE_ID, false);
@@ -196,6 +208,7 @@ export function createAirQualityLayer({ source, overlayHost } = {}) {
       _request?.abort();
       _request = null;
       _enabled = false;
+      followCamera(false);
       overlayHost.clearSource(AIR_QUALITY_OVERLAY_SOURCE_ID);
       overlayHost.setVisible(AIR_QUALITY_OVERLAY_SOURCE_ID, false);
       if (_dataSource) {
