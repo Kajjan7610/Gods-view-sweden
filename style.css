@@ -39,4 +39,7 @@
 @import './src/ui/styles/mobile-shell.css';
 @import './src/ui/styles/annotations.css';
 @import './src/ui/styles/ai-chat.css';
+/* Swedish fork: text size and legibility floors, after the original's own
+   sheets (Cyber, which must stay last, scopes itself to its theme). */
+@import './src/ui/styles/sverige-legibility.css';
 @import './src/ui/styles/cyber.css';

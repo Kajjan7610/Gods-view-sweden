@@ -3832,5 +3832,8 @@
   "Show on the map": "عرض على الخريطة",
   "Follow the aircraft": "تتبّع الطائرة",
   "Turn on the flights layer to follow aircraft from the board": "شغّل طبقة الرحلات لتتبّع الطائرات من اللوحة",
-  "Turn on": "تشغيل"
+  "Turn on": "تشغيل",
+  "Text size: {size}": "حجم النص: {size}",
+  "Larger": "أكبر",
+  "Largest": "الأكبر"
 }

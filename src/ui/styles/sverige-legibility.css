@@ -1,0 +1,289 @@
+/* ── Legibility (Swedish fork) ─────────────────────────────────────────
+   The text size button (src/ui/textSize.js) sets data-text-size on the root:
+   Normal keeps the original look; Larger and Largest raise the cockpit's
+   and the rails' smallest text to a floor and its faintest secondary text
+   to a readable alpha. Kept in this one file, loaded last, so the original
+   stylesheets stay as they are and later merges with them stay simple.
+   Sizes: xs was 5–6 px, sm 7 px, md 8 px, lg 9 px. */
+:root[data-text-size='large'] {
+  --sv-fs-xs: 9px;
+  --sv-fs-sm: 9.5px;
+  --sv-fs-md: 10px;
+  --sv-fs-lg: 11px;
+  --sv-soft: 0.78;
+  --sv-scale: 0.85;
+  --sv-rail: 0.45;
+}
+:root[data-text-size='largest'] {
+  --sv-fs-xs: 10.5px;
+  --sv-fs-sm: 11px;
+  --sv-fs-md: 11.5px;
+  --sv-fs-lg: 12.5px;
+  --sv-soft: 0.88;
+  --sv-scale: 0.95;
+  --sv-rail: 0.6;
+}
+
+/* Smallest: footnotes, timestamps, sources, little switch labels. */
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  :is(
+    #cockpit-vision-previous > small,
+    #cockpit-vision-current > small,
+    #cockpit-vision-next > small,
+    .cockpit-context-cohorts small,
+    .cockpit-context-nearest small,
+    #cockpit-context-uncertainty,
+    #cockpit-context-updated,
+    #cockpit-weather-toggle > span,
+    #cockpit-weather-state,
+    #cockpit-route-status,
+    .cockpit-route-airport > span,
+    #cockpit-brief-position,
+    #cockpit-brief-auto,
+    #cockpit-brief-source,
+    #cockpit-signal-list time,
+    .cockpit-brief-tabs > button
+  ) {
+  font-size: var(--sv-fs-xs);
+  letter-spacing: 0.06em;
+}
+
+/* Small: scale captions, status lines, card qualifiers. */
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  :is(
+    .cockpit-horizon-guide small,
+    #cockpit-route-direction-label,
+    .cockpit-visor-status,
+    .cockpit-altitude-rim-label,
+    #cockpit-aircraft-meta,
+    .cockpit-context-qualifier,
+    .cockpit-route-kicker
+  ) {
+  font-size: var(--sv-fs-sm);
+}
+
+/* Medium: scale numbers, card headings, list rows, buttons. */
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  :is(
+    .cockpit-roll-arc > span,
+    .cockpit-pitch-rail > span,
+    .cockpit-altitude-rim-scale b,
+    .cockpit-card-kicker,
+    .cockpit-context-cohorts > div > span,
+    #cockpit-route-from,
+    #cockpit-route-to,
+    #cockpit-brief-kicker,
+    #cockpit-brief-subtitle,
+    .cockpit-signal-target-label,
+    #cockpit-signal-list li > div > span,
+    .cockpit-utility-launcher > span,
+    #cockpit-reset-globe > span,
+    #map-view-switch > span,
+    .ui-panel__title.panel-title
+  ) {
+  font-size: var(--sv-fs-md);
+}
+
+/* Large: instrument labels and the cockpit's own headings. */
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  :is(
+    .cockpit-kicker,
+    .cockpit-readout-label,
+    #cockpit-vision-current-label,
+    #cockpit-context-nearest-label,
+    .cockpit-help bdi
+  ) {
+  font-size: var(--sv-fs-lg);
+}
+
+/* Faint secondary text (the original's near-white at 30–60 %) gets a
+   readable alpha; the cyan headings keep their colour. */
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  :is(
+    .cockpit-roll-arc > span,
+    .cockpit-pitch-rail > span:not(.active),
+    #cockpit-aircraft-meta,
+    #cockpit-vision-previous > small,
+    #cockpit-vision-next > small,
+    .cockpit-context-cohorts small,
+    .cockpit-context-nearest small,
+    #cockpit-context-uncertainty,
+    #cockpit-context-updated,
+    #cockpit-weather-toggle > span,
+    #cockpit-weather-state,
+    #cockpit-brief-position,
+    #cockpit-brief-auto,
+    #cockpit-brief-source,
+    #cockpit-signal-list time,
+    #cockpit-signal-list li > div > span,
+    .cockpit-help bdi,
+    #cockpit-compass-tape > span
+  ) {
+  color: rgba(244, 251, 255, var(--sv-soft));
+}
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  .cockpit-altitude-rim-scale
+  b {
+  color: rgba(244, 251, 255, var(--sv-scale));
+}
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  .cockpit-utility-launcher
+  > span {
+  color: rgba(232, 234, 237, var(--sv-soft));
+}
+/* Larger text needs wider side cards and a wider time column, or route
+   names, the briefing's page buttons and the times get cut. */
+:root[data-text-size='large'] body #cockpit-hud {
+  --cockpit-side-panel-width: min(372px, 30vw);
+}
+:root[data-text-size='largest'] body #cockpit-hud {
+  --cockpit-side-panel-width: min(420px, 32vw);
+}
+:root[data-text-size='large'] body .cockpit-signal-list li {
+  grid-template-columns: 64px minmax(0, 1fr);
+}
+:root[data-text-size='largest'] body .cockpit-signal-list li {
+  grid-template-columns: 78px minmax(0, 1fr);
+}
+/* The signal window is a one-column grid sized by its widest unwrapped
+   line; with larger text that line would push every row past the edge.
+   Hold the column to the window and let long lines end in an ellipsis. */
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  .cockpit-signal-window {
+  grid-template-columns: minmax(0, 1fr);
+}
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  :is(.cockpit-signal-footer, .cockpit-signal-footer > *) {
+  min-width: 0;
+}
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  .cockpit-signal-footer
+  > :not(nav) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The briefing's auto-cycle switch and its tabs share one row with other
+   controls: they stop at 9.5 px, and the header may wrap rather than cut. */
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  :is(#cockpit-brief-auto, .cockpit-brief-tabs > button) {
+  font-size: min(var(--sv-fs-xs), 9.5px);
+  letter-spacing: 0.02em;
+}
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  .cockpit-signal-header {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+/* The taller kicker needs air under the signal window's top edge. */
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  .cockpit-signal-header {
+  padding-top: 5px;
+}
+/* The pitch ladder fades as a whole; it stays quieter than the rest. */
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  .cockpit-pitch-rail {
+  opacity: var(--sv-rail);
+}
+:root:is([data-text-size='large'], [data-text-size='largest'])
+  body
+  .ui-panel__title.panel-title {
+  color: rgba(206, 232, 239, 0.92);
+}
+
+/* ── Phone cockpit (any text size) ──────────────────────────────────────
+   The original puts VIEW and RADIO 152 px up, right over the speed and
+   altitude readouts, and lets the aircraft line wrap into the roll scale.
+   The sky under the roll scale is empty: the two buttons go there, and the
+   aircraft line stays one line. */
+@media (max-width: 760px) {
+  body.cockpit-mode .cockpit-utility-controls {
+    top: calc(env(safe-area-inset-top, 0px) + 150px);
+    bottom: auto;
+  }
+  /* The switcher's arrows (and their labels for screen readers) say
+     previous and next; the words would push it off a phone's edge. */
+  body.cockpit-mode
+    :is(#cockpit-vision-previous, #cockpit-vision-next)
+    > small {
+    display: none;
+  }
+  body.cockpit-mode #cockpit-aircraft-meta {
+    /* Beside the vision switcher, which shares the top row. */
+    max-width: 52vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* ── The text size button, in the corner row beside the language picker ── */
+#text-size-button {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid rgba(54, 220, 255, 0.38);
+  border-radius: 0.42rem;
+  background: linear-gradient(
+    145deg,
+    rgba(10, 27, 37, 0.92),
+    rgba(7, 13, 22, 0.9)
+  );
+  box-shadow: 0 0.4rem 1.6rem rgba(0, 0, 0, 0.5);
+  color: rgba(225, 244, 248, 0.92);
+  font-family: var(--font-mono);
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+#text-size-button:hover,
+#text-size-button:focus-visible {
+  border-color: rgba(54, 220, 255, 0.75);
+  outline: none;
+}
+.text-size-glyph {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.text-size-glyph small {
+  font-size: 0.6rem;
+}
+.text-size-level {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 0.7rem;
+}
+.text-size-level i {
+  width: 3px;
+  background: rgba(225, 244, 248, 0.25);
+}
+.text-size-level i:nth-child(1) {
+  height: 40%;
+}
+.text-size-level i:nth-child(2) {
+  height: 70%;
+}
+.text-size-level i:nth-child(3) {
+  height: 100%;
+}
+.text-size-level i.on {
+  background: #36dcff;
+}

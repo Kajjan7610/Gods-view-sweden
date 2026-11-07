@@ -66,7 +66,7 @@
 }
 #city-panel-name {
   color: var(--text-secondary);
-  font: 9px var(--font-mono);
+  font: 10.5px var(--font-mono);
   letter-spacing: 1px;
   white-space: nowrap;
 }
@@ -89,7 +89,7 @@
   display: grid;
   gap: 8px;
   color: #dceeff;
-  font: 500 10px/1.45 var(--font-mono);
+  font: 500 11px/1.45 var(--font-mono);
 }
 .city-dossier-head {
   display: flex;
@@ -112,7 +112,7 @@
 .city-dossier-sub {
   display: block;
   color: rgba(220, 238, 255, 0.6);
-  font-size: 8px;
+  font-size: 9.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -128,8 +128,10 @@
   border-radius: 4px;
   background: rgba(2, 12, 20, 0.6);
   color: rgba(220, 238, 255, 0.7);
-  font: 700 7px/1 var(--font-mono);
-  letter-spacing: 0.1em;
+  /* Five tabs in a 300 px rail: tight tracking keeps BEFOLKNING whole. */
+  font: 700 8.5px/1 var(--font-mono);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
   cursor: pointer;
 }
 .city-dossier-tabs button.active,
@@ -153,7 +155,7 @@
   margin: 0;
   color: rgba(244, 251, 255, 0.86);
   font-family: var(--font-sans, inherit);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.5;
 }
 .city-dossier-rows {
@@ -171,7 +173,7 @@
 }
 .city-dossier-rows dt {
   color: var(--cockpit-accent, #00dcff);
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -187,7 +189,7 @@
 .city-dossier-note,
 .city-dossier-source {
   color: rgba(220, 238, 255, 0.5);
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.06em;
 }
 .city-dossier-note {
@@ -195,7 +197,7 @@
 }
 .city-dossier-credit {
   color: rgba(182, 226, 241, 0.72);
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -221,7 +223,7 @@
   justify-content: space-between;
   gap: 6px;
   color: rgba(220, 238, 255, 0.55);
-  font-size: 7px;
+  font-size: 9px;
 }
 .city-dossier-spark figcaption strong {
   color: currentColor;
@@ -233,7 +235,7 @@
 }
 .city-dossier-election > strong {
   color: rgba(220, 238, 255, 0.75);
-  font-size: 8px;
+  font-size: 9.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -244,7 +246,7 @@
   grid-template-columns: 72px minmax(0, 1fr) 42px;
   align-items: center;
   gap: 6px;
-  font-size: 8px;
+  font-size: 9.5px;
 }
 .city-dossier-party span {
   overflow: hidden;
@@ -293,7 +295,7 @@
 }
 .city-dossier-alerts span {
   color: rgba(220, 238, 255, 0.55);
-  font-size: 7px;
+  font-size: 9px;
   text-transform: uppercase;
 }
 .city-dossier-trains,
@@ -305,7 +307,7 @@
 .city-dossier-jams > strong,
 .city-dossier-police > strong {
   color: rgba(220, 238, 255, 0.75);
-  font-size: 8px;
+  font-size: 9.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -319,7 +321,7 @@
 }
 .city-dossier-time {
   color: #fff;
-  font-size: 10px;
+  font-size: 11px;
 }
 .city-dossier-dest {
   display: grid;
@@ -330,13 +332,13 @@
 .city-dossier-jam small {
   overflow: hidden;
   color: rgba(220, 238, 255, 0.5);
-  font-size: 7px;
+  font-size: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .city-dossier-delay {
   color: #69f0ae;
-  font-size: 8px;
+  font-size: 9.5px;
   white-space: nowrap;
 }
 .city-dossier-departure.late .city-dossier-delay {
@@ -350,7 +352,7 @@
 }
 .city-dossier-flights-head > strong {
   color: rgba(220, 238, 255, 0.75);
-  font-size: 8px;
+  font-size: 9.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -364,7 +366,7 @@
   border-radius: 999px;
   background: none;
   color: #ffc94d;
-  font: 500 8px var(--font-mono);
+  font: 500 9.5px var(--font-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
@@ -382,7 +384,7 @@
   gap: 4px;
   margin-top: 3px;
   color: rgba(220, 238, 255, 0.55);
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -405,7 +407,7 @@
   border: 1px solid rgba(105, 240, 174, 0.35);
   border-radius: 999px;
   color: #69f0ae;
-  font-size: 8px;
+  font-size: 9.5px;
 }
 .city-dossier-queue small {
   color: rgba(220, 238, 255, 0.6);
@@ -419,7 +421,7 @@
 }
 .city-dossier-time small {
   color: #ffc94d;
-  font-size: 6px;
+  font-size: 8.5px;
   text-transform: uppercase;
 }
 .city-dossier-flights .city-dossier-delay {
@@ -456,7 +458,7 @@
   border-radius: 6px;
   background: rgba(2, 12, 18, 0.85);
   color: #dceeff;
-  font: 700 8px/1 var(--font-mono);
+  font: 700 9.5px/1 var(--font-mono);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
@@ -479,7 +481,7 @@
 /* ── Visit passport ───────────────────────────────────────── */
 .city-dossier-pass-summary {
   color: #ffc94d;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -487,7 +489,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 3px 8px;
-  font-size: 9px;
+  font-size: 10.5px;
 }
 .city-dossier-challenge small {
   color: rgba(220, 238, 255, 0.6);
@@ -520,7 +522,7 @@
   border-radius: 4px;
   background: rgba(2, 12, 20, 0.6);
   color: rgba(220, 238, 255, 0.7);
-  font: 700 7px/1.2 var(--font-mono);
+  font: 700 9px/1.2 var(--font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
@@ -546,7 +548,7 @@
 }
 .city-dossier-stamps small {
   color: rgba(220, 238, 255, 0.5);
-  font-size: 7px;
+  font-size: 9px;
 }
 
 /* ── Arrival title card (first visit) ─────────────────────── */

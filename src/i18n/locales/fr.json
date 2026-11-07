@@ -3604,5 +3604,8 @@
   "Show on the map": "Afficher sur la carte",
   "Follow the aircraft": "Suivre l’avion",
   "Turn on the flights layer to follow aircraft from the board": "Activez la couche des vols pour suivre les avions depuis le tableau",
-  "Turn on": "Activer"
+  "Turn on": "Activer",
+  "Text size: {size}": "Taille du texte : {size}",
+  "Larger": "Plus grand",
+  "Largest": "Le plus grand"
 }

@@ -3680,5 +3680,8 @@
   "Show on the map": "Показать на карте",
   "Follow the aircraft": "Следить за самолётом",
   "Turn on the flights layer to follow aircraft from the board": "Включите слой рейсов, чтобы следить за самолётами с табло",
-  "Turn on": "Включить"
+  "Turn on": "Включить",
+  "Text size: {size}": "Размер текста: {size}",
+  "Larger": "Крупнее",
+  "Largest": "Самый крупный"
 }

@@ -66,6 +66,27 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (läsbarhet och textstorlek)
+- Mätning av all synlig text i cockpit (1600×900): 104 av 145 texter var
+  under 10 px (35 under 8 px, minst 5–6 px) och 62 var svagare än 60 %.
+- Ny knapp **Aa** i hörnraden bredvid språkväljaren (även i cockpit och på
+  telefon) växlar Normal → Större → Störst; valet sparas i webbläsaren och
+  **Större** är standard. Normal är originalets utseende.
+- Större/Störst lyfter cockpitens minsta text (skalor, kontaktkortet,
+  signallistan, färdplanen, visionsväljaren, väder- och verktygsknappar,
+  sidopanelernas rubriker) till ett golv och den svaga vitgrå texten till
+  78/88 % täckning; de cyanfärgade rubrikerna behåller färgen. Sidokorten
+  blir lite bredare och signalfönstrets långa rader slutar med … i
+  stället för att skjuta innehållet över kanten. Efter: 0 texter under
+  8 px i cockpit (Större), allt minst 11 px (Störst).
+- Telefon (alla storlekar): VISNING och RADIO flyttas från fart- och
+  höjdsiffrorna upp under rollskalan, flygets metarad hålls på en rad och
+  visionsväljaren visar pilar utan orden FÖRRA/NÄSTA.
+- STAD-panelen och flygplatstavlan har större grundtext (minst ~9 px).
+- Allt i den egna filen `src/ui/styles/sverige-legibility.css` (laddas
+  före Cyber-temat, som ska vara sist), så originalets stilfiler är
+  orörda och kommande synkar inte krockar.
+
 ### 2026-11-07 (flygplatstavla, steg 3: från tavla till plan i luften)
 - Rader vars plan finns i flyglagrets data får en gul flygplansknapp, och
   utfällda detaljer får "Följ planet". Ett klick stänger tavlan och låser

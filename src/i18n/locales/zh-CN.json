@@ -3452,5 +3452,8 @@
   "Show on the map": "在地图上显示",
   "Follow the aircraft": "跟踪飞机",
   "Turn on the flights layer to follow aircraft from the board": "打开航班图层即可从航班信息屏跟踪飞机",
-  "Turn on": "打开"
+  "Turn on": "打开",
+  "Text size: {size}": "文字大小：{size}",
+  "Larger": "较大",
+  "Largest": "最大"
 }
