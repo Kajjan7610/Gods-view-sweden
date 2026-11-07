@@ -265,7 +265,7 @@ test('the board opens on a day of rows, "now" before the first to go', async () 
   assert.equal(view.name, 'Stockholm Arlanda');
   assert.deepEqual(
     view.tabs.map((tab) => tab.id),
-    ['departures', 'arrivals', 'security'],
+    ['departures', 'arrivals', 'security', 'weather'],
   );
   assert.deepEqual(
     view.rows.map((row) => [row.flight, row.tone, row.nowBefore]),
@@ -333,7 +333,7 @@ test('an airport without queue readings has no security tab', async () => {
   assert.equal(latest().board.tab, 'departures');
   assert.deepEqual(
     latest().board.tabs.map((tab) => tab.id),
-    ['departures', 'arrivals'],
+    ['departures', 'arrivals', 'weather'],
   );
   act('open', 'CPH');
   assert.equal(latest().board.iata, 'VBY', 'not a Swedavia airport: no change');
@@ -489,5 +489,61 @@ test('a row whose aircraft is in the air follows it; the board offers the layer 
   assert.deepEqual(tracked, [['abc123', 'user']]);
   assert.equal(latest().board, null, 'the board makes way for the aircraft');
   assert.equal(latest().card, null, "and so does the airport's card");
+  controller.destroy();
+});
+
+test("the weather tab: the airport's METAR decoded, and a line under the title", async () => {
+  const urls = [];
+  let actions = null;
+  const published = [];
+  const controller = createAirportBoard({
+    viewer: fakeViewer(59.33, 18.07, 3000),
+    publish: (view) => published.push(view),
+    connect: (next) => ((actions = next), () => {}),
+    fetchImpl: async (url) => {
+      urls.push(url);
+      if (url.startsWith('/api/aviation-weather'))
+        return new Response(
+          JSON.stringify({
+            reports: [
+              {
+                icao: 'ESSA',
+                observed: NOW,
+                windDir: 260,
+                windVariable: false,
+                windKt: 7,
+                gustKt: null,
+                visibilityM: 10000,
+                cavok: true,
+                clouds: [],
+                temperatureC: 2,
+                dewpointC: -1,
+                qnhHpa: 1024,
+                weather: null,
+                category: 'VFR',
+                metar: 'METAR ESSA 071120Z 26007KT CAVOK 02/M01 Q1024',
+                taf: 'TAF ESSA 071100Z 0712/0818 26008KT CAVOK',
+              },
+            ],
+          }),
+        );
+      return new Response(JSON.stringify(boardBody()));
+    },
+    now: () => NOW,
+    documentRef: null,
+  });
+  actions.open('ARN');
+  await settled();
+  assert.ok(urls.includes('/api/aviation-weather?ids=ESSA'));
+  const board = published.at(-1).board;
+  assert.equal(board.weather.category, 'VFR');
+  assert.match(board.weather.line, /260° 7 kt · 10 km or more · CAVOK · 2 °C/);
+  actions.setTab('weather');
+  const tab = published.at(-1).board;
+  assert.equal(tab.kind, 'weather');
+  assert.ok(tab.rows.some((row) => row.label === 'Wind'));
+  assert.match(tab.metar, /^METAR ESSA/);
+  assert.match(tab.taf, /^TAF ESSA/);
+  assert.ok(tab.tabs.some((row) => row.id === 'weather'));
   controller.destroy();
 });

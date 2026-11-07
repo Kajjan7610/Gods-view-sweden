@@ -9,6 +9,11 @@ import * as Cesium from 'cesium';
 import { getLocale, msg, onLocaleChange, t } from '../i18n/index.js';
 import { swedaviaAirport } from '../data/swedaviaAirports.js';
 import {
+  CATEGORY_COLORS,
+  weatherLine,
+  weatherRows,
+} from './aviationWeatherView.js';
+import {
   aircraftFor,
   aircraftIndex,
   aircraftMatch,
@@ -23,6 +28,8 @@ const REFRESH_MS = 3 * 60_000;
 /** The "now" line and gone rows move on this often while the board shows. */
 const TICK_MS = 60_000;
 const SETTLE_DELAY_MS = 600;
+/** The airport's METAR is read again this often while the board shows. */
+const WEATHER_TTL_MS = 10 * 60_000;
 /** How long the flights layer's contacts are read once for the board. */
 const AIRCRAFT_INDEX_MS = 20_000;
 const FLIGHTS_LAYER = 'flights';
@@ -35,6 +42,7 @@ const TABS = Object.freeze([
   ['departures', msg('Departures'), 'flight_takeoff'],
   ['arrivals', msg('Arrivals'), 'flight_land'],
   ['security', msg('Security'), 'security'],
+  ['weather', msg('Weather'), 'cloud'],
 ]);
 const SCOPES = Object.freeze({
   S: msg('Schengen'),
@@ -95,6 +103,34 @@ export function createAirportBoard({
   let dismissed = null;
   let aircraft = { at: -Infinity, index: null };
   let layerTimers = [];
+  /** The open airport's latest METAR/TAF: `{ icao, report, at }`. */
+  let weather = null;
+
+  async function loadWeather() {
+    const forAirport = airport;
+    if (!forAirport?.icao) return;
+    if (
+      weather?.icao === forAirport.icao &&
+      now() - weather.at < WEATHER_TTL_MS
+    )
+      return;
+    try {
+      const response = await fetchImpl(
+        `/api/aviation-weather?ids=${forAirport.icao}`,
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const body = await response.json();
+      if (destroyed || airport !== forAirport) return;
+      weather = {
+        icao: forAirport.icao,
+        report: body?.reports?.[0] ?? null,
+        at: now(),
+      };
+      render();
+    } catch (error) {
+      console.warn('[AirportBoard] weather failed:', error?.message || error);
+    }
+  }
 
   async function load({ quiet = false } = {}) {
     if (!airport) return;
@@ -125,6 +161,7 @@ export function createAirportBoard({
     }
     render();
     scheduleRefresh();
+    void loadWeather();
   }
 
   function scheduleRefresh() {
@@ -380,7 +417,10 @@ export function createAirportBoard({
           ? { rows: [], empty: t('The board could not be read') }
           : tab === 'security'
             ? securityView()
-            : flightsView(tab, nowMs);
+            : tab === 'weather'
+              ? weatherView()
+              : flightsView(tab, nowMs);
+    const report = weather?.icao === airport.icao ? weather.report : null;
     return {
       iata: airport.iata,
       name: airport.name,
@@ -410,6 +450,31 @@ export function createAirportBoard({
       flightsOff: Boolean(dataManager) && !flightsLayer(),
       ...body,
       scrollKey,
+      // The airport's weather in one line, under the title.
+      weather: report
+        ? {
+            line: weatherLine(report),
+            category: report.category,
+            color: CATEGORY_COLORS[report.category] ?? null,
+          }
+        : null,
+    };
+  }
+
+  function weatherView() {
+    const report = weather?.icao === airport.icao ? weather.report : null;
+    if (!report)
+      return {
+        rows: [],
+        empty: weather
+          ? t('No weather report right now')
+          : t('Loading the board…'),
+      };
+    return {
+      rows: weatherRows(report),
+      metar: report.metar,
+      taf: report.taf,
+      empty: '',
     };
   }
 

@@ -58,6 +58,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
         <div class="airport-board-title">
           <strong>{{ view.board.name }}</strong>
           <small>{{ [view.board.dateLabel, view.board.updated].filter(Boolean).join(' · ') }}</small>
+          <button v-if="view.board.weather" type="button" class="airport-board-weather" :title="t('Weather')" @click="store.act('setTab', 'weather')">
+            <b v-if="view.board.weather.category" :style="{ color: view.board.weather.color, borderColor: view.board.weather.color }">{{ view.board.weather.category }}</b>{{ view.board.weather.line }}
+          </button>
         </div>
         <div class="airport-board-days" role="group" :aria-label="t('Day')">
           <button type="button" :aria-pressed="String(view.board.date === 'today')" @click="store.act('setDate', 'today')">{{ t('Today') }}</button>
@@ -74,13 +77,21 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
         <button v-for="tab in view.board.tabs" :key="tab.id" type="button" role="tab" :aria-selected="String(tab.active)" :class="{ active: tab.active }" @click="store.act('setTab', tab.id)">
           <span class="material-symbols-outlined" aria-hidden="true">{{ tab.icon }}</span>{{ tab.label }}
         </button>
-        <label v-if="view.board.kind !== 'security'" class="airport-board-search">
+        <label v-if="view.board.kind === 'departures' || view.board.kind === 'arrivals'" class="airport-board-search">
           <span class="material-symbols-outlined" aria-hidden="true">search</span>
           <input type="search" :value="view.board.query" :placeholder="t('Flight, city or airline')" :aria-label="t('Search flights')" @input="store.act('setQuery', $event.target.value)" />
         </label>
       </nav>
       <div ref="list" class="airport-board-list ui-scroll">
-        <template v-if="view.board.kind !== 'security'">
+        <template v-if="view.board.kind === 'weather'">
+          <dl v-if="view.board.rows.length" class="airport-board-details airport-board-weather-rows">
+            <div v-for="item in view.board.rows" :key="item.label"><dt>{{ item.label }}</dt><dd>{{ item.value }}</dd></div>
+          </dl>
+          <pre v-if="view.board.metar" class="airport-board-raw">{{ view.board.metar }}</pre>
+          <pre v-if="view.board.taf" class="airport-board-raw">{{ view.board.taf }}</pre>
+          <p v-if="view.board.metar" class="airport-board-note">{{ t('METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).') }}</p>
+        </template>
+        <template v-else-if="view.board.kind !== 'security'">
           <div class="airport-board-colhead" aria-hidden="true">
             <span>{{ t('Time') }}</span>
             <span>{{ view.board.kind === 'departures' ? t('To') : t('From') }}</span>

@@ -21,6 +21,7 @@ const KICKER = 'SWEDAVIA'; // i18n-ignore: provider name
       <span class="cockpit-flight-leg-label">{{ leg.label }}</span>
       <strong>{{ leg.time }}<em v-if="leg.delay">{{ leg.delay }}</em></strong>
       <small v-if="leg.detail || leg.status">{{ [leg.detail, leg.status].filter(Boolean).join(' · ') }}</small>
+      <small v-if="leg.weather" class="cockpit-flight-leg-weather"><b v-if="leg.category" :style="{ color: leg.categoryColor }">{{ leg.category }}</b> {{ leg.weather }}</small>
     </div>
   </section>
   <Teleport v-else-if="v && compact" to="body">

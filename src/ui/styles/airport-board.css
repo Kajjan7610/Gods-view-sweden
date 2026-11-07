@@ -56,6 +56,48 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* The airport's weather in one line under the title; opens the tab. */
+.airport-board-weather {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin-top: 2px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: none;
+  color: rgba(220, 238, 255, 0.85);
+  font: 500 10px/1.3 var(--font-mono);
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.airport-board-weather b {
+  flex: 0 0 auto;
+  padding: 0 5px;
+  border: 1px solid;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 700;
+}
+.airport-board-weather:hover {
+  color: #fff;
+}
+.airport-board-weather-rows {
+  margin: 10px 8px 6px;
+}
+.airport-board-raw {
+  margin: 6px 8px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  border-left: 2px solid rgba(116, 219, 255, 0.4);
+  background: rgba(2, 12, 20, 0.6);
+  color: #cfe8ff;
+  font: 500 11px/1.5 var(--font-mono);
+  white-space: pre-wrap;
+}
 .airport-board-days {
   display: flex;
   border: 1px solid rgba(244, 251, 255, 0.14);

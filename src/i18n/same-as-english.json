@@ -221,7 +221,11 @@
     "Check-in",
     "Gate",
     "Terminal {terminal}",
-    "Status"
+    "Status",
+    "{dir}° {kt} kt",
+    "{m} m",
+    "{ft} ft",
+    "{c} °C"
   ],
   "es": [
     "1090 MHz",
@@ -368,7 +372,12 @@
     "{minutes} min",
     "Schengen",
     "Terminal",
-    "Terminal {terminal}"
+    "Terminal {terminal}",
+    "variable {kt} kt",
+    "{dir}° {kt} kt",
+    "{m} m",
+    "{ft} ft",
+    "{c} °C"
   ],
   "fr": [
     "1090 MHz",
@@ -578,7 +587,12 @@
     "Schengen",
     "via {places}",
     "Terminal",
-    "Terminal {terminal}"
+    "Terminal {terminal}",
+    "variable {kt} kt",
+    "{dir}° {kt} kt",
+    "{m} m",
+    "{ft} ft",
+    "{c} °C"
   ],
   "it": [
     "1090 MHz",
@@ -772,7 +786,11 @@
     "Check-in",
     "Gate",
     "Terminal {terminal}",
-    "Fast track"
+    "Fast track",
+    "{dir}° {kt} kt",
+    "{m} m",
+    "{ft} ft",
+    "{c} °C"
   ],
   "ja": [
     "1090 MHz",
@@ -828,7 +846,11 @@
     "{mw} MW",
     "{from}–{to} µSv/h",
     "{flow} m³/s",
-    "{km} km"
+    "{km} km",
+    "{dir}° {kt} kt",
+    "{m} m",
+    "{ft} ft",
+    "{c} °C"
   ],
   "pt": [
     "1090 MHz",
@@ -978,7 +1000,11 @@
     "via {places}",
     "Terminal",
     "Check-in",
-    "Terminal {terminal}"
+    "Terminal {terminal}",
+    "{dir}° {kt} kt",
+    "{m} m",
+    "{ft} ft",
+    "{c} °C"
   ],
   "ru": [
     "AIS: --",
@@ -998,7 +1024,8 @@
     "VS",
     "WHOT/BHOT",
     "{town} {chance} %",
-    "Svenska kraftnät · {time}"
+    "Svenska kraftnät · {time}",
+    "{c} °C"
   ],
   "sv": [
     "1090 MHz",
@@ -1178,7 +1205,11 @@
     "Terminal",
     "Gate",
     "Terminal {terminal}",
-    "Status"
+    "Status",
+    "{dir}° {kt} kt",
+    "{m} m",
+    "{ft} ft",
+    "{c} °C"
   ],
   "uk": [
     "AIS: --",
@@ -1193,7 +1224,8 @@
     "S2 GhostMaps",
     "WHOT/BHOT",
     "{town} {chance} %",
-    "Svenska kraftnät · {time}"
+    "Svenska kraftnät · {time}",
+    "{c} °C"
   ],
   "zh-CN": [
     "1090 MHz",
@@ -1255,7 +1287,8 @@
     "Svenska kraftnät · {time}",
     "{mw} MW",
     "{from}–{to} µSv/h",
-    "{flow} m³/s"
+    "{flow} m³/s",
+    "{c} °C"
   ],
   "zh-Hant": [
     "1090 MHz",
@@ -1317,6 +1350,7 @@
     "Svenska kraftnät · {time}",
     "{mw} MW",
     "{from}–{to} µSv/h",
-    "{flow} m³/s"
+    "{flow} m³/s",
+    "{c} °C"
   ]
 }

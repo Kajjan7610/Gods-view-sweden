@@ -8,6 +8,7 @@
  */
 import { getLocale, onLocaleChange, t } from '../i18n/index.js';
 import { swedaviaAirportByCode } from '../data/swedaviaAirports.js';
+import { CATEGORY_COLORS, weatherLine } from './aviationWeatherView.js';
 
 /** The rows are read again this often while the cockpit flies the aircraft. */
 const REFRESH_MS = 2 * 60_000;
@@ -31,7 +32,7 @@ const bilingual = (value) =>
  * One leg as the card shows it: what happens when, where at the airport, and
  * the airport's own line.
  */
-export function legView(leg, nowMs) {
+export function legView(leg, nowMs, report = null) {
   const { flight, kind, airport } = leg;
   const departing = kind === 'departures';
   const delay = flight.delayMinutes > 0 ? flight.delayMinutes : 0;
@@ -69,6 +70,10 @@ export function legView(leg, nowMs) {
       .filter(Boolean)
       .join(' · '),
     status: bilingual(flight.remark) || bilingual(flight.status),
+    // The airport's latest METAR in one line, with its flight category.
+    weather: report ? weatherLine(report) : '',
+    category: report?.category ?? null,
+    categoryColor: CATEGORY_COLORS[report?.category] ?? null,
     tone: flight.canceled
       ? 'negative'
       : flight.remark?.tone === 'negative' || delay >= 15
@@ -94,6 +99,8 @@ export function createCockpitFlightLeg({
   let readAt = 0;
   let request = null;
   let tick = null;
+  /** The legs' airports' latest METAR: ICAO → `{ report, at }`. */
+  const weather = new Map();
   /** The airport each aircraft was followed from on the board. */
   const hints = new Map();
 
@@ -129,6 +136,7 @@ export function createCockpitFlightLeg({
       if (destroyed || subject !== forSubject) return;
       legs = Array.isArray(body?.legs) ? body.legs : [];
       render();
+      void readWeather();
     } catch (error) {
       if (error?.name !== 'AbortError')
         console.warn(
@@ -137,6 +145,37 @@ export function createCockpitFlightLeg({
         );
     } finally {
       if (request === controller) request = null;
+    }
+  }
+
+  async function readWeather() {
+    const ids = [
+      ...new Set(
+        (legs ?? [])
+          .map((leg) => swedaviaAirportByCode(leg.airport.iata)?.icao)
+          .filter(Boolean),
+      ),
+    ].filter(
+      (id) => !(now() - (weather.get(id)?.at ?? -Infinity) < REFRESH_MS * 5),
+    );
+    if (!ids.length) return;
+    try {
+      const response = await fetchImpl(
+        `/api/aviation-weather?ids=${ids.join(',')}`,
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const body = await response.json();
+      for (const id of ids)
+        weather.set(id, {
+          report: body?.reports?.find((report) => report.icao === id) ?? null,
+          at: now(),
+        });
+      render();
+    } catch (error) {
+      console.warn(
+        '[CockpitFlightLeg] weather failed:',
+        error?.message || error,
+      );
     }
   }
 
@@ -154,7 +193,13 @@ export function createCockpitFlightLeg({
             flights: first.codeshares.slice(0, 3).join(', '),
           })
         : '',
-      legs: legs.map((leg) => legView(leg, now())),
+      legs: legs.map((leg) =>
+        legView(
+          leg,
+          now(),
+          weather.get(swedaviaAirportByCode(leg.airport.iata)?.icao)?.report,
+        ),
+      ),
     });
   }
 

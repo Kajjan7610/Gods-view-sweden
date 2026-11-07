@@ -66,6 +66,17 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (flygväder METAR/TAF)
+- Nyckelfritt flygväder från NOAA Aviation Weather Center
+  (aviationweather.gov) via `/api/aviation-weather?ids=ESSA,…` (högst sex
+  ICAO-koder, varje station sparas tio minuter).
+- Flygplatstavlan: en väderrad under rubriken med flygkategori i färg
+  (VFR grön, MVFR blå, IFR röd, LIFR lila), t.ex. "VFR · 260° 8 kt ·
+  10 km eller mer · CAVOK · 3 °C", och en ny flik **Väder** med avkodad
+  vind, sikt, moln, väder, temperatur/daggpunkt och QNH samt rå METAR och
+  TAF. Raden öppnar fliken.
+- Cockpitens SWEDAVIA-kort visar vädret på varje sträckas flygplats.
+
 ### 2026-11-07 (Swedavia i cockpit)
 - Cockpit visar ett SWEDAVIA-kort under färdplanen när planet avgår från
   eller ankommer till en Swedavia-flygplats i dag: avgång och/eller

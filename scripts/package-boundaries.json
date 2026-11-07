@@ -2310,6 +2310,7 @@
       "./standalone/catalog"
     ],
     "modules": [
+      "src/ui/aviationWeatherView.js",
       "src/ui/cockpitFlightLeg.js",
       "src/ui/stores/cockpitFlightLeg.js",
       "src/ui/airportQueues.js",

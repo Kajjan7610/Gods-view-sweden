@@ -76,6 +76,14 @@
   color: #69f0ae;
 }
 
+/* The airport's weather, its flight category in its colour. */
+.cockpit-flight-leg-row .cockpit-flight-leg-weather {
+  color: rgba(244, 251, 255, 0.72);
+}
+.cockpit-flight-leg-weather b {
+  font-weight: 700;
+}
+
 /* The phone strip shows only in the phone cockpit. */
 .cockpit-flight-leg-strip {
   display: none;
