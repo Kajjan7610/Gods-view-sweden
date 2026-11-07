@@ -3721,5 +3721,16 @@
   "3D": "3D",
   "Read more": "Докладніше",
   "All of Sweden": "Уся Швеція",
-  "No messages from Krisinformation.se for the town": "Немає повідомлень Krisinformation.se для цього міста"
+  "No messages from Krisinformation.se for the town": "Немає повідомлень Krisinformation.se для цього міста",
+  "low": "низька",
+  "possible": "можлива",
+  "good": "добра",
+  "high": "висока",
+  "Northern lights: no dark sky tonight": "Північне сяйво: цієї ночі небо не темніє",
+  "Northern lights tonight: {chance}": "Північне сяйво цієї ночі: імовірність {chance}",
+  "Kp {kp} forecast, {need} is enough here": "очікується Kp {kp}, тут достатньо {need}",
+  "{pct} % cloud": "хмарність {pct} %",
+  "dark {from}–{to}": "темно {from}–{to}",
+  "best around {time}": "найкраще близько {time}",
+  "Show the aurora oval on the map": "Показати авроральний овал на мапі"
 }

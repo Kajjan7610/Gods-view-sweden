@@ -85,6 +85,12 @@ const ALERT_LEVEL_KEYS = Object.freeze({
   RED: msg('Red warning'),
 });
 const SEK = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 0 });
+const AURORA_CHANCES = Object.freeze({
+  low: msg('low'),
+  possible: msg('possible'),
+  good: msg('good'),
+  high: msg('high'),
+});
 
 const clock = (ms) =>
   new Intl.DateTimeFormat(getLocale(), {
@@ -225,7 +231,8 @@ export function createCityDossier({
       police: null,
       transit: null,
       kris: null,
-      pending: 5,
+      aurora: null,
+      pending: 6,
     };
     render();
     const current = () =>
@@ -256,6 +263,8 @@ export function createCityDossier({
         `/api/city-transit?lat=${lat}&lon=${lon}&town=${encodeURIComponent(forCity.name)}`,
         'transit',
       ),
+      // Tonight's northern lights: NOAA's Kp and SMHI's clouds for the town.
+      part(`/api/aurora-outlook?lat=${lat}&lon=${lon}`, 'aurora'),
       // Krisinformation.se: alerts and news for the country, county or town.
       part('/api/krisinformation', 'kris', (value) =>
         messagesFor(value, {
@@ -710,6 +719,7 @@ export function createCityDossier({
       jams: jamsView(live.transit?.jams),
       flights: flightsView(live.transit?.flights),
       kris: krisView(live.kris),
+      aurora: auroraView(live.aurora),
       radioLabel: radioBusy ? t('Tuning in…') : t('Play local radio'),
       radioBusy,
     };
@@ -812,6 +822,52 @@ export function createCityDossier({
         },
       ],
     }));
+  }
+
+  /**
+   * Tonight's northern lights at the town: the chance, the forecast Kp
+   * against what the latitude needs, the clouds and the darkest best hour;
+   * and whether the original's aurora oval layer is on.
+   */
+  function auroraView(outlook) {
+    if (!outlook?.level) return null;
+    if (outlook.level === 'none')
+      return {
+        level: 'none',
+        title: t('Northern lights: no dark sky tonight'),
+        detail: '',
+        layerOn: Boolean(dataManager?.isEnabled?.('aurora')),
+      };
+    return {
+      level: outlook.level,
+      title: t('Northern lights tonight: {chance}', {
+        chance: t(AURORA_CHANCES[outlook.level]),
+      }),
+      detail: [
+        outlook.maxKp !== null
+          ? t('Kp {kp} forecast, {need} is enough here', {
+              kp: oneDecimal(outlook.maxKp),
+              need: outlook.requiredKp,
+            })
+          : null,
+        outlook.scale,
+        outlook.cloudPct !== null
+          ? t('{pct} % cloud', { pct: outlook.cloudPct })
+          : null,
+        outlook.dark
+          ? t('dark {from}–{to}', {
+              from: clock(outlook.dark.from),
+              to: clock(outlook.dark.to),
+            })
+          : null,
+        outlook.best
+          ? t('best around {time}', { time: clock(outlook.best) })
+          : null,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      layerOn: Boolean(dataManager?.isEnabled?.('aurora')),
+    };
   }
 
   /**
@@ -928,6 +984,7 @@ export function createCityDossier({
         live?.transit?.jams ? 'TomTom' : null, // i18n-ignore: provider name
         live?.transit?.flights?.airports?.length ? 'Swedavia' : null, // i18n-ignore: provider name
         live?.kris ? 'Krisinformation.se' : null, // i18n-ignore: provider name
+        live?.aurora?.level ? 'NOAA SWPC' : null, // i18n-ignore: provider name
       ]
         .filter(Boolean)
         .join(' · '),
@@ -942,6 +999,11 @@ export function createCityDossier({
       render();
     },
     playRadio,
+    // The original's aurora oval (NOAA OVATION) on the map.
+    async showAurora() {
+      await dataManager?.setEnabled?.('aurora', true, { origin: 'user' });
+      render();
+    },
     toggleCinematic() {
       passport.cinematic = !passport.cinematic;
       if (!passport.cinematic) stopOrbit();

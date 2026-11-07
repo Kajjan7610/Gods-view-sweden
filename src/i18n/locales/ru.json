@@ -3721,5 +3721,16 @@
   "3D": "3D",
   "Read more": "Подробнее",
   "All of Sweden": "Вся Швеция",
-  "No messages from Krisinformation.se for the town": "Нет сообщений Krisinformation.se для этого города"
+  "No messages from Krisinformation.se for the town": "Нет сообщений Krisinformation.se для этого города",
+  "low": "низкая",
+  "possible": "возможна",
+  "good": "хорошая",
+  "high": "высокая",
+  "Northern lights: no dark sky tonight": "Северное сияние: сегодня ночью небо не темнеет",
+  "Northern lights tonight: {chance}": "Северное сияние сегодня ночью: вероятность {chance}",
+  "Kp {kp} forecast, {need} is enough here": "ожидается Kp {kp}, здесь достаточно {need}",
+  "{pct} % cloud": "облачность {pct} %",
+  "dark {from}–{to}": "темно {from}–{to}",
+  "best around {time}": "лучше всего около {time}",
+  "Show the aurora oval on the map": "Показать авроральный овал на карте"
 }

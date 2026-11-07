@@ -3493,5 +3493,16 @@
   "3D": "3D",
   "Read more": "閱讀更多",
   "All of Sweden": "瑞典全境",
-  "No messages from Krisinformation.se for the town": "沒有 Krisinformation.se 針對該城鎮的訊息"
+  "No messages from Krisinformation.se for the town": "沒有 Krisinformation.se 針對該城鎮的訊息",
+  "low": "低",
+  "possible": "可能",
+  "good": "良好",
+  "high": "高",
+  "Northern lights: no dark sky tonight": "極光：今晚天空不夠暗",
+  "Northern lights tonight: {chance}": "今晚極光：機會{chance}",
+  "Kp {kp} forecast, {need} is enough here": "預報 Kp {kp}，此處 {need} 即可",
+  "{pct} % cloud": "雲量 {pct}%",
+  "dark {from}–{to}": "天黑 {from}–{to}",
+  "best around {time}": "最佳時間約 {time}",
+  "Show the aurora oval on the map": "在地圖上顯示極光橢圓帶"
 }

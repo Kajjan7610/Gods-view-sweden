@@ -66,6 +66,17 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (norrsken i natt)
+- Dossierns NU-flik har en rad "Norrsken i natt: chansen är låg/möjlig/
+  god/hög" med prognostiserat Kp under kvällens mörka timmar mot det Kp
+  orten behöver (Kiruna 1 … Malmö 7), NOAA:s stormskala (G1…), andel
+  moln från SMHI, när det är mörkt (solen under −10°) och bästa timmen,
+  t.ex. Västerås i kväll: möjlig, Kp 4,7 väntas, här räcker 5, 13 % moln.
+- Knappen "Visa norrskensovalen på kartan" slår på originalets
+  OVATION-lager (NOAA:s norrskensoval).
+- Ny adress `/api/aurora-outlook` (ny fil `server/providers/auroraOutlook.js`;
+  originalets `aurora.js` för OVATION-lagret är orört).
+
 ### 2026-11-07 (Krisinformation och VMA)
 - Nyckelfritt från Krisinformation.se (Myndigheten för civilt försvar) via
   `/api/krisinformation` (VMA och de senaste tre dygnens nyheter, två

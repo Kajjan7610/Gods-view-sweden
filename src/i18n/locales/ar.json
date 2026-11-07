@@ -3873,5 +3873,16 @@
   "3D": "3D",
   "Read more": "اقرأ المزيد",
   "All of Sweden": "كل السويد",
-  "No messages from Krisinformation.se for the town": "لا رسائل من Krisinformation.se لهذه البلدة"
+  "No messages from Krisinformation.se for the town": "لا رسائل من Krisinformation.se لهذه البلدة",
+  "low": "منخفضة",
+  "possible": "ممكنة",
+  "good": "جيدة",
+  "high": "عالية",
+  "Northern lights: no dark sky tonight": "الشفق القطبي: لا سماء مظلمة الليلة",
+  "Northern lights tonight: {chance}": "الشفق القطبي الليلة: الفرصة {chance}",
+  "Kp {kp} forecast, {need} is enough here": "متوقع Kp {kp}، ويكفي هنا {need}",
+  "{pct} % cloud": "سحب {pct} %",
+  "dark {from}–{to}": "مظلم {from}–{to}",
+  "best around {time}": "الأفضل نحو {time}",
+  "Show the aurora oval on the map": "عرض الحلقة الشفقية على الخريطة"
 }

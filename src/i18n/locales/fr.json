@@ -3645,5 +3645,16 @@
   "3D": "3D",
   "Read more": "En savoir plus",
   "All of Sweden": "Toute la Suède",
-  "No messages from Krisinformation.se for the town": "Aucun message de Krisinformation.se pour la ville"
+  "No messages from Krisinformation.se for the town": "Aucun message de Krisinformation.se pour la ville",
+  "low": "faible",
+  "possible": "possible",
+  "good": "bonne",
+  "high": "élevée",
+  "Northern lights: no dark sky tonight": "Aurores boréales : pas de ciel noir cette nuit",
+  "Northern lights tonight: {chance}": "Aurores boréales cette nuit : chance {chance}",
+  "Kp {kp} forecast, {need} is enough here": "Kp {kp} prévu, {need} suffit ici",
+  "{pct} % cloud": "{pct} % de nuages",
+  "dark {from}–{to}": "nuit {from}–{to}",
+  "best around {time}": "idéalement vers {time}",
+  "Show the aurora oval on the map": "Afficher l’ovale auroral sur la carte"
 }

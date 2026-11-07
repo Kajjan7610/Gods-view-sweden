@@ -39,6 +39,7 @@ import { cityDossierProxy } from './cityDossier.js';
 import { cityTransitProxy } from './cityTransit.js';
 import { aviationWeatherProxy } from './aviationWeather.js';
 import { krisinformationProxy } from './krisinformation.js';
+import { auroraOutlookProxy } from './auroraOutlook.js';
 import { gammaRadiationProxy } from './gammaRadiation.js';
 import { auroraProxy } from './aurora.js';
 import { smhiWeatherProxy } from './smhiWeather.js';
@@ -109,6 +110,7 @@ function localProviderPlugins({
     cityTransitProxy(),
     aviationWeatherProxy(),
     krisinformationProxy(),
+    auroraOutlookProxy(),
     gammaRadiationProxy(),
     auroraProxy(),
     smhiWeatherProxy(),

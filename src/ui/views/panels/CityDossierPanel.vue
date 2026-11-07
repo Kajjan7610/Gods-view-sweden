@@ -76,6 +76,11 @@ const airportBoard = useAirportBoardStore();
               <li v-for="alert in d.now.alerts" :key="alert.key" :data-level="alert.level"><strong>{{ alert.title }}</strong><span>{{ alert.meta }}</span></li>
             </ul>
             <p v-else-if="d.now.alertsNote" class="city-dossier-note">{{ d.now.alertsNote }}</p>
+            <div v-if="d.now.aurora" class="city-dossier-aurora" :data-level="d.now.aurora.level">
+              <strong><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span>{{ d.now.aurora.title }}</strong>
+              <small v-if="d.now.aurora.detail">{{ d.now.aurora.detail }}</small>
+              <button v-if="!d.now.aurora.layerOn" type="button" @click="store.act('showAurora')">{{ t('Show the aurora oval on the map') }}</button>
+            </div>
             <div v-if="d.now.kris" class="city-dossier-kris">
               <a v-for="vma in d.now.kris.vmas" :key="vma.key" class="city-dossier-vma" :href="vma.url || undefined" target="_blank" rel="noopener noreferrer">
                 <strong><span class="material-symbols-outlined" aria-hidden="true">campaign</span>{{ vma.headline }}</strong>

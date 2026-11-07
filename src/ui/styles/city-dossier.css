@@ -435,6 +435,51 @@
   padding: 3px 0 3px 7px;
   border-left: 2px solid #ff5252;
 }
+/* Tonight's northern lights; the colour follows the chance. */
+.city-dossier-aurora {
+  display: grid;
+  gap: 3px;
+  padding: 7px 9px;
+  border-inline-start: 2px solid rgba(220, 238, 255, 0.35);
+  background: rgba(2, 12, 20, 0.45);
+}
+.city-dossier-aurora strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 10.5px;
+}
+.city-dossier-aurora .material-symbols-outlined {
+  font-size: 15px;
+}
+.city-dossier-aurora small {
+  color: rgba(220, 238, 255, 0.7);
+  font-size: 9.5px;
+}
+.city-dossier-aurora[data-level='possible'] {
+  border-inline-start-color: #4fc3f7;
+}
+.city-dossier-aurora[data-level='good'],
+.city-dossier-aurora[data-level='high'] {
+  border-inline-start-color: #69f0ae;
+}
+.city-dossier-aurora[data-level='good'] strong,
+.city-dossier-aurora[data-level='high'] strong {
+  color: #69f0ae;
+}
+.city-dossier-aurora button {
+  justify-self: start;
+  margin-top: 2px;
+  padding: 3px 8px;
+  border: 1px solid rgba(105, 240, 174, 0.45);
+  border-radius: 999px;
+  background: none;
+  color: #69f0ae;
+  font: 500 9px var(--font-mono);
+  text-transform: uppercase;
+  cursor: pointer;
+}
 .city-dossier-kris {
   display: grid;
   gap: 4px;

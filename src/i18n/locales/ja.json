@@ -3493,5 +3493,16 @@
   "3D": "3D",
   "Read more": "詳しく読む",
   "All of Sweden": "スウェーデン全土",
-  "No messages from Krisinformation.se for the town": "この町への Krisinformation.se のお知らせはありません"
+  "No messages from Krisinformation.se for the town": "この町への Krisinformation.se のお知らせはありません",
+  "low": "低い",
+  "possible": "あり得る",
+  "good": "良い",
+  "high": "高い",
+  "Northern lights: no dark sky tonight": "オーロラ: 今夜は空が暗くなりません",
+  "Northern lights tonight: {chance}": "今夜のオーロラ: 可能性は{chance}",
+  "Kp {kp} forecast, {need} is enough here": "Kp {kp} の予報、ここでは {need} で十分",
+  "{pct} % cloud": "雲量 {pct} %",
+  "dark {from}–{to}": "暗い時間 {from}–{to}",
+  "best around {time}": "{time} ごろが最適",
+  "Show the aurora oval on the map": "オーロラオーバルを地図に表示"
 }
