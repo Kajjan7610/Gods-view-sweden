@@ -180,10 +180,18 @@ export function aircraftIndex(contacts) {
  * data.
  */
 export function aircraftFor(flight, index) {
+  return aircraftMatch(flight, index)?.id ?? null;
+}
+
+/**
+ * As `aircraftFor`, saying how: 'callsign' is this flight in the air;
+ * 'registration' is its airframe, which may still be flying the leg before
+ * (a departure whose aircraft is on its way in).
+ */
+export function aircraftMatch(flight, index) {
   if (!index) return null;
-  return (
-    index.byCallsign.get(identity(flight.callsign)) ??
-    index.byRegistration.get(identity(flight.registration)) ??
-    null
-  );
+  const bySign = index.byCallsign.get(identity(flight.callsign));
+  if (bySign) return { id: bySign, by: 'callsign' };
+  const byTail = index.byRegistration.get(identity(flight.registration));
+  return byTail ? { id: byTail, by: 'registration' } : null;
 }

@@ -3531,5 +3531,15 @@
   "Turn on": "Einschalten",
   "Text size: {size}": "Textgröße: {size}",
   "Larger": "Größer",
-  "Largest": "Am größten"
+  "Largest": "Am größten",
+  "Took off {time}": "Gestartet {time}",
+  "Landed {time}": "Gelandet {time}",
+  "Expected {time}": "Erwartet {time}",
+  "Scheduled {time}": "Planmäßig {time}",
+  "in {minutes} min": "in {minutes} Min.",
+  "Departure · {airport}": "Abflug · {airport}",
+  "Arrival · {airport}": "Ankunft · {airport}",
+  "also {flights}": "auch {flights}",
+  "Swedavia flight information": "Fluginformationen von Swedavia",
+  "Follow the aircraft, still on its way in": "Flugzeug folgen, noch im Anflug"
 }

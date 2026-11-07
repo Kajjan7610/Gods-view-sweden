@@ -1,0 +1,113 @@
+/* ── The cockpit's Swedavia card (Swedish fork) ─────────────────────────
+   Under the flight plan in the briefing window, in the cockpit's own card
+   style; on phones (where that window is hidden) a strip under VIEW/RADIO. */
+.cockpit-flight-leg {
+  display: grid;
+  gap: 6px;
+  padding: 8px 9px 9px;
+  border: 1px solid
+    color-mix(in srgb, var(--cockpit-accent, #00dcff) 30%, transparent);
+  border-radius: 8px;
+  background: rgba(0, 7, 12, 0.42);
+  font-family: var(--font-mono);
+}
+.cockpit-flight-leg-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+.cockpit-flight-leg-kicker {
+  color: #ffc94d;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+.cockpit-flight-leg-heading small {
+  overflow: hidden;
+  color: rgba(244, 251, 255, 0.8);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cockpit-flight-leg-row {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding-inline-start: 8px;
+  border-inline-start: 2px solid #69f0ae;
+}
+.cockpit-flight-leg-row[data-tone='neutral'] {
+  border-inline-start-color: color-mix(
+    in srgb,
+    var(--cockpit-accent, #00dcff) 70%,
+    transparent
+  );
+}
+.cockpit-flight-leg-row[data-tone='negative'] {
+  border-inline-start-color: #ffab40;
+}
+.cockpit-flight-leg-label {
+  color: color-mix(in srgb, var(--cockpit-accent, #00dcff) 85%, white);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.cockpit-flight-leg-row strong {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.cockpit-flight-leg-row strong em {
+  margin-inline-start: 6px;
+  color: #ffab40;
+  font-style: normal;
+}
+.cockpit-flight-leg-row small {
+  overflow: hidden;
+  color: rgba(244, 251, 255, 0.8);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cockpit-flight-leg-row[data-tone='positive'] small {
+  color: #69f0ae;
+}
+
+/* The phone strip shows only in the phone cockpit. */
+.cockpit-flight-leg-strip {
+  display: none;
+}
+@media (max-width: 760px) {
+  body.cockpit-mode .cockpit-flight-leg-strip {
+    position: fixed;
+    z-index: 147;
+    top: calc(env(safe-area-inset-top, 0px) + 204px);
+    right: 12px;
+    left: 12px;
+    display: grid;
+    gap: 3px;
+    padding: 7px 10px;
+    border: 1px solid rgba(255, 201, 77, 0.4);
+    border-radius: 10px;
+    background: rgba(4, 10, 18, 0.82);
+    color: #fff;
+    font: 500 11px/1.35 var(--font-mono);
+    pointer-events: none;
+  }
+  .cockpit-flight-leg-strip span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cockpit-flight-leg-strip b {
+    color: #ffc94d;
+    font-weight: 600;
+  }
+  .cockpit-flight-leg-strip em {
+    color: #ffab40;
+    font-style: normal;
+  }
+}

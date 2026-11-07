@@ -96,7 +96,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
               <span class="ab-flight">{{ row.flight }}<small>{{ [row.codeshares, row.airline].filter(Boolean).join(' · ') }}</small></span>
               <span class="ab-where">{{ row.where }}</span>
               <span class="ab-status">
-                <button v-if="row.live" type="button" class="ab-follow" :aria-label="t('Follow the aircraft')" :title="t('Follow the aircraft')" @click.stop="store.act('follow', row.key)">
+                <button v-if="row.live" type="button" class="ab-follow" :class="{ inbound: row.inbound }" :aria-label="row.inbound ? t('Follow the aircraft, still on its way in') : t('Follow the aircraft')" :title="row.inbound ? t('Follow the aircraft, still on its way in') : t('Follow the aircraft')" @click.stop="store.act('follow', row.key)">
                   <span class="material-symbols-outlined" aria-hidden="true">flight</span>
                 </button>
                 <SplitFlapText :text="row.status" />
@@ -105,7 +105,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
             <dl v-if="row.details" class="airport-board-details">
               <div v-for="item in row.details" :key="item.label"><dt>{{ item.label }}</dt><dd>{{ item.value }}</dd></div>
               <button v-if="row.live" type="button" class="airport-board-follow" @click="store.act('follow', row.key)">
-                <span class="material-symbols-outlined" aria-hidden="true">flight</span>{{ t('Follow the aircraft') }}
+                <span class="material-symbols-outlined" aria-hidden="true">flight</span>{{ row.inbound ? t('Follow the aircraft, still on its way in') : t('Follow the aircraft') }}
               </button>
             </dl>
           </template>

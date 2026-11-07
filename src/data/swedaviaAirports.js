@@ -9,6 +9,7 @@ export const SWEDAVIA_AIRPORTS = Object.freeze(
   [
     {
       iata: 'ARN',
+      icao: 'ESSA',
       name: 'Stockholm Arlanda',
       lat: 59.6519,
       lon: 17.9186,
@@ -17,6 +18,7 @@ export const SWEDAVIA_AIRPORTS = Object.freeze(
     },
     {
       iata: 'GOT',
+      icao: 'ESGG',
       name: 'Göteborg Landvetter',
       lat: 57.6628,
       lon: 12.2798,
@@ -25,6 +27,7 @@ export const SWEDAVIA_AIRPORTS = Object.freeze(
     },
     {
       iata: 'BMA',
+      icao: 'ESSB',
       name: 'Stockholm Bromma',
       lat: 59.3544,
       lon: 17.9417,
@@ -33,6 +36,7 @@ export const SWEDAVIA_AIRPORTS = Object.freeze(
     },
     {
       iata: 'MMX',
+      icao: 'ESMS',
       name: 'Malmö Airport',
       lat: 55.5363,
       lon: 13.3762,
@@ -40,6 +44,7 @@ export const SWEDAVIA_AIRPORTS = Object.freeze(
     },
     {
       iata: 'LLA',
+      icao: 'ESPA',
       name: 'Luleå Airport',
       lat: 65.5438,
       lon: 22.122,
@@ -47,6 +52,7 @@ export const SWEDAVIA_AIRPORTS = Object.freeze(
     },
     {
       iata: 'UME',
+      icao: 'ESNU',
       name: 'Umeå Airport',
       lat: 63.7918,
       lon: 20.2828,
@@ -54,6 +60,7 @@ export const SWEDAVIA_AIRPORTS = Object.freeze(
     },
     {
       iata: 'OSD',
+      icao: 'ESNZ',
       name: 'Åre Östersund Airport',
       lat: 63.1944,
       lon: 14.5003,
@@ -61,6 +68,7 @@ export const SWEDAVIA_AIRPORTS = Object.freeze(
     },
     {
       iata: 'VBY',
+      icao: 'ESSV',
       name: 'Visby Airport',
       lat: 57.6628,
       lon: 18.3462,
@@ -68,6 +76,7 @@ export const SWEDAVIA_AIRPORTS = Object.freeze(
     },
     {
       iata: 'KRN',
+      icao: 'ESNQ',
       name: 'Kiruna Airport',
       lat: 67.822,
       lon: 20.3368,
@@ -75,6 +84,7 @@ export const SWEDAVIA_AIRPORTS = Object.freeze(
     },
     {
       iata: 'RNB',
+      icao: 'ESDF',
       name: 'Ronneby Airport',
       lat: 56.2667,
       lon: 15.265,
@@ -88,3 +98,15 @@ export const swedaviaAirport = (iata) =>
   SWEDAVIA_AIRPORTS.find(
     (airport) => airport.iata === String(iata ?? '').toUpperCase(),
   ) ?? null;
+
+/** One of Swedavia's airports by IATA or ICAO code ("ARN", "ESSA"), or null. */
+export const swedaviaAirportByCode = (code) => {
+  const value = String(code ?? '')
+    .trim()
+    .toUpperCase();
+  return (
+    SWEDAVIA_AIRPORTS.find(
+      (airport) => airport.iata === value || airport.icao === value,
+    ) ?? null
+  );
+};

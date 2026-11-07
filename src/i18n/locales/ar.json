@@ -3835,5 +3835,15 @@
   "Turn on": "تشغيل",
   "Text size: {size}": "حجم النص: {size}",
   "Larger": "أكبر",
-  "Largest": "الأكبر"
+  "Largest": "الأكبر",
+  "Took off {time}": "أقلعت {time}",
+  "Landed {time}": "هبطت {time}",
+  "Expected {time}": "متوقعة {time}",
+  "Scheduled {time}": "مجدولة {time}",
+  "in {minutes} min": "بعد {minutes} دقيقة",
+  "Departure · {airport}": "المغادرة · {airport}",
+  "Arrival · {airport}": "الوصول · {airport}",
+  "also {flights}": "أيضًا {flights}",
+  "Swedavia flight information": "معلومات الرحلة من Swedavia",
+  "Follow the aircraft, still on its way in": "تتبّع الطائرة، ما زالت في طريقها"
 }

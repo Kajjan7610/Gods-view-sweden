@@ -398,6 +398,11 @@
   cursor: pointer;
   align-self: center;
 }
+/* The aircraft is still flying the leg before: a hollow, dashed mark. */
+.ab-follow.inbound {
+  border-style: dashed;
+  background: none;
+}
 .ab-follow .material-symbols-outlined {
   font-size: 13px;
 }

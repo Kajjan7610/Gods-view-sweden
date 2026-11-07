@@ -12,6 +12,7 @@ import { greatCircleKm } from '../../src/geoDistance.js';
 import {
   SWEDAVIA_AIRPORTS,
   swedaviaAirport,
+  swedaviaAirportByCode,
 } from '../../src/data/swedaviaAirports.js';
 
 export { SWEDAVIA_AIRPORTS, swedaviaAirport };
@@ -183,6 +184,12 @@ export function normalizeDay(payload, kind) {
   }
   return out.sort((a, b) => a.planned - b.planned || a.expected - b.expected);
 }
+
+/** A callsign or registration as Swedavia and the transponder agree on it. */
+export const flightIdentity = (value) =>
+  String(value ?? '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
 
 /** Whether a flight has left (or landed) by `nowMs`. */
 export function isGone(flight, kind, nowMs) {
@@ -415,5 +422,68 @@ export function createSwedaviaFlights({
     };
   }
 
-  return { nearby, board };
+  /**
+   * The followed aircraft's own rows: its departure and/or arrival at
+   * Swedavia airports today, found by callsign (what the transponder sends)
+   * or registration. `airports` are the codes worth reading (the route's
+   * ends, the board it was followed from; Swedavia's only, at most three);
+   * every day list already kept is searched as well, at no cost.
+   */
+  async function findFlight({ callsign, registration, airports = [] }) {
+    const key = flightKey();
+    const wanted = new Set([
+      flightIdentity(callsign),
+      flightIdentity(registration),
+    ]);
+    wanted.delete('');
+    if (!key || !wanted.size) return null;
+    const today = stockholmDate(now());
+    const codes = [
+      ...new Set(
+        airports
+          .map((code) => swedaviaAirportByCode(code)?.iata)
+          .filter(Boolean),
+      ),
+    ].slice(0, 3);
+    await Promise.allSettled(
+      codes.flatMap((iata) =>
+        ['departures', 'arrivals'].map((kind) => day(key, iata, kind, today)),
+      ),
+    );
+    const sign = flightIdentity(callsign);
+    const tail = flightIdentity(registration);
+    const byCallsign = [];
+    const byTail = [];
+    for (const [id, entry] of answers) {
+      const [iata, kind, date] = id.split(':');
+      if (date !== today || !Array.isArray(entry.value)) continue;
+      const airport = { iata, name: swedaviaAirport(iata).name };
+      for (const flight of entry.value) {
+        if (sign && flightIdentity(flight.callsign) === sign)
+          byCallsign.push({ airport, kind, flight });
+        else if (tail && flightIdentity(flight.registration) === tail)
+          byTail.push({ airport, kind, flight });
+      }
+    }
+    const order = (a, b) => a.flight.planned - b.flight.planned;
+    // The callsign names this flight; the registration names the airframe,
+    // which flies several legs a day: then only the leg under way counts,
+    // its latest departure so far and the first arrival still to come.
+    if (byCallsign.length) return byCallsign.sort(order).slice(0, 2);
+    const at = now();
+    const departed = byTail
+      .filter((leg) => leg.kind === 'departures' && leg.flight.expected <= at)
+      .sort(order)
+      .at(-1);
+    const arriving = byTail
+      .filter((leg) => leg.kind === 'arrivals' && leg.flight.expected >= at)
+      .sort(order)[0];
+    // Not yet off and nothing inbound: it waits at the gate for its next.
+    const waiting = byTail
+      .filter((leg) => leg.kind === 'departures' && leg.flight.expected > at)
+      .sort(order)[0];
+    return [departed ?? (arriving ? null : waiting), arriving].filter(Boolean);
+  }
+
+  return { nearby, board, findFlight };
 }

@@ -5,6 +5,8 @@ import { t } from '../../../i18n/index.js';
 import { createBriefState } from '../../cockpitBriefPages.js';
 import { useCockpitStore } from '../../stores/cockpit.js';
 import CockpitRoute from './CockpitRoute.vue';
+// Swedish fork: the flown aircraft's Swedavia rows, under the flight plan.
+import CockpitFlightLeg from './CockpitFlightLeg.vue';
 import CockpitSignalList from './CockpitSignalList.vue';
 import UiButton from '../../kit/UiButton.vue';
 
@@ -39,6 +41,7 @@ function leaveSignals() {
 <template>
   <aside id="cockpit-signal-stream" class="cockpit-signal-window" :aria-label="t('Cockpit briefing carousel')" :hidden="!presence?.active" v-bind="streamState" ref="stream">
     <CockpitRoute />
+    <CockpitFlightLeg />
     <header class="cockpit-card-header cockpit-signal-header">
       <div class="cockpit-brief-heading">
         <span id="cockpit-brief-kicker" class="cockpit-card-kicker cockpit-signal-kicker"><i aria-hidden="true"></i> {{ b.kicker }}</span>

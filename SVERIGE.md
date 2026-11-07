@@ -66,6 +66,23 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (Swedavia i cockpit)
+- Cockpit visar ett SWEDAVIA-kort under färdplanen när planet avgår från
+  eller ankommer till en Swedavia-flygplats i dag: avgång och/eller
+  ankomst med tid ("Startade 11:29", "Beräknad 12:50 · om 2 min"),
+  försening, terminal, gate, bagageband och flygplatsens egen rad. På
+  telefon (där briefingfönstret är dolt) en remsa under VISNING/RADIO.
+  Läses om varannan minut medan cockpit flyger planet.
+- Ny adress `/api/airport-flight?callsign=&registration=&airports=`: söker
+  planets rader på rutans ändar (IATA eller ICAO), på flygplatsen det
+  följdes från på tavlan och i alla dagslistor som redan finns, utan
+  extra anrop för dem. Anropssignalen går före; registreringen ensam
+  (flygplanet flyger flera sträckor om dagen) ger bara sträckan som pågår.
+- Tavlan skiljer på planet i luften (fylld knapp) och flygplanet som ännu
+  flyger sträckan innan, t.ex. SK020:s plan på väg in som SK1420
+  (streckad knapp, "Följ planet, som är på väg in").
+- Flygplatslistan har nu även ICAO-koder.
+
 ### 2026-11-07 (läsbarhet och textstorlek)
 - Mätning av all synlig text i cockpit (1600×900): 104 av 145 texter var
   under 10 px (35 under 8 px, minst 5–6 px) och 62 var svagare än 60 %.

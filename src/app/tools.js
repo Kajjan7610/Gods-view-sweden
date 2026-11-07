@@ -9,6 +9,8 @@ import { createRecentImageryPanel } from '../ui/recentImagery.js';
 import { createCityDossier } from '../ui/cityDossier.js';
 import { createAirportBoard } from '../ui/airportBoard.js';
 import { createAirportQueues } from '../ui/airportQueues.js';
+import { createCockpitFlightLeg } from '../ui/cockpitFlightLeg.js';
+import { useCockpitFlightLegStore } from '../ui/stores/cockpitFlightLeg.js';
 import * as worldOverlays from '../overlays/worldOverlay.js';
 import { useCityDossierStore } from '../ui/stores/cityDossier.js';
 import { useAirportBoardStore } from '../ui/stores/airportBoard.js';
@@ -140,11 +142,19 @@ export function createApplicationTools({
     isCameraBusy: () => sceneDirector.getPlaybackStatus?.()?.running === true,
   });
   defer(() => cityDossier.destroy());
+  // The cockpit's Swedavia card: the flown aircraft's own board rows.
+  const cockpitFlightLegStore = useCockpitFlightLegStore(applicationPinia());
+  const cockpitFlightLeg = createCockpitFlightLeg({
+    dataManager,
+    publish: (view) => cockpitFlightLegStore.publish(view),
+  });
+  defer(() => cockpitFlightLeg.destroy());
   // A Swedavia airport's whole day, from the dossier or over the airport.
   const airportBoardStore = useAirportBoardStore(applicationPinia());
   const airportBoard = createAirportBoard({
     viewer,
     dataManager,
+    onFollow: (icao24, iata) => cockpitFlightLeg.hint(icao24, iata),
     publish: (view) => airportBoardStore.publish(view),
     connect: (actions) => airportBoardStore.connect(actions),
   });

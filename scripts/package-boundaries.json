@@ -18,6 +18,8 @@
   "application": {
     "exports": ["./application"],
     "modules": [
+      "src/ui/views/panels/CockpitFlightLeg.vue",
+      "src/ui/stores/cockpitFlightLeg.js",
       "src/ui/views/panels/TextSizeButton.vue",
       "src/ui/textSize.js",
       "src/ui/stores/airportBoard.js",
@@ -2308,6 +2310,8 @@
       "./standalone/catalog"
     ],
     "modules": [
+      "src/ui/cockpitFlightLeg.js",
+      "src/ui/stores/cockpitFlightLeg.js",
       "src/ui/airportQueues.js",
       "src/ui/airportBoard.js",
       "src/ui/airportBoardModel.js",

@@ -3455,5 +3455,15 @@
   "Turn on": "開啟",
   "Text size: {size}": "文字大小：{size}",
   "Larger": "較大",
-  "Largest": "最大"
+  "Largest": "最大",
+  "Took off {time}": "{time} 起飛",
+  "Landed {time}": "{time} 降落",
+  "Expected {time}": "預計 {time}",
+  "Scheduled {time}": "計劃 {time}",
+  "in {minutes} min": "{minutes} 分鐘後",
+  "Departure · {airport}": "出發 · {airport}",
+  "Arrival · {airport}": "抵達 · {airport}",
+  "also {flights}": "另有 {flights}",
+  "Swedavia flight information": "Swedavia 航班資訊",
+  "Follow the aircraft, still on its way in": "追蹤飛機（仍在飛來途中）"
 }

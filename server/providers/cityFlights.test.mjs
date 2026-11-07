@@ -386,3 +386,110 @@ test('a board read out of allowance is the last one, marked stale', async () => 
   assert.equal(empty.departures, null);
   assert.equal(keyless.calls.length, 0);
 });
+
+test("the followed aircraft's own rows: by callsign or registration, departure then arrival", async () => {
+  const calls = [];
+  const leg = (id, callsign, registration, extra) => ({
+    ...departure(id, '15:30'),
+    flightLegIdentifier: { callsign, aircraftRegistration: registration },
+    ...extra,
+  });
+  const fetchJson = async (url) => {
+    calls.push(url);
+    if (url.includes('/ARN/departures/'))
+      return {
+        flights: [
+          leg('SK1427', 'SAS1427', 'SEROH'),
+          leg('DY1', 'NSZ1', 'LNABC'),
+        ],
+      };
+    if (url.includes('/GOT/arrivals/'))
+      return {
+        flights: [
+          {
+            flightId: 'SK1427',
+            departureAirportSwedish: 'Stockholm',
+            arrivalTime: { scheduledUtc: at('16:30') },
+            locationAndStatus: { flightLegStatus: 'SCH' },
+            flightLegIdentifier: { callsign: 'SAS1427' },
+          },
+        ],
+      };
+    return { flights: [] };
+  };
+  const service = createSwedaviaFlights({
+    fetchJson,
+    now: () => NOW,
+    env: { SWEDAVIA_FLIGHTINFO_KEY: 'k' },
+  });
+  const legs = await service.findFlight({
+    callsign: 'sas 1427',
+    airports: ['ESSA', 'got', 'CPH', 'nope'],
+  });
+  assert.deepEqual(
+    legs.map((row) => [row.airport.iata, row.kind, row.flight.flight]),
+    [
+      ['ARN', 'departures', 'SK1427'],
+      ['GOT', 'arrivals', 'SK1427'],
+    ],
+  );
+  assert.equal(
+    calls.length,
+    4,
+    'two airports, two directions; CPH is not Swedavia',
+  );
+  const byTail = await service.findFlight({ registration: 'LN-ABC' });
+  assert.deepEqual(
+    byTail.map((row) => row.flight.flight),
+    ['DY1'],
+    'the kept lists are searched without new calls',
+  );
+  assert.equal(calls.length, 4);
+  assert.deepEqual(await service.findFlight({ callsign: 'NOPE1' }), []);
+  // The callsign wins over the airframe's other legs of the day.
+  const both = await service.findFlight({
+    callsign: 'SAS1427',
+    registration: 'LN-ABC',
+  });
+  assert.deepEqual(
+    both.map((row) => row.flight.flight),
+    ['SK1427', 'SK1427'],
+  );
+  assert.equal(await service.findFlight({}), null);
+});
+
+test('by registration alone, only the leg under way', async () => {
+  const row = (id, hhmm, kind) => ({
+    flightId: id,
+    [kind === 'departures' ? 'departureTime' : 'arrivalTime']: {
+      scheduledUtc: at(hhmm),
+    },
+    locationAndStatus: { flightLegStatus: 'SCH' },
+    flightLegIdentifier: { aircraftRegistration: 'SEROH' },
+  });
+  const fetchJson = async (url) => ({
+    flights: url.includes('/departures/')
+      ? [
+          row('SK1', '06:00', 'departures'),
+          row('SK3', '14:30', 'departures'),
+          row('SK5', '18:00', 'departures'),
+        ]
+      : [row('SK2', '09:00', 'arrivals'), row('SK4', '16:10', 'arrivals')],
+  });
+  const service = createSwedaviaFlights({
+    fetchJson,
+    now: () => Date.parse(at('15:00')),
+    env: { SWEDAVIA_FLIGHTINFO_KEY: 'k' },
+  });
+  const legs = await service.findFlight({
+    registration: 'SE-ROH',
+    airports: ['ARN'],
+  });
+  assert.deepEqual(
+    legs.map((leg) => [leg.kind, leg.flight.flight]),
+    [
+      ['departures', 'SK3'],
+      ['arrivals', 'SK4'],
+    ],
+  );
+});

@@ -8,6 +8,7 @@ import { createAirportBoard } from './airportBoard.js';
 import {
   aircraftFor,
   aircraftIndex,
+  aircraftMatch,
   airportUnder,
   flightTone,
   matchesQuery,
@@ -429,6 +430,14 @@ test("a row's aircraft: by callsign, else by registration", () => {
     null,
   );
   assert.equal(aircraftFor({ callsign: 'SAS1427' }, null), null);
+  assert.deepEqual(aircraftMatch({ callsign: 'SAS1427' }, index), {
+    id: '4ac9e1',
+    by: 'callsign',
+  });
+  assert.deepEqual(aircraftMatch({ registration: 'SE-DOX' }, index), {
+    id: '4ac9e2',
+    by: 'registration',
+  });
 });
 
 test('a row whose aircraft is in the air follows it; the board offers the layer when it is off', async () => {

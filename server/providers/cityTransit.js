@@ -405,15 +405,54 @@ export function cityTransitProxy({
     }
   }
 
+  /**
+   * The followed aircraft's Swedavia rows:
+   * ?callsign=SAS1427[&registration=SE-ROH][&airports=ARN,CPH].
+   */
+  async function flightHandler(req, res) {
+    const json = respond(res);
+    if (req.method !== 'GET') return json(405, { error: 'method_not_allowed' });
+    const url = new URL(req.url || '/', 'http://local');
+    if (url.pathname !== '/' && url.pathname !== '')
+      return json(404, { error: 'unknown_route' });
+    const field = (name) =>
+      String(url.searchParams.get(name) ?? '')
+        .replace(/[^A-Za-z0-9-]/g, '')
+        .slice(0, 12);
+    const callsign = field('callsign');
+    const registration = field('registration');
+    if (!callsign && !registration)
+      return json(400, { error: 'callsign_or_registration_required' });
+    const airports = String(url.searchParams.get('airports') ?? '')
+      .split(',')
+      .map((code) => code.replace(/[^A-Za-z]/g, '').slice(0, 4))
+      .filter(Boolean)
+      .slice(0, 4);
+    if (!allow(clientKey(req))) return json(429, { error: 'rate_limited' });
+    try {
+      const legs = await swedavia.findFlight({
+        callsign,
+        registration,
+        airports,
+      });
+      return json(200, { legs, fetchedAt: now() });
+    } catch (error) {
+      console.warn(`[airport-flight] ${error?.message}`);
+      return json(502, { error: 'upstream_failed' });
+    }
+  }
+
   return {
     name: 'city-transit',
     configureServer({ middlewares }) {
       middlewares.use('/api/city-transit', handler);
       middlewares.use('/api/airport-board', boardHandler);
+      middlewares.use('/api/airport-flight', flightHandler);
     },
     configurePreviewServer({ middlewares }) {
       middlewares.use('/api/city-transit', handler);
       middlewares.use('/api/airport-board', boardHandler);
+      middlewares.use('/api/airport-flight', flightHandler);
     },
   };
 }

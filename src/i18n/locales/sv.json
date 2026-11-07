@@ -3531,5 +3531,15 @@
   "Turn on": "Slå på",
   "Text size: {size}": "Textstorlek: {size}",
   "Larger": "Större",
-  "Largest": "Störst"
+  "Largest": "Störst",
+  "Took off {time}": "Startade {time}",
+  "Landed {time}": "Landade {time}",
+  "Expected {time}": "Beräknad {time}",
+  "Scheduled {time}": "Planerad {time}",
+  "in {minutes} min": "om {minutes} min",
+  "Departure · {airport}": "Avgång · {airport}",
+  "Arrival · {airport}": "Ankomst · {airport}",
+  "also {flights}": "även {flights}",
+  "Swedavia flight information": "Flyginformation från Swedavia",
+  "Follow the aircraft, still on its way in": "Följ planet, som är på väg in"
 }

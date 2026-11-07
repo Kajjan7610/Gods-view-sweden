@@ -11,6 +11,7 @@ import { swedaviaAirport } from '../data/swedaviaAirports.js';
 import {
   aircraftFor,
   aircraftIndex,
+  aircraftMatch,
   airportUnder,
   flightTone,
   matchesQuery,
@@ -68,6 +69,8 @@ export function createAirportBoard({
   viewer,
   // The flights layer, for following a board row's aircraft (optional).
   dataManager = null,
+  // Told which airport a followed aircraft's row came from (optional).
+  onFollow = null,
   publish,
   connect,
   fetchImpl = (...args) => globalThis.fetch(...args),
@@ -206,6 +209,7 @@ export function createAirportBoard({
   // ---- the view ----------------------------------------------------------------
   function flightRow(flight, kind, nowMs, before, index) {
     const tone = flightTone(flight, kind, nowMs);
+    const match = aircraftMatch(flight, index);
     const late =
       flight.delayMinutes > 0 && tone !== 'gone' && tone !== 'canceled';
     const departing = kind === 'departures';
@@ -236,7 +240,9 @@ export function createAirportBoard({
         : bilingual(flight.remark) || bilingual(flight.status),
       tone,
       // In the flights layer's air data: the row can follow its aircraft.
-      live: Boolean(aircraftFor(flight, index)),
+      live: Boolean(match),
+      // Matched by its airframe only: the aircraft may still fly the leg before.
+      inbound: match?.by === 'registration',
       nowBefore: before,
       open,
       details: open ? details(flight, kind) : null,
@@ -494,6 +500,7 @@ export function createAirportBoard({
       // A followed aircraft keeps the camera moving, so no settle would take
       // the airport's card away: it goes with the board.
       near = null;
+      onFollow?.(icao24, airport?.iata);
       close();
       layer.trackById(icao24, { origin: 'user' });
     },

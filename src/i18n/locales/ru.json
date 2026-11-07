@@ -3683,5 +3683,15 @@
   "Turn on": "Включить",
   "Text size: {size}": "Размер текста: {size}",
   "Larger": "Крупнее",
-  "Largest": "Самый крупный"
+  "Largest": "Самый крупный",
+  "Took off {time}": "Взлетел в {time}",
+  "Landed {time}": "Приземлился в {time}",
+  "Expected {time}": "Ожидается в {time}",
+  "Scheduled {time}": "По расписанию {time}",
+  "in {minutes} min": "через {minutes} мин",
+  "Departure · {airport}": "Вылет · {airport}",
+  "Arrival · {airport}": "Прилёт · {airport}",
+  "also {flights}": "также {flights}",
+  "Swedavia flight information": "Информация о рейсе от Swedavia",
+  "Follow the aircraft, still on its way in": "Следить за самолётом, он ещё на подлёте"
 }

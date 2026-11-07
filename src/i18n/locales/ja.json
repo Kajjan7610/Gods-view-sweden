@@ -3455,5 +3455,15 @@
   "Turn on": "オンにする",
   "Text size: {size}": "文字サイズ: {size}",
   "Larger": "大きく",
-  "Largest": "最大"
+  "Largest": "最大",
+  "Took off {time}": "{time} 離陸",
+  "Landed {time}": "{time} 着陸",
+  "Expected {time}": "{time} 予定",
+  "Scheduled {time}": "定刻 {time}",
+  "in {minutes} min": "あと{minutes}分",
+  "Departure · {airport}": "出発 · {airport}",
+  "Arrival · {airport}": "到着 · {airport}",
+  "also {flights}": "共同運航 {flights}",
+  "Swedavia flight information": "Swedavia のフライト情報",
+  "Follow the aircraft, still on its way in": "機体を追跡（まだ到着前）"
 }
