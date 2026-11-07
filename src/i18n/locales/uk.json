@@ -3677,5 +3677,8 @@
   "The wait projected for someone joining the queue now.": "Очікуваний час для тих, хто стає в чергу зараз.",
   "Source: Swedavia": "Джерело: Swedavia",
   "Full board": "Усе табло",
-  "Show on the map": "Показати на мапі"
+  "Show on the map": "Показати на мапі",
+  "Follow the aircraft": "Стежити за літаком",
+  "Turn on the flights layer to follow aircraft from the board": "Увімкніть шар рейсів, щоб стежити за літаками з табло",
+  "Turn on": "Увімкнути"
 }

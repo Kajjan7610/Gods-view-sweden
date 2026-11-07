@@ -329,9 +329,81 @@
   font-size: 9px;
 }
 .airport-board-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
   padding: 6px 14px 10px;
   color: rgba(220, 238, 255, 0.4);
   font-size: 8px;
+}
+.airport-board-flights-off {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(220, 238, 255, 0.65);
+}
+.airport-board-flights-off button,
+.airport-board-follow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border: 1px solid rgba(255, 201, 77, 0.5);
+  border-radius: 999px;
+  background: none;
+  color: #ffc94d;
+  font: 500 9px var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.airport-board-follow {
+  grid-column: 1 / -1;
+  justify-self: start;
+  padding: 5px 12px;
+  font-size: 10px;
+}
+.airport-board-follow .material-symbols-outlined {
+  font-size: 15px;
+}
+.airport-board-flights-off button:hover,
+.airport-board-follow:hover,
+.airport-board-follow:focus-visible {
+  background: rgba(255, 201, 77, 0.16);
+}
+/* A row whose aircraft is in the air data: a plane to follow. */
+.ab-status {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+.ab-status > .gev-flap-host {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ab-follow {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid rgba(255, 201, 77, 0.5);
+  border-radius: 50%;
+  background: rgba(255, 201, 77, 0.1);
+  color: #ffc94d;
+  cursor: pointer;
+  align-self: center;
+}
+.ab-follow .material-symbols-outlined {
+  font-size: 13px;
+}
+.ab-follow:hover,
+.ab-follow:focus-visible {
+  background: rgba(255, 201, 77, 0.28);
 }
 
 /* The card offered while the view is over an airport. */

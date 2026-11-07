@@ -95,10 +95,18 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
               <span class="ab-place">{{ row.place }}<small v-if="row.via">{{ row.via }}</small></span>
               <span class="ab-flight">{{ row.flight }}<small>{{ [row.codeshares, row.airline].filter(Boolean).join(' · ') }}</small></span>
               <span class="ab-where">{{ row.where }}</span>
-              <span class="ab-status"><SplitFlapText :text="row.status" /></span>
+              <span class="ab-status">
+                <button v-if="row.live" type="button" class="ab-follow" :aria-label="t('Follow the aircraft')" :title="t('Follow the aircraft')" @click.stop="store.act('follow', row.key)">
+                  <span class="material-symbols-outlined" aria-hidden="true">flight</span>
+                </button>
+                <SplitFlapText :text="row.status" />
+              </span>
             </div>
             <dl v-if="row.details" class="airport-board-details">
               <div v-for="item in row.details" :key="item.label"><dt>{{ item.label }}</dt><dd>{{ item.value }}</dd></div>
+              <button v-if="row.live" type="button" class="airport-board-follow" @click="store.act('follow', row.key)">
+                <span class="material-symbols-outlined" aria-hidden="true">flight</span>{{ t('Follow the aircraft') }}
+              </button>
             </dl>
           </template>
         </template>
@@ -115,7 +123,13 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
         </template>
         <p v-if="view.board.empty" class="airport-board-empty">{{ view.board.empty }}</p>
       </div>
-      <footer class="airport-board-foot">{{ t('Source: Swedavia') }}</footer>
+      <footer class="airport-board-foot">
+        <span>{{ t('Source: Swedavia') }}</span>
+        <span v-if="view.board.flightsOff && view.board.kind !== 'security'" class="airport-board-flights-off">
+          {{ t('Turn on the flights layer to follow aircraft from the board') }}
+          <button type="button" @click="store.act('enableFlights')">{{ t('Turn on') }}</button>
+        </span>
+      </footer>
     </section>
   </Teleport>
 </template>

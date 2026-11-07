@@ -66,6 +66,18 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (flygplatstavla, steg 3: från tavla till plan i luften)
+- Rader vars plan finns i flyglagrets data får en gul flygplansknapp, och
+  utfällda detaljer får "Följ planet". Ett klick stänger tavlan och låser
+  kameran på planet (därifrån finns Cockpit som vanligt), t.ex. BA785 som
+  startade 10:29 och följdes över Nederländerna på FL388.
+- Matchningen sker på Swedavias anropssignal (det transpondern sänder,
+  "BAW785"), annars på registreringen med eller utan bindestreck
+  ("SEROH" mot "SE-ROH"). Flyglagrets kontakter läses högst var 20:e
+  sekund medan tavlan visas.
+- Är flyglagret avstängt erbjuder tavlans fot "Slå på", och raderna får
+  sina knappar när de första positionerna kommit in.
+
 ### 2026-11-07 (flygplatstavla, steg 4: köer över terminalerna)
 - När vyn stannar inom 20 km från Arlanda, Landvetter eller Bromma (under
   40 km höjd) får varje säkerhetskontroll en punkt och en etikett på sin

@@ -3829,5 +3829,8 @@
   "The wait projected for someone joining the queue now.": "الانتظار المتوقع لمن ينضم إلى الطابور الآن.",
   "Source: Swedavia": "المصدر: Swedavia",
   "Full board": "اللوحة كاملة",
-  "Show on the map": "عرض على الخريطة"
+  "Show on the map": "عرض على الخريطة",
+  "Follow the aircraft": "تتبّع الطائرة",
+  "Turn on the flights layer to follow aircraft from the board": "شغّل طبقة الرحلات لتتبّع الطائرات من اللوحة",
+  "Turn on": "تشغيل"
 }

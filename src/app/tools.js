@@ -144,6 +144,7 @@ export function createApplicationTools({
   const airportBoardStore = useAirportBoardStore(applicationPinia());
   const airportBoard = createAirportBoard({
     viewer,
+    dataManager,
     publish: (view) => airportBoardStore.publish(view),
     connect: (actions) => airportBoardStore.connect(actions),
   });

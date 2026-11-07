@@ -3601,5 +3601,8 @@
   "The wait projected for someone joining the queue now.": "Espera prevista para quien se una a la cola ahora.",
   "Source: Swedavia": "Fuente: Swedavia",
   "Full board": "Panel completo",
-  "Show on the map": "Mostrar en el mapa"
+  "Show on the map": "Mostrar en el mapa",
+  "Follow the aircraft": "Seguir el avión",
+  "Turn on the flights layer to follow aircraft from the board": "Activa la capa de vuelos para seguir aviones desde el panel",
+  "Turn on": "Activar"
 }

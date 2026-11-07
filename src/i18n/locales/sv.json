@@ -3525,5 +3525,8 @@
   "The wait projected for someone joining the queue now.": "Beräknad väntetid för den som ställer sig i kön nu.",
   "Source: Swedavia": "Källa: Swedavia",
   "Full board": "Hela tavlan",
-  "Show on the map": "Visa på kartan"
+  "Show on the map": "Visa på kartan",
+  "Follow the aircraft": "Följ planet",
+  "Turn on the flights layer to follow aircraft from the board": "Slå på flyglagret för att följa planen från tavlan",
+  "Turn on": "Slå på"
 }

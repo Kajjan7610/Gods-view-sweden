@@ -3449,5 +3449,8 @@
   "The wait projected for someone joining the queue now.": "今並んだ場合の予想待ち時間です。",
   "Source: Swedavia": "出典: Swedavia",
   "Full board": "すべての便",
-  "Show on the map": "地図で表示"
+  "Show on the map": "地図で表示",
+  "Follow the aircraft": "機体を追跡",
+  "Turn on the flights layer to follow aircraft from the board": "発着案内から機体を追跡するには、フライトのレイヤーをオンにしてください",
+  "Turn on": "オンにする"
 }

@@ -3449,5 +3449,8 @@
   "The wait projected for someone joining the queue now.": "現在排隊的預計等待時間。",
   "Source: Swedavia": "來源：Swedavia",
   "Full board": "完整航班表",
-  "Show on the map": "在地圖上顯示"
+  "Show on the map": "在地圖上顯示",
+  "Follow the aircraft": "追蹤飛機",
+  "Turn on the flights layer to follow aircraft from the board": "開啟航班圖層即可從航班資訊看板追蹤飛機",
+  "Turn on": "開啟"
 }

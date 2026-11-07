@@ -9,6 +9,8 @@ import * as Cesium from 'cesium';
 import { getLocale, msg, onLocaleChange, t } from '../i18n/index.js';
 import { swedaviaAirport } from '../data/swedaviaAirports.js';
 import {
+  aircraftFor,
+  aircraftIndex,
   airportUnder,
   flightTone,
   matchesQuery,
@@ -20,6 +22,10 @@ const REFRESH_MS = 3 * 60_000;
 /** The "now" line and gone rows move on this often while the board shows. */
 const TICK_MS = 60_000;
 const SETTLE_DELAY_MS = 600;
+/** How long the flights layer's contacts are read once for the board. */
+const AIRCRAFT_INDEX_MS = 20_000;
+const FLIGHTS_LAYER = 'flights';
+const AIRCRAFT_INDEX_MAX = 50_000;
 /** A checkpoint is shown from this far south and this high (about 1.2 km
     back at a 35° pitch, so its label sits near mid-screen). */
 const QUEUE_VIEW_SOUTH_DEG = 0.0105;
@@ -60,6 +66,8 @@ const bilingual = (value) =>
 /** Own the board for one viewer; `publish` receives `{ card, board }`. */
 export function createAirportBoard({
   viewer,
+  // The flights layer, for following a board row's aircraft (optional).
+  dataManager = null,
   publish,
   connect,
   fetchImpl = (...args) => globalThis.fetch(...args),
@@ -82,6 +90,8 @@ export function createAirportBoard({
   let scrollKey = 0;
   let near = null;
   let dismissed = null;
+  let aircraft = { at: -Infinity, index: null };
+  let layerTimers = [];
 
   async function load({ quiet = false } = {}) {
     if (!airport) return;
@@ -174,8 +184,27 @@ export function createAirportBoard({
     settleTimer = setTimeout(settle, SETTLE_DELAY_MS);
   });
 
+  // ---- aircraft in the air -------------------------------------------------------
+  const flightsLayer = () =>
+    dataManager?.isEnabled?.(FLIGHTS_LAYER)
+      ? (dataManager.layers?.get(FLIGHTS_LAYER)?.module ?? null)
+      : null;
+
+  /** The live contacts by callsign and registration, read at most every 20 s. */
+  function liveIndex() {
+    const layer = flightsLayer();
+    if (!layer?.getAllPositions) return null;
+    if (now() - aircraft.at >= AIRCRAFT_INDEX_MS || !aircraft.index)
+      aircraft = {
+        at: now(),
+        // A finite cap: the layer reads a non-finite one as its 500 default.
+        index: aircraftIndex(layer.getAllPositions(AIRCRAFT_INDEX_MAX)),
+      };
+    return aircraft.index;
+  }
+
   // ---- the view ----------------------------------------------------------------
-  function flightRow(flight, kind, nowMs, before) {
+  function flightRow(flight, kind, nowMs, before, index) {
     const tone = flightTone(flight, kind, nowMs);
     const late =
       flight.delayMinutes > 0 && tone !== 'gone' && tone !== 'canceled';
@@ -206,6 +235,8 @@ export function createAirportBoard({
         ? t('Cancelled')
         : bilingual(flight.remark) || bilingual(flight.status),
       tone,
+      // In the flights layer's air data: the row can follow its aircraft.
+      live: Boolean(aircraftFor(flight, index)),
       nowBefore: before,
       open,
       details: open ? details(flight, kind) : null,
@@ -286,9 +317,10 @@ export function createAirportBoard({
     if (!all) return { rows: [], empty: '' };
     const kept = all.filter((flight) => matchesQuery(flight, query));
     const first = date === 'today' ? nowIndex(kept, nowMs) : -1;
+    const index = liveIndex();
     return {
-      rows: kept.map((flight, index) =>
-        flightRow(flight, kind, nowMs, index === first),
+      rows: kept.map((flight, position) =>
+        flightRow(flight, kind, nowMs, position === first, index),
       ),
       empty: kept.length
         ? ''
@@ -368,6 +400,8 @@ export function createAirportBoard({
       ),
       query,
       kind: tab,
+      // Following needs the flights layer; the board offers to turn it on.
+      flightsOff: Boolean(dataManager) && !flightsLayer(),
       ...body,
       scrollKey,
     };
@@ -449,6 +483,34 @@ export function createAirportBoard({
       dismissed = near?.iata ?? null;
       render();
     },
+    follow(id) {
+      const flight = [
+        ...(data?.departures ?? []),
+        ...(data?.arrivals ?? []),
+      ].find((row) => row.id === id);
+      const icao24 = flight && aircraftFor(flight, liveIndex());
+      const layer = flightsLayer();
+      if (!icao24 || !layer?.trackById) return;
+      // A followed aircraft keeps the camera moving, so no settle would take
+      // the airport's card away: it goes with the board.
+      near = null;
+      close();
+      layer.trackById(icao24, { origin: 'user' });
+    },
+    async enableFlights() {
+      if (!dataManager?.setEnabled) return;
+      await dataManager.setEnabled(FLIGHTS_LAYER, true, { origin: 'user' });
+      // The first contacts arrive with the layer's first polls.
+      aircraft = { at: -Infinity, index: null };
+      for (const timer of layerTimers) clearTimeout(timer);
+      layerTimers = [3000, 10_000, 25_000].map((ms) =>
+        setTimeout(() => {
+          aircraft = { at: -Infinity, index: null };
+          render();
+        }, ms),
+      );
+      render();
+    },
     showQueue(key) {
       const queue = data?.security?.find((row) => (row.id || row.name) === key);
       if (!Number.isFinite(queue?.lat) || !Number.isFinite(queue?.lon)) return;
@@ -481,6 +543,7 @@ export function createAirportBoard({
       clearTimeout(refreshTimer);
       clearTimeout(settleTimer);
       clearInterval(tickTimer);
+      for (const timer of layerTimers) clearTimeout(timer);
       removeMoveEnd?.();
       removeLocale?.();
       documentRef?.removeEventListener?.('visibilitychange', visible);

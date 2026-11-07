@@ -141,3 +141,49 @@ export function queueMarkers(queues) {
       String(a.terminal ?? '').localeCompare(String(b.terminal ?? '')),
     );
 }
+
+/** A callsign or registration as both sources can agree on it. */
+const identity = (value) =>
+  String(value ?? '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+
+/**
+ * The flights layer's contacts by callsign and by registration, for finding
+ * a board row's aircraft in the air. Contacts are the layer's
+ * `getAllPositions` rows: `id` (ICAO address), `label` (callsign when it
+ * has one) and `registration`.
+ */
+export function aircraftIndex(contacts) {
+  const byCallsign = new Map();
+  const byRegistration = new Map();
+  for (const contact of contacts ?? []) {
+    if (!contact?.id) continue;
+    const callsign = identity(contact.label);
+    const registration = identity(contact.registration);
+    // A label that is the registration (no callsign) is not a callsign.
+    if (
+      callsign &&
+      callsign !== registration &&
+      callsign !== identity(contact.id)
+    )
+      byCallsign.set(callsign, contact.id);
+    if (registration) byRegistration.set(registration, contact.id);
+  }
+  return { byCallsign, byRegistration };
+}
+
+/**
+ * The ICAO address of a board flight's aircraft among the live contacts:
+ * by Swedavia's callsign (what the transponder sends, "SAS1427"), else by
+ * registration ("SEROH" against "SE-ROH"); null when it is not in the air
+ * data.
+ */
+export function aircraftFor(flight, index) {
+  if (!index) return null;
+  return (
+    index.byCallsign.get(identity(flight.callsign)) ??
+    index.byRegistration.get(identity(flight.registration)) ??
+    null
+  );
+}

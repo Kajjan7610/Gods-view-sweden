@@ -6,6 +6,8 @@ import test from 'node:test';
 import * as Cesium from 'cesium';
 import { createAirportBoard } from './airportBoard.js';
 import {
+  aircraftFor,
+  aircraftIndex,
   airportUnder,
   flightTone,
   matchesQuery,
@@ -223,12 +225,13 @@ const boardBody = (date = '2026-11-07') => ({
   fetchedAt: NOW,
 });
 
-function board(viewer = fakeViewer(59.33, 18.07, 3000)) {
+function board(viewer = fakeViewer(59.33, 18.07, 3000), dataManager = null) {
   const published = [];
   const urls = [];
   let actions = null;
   const controller = createAirportBoard({
     viewer,
+    dataManager,
     publish: (view) => published.push(view),
     connect: (next) => ((actions = next), () => {}),
     fetchImpl: async (url) => {
@@ -395,4 +398,87 @@ test('the airport under the view, with a wider reach for the queue labels', () =
     airportUnder(view, undefined, { km: 20, height: 40_000 })?.iata,
     'ARN',
   );
+});
+
+test("a row's aircraft: by callsign, else by registration", () => {
+  const index = aircraftIndex([
+    { id: '4ac9e1', label: 'SAS1427', registration: 'SE-ROH' },
+    { id: '4ac9e2', label: 'SE-DOX', registration: 'SE-DOX' },
+    { id: '4ac9e3', label: '4ac9e3', registration: null },
+    null,
+  ]);
+  assert.equal(aircraftFor({ callsign: 'SAS1427' }, index), '4ac9e1');
+  assert.equal(aircraftFor({ callsign: 'sas 1427' }, index), '4ac9e1');
+  assert.equal(
+    aircraftFor({ callsign: 'NOPE1', registration: 'SEDOX' }, index),
+    '4ac9e2',
+    'a tail number matches with or without its dash',
+  );
+  assert.equal(
+    aircraftFor({ callsign: 'SEDOX' }, index),
+    null,
+    'a registration label is no callsign',
+  );
+  assert.equal(
+    aircraftFor({ callsign: '4AC9E3' }, index),
+    null,
+    'nor is a hex label',
+  );
+  assert.equal(
+    aircraftFor({ callsign: null, registration: null }, index),
+    null,
+  );
+  assert.equal(aircraftFor({ callsign: 'SAS1427' }, null), null);
+});
+
+test('a row whose aircraft is in the air follows it; the board offers the layer when it is off', async () => {
+  let enabled = false;
+  const tracked = [];
+  const turnedOn = [];
+  const dataManager = {
+    isEnabled: (id) => id === 'flights' && enabled,
+    setEnabled: async (id, on, options) => {
+      turnedOn.push([id, on, options.origin]);
+      enabled = on;
+      return true;
+    },
+    layers: new Map([
+      [
+        'flights',
+        {
+          module: {
+            getAllPositions: (max) => {
+              assert.ok(Number.isFinite(max) && max > 500);
+              return [{ id: 'abc123', label: 'SAS2', registration: 'SE-ROH' }];
+            },
+            trackById: (id, options) => (
+              tracked.push([id, options.origin]),
+              true
+            ),
+          },
+        },
+      ],
+    ]),
+  };
+  const { controller, act, latest } = board(undefined, dataManager);
+  act('open', 'ARN');
+  await settled();
+  assert.equal(latest().board.flightsOff, true);
+  assert.equal(
+    latest().board.rows.some((row) => row.live),
+    false,
+  );
+  await act('enableFlights');
+  assert.deepEqual(turnedOn, [['flights', true, 'user']]);
+  assert.equal(latest().board.flightsOff, false);
+  const live = latest().board.rows.filter((row) => row.live);
+  assert.deepEqual(
+    live.map((row) => row.flight),
+    ['SK2'],
+  );
+  act('follow', live[0].key);
+  assert.deepEqual(tracked, [['abc123', 'user']]);
+  assert.equal(latest().board, null, 'the board makes way for the aircraft');
+  assert.equal(latest().card, null, "and so does the airport's card");
+  controller.destroy();
 });
