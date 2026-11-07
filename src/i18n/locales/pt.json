@@ -3656,5 +3656,14 @@
   "{pct} % cloud": "{pct} % de nuvens",
   "dark {from}–{to}": "escuro {from}–{to}",
   "best around {time}": "melhor por volta das {time}",
-  "Show the aurora oval on the map": "Mostrar o oval auroral no mapa"
+  "Show the aurora oval on the map": "Mostrar o oval auroral no mapa",
+  "Visit {count}": "Visita {count}",
+  "first {date}": "primeira a {date}",
+  "Most visited": "As mais visitadas",
+  "Latest stamps": "Últimos carimbos",
+  "{count} visits in all": {
+    "one": "{count} visita no total",
+    "many": "{count} visitas no total",
+    "other": "{count} visitas no total"
+  }
 }

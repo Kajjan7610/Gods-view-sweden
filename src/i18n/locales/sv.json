@@ -3580,5 +3580,13 @@
   "{pct} % cloud": "{pct} % moln",
   "dark {from}–{to}": "mörkt {from}–{to}",
   "best around {time}": "bäst kring {time}",
-  "Show the aurora oval on the map": "Visa norrskensovalen på kartan"
+  "Show the aurora oval on the map": "Visa norrskensovalen på kartan",
+  "Visit {count}": "Besök {count}",
+  "first {date}": "första {date}",
+  "Most visited": "Mest besökta",
+  "Latest stamps": "Senaste stämplar",
+  "{count} visits in all": {
+    "one": "{count} besök totalt",
+    "other": "{count} besök totalt"
+  }
 }

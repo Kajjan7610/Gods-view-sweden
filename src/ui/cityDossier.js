@@ -29,9 +29,11 @@ import {
   MUNICIPALITY_COUNT,
   challengeProgress,
   loadPassport,
+  mostVisited,
   savePassport,
   stampVisit,
   stampsInOrder,
+  totalVisits,
 } from './visitPassport.js';
 import { OrbitController } from '../orbit.js';
 import { messagesFor } from './krisinformationModel.js';
@@ -407,6 +409,22 @@ export function createCityDossier({
     viewer.scene.requestRender?.();
   }
 
+  /** "Visit 4 · first 5 Nov" for the town shown, if it is stamped. */
+  function visitLine() {
+    const stamp = passport.stamps[city?.code];
+    if (!stamp) return '';
+    const count = stamp.count || 1;
+    return [
+      t('Visit {count}', { count }),
+      t('first {date}', {
+        date: new Intl.DateTimeFormat(getLocale(), {
+          day: 'numeric',
+          month: 'short',
+        }).format(stamp.first),
+      }),
+    ].join(' · ');
+  }
+
   function passView() {
     const stamps = stampsInOrder(passport);
     const day = new Intl.DateTimeFormat(getLocale(), {
@@ -425,12 +443,29 @@ export function createCityDossier({
         done: row.done >= row.total,
         width: `${Math.round((row.done / row.total) * 100)}%`,
       })),
+      total: tn(
+        totalVisits(passport),
+        '{count} visit in all',
+        '{count} visits in all',
+      ),
+      // The towns returned to most, with their count.
+      most: mostVisited(passport)
+        .filter((stamp) => stamp.count > 1)
+        .map((stamp) => ({
+          key: stamp.code,
+          name: stamp.name,
+          count: `×${stamp.count}`,
+          detail: [stamp.county, day.format(stamp.last ?? stamp.first)]
+            .filter(Boolean)
+            .join(' · '),
+        })),
       recent: stamps
         .slice(-8)
         .reverse()
         .map((stamp) => ({
           key: stamp.code,
           name: stamp.name,
+          count: (stamp.count || 1) > 1 ? `×${stamp.count}` : '',
           detail: [stamp.county, day.format(stamp.first)]
             .filter(Boolean)
             .join(' · '),
@@ -962,6 +997,7 @@ export function createCityDossier({
       ]
         .filter(Boolean)
         .join(' · '),
+      visits: visitLine(),
       coatOfArms: facts?.town?.coatOfArms || null,
       status,
       error: status === 'error' ? t('Facts unavailable right now') : '',

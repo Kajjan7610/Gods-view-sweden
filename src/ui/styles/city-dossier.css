@@ -712,3 +712,24 @@ body.mobile-shell #city-panel-body {
 body.mobile-shell .city-arrival {
   bottom: calc(var(--mobile-tab-space, 64px) + 150px);
 }
+/* Visits: the town's count under its name, counts in the passport. */
+.city-dossier-visits {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  color: #ffc94d;
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+}
+.city-dossier-visits .material-symbols-outlined {
+  font-size: 13px;
+}
+.city-dossier-count {
+  margin-inline-start: 4px;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: rgba(255, 201, 77, 0.16);
+  color: #ffc94d;
+  font-size: 9.5px;
+}

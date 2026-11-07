@@ -3884,5 +3884,17 @@
   "{pct} % cloud": "سحب {pct} %",
   "dark {from}–{to}": "مظلم {from}–{to}",
   "best around {time}": "الأفضل نحو {time}",
-  "Show the aurora oval on the map": "عرض الحلقة الشفقية على الخريطة"
+  "Show the aurora oval on the map": "عرض الحلقة الشفقية على الخريطة",
+  "Visit {count}": "الزيارة {count}",
+  "first {date}": "الأولى {date}",
+  "Most visited": "الأكثر زيارة",
+  "Latest stamps": "أحدث الأختام",
+  "{count} visits in all": {
+    "zero": "{count} زيارة إجمالًا",
+    "one": "{count} زيارة إجمالًا",
+    "two": "{count} زيارة إجمالًا",
+    "few": "{count} زيارات إجمالًا",
+    "many": "{count} زيارة إجمالًا",
+    "other": "{count} زيارة إجمالًا"
+  }
 }

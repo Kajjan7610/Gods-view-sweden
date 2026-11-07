@@ -3504,5 +3504,12 @@
   "{pct} % cloud": "云量 {pct}%",
   "dark {from}–{to}": "天黑 {from}–{to}",
   "best around {time}": "最佳时间约 {time}",
-  "Show the aurora oval on the map": "在地图上显示极光椭圆带"
+  "Show the aurora oval on the map": "在地图上显示极光椭圆带",
+  "Visit {count}": "第 {count} 次到访",
+  "first {date}": "首次 {date}",
+  "Most visited": "最常到访",
+  "Latest stamps": "最新印章",
+  "{count} visits in all": {
+    "other": "共 {count} 次到访"
+  }
 }

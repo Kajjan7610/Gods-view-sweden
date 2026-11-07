@@ -3732,5 +3732,15 @@
   "{pct} % cloud": "облачность {pct} %",
   "dark {from}–{to}": "темно {from}–{to}",
   "best around {time}": "лучше всего около {time}",
-  "Show the aurora oval on the map": "Показать авроральный овал на карте"
+  "Show the aurora oval on the map": "Показать авроральный овал на карте",
+  "Visit {count}": "Визит {count}",
+  "first {date}": "впервые {date}",
+  "Most visited": "Чаще всего",
+  "Latest stamps": "Последние отметки",
+  "{count} visits in all": {
+    "one": "всего {count} визит",
+    "few": "всего {count} визита",
+    "many": "всего {count} визитов",
+    "other": "всего {count} визита"
+  }
 }

@@ -66,6 +66,13 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (besöksräknare)
+- Dossierns huvud visar "Besök 4 · första 5 nov." för en stämplad stad.
+- PASS-fliken visar antal besök totalt, en lista **Mest besökta** (städer
+  med fler än ett besök, ×antal) och antal vid de senaste stämplarna.
+- Ett återbesök räknas först tio minuter efter det förra, så att
+  panorering fram och tillbaka mellan två städer inte räknar upp.
+
 ### 2026-11-07 (norrsken i natt)
 - Dossierns NU-flik har en rad "Norrsken i natt: chansen är låg/möjlig/
   god/hög" med prognostiserat Kp under kvällens mörka timmar mot det Kp

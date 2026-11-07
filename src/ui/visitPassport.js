@@ -57,6 +57,9 @@ export const COUNTY_CODES = Object.freeze([
   '25',
 ]);
 const MAX_STAMPS = MUNICIPALITY_COUNT;
+/** A return within this time is the same visit: panning back and forth
+    over two towns does not count up. */
+export const REVISIT_GAP_MS = 10 * 60_000;
 
 function emptyPassport() {
   return { stamps: {}, cinematic: true, showMap: false };
@@ -87,7 +90,8 @@ export function savePassport(storage, passport) {
 
 /**
  * Stamp a town. The first visit is remembered with its time; later ones
- * count. Returns whether this was the town's first stamp.
+ * count, once at least REVISIT_GAP_MS has passed since the last. Returns
+ * whether this was the town's first stamp.
  * @param {object} passport Changed in place.
  * @param {{code: string, name: string, county?: string, point: number[]}} city
  * @param {number} nowMs
@@ -97,8 +101,9 @@ export function stampVisit(passport, city, nowMs) {
   if (!/^\d{4}$/.test(code)) return false;
   const existing = passport.stamps[code];
   if (existing) {
+    if (nowMs - (existing.last ?? 0) >= REVISIT_GAP_MS)
+      existing.count = (existing.count || 1) + 1;
     existing.last = nowMs;
-    existing.count = (existing.count || 1) + 1;
     return false;
   }
   if (Object.keys(passport.stamps).length >= MAX_STAMPS) return false;
@@ -120,6 +125,22 @@ export function stampsInOrder(passport) {
   return Object.entries(passport.stamps)
     .map(([code, stamp]) => ({ code, ...stamp }))
     .sort((a, b) => a.first - b.first);
+}
+
+/** Every visit in the passport, first ones and returns. */
+export function totalVisits(passport) {
+  return Object.values(passport.stamps).reduce(
+    (sum, stamp) => sum + (stamp.count || 1),
+    0,
+  );
+}
+
+/** The towns visited most often, most recent first among equals. */
+export function mostVisited(passport, max = 5) {
+  return Object.entries(passport.stamps)
+    .map(([code, stamp]) => ({ code, ...stamp, count: stamp.count || 1 }))
+    .sort((a, b) => b.count - a.count || (b.last ?? 0) - (a.last ?? 0))
+    .slice(0, max);
 }
 
 /**

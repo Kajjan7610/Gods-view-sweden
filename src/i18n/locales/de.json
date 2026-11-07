@@ -3580,5 +3580,13 @@
   "{pct} % cloud": "{pct} % Bewölkung",
   "dark {from}–{to}": "dunkel {from}–{to}",
   "best around {time}": "am besten gegen {time}",
-  "Show the aurora oval on the map": "Polarlichtoval auf der Karte zeigen"
+  "Show the aurora oval on the map": "Polarlichtoval auf der Karte zeigen",
+  "Visit {count}": "Besuch {count}",
+  "first {date}": "zuerst {date}",
+  "Most visited": "Am häufigsten besucht",
+  "Latest stamps": "Neueste Stempel",
+  "{count} visits in all": {
+    "one": "{count} Besuch insgesamt",
+    "other": "{count} Besuche insgesamt"
+  }
 }

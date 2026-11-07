@@ -3504,5 +3504,12 @@
   "{pct} % cloud": "雲量 {pct} %",
   "dark {from}–{to}": "暗い時間 {from}–{to}",
   "best around {time}": "{time} ごろが最適",
-  "Show the aurora oval on the map": "オーロラオーバルを地図に表示"
+  "Show the aurora oval on the map": "オーロラオーバルを地図に表示",
+  "Visit {count}": "{count} 回目の訪問",
+  "first {date}": "初回 {date}",
+  "Most visited": "よく訪れた町",
+  "Latest stamps": "最近のスタンプ",
+  "{count} visits in all": {
+    "other": "合計 {count} 回の訪問"
+  }
 }

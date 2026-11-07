@@ -24,6 +24,7 @@ const airportBoard = useAirportBoardStore();
           <div>
             <strong class="city-dossier-name">{{ d.name }}</strong>
             <small class="city-dossier-sub">{{ d.subtitle }}</small>
+            <small v-if="d.visits" class="city-dossier-visits"><span class="material-symbols-outlined" aria-hidden="true">approval</span>{{ d.visits }}</small>
           </div>
         </header>
         <nav class="city-dossier-tabs" role="tablist" :aria-label="t('City dossier sections')">
@@ -139,6 +140,7 @@ const airportBoard = useAirportBoardStore();
         </section>
         <section v-else-if="d.tab === 'pass'" class="city-dossier-section" role="tabpanel">
           <strong class="city-dossier-pass-summary">{{ d.pass.summary }}</strong>
+          <small class="city-dossier-note">{{ d.pass.total }}</small>
           <div v-for="row in d.pass.challenges" :key="row.id" class="city-dossier-challenge" :class="{ done: row.done }">
             <span>{{ row.label }}</span><small>{{ row.progress }}</small>
             <i><b :style="{ width: row.width }"></b></i>
@@ -147,8 +149,15 @@ const airportBoard = useAirportBoardStore();
             <button type="button" :aria-pressed="String(d.pass.showMap)" @click="store.act('togglePassMap')">{{ t('Show my journey on the map') }}</button>
             <button type="button" :aria-pressed="String(d.pass.cinematic)" @click="store.act('toggleCinematic')">{{ t('Cinematic arrival') }}</button>
           </div>
+          <template v-if="d.pass.most.length">
+            <strong class="city-dossier-kris-title">{{ t('Most visited') }}</strong>
+            <ol class="city-dossier-stamps">
+              <li v-for="stamp in d.pass.most" :key="stamp.key"><strong>{{ stamp.name }} <b class="city-dossier-count">{{ stamp.count }}</b></strong><small>{{ stamp.detail }}</small></li>
+            </ol>
+          </template>
+          <strong class="city-dossier-kris-title">{{ t('Latest stamps') }}</strong>
           <ol class="city-dossier-stamps">
-            <li v-for="stamp in d.pass.recent" :key="stamp.key"><strong>{{ stamp.name }}</strong><small>{{ stamp.detail }}</small></li>
+            <li v-for="stamp in d.pass.recent" :key="stamp.key"><strong>{{ stamp.name }} <b v-if="stamp.count" class="city-dossier-count">{{ stamp.count }}</b></strong><small>{{ stamp.detail }}</small></li>
           </ol>
         </section>
         <footer class="city-dossier-source">{{ d.source }}</footer>

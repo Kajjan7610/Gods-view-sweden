@@ -6,10 +6,13 @@ import {
   COUNTY_SEAT_CODES,
   PASSPORT_STORAGE_KEY,
   challengeProgress,
+  REVISIT_GAP_MS,
   loadPassport,
+  mostVisited,
   savePassport,
   stampVisit,
   stampsInOrder,
+  totalVisits,
 } from './visitPassport.js';
 
 const memory = () => {
@@ -20,7 +23,7 @@ const memory = () => {
   };
 };
 
-test('a town is stamped once; later visits count', () => {
+test('a town is stamped once; later visits count, a quick return does not', () => {
   const passport = loadPassport(memory());
   const gavle = {
     code: '2180',
@@ -29,13 +32,17 @@ test('a town is stamped once; later visits count', () => {
     point: [17.14, 60.67],
   };
   assert.equal(stampVisit(passport, gavle, 1000), true);
+  // Panning back within ten minutes is the same visit.
   assert.equal(stampVisit(passport, gavle, 2000), false);
+  assert.equal(passport.stamps['2180'].count, 1);
+  const later = 2000 + REVISIT_GAP_MS;
+  assert.equal(stampVisit(passport, gavle, later), false);
   assert.deepEqual(passport.stamps['2180'], {
     name: 'Gävle',
     county: 'Gävleborgs län',
     point: [17.14, 60.67],
     first: 1000,
-    last: 2000,
+    last: later,
     count: 2,
   });
   assert.equal(stampVisit(passport, { code: 'x' }, 3000), false);
@@ -94,4 +101,33 @@ test('challenges: county seats, counties, the Arctic Circle and all towns', () =
     stampsInOrder(passport).map((s) => s.code),
     ['2181', '2584', '2180', '2580'],
   );
+});
+
+test('visits in all, and the towns returned to most', () => {
+  const passport = loadPassport(memory());
+  const town = (code, name) => ({ code, name, point: [18, 59] });
+  let at = 0;
+  const visit = (code, name) => {
+    at += REVISIT_GAP_MS;
+    stampVisit(passport, town(code, name), at);
+  };
+  for (const [code, name] of [
+    ['0180', 'Stockholm'],
+    ['1980', 'Västerås'],
+    ['0180', 'Stockholm'],
+    ['2584', 'Kiruna'],
+    ['0180', 'Stockholm'],
+    ['1980', 'Västerås'],
+  ])
+    visit(code, name);
+  assert.equal(totalVisits(passport), 6);
+  assert.deepEqual(
+    mostVisited(passport, 2).map((stamp) => [stamp.name, stamp.count]),
+    [
+      ['Stockholm', 3],
+      ['Västerås', 2],
+    ],
+  );
+  // An old passport without counts reads as one visit each.
+  assert.equal(totalVisits({ stamps: { '0180': { name: 'x' } } }), 1);
 });
