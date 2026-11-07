@@ -3757,5 +3757,30 @@
   "Looking for sights…": "Ищем достопримечательности…",
   "Sights unavailable right now": "Достопримечательности сейчас недоступны",
   "No sights found nearby": "Поблизости нет достопримечательностей",
-  "Read on Wikipedia": "Читать в Википедии"
+  "Read on Wikipedia": "Читать в Википедии",
+  "north": "север",
+  "northeast": "северо-восток",
+  "east": "восток",
+  "southeast": "юго-восток",
+  "south": "юг",
+  "southwest": "юго-запад",
+  "west": "запад",
+  "northwest": "северо-запад",
+  "facing {degrees}° ({direction})": "направлена на {degrees}° ({direction})",
+  "SPEED CAMERA · {road}": "КАМЕРА СКОРОСТИ · {road}",
+  "SPEED CAMERA": "КАМЕРА СКОРОСТИ",
+  "The police move the cameras between sites": "Полиция переставляет камеры между точками",
+  "Speed camera data unavailable": "Данные о камерах скорости недоступны",
+  "Camera site, arrow in the direction it faces": "Место камеры, стрелка — направление съёмки",
+  "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "Стационарные камеры безопасности движения Trafikverket: места, где скорость контролируется камерой. Полиция переставляет оборудование между точками, поэтому не каждая точка снимает постоянно. Стрелки видны, когда обзор ближе примерно 400 км. Нажмите на точку, чтобы увидеть дорогу и направление.",
+  "Speed cameras need the Trafikverket key": "Для камер скорости нужен ключ Trafikverket",
+  "Malformed speed camera snapshot": "Некорректные данные о камерах скорости",
+  "{count} speed cameras within {km} km": {
+    "one": "{count} камера скорости в радиусе {km} км",
+    "few": "{count} камеры скорости в радиусе {km} км",
+    "many": "{count} камер скорости в радиусе {km} км",
+    "other": "{count} камеры скорости в радиусе {km} км"
+  },
+  "No speed cameras within {km} km": "Нет камер скорости в радиусе {km} км",
+  "Speed Cameras (Sweden)": "Камеры скорости (Швеция)"
 }

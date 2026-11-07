@@ -3911,5 +3911,32 @@
   "Looking for sights…": "جارٍ البحث عن المعالم…",
   "Sights unavailable right now": "المعالم غير متاحة حاليًا",
   "No sights found nearby": "لا توجد معالم قريبة",
-  "Read on Wikipedia": "اقرأ في ويكيبيديا"
+  "Read on Wikipedia": "اقرأ في ويكيبيديا",
+  "north": "الشمال",
+  "northeast": "الشمال الشرقي",
+  "east": "الشرق",
+  "southeast": "الجنوب الشرقي",
+  "south": "الجنوب",
+  "southwest": "الجنوب الغربي",
+  "west": "الغرب",
+  "northwest": "الشمال الغربي",
+  "facing {degrees}° ({direction})": "باتجاه {degrees}° ({direction})",
+  "SPEED CAMERA · {road}": "كاميرا سرعة · {road}",
+  "SPEED CAMERA": "كاميرا سرعة",
+  "The police move the cameras between sites": "تنقل الشرطة الكاميرات بين المواقع",
+  "Speed camera data unavailable": "بيانات كاميرات السرعة غير متاحة",
+  "Camera site, arrow in the direction it faces": "موقع كاميرا، والسهم باتجاهها",
+  "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "كاميرات السلامة المرورية الثابتة لدى Trafikverket: المواقع التي تُراقَب فيها السرعة بالكاميرا. تنقل الشرطة المعدات بين المواقع، لذا لا يصوّر كل موقع طوال الوقت. تظهر الأسهم عندما يكون العرض ضمن نحو 400 كم. انقر على موقع لمعرفة الطريق والاتجاه.",
+  "Speed cameras need the Trafikverket key": "تتطلب كاميرات السرعة مفتاح Trafikverket",
+  "Malformed speed camera snapshot": "بيانات كاميرات السرعة تالفة",
+  "{count} speed cameras within {km} km": {
+    "zero": "{count} كاميرا سرعة ضمن {km} كم",
+    "one": "كاميرا سرعة واحدة ({count}) ضمن {km} كم",
+    "two": "كاميرتا سرعة ({count}) ضمن {km} كم",
+    "few": "{count} كاميرات سرعة ضمن {km} كم",
+    "many": "{count} كاميرا سرعة ضمن {km} كم",
+    "other": "{count} كاميرا سرعة ضمن {km} كم"
+  },
+  "No speed cameras within {km} km": "لا توجد كاميرات سرعة ضمن {km} كم",
+  "Speed Cameras (Sweden)": "كاميرات السرعة (السويد)"
 }

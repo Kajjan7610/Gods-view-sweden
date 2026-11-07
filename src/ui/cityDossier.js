@@ -38,6 +38,7 @@ import {
 import { OrbitController } from '../orbit.js';
 import { messagesFor } from './krisinformationModel.js';
 import { SIGHT_COLORS, createSightsLayer } from './citySights.js';
+import { facingText } from '../layers/speedCameras/cards.js';
 
 const PANEL_ID = 'city-panel';
 /** Higher than this the view is looking at a region, not visiting a town. */
@@ -104,6 +105,9 @@ const SIGHT_KINDS = Object.freeze({
 /** A chosen sight is shown from this far south and this high. */
 const SIGHT_VIEW_SOUTH_DEG = 0.011;
 const SIGHT_VIEW_HEIGHT_M = 900;
+/** A speed camera is looked at from closer and lower than a sight. */
+const CAMERA_VIEW_SOUTH_DEG = 0.006;
+const CAMERA_VIEW_HEIGHT_M = 500;
 const AURORA_CHANCES = Object.freeze({
   low: msg('low'),
   possible: msg('possible'),
@@ -267,7 +271,8 @@ export function createCityDossier({
       transit: null,
       kris: null,
       aurora: null,
-      pending: 6,
+      cameras: null,
+      pending: 7,
     };
     render();
     const current = () =>
@@ -300,6 +305,8 @@ export function createCityDossier({
       ),
       // Tonight's northern lights: NOAA's Kp and SMHI's clouds for the town.
       part(`/api/aurora-outlook?lat=${lat}&lon=${lon}`, 'aurora'),
+      // Trafikverket's speed camera sites around the town.
+      part(`/api/speed-cameras?lat=${lat}&lon=${lon}`, 'cameras'),
       // Krisinformation.se: alerts and news for the country, county or town.
       part('/api/krisinformation', 'kris', (value) =>
         messagesFor(value, {
@@ -876,6 +883,7 @@ export function createCityDossier({
       flights: flightsView(live.transit?.flights),
       kris: krisView(live.kris),
       aurora: auroraView(live.aurora),
+      cameras: camerasView(live.cameras),
       radioLabel: radioBusy ? t('Tuning in…') : t('Play local radio'),
       radioBusy,
     };
@@ -1027,6 +1035,63 @@ export function createCityDossier({
   }
 
   /**
+   * Trafikverket's speed camera sites within the route's radius of the town,
+   * the nearest few listed; null without the Trafikverket key.
+   */
+  function camerasView(cameras) {
+    if (!Number.isFinite(cameras?.count)) return null;
+    return {
+      title: cameras.count
+        ? tn(
+            cameras.count,
+            '{count} speed camera within {km} km',
+            '{count} speed cameras within {km} km',
+            { km: cameras.radiusKm },
+          )
+        : t('No speed cameras within {km} km', { km: cameras.radiusKm }),
+      items: (cameras.nearest ?? []).map((camera) => ({
+        key: camera.id,
+        road: camera.road || '',
+        name: camera.name,
+        detail: [
+          facingText(camera.bearing),
+          t('{km} km', { km: oneDecimal(camera.km) }),
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      })),
+    };
+  }
+
+  /**
+   * Point a speed camera out: the layer on, a look at the site from the
+   * south, and its card on the map.
+   */
+  async function showCamera(id) {
+    const camera = live?.cameras?.nearest?.find((row) => row.id === id);
+    if (!camera) return false;
+    stopOrbit();
+    const [lon, lat] = camera.point;
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(
+        lon,
+        lat - CAMERA_VIEW_SOUTH_DEG,
+        CAMERA_VIEW_HEIGHT_M,
+      ),
+      orientation: { heading: 0, pitch: Cesium.Math.toRadians(-40), roll: 0 },
+      duration: 2,
+    });
+    await dataManager?.setEnabled?.('speed-cameras', true, { origin: 'user' });
+    const layer = dataManager?.layers?.get?.('speed-cameras')?.module;
+    // The first read of the sites may still be on its way.
+    for (let i = 0; i < 50; i += 1) {
+      if (destroyed || layer?.selectById?.(id)) return true;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    return false;
+  }
+
+  /**
    * Krisinformation.se for the town: its active alerts (VMA) and the newest
    * news for it, its county or the whole country; null until read.
    */
@@ -1143,6 +1208,9 @@ export function createCityDossier({
         live?.transit?.flights?.airports?.length ? 'Swedavia' : null, // i18n-ignore: provider name
         live?.kris ? 'Krisinformation.se' : null, // i18n-ignore: provider name
         live?.aurora?.level ? 'NOAA SWPC' : null, // i18n-ignore: provider name
+        live?.cameras && !live?.transit?.trains?.station
+          ? 'Trafikverket' // i18n-ignore: provider name
+          : null,
       ]
         .filter(Boolean)
         .join(' · '),
@@ -1166,6 +1234,7 @@ export function createCityDossier({
       render();
     },
     playRadio,
+    showCamera: (id) => showCamera(id),
     // The original's aurora oval (NOAA OVATION) on the map.
     async showAurora() {
       await dataManager?.setEnabled?.('aurora', true, { origin: 'user' });

@@ -3680,5 +3680,29 @@
   "Looking for sights…": "Recherche des lieux à voir…",
   "Sights unavailable right now": "Lieux à voir indisponibles pour l’instant",
   "No sights found nearby": "Aucun lieu à voir à proximité",
-  "Read on Wikipedia": "Lire sur Wikipédia"
+  "Read on Wikipedia": "Lire sur Wikipédia",
+  "north": "nord",
+  "northeast": "nord-est",
+  "east": "est",
+  "southeast": "sud-est",
+  "south": "sud",
+  "southwest": "sud-ouest",
+  "west": "ouest",
+  "northwest": "nord-ouest",
+  "facing {degrees}° ({direction})": "orientée à {degrees}° ({direction})",
+  "SPEED CAMERA · {road}": "RADAR · {road}",
+  "SPEED CAMERA": "RADAR",
+  "The police move the cameras between sites": "La police déplace les caméras entre les sites",
+  "Speed camera data unavailable": "Données des radars indisponibles",
+  "Camera site, arrow in the direction it faces": "Site de radar, flèche dans le sens où il vise",
+  "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "Les radars fixes de Trafikverket : les sites où la vitesse est contrôlée par caméra. La police déplace l’équipement entre les sites, donc tous ne photographient pas en permanence. Les flèches apparaissent quand la vue est à moins de 400 km environ. Cliquez sur un site pour sa route et sa direction.",
+  "Speed cameras need the Trafikverket key": "Les radars nécessitent la clé Trafikverket",
+  "Malformed speed camera snapshot": "Données de radars mal formées",
+  "{count} speed cameras within {km} km": {
+    "one": "{count} radar dans un rayon de {km} km",
+    "many": "{count} radars dans un rayon de {km} km",
+    "other": "{count} radars dans un rayon de {km} km"
+  },
+  "No speed cameras within {km} km": "Aucun radar dans un rayon de {km} km",
+  "Speed Cameras (Sweden)": "Radars (Suède)"
 }

@@ -3680,5 +3680,29 @@
   "Looking for sights…": "Ricerca dei luoghi da vedere…",
   "Sights unavailable right now": "Luoghi da vedere non disponibili al momento",
   "No sights found nearby": "Nessun luogo da vedere nelle vicinanze",
-  "Read on Wikipedia": "Leggi su Wikipedia"
+  "Read on Wikipedia": "Leggi su Wikipedia",
+  "north": "nord",
+  "northeast": "nord-est",
+  "east": "est",
+  "southeast": "sud-est",
+  "south": "sud",
+  "southwest": "sud-ovest",
+  "west": "ovest",
+  "northwest": "nord-ovest",
+  "facing {degrees}° ({direction})": "rivolta a {degrees}° ({direction})",
+  "SPEED CAMERA · {road}": "AUTOVELOX · {road}",
+  "SPEED CAMERA": "AUTOVELOX",
+  "The police move the cameras between sites": "La polizia sposta le telecamere tra i siti",
+  "Speed camera data unavailable": "Dati degli autovelox non disponibili",
+  "Camera site, arrow in the direction it faces": "Sito autovelox, freccia nella direzione in cui guarda",
+  "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "Le telecamere fisse per la sicurezza stradale di Trafikverket: i siti dove la velocità è controllata con telecamera. La polizia sposta le apparecchiature tra i siti, quindi non tutti fotografano sempre. Le frecce compaiono quando la vista è entro circa 400 km. Fai clic su un sito per la strada e la direzione.",
+  "Speed cameras need the Trafikverket key": "Gli autovelox richiedono la chiave Trafikverket",
+  "Malformed speed camera snapshot": "Dati degli autovelox malformati",
+  "{count} speed cameras within {km} km": {
+    "one": "{count} autovelox entro {km} km",
+    "many": "{count} autovelox entro {km} km",
+    "other": "{count} autovelox entro {km} km"
+  },
+  "No speed cameras within {km} km": "Nessun autovelox entro {km} km",
+  "Speed Cameras (Sweden)": "Autovelox (Svezia)"
 }

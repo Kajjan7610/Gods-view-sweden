@@ -3603,5 +3603,28 @@
   "Looking for sights…": "Letar efter sevärdheter…",
   "Sights unavailable right now": "Sevärdheterna kan inte hämtas just nu",
   "No sights found nearby": "Inga sevärdheter hittades i närheten",
-  "Read on Wikipedia": "Läs på Wikipedia"
+  "Read on Wikipedia": "Läs på Wikipedia",
+  "north": "norr",
+  "northeast": "nordost",
+  "east": "öster",
+  "southeast": "sydost",
+  "south": "söder",
+  "southwest": "sydväst",
+  "west": "väster",
+  "northwest": "nordväst",
+  "facing {degrees}° ({direction})": "riktad {degrees}° ({direction})",
+  "SPEED CAMERA · {road}": "FARTKAMERA · {road}",
+  "SPEED CAMERA": "FARTKAMERA",
+  "The police move the cameras between sites": "Polisen flyttar kamerorna mellan platserna",
+  "Speed camera data unavailable": "Fartkameradata är inte tillgängliga",
+  "Camera site, arrow in the direction it faces": "Kameraplats, pilen pekar åt kamerans håll",
+  "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "Trafikverkets fasta trafiksäkerhetskameror: platserna där hastigheten kontrolleras med kamera. Polisen flyttar kamerautrustningen mellan platserna, så alla platser fotograferar inte hela tiden. Pilarna syns när vyn är inom ungefär 400 km. Klicka på en plats för väg och riktning.",
+  "Speed cameras need the Trafikverket key": "Fartkamerorna kräver Trafikverkets nyckel",
+  "Malformed speed camera snapshot": "Felaktig fartkameradata",
+  "{count} speed cameras within {km} km": {
+    "one": "{count} trafiksäkerhetskamera inom {km} km",
+    "other": "{count} trafiksäkerhetskameror inom {km} km"
+  },
+  "No speed cameras within {km} km": "Inga trafiksäkerhetskameror inom {km} km",
+  "Speed Cameras (Sweden)": "Fartkameror (Sverige)"
 }

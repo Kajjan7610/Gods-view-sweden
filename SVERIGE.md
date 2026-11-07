@@ -66,6 +66,21 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (fartkameror)
+- Nytt lager **Speed Cameras (Sweden)** (delningstoken 0n) under
+  Infrastructure: Trafikverkets cirka 2 800 fasta trafiksäkerhetskameror
+  som gula pilar vridna åt det håll kameran pekar. Pilarna syns när vyn är
+  inom ungefär 400 km. Klick på en pil visar väg, platsnamn, riktning
+  (t.ex. "riktad 101° (öster)") och län.
+- Dossierns NU-flik visar "24 trafiksäkerhetskameror inom 15 km" (Uppsala)
+  och de fem närmaste med väg och avstånd. Klick på en rad slår på lagret,
+  flyger dit och visar kamerans kort.
+- Det är platser, inte aktiva kameror: polisen flyttar utrustningen mellan
+  platserna, vilket står i kortet och i lagrets förklaring.
+- Ny adress `/api/speed-cameras` på den befintliga Trafikverket-nyckeln;
+  listan sparas ett dygn. Polisbilars positioner är inte offentliga och
+  byggs inte.
+
 ### 2026-11-07 (sevärt i staden)
 - Ny flik **SEVÄRT** i dossiern (flikarna ligger nu i två rader): slott
   och borgar, fästningar, kyrkor och domkyrkor, museer, runstenar,

@@ -437,6 +437,42 @@
   border-left: 2px solid #ff5252;
 }
 /* Tonight's northern lights; the colour follows the chance. */
+.city-dossier-cameras > strong {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.city-dossier-cameras > strong .material-symbols-outlined {
+  color: #ffb300;
+  font-size: 14px;
+}
+.city-dossier-camera {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+  padding: 3px 0;
+  border: 0;
+  border-bottom: 1px solid rgba(244, 251, 255, 0.06);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.city-dossier-camera:hover .city-dossier-dest,
+.city-dossier-camera:focus-visible .city-dossier-dest {
+  color: #ffb300;
+}
+.city-dossier-camera-road {
+  color: #ffb300;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.city-dossier-camera > .material-symbols-outlined {
+  color: rgba(220, 238, 255, 0.55);
+  font-size: 15px;
+}
 .city-dossier-aurora {
   display: grid;
   gap: 3px;

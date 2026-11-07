@@ -3757,5 +3757,30 @@
   "Looking for sights…": "Шукаємо пам’ятки…",
   "Sights unavailable right now": "Пам’ятки зараз недоступні",
   "No sights found nearby": "Поблизу немає пам’яток",
-  "Read on Wikipedia": "Читати у Вікіпедії"
+  "Read on Wikipedia": "Читати у Вікіпедії",
+  "north": "північ",
+  "northeast": "північний схід",
+  "east": "схід",
+  "southeast": "південний схід",
+  "south": "південь",
+  "southwest": "південний захід",
+  "west": "захід",
+  "northwest": "північний захід",
+  "facing {degrees}° ({direction})": "спрямована на {degrees}° ({direction})",
+  "SPEED CAMERA · {road}": "КАМЕРА ШВИДКОСТІ · {road}",
+  "SPEED CAMERA": "КАМЕРА ШВИДКОСТІ",
+  "The police move the cameras between sites": "Поліція переставляє камери між точками",
+  "Speed camera data unavailable": "Дані про камери швидкості недоступні",
+  "Camera site, arrow in the direction it faces": "Місце камери, стрілка — напрямок зйомки",
+  "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "Стаціонарні камери безпеки руху Trafikverket: місця, де швидкість контролюється камерою. Поліція переставляє обладнання між точками, тож не кожна точка знімає постійно. Стрілки видно, коли огляд ближче приблизно 400 км. Натисніть на точку, щоб побачити дорогу й напрямок.",
+  "Speed cameras need the Trafikverket key": "Для камер швидкості потрібен ключ Trafikverket",
+  "Malformed speed camera snapshot": "Некоректні дані про камери швидкості",
+  "{count} speed cameras within {km} km": {
+    "one": "{count} камера швидкості в радіусі {km} км",
+    "few": "{count} камери швидкості в радіусі {km} км",
+    "many": "{count} камер швидкості в радіусі {km} км",
+    "other": "{count} камери швидкості в радіусі {km} км"
+  },
+  "No speed cameras within {km} km": "Немає камер швидкості в радіусі {km} км",
+  "Speed Cameras (Sweden)": "Камери швидкості (Швеція)"
 }

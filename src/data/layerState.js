@@ -749,6 +749,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     disposition: 'enabled-only',
   }),
   Object.freeze({
+    id: 'speed-cameras',
+    token: '0n',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'sr-traffic',
     token: '0v',
     disposition: 'enabled-only',

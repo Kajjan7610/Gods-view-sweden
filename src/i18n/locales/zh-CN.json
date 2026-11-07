@@ -3526,5 +3526,27 @@
   "Looking for sights…": "正在查找景点…",
   "Sights unavailable right now": "景点暂时不可用",
   "No sights found nearby": "附近没有找到景点",
-  "Read on Wikipedia": "在维基百科上阅读"
+  "Read on Wikipedia": "在维基百科上阅读",
+  "north": "北",
+  "northeast": "东北",
+  "east": "东",
+  "southeast": "东南",
+  "south": "南",
+  "southwest": "西南",
+  "west": "西",
+  "northwest": "西北",
+  "facing {degrees}° ({direction})": "朝向 {degrees}°（{direction}）",
+  "SPEED CAMERA · {road}": "测速摄像头 · {road}",
+  "SPEED CAMERA": "测速摄像头",
+  "The police move the cameras between sites": "警方会在各点位之间轮换摄像头",
+  "Speed camera data unavailable": "测速摄像头数据不可用",
+  "Camera site, arrow in the direction it faces": "摄像头点位，箭头为其朝向",
+  "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "Trafikverket 的固定交通安全摄像头：用摄像头检测车速的点位。警方会在各点位之间轮换设备，因此并非每个点位都一直在拍摄。视图在约 400 公里以内时显示箭头。点击点位可查看道路和朝向。",
+  "Speed cameras need the Trafikverket key": "测速摄像头需要 Trafikverket 密钥",
+  "Malformed speed camera snapshot": "测速摄像头数据格式错误",
+  "{count} speed cameras within {km} km": {
+    "other": "{km} 公里内有 {count} 个测速摄像头"
+  },
+  "No speed cameras within {km} km": "{km} 公里内没有测速摄像头",
+  "Speed Cameras (Sweden)": "测速摄像头（瑞典）"
 }

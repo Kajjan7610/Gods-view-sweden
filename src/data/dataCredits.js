@@ -403,6 +403,12 @@ export const DATA_CREDITS = [
       '<a href="https://viva.sjofartsverket.se/" target="_blank" rel="noopener">Sjöfartsverket ViVa</a>',
   },
   {
+    key: 'speed-cameras',
+    html:
+      'Speed Cameras (Sweden): ' +
+      '<a href="https://data.trafikverket.se/" target="_blank" rel="noopener">Trafikverket</a> (traffic safety cameras, CC0)',
+  },
+  {
     key: 'river-flow',
     html:
       'River flow (Sweden): ' +

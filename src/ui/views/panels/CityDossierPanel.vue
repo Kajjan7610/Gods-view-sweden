@@ -104,6 +104,14 @@ watch(
               <p v-if="d.now.kris.empty" class="city-dossier-note">{{ d.now.kris.empty }}</p>
               <a v-for="item in d.now.kris.news" :key="item.key" :href="item.url || undefined" target="_blank" rel="noopener noreferrer"><small>{{ item.meta }}</small> {{ item.headline }}</a>
             </div>
+            <div v-if="d.now.cameras" class="city-dossier-trains city-dossier-cameras">
+              <strong><span class="material-symbols-outlined" aria-hidden="true">speed_camera</span>{{ d.now.cameras.title }}</strong>
+              <button v-for="row in d.now.cameras.items" :key="row.key" type="button" class="city-dossier-camera" :title="t('Show on the map')" @click="store.act('showCamera', row.key)">
+                <span class="city-dossier-camera-road">{{ row.road }}</span>
+                <span class="city-dossier-dest">{{ row.name }}<small v-if="row.detail">{{ row.detail }}</small></span>
+                <span class="material-symbols-outlined" aria-hidden="true">my_location</span>
+              </button>
+            </div>
             <div v-if="d.now.trains" class="city-dossier-trains">
               <strong>{{ d.now.trains.title }}</strong>
               <p v-if="d.now.trains.empty" class="city-dossier-note">{{ d.now.trains.empty }}</p>

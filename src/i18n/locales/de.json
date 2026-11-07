@@ -3603,5 +3603,28 @@
   "Looking for sights…": "Sehenswürdigkeiten werden gesucht…",
   "Sights unavailable right now": "Sehenswürdigkeiten gerade nicht verfügbar",
   "No sights found nearby": "Keine Sehenswürdigkeiten in der Nähe",
-  "Read on Wikipedia": "Auf Wikipedia lesen"
+  "Read on Wikipedia": "Auf Wikipedia lesen",
+  "north": "Norden",
+  "northeast": "Nordosten",
+  "east": "Osten",
+  "southeast": "Südosten",
+  "south": "Süden",
+  "southwest": "Südwesten",
+  "west": "Westen",
+  "northwest": "Nordwesten",
+  "facing {degrees}° ({direction})": "Richtung {degrees}° ({direction})",
+  "SPEED CAMERA · {road}": "BLITZER · {road}",
+  "SPEED CAMERA": "BLITZER",
+  "The police move the cameras between sites": "Die Polizei wechselt die Kameras zwischen den Standorten",
+  "Speed camera data unavailable": "Blitzerdaten nicht verfügbar",
+  "Camera site, arrow in the direction it faces": "Kamerastandort, Pfeil in Blickrichtung",
+  "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "Die festen Verkehrssicherheitskameras von Trafikverket: Standorte, an denen die Geschwindigkeit per Kamera überwacht wird. Die Polizei wechselt die Technik zwischen den Standorten, daher blitzt nicht jeder Standort ständig. Die Pfeile erscheinen, wenn die Ansicht näher als etwa 400 km ist. Ein Klick zeigt Straße und Richtung.",
+  "Speed cameras need the Trafikverket key": "Blitzer benötigen den Trafikverket-Schlüssel",
+  "Malformed speed camera snapshot": "Fehlerhafte Blitzerdaten",
+  "{count} speed cameras within {km} km": {
+    "one": "{count} Blitzer im Umkreis von {km} km",
+    "other": "{count} Blitzer im Umkreis von {km} km"
+  },
+  "No speed cameras within {km} km": "Keine Blitzer im Umkreis von {km} km",
+  "Speed Cameras (Sweden)": "Blitzer (Schweden)"
 }

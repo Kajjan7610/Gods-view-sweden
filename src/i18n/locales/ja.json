@@ -3526,5 +3526,27 @@
   "Looking for sights…": "見どころを探しています…",
   "Sights unavailable right now": "見どころは現在取得できません",
   "No sights found nearby": "近くに見どころは見つかりません",
-  "Read on Wikipedia": "Wikipedia で読む"
+  "Read on Wikipedia": "Wikipedia で読む",
+  "north": "北",
+  "northeast": "北東",
+  "east": "東",
+  "southeast": "南東",
+  "south": "南",
+  "southwest": "南西",
+  "west": "西",
+  "northwest": "北西",
+  "facing {degrees}° ({direction})": "向き {degrees}°（{direction}）",
+  "SPEED CAMERA · {road}": "速度取締カメラ · {road}",
+  "SPEED CAMERA": "速度取締カメラ",
+  "The police move the cameras between sites": "警察はカメラを地点間で移動させます",
+  "Speed camera data unavailable": "速度取締カメラのデータを取得できません",
+  "Camera site, arrow in the direction it faces": "カメラ地点、矢印は向いている方向",
+  "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "Trafikverket の固定式交通安全カメラ：カメラで速度を取り締まる地点です。警察は機材を地点間で移動させるため、すべての地点が常に撮影しているわけではありません。矢印は表示範囲が約 400 km 以内のときに表示されます。地点をクリックすると道路と向きが分かります。",
+  "Speed cameras need the Trafikverket key": "速度取締カメラには Trafikverket のキーが必要です",
+  "Malformed speed camera snapshot": "速度取締カメラのデータが不正です",
+  "{count} speed cameras within {km} km": {
+    "other": "{km} km 以内に速度取締カメラ {count} 台"
+  },
+  "No speed cameras within {km} km": "{km} km 以内に速度取締カメラはありません",
+  "Speed Cameras (Sweden)": "速度取締カメラ（スウェーデン）"
 }
