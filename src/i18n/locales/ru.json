@@ -3742,5 +3742,20 @@
     "few": "всего {count} визита",
     "many": "всего {count} визитов",
     "other": "всего {count} визита"
-  }
+  },
+  "SIGHTS": "ДОСТОПРИМ.",
+  "Castle or palace": "Замок или дворец",
+  "Fortress": "Крепость",
+  "Church": "Церковь",
+  "Museum": "Музей",
+  "Runestone": "Рунический камень",
+  "Ancient monument": "Археологический памятник",
+  "Manor": "Усадьба",
+  "Monument": "Памятник",
+  "Nature": "Природа",
+  "Lighthouse": "Маяк",
+  "Looking for sights…": "Ищем достопримечательности…",
+  "Sights unavailable right now": "Достопримечательности сейчас недоступны",
+  "No sights found nearby": "Поблизости нет достопримечательностей",
+  "Read on Wikipedia": "Читать в Википедии"
 }

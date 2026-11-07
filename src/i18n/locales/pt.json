@@ -3665,5 +3665,20 @@
     "one": "{count} visita no total",
     "many": "{count} visitas no total",
     "other": "{count} visitas no total"
-  }
+  },
+  "SIGHTS": "A VISITAR",
+  "Castle or palace": "Castelo ou palácio",
+  "Fortress": "Fortaleza",
+  "Church": "Igreja",
+  "Museum": "Museu",
+  "Runestone": "Pedra rúnica",
+  "Ancient monument": "Sítio arqueológico",
+  "Manor": "Solar",
+  "Monument": "Monumento",
+  "Nature": "Natureza",
+  "Lighthouse": "Farol",
+  "Looking for sights…": "A procurar locais de interesse…",
+  "Sights unavailable right now": "Locais de interesse indisponíveis de momento",
+  "No sights found nearby": "Sem locais de interesse por perto",
+  "Read on Wikipedia": "Ler na Wikipédia"
 }

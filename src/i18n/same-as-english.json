@@ -229,7 +229,8 @@
     "{ft} ft",
     "{c} °C",
     "2D",
-    "3D"
+    "3D",
+    "Museum"
   ],
   "es": [
     "1090 MHz",
@@ -601,7 +602,9 @@
     "{c} °C",
     "2D",
     "3D",
-    "possible"
+    "possible",
+    "Monument",
+    "Nature"
   ],
   "it": [
     "1090 MHz",
@@ -1228,7 +1231,8 @@
     "{ft} ft",
     "{c} °C",
     "2D",
-    "3D"
+    "3D",
+    "Museum"
   ],
   "uk": [
     "AIS: --",

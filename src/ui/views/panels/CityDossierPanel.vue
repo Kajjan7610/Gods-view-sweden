@@ -1,4 +1,5 @@
 <script setup>
+import { nextTick, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { t } from '../../../i18n/index.js';
 import RailPanel from '../../rail/RailPanel.vue';
@@ -12,6 +13,17 @@ const store = useCityDossierStore();
 const { view: d } = storeToRefs(store);
 // "Full board" opens the airport board (src/ui/airportBoard.js).
 const airportBoard = useAirportBoardStore();
+// A sight picked on the map scrolls into view in the list.
+watch(
+  () => d.value?.sights?.chosen,
+  async (id) => {
+    if (!id) return;
+    await nextTick();
+    document
+      .querySelector(`#city-panel-body [data-sight="${id}"]`)
+      ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  },
+);
 </script>
 
 <template>
@@ -138,8 +150,22 @@ const airportBoard = useAirportBoardStore();
             </button>
           </template>
         </section>
-        <section v-else-if="d.tab === 'pass'" class="city-dossier-section" role="tabpanel">
-          <strong class="city-dossier-pass-summary">{{ d.pass.summary }}</strong>
+        <section v-else-if="d.tab === 'sights' && d.sights" class="city-dossier-section" role="tabpanel">
+          <p v-if="d.sights.note" class="city-dossier-note">{{ d.sights.note }}</p>
+          <ul class="city-dossier-sights">
+            <li v-for="item in d.sights.items" :key="item.key" :class="{ chosen: item.chosen }" :data-sight="item.key">
+              <button type="button" :aria-pressed="String(item.chosen)" @click="store.act(item.chosen ? 'clearSight' : 'chooseSight', item.key)">
+                <i :style="{ background: item.color }" aria-hidden="true"></i>
+                <span><strong>{{ item.name }}</strong><small>{{ item.kind }} · {{ item.distance }}</small></span>
+              </button>
+              <div v-if="item.chosen && (item.image || item.article)" class="city-dossier-sight-more">
+                <img v-if="item.image" :src="item.image" alt="" loading="lazy" referrerpolicy="no-referrer" />
+                <a v-if="item.article" :href="item.article" target="_blank" rel="noopener noreferrer">{{ t('Read on Wikipedia') }}</a>
+              </div>
+            </li>
+          </ul>
+        </section>
+        <section v-else-if="d.tab === 'pass'" class="city-dossier-section" role="tabpanel">          <strong class="city-dossier-pass-summary">{{ d.pass.summary }}</strong>
           <small class="city-dossier-note">{{ d.pass.total }}</small>
           <div v-for="row in d.pass.challenges" :key="row.id" class="city-dossier-challenge" :class="{ done: row.done }">
             <span>{{ row.label }}</span><small>{{ row.progress }}</small>

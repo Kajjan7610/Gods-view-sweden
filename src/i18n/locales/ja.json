@@ -3511,5 +3511,20 @@
   "Latest stamps": "最近のスタンプ",
   "{count} visits in all": {
     "other": "合計 {count} 回の訪問"
-  }
+  },
+  "SIGHTS": "見どころ",
+  "Castle or palace": "城・宮殿",
+  "Fortress": "要塞",
+  "Church": "教会",
+  "Museum": "博物館",
+  "Runestone": "ルーン石碑",
+  "Ancient monument": "遺跡",
+  "Manor": "荘園邸宅",
+  "Monument": "記念物",
+  "Nature": "自然",
+  "Lighthouse": "灯台",
+  "Looking for sights…": "見どころを探しています…",
+  "Sights unavailable right now": "見どころは現在取得できません",
+  "No sights found nearby": "近くに見どころは見つかりません",
+  "Read on Wikipedia": "Wikipedia で読む"
 }

@@ -37,6 +37,7 @@ import {
 } from './visitPassport.js';
 import { OrbitController } from '../orbit.js';
 import { messagesFor } from './krisinformationModel.js';
+import { SIGHT_COLORS, createSightsLayer } from './citySights.js';
 
 const PANEL_ID = 'city-panel';
 /** Higher than this the view is looking at a region, not visiting a town. */
@@ -54,6 +55,7 @@ const TABS = Object.freeze([
   ['people', msg('POPULATION')],
   ['society', msg('SOCIETY')],
   ['now', msg('NOW')],
+  ['sights', msg('SIGHTS')],
   ['pass', msg('PASSPORT')],
 ]);
 const CHALLENGE_LABELS = Object.freeze({
@@ -87,6 +89,21 @@ const ALERT_LEVEL_KEYS = Object.freeze({
   RED: msg('Red warning'),
 });
 const SEK = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 0 });
+const SIGHT_KINDS = Object.freeze({
+  castle: msg('Castle or palace'),
+  fortress: msg('Fortress'),
+  church: msg('Church'),
+  museum: msg('Museum'),
+  runestone: msg('Runestone'),
+  ancient: msg('Ancient monument'),
+  manor: msg('Manor'),
+  monument: msg('Monument'),
+  nature: msg('Nature'),
+  lighthouse: msg('Lighthouse'),
+});
+/** A chosen sight is shown from this far south and this high. */
+const SIGHT_VIEW_SOUTH_DEG = 0.011;
+const SIGHT_VIEW_HEIGHT_M = 900;
 const AURORA_CHANCES = Object.freeze({
   low: msg('low'),
   possible: msg('possible'),
@@ -128,6 +145,8 @@ export function createCityDossier({
   storage = globalThis.localStorage,
   // Scenes and other camera owners: no arrival orbit while they hold it.
   isCameraBusy = () => false,
+  // The world-overlay host, for the sights' names on the map (optional).
+  overlayHost = null,
 }) {
   let destroyed = false;
   const createdAt = now();
@@ -148,6 +167,15 @@ export function createCityDossier({
   let status = 'idle';
   let radioBusy = false;
   let appeared = false;
+  /** The town's sights: `{ code, status, items }`, and the one chosen. */
+  let sights = null;
+  let chosenSight = null;
+  let sightsRequest = null;
+  const sightsLayer = createSightsLayer({
+    viewer,
+    overlayHost,
+    onPick: (id) => chooseSight(id),
+  });
 
   function viewCenter() {
     const canvas = viewer.scene.canvas;
@@ -180,6 +208,8 @@ export function createCityDossier({
     timer = null;
     if (destroyed || documentRef?.body?.classList?.contains('cockpit-mode'))
       return;
+    // A chosen sight may lie over the border: the town stays while it shows.
+    if (tab === 'sights' && chosenSight) return;
     const center = viewCenter();
     if (!center) return;
     request?.abort();
@@ -207,6 +237,9 @@ export function createCityDossier({
         }
         render();
         openOnFirstVisit();
+        // A new town on the SIGHTS tab: its own sights, the last town's gone.
+        drawSights();
+        if (tab === 'sights') void loadSights();
       }
       if (now() - liveAt > LIVE_TTL_MS) void loadLive();
     } catch (error) {
@@ -423,6 +456,94 @@ export function createCityDossier({
         }).format(stamp.first),
       }),
     ].join(' · ');
+  }
+
+  // ---- sights --------------------------------------------------------------
+  /** The town's sights, read once per town while the tab is open. */
+  async function loadSights() {
+    // A failed read is tried again the next time the tab opens.
+    if (!city || (sights?.code === city.code && sights.status !== 'error'))
+      return;
+    const forCity = city;
+    sightsRequest?.abort();
+    const controller = new AbortController();
+    sightsRequest = controller;
+    sights = { code: forCity.code, status: 'loading', items: [] };
+    render();
+    const [lon, lat] = forCity.point;
+    try {
+      const body = await getJson(
+        `/api/city-sights?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`,
+        controller.signal,
+      );
+      if (destroyed || city !== forCity) return;
+      sights = {
+        code: forCity.code,
+        status: 'ready',
+        items: (body?.sights ?? []).map((sight, rank) => ({ ...sight, rank })),
+      };
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+      sights = { code: forCity.code, status: 'error', items: [] };
+    } finally {
+      if (sightsRequest === controller) sightsRequest = null;
+    }
+    drawSights();
+    render();
+  }
+
+  function drawSights() {
+    if (tab === 'sights' && sights?.code === city?.code)
+      sightsLayer.show(sights.items, chosenSight);
+    else sightsLayer.hide();
+  }
+
+  /** Choose a sight: mark it, and fly in from the south to look at it. */
+  function chooseSight(id) {
+    const sight = sights?.items.find((item) => item.id === id);
+    if (!sight) return;
+    chosenSight = id;
+    stopOrbit();
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(
+        sight.lon,
+        sight.lat - SIGHT_VIEW_SOUTH_DEG,
+        SIGHT_VIEW_HEIGHT_M,
+      ),
+      orientation: {
+        heading: 0,
+        pitch: Cesium.Math.toRadians(-35),
+        roll: 0,
+      },
+      duration: 2,
+    });
+    drawSights();
+    render();
+  }
+
+  function sightsView() {
+    if (!sights || sights.code !== city?.code || sights.status === 'loading')
+      return { note: t('Looking for sights…'), items: [] };
+    if (sights.status === 'error')
+      return { note: t('Sights unavailable right now'), items: [] };
+    return {
+      note: sights.items.length ? '' : t('No sights found nearby'),
+      chosen: chosenSight,
+      items: sights.items.map((sight) => {
+        const chosen = sight.id === chosenSight;
+        return {
+          key: sight.id,
+          name: sight.name,
+          kind: t(SIGHT_KINDS[sight.kind] ?? SIGHT_KINDS.monument),
+          color: SIGHT_COLORS[sight.kind] ?? '#ffffff',
+          distance: t('{km} km', { km: oneDecimal(sight.km) }),
+          chosen,
+          article: chosen ? sight.article : null,
+          // Commons' own thumbnail of the chosen sight's picture.
+          image: chosen && sight.image ? `${sight.image}?width=320` : null,
+        };
+      }),
+    };
   }
 
   function passView() {
@@ -1011,6 +1132,7 @@ export function createCityDossier({
       people: facts ? peopleView() : null,
       society: facts ? societyView() : null,
       now: nowView(),
+      sights: tab === 'sights' ? sightsView() : null,
       pass: passView(),
       arrival,
       // Provider names; the live transport ones only once they show.
@@ -1032,6 +1154,15 @@ export function createCityDossier({
       if (!TABS.some(([tabId]) => tabId === id)) return;
       tab = id;
       if (id === 'now' && now() - liveAt > LIVE_TTL_MS) void loadLive();
+      if (id !== 'sights') chosenSight = null;
+      if (id === 'sights') void loadSights();
+      drawSights();
+      render();
+    },
+    chooseSight: (id) => chooseSight(id),
+    clearSight() {
+      chosenSight = null;
+      drawSights();
       render();
     },
     playRadio,
@@ -1080,6 +1211,8 @@ export function createCityDossier({
       clearTimeout(arrivalTimer);
       if (journey) viewer.dataSources.remove(journey, true);
       journey = null;
+      sightsRequest?.abort();
+      sightsLayer.destroy();
       disconnect();
       publish(null);
     },

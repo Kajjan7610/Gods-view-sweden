@@ -3588,5 +3588,20 @@
   "{count} visits in all": {
     "one": "{count} besök totalt",
     "other": "{count} besök totalt"
-  }
+  },
+  "SIGHTS": "SEVÄRT",
+  "Castle or palace": "Slott eller borg",
+  "Fortress": "Fästning",
+  "Church": "Kyrka",
+  "Museum": "Museum",
+  "Runestone": "Runsten",
+  "Ancient monument": "Fornlämning",
+  "Manor": "Herrgård",
+  "Monument": "Minnesmärke",
+  "Nature": "Natur",
+  "Lighthouse": "Fyr",
+  "Looking for sights…": "Letar efter sevärdheter…",
+  "Sights unavailable right now": "Sevärdheterna kan inte hämtas just nu",
+  "No sights found nearby": "Inga sevärdheter hittades i närheten",
+  "Read on Wikipedia": "Läs på Wikipedia"
 }

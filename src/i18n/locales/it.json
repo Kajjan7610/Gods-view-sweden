@@ -3665,5 +3665,20 @@
     "one": "{count} visita in tutto",
     "many": "{count} visite in tutto",
     "other": "{count} visite in tutto"
-  }
+  },
+  "SIGHTS": "DA VEDERE",
+  "Castle or palace": "Castello o palazzo",
+  "Fortress": "Fortezza",
+  "Church": "Chiesa",
+  "Museum": "Museo",
+  "Runestone": "Pietra runica",
+  "Ancient monument": "Sito archeologico",
+  "Manor": "Maniero",
+  "Monument": "Monumento",
+  "Nature": "Natura",
+  "Lighthouse": "Faro",
+  "Looking for sights…": "Ricerca dei luoghi da vedere…",
+  "Sights unavailable right now": "Luoghi da vedere non disponibili al momento",
+  "No sights found nearby": "Nessun luogo da vedere nelle vicinanze",
+  "Read on Wikipedia": "Leggi su Wikipedia"
 }

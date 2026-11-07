@@ -66,6 +66,21 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (sevärt i staden)
+- Ny flik **SEVÄRT** i dossiern (flikarna ligger nu i två rader): slott
+  och borgar, fästningar, kyrkor och domkyrkor, museer, runstenar,
+  fornlämningar och ruiner, herrgårdar, minnesmärken, natur (vattenfall,
+  naturreservat, nationalparker) och fyrar inom 12 km, från Wikidata, t.ex.
+  Uppsala: Uppsala slott, Gustavianum, Ärkebiskopsborgen, Gamla Uppsala.
+  Högst 40 och högst 8 av en sort; de med Wikipedia-artikel, bild eller
+  en sevärd sort först.
+- Varje plats pekas ut på kartan som en prick i sin sorts färg med namn.
+  Klick i listan eller på kartan väljer platsen: den blir guldfärgad,
+  kameran flyger in söderifrån och listan visar bild (Wikimedia Commons)
+  och länk till Wikipedia. Medan en plats är vald byter dossiern inte stad
+  om platsen ligger i grannkommunen.
+- Ny adress `/api/city-sights` (sparas ett dygn per stad).
+
 ### 2026-11-07 (besöksräknare)
 - Dossierns huvud visar "Besök 4 · första 5 nov." för en stämplad stad.
 - PASS-fliken visar antal besök totalt, en lista **Mest besökta** (städer

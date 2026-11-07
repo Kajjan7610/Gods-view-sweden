@@ -3511,5 +3511,20 @@
   "Latest stamps": "最新印章",
   "{count} visits in all": {
     "other": "共 {count} 次到訪"
-  }
+  },
+  "SIGHTS": "景點",
+  "Castle or palace": "城堡或宮殿",
+  "Fortress": "要塞",
+  "Church": "教堂",
+  "Museum": "博物館",
+  "Runestone": "盧恩石",
+  "Ancient monument": "古蹟",
+  "Manor": "莊園",
+  "Monument": "紀念物",
+  "Nature": "自然",
+  "Lighthouse": "燈塔",
+  "Looking for sights…": "正在尋找景點…",
+  "Sights unavailable right now": "景點暫時無法取得",
+  "No sights found nearby": "附近沒有找到景點",
+  "Read on Wikipedia": "在維基百科上閱讀"
 }

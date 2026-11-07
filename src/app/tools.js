@@ -144,6 +144,12 @@ export function createApplicationTools({
     connect: (actions) => cityDossierStore.connect(actions),
     // A playing scene owns the camera; a first visit then gets no orbit.
     isCameraBusy: () => sceneDirector.getPlaybackStatus?.()?.running === true,
+    overlayHost: {
+      setEntries: worldOverlays.setOverlayEntries,
+      setVisible: worldOverlays.setOverlaySourceVisible,
+      clearSource: worldOverlays.clearOverlaySource,
+      hitTest: worldOverlays.hitTestWorldOverlay,
+    },
   });
   defer(() => cityDossier.destroy());
   // Krisinformation.se's public alerts (VMA), across the top while active.

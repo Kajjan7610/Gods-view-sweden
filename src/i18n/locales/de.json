@@ -3588,5 +3588,20 @@
   "{count} visits in all": {
     "one": "{count} Besuch insgesamt",
     "other": "{count} Besuche insgesamt"
-  }
+  },
+  "SIGHTS": "SEHENSWERT",
+  "Castle or palace": "Schloss oder Burg",
+  "Fortress": "Festung",
+  "Church": "Kirche",
+  "Museum": "Museum",
+  "Runestone": "Runenstein",
+  "Ancient monument": "Bodendenkmal",
+  "Manor": "Herrenhaus",
+  "Monument": "Denkmal",
+  "Nature": "Natur",
+  "Lighthouse": "Leuchtturm",
+  "Looking for sights…": "Sehenswürdigkeiten werden gesucht…",
+  "Sights unavailable right now": "Sehenswürdigkeiten gerade nicht verfügbar",
+  "No sights found nearby": "Keine Sehenswürdigkeiten in der Nähe",
+  "Read on Wikipedia": "Auf Wikipedia lesen"
 }

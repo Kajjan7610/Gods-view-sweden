@@ -3742,5 +3742,20 @@
     "few": "усього {count} візити",
     "many": "усього {count} візитів",
     "other": "усього {count} візиту"
-  }
+  },
+  "SIGHTS": "ВАРТО ПОБАЧИТИ",
+  "Castle or palace": "Замок або палац",
+  "Fortress": "Фортеця",
+  "Church": "Церква",
+  "Museum": "Музей",
+  "Runestone": "Руничний камінь",
+  "Ancient monument": "Археологічна пам’ятка",
+  "Manor": "Садиба",
+  "Monument": "Пам’ятник",
+  "Nature": "Природа",
+  "Lighthouse": "Маяк",
+  "Looking for sights…": "Шукаємо пам’ятки…",
+  "Sights unavailable right now": "Пам’ятки зараз недоступні",
+  "No sights found nearby": "Поблизу немає пам’яток",
+  "Read on Wikipedia": "Читати у Вікіпедії"
 }

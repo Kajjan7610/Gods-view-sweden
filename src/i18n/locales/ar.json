@@ -3896,5 +3896,20 @@
     "few": "{count} زيارات إجمالًا",
     "many": "{count} زيارة إجمالًا",
     "other": "{count} زيارة إجمالًا"
-  }
+  },
+  "SIGHTS": "معالم",
+  "Castle or palace": "قلعة أو قصر",
+  "Fortress": "حصن",
+  "Church": "كنيسة",
+  "Museum": "متحف",
+  "Runestone": "حجر روني",
+  "Ancient monument": "موقع أثري",
+  "Manor": "قصر ريفي",
+  "Monument": "نصب تذكاري",
+  "Nature": "طبيعة",
+  "Lighthouse": "منارة",
+  "Looking for sights…": "جارٍ البحث عن المعالم…",
+  "Sights unavailable right now": "المعالم غير متاحة حاليًا",
+  "No sights found nearby": "لا توجد معالم قريبة",
+  "Read on Wikipedia": "اقرأ في ويكيبيديا"
 }

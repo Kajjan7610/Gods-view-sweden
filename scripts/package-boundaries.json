@@ -2316,6 +2316,7 @@
       "./standalone/catalog"
     ],
     "modules": [
+      "src/ui/citySights.js",
       "src/ui/krisinformationModel.js",
       "src/ui/vmaBanner.js",
       "src/ui/stores/vmaBanner.js",

@@ -118,7 +118,8 @@
 }
 .city-dossier-tabs {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  /* Six tabs: two rows of three. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 3px;
 }
 .city-dossier-tabs button {
@@ -731,5 +732,71 @@ body.mobile-shell .city-arrival {
   border-radius: 3px;
   background: rgba(255, 201, 77, 0.16);
   color: #ffc94d;
+  font-size: 9.5px;
+}
+/* Sights: a list matched by colour to the dots on the map. */
+.city-dossier-sights {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.city-dossier-sights button {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 5px 6px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.city-dossier-sights button:hover,
+.city-dossier-sights li.chosen button {
+  background: rgba(255, 201, 77, 0.1);
+}
+.city-dossier-sights i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #04101a;
+}
+.city-dossier-sights span {
+  display: grid;
+  min-width: 0;
+}
+.city-dossier-sights strong {
+  overflow: hidden;
+  color: #fff;
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.city-dossier-sights li.chosen strong {
+  color: #ffc94d;
+}
+.city-dossier-sights small {
+  color: rgba(220, 238, 255, 0.6);
+  font-size: 9px;
+}
+.city-dossier-sight-more {
+  display: grid;
+  gap: 4px;
+  margin: 2px 6px 6px 24px;
+}
+.city-dossier-sight-more img {
+  width: 100%;
+  max-height: 160px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+.city-dossier-sight-more a {
+  color: #90caf9;
   font-size: 9.5px;
 }
