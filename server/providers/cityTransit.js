@@ -196,7 +196,17 @@ export function normalizeJams(payload) {
     .slice(0, MAX_JAMS);
 }
 
-/** Bounded city transit route for dev and preview. */
+/** A JSON writer for one response, never cached by the browser. */
+const respond = (res) => (status, value) => {
+  if (res.destroyed) return;
+  res.writeHead(status, {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-store',
+  });
+  res.end(JSON.stringify(value));
+};
+
+/** Bounded city transit and airport board routes for dev and preview. */
 export function cityTransitProxy({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
@@ -298,7 +308,9 @@ export function cityTransitProxy({
     };
   }
 
-  const flights = createSwedaviaFlights({ fetchJson, now, env });
+  // One Swedavia reader for the dossier and the airport board: both read the
+  // same day lists, so the board costs no extra calls while the dossier shows.
+  const swedavia = createSwedaviaFlights({ fetchJson, now, env });
 
   async function trafficJams(point, cacheKey) {
     const key = String(env.TOMTOM_API_KEY ?? '').trim();
@@ -317,14 +329,7 @@ export function cityTransitProxy({
   }
 
   async function handler(req, res) {
-    const json = (status, value) => {
-      if (res.destroyed) return;
-      res.writeHead(status, {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-store',
-      });
-      res.end(JSON.stringify(value));
-    };
+    const json = respond(res);
     if (req.method !== 'GET') return json(405, { error: 'method_not_allowed' });
     const url = new URL(req.url || '/', 'http://local');
     if (url.pathname !== '/' && url.pathname !== '')
@@ -345,7 +350,7 @@ export function cityTransitProxy({
     const [rail, road, air] = await Promise.allSettled([
       trains(point, town),
       trafficJams(point, cell),
-      flights(point),
+      swedavia.nearby(point),
     ]);
     for (const [label, result] of [
       ['trains', rail],
@@ -375,13 +380,40 @@ export function cityTransitProxy({
     });
   }
 
+  /** One Swedavia airport's whole day: ?iata=ARN[&date=tomorrow][&only=security]. */
+  async function boardHandler(req, res) {
+    const json = respond(res);
+    if (req.method !== 'GET') return json(405, { error: 'method_not_allowed' });
+    const url = new URL(req.url || '/', 'http://local');
+    if (url.pathname !== '/' && url.pathname !== '')
+      return json(404, { error: 'unknown_route' });
+    const date =
+      url.searchParams.get('date') === 'tomorrow' ? 'tomorrow' : 'today';
+    const only =
+      url.searchParams.get('only') === 'security' ? 'security' : null;
+    if (!allow(clientKey(req))) return json(429, { error: 'rate_limited' });
+    try {
+      const board = await swedavia.board(url.searchParams.get('iata'), {
+        date,
+        only,
+      });
+      if (!board) return json(404, { error: 'unknown_airport' });
+      return json(200, { ...board, fetchedAt: now() });
+    } catch (error) {
+      console.warn(`[airport-board] ${error?.message}`);
+      return json(502, { error: 'upstream_failed' });
+    }
+  }
+
   return {
     name: 'city-transit',
     configureServer({ middlewares }) {
       middlewares.use('/api/city-transit', handler);
+      middlewares.use('/api/airport-board', boardHandler);
     },
     configurePreviewServer({ middlewares }) {
       middlewares.use('/api/city-transit', handler);
+      middlewares.use('/api/airport-board', boardHandler);
     },
   };
 }

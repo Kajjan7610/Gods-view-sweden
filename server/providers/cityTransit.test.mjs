@@ -187,11 +187,12 @@ test('jams: the longest delays first, roads and stretch named', () => {
   );
 });
 
-function route(options) {
-  let handler = null;
+function route(options, path = '/api/city-transit') {
+  const handlers = new Map();
   cityTransitProxy(options).configureServer({
-    middlewares: { use: (path, fn) => (handler = fn) },
+    middlewares: { use: (at, fn) => handlers.set(at, fn) },
   });
+  const handler = handlers.get(path);
   return async (url) => {
     const res = {
       destroyed: false,
@@ -240,4 +241,25 @@ test('the route answers trains and jams, each only with its key', async () => {
   assert.equal(none.jams, null);
   assert.equal(none.flights, null);
   assert.equal((await keyless('/?lat=x')).status, 400);
+});
+
+test('the airport board route: one Swedavia airport, today or tomorrow', async () => {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    return new Response(JSON.stringify({ flights: [] }));
+  };
+  const board = route(
+    { fetchImpl, env: { SWEDAVIA_FLIGHTINFO_KEY: 'k' } },
+    '/api/airport-board',
+  );
+  const today = await board('/?iata=ARN');
+  assert.equal(today.status, 200);
+  assert.equal(today.body.airport.name, 'Stockholm Arlanda');
+  assert.deepEqual(today.body.departures, []);
+  assert.equal(today.body.security, null, 'no WaitTime key');
+  assert.equal(calls.length, 2);
+  assert.equal((await board('/?iata=CPH')).status, 404);
+  assert.equal((await board('/?iata=ARN&only=security')).body.departures, null);
+  assert.equal(calls.length, 2, 'queues alone ask no flight list');
 });

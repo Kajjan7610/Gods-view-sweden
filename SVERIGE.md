@@ -66,6 +66,17 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (flygplatstavla, steg 1: hela dagen på servern)
+- Ny adress `/api/airport-board?iata=ARN` (`&date=tomorrow`,
+  `&only=security`): en Swedavia-flygplats hela dag i båda riktningar,
+  även flyg som redan gått, med anmärkningsraden från flygplatsens egna
+  skärmar ("Gå till gate", "Försenad till 16:15", "Sista bagage") och dess
+  ton, incheckningsdiskar, gatens öppning och stängning, bagageband,
+  mellanlandningar, codeshare, registrering, anropssignal och
+  Schengen/utrikes/inrikes. Köerna kommer med kontrollpunktens position.
+- Dossierns NU-flik och tavlan läser samma dagslista (sparad tre minuter),
+  så tavlan kostar inga extra anrop när dossiern redan visar flygplatsen.
+
 ### 2026-11-05 (flyg och säkerhetskontroll i stadsdossiern)
 - Fliken NU visar nu flyg för städer inom 45 km från någon av Swedavias tio
   flygplatser (högst två, den största först – Stockholm får Arlanda och
