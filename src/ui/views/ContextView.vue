@@ -11,6 +11,7 @@ import { useSceneStore } from '../stores/scenes.js';
 import AwarenessPanel from './panels/AwarenessPanel.vue';
 import BhoteKoshiPanel from './panels/BhoteKoshiPanel.vue';
 import CityDossierPanel from './panels/CityDossierPanel.vue';
+import AirportBoardPanel from './panels/AirportBoardPanel.vue';
 import MissionDetail from './panels/MissionDetail.vue';
 import MissionRoster from './panels/MissionRoster.vue';
 import RadioPanel from './panels/RadioPanel.vue';
@@ -39,6 +40,7 @@ const sceneRuntime = computed(() => scenePanel.value?.runtime ?? '');
       <div id="recent-imagery-panel-body" class="ui-scroll" data-rail-scroller></div>
     </RailPanel>
     <CityDossierPanel />
+    <AirportBoardPanel />
     <RailPanel id="global-context-panel" start-collapsed v-class-toggle="{ ...(ctx && { 'context-enabled': ctx.enabled }) }" :data-context-mode="ctx?.mode" :title="t('CONTEXT')" sideways scroll rail-scroller>
         <div class="cyber-panel-body ui-scroll" data-rail-scroller>
         <div class="global-context-modes" role="tablist" :aria-label="t('Context mode')">

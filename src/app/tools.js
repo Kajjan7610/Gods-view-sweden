@@ -7,7 +7,9 @@ import { applicationPinia } from '../ui/vueRuntime.js';
 import { initImageryBoxTool } from '../ui/imageryBoxTool.js';
 import { createRecentImageryPanel } from '../ui/recentImagery.js';
 import { createCityDossier } from '../ui/cityDossier.js';
+import { createAirportBoard } from '../ui/airportBoard.js';
 import { useCityDossierStore } from '../ui/stores/cityDossier.js';
+import { useAirportBoardStore } from '../ui/stores/airportBoard.js';
 import { initGevVoiceCommands } from '../voice/gevRealtime.js';
 import { installViews, isEmbeddedInline } from './embed.js';
 import { installScopeMask, destroyScopeMask } from '../scopeMask.js';
@@ -136,6 +138,14 @@ export function createApplicationTools({
     isCameraBusy: () => sceneDirector.getPlaybackStatus?.()?.running === true,
   });
   defer(() => cityDossier.destroy());
+  // A Swedavia airport's whole day, from the dossier or over the airport.
+  const airportBoardStore = useAirportBoardStore(applicationPinia());
+  const airportBoard = createAirportBoard({
+    viewer,
+    publish: (view) => airportBoardStore.publish(view),
+    connect: (actions) => airportBoardStore.connect(actions),
+  });
+  defer(() => airportBoard.destroy());
   if (startChrome)
     defer(startChrome({ loadingScreen, styleManager, dataManager, signal }));
   // Idle render governor: flips the scene into requestRenderMode whenever

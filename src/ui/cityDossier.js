@@ -753,7 +753,8 @@ export function createCityDossier({
                 time: clock(row.expected),
                 minutes: row.delayMinutes,
               })
-            : bilingual(row.status),
+            : // Swedavia's own screen line (Boarding, Go to gate) first.
+              bilingual(row.remark) || bilingual(row.status),
         late: row.canceled || row.delayMinutes > 0,
         detail: [
           row.flight,

@@ -66,6 +66,27 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (flygplatstavla, steg 2: tavlan)
+- Ny panel: en Swedavia-flygplats hela dag som en avgångstavla, med
+  flikarna Avgångar, Ankomster och Säkerhet (den sista bara på Arlanda,
+  Landvetter och Bromma). Raderna står i planerad ordning; en gul linje
+  "Nu" visar var dagen är och tavlan scrollar dit när den öppnas.
+  Försenade flyg visar ursprunglig och ny tid, avgångna dämpas, inställda
+  blir röda och Swedavias egen rad ("Gå till gate", "Boarding",
+  "Försenad till …") skiftar med split-flap.
+- Klick på en rad fäller ut detaljer: flygbolag, codeshare, planerad,
+  beräknad och faktisk tid, terminal, incheckningsdiskar, gate och dess
+  öppettider, bagageband med första och sista väska, Schengen/utrikes/
+  inrikes, anropssignal och flygplanets registrering.
+- Sökfält (flygnummer med eller utan mellanslag, stad på svenska eller
+  engelska, IATA-kod, flygbolag), knapp för i dag/i morgon och
+  uppdatering var tredje minut medan tavlan är öppen och sidan syns.
+- Öppnas med "Hela tavlan" vid varje flygplats i dossierns NU-flik, eller
+  från kortet som dyker upp när vyn stannar över en Swedavia-flygplats
+  (inom 6 km, under 25 km höjd). På telefon fyller tavlan skärmen.
+- Flygplatslistan ligger nu i `src/data/swedaviaAirports.js`, delad av
+  servern och tavlan. NU-fliken visar Swedavias rad i första hand.
+
 ### 2026-11-07 (flygplatstavla, steg 1: hela dagen på servern)
 - Ny adress `/api/airport-board?iata=ARN` (`&date=tomorrow`,
   `&only=security`): en Swedavia-flygplats hela dag i båda riktningar,

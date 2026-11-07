@@ -18,6 +18,8 @@
   "application": {
     "exports": ["./application"],
     "modules": [
+      "src/ui/stores/airportBoard.js",
+      "src/ui/views/panels/AirportBoardPanel.vue",
       "src/ui/views/panels/CityDossierPanel.vue",
       "src/ui/stores/cityDossier.js",
       "src/app/application.js",
@@ -2304,6 +2306,10 @@
       "./standalone/catalog"
     ],
     "modules": [
+      "src/ui/airportBoard.js",
+      "src/ui/airportBoardModel.js",
+      "src/data/swedaviaAirports.js",
+      "src/ui/stores/airportBoard.js",
       "src/ui/visitPassport.js",
       "src/ui/cityDossier.js",
       "src/ui/cityDossierModel.js",

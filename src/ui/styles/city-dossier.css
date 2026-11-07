@@ -342,6 +342,40 @@
 .city-dossier-departure.late .city-dossier-delay {
   color: #ffab40;
 }
+.city-dossier-flights-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.city-dossier-flights-head > strong {
+  color: rgba(220, 238, 255, 0.75);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.city-dossier-board-open {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border: 1px solid rgba(255, 201, 77, 0.45);
+  border-radius: 999px;
+  background: none;
+  color: #ffc94d;
+  font: 500 8px var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.city-dossier-board-open:hover,
+.city-dossier-board-open:focus-visible {
+  background: rgba(255, 201, 77, 0.14);
+}
+.city-dossier-board-open .material-symbols-outlined {
+  font-size: 11px;
+}
 .city-dossier-board {
   display: flex;
   align-items: center;

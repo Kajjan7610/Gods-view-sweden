@@ -3,12 +3,15 @@ import { storeToRefs } from 'pinia';
 import { t } from '../../../i18n/index.js';
 import RailPanel from '../../rail/RailPanel.vue';
 import { useCityDossierStore } from '../../stores/cityDossier.js';
+import { useAirportBoardStore } from '../../stores/airportBoard.js';
 
 // The city dossier on the right rail. The dossier controller presents the
 // town the view is visiting (src/ui/cityDossier.js); the panel stays hidden
 // until the first visit and answers its tabs and radio button through act().
 const store = useCityDossierStore();
 const { view: d } = storeToRefs(store);
+// "Full board" opens the airport board (src/ui/airportBoard.js).
+const airportBoard = useAirportBoardStore();
 </script>
 
 <template>
@@ -88,7 +91,12 @@ const { view: d } = storeToRefs(store);
               <div v-for="row in d.now.jams.items" :key="row.key" class="city-dossier-jam"><span>{{ row.title }}</span><small>{{ row.detail }}</small></div>
             </div>
             <div v-for="airport in d.now.flights || []" :key="airport.key" class="city-dossier-trains city-dossier-flights">
-              <strong>{{ airport.title }}</strong>
+              <div class="city-dossier-flights-head">
+                <strong>{{ airport.title }}</strong>
+                <button type="button" class="city-dossier-board-open" @click="airportBoard.act('open', airport.key)">
+                  <span class="material-symbols-outlined" aria-hidden="true">open_in_full</span>{{ t('Full board') }}
+                </button>
+              </div>
               <div v-if="airport.security.length" class="city-dossier-security">
                 <span class="city-dossier-board"><span class="material-symbols-outlined" aria-hidden="true">security</span>{{ t('Security queue') }}</span>
                 <span v-for="queue in airport.security" :key="queue.key" class="city-dossier-queue" :class="{ busy: queue.busy }"><small v-if="queue.label">{{ queue.label }}</small>{{ queue.value }}</span>

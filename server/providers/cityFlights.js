@@ -9,27 +9,16 @@
 // the last answer read is shown instead.
 
 import { greatCircleKm } from '../../src/geoDistance.js';
+import {
+  SWEDAVIA_AIRPORTS,
+  swedaviaAirport,
+} from '../../src/data/swedaviaAirports.js';
+
+export { SWEDAVIA_AIRPORTS, swedaviaAirport };
 
 export const SWEDAVIA_FLIGHTINFO_URL = 'https://api.swedavia.se/flightinfo/v2';
 export const SWEDAVIA_WAITTIME_URL =
   'https://api.swedavia.se/waittimepublic/v2/airports';
-/** The airports WaitTime measures; it answers 400 for the others. */
-const WAITTIME_AIRPORTS = new Set(['ARN', 'GOT', 'BMA']);
-
-/** Swedavia's ten airports, the busiest first. */
-export const SWEDAVIA_AIRPORTS = Object.freeze([
-  { iata: 'ARN', name: 'Stockholm Arlanda', lat: 59.6519, lon: 17.9186 },
-  { iata: 'GOT', name: 'Göteborg Landvetter', lat: 57.6628, lon: 12.2798 },
-  { iata: 'BMA', name: 'Stockholm Bromma', lat: 59.3544, lon: 17.9417 },
-  { iata: 'MMX', name: 'Malmö Airport', lat: 55.5363, lon: 13.3762 },
-  { iata: 'LLA', name: 'Luleå Airport', lat: 65.5438, lon: 22.122 },
-  { iata: 'UME', name: 'Umeå Airport', lat: 63.7918, lon: 20.2828 },
-  { iata: 'OSD', name: 'Åre Östersund Airport', lat: 63.1944, lon: 14.5003 },
-  { iata: 'VBY', name: 'Visby Airport', lat: 57.6628, lon: 18.3462 },
-  { iata: 'KRN', name: 'Kiruna Airport', lat: 67.822, lon: 20.3368 },
-  { iata: 'RNB', name: 'Ronneby Airport', lat: 56.2667, lon: 15.265 },
-]);
-
 /** A town is served by the airports within this distance. */
 const AIRPORT_RADIUS_KM = 45;
 const MAX_AIRPORTS = 2;
@@ -56,12 +45,6 @@ const time = (value) => {
   return Number.isFinite(ms) ? ms : null;
 };
 const TONES = new Set(['positive', 'negative', 'neutral']);
-
-/** One of Swedavia's airports by IATA code, or null. */
-export const swedaviaAirport = (iata) =>
-  SWEDAVIA_AIRPORTS.find(
-    (airport) => airport.iata === String(iata ?? '').toUpperCase(),
-  ) ?? null;
 
 /** The Swedavia airports serving a point, the busiest first. */
 export function airportsNear(point, radiusKm = AIRPORT_RADIUS_KM) {
@@ -358,7 +341,7 @@ export function createSwedaviaFlights({
 
   async function security(iata) {
     const key = waitKey();
-    if (!key || !WAITTIME_AIRPORTS.has(iata)) return null;
+    if (!key || !swedaviaAirport(iata)?.queues) return null;
     try {
       return await kept(`${iata}:security`, async () =>
         normalizeWaitTimes(await call(key, `${SWEDAVIA_WAITTIME_URL}/${iata}`)),
@@ -417,7 +400,7 @@ export function createSwedaviaFlights({
         name: airport.name,
         lat: airport.lat,
         lon: airport.lon,
-        queues: WAITTIME_AIRPORTS.has(airport.iata),
+        queues: airport.queues,
       },
       date: listDate,
       flights: Boolean(key),

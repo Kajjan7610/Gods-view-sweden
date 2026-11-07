@@ -215,7 +215,13 @@
     "{mw} MW",
     "{from}–{to} µSv/h",
     "{flow} m³/s",
-    "{km} km"
+    "{km} km",
+    "Schengen",
+    "Terminal",
+    "Check-in",
+    "Gate",
+    "Terminal {terminal}",
+    "Status"
   ],
   "es": [
     "1090 MHz",
@@ -359,7 +365,10 @@
     "{time} (+{minutes} min)",
     "{km} km",
     "+{minutes} min",
-    "{minutes} min"
+    "{minutes} min",
+    "Schengen",
+    "Terminal",
+    "Terminal {terminal}"
   ],
   "fr": [
     "1090 MHz",
@@ -565,7 +574,11 @@
     "{time} (+{minutes} min)",
     "{km} km",
     "+{minutes} min",
-    "{minutes} min"
+    "{minutes} min",
+    "Schengen",
+    "via {places}",
+    "Terminal",
+    "Terminal {terminal}"
   ],
   "it": [
     "1090 MHz",
@@ -752,7 +765,14 @@
     "{km} km",
     "+{minutes} min",
     "{minutes} min",
-    "gate {gate}"
+    "gate {gate}",
+    "Schengen",
+    "via {places}",
+    "Terminal",
+    "Check-in",
+    "Gate",
+    "Terminal {terminal}",
+    "Fast track"
   ],
   "ja": [
     "1090 MHz",
@@ -953,7 +973,12 @@
     "{time} (+{minutes} min)",
     "{km} km",
     "+{minutes} min",
-    "{minutes} min"
+    "{minutes} min",
+    "Schengen",
+    "via {places}",
+    "Terminal",
+    "Check-in",
+    "Terminal {terminal}"
   ],
   "ru": [
     "AIS: --",
@@ -1147,7 +1172,13 @@
     "{km} km",
     "+{minutes} min",
     "{minutes} min",
-    "gate {gate}"
+    "gate {gate}",
+    "Schengen",
+    "via {places}",
+    "Terminal",
+    "Gate",
+    "Terminal {terminal}",
+    "Status"
   ],
   "uk": [
     "AIS: --",
