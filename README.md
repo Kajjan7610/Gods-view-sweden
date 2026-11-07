@@ -1,5 +1,65 @@
 <div align="center">
 
+# 🇸🇪 God's Eye View Sverige
+
+**En vidareutvecklad svensk version av [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view), av Kaj Obst**
+
+![God's Eye View Sverige: titeln över Bottenviken med flyget live](docs/media/sverige/sverige-hero.gif)
+
+</div>
+
+Ett digitalt jordklot med hela världen live: flyg, satelliter, fartyg, jordbävningar och bränder från över 110 datakällor. Ovanpå det ligger Sveriges öppna data: **21 svenska API:er och 30 datatyper från 14 myndigheter och tjänster**, med hela gränssnittet på svenska.
+
+Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av Bilawal Sidhu och Sameh Khamis ([Halfpixel](https://halfpixel.ai)), öppen källkod under [MIT-licensen](LICENSE). Den här forken är ett fristående hobbyprojekt utan koppling till eller stöd från originalets upphovsmän. Fel i de svenska delarna rapporteras här, inte i originalet.
+
+![110+ datakällor, 21 svenska API:er, 30 datatyper från Trafikverket, SMHI, Swedavia, Samtrafiken, Krisinformation.se, Polisen, Sveriges Radio, SCB, Kolada, Valmyndigheten, Strålsäkerhetsmyndigheten, Svenska kraftnät, Sjöfartsverket och Elpriset just nu](docs/media/sverige/kallor.webp)
+
+### Det här är tillagt
+
+<table>
+<tr>
+<td width="50%"><img src="docs/media/sverige/flygtavlan.webp" alt="Arlandas flygtavla med avgångar och köer"><br><b>Flygtavlan</b>: Swedavias tio flygplatser, hela dagens avgångar och ankomster och köerna i säkerhetskontrollen</td>
+<td width="50%"><img src="docs/media/sverige/cockpit.webp" alt="Cockpit i ett plan på 36 000 fot över Värmland"><br><b>Cockpit</b>: i ett plan över Sverige, med Swedavias rader, flygväder och vädret på marken från SMHI</td>
+</tr>
+<tr>
+<td><img src="docs/media/sverige/vagkameror-3d.webp" alt="Trafikverkets vägkamera med livebilden lagd i 3D-scenen"><br><b>Vägkameror i 3D</b>: drygt 1 500 av Trafikverkets kameror med livebilden placerad i scenen</td>
+<td><img src="docs/media/sverige/stadsdossier-sevart.webp" alt="Stadsdossiern för Uppsala med Uppsala slott utpekat"><br><b>Stadsdossier</b>: en panel för varje ort, här Uppsala med fliken Sevärt från Wikidata</td>
+</tr>
+<tr>
+<td><img src="docs/media/sverige/stadsdossier-befolkning.webp" alt="Göteborgs befolkning med kurva i stadsdossiern"><br><b>Varje stad</b>: folkmängd från SCB och Kolada, här Göteborg</td>
+<td><img src="docs/media/sverige/stadsdossier-val.webp" alt="Malmös skattesats, inkomst och kommunval"><br><b>Varje stad</b>: skatt, inkomst, arbetslöshet och kommunvalet, här Malmö</td>
+</tr>
+<tr>
+<td><img src="docs/media/sverige/fartkameror.webp" alt="Fartkameror som pilar över Stockholm och listan i dossiern"><br><b>Fartkameror</b>: Trafikverkets cirka 2 800 platser, vridna åt det håll kameran pekar</td>
+<td><img src="docs/media/sverige/kraftsystemet.webp" alt="Pilar för elflödet mellan elområdena SE1–SE4 och grannländerna"><br><b>Kraftsystemet</b>: flödena mellan elområdena live från Svenska kraftnät</td>
+</tr>
+</table>
+
+- **Flyg:** följ ett plan i luften från tavlan, dagens rutter på globen, METAR och TAF, och en svensk lägesbild i cockpit.
+- **Varje stad:** panelen STAD för svenska orter med folkmängd, skatt, inkomst, val, läget just nu, tåg från stationen, köer runt staden, Sevärt och ett besökspass.
+- **Väg och trafik:** tåg i realtid färgade efter försening, bussar och spårvagnar från 16 regionala trafikbolag, väglag, vägväder, Sveriges Radios trafikmeddelanden och kollektivtrafikstörningar.
+- **Väder, kris och infrastruktur:** SMHI:s väder, varningar, radar, luftkvalitet och vattenföring, VMA och krisnyheter från Krisinformation.se, Polisens händelser, norrskensprognos, elpris per elområde, sjöväder och strålning.
+- **Sparläge:** knappen 3D/2D, eller `?globe=lite`, startar utan Google 3D Tiles så att hemmabruk inte drar av Googles kvot.
+
+### Kom igång
+
+```
+npm ci
+npm run dev
+```
+
+Öppna http://localhost:4173/?lang=sv (kräver Node 24 eller 26). De flesta svenska källor behöver ingen nyckel. Kameror, tåg, kollektivtrafik och flygtavlorna kräver kostnadsfria nycklar från Trafikverket, Trafiklab och Swedavia, som läggs i `.env` (se `.env.example`) eller i appen. Alla svenska tillägg, nycklarna och en logg över varje ändring finns i **[SVERIGE.md](SVERIGE.md)**. Källor och villkor finns i **[DATA_SOURCES.md](DATA_SOURCES.md)**.
+
+<sub>Bilderna är tagna i God's Eye View Sverige med Google Photorealistic 3D Tiles och de svenska datalagren, med källhänvisningen synlig i bild. Se [docs/media/README.md](docs/media/README.md).</sub>
+
+---
+
+<sub>Nedan följer originalprojektets README (på engelska). Den gäller även här, med de svenska tilläggen ovan.</sub>
+
+---
+
+<div align="center">
+
 # 🌐 God's Eye View
 
 [![CI](https://github.com/bilawalsidhu/gods-eye-view/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bilawalsidhu/gods-eye-view/actions/workflows/ci.yml) [![Reached #1 on GitHub Trending](https://img.shields.io/badge/%231_GitHub_Trending-thank_you!-F0A63C?style=flat-square&logo=github)](https://x.com/bilawalsidhu/status/2093798887815348521)

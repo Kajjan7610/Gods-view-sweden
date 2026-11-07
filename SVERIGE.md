@@ -1,8 +1,9 @@
 # God's Eye View – Sverige
 
 Fork av [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view)
-med svenska öppna data. Originalets `README.md` lämnas orört så att uppdateringar
-från originalet går att slå ihop; allt svenskt beskrivs här.
+med svenska öppna data, av Kaj Obst. `README.md` har ett svenskt block med bilder
+överst; resten av originalets README lämnas orört så att uppdateringar från
+originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 
 ## Vad som är tillagt
 
@@ -28,6 +29,13 @@ från originalet går att slå ihop; allt svenskt beskrivs här.
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, flöde i m³/s var 15:e minut och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
 | Stadsdossier: när vyn stannar lågt över en svensk ort visar panelen STAD i högerkanten stadsvapen, foto och inledning, tätortens och kommunens folkmängd med kurva, skattesats, inkomst, arbetslöshet och kommunvalet, samt läget just nu (väder, luft, varningar, Polisen, sol) och en knapp för lokalradio | Kolada (RKA), Wikidata (CC0), Wikipedia (CC BY-SA 4.0), SMHI, Polisen; ingen nyckel | Panelen STAD i högerkanten (dyker upp vid första besöket) |
+| Stadsdossierns flikar Sevärt (slott, kyrkor, museer m.m. utpekade på kartan), besökspass, tåg från stadens station, köer runt staden, VMA-banner och norrsken i natt | Wikidata (CC0), Trafikverket, TomTom, Krisinformation.se, NOAA SWPC | Panelen STAD |
+| Flygtavla: Swedavias tio flygplatser, hela dagens avgångar och ankomster, köerna i säkerhetskontrollen över terminalerna, följ planet i luften och dagens rutter på globen | Swedavia FlightInfo och WaitTime (gratisnycklar) | Kortet över en Swedavia-flygplats och tavlans egen panel |
+| Flygväder: METAR och TAF för flygplatserna | NOAA Aviation Weather Center (ingen nyckel) | Flygtavlan och cockpit |
+| Cockpit: knapp vid kartan när ett plan är valt, Swedavias rader för planet, svensk lägesbild i genomgången (ort och län, SMHI:s väder, varningar och VMA) | Swedavia, SMHI, Krisinformation.se, NOAA (METAR/TAF) | Cockpit |
+| Fartkameror: ca 2 800 fasta trafiksäkerhetskameror som pilar i kamerans riktning, och de närmaste i dossiern | Trafikverket (CC0) | Speed Cameras (Sweden), under Infrastructure, och NU-fliken |
+| Sverige-turen "Sverige just nu" | Lagren ovan | Scener |
+| Sparläge: starta utan Google 3D Tiles | – | Knappen 3D/2D, eller `?globe=lite` |
 | Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
 Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s radar och varningar samt OPERA:s radar är CC BY 4.0 (källa: SMHI respektive EUMETNET OPERA). Källor, villkor och tekniska detaljer står i
@@ -40,6 +48,8 @@ Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s radar och varningar samt O
 | `TRAFIKVERKET_API_KEY` | kameror, tåg, väglag, händelser | data.trafikverket.se |
 | `TRAFIKLAB_GTFS_RT_KEY` | bussar m.m. live | trafiklab.se → GTFS Regional Realtime |
 | `TRAFIKLAB_GTFS_STATIC_KEY` | linjenummer och fordonstyp | trafiklab.se → GTFS Regional Static |
+| `SWEDAVIA_FLIGHTINFO_KEY` | avgångar och ankomster i dossiern, tavlan och cockpit | apideveloper.swedavia.se → FlightInfo Free |
+| `SWEDAVIA_WAITTIME_KEY` | köerna i säkerhetskontrollen | apideveloper.swedavia.se → WaitTime Free |
 | `CESIUM_ION_TOKEN` | fotorealistiska 3D-städer | ion.cesium.com |
 
 Utan nyckel hoppas respektive del över med en förklarande rad; inget annat slutar fungera.
@@ -65,6 +75,25 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-07 (README och genomlysning inför publikt repo)
+- `README.md` har ett svenskt block överst: vad forken är, erkännande av
+  originalet (Bilawal Sidhu och Sameh Khamis, MIT), att forken saknar
+  koppling till originalets upphovsmän, siffrorna 110+ / 21 / 30 / 14,
+  åtta bilder och kom-igång på svenska. Originalets README följer orörd
+  under en avdelare.
+- Nya bilder i `docs/media/sverige/` (WebP och en GIF på 6,5 MB), tagna i
+  appen med Google Photorealistic 3D Tiles och källhänvisningen synlig i
+  bild; förtecknade i `docs/media/README.md`.
+- `LICENSE` har en andra copyrightrad för de svenska tilläggen; originalets
+  rad och villkor står kvar.
+- Tabellen "Vad som är tillagt" tar med flygtavlan, flygvädret, cockpit,
+  fartkameror, dossierns nyare flikar, Sverige-turen och sparläget, och
+  nyckeltabellen Swedavias två nycklar.
+- Genomlysning: hela historiken (3 075 commits) söktes igenom efter
+  värdena i `.env` och vanliga nyckelmönster (Google, AWS, GitHub, privata
+  nycklar m.fl.) utan träff; `.env`, `.gev-cache/` och `.claude/` har
+  aldrig checkats in. Inga lokala sökvägar i filerna.
 
 ### 2026-11-07 (fartkameror)
 - Nytt lager **Speed Cameras (Sweden)** (delningstoken 0n) under

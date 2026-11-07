@@ -38,3 +38,20 @@ Source: [`assets/youtube-popular-videos.png`](https://github.com/bilawalsidhu/go
 These files are not covered by the project's MIT License. No permission is granted for standalone reuse or modification. Commercial reuse outside this repository requires separate permission. No share-alike license applies.
 
 The authorization covers the PNGs as project promotional material. It does not claim ownership of platform interfaces, trademarks, avatars, data, or third-party imagery visible within the screenshots. Those elements remain subject to their respective owners' terms.
+
+## Swedish fork captures (`sverige/`)
+
+Kaj Obst captured the following files from God's Eye View Sverige (this fork) in November 2026 for its README:
+
+- `sverige/sverige-hero.gif`
+- `sverige/kallor.webp`
+- `sverige/flygtavlan.webp`
+- `sverige/cockpit.webp`
+- `sverige/vagkameror-3d.webp`
+- `sverige/stadsdossier-sevart.webp`
+- `sverige/stadsdossier-befolkning.webp`
+- `sverige/stadsdossier-val.webp`
+- `sverige/fartkameror.webp`
+- `sverige/kraftsystemet.webp`
+
+They are included as project documentation for this repository and are not covered by the project's MIT License. They show Google Photorealistic 3D Tiles and live public data layers (Trafikverket, Swedavia, SMHI, SCB, Kolada, Valmyndigheten, Wikidata, Svenska kraftnät and others) with the in-app attribution visible in frame; those elements remain subject to Google Maps Platform's and each data provider's terms. Keep the visible attribution intact. `kallor.webp` is a title card from the fork's promotional film.
