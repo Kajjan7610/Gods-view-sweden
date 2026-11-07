@@ -12,6 +12,8 @@ import { createAirportQueues } from '../ui/airportQueues.js';
 import { createAirportRoutes } from '../ui/airportRoutes.js';
 import { useAirportRoutesStore } from '../ui/stores/airportRoutes.js';
 import { createCockpitFlightLeg } from '../ui/cockpitFlightLeg.js';
+import { createVmaBanner } from '../ui/vmaBanner.js';
+import { useVmaBannerStore } from '../ui/stores/vmaBanner.js';
 import { useCockpitFlightLegStore } from '../ui/stores/cockpitFlightLeg.js';
 import * as worldOverlays from '../overlays/worldOverlay.js';
 import { useCityDossierStore } from '../ui/stores/cityDossier.js';
@@ -144,6 +146,13 @@ export function createApplicationTools({
     isCameraBusy: () => sceneDirector.getPlaybackStatus?.()?.running === true,
   });
   defer(() => cityDossier.destroy());
+  // Krisinformation.se's public alerts (VMA), across the top while active.
+  const vmaBannerStore = useVmaBannerStore(applicationPinia());
+  const vmaBanner = createVmaBanner({
+    publish: (rows) => vmaBannerStore.publish(rows),
+    connect: (actions) => vmaBannerStore.connect(actions),
+  });
+  defer(() => vmaBanner.destroy());
   // The cockpit's Swedavia card: the flown aircraft's own board rows.
   const cockpitFlightLegStore = useCockpitFlightLegStore(applicationPinia());
   const cockpitFlightLeg = createCockpitFlightLeg({

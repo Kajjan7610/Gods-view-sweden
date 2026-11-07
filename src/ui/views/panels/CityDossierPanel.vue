@@ -76,6 +76,16 @@ const airportBoard = useAirportBoardStore();
               <li v-for="alert in d.now.alerts" :key="alert.key" :data-level="alert.level"><strong>{{ alert.title }}</strong><span>{{ alert.meta }}</span></li>
             </ul>
             <p v-else-if="d.now.alertsNote" class="city-dossier-note">{{ d.now.alertsNote }}</p>
+            <div v-if="d.now.kris" class="city-dossier-kris">
+              <a v-for="vma in d.now.kris.vmas" :key="vma.key" class="city-dossier-vma" :href="vma.url || undefined" target="_blank" rel="noopener noreferrer">
+                <strong><span class="material-symbols-outlined" aria-hidden="true">campaign</span>{{ vma.headline }}</strong>
+                <span v-if="vma.text">{{ vma.text }}</span>
+                <small>{{ vma.meta }}</small>
+              </a>
+              <strong class="city-dossier-kris-title">{{ d.now.kris.title }}</strong>
+              <p v-if="d.now.kris.empty" class="city-dossier-note">{{ d.now.kris.empty }}</p>
+              <a v-for="item in d.now.kris.news" :key="item.key" :href="item.url || undefined" target="_blank" rel="noopener noreferrer"><small>{{ item.meta }}</small> {{ item.headline }}</a>
+            </div>
             <div v-if="d.now.trains" class="city-dossier-trains">
               <strong>{{ d.now.trains.title }}</strong>
               <p v-if="d.now.trains.empty" class="city-dossier-note">{{ d.now.trains.empty }}</p>

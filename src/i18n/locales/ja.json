@@ -3490,5 +3490,8 @@
   "Saver mode: flat map without Google 3D. Press to turn the 3D city back on (reloads the page).": "節約モード: Google 3D なしの平面地図です。押すと 3D の街に戻します（ページを再読み込みします）。",
   "Google 3D city on: each start uses one Cesium ion session. Press for saver mode (reloads the page).": "Google 3D の街がオン: 起動ごとに Cesium ion のセッションを 1 回使います。押すと節約モード（ページを再読み込み）。",
   "2D": "2D",
-  "3D": "3D"
+  "3D": "3D",
+  "Read more": "詳しく読む",
+  "All of Sweden": "スウェーデン全土",
+  "No messages from Krisinformation.se for the town": "この町への Krisinformation.se のお知らせはありません"
 }

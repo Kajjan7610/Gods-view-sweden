@@ -14,6 +14,7 @@ import CityDossierPanel from './panels/CityDossierPanel.vue';
 import AirportBoardPanel from './panels/AirportBoardPanel.vue';
 import TextSizeButton from './panels/TextSizeButton.vue';
 import GlobeSaverButton from './panels/GlobeSaverButton.vue';
+import VmaBanner from './panels/VmaBanner.vue';
 import CockpitFlightLeg from './panels/CockpitFlightLeg.vue';
 import MissionDetail from './panels/MissionDetail.vue';
 import MissionRoster from './panels/MissionRoster.vue';
@@ -45,6 +46,7 @@ const sceneRuntime = computed(() => scenePanel.value?.runtime ?? '');
     <CityDossierPanel />
     <AirportBoardPanel />
     <GlobeSaverButton />
+    <VmaBanner />
     <TextSizeButton />
     <CockpitFlightLeg compact />
     <RailPanel id="global-context-panel" start-collapsed v-class-toggle="{ ...(ctx && { 'context-enabled': ctx.enabled }) }" :data-context-mode="ctx?.mode" :title="t('CONTEXT')" sideways scroll rail-scroller>

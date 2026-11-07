@@ -66,6 +66,16 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (Krisinformation och VMA)
+- Nyckelfritt från Krisinformation.se (Myndigheten för civilt försvar) via
+  `/api/krisinformation` (VMA och de senaste tre dygnens nyheter, två
+  minuters cache).
+- Ett aktivt VMA var som helst i Sverige visas som röd banner överst i
+  appen med område och "Läs mer"; den kan stängas för sidans livstid.
+- Dossierns NU-flik har en del Krisinformation.se: VMA för kommunen eller
+  länet i rött, därefter de senaste nyheterna för kommunen, länet eller
+  hela landet ("Hela Sverige").
+
 ### 2026-11-07 (sparläge för Google 3D)
 - Varje start med Google Photorealistic 3D Tiles förbrukar en session av
   Cesium ions gratiskvot (1 000 per månad); den tog slut i november,

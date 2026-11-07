@@ -18,6 +18,8 @@
   "application": {
     "exports": ["./application"],
     "modules": [
+      "src/ui/views/panels/VmaBanner.vue",
+      "src/ui/stores/vmaBanner.js",
       "src/ui/views/panels/GlobeSaverButton.vue",
       "src/globeSaver.js",
       "src/ui/views/panels/cornerActions.js",
@@ -2314,6 +2316,9 @@
       "./standalone/catalog"
     ],
     "modules": [
+      "src/ui/krisinformationModel.js",
+      "src/ui/vmaBanner.js",
+      "src/ui/stores/vmaBanner.js",
       "src/globeSaver.js",
       "src/ui/airportRoutes.js",
       "src/ui/stores/airportRoutes.js",

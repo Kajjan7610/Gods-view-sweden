@@ -1,0 +1,67 @@
+/* ── Public alert banner (Swedish fork) ───────────────────────────────
+   An active VMA anywhere in Sweden, across the top of the app. */
+.vma-banner {
+  position: fixed;
+  z-index: 180;
+  top: 10px;
+  left: 50%;
+  display: grid;
+  gap: 6px;
+  width: min(760px, calc(100vw - 24px));
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+.vma-banner-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #ff5252;
+  border-radius: 8px;
+  background: rgba(60, 4, 10, 0.92);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font: 500 12px/1.35 var(--font-mono);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.vma-banner-row > .material-symbols-outlined {
+  color: #ff8a80;
+  font-size: 22px;
+}
+.vma-banner-row > b {
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #ff1744;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+.vma-banner-text {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.vma-banner-text small {
+  color: rgba(255, 220, 220, 0.8);
+  font-size: 10.5px;
+}
+.vma-banner-row a {
+  flex: 0 0 auto;
+  color: #ffcdd2;
+  font-size: 11px;
+}
+.vma-banner-row button {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: #ffcdd2;
+  cursor: pointer;
+}
+.vma-banner-row button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}

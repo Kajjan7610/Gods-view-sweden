@@ -435,6 +435,50 @@
   padding: 3px 0 3px 7px;
   border-left: 2px solid #ff5252;
 }
+.city-dossier-kris {
+  display: grid;
+  gap: 4px;
+}
+.city-dossier-kris-title {
+  color: rgba(220, 238, 255, 0.75);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.city-dossier-kris > a:not(.city-dossier-vma) {
+  display: block;
+  color: rgba(244, 251, 255, 0.85);
+  text-decoration: none;
+}
+.city-dossier-kris > a:not(.city-dossier-vma):hover {
+  color: #fff;
+  text-decoration: underline;
+}
+.city-dossier-kris small {
+  color: rgba(220, 238, 255, 0.55);
+}
+/* A public alert (VMA): unmissable, red. */
+.city-dossier-vma {
+  display: grid;
+  gap: 3px;
+  padding: 8px 10px;
+  border: 1px solid #ff5252;
+  border-radius: 6px;
+  background: rgba(255, 23, 68, 0.16);
+  color: #fff;
+  text-decoration: none;
+}
+.city-dossier-vma strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ff8a80;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.city-dossier-vma .material-symbols-outlined {
+  font-size: 16px;
+}
 .city-dossier-police {
   display: grid;
   gap: 3px;

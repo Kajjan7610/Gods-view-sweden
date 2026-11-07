@@ -34,6 +34,7 @@ import {
   stampsInOrder,
 } from './visitPassport.js';
 import { OrbitController } from '../orbit.js';
+import { messagesFor } from './krisinformationModel.js';
 
 const PANEL_ID = 'city-panel';
 /** Higher than this the view is looking at a region, not visiting a town. */
@@ -218,7 +219,14 @@ export function createCityDossier({
     liveAt = now();
     // Each part shows as soon as it answers: the briefing (weather and
     // warnings) also gathers news and can take seconds.
-    live = { brief: null, air: null, police: null, transit: null, pending: 4 };
+    live = {
+      brief: null,
+      air: null,
+      police: null,
+      transit: null,
+      kris: null,
+      pending: 5,
+    };
     render();
     const current = () =>
       !destroyed && liveRequest === controller && city === forCity;
@@ -247,6 +255,13 @@ export function createCityDossier({
       part(
         `/api/city-transit?lat=${lat}&lon=${lon}&town=${encodeURIComponent(forCity.name)}`,
         'transit',
+      ),
+      // Krisinformation.se: alerts and news for the country, county or town.
+      part('/api/krisinformation', 'kris', (value) =>
+        messagesFor(value, {
+          municipality: forCity.municipality,
+          county: forCity.county,
+        }),
       ),
     ]);
     if (current()) liveRequest = null;
@@ -694,6 +709,7 @@ export function createCityDossier({
       trains: trainsView(live.transit?.trains),
       jams: jamsView(live.transit?.jams),
       flights: flightsView(live.transit?.flights),
+      kris: krisView(live.kris),
       radioLabel: radioBusy ? t('Tuning in…') : t('Play local radio'),
       radioBusy,
     };
@@ -798,6 +814,56 @@ export function createCityDossier({
     }));
   }
 
+  /**
+   * Krisinformation.se for the town: its active alerts (VMA) and the newest
+   * news for it, its county or the whole country; null until read.
+   */
+  function krisView(kris) {
+    if (!kris) return null;
+    const when = (ms) =>
+      ms
+        ? new Intl.DateTimeFormat(getLocale(), {
+            timeZone: 'Europe/Stockholm',
+            day: 'numeric',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+          }).format(ms)
+        : '';
+    const scope = (message) =>
+      message.national
+        ? t('All of Sweden')
+        : message.areas
+            .map((area) => area.name)
+            .filter(Boolean)
+            .slice(0, 2)
+            .join(', ');
+    return {
+      title: 'Krisinformation.se', // i18n-ignore: provider name
+      vmas: kris.vmas.map((message) => ({
+        key: message.id,
+        headline: message.headline,
+        text: message.preamble ?? '',
+        meta: [scope(message), when(message.published)]
+          .filter(Boolean)
+          .join(' · '),
+        url: message.web,
+      })),
+      news: kris.news.map((message) => ({
+        key: message.id,
+        headline: message.headline,
+        meta: [when(message.published), scope(message)]
+          .filter(Boolean)
+          .join(' · '),
+        url: message.web,
+      })),
+      empty:
+        kris.vmas.length || kris.news.length
+          ? ''
+          : t('No messages from Krisinformation.se for the town'),
+    };
+  }
+
   /** TomTom's jams around the town; null without the TomTom key. */
   function jamsView(jams) {
     if (!jams) return null;
@@ -861,6 +927,7 @@ export function createCityDossier({
         live?.transit?.trains?.station ? 'Trafikverket' : null, // i18n-ignore: provider name
         live?.transit?.jams ? 'TomTom' : null, // i18n-ignore: provider name
         live?.transit?.flights?.airports?.length ? 'Swedavia' : null, // i18n-ignore: provider name
+        live?.kris ? 'Krisinformation.se' : null, // i18n-ignore: provider name
       ]
         .filter(Boolean)
         .join(' · '),

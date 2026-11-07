@@ -3870,5 +3870,8 @@
   "Saver mode: flat map without Google 3D. Press to turn the 3D city back on (reloads the page).": "وضع التوفير: خريطة مسطحة بلا Google 3D. اضغط لإعادة تشغيل المدينة ثلاثية الأبعاد (تُعاد تحميل الصفحة).",
   "Google 3D city on: each start uses one Cesium ion session. Press for saver mode (reloads the page).": "مدينة Google ثلاثية الأبعاد مفعّلة: كل تشغيل يستهلك جلسة Cesium ion. اضغط لوضع التوفير (تُعاد تحميل الصفحة).",
   "2D": "2D",
-  "3D": "3D"
+  "3D": "3D",
+  "Read more": "اقرأ المزيد",
+  "All of Sweden": "كل السويد",
+  "No messages from Krisinformation.se for the town": "لا رسائل من Krisinformation.se لهذه البلدة"
 }

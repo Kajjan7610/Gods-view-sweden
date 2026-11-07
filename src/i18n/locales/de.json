@@ -3566,5 +3566,8 @@
   "Saver mode: flat map without Google 3D. Press to turn the 3D city back on (reloads the page).": "Sparmodus: flache Karte ohne Google 3D. Drücken, um die 3D-Stadt wieder einzuschalten (lädt die Seite neu).",
   "Google 3D city on: each start uses one Cesium ion session. Press for saver mode (reloads the page).": "Google-3D-Stadt an: Jeder Start verbraucht eine Cesium-ion-Sitzung. Drücken für den Sparmodus (lädt die Seite neu).",
   "2D": "2D",
-  "3D": "3D"
+  "3D": "3D",
+  "Read more": "Mehr lesen",
+  "All of Sweden": "Ganz Schweden",
+  "No messages from Krisinformation.se for the town": "Keine Meldungen von Krisinformation.se für den Ort"
 }
