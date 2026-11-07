@@ -1,7 +1,9 @@
 /**
  * Swedavia's ten airports, the busiest first, shared by the server's
  * flight reader and the airport board. `queues` marks the airports whose
- * security checkpoints Swedavia's WaitTime measures.
+ * security checkpoints Swedavia's WaitTime measures, and `groundM` is their
+ * apron's approximate height above the WGS84 ellipsoid (elevation plus the
+ * geoid's ~25 m over Sweden), where the queue markers stand.
  */
 export const SWEDAVIA_AIRPORTS = Object.freeze(
   [
@@ -11,6 +13,7 @@ export const SWEDAVIA_AIRPORTS = Object.freeze(
       lat: 59.6519,
       lon: 17.9186,
       queues: true,
+      groundM: 66,
     },
     {
       iata: 'GOT',
@@ -18,6 +21,7 @@ export const SWEDAVIA_AIRPORTS = Object.freeze(
       lat: 57.6628,
       lon: 12.2798,
       queues: true,
+      groundM: 178,
     },
     {
       iata: 'BMA',
@@ -25,6 +29,7 @@ export const SWEDAVIA_AIRPORTS = Object.freeze(
       lat: 59.3544,
       lon: 17.9417,
       queues: true,
+      groundM: 38,
     },
     {
       iata: 'MMX',

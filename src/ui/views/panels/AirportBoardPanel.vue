@@ -107,6 +107,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
             <span class="material-symbols-outlined" aria-hidden="true">security</span>
             <span><strong>{{ row.name }}</strong><small>{{ row.lane }}</small></span>
             <b>{{ row.minutes }}</b>
+            <button v-if="row.mapped" type="button" class="airport-board-icon" :aria-label="t('Show on the map')" :title="t('Show on the map')" @click="store.act('showQueue', row.key)">
+              <span class="material-symbols-outlined" aria-hidden="true">my_location</span>
+            </button>
           </div>
           <p v-if="view.board.rows.length" class="airport-board-note">{{ t('The wait projected for someone joining the queue now.') }}</p>
         </template>

@@ -8,6 +8,8 @@ import { initImageryBoxTool } from '../ui/imageryBoxTool.js';
 import { createRecentImageryPanel } from '../ui/recentImagery.js';
 import { createCityDossier } from '../ui/cityDossier.js';
 import { createAirportBoard } from '../ui/airportBoard.js';
+import { createAirportQueues } from '../ui/airportQueues.js';
+import * as worldOverlays from '../overlays/worldOverlay.js';
 import { useCityDossierStore } from '../ui/stores/cityDossier.js';
 import { useAirportBoardStore } from '../ui/stores/airportBoard.js';
 import { initGevVoiceCommands } from '../voice/gevRealtime.js';
@@ -146,6 +148,18 @@ export function createApplicationTools({
     connect: (actions) => airportBoardStore.connect(actions),
   });
   defer(() => airportBoard.destroy());
+  // Queue labels over the terminals; a click opens the board's queues.
+  const airportQueues = createAirportQueues({
+    viewer,
+    overlayHost: {
+      setEntries: worldOverlays.setOverlayEntries,
+      setVisible: worldOverlays.setOverlaySourceVisible,
+      clearSource: worldOverlays.clearOverlaySource,
+      hitTest: worldOverlays.hitTestWorldOverlay,
+    },
+    openBoard: (iata) => airportBoard.open(iata, 'security'),
+  });
+  defer(() => airportQueues.destroy());
   if (startChrome)
     defer(startChrome({ loadingScreen, styleManager, dataManager, signal }));
   // Idle render governor: flips the scene into requestRenderMode whenever

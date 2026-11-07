@@ -66,6 +66,19 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (flygplatstavla, steg 4: köer över terminalerna)
+- När vyn stannar inom 20 km från Arlanda, Landvetter eller Bromma (under
+  40 km höjd) får varje säkerhetskontroll en punkt och en etikett på sin
+  egen position från Swedavia, t.ex. "T5 · 2 min · Snabbspår 0 min":
+  grön under 5 minuter, gul 5–14, orange från 15 eller när Swedavia
+  säger att kön svämmar över. Läses om var tredje minut medan vyn stannar.
+- Etiketterna ritas av appens world-overlay (som övriga lager); ett klick
+  på etikett eller punkt öppnar tavlans flik Säkerhet.
+- Tavlans köer har knappen "Visa på kartan", som stänger tavlan och
+  flyger in söderifrån över terminalen.
+- Under dossierns filmiska ankomstrunda (30 s) rör sig kameran hela
+  tiden; kortet och etiketterna kommer när rundan slutar eller avbryts.
+
 ### 2026-11-07 (flygplatstavla, steg 2: tavlan)
 - Ny panel: en Swedavia-flygplats hela dag som en avgångstavla, med
   flikarna Avgångar, Ankomster och Säkerhet (den sista bara på Arlanda,

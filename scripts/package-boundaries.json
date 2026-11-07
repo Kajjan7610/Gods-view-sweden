@@ -2306,6 +2306,7 @@
       "./standalone/catalog"
     ],
     "modules": [
+      "src/ui/airportQueues.js",
       "src/ui/airportBoard.js",
       "src/ui/airportBoardModel.js",
       "src/data/swedaviaAirports.js",

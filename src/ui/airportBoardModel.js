@@ -85,20 +85,59 @@ export function queueLevel(minutes, overflow = false) {
 }
 
 /**
- * The Swedavia airport the view is over: within AIRPORT_NEAR_KM of its
- * reference point and below AIRPORT_NEAR_HEIGHT_M, else null.
+ * The Swedavia airport the view is over: within `km` of its reference point
+ * and below `height` metres (AIRPORT_NEAR_KM and AIRPORT_NEAR_HEIGHT_M by
+ * default), the nearest if several, else null.
  * @param {{ lat: number, lon: number, height: number }} camera
  */
-export function airportUnder(camera, airports = SWEDAVIA_AIRPORTS) {
-  if (!camera || !(camera.height < AIRPORT_NEAR_HEIGHT_M)) return null;
+export function airportUnder(
+  camera,
+  airports = SWEDAVIA_AIRPORTS,
+  { km = AIRPORT_NEAR_KM, height = AIRPORT_NEAR_HEIGHT_M } = {},
+) {
+  if (!camera || !(camera.height < height)) return null;
   let best = null;
   for (const airport of airports) {
-    const km = greatCircleKm(
+    const distance = greatCircleKm(
       { lat: camera.lat, lon: camera.lon },
       { lat: airport.lat, lon: airport.lon },
     );
-    if (km <= AIRPORT_NEAR_KM && (!best || km < best.km))
-      best = { airport, km };
+    if (distance <= km && (!best || distance < best.distance))
+      best = { airport, distance };
   }
   return best?.airport ?? null;
+}
+
+/**
+ * The map's queue markers: one per checkpoint position (its ordinary lane
+ * and fast track share a door), with the ordinary lane's minutes, the fast
+ * track's beside them, and the length of the queue that leads.
+ * @param {object[]} queues /api/airport-board's `security`.
+ */
+export function queueMarkers(queues) {
+  const groups = new Map();
+  for (const queue of queues ?? []) {
+    if (!Number.isFinite(queue.lat) || !Number.isFinite(queue.lon)) continue;
+    const key = `${queue.lat.toFixed(4)},${queue.lon.toFixed(4)}`;
+    const group = groups.get(key) ?? { key, lat: queue.lat, lon: queue.lon };
+    group[queue.fastTrack ? 'fast' : 'ordinary'] = queue;
+    groups.set(key, group);
+  }
+  return [...groups.values()]
+    .map(({ key, lat, lon, ordinary, fast }) => {
+      const lead = ordinary ?? fast;
+      return {
+        key,
+        lat,
+        lon,
+        terminal: lead.terminal,
+        minutes: lead.minutes,
+        fastTrack: ordinary && fast ? fast.minutes : null,
+        onlyFastTrack: !ordinary,
+        level: queueLevel(lead.minutes, lead.overflow),
+      };
+    })
+    .sort((a, b) =>
+      String(a.terminal ?? '').localeCompare(String(b.terminal ?? '')),
+    );
 }

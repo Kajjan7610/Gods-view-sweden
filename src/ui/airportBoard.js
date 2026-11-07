@@ -20,6 +20,10 @@ const REFRESH_MS = 3 * 60_000;
 /** The "now" line and gone rows move on this often while the board shows. */
 const TICK_MS = 60_000;
 const SETTLE_DELAY_MS = 600;
+/** A checkpoint is shown from this far south and this high (about 1.2 km
+    back at a 35° pitch, so its label sits near mid-screen). */
+const QUEUE_VIEW_SOUTH_DEG = 0.0105;
+const QUEUE_VIEW_HEIGHT_M = 900;
 const TABS = Object.freeze([
   ['departures', msg('Departures'), 'flight_takeoff'],
   ['arrivals', msg('Arrivals'), 'flight_land'],
@@ -321,6 +325,8 @@ export function createAirportBoard({
         minutes: t('{minutes} min', { minutes: queue.minutes }),
         level: queueLevel(queue.minutes, queue.overflow),
         fastTrack: queue.fastTrack,
+        // Only a checkpoint with a position can be shown on the map.
+        mapped: Number.isFinite(queue.lat) && Number.isFinite(queue.lon),
       })),
       empty: queues.length ? '' : t('No queue readings right now'),
     };
@@ -442,6 +448,26 @@ export function createAirportBoard({
     dismissCard() {
       dismissed = near?.iata ?? null;
       render();
+    },
+    showQueue(key) {
+      const queue = data?.security?.find((row) => (row.id || row.name) === key);
+      if (!Number.isFinite(queue?.lat) || !Number.isFinite(queue?.lon)) return;
+      close();
+      // From the south, looking north over the checkpoint's terminal; its
+      // label (src/ui/airportQueues.js) shows once the view settles.
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(
+          queue.lon,
+          queue.lat - QUEUE_VIEW_SOUTH_DEG,
+          QUEUE_VIEW_HEIGHT_M,
+        ),
+        orientation: {
+          heading: 0,
+          pitch: Cesium.Math.toRadians(-35),
+          roll: 0,
+        },
+        duration: 2,
+      });
     },
   });
   const removeLocale = onLocaleChange(render);

@@ -11,6 +11,7 @@ import {
   matchesQuery,
   nowIndex,
   queueLevel,
+  queueMarkers,
 } from './airportBoardModel.js';
 
 const NOW = Date.parse('2026-11-07T12:00:00Z');
@@ -359,4 +360,39 @@ test('a card is offered over the airport until closed there', async () => {
   await settled();
   assert.equal(latest().card, null);
   controller.destroy();
+});
+
+test('queue markers: one per door, the ordinary lane leading', () => {
+  const at = (lat, lon, extra) => ({ lat, lon, overflow: false, ...extra });
+  const markers = queueMarkers([
+    at(59.64442, 17.92809, { terminal: 'T2', fastTrack: false, minutes: 18 }),
+    at(59.64442, 17.92809, { terminal: 'T2', fastTrack: true, minutes: 2 }),
+    at(59.64775, 17.92761, { terminal: 'T4', fastTrack: true, minutes: 0 }),
+    at(59.65176, 17.93376, { terminal: 'T5', fastTrack: false, minutes: 6 }),
+    { terminal: 'T3', fastTrack: false, minutes: 1, lat: null, lon: null },
+  ]);
+  assert.deepEqual(
+    markers.map((m) => [
+      m.terminal,
+      m.minutes,
+      m.fastTrack,
+      m.onlyFastTrack,
+      m.level,
+    ]),
+    [
+      ['T2', 18, 2, false, 'long'],
+      ['T4', 0, null, true, 'short'],
+      ['T5', 6, null, false, 'medium'],
+    ],
+  );
+  assert.deepEqual(queueMarkers(null), []);
+});
+
+test('the airport under the view, with a wider reach for the queue labels', () => {
+  const view = { lat: 59.55, lon: 17.95, height: 30_000 };
+  assert.equal(airportUnder(view), null, 'too far and too high for the card');
+  assert.equal(
+    airportUnder(view, undefined, { km: 20, height: 40_000 })?.iata,
+    'ARN',
+  );
 });
