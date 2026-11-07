@@ -66,6 +66,20 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (dagens rutter på globen)
+- Flygplatstavlan har en globknapp, "Dagens rutter på kartan": tavlan
+  stängs och varje destination för flygplatsens avgångar i dag ritas som
+  en båge från flygplatsen (tjockare för fler flyg, högre för längre
+  sträckor) med namn och antal, t.ex. "Helsingfors · 13". Kameran ser rakt
+  ner över rutternas tyngdpunkt. Arlanda i dag: 72 destinationer, 162
+  avgångar.
+- En remsa på kartan ("Rutter i dag: …") öppnar tavlan igen och har ✕ för
+  att dölja rutterna. Klick på en destination (etikett eller punkt)
+  öppnar tavlan filtrerad på dess avgångar.
+- Positionerna kommer från OurAirports (public domain), hämtas högst en
+  gång i veckan och sparas i `.gev-cache/ourairports/` (ca 580 kB);
+  `/api/airport-routes?iata=ARN` grupperar dagens avgångar per destination.
+
 ### 2026-11-07 (flygväder METAR/TAF)
 - Nyckelfritt flygväder från NOAA Aviation Weather Center
   (aviationweather.gov) via `/api/aviation-weather?ids=ESSA,…` (högst sex

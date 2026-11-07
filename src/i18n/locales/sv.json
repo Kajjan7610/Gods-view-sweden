@@ -3559,5 +3559,8 @@
   "Clouds": "Moln",
   "dew point {c} °C": "daggpunkt {c} °C",
   "No weather report right now": "Ingen väderrapport just nu",
-  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR och TAF från NOAA Aviation Weather Center (aviationweather.gov)."
+  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR och TAF från NOAA Aviation Weather Center (aviationweather.gov).",
+  "Routes today: {destinations} destinations · {flights} departures": "Rutter i dag: {destinations} destinationer · {flights} avgångar",
+  "Today’s routes on the map": "Dagens rutter på kartan",
+  "Hide the routes": "Dölj rutterna"
 }

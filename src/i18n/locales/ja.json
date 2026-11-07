@@ -3483,5 +3483,8 @@
   "Clouds": "雲",
   "dew point {c} °C": "露点 {c} °C",
   "No weather report right now": "現在、気象通報はありません",
-  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR と TAF は NOAA Aviation Weather Center（aviationweather.gov）より。"
+  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR と TAF は NOAA Aviation Weather Center（aviationweather.gov）より。",
+  "Routes today: {destinations} destinations · {flights} departures": "本日の路線: {destinations} 都市 · {flights} 便",
+  "Today’s routes on the map": "本日の路線を地図に表示",
+  "Hide the routes": "路線を隠す"
 }

@@ -485,5 +485,58 @@ export function createSwedaviaFlights({
     return [departed ?? (arriving ? null : waiting), arriving].filter(Boolean);
   }
 
-  return { nearby, board, findFlight };
+  /**
+   * Today's departures from one Swedavia airport grouped by destination:
+   * the flights (cancelled ones not counted), their airlines and the next
+   * one still to go. Null for an airport that is not Swedavia's or without
+   * the FlightInfo key.
+   */
+  async function routes(iata) {
+    const airport = swedaviaAirport(iata);
+    const key = flightKey();
+    if (!airport || !key) return null;
+    const list = await day(
+      key,
+      airport.iata,
+      'departures',
+      stockholmDate(now()),
+    );
+    const at = now();
+    const byPlace = new Map();
+    for (const flight of list.value) {
+      if (flight.canceled || !flight.placeIata) continue;
+      const route = byPlace.get(flight.placeIata) ?? {
+        iata: flight.placeIata,
+        place: flight.place,
+        flights: 0,
+        airlines: new Set(),
+        next: null,
+      };
+      route.flights += 1;
+      if (flight.airline) route.airlines.add(flight.airline);
+      if (
+        flight.expected >= at &&
+        (route.next === null || flight.planned < route.next)
+      )
+        route.next = flight.planned;
+      byPlace.set(flight.placeIata, route);
+    }
+    return {
+      airport: {
+        iata: airport.iata,
+        name: airport.name,
+        lat: airport.lat,
+        lon: airport.lon,
+      },
+      updatedAt: list.at,
+      routes: [...byPlace.values()]
+        .map((route) => ({
+          ...route,
+          airlines: [...route.airlines].slice(0, 6),
+        }))
+        .sort((a, b) => b.flights - a.flights || a.iata.localeCompare(b.iata)),
+    };
+  }
+
+  return { nearby, board, findFlight, routes };
 }

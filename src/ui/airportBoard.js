@@ -79,6 +79,8 @@ export function createAirportBoard({
   dataManager = null,
   // Told which airport a followed aircraft's row came from (optional).
   onFollow = null,
+  // Draws the airport's routes today on the globe (optional).
+  onShowRoutes = null,
   publish,
   connect,
   fetchImpl = (...args) => globalThis.fetch(...args),
@@ -448,6 +450,7 @@ export function createAirportBoard({
       kind: tab,
       // Following needs the flights layer; the board offers to turn it on.
       flightsOff: Boolean(dataManager) && !flightsLayer(),
+      routes: Boolean(onShowRoutes) && Boolean(data?.flights),
       ...body,
       scrollKey,
       // The airport's weather in one line, under the title.
@@ -494,7 +497,7 @@ export function createAirportBoard({
   }
 
   // ---- actions -------------------------------------------------------------------
-  function open(iata, nextTab = 'departures') {
+  function open(iata, nextTab = 'departures', nextQuery = null) {
     const next = swedaviaAirport(iata);
     if (!next) return;
     const same = airport?.iata === next.iata;
@@ -506,6 +509,7 @@ export function createAirportBoard({
       expanded = null;
       data = null;
     }
+    if (nextQuery !== null) query = String(nextQuery).slice(0, 40);
     scrollKey += 1;
     startTick();
     void load();
@@ -582,6 +586,12 @@ export function createAirportBoard({
         }, ms),
       );
       render();
+    },
+    showRoutes() {
+      const iata = airport?.iata;
+      if (!iata || !onShowRoutes) return;
+      close();
+      onShowRoutes(iata);
     },
     showQueue(key) {
       const queue = data?.security?.find((row) => (row.id || row.name) === key);

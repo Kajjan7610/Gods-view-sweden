@@ -3,6 +3,7 @@ import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 import { TRAFIKVERKET_API_URL, xmlAttr } from './trafikverketProxy.js';
 import { greatCircleKm } from '../../src/geoDistance.js';
 import { createSwedaviaFlights } from './cityFlights.js';
+import { createAirportIndex } from './ourAirports.js';
 
 // The city dossier's live transport: the next departures from the town's
 // railway station (Trafikverket, CC0, the existing TRAFIKVERKET_API_KEY) and
@@ -211,6 +212,7 @@ export function cityTransitProxy({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
   env = process.env,
+  airportIndex = createAirportIndex({ fetchImpl, now }),
 } = {}) {
   let stations = null;
   const departures = new Map();
@@ -442,17 +444,48 @@ export function cityTransitProxy({
     }
   }
 
+  /** Today's routes from a Swedavia airport, placed: ?iata=ARN. */
+  async function routesHandler(req, res) {
+    const json = respond(res);
+    if (req.method !== 'GET') return json(405, { error: 'method_not_allowed' });
+    const url = new URL(req.url || '/', 'http://local');
+    if (url.pathname !== '/' && url.pathname !== '')
+      return json(404, { error: 'unknown_route' });
+    if (!allow(clientKey(req))) return json(429, { error: 'rate_limited' });
+    try {
+      const day = await swedavia.routes(url.searchParams.get('iata'));
+      if (!day) return json(404, { error: 'unknown_airport_or_no_key' });
+      const places = await airportIndex.lookup(day.routes.map((r) => r.iata));
+      return json(200, {
+        ...day,
+        routes: day.routes
+          .filter((route) => places[route.iata])
+          .map((route) => ({ ...route, ...places[route.iata] })),
+        // Codes the airport list does not know, so the map leaves them out.
+        unplaced: day.routes
+          .filter((route) => !places[route.iata])
+          .map((route) => route.iata),
+        fetchedAt: now(),
+      });
+    } catch (error) {
+      console.warn(`[airport-routes] ${error?.message}`);
+      return json(502, { error: 'upstream_failed' });
+    }
+  }
+
   return {
     name: 'city-transit',
     configureServer({ middlewares }) {
       middlewares.use('/api/city-transit', handler);
       middlewares.use('/api/airport-board', boardHandler);
       middlewares.use('/api/airport-flight', flightHandler);
+      middlewares.use('/api/airport-routes', routesHandler);
     },
     configurePreviewServer({ middlewares }) {
       middlewares.use('/api/city-transit', handler);
       middlewares.use('/api/airport-board', boardHandler);
       middlewares.use('/api/airport-flight', flightHandler);
+      middlewares.use('/api/airport-routes', routesHandler);
     },
   };
 }

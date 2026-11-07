@@ -3635,5 +3635,8 @@
   "Clouds": "Nuvens",
   "dew point {c} °C": "ponto de orvalho {c} °C",
   "No weather report right now": "Sem boletim meteorológico de momento",
-  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR e TAF do NOAA Aviation Weather Center (aviationweather.gov)."
+  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR e TAF do NOAA Aviation Weather Center (aviationweather.gov).",
+  "Routes today: {destinations} destinations · {flights} departures": "Rotas de hoje: {destinations} destinos · {flights} partidas",
+  "Today’s routes on the map": "Rotas de hoje no mapa",
+  "Hide the routes": "Ocultar as rotas"
 }

@@ -3711,5 +3711,8 @@
   "Clouds": "Хмарність",
   "dew point {c} °C": "точка роси {c} °C",
   "No weather report right now": "Зараз немає зведення погоди",
-  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR і TAF від NOAA Aviation Weather Center (aviationweather.gov)."
+  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR і TAF від NOAA Aviation Weather Center (aviationweather.gov).",
+  "Routes today: {destinations} destinations · {flights} departures": "Маршрути сьогодні: {destinations} напрямків · {flights} вильотів",
+  "Today’s routes on the map": "Маршрути сьогодні на мапі",
+  "Hide the routes": "Сховати маршрути"
 }

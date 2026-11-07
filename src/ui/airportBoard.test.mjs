@@ -547,3 +547,26 @@ test("the weather tab: the airport's METAR decoded, and a line under the title",
   assert.ok(tab.tabs.some((row) => row.id === 'weather'));
   controller.destroy();
 });
+
+test('a destination opens the board filtered on it; the routes leave the board', async () => {
+  const shown = [];
+  let actions = null;
+  const published = [];
+  const controller = createAirportBoard({
+    viewer: fakeViewer(59.33, 18.07, 3000),
+    publish: (view) => published.push(view),
+    connect: (next) => ((actions = next), () => {}),
+    onShowRoutes: (iata) => shown.push(iata),
+    fetchImpl: async () => new Response(JSON.stringify(boardBody())),
+    now: () => NOW,
+    documentRef: null,
+  });
+  controller.open('ARN', 'departures', 'OSL');
+  await settled();
+  assert.equal(published.at(-1).board.query, 'OSL');
+  assert.equal(published.at(-1).board.routes, true);
+  actions.showRoutes();
+  assert.deepEqual(shown, ['ARN']);
+  assert.equal(published.at(-1).board, null);
+  controller.destroy();
+});

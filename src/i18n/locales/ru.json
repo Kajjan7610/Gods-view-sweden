@@ -3711,5 +3711,8 @@
   "Clouds": "Облачность",
   "dew point {c} °C": "точка росы {c} °C",
   "No weather report right now": "Сейчас нет сводки погоды",
-  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR и TAF от NOAA Aviation Weather Center (aviationweather.gov)."
+  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR и TAF от NOAA Aviation Weather Center (aviationweather.gov).",
+  "Routes today: {destinations} destinations · {flights} departures": "Маршруты сегодня: {destinations} направлений · {flights} вылетов",
+  "Today’s routes on the map": "Маршруты сегодня на карте",
+  "Hide the routes": "Скрыть маршруты"
 }

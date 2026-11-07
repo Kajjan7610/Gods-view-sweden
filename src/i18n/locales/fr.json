@@ -3635,5 +3635,8 @@
   "Clouds": "Nuages",
   "dew point {c} °C": "point de rosée {c} °C",
   "No weather report right now": "Aucun bulletin météo pour l’instant",
-  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR et TAF du NOAA Aviation Weather Center (aviationweather.gov)."
+  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR et TAF du NOAA Aviation Weather Center (aviationweather.gov).",
+  "Routes today: {destinations} destinations · {flights} departures": "Liaisons du jour : {destinations} destinations · {flights} départs",
+  "Today’s routes on the map": "Liaisons du jour sur la carte",
+  "Hide the routes": "Masquer les liaisons"
 }

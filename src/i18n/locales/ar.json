@@ -3863,5 +3863,8 @@
   "Clouds": "السحب",
   "dew point {c} °C": "نقطة الندى {c} °م",
   "No weather report right now": "لا يوجد تقرير طقس حاليًا",
-  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR و TAF من NOAA Aviation Weather Center ‏(aviationweather.gov)."
+  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR و TAF من NOAA Aviation Weather Center ‏(aviationweather.gov).",
+  "Routes today: {destinations} destinations · {flights} departures": "رحلات اليوم: {destinations} وجهة · {flights} مغادرة",
+  "Today’s routes on the map": "رحلات اليوم على الخريطة",
+  "Hide the routes": "إخفاء الرحلات"
 }

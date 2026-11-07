@@ -9,6 +9,8 @@ import { createRecentImageryPanel } from '../ui/recentImagery.js';
 import { createCityDossier } from '../ui/cityDossier.js';
 import { createAirportBoard } from '../ui/airportBoard.js';
 import { createAirportQueues } from '../ui/airportQueues.js';
+import { createAirportRoutes } from '../ui/airportRoutes.js';
+import { useAirportRoutesStore } from '../ui/stores/airportRoutes.js';
 import { createCockpitFlightLeg } from '../ui/cockpitFlightLeg.js';
 import { useCockpitFlightLegStore } from '../ui/stores/cockpitFlightLeg.js';
 import * as worldOverlays from '../overlays/worldOverlay.js';
@@ -155,6 +157,7 @@ export function createApplicationTools({
     viewer,
     dataManager,
     onFollow: (icao24, iata) => cockpitFlightLeg.hint(icao24, iata),
+    onShowRoutes: (iata) => airportRoutes.show(iata),
     publish: (view) => airportBoardStore.publish(view),
     connect: (actions) => airportBoardStore.connect(actions),
   });
@@ -171,6 +174,26 @@ export function createApplicationTools({
     openBoard: (iata) => airportBoard.open(iata, 'security'),
   });
   defer(() => airportQueues.destroy());
+  // Today's routes on the globe; a destination opens the board on it.
+  const airportRoutesStore = useAirportRoutesStore(applicationPinia());
+  const airportRoutes = createAirportRoutes({
+    viewer,
+    overlayHost: {
+      setEntries: worldOverlays.setOverlayEntries,
+      setVisible: worldOverlays.setOverlaySourceVisible,
+      clearSource: worldOverlays.clearOverlaySource,
+      hitTest: worldOverlays.hitTestWorldOverlay,
+    },
+    publish: (view) => airportRoutesStore.publish(view),
+    openBoard: (iata, query) => airportBoard.open(iata, 'departures', query),
+  });
+  defer(
+    airportRoutesStore.connect({
+      hide: () => airportRoutes.hide(),
+      openBoard: (iata) => airportBoard.open(iata),
+    }),
+  );
+  defer(() => airportRoutes.destroy());
   if (startChrome)
     defer(startChrome({ loadingScreen, styleManager, dataManager, signal }));
   // Idle render governor: flips the scene into requestRenderMode whenever

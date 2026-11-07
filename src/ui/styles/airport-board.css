@@ -514,6 +514,14 @@
 .airport-card-close:hover {
   color: #ffc94d;
 }
+/* The routes chip stands above the airport card, both may show. */
+.airport-card.airport-routes-chip {
+  bottom: 206px;
+  border-color: rgba(255, 201, 77, 0.6);
+}
+body.mobile-shell .airport-card.airport-routes-chip {
+  bottom: calc(var(--mobile-tab-space, 64px) + 126px);
+}
 .airport-card-enter-active,
 .airport-card-leave-active {
   transition:

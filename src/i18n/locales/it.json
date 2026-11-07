@@ -3635,5 +3635,8 @@
   "Clouds": "Nubi",
   "dew point {c} °C": "punto di rugiada {c} °C",
   "No weather report right now": "Nessun bollettino meteo al momento",
-  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR e TAF dal NOAA Aviation Weather Center (aviationweather.gov)."
+  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR e TAF dal NOAA Aviation Weather Center (aviationweather.gov).",
+  "Routes today: {destinations} destinations · {flights} departures": "Rotte di oggi: {destinations} destinazioni · {flights} partenze",
+  "Today’s routes on the map": "Rotte di oggi sulla mappa",
+  "Hide the routes": "Nascondi le rotte"
 }

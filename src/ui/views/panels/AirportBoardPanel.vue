@@ -3,6 +3,7 @@ import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { t } from '../../../i18n/index.js';
 import { useAirportBoardStore } from '../../stores/airportBoard.js';
+import { useAirportRoutesStore } from '../../stores/airportRoutes.js';
 import SplitFlapText from './SplitFlapText.vue';
 
 // The airport board (Swedish fork): a Swedavia airport's whole day, opened
@@ -11,6 +12,9 @@ import SplitFlapText from './SplitFlapText.vue';
 const store = useAirportBoardStore();
 const { view } = storeToRefs(store);
 const list = ref(null);
+// Today's routes on the globe: the chip that names them and hides them.
+const routesStore = useAirportRoutesStore();
+const { view: routes } = storeToRefs(routesStore);
 // Each opening (airport, tab or day) scrolls to "now" once its rows arrive.
 let scrolledFor = null;
 
@@ -52,6 +56,17 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
         </button>
       </div>
     </Transition>
+    <Transition name="airport-card">
+      <div v-if="routes" :key="routes.iata" class="airport-card airport-routes-chip">
+        <button type="button" class="airport-card-open" @click="routesStore.act('openBoard', routes.iata)">
+          <span class="material-symbols-outlined" aria-hidden="true">public</span>
+          <span><strong>{{ routes.name }}</strong><small>{{ routes.label }}</small></span>
+        </button>
+        <button type="button" class="airport-card-close" :aria-label="t('Hide the routes')" :title="t('Hide the routes')" @click="routesStore.act('hide')">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </div>
+    </Transition>
     <section v-if="view.board" class="airport-board" role="dialog" :aria-label="view.board.name">
       <header class="airport-board-head">
         <span class="material-symbols-outlined airport-board-logo" aria-hidden="true">flight</span>
@@ -66,6 +81,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
           <button type="button" :aria-pressed="String(view.board.date === 'today')" @click="store.act('setDate', 'today')">{{ t('Today') }}</button>
           <button type="button" :aria-pressed="String(view.board.date === 'tomorrow')" @click="store.act('setDate', 'tomorrow')">{{ t('Tomorrow') }}</button>
         </div>
+        <button v-if="view.board.routes" type="button" class="airport-board-icon" :aria-label="t('Today’s routes on the map')" :title="t('Today’s routes on the map')" @click="store.act('showRoutes')">
+          <span class="material-symbols-outlined" aria-hidden="true">public</span>
+        </button>
         <button type="button" class="airport-board-icon" :aria-label="t('Refresh')" @click="store.act('refresh')">
           <span class="material-symbols-outlined" :class="{ spinning: view.board.loading }" aria-hidden="true">refresh</span>
         </button>

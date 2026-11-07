@@ -3559,5 +3559,8 @@
   "Clouds": "Wolken",
   "dew point {c} °C": "Taupunkt {c} °C",
   "No weather report right now": "Gerade kein Wetterbericht",
-  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR und TAF vom NOAA Aviation Weather Center (aviationweather.gov)."
+  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR und TAF vom NOAA Aviation Weather Center (aviationweather.gov).",
+  "Routes today: {destinations} destinations · {flights} departures": "Strecken heute: {destinations} Ziele · {flights} Abflüge",
+  "Today’s routes on the map": "Heutige Strecken auf der Karte",
+  "Hide the routes": "Strecken ausblenden"
 }

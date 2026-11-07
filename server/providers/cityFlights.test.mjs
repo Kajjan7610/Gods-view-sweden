@@ -493,3 +493,44 @@ test('by registration alone, only the leg under way', async () => {
     ],
   );
 });
+
+test("today's routes: departures by destination, cancelled ones not counted", async () => {
+  const dep = (id, hhmm, iata, place, extra = {}) => ({
+    ...departure(id, hhmm, extra.status),
+    arrivalAirportSwedish: place,
+    arrivalAirportEnglish: place,
+    airlineOperator: { name: extra.airline ?? 'SAS' },
+    flightLegIdentifier: { arrivalAirportIata: iata },
+  });
+  const fetchJson = async () => ({
+    flights: [
+      dep('SK1', '10:00', 'CPH', 'Köpenhamn'),
+      dep('SK2', '16:00', 'CPH', 'Köpenhamn'),
+      dep('AY1', '16:30', 'HEL', 'Helsingfors', { airline: 'Finnair' }),
+      dep('SK3', '17:00', 'CPH', 'Köpenhamn', {
+        status: { flightLegStatus: 'CAN' },
+      }),
+      dep('DY1', '18:00', 'CPH', 'Köpenhamn', { airline: 'Norwegian' }),
+    ],
+  });
+  const service = createSwedaviaFlights({
+    fetchJson,
+    now: () => NOW,
+    env: { SWEDAVIA_FLIGHTINFO_KEY: 'k' },
+  });
+  const day = await service.routes('arn');
+  assert.equal(day.airport.iata, 'ARN');
+  assert.deepEqual(
+    day.routes.map((r) => [r.iata, r.flights, r.airlines.join('/')]),
+    [
+      ['CPH', 3, 'SAS/Norwegian'],
+      ['HEL', 1, 'Finnair'],
+    ],
+  );
+  assert.equal(
+    day.routes[0].next,
+    Date.parse(at('16:00')),
+    'the next one still to go',
+  );
+  assert.equal(await service.routes('CPH'), null);
+});

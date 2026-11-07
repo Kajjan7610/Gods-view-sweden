@@ -3483,5 +3483,8 @@
   "Clouds": "云",
   "dew point {c} °C": "露点 {c} °C",
   "No weather report right now": "目前没有天气报告",
-  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR 和 TAF 来自 NOAA Aviation Weather Center（aviationweather.gov）。"
+  "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR 和 TAF 来自 NOAA Aviation Weather Center（aviationweather.gov）。",
+  "Routes today: {destinations} destinations · {flights} departures": "今日航线：{destinations} 个目的地 · {flights} 个航班",
+  "Today’s routes on the map": "在地图上显示今日航线",
+  "Hide the routes": "隐藏航线"
 }
