@@ -1,5 +1,9 @@
 # Security
 
+> **God's Eye View Sverige (den här forken):** rapportera säkerhetsproblem privat via [Security → Report a vulnerability](https://github.com/Kajjan7610/Gods-view-sweden/security/advisories/new) i det här repot, aldrig som ett publikt issue. Gäller problemet även originalet, rapportera det dessutom privat till [originalet](https://github.com/bilawalsidhu/gods-eye-view/security/advisories/new).
+>
+> _English: report vulnerabilities in this Swedish fork privately via this repository's Security tab. If the issue also affects the original project, report it upstream privately as well. The original maintainers are not responsible for this fork._
+
 God's Eye View is a local-first client for **public** data. It is built for exploration, demos, and learning — not as a hardened production service. This document explains the security model so you can run it safely and report issues responsibly.
 
 Vite's development file server also denies `.gev-logs/`, `.gev-cache/`, and

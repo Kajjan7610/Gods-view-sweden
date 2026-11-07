@@ -76,6 +76,18 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (riktlinjer för bidrag)
+- `CONTRIBUTING.md` och `SECURITY.md` börjar med ett svenskt stycke (och en
+  rad på engelska): det här är forken, inte originalet; issues och pull
+  requests granskas när tid finns; svenska delar rapporteras här, originalets
+  delar i originalet; säkerhetsproblem privat via forkens Security-flik.
+  Bidrag får inte innehålla nycklar eller personuppgifter, nya källor ska
+  vara öppna och stå i DATA_SOURCES.md, och originalets gräns mot att spåra
+  personer gäller.
+- Ärendemallarnas länkar (`.github/ISSUE_TEMPLATE/config.yml`) pekar på
+  forken för säkerhet, kom igång och kända problem, plus en länk till
+  originalets issues för fel i originalets delar.
+
 ### 2026-11-07 (README och genomlysning inför publikt repo)
 - `README.md` har ett svenskt block överst: vad forken är, erkännande av
   originalet (Bilawal Sidhu och Sameh Khamis, MIT), att forken saknar

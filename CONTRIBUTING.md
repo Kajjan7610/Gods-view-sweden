@@ -1,3 +1,33 @@
+# Bidra till God's Eye View Sverige
+
+> **Det här är den svenska forken av [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view), inte originalprojektet.** Den underhålls på fritiden av Kaj Obst.
+>
+> _English: this is the Swedish fork, maintained in spare time. Pull requests are welcome but reviewed when time allows. Problems with the original project's features belong [upstream](https://github.com/bilawalsidhu/gods-eye-view)._
+
+**Hur det fungerar**
+
+- Issues och pull requests är välkomna, men de granskas när tid finns. Det finns inget löfte om svar eller merge. Små, avgränsade ändringar har störst chans.
+- **Gäller det de svenska delarna, rapportera här.** Det omfattar lagren och tavlorna i [SVERIGE.md](SVERIGE.md), stadsdossiern, flygtavlan, Swedavia i cockpit och den svenska översättningen.
+- **Gäller det originalets delar, rapportera i [originalet](https://github.com/bilawalsidhu/gods-eye-view/issues).** Det omfattar globen, de globala lagren, röststyrningen och grunden i cockpit. Kontrollera gärna först att felet finns även där.
+- **Säkerhetsproblem rapporteras privat** via fliken Security → "Report a vulnerability" i det här repot, aldrig som ett publikt issue. Se [SECURITY.md](SECURITY.md).
+
+**Krav på ett bidrag**
+
+- Inga API-nycklar, lösenord eller personuppgifter i koden. Nycklar hör hemma i `.env`, som aldrig checkas in.
+- En ny datakälla ska vara öppen, ha en känd licens och läggas till i [DATA_SOURCES.md](DATA_SOURCES.md).
+- Originalets gräns gäller även här: inga funktioner för att söka efter, känna igen eller spåra enskilda personer.
+- Kör `npm test` innan du skickar. Nya texter i gränssnittet behövs på alla språk (`node scripts/i18n.mjs --check`).
+
+Klona forken:
+
+```bash
+git clone https://github.com/Kajjan7610/Gods-view-sweden.git
+```
+
+Nedan följer originalets riktlinjer (på engelska). De gäller även här, men byt originalets adress mot forkens där det står `git clone`.
+
+---
+
 # Contributing to God's Eye View
 
 Thanks for being here. God's Eye View is an open foundation for live spatial intelligence in the browser, and it gets better when more people run it, break it, and extend it.
