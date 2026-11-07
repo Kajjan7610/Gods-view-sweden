@@ -232,7 +232,8 @@
 }
 
 /* ── The text size button, in the corner row beside the language picker ── */
-#text-size-button {
+#text-size-button,
+#globe-saver-button {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -254,7 +255,9 @@
   -webkit-backdrop-filter: blur(18px) saturate(1.2);
 }
 #text-size-button:hover,
-#text-size-button:focus-visible {
+#text-size-button:focus-visible,
+#globe-saver-button:hover,
+#globe-saver-button:focus-visible {
   border-color: rgba(54, 220, 255, 0.75);
   outline: none;
 }
@@ -286,4 +289,22 @@
 }
 .text-size-level i.on {
   background: #36dcff;
+}
+
+/* The 3D button: cyan with Google 3D on, amber in saver mode. */
+#globe-saver-button .material-symbols-outlined {
+  color: #36dcff;
+  font-size: 0.95rem;
+}
+.globe-saver-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+#globe-saver-button.saver {
+  border-color: rgba(255, 201, 77, 0.55);
+}
+#globe-saver-button.saver .material-symbols-outlined,
+#globe-saver-button.saver .globe-saver-label {
+  color: #ffc94d;
 }

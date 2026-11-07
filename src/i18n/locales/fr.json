@@ -3638,5 +3638,9 @@
   "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR et TAF du NOAA Aviation Weather Center (aviationweather.gov).",
   "Routes today: {destinations} destinations · {flights} departures": "Liaisons du jour : {destinations} destinations · {flights} départs",
   "Today’s routes on the map": "Liaisons du jour sur la carte",
-  "Hide the routes": "Masquer les liaisons"
+  "Hide the routes": "Masquer les liaisons",
+  "Saver mode: flat map without Google 3D. Press to turn the 3D city back on (reloads the page).": "Mode économie : carte plate sans Google 3D. Appuyez pour réactiver la ville en 3D (recharge la page).",
+  "Google 3D city on: each start uses one Cesium ion session. Press for saver mode (reloads the page).": "Ville Google 3D activée : chaque démarrage utilise une session Cesium ion. Appuyez pour le mode économie (recharge la page).",
+  "2D": "2D",
+  "3D": "3D"
 }

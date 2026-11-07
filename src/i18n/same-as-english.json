@@ -35,7 +35,9 @@
     "{town} {chance} %",
     "Svenska kraftnät · {time}",
     "{mw} MW",
-    "{from}–{to} µSv/h"
+    "{from}–{to} µSv/h",
+    "2D",
+    "3D"
   ],
   "de": [
     "1090 MHz",
@@ -225,7 +227,9 @@
     "{dir}° {kt} kt",
     "{m} m",
     "{ft} ft",
-    "{c} °C"
+    "{c} °C",
+    "2D",
+    "3D"
   ],
   "es": [
     "1090 MHz",
@@ -377,7 +381,9 @@
     "{dir}° {kt} kt",
     "{m} m",
     "{ft} ft",
-    "{c} °C"
+    "{c} °C",
+    "2D",
+    "3D"
   ],
   "fr": [
     "1090 MHz",
@@ -592,7 +598,9 @@
     "{dir}° {kt} kt",
     "{m} m",
     "{ft} ft",
-    "{c} °C"
+    "{c} °C",
+    "2D",
+    "3D"
   ],
   "it": [
     "1090 MHz",
@@ -790,7 +798,9 @@
     "{dir}° {kt} kt",
     "{m} m",
     "{ft} ft",
-    "{c} °C"
+    "{c} °C",
+    "2D",
+    "3D"
   ],
   "ja": [
     "1090 MHz",
@@ -850,7 +860,9 @@
     "{dir}° {kt} kt",
     "{m} m",
     "{ft} ft",
-    "{c} °C"
+    "{c} °C",
+    "2D",
+    "3D"
   ],
   "pt": [
     "1090 MHz",
@@ -1004,7 +1016,9 @@
     "{dir}° {kt} kt",
     "{m} m",
     "{ft} ft",
-    "{c} °C"
+    "{c} °C",
+    "2D",
+    "3D"
   ],
   "ru": [
     "AIS: --",
@@ -1025,7 +1039,9 @@
     "WHOT/BHOT",
     "{town} {chance} %",
     "Svenska kraftnät · {time}",
-    "{c} °C"
+    "{c} °C",
+    "2D",
+    "3D"
   ],
   "sv": [
     "1090 MHz",
@@ -1209,7 +1225,9 @@
     "{dir}° {kt} kt",
     "{m} m",
     "{ft} ft",
-    "{c} °C"
+    "{c} °C",
+    "2D",
+    "3D"
   ],
   "uk": [
     "AIS: --",
@@ -1225,7 +1243,9 @@
     "WHOT/BHOT",
     "{town} {chance} %",
     "Svenska kraftnät · {time}",
-    "{c} °C"
+    "{c} °C",
+    "2D",
+    "3D"
   ],
   "zh-CN": [
     "1090 MHz",
@@ -1288,7 +1308,9 @@
     "{mw} MW",
     "{from}–{to} µSv/h",
     "{flow} m³/s",
-    "{c} °C"
+    "{c} °C",
+    "2D",
+    "3D"
   ],
   "zh-Hant": [
     "1090 MHz",
@@ -1351,6 +1373,8 @@
     "{mw} MW",
     "{from}–{to} µSv/h",
     "{flow} m³/s",
-    "{c} °C"
+    "{c} °C",
+    "2D",
+    "3D"
   ]
 }

@@ -3714,5 +3714,9 @@
   "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR і TAF від NOAA Aviation Weather Center (aviationweather.gov).",
   "Routes today: {destinations} destinations · {flights} departures": "Маршрути сьогодні: {destinations} напрямків · {flights} вильотів",
   "Today’s routes on the map": "Маршрути сьогодні на мапі",
-  "Hide the routes": "Сховати маршрути"
+  "Hide the routes": "Сховати маршрути",
+  "Saver mode: flat map without Google 3D. Press to turn the 3D city back on (reloads the page).": "Режим економії: пласка мапа без Google 3D. Натисніть, щоб знову ввімкнути 3D-місто (сторінка перезавантажиться).",
+  "Google 3D city on: each start uses one Cesium ion session. Press for saver mode (reloads the page).": "3D-місто Google увімкнено: кожен запуск витрачає сеанс Cesium ion. Натисніть для режиму економії (сторінка перезавантажиться).",
+  "2D": "2D",
+  "3D": "3D"
 }

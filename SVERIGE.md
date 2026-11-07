@@ -66,6 +66,20 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-07 (sparläge för Google 3D)
+- Varje start med Google Photorealistic 3D Tiles förbrukar en session av
+  Cesium ions gratiskvot (1 000 per månad); den tog slut i november,
+  främst genom automatiska testkörningar.
+- Ny knapp **3D/2D** i hörnraden: med 3D på laddas Google 3D-staden som
+  förut; i sparläge (2D, bärnstensfärgad) startar jordgloben på Esris
+  nyckelfria satellitbild och inga 3D-tiles hämtas, alltså ingen session.
+  Valet sparas i webbläsaren; ett byte laddar om sidan (vyn behålls i
+  adressen).
+- `?globe=lite` tvingar sparläge för en laddning (alla automatiska
+  kontroller använder det framöver), `?globe=3d` tvingar 3D.
+- Alternativ till ion: egen `GOOGLE_MAPS_API_KEY` med Map Tiles API
+  påslaget, så hämtas 3D-tiles direkt från Google.
+
 ### 2026-11-07 (dagens rutter på globen)
 - Flygplatstavlan har en globknapp, "Dagens rutter på kartan": tavlan
   stängs och varje destination för flygplatsens avgångar i dag ritas som

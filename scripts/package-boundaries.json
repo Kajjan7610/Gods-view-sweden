@@ -18,6 +18,9 @@
   "application": {
     "exports": ["./application"],
     "modules": [
+      "src/ui/views/panels/GlobeSaverButton.vue",
+      "src/globeSaver.js",
+      "src/ui/views/panels/cornerActions.js",
       "src/ui/stores/airportRoutes.js",
       "src/ui/views/panels/CockpitFlightLeg.vue",
       "src/ui/stores/cockpitFlightLeg.js",
@@ -2311,6 +2314,7 @@
       "./standalone/catalog"
     ],
     "modules": [
+      "src/globeSaver.js",
       "src/ui/airportRoutes.js",
       "src/ui/stores/airportRoutes.js",
       "src/ui/aviationWeatherView.js",

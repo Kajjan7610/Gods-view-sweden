@@ -15,6 +15,7 @@ import {
 } from '../renderGovernor.js';
 import { describeError } from './errors.js';
 import { onLocaleChange, t } from '../i18n/index.js';
+import { readGlobeSaver } from '../globeSaver.js';
 
 /** Construct the application globe using the caller's local configuration. */
 export async function createApplicationScene({
@@ -61,15 +62,22 @@ export async function createApplicationScene({
   registerDataCredits(viewer, credits);
   configureCreditKeyboardAccess(document);
   defer(onLocaleChange(() => configureCreditKeyboardAccess(document)));
+  // Saver mode (Swedish fork): no Google 3D Tiles session on this start.
+  const saver = readGlobeSaver(
+    globalThis.localStorage,
+    globalThis.location?.search,
+  );
   loaderStatus.textContent =
-    googleApiKey || googleTokens || cesiumToken
+    !saver && (googleApiKey || googleTokens || cesiumToken)
       ? t('Loading Google 3D Tiles...')
       : t('Loading the keyless globe...');
-  const photoreal = await loadPhotorealisticTileset(Cesium, {
-    googleApiKey,
-    googleTokens,
-    cesiumToken,
-  });
+  const photoreal = saver
+    ? { tileset: null, route: 'osm', errors: [] }
+    : await loadPhotorealisticTileset(Cesium, {
+        googleApiKey,
+        googleTokens,
+        cesiumToken,
+      });
   const tileset = photoreal.tileset;
   // A provider can finish after cancellation; retain ownership of its result.
   defer(() => {

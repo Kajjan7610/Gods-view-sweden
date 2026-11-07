@@ -3562,5 +3562,9 @@
   "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR och TAF från NOAA Aviation Weather Center (aviationweather.gov).",
   "Routes today: {destinations} destinations · {flights} departures": "Rutter i dag: {destinations} destinationer · {flights} avgångar",
   "Today’s routes on the map": "Dagens rutter på kartan",
-  "Hide the routes": "Dölj rutterna"
+  "Hide the routes": "Dölj rutterna",
+  "Saver mode: flat map without Google 3D. Press to turn the 3D city back on (reloads the page).": "Sparläge: platt karta utan Google 3D. Tryck för att slå på 3D-staden igen (sidan laddas om).",
+  "Google 3D city on: each start uses one Cesium ion session. Press for saver mode (reloads the page).": "Google 3D-stad på: varje start använder en Cesium ion-session. Tryck för sparläge (sidan laddas om).",
+  "2D": "2D",
+  "3D": "3D"
 }

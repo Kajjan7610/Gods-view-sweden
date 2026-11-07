@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue';
+import { computed, ref } from 'vue';
 import { msg, t } from '../../../i18n/index.js';
 import {
   TEXT_SIZES,
@@ -8,6 +8,7 @@ import {
   readTextSize,
   saveTextSize,
 } from '../../textSize.js';
+import { useCornerActions } from './cornerActions.js';
 
 // The text size button (Swedish fork), beside the language picker in the
 // bottom-right corner row: each press steps Normal → Larger → Largest.
@@ -25,21 +26,7 @@ const label = computed(() =>
 );
 const level = computed(() => TEXT_SIZES.indexOf(size.value));
 
-// The corner row is mounted by the provider settings view, which may come
-// after this one: wait for it rather than teleport into nothing.
-const corner = shallowRef(null);
-let watcher = null;
-onMounted(() => {
-  const find = () => document.getElementById('corner-actions');
-  corner.value = find();
-  if (corner.value) return;
-  watcher = new MutationObserver(() => {
-    corner.value = find();
-    if (corner.value) watcher?.disconnect();
-  });
-  watcher.observe(document.body, { childList: true, subtree: true });
-});
-onBeforeUnmount(() => watcher?.disconnect());
+const corner = useCornerActions();
 
 function step() {
   size.value = nextTextSize(size.value);

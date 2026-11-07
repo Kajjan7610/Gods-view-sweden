@@ -3714,5 +3714,9 @@
   "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR и TAF от NOAA Aviation Weather Center (aviationweather.gov).",
   "Routes today: {destinations} destinations · {flights} departures": "Маршруты сегодня: {destinations} направлений · {flights} вылетов",
   "Today’s routes on the map": "Маршруты сегодня на карте",
-  "Hide the routes": "Скрыть маршруты"
+  "Hide the routes": "Скрыть маршруты",
+  "Saver mode: flat map without Google 3D. Press to turn the 3D city back on (reloads the page).": "Режим экономии: плоская карта без Google 3D. Нажмите, чтобы снова включить 3D-город (страница перезагрузится).",
+  "Google 3D city on: each start uses one Cesium ion session. Press for saver mode (reloads the page).": "3D-город Google включён: каждый запуск расходует сеанс Cesium ion. Нажмите для режима экономии (страница перезагрузится).",
+  "2D": "2D",
+  "3D": "3D"
 }

@@ -3486,5 +3486,9 @@
   "METAR and TAF from the NOAA Aviation Weather Center (aviationweather.gov).": "METAR 和 TAF 來自 NOAA Aviation Weather Center（aviationweather.gov）。",
   "Routes today: {destinations} destinations · {flights} departures": "今日航線：{destinations} 個目的地 · {flights} 個航班",
   "Today’s routes on the map": "在地圖上顯示今日航線",
-  "Hide the routes": "隱藏航線"
+  "Hide the routes": "隱藏航線",
+  "Saver mode: flat map without Google 3D. Press to turn the 3D city back on (reloads the page).": "節省模式：不含 Google 3D 的平面地圖。按下可重新開啟 3D 城市（將重新載入頁面）。",
+  "Google 3D city on: each start uses one Cesium ion session. Press for saver mode (reloads the page).": "Google 3D 城市已開啟：每次啟動消耗一次 Cesium ion 工作階段。按下切換為節省模式（將重新載入頁面）。",
+  "2D": "2D",
+  "3D": "3D"
 }
