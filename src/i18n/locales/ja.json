@@ -3567,5 +3567,21 @@
   "Lightning · Europe": "雷 · ヨーロッパ",
   "Americas": "南北アメリカ",
   "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "南北アメリカと太平洋上の NOAA/NWS 15 分間落雷密度",
-  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "ヨーロッパとアフリカ上空の EUMETSAT MTG 雷イメージャ。5 分ごとに更新"
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "ヨーロッパとアフリカ上空の EUMETSAT MTG 雷イメージャ。5 分ごとに更新",
+  "Lightning Strikes (Sweden)": "落雷（スウェーデン）",
+  "Cloud to ground, negative": "対地放電（負極性）",
+  "Cloud to ground, positive": "対地放電（正極性）",
+  "Cloud to cloud": "雲間放電",
+  "Type not stated": "種別の記載なし",
+  "{amp} kA peak current": "ピーク電流 {amp} kA",
+  "Located by {count} sensors": "{count} 台のセンサーで標定",
+  "Within about 0.5–2 km near Denmark, less precise farther away": "デンマーク付近で約 0.5〜2 km の精度、遠いほど低下",
+  "LIGHTNING · IN CLOUD": "雷 · 雲内",
+  "LIGHTNING STRIKE": "落雷",
+  "{from}–{to} min ago": "{from}〜{to} 分前",
+  "Lightning data unavailable": "雷データを取得できません",
+  "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "点は DMI と近隣国のセンサー網が過去 1 時間に標定した雷放電で、経過時間で色分けしています。白は直近 5 分です。大きい点は地面への落雷、小さい点は雲の中の放電です。位置の精度はデンマーク付近で約 0.5〜2 km、北へ行くほど低下します。警報ではありません。雷鳴が聞こえたら落雷の危険がある距離です。",
+  "No lightning in the last hour": "過去 1 時間に雷はありません",
+  "Showing the newest 20,000 strokes": "最新の 20,000 件の放電を表示",
+  "Malformed lightning snapshot": "雷スナップショットが不正です"
 }

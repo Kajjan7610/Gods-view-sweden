@@ -3801,5 +3801,21 @@
   "Lightning · Europe": "Молнии · Европа",
   "Americas": "Америка",
   "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "Плотность молний NOAA/NWS за 15 минут над Америкой и Тихим океаном",
-  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "Регистратор молний MTG EUMETSAT над Европой и Африкой; обновление каждые 5 минут"
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "Регистратор молний MTG EUMETSAT над Европой и Африкой; обновление каждые 5 минут",
+  "Lightning Strikes (Sweden)": "Удары молний (Швеция)",
+  "Cloud to ground, negative": "Облако — земля, отрицательный",
+  "Cloud to ground, positive": "Облако — земля, положительный",
+  "Cloud to cloud": "Облако — облако",
+  "Type not stated": "Тип не указан",
+  "{amp} kA peak current": "Пиковый ток {amp} кА",
+  "Located by {count} sensors": "Определено {count} датчиками",
+  "Within about 0.5–2 km near Denmark, less precise farther away": "Точность около 0,5–2 км у Дании, дальше ниже",
+  "LIGHTNING · IN CLOUD": "МОЛНИЯ · В ОБЛАКЕ",
+  "LIGHTNING STRIKE": "УДАР МОЛНИИ",
+  "{from}–{to} min ago": "{from}–{to} мин назад",
+  "Lightning data unavailable": "Данные о молниях недоступны",
+  "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "Точки — разряды молний за последний час, определённые сетью датчиков DMI и соседних стран, окрашенные по давности: белые — последние пять минут. Крупные точки бьют в землю, мелкие остаются в облаке. Точность положения около 0,5–2 км у Дании и ниже севернее. Это не предупреждение: если слышен гром, молния достаточно близко, чтобы ударить.",
+  "No lightning in the last hour": "За последний час молний нет",
+  "Showing the newest 20,000 strokes": "Показаны 20 000 последних разрядов",
+  "Malformed lightning snapshot": "Неверный снимок данных о молниях"
 }

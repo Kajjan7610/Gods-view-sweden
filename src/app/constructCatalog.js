@@ -37,6 +37,7 @@ import { createApplicationPowerGrid } from './layers/powerGrid.js';
 import { createApplicationTransitAlerts } from './layers/transitAlerts.js';
 import { createApplicationSrTraffic } from './layers/srTraffic.js';
 import { createApplicationSeaWeather } from './layers/seaWeather.js';
+import { createApplicationLightningStrikes } from './layers/lightningStrikes.js';
 import { createApplicationFireStations } from './layers/fireStations.js';
 import { createApplicationSpeedCameras } from './layers/speedCameras.js';
 import { createApplicationRiverFlow } from './layers/riverFlow.js';
@@ -174,6 +175,9 @@ export function createApplicationCatalog({
         }),
         createApplicationSeaWeather({
           source: sources['sea-weather'],
+        }),
+        createApplicationLightningStrikes({
+          source: sources['lightning-strikes'],
         }),
         createApplicationFireStations({
           source: sources['fire-stations'],

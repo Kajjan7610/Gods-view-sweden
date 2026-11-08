@@ -409,6 +409,13 @@ export const DATA_CREDITS = [
       '<a href="https://viva.sjofartsverket.se/" target="_blank" rel="noopener">Sjöfartsverket ViVa</a>',
   },
   {
+    key: 'lightning-strikes',
+    html:
+      'Lightning strikes (Sweden): ' +
+      '<a href="https://www.dmi.dk/friedata/dokumentation/lightning-data" target="_blank" rel="noopener">DMI</a> lightning data ' +
+      '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>)',
+  },
+  {
     key: 'fire-stations',
     html:
       'Fire stations (Sweden): ' +

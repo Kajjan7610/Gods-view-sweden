@@ -16,6 +16,7 @@
   ["flights", "f"],
   ["gamma-radiation", "0p"],
   ["gnss-integrity", "3"],
+  ["lightning-strikes", "0l"],
   ["local-dams", "q"],
   ["local-datacenters", "d"],
   ["local-firms", "w"],

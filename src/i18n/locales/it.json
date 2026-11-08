@@ -3723,5 +3723,21 @@
   "Lightning · Europe": "Fulmini · Europa",
   "Americas": "Americhe",
   "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "Densità di fulmini NOAA/NWS su 15 minuti sulle Americhe e sul Pacifico",
-  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "Lightning Imager MTG di EUMETSAT su Europa e Africa; aggiornamento ogni 5 minuti"
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "Lightning Imager MTG di EUMETSAT su Europa e Africa; aggiornamento ogni 5 minuti",
+  "Lightning Strikes (Sweden)": "Fulmini a terra (Svezia)",
+  "Cloud to ground, negative": "Nube-suolo, negativo",
+  "Cloud to ground, positive": "Nube-suolo, positivo",
+  "Cloud to cloud": "Nube-nube",
+  "Type not stated": "Tipo non indicato",
+  "{amp} kA peak current": "Corrente di picco {amp} kA",
+  "Located by {count} sensors": "Localizzato da {count} sensori",
+  "Within about 0.5–2 km near Denmark, less precise farther away": "Entro circa 0,5–2 km vicino alla Danimarca, meno preciso più lontano",
+  "LIGHTNING · IN CLOUD": "FULMINE · NELLA NUBE",
+  "LIGHTNING STRIKE": "FULMINE A TERRA",
+  "{from}–{to} min ago": "{from}–{to} min fa",
+  "Lightning data unavailable": "Dati sui fulmini non disponibili",
+  "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "I punti sono le scariche di fulmini dell’ultima ora localizzate dalla rete di sensori del DMI e da quelle dei paesi vicini, colorate per età: il bianco indica gli ultimi cinque minuti. I punti grandi colpiscono il suolo, quelli piccoli restano nella nube. Le posizioni sono precise entro circa 0,5–2 km vicino alla Danimarca e meno più a nord. Non è un’allerta: se si sente il tuono, il fulmine è abbastanza vicino da colpire.",
+  "No lightning in the last hour": "Nessun fulmine nell’ultima ora",
+  "Showing the newest 20,000 strokes": "Mostrate le 20.000 scariche più recenti",
+  "Malformed lightning snapshot": "Istantanea dei fulmini non valida"
 }

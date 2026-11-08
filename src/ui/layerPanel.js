@@ -103,6 +103,7 @@ const PANEL_GROUPS = [
       'aurora',
       'weather-satellite',
       'weather-lightning',
+      'lightning-strikes',
       'weather-cyclones',
     ],
   },

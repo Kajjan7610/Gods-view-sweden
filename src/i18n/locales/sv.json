@@ -3645,5 +3645,21 @@
   "Lightning · Europe": "Blixtar · Europa",
   "Americas": "Amerika",
   "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "NOAA/NWS blixttäthet per 15 minuter över Amerika och Stilla havet",
-  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "EUMETSAT:s blixtkamera på MTG över Europa och Afrika; uppdateras var 5:e minut"
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "EUMETSAT:s blixtkamera på MTG över Europa och Afrika; uppdateras var 5:e minut",
+  "Lightning Strikes (Sweden)": "Blixtnedslag (Sverige)",
+  "Cloud to ground, negative": "Moln till mark, negativ",
+  "Cloud to ground, positive": "Moln till mark, positiv",
+  "Cloud to cloud": "Moln till moln",
+  "Type not stated": "Typ anges inte",
+  "{amp} kA peak current": "{amp} kA toppström",
+  "Located by {count} sensors": "Lokaliserad av {count} sensorer",
+  "Within about 0.5–2 km near Denmark, less precise farther away": "Inom cirka 0,5–2 km nära Danmark, mindre exakt längre bort",
+  "LIGHTNING · IN CLOUD": "BLIXT · I MOLNET",
+  "LIGHTNING STRIKE": "BLIXTNEDSLAG",
+  "{from}–{to} min ago": "för {from}–{to} min sedan",
+  "Lightning data unavailable": "Blixtdata otillgängliga",
+  "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "Punkterna är blixturladdningar som DMI:s sensornät och grannländernas sensorer har lokaliserat den senaste timmen, färgade efter ålder: vitt är de senaste fem minuterna. Stora punkter slår ned i marken; små stannar i molnet. Positionerna stämmer inom cirka 0,5–2 km nära Danmark och är mindre exakta längre norrut. Ingen varning: hörs åskan är blixten nära nog att slå ned.",
+  "No lightning in the last hour": "Inga blixtar den senaste timmen",
+  "Showing the newest 20,000 strokes": "Visar de 20 000 senaste urladdningarna",
+  "Malformed lightning snapshot": "Felaktig ögonblicksbild av blixtdata"
 }

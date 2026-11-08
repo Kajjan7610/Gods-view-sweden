@@ -3645,5 +3645,21 @@
   "Lightning · Europe": "Blitze · Europa",
   "Americas": "Amerika",
   "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "NOAA/NWS-Blitzdichte über 15 Minuten über Amerika und dem Pazifik",
-  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "EUMETSAT MTG Lightning Imager über Europa und Afrika; Aktualisierung alle 5 Minuten"
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "EUMETSAT MTG Lightning Imager über Europa und Afrika; Aktualisierung alle 5 Minuten",
+  "Lightning Strikes (Sweden)": "Blitzeinschläge (Schweden)",
+  "Cloud to ground, negative": "Wolke–Erde, negativ",
+  "Cloud to ground, positive": "Wolke–Erde, positiv",
+  "Cloud to cloud": "Wolke–Wolke",
+  "Type not stated": "Typ nicht angegeben",
+  "{amp} kA peak current": "{amp} kA Spitzenstrom",
+  "Located by {count} sensors": "Von {count} Sensoren geortet",
+  "Within about 0.5–2 km near Denmark, less precise farther away": "Auf etwa 0,5–2 km genau nahe Dänemark, weiter entfernt ungenauer",
+  "LIGHTNING · IN CLOUD": "BLITZ · IN DER WOLKE",
+  "LIGHTNING STRIKE": "BLITZEINSCHLAG",
+  "{from}–{to} min ago": "vor {from}–{to} Min.",
+  "Lightning data unavailable": "Blitzdaten nicht verfügbar",
+  "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "Punkte sind Blitzentladungen der letzten Stunde, geortet vom Sensornetz des DMI und dem seiner Nachbarn, gefärbt nach Alter: Weiß sind die letzten fünf Minuten. Große Punkte schlagen in den Boden ein, kleine bleiben in der Wolke. Die Positionen sind nahe Dänemark auf etwa 0,5–2 km genau und weiter nördlich ungenauer. Keine Warnung: Wer Donner hört, ist nah genug für einen Einschlag.",
+  "No lightning in the last hour": "Keine Blitze in der letzten Stunde",
+  "Showing the newest 20,000 strokes": "Die neuesten 20.000 Entladungen werden angezeigt",
+  "Malformed lightning snapshot": "Fehlerhafter Blitz-Snapshot"
 }

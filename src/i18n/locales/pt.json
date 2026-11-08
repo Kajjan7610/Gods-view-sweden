@@ -3723,5 +3723,21 @@
   "Lightning · Europe": "Raios · Europa",
   "Americas": "Américas",
   "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "Densidade de raios NOAA/NWS em 15 minutos sobre as Américas e o Pacífico",
-  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "Lightning Imager MTG da EUMETSAT sobre a Europa e a África; atualização a cada 5 minutos"
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "Lightning Imager MTG da EUMETSAT sobre a Europa e a África; atualização a cada 5 minutos",
+  "Lightning Strikes (Sweden)": "Descargas de raios (Suécia)",
+  "Cloud to ground, negative": "Nuvem-solo, negativa",
+  "Cloud to ground, positive": "Nuvem-solo, positiva",
+  "Cloud to cloud": "Nuvem-nuvem",
+  "Type not stated": "Tipo não indicado",
+  "{amp} kA peak current": "{amp} kA de corrente de pico",
+  "Located by {count} sensors": "Localizada por {count} sensores",
+  "Within about 0.5–2 km near Denmark, less precise farther away": "Com cerca de 0,5–2 km de precisão perto da Dinamarca, menos mais longe",
+  "LIGHTNING · IN CLOUD": "RAIO · NA NUVEM",
+  "LIGHTNING STRIKE": "DESCARGA DE RAIO",
+  "{from}–{to} min ago": "há {from}–{to} min",
+  "Lightning data unavailable": "Dados de raios indisponíveis",
+  "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "Os pontos são descargas de raios da última hora localizadas pela rede de sensores do DMI e dos países vizinhos, coloridas pela idade: branco são os últimos cinco minutos. Pontos grandes atingem o solo; os pequenos ficam na nuvem. As posições têm cerca de 0,5–2 km de precisão perto da Dinamarca e menos mais a norte. Não é um alerta: se se ouve o trovão, o raio está perto o suficiente para atingir.",
+  "No lightning in the last hour": "Sem raios na última hora",
+  "Showing the newest 20,000 strokes": "A mostrar as 20 000 descargas mais recentes",
+  "Malformed lightning snapshot": "Instantâneo de raios malformado"
 }

@@ -3567,5 +3567,21 @@
   "Lightning · Europe": "閃電 · 歐洲",
   "Americas": "美洲",
   "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "美洲和太平洋上空 NOAA/NWS 15 分鐘閃電密度",
-  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "歐洲和非洲上空的 EUMETSAT MTG 閃電成像儀；每 5 分鐘更新"
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "歐洲和非洲上空的 EUMETSAT MTG 閃電成像儀；每 5 分鐘更新",
+  "Lightning Strikes (Sweden)": "雷擊（瑞典）",
+  "Cloud to ground, negative": "雲對地閃電，負極性",
+  "Cloud to ground, positive": "雲對地閃電，正極性",
+  "Cloud to cloud": "雲間閃電",
+  "Type not stated": "未註明類型",
+  "{amp} kA peak current": "峰值電流 {amp} kA",
+  "Located by {count} sensors": "由 {count} 個感測器定位",
+  "Within about 0.5–2 km near Denmark, less precise farther away": "丹麥附近精度約 0.5–2 公里，越遠越低",
+  "LIGHTNING · IN CLOUD": "閃電 · 雲內",
+  "LIGHTNING STRIKE": "雷擊",
+  "{from}–{to} min ago": "{from}–{to} 分鐘前",
+  "Lightning data unavailable": "閃電資料無法取得",
+  "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "圓點是 DMI 及鄰國感測器網路在過去一小時內定位的閃電放電，依時間著色：白色為最近五分鐘。大圓點為落地雷擊，小圓點留在雲內。丹麥附近定位精度約 0.5–2 公里，越往北越低。這不是警報：聽到雷聲時，閃電已近到足以擊中。",
+  "No lightning in the last hour": "過去一小時沒有閃電",
+  "Showing the newest 20,000 strokes": "顯示最新的 20,000 次放電",
+  "Malformed lightning snapshot": "閃電快照格式錯誤"
 }

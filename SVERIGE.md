@@ -28,6 +28,7 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 | Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (pilar i flödesriktningen, MW), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, flöde i m³/s var 15:e minut och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
 | Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
+| Blixtnedslag: varje urladdning den senaste timmen som punkt, färgad efter ålder (vit = senaste 5 min), stora för nedslag i marken och små för blixtar i molnet; klick ger tid, typ och toppström | DMI:s blixtdata (CC BY 4.0, ingen nyckel; DMI:s sensornät och grannländernas sensorer) | Lightning Strikes (Sweden) / Blixtnedslag, under Weather |
 | Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
 | Stadsdossier: när vyn stannar lågt över en svensk ort visar panelen STAD i högerkanten stadsvapen, foto och inledning, tätortens och kommunens folkmängd med kurva, skattesats, inkomst, arbetslöshet och kommunvalet, samt läget just nu (väder, luft, varningar, Polisen, sol) och en knapp för lokalradio | Kolada (RKA), Wikidata (CC0), Wikipedia (CC BY-SA 4.0), SMHI, Polisen; ingen nyckel | Panelen STAD i högerkanten (dyker upp vid första besöket) |
@@ -77,6 +78,22 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-08 (blixtnedslag från DMI)
+- Nytt lager **Blixtnedslag (Sverige)** (delningstoken `0l`) under Weather,
+  direkt under blixtlagret: varje blixturladdning som DMI:s sensornät och
+  grannländernas sensorer lokaliserar, den senaste timmen. Punkterna färgas
+  efter ålder (vit de senaste 5 minuterna, sedan gul, orange och röd). Stora
+  punkter är nedslag i marken, små är blixtar i molnet. Klick ger klockslag,
+  typ, toppström i kA och antal sensorer.
+- `/api/lightning-strikes` frågar DMI:s öppna API (CC BY 4.0, ingen
+  nyckel) om den senaste timmen över Norden högst en gång i minuten,
+  nyaste först, högst 20 000 urladdningar.
+- Noggrannheten är 0,5–2 km nära Danmark och sämre längre norrut. Det
+  står på kortet och i lagrets beskrivning, tillsammans med att lagret
+  inte är en varning.
+- Hittades via EU:s dataportal (data.europa.eu). Testat med ett riktigt
+  åskväder från 5 juli 2026 som spelades upp som om det pågick.
 
 ### 2026-11-08 (blixtar över Europa och brandstationer)
 - Blixtlagret har en ny region, **Europa**, som nu är förvald. Den visar

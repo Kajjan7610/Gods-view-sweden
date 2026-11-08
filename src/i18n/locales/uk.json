@@ -3801,5 +3801,21 @@
   "Lightning · Europe": "Блискавки · Європа",
   "Americas": "Америка",
   "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "Щільність блискавок NOAA/NWS за 15 хвилин над Америкою і Тихим океаном",
-  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "Реєстратор блискавок MTG EUMETSAT над Європою та Африкою; оновлення кожні 5 хвилин"
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "Реєстратор блискавок MTG EUMETSAT над Європою та Африкою; оновлення кожні 5 хвилин",
+  "Lightning Strikes (Sweden)": "Удари блискавок (Швеція)",
+  "Cloud to ground, negative": "Хмара — земля, негативний",
+  "Cloud to ground, positive": "Хмара — земля, позитивний",
+  "Cloud to cloud": "Хмара — хмара",
+  "Type not stated": "Тип не вказано",
+  "{amp} kA peak current": "Піковий струм {amp} кА",
+  "Located by {count} sensors": "Визначено {count} датчиками",
+  "Within about 0.5–2 km near Denmark, less precise farther away": "Точність близько 0,5–2 км біля Данії, далі нижча",
+  "LIGHTNING · IN CLOUD": "БЛИСКАВКА · У ХМАРІ",
+  "LIGHTNING STRIKE": "УДАР БЛИСКАВКИ",
+  "{from}–{to} min ago": "{from}–{to} хв тому",
+  "Lightning data unavailable": "Дані про блискавки недоступні",
+  "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "Точки — розряди блискавок за останню годину, визначені мережею датчиків DMI та сусідніх країн, забарвлені за давністю: білі — останні п’ять хвилин. Великі точки б’ють у землю, малі залишаються в хмарі. Точність розташування близько 0,5–2 км біля Данії й нижча північніше. Це не попередження: якщо чути грім, блискавка достатньо близько, щоб ударити.",
+  "No lightning in the last hour": "За останню годину блискавок немає",
+  "Showing the newest 20,000 strokes": "Показано 20 000 найновіших розрядів",
+  "Malformed lightning snapshot": "Неправильний знімок даних про блискавки"
 }

@@ -28,6 +28,7 @@ test('reference factories retain compatibility without starting acquisition or s
     'transit-alerts',
     'sr-traffic',
     'sea-weather',
+    'lightning-strikes',
     'fire-stations',
     'speed-cameras',
     'river-flow',
@@ -59,6 +60,7 @@ test('reference factories retain compatibility without starting acquisition or s
   assert.notEqual(first['river-flow'], second['river-flow']);
   assert.notEqual(first['speed-cameras'], second['speed-cameras']);
   assert.notEqual(first['fire-stations'], second['fire-stations']);
+  assert.notEqual(first['lightning-strikes'], second['lightning-strikes']);
   assert.equal(typeof first.earthquakes.getSnapshot, 'function');
   assert.equal(typeof first['air-quality'].getSnapshot, 'function');
   assert.equal(typeof first['fire-perimeters'].getSnapshot, 'function');

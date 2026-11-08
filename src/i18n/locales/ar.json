@@ -3957,5 +3957,21 @@
   "Lightning · Europe": "البرق · أوروبا",
   "Americas": "الأمريكتان",
   "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "كثافة البرق من NOAA/NWS لكل 15 دقيقة فوق الأمريكتين والمحيط الهادئ",
-  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "مصوّر البرق MTG من EUMETSAT فوق أوروبا وأفريقيا؛ تحديث كل 5 دقائق"
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "مصوّر البرق MTG من EUMETSAT فوق أوروبا وأفريقيا؛ تحديث كل 5 دقائق",
+  "Lightning Strikes (Sweden)": "ضربات البرق (السويد)",
+  "Cloud to ground, negative": "من السحاب إلى الأرض، سالبة",
+  "Cloud to ground, positive": "من السحاب إلى الأرض، موجبة",
+  "Cloud to cloud": "من سحابة إلى سحابة",
+  "Type not stated": "النوع غير محدد",
+  "{amp} kA peak current": "تيار ذروة {amp} كيلوأمبير",
+  "Located by {count} sensors": "حددها {count} مستشعرات",
+  "Within about 0.5–2 km near Denmark, less precise farther away": "بدقة نحو 0.5–2 كم قرب الدنمارك، وأقل دقة كلما ابتعدت",
+  "LIGHTNING · IN CLOUD": "برق · داخل السحابة",
+  "LIGHTNING STRIKE": "ضربة برق",
+  "{from}–{to} min ago": "قبل {from}–{to} دقيقة",
+  "Lightning data unavailable": "بيانات البرق غير متاحة",
+  "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "النقاط هي تفريغات البرق في الساعة الأخيرة كما حددتها شبكة مستشعرات DMI ومستشعرات الدول المجاورة، ملوّنة حسب عمرها: الأبيض لآخر خمس دقائق. النقاط الكبيرة تضرب الأرض، والصغيرة تبقى داخل السحابة. دقة المواقع نحو 0.5–2 كم قرب الدنمارك وأقل شمالًا. ليس تحذيرًا: إذا سُمع الرعد فالبرق قريب بما يكفي ليضرب.",
+  "No lightning in the last hour": "لا برق في الساعة الأخيرة",
+  "Showing the newest 20,000 strokes": "عرض أحدث 20,000 تفريغ",
+  "Malformed lightning snapshot": "لقطة بيانات البرق غير صالحة"
 }
