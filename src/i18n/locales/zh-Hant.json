@@ -3583,5 +3583,14 @@
   "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "圓點是 DMI 及鄰國感測器網路在過去一小時內定位的閃電放電，依時間著色：白色為最近五分鐘。大圓點為落地雷擊，小圓點留在雲內。丹麥附近定位精度約 0.5–2 公里，越往北越低。這不是警報：聽到雷聲時，閃電已近到足以擊中。",
   "No lightning in the last hour": "過去一小時沒有閃電",
   "Showing the newest 20,000 strokes": "顯示最新的 20,000 次放電",
-  "Malformed lightning snapshot": "閃電快照格式錯誤"
+  "Malformed lightning snapshot": "閃電快照格式錯誤",
+  "Retail Chains (Sweden)": "零售連鎖（瑞典）",
+  "org. no. {number}": "機構編號 {number}",
+  "head office {place}": "總部 {place}",
+  "Hours: {hours}": "營業時間：{hours}",
+  "Store data unavailable": "門市資料無法取得",
+  "{company}, other": "{company}·其他",
+  "Show or hide {company} stores": "顯示或隱藏 {company} 門市",
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.": "圓點是 OpenStreetMap 中標註的瑞典大型零售連鎖門市，依公司和門市型態著色。這些資料由地圖貢獻者而非公司蒐集，因此個別門市可能缺漏或過時。僅顯示門市。點選門市查看地址、營業時間和所屬公司。",
+  "Malformed store snapshot": "門市快照格式錯誤"
 }

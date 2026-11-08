@@ -3817,5 +3817,14 @@
   "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "Точки — разряды молний за последний час, определённые сетью датчиков DMI и соседних стран, окрашенные по давности: белые — последние пять минут. Крупные точки бьют в землю, мелкие остаются в облаке. Точность положения около 0,5–2 км у Дании и ниже севернее. Это не предупреждение: если слышен гром, молния достаточно близко, чтобы ударить.",
   "No lightning in the last hour": "За последний час молний нет",
   "Showing the newest 20,000 strokes": "Показаны 20 000 последних разрядов",
-  "Malformed lightning snapshot": "Неверный снимок данных о молниях"
+  "Malformed lightning snapshot": "Неверный снимок данных о молниях",
+  "Retail Chains (Sweden)": "Торговые сети (Швеция)",
+  "org. no. {number}": "рег. № {number}",
+  "head office {place}": "штаб-квартира {place}",
+  "Hours: {hours}": "Часы работы: {hours}",
+  "Store data unavailable": "Данные о магазинах недоступны",
+  "{company}, other": "{company}, прочие",
+  "Show or hide {company} stores": "Показать или скрыть магазины {company}",
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.": "Точки — магазины крупных торговых сетей в Швеции по данным OpenStreetMap, окрашенные по компании и формату магазина. Их собирают картографы, а не сами компании, поэтому отдельных может не быть или они устарели. Показаны только магазины. Нажмите на магазин, чтобы увидеть адрес, часы работы и компанию.",
+  "Malformed store snapshot": "Неверный снимок данных о магазинах"
 }

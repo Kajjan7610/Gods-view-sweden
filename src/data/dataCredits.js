@@ -409,6 +409,12 @@ export const DATA_CREDITS = [
       '<a href="https://viva.sjofartsverket.se/" target="_blank" rel="noopener">Sjöfartsverket ViVa</a>',
   },
   {
+    key: 'company-stores',
+    html:
+      'Retail chains (Sweden): store locations from OpenStreetMap contributors, a snapshot ' +
+      '(<a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL</a>); company facts from Wikidata (CC0)',
+  },
+  {
     key: 'lightning-strikes',
     html:
       'Lightning strikes (Sweden): ' +

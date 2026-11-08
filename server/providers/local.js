@@ -34,6 +34,7 @@ import { polisenEventsProxy } from './polisenEvents.js';
 import { electricityPricesProxy } from './electricityPrices.js';
 import { srTrafficProxy } from './srTraffic.js';
 import { seaWeatherProxy } from './seaWeather.js';
+import { companyStoresProxy } from './companyStores.js';
 import { lightningStrikesProxy } from './lightningStrikes.js';
 import { fireStationsProxy } from './fireStations.js';
 import { speedCamerasProxy } from './speedCameras.js';
@@ -109,6 +110,7 @@ function localProviderPlugins({
     electricityPricesProxy(),
     srTrafficProxy(),
     seaWeatherProxy(),
+    companyStoresProxy(),
     lightningStrikesProxy(),
     fireStationsProxy(),
     speedCamerasProxy(),

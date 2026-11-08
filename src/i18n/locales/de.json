@@ -3661,5 +3661,14 @@
   "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "Punkte sind Blitzentladungen der letzten Stunde, geortet vom Sensornetz des DMI und dem seiner Nachbarn, gefärbt nach Alter: Weiß sind die letzten fünf Minuten. Große Punkte schlagen in den Boden ein, kleine bleiben in der Wolke. Die Positionen sind nahe Dänemark auf etwa 0,5–2 km genau und weiter nördlich ungenauer. Keine Warnung: Wer Donner hört, ist nah genug für einen Einschlag.",
   "No lightning in the last hour": "Keine Blitze in der letzten Stunde",
   "Showing the newest 20,000 strokes": "Die neuesten 20.000 Entladungen werden angezeigt",
-  "Malformed lightning snapshot": "Fehlerhafter Blitz-Snapshot"
+  "Malformed lightning snapshot": "Fehlerhafter Blitz-Snapshot",
+  "Retail Chains (Sweden)": "Handelsketten (Schweden)",
+  "org. no. {number}": "Org.-Nr. {number}",
+  "head office {place}": "Hauptsitz {place}",
+  "Hours: {hours}": "Öffnungszeiten: {hours}",
+  "Store data unavailable": "Filialdaten nicht verfügbar",
+  "{company}, other": "{company}, sonstige",
+  "Show or hide {company} stores": "Filialen von {company} ein- oder ausblenden",
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.": "Punkte sind die Filialen großer Handelsketten in Schweden, wie sie in OpenStreetMap erfasst sind, gefärbt nach Unternehmen und Filialkonzept. Sie werden von Kartierenden gesammelt, nicht von den Unternehmen, daher können einzelne fehlen oder veraltet sein. Es werden nur Filialen gezeigt. Klicken Sie auf eine Filiale für Adresse, Öffnungszeiten und Unternehmen.",
+  "Malformed store snapshot": "Fehlerhafter Filial-Snapshot"
 }

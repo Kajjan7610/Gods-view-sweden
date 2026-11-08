@@ -3583,5 +3583,14 @@
   "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "点は DMI と近隣国のセンサー網が過去 1 時間に標定した雷放電で、経過時間で色分けしています。白は直近 5 分です。大きい点は地面への落雷、小さい点は雲の中の放電です。位置の精度はデンマーク付近で約 0.5〜2 km、北へ行くほど低下します。警報ではありません。雷鳴が聞こえたら落雷の危険がある距離です。",
   "No lightning in the last hour": "過去 1 時間に雷はありません",
   "Showing the newest 20,000 strokes": "最新の 20,000 件の放電を表示",
-  "Malformed lightning snapshot": "雷スナップショットが不正です"
+  "Malformed lightning snapshot": "雷スナップショットが不正です",
+  "Retail Chains (Sweden)": "小売チェーン（スウェーデン）",
+  "org. no. {number}": "法人番号 {number}",
+  "head office {place}": "本社 {place}",
+  "Hours: {hours}": "営業時間: {hours}",
+  "Store data unavailable": "店舗データを取得できません",
+  "{company}, other": "{company}・その他",
+  "Show or hide {company} stores": "{company} の店舗を表示／非表示",
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.": "点は OpenStreetMap に登録されたスウェーデンの大手小売チェーンの店舗で、企業と店舗業態で色分けしています。企業ではなくマッパーが集めた情報のため、一部が欠けていたり古かったりすることがあります。店舗のみを表示します。店舗をクリックすると住所、営業時間、企業を表示します。",
+  "Malformed store snapshot": "店舗スナップショットが不正です"
 }

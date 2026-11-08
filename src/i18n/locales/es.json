@@ -3739,5 +3739,14 @@
   "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "Los puntos son descargas de rayos de la última hora localizadas por la red de sensores del DMI y las de sus vecinos, coloreadas por antigüedad: el blanco son los últimos cinco minutos. Los puntos grandes caen a tierra; los pequeños se quedan en la nube. Las posiciones tienen unos 0,5–2 km de precisión cerca de Dinamarca y menos más al norte. No es una alerta: si se oye el trueno, el rayo está lo bastante cerca para caer.",
   "No lightning in the last hour": "Sin rayos en la última hora",
   "Showing the newest 20,000 strokes": "Se muestran las 20.000 descargas más recientes",
-  "Malformed lightning snapshot": "Instantánea de rayos mal formada"
+  "Malformed lightning snapshot": "Instantánea de rayos mal formada",
+  "Retail Chains (Sweden)": "Cadenas comerciales (Suecia)",
+  "org. no. {number}": "n.º de org. {number}",
+  "head office {place}": "sede {place}",
+  "Hours: {hours}": "Horario: {hours}",
+  "Store data unavailable": "Datos de tiendas no disponibles",
+  "{company}, other": "{company}, otras",
+  "Show or hide {company} stores": "Mostrar u ocultar las tiendas de {company}",
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.": "Los puntos son las tiendas de grandes cadenas en Suecia tal como están cartografiadas en OpenStreetMap, coloreadas por empresa y formato de tienda. Las recogen los cartógrafos, no las empresas, así que alguna puede faltar o estar desactualizada. Solo se muestran tiendas. Haz clic en una tienda para ver su dirección, horario y empresa.",
+  "Malformed store snapshot": "Instantánea de tiendas mal formada"
 }

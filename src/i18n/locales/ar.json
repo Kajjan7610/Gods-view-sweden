@@ -3973,5 +3973,14 @@
   "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "النقاط هي تفريغات البرق في الساعة الأخيرة كما حددتها شبكة مستشعرات DMI ومستشعرات الدول المجاورة، ملوّنة حسب عمرها: الأبيض لآخر خمس دقائق. النقاط الكبيرة تضرب الأرض، والصغيرة تبقى داخل السحابة. دقة المواقع نحو 0.5–2 كم قرب الدنمارك وأقل شمالًا. ليس تحذيرًا: إذا سُمع الرعد فالبرق قريب بما يكفي ليضرب.",
   "No lightning in the last hour": "لا برق في الساعة الأخيرة",
   "Showing the newest 20,000 strokes": "عرض أحدث 20,000 تفريغ",
-  "Malformed lightning snapshot": "لقطة بيانات البرق غير صالحة"
+  "Malformed lightning snapshot": "لقطة بيانات البرق غير صالحة",
+  "Retail Chains (Sweden)": "سلاسل المتاجر (السويد)",
+  "org. no. {number}": "رقم التسجيل {number}",
+  "head office {place}": "المقر الرئيسي {place}",
+  "Hours: {hours}": "ساعات العمل: {hours}",
+  "Store data unavailable": "بيانات المتاجر غير متاحة",
+  "{company}, other": "{company}، أخرى",
+  "Show or hide {company} stores": "إظهار متاجر {company} أو إخفاؤها",
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.": "النقاط هي متاجر سلاسل البيع الكبرى في السويد كما رُسمت في OpenStreetMap، ملوّنة حسب الشركة ونوع المتجر. يجمعها مساهمو الخرائط لا الشركات، لذا قد يغيب بعضها أو يكون قديمًا. تُعرض المتاجر فقط. انقر على متجر لعرض عنوانه وساعات عمله والشركة.",
+  "Malformed store snapshot": "لقطة بيانات المتاجر غير صالحة"
 }

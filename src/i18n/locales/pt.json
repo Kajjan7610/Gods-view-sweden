@@ -3739,5 +3739,14 @@
   "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "Os pontos são descargas de raios da última hora localizadas pela rede de sensores do DMI e dos países vizinhos, coloridas pela idade: branco são os últimos cinco minutos. Pontos grandes atingem o solo; os pequenos ficam na nuvem. As posições têm cerca de 0,5–2 km de precisão perto da Dinamarca e menos mais a norte. Não é um alerta: se se ouve o trovão, o raio está perto o suficiente para atingir.",
   "No lightning in the last hour": "Sem raios na última hora",
   "Showing the newest 20,000 strokes": "A mostrar as 20 000 descargas mais recentes",
-  "Malformed lightning snapshot": "Instantâneo de raios malformado"
+  "Malformed lightning snapshot": "Instantâneo de raios malformado",
+  "Retail Chains (Sweden)": "Cadeias de lojas (Suécia)",
+  "org. no. {number}": "n.º org. {number}",
+  "head office {place}": "sede {place}",
+  "Hours: {hours}": "Horário: {hours}",
+  "Store data unavailable": "Dados das lojas indisponíveis",
+  "{company}, other": "{company}, outras",
+  "Show or hide {company} stores": "Mostrar ou ocultar as lojas {company}",
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.": "Os pontos são as lojas das grandes cadeias na Suécia tal como mapeadas no OpenStreetMap, coloridas por empresa e formato de loja. São recolhidas por mapeadores, não pelas empresas, por isso algumas podem faltar ou estar desatualizadas. Só são mostradas lojas. Clique numa loja para ver morada, horário e empresa.",
+  "Malformed store snapshot": "Instantâneo de lojas malformado"
 }

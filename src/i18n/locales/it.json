@@ -3739,5 +3739,14 @@
   "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "I punti sono le scariche di fulmini dell’ultima ora localizzate dalla rete di sensori del DMI e da quelle dei paesi vicini, colorate per età: il bianco indica gli ultimi cinque minuti. I punti grandi colpiscono il suolo, quelli piccoli restano nella nube. Le posizioni sono precise entro circa 0,5–2 km vicino alla Danimarca e meno più a nord. Non è un’allerta: se si sente il tuono, il fulmine è abbastanza vicino da colpire.",
   "No lightning in the last hour": "Nessun fulmine nell’ultima ora",
   "Showing the newest 20,000 strokes": "Mostrate le 20.000 scariche più recenti",
-  "Malformed lightning snapshot": "Istantanea dei fulmini non valida"
+  "Malformed lightning snapshot": "Istantanea dei fulmini non valida",
+  "Retail Chains (Sweden)": "Catene di negozi (Svezia)",
+  "org. no. {number}": "n. org. {number}",
+  "head office {place}": "sede {place}",
+  "Hours: {hours}": "Orari: {hours}",
+  "Store data unavailable": "Dati dei negozi non disponibili",
+  "{company}, other": "{company}, altri",
+  "Show or hide {company} stores": "Mostra o nascondi i negozi {company}",
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.": "I punti sono i negozi delle grandi catene in Svezia come mappati in OpenStreetMap, colorati per azienda e formato. Li raccolgono i mappatori, non le aziende, quindi qualcuno può mancare o non essere aggiornato. Sono mostrati solo i negozi. Fai clic su un negozio per indirizzo, orari e azienda.",
+  "Malformed store snapshot": "Istantanea dei negozi non valida"
 }

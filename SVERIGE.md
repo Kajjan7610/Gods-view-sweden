@@ -27,6 +27,7 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (pilar i flödesriktningen, MW), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, flöde i m³/s var 15:e minut och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
+| Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp), Lidls, City Gross och Systembolagets butiker, färgade efter företag och koncept, med en knapp per företag; klick ger adress, öppettider och företaget (org.nr och huvudkontor). Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
 | Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
 | Blixtnedslag: varje urladdning den senaste timmen som punkt, färgad efter ålder (vit = senaste 5 min), stora för nedslag i marken och små för blixtar i molnet; klick ger tid, typ och toppström | DMI:s blixtdata (CC BY 4.0, ingen nyckel; DMI:s sensornät och grannländernas sensorer) | Lightning Strikes (Sweden) / Blixtnedslag, under Weather |
 | Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
@@ -78,6 +79,23 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-08 (butikskedjor)
+- Nytt lager **Butikskedjor (Sverige)** (delningstoken `0k`) under
+  Infrastructure: butikerna för ICA (Nära, Supermarket, Kvantum, Maxi), Coop,
+  Axfood (Willys, Hemköp), Lidl, City Gross och Systembolaget. En knapp per
+  företag visar eller döljer det; legenden räknar butiker per koncept. Klick
+  ger adress, öppettider och företaget med organisationsnummer och
+  huvudkontor. Bara butiker visas, inga lager, kontor eller bankomater.
+- Butikerna kommer från OpenStreetMap (ODbL), matchade på kedjornas
+  `brand:wikidata`, och ligger som en ögonblicksbild i
+  `src/data/local_data/se_company_stores/stores.json`. Den byggs om för hand
+  ungefär en gång i veckan med `node scripts/build-company-stores.mjs`;
+  appen frågar aldrig Overpass själv (originalets regel: bara egna servrar).
+  Företagsfakta hämtas från Wikidata när ögonblicksbilden byggs.
+- Företagens egna butikssökare används inte: ica.se blockerar automatisk
+  åtkomst, och en lista hämtad därifrån omfattas av företagets
+  databasrätt. All the Places (CC0) valdes bort av samma skäl.
 
 ### 2026-11-08 (blixtnedslag från DMI)
 - Nytt lager **Blixtnedslag (Sverige)** (delningstoken `0l`) under Weather,

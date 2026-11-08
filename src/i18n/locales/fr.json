@@ -3739,5 +3739,14 @@
   "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "Les points sont les décharges de foudre de la dernière heure localisées par le réseau de capteurs du DMI et ceux des pays voisins, colorées selon leur âge : blanc pour les cinq dernières minutes. Les gros points frappent le sol, les petits restent dans le nuage. Les positions sont précises à environ 0,5–2 km près du Danemark et moins précises plus au nord. Ce n’est pas une alerte : si l’on entend le tonnerre, la foudre est assez proche pour frapper.",
   "No lightning in the last hour": "Aucun éclair dans la dernière heure",
   "Showing the newest 20,000 strokes": "Affichage des 20 000 décharges les plus récentes",
-  "Malformed lightning snapshot": "Instantané de foudre mal formé"
+  "Malformed lightning snapshot": "Instantané de foudre mal formé",
+  "Retail Chains (Sweden)": "Chaînes de magasins (Suède)",
+  "org. no. {number}": "n° d’org. {number}",
+  "head office {place}": "siège {place}",
+  "Hours: {hours}": "Horaires : {hours}",
+  "Store data unavailable": "Données des magasins indisponibles",
+  "{company}, other": "{company}, autres",
+  "Show or hide {company} stores": "Afficher ou masquer les magasins {company}",
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.": "Les points sont les magasins des grandes chaînes en Suède tels que cartographiés dans OpenStreetMap, colorés par entreprise et par enseigne. Ils sont relevés par des contributeurs, pas par les entreprises, donc quelques-uns peuvent manquer ou être périmés. Seuls les magasins sont affichés. Cliquez sur un magasin pour son adresse, ses horaires et son entreprise.",
+  "Malformed store snapshot": "Instantané des magasins mal formé"
 }

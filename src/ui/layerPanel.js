@@ -70,6 +70,7 @@ const PANEL_GROUPS = [
       'power-grid',
       'gamma-radiation',
       'fire-stations',
+      'company-stores',
       'sea-marks',
       'ski-pistes',
     ],

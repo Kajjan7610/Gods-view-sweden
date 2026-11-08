@@ -3817,5 +3817,14 @@
   "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "Точки — розряди блискавок за останню годину, визначені мережею датчиків DMI та сусідніх країн, забарвлені за давністю: білі — останні п’ять хвилин. Великі точки б’ють у землю, малі залишаються в хмарі. Точність розташування близько 0,5–2 км біля Данії й нижча північніше. Це не попередження: якщо чути грім, блискавка достатньо близько, щоб ударити.",
   "No lightning in the last hour": "За останню годину блискавок немає",
   "Showing the newest 20,000 strokes": "Показано 20 000 найновіших розрядів",
-  "Malformed lightning snapshot": "Неправильний знімок даних про блискавки"
+  "Malformed lightning snapshot": "Неправильний знімок даних про блискавки",
+  "Retail Chains (Sweden)": "Торговельні мережі (Швеція)",
+  "org. no. {number}": "реєстр. № {number}",
+  "head office {place}": "головний офіс {place}",
+  "Hours: {hours}": "Години роботи: {hours}",
+  "Store data unavailable": "Дані про магазини недоступні",
+  "{company}, other": "{company}, інші",
+  "Show or hide {company} stores": "Показати або сховати магазини {company}",
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.": "Точки — магазини великих торговельних мереж у Швеції за даними OpenStreetMap, забарвлені за компанією та форматом магазину. Їх збирають картографи, а не самі компанії, тож окремих може бракувати або вони застаріли. Показано лише магазини. Натисніть на магазин, щоб побачити адресу, години роботи та компанію.",
+  "Malformed store snapshot": "Неправильний знімок даних про магазини"
 }

@@ -3661,5 +3661,14 @@
   "Dots are lightning strokes located by DMI’s sensor network and its neighbours’ in the last hour, coloured by age: white is the last five minutes. Large dots strike the ground; small ones stay in the cloud. Positions are within about 0.5–2 km near Denmark and less precise farther north. Not a safety warning: when thunder can be heard, lightning is close enough to strike.": "Punkterna är blixturladdningar som DMI:s sensornät och grannländernas sensorer har lokaliserat den senaste timmen, färgade efter ålder: vitt är de senaste fem minuterna. Stora punkter slår ned i marken; små stannar i molnet. Positionerna stämmer inom cirka 0,5–2 km nära Danmark och är mindre exakta längre norrut. Ingen varning: hörs åskan är blixten nära nog att slå ned.",
   "No lightning in the last hour": "Inga blixtar den senaste timmen",
   "Showing the newest 20,000 strokes": "Visar de 20 000 senaste urladdningarna",
-  "Malformed lightning snapshot": "Felaktig ögonblicksbild av blixtdata"
+  "Malformed lightning snapshot": "Felaktig ögonblicksbild av blixtdata",
+  "Retail Chains (Sweden)": "Butikskedjor (Sverige)",
+  "org. no. {number}": "org.nr {number}",
+  "head office {place}": "huvudkontor {place}",
+  "Hours: {hours}": "Öppet: {hours}",
+  "Store data unavailable": "Butiksdata otillgängliga",
+  "{company}, other": "{company}, övriga",
+  "Show or hide {company} stores": "Visa eller dölj butiker från {company}",
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.": "Punkterna är stora butikskedjors butiker i Sverige så som de är kartlagda i OpenStreetMap, färgade efter företag och butikskoncept. Det är kartläggare som samlar in dem, inte företagen, så enstaka kan saknas eller vara inaktuella. Bara butiker visas. Klicka på en butik för adress, öppettider och företag.",
+  "Malformed store snapshot": "Felaktig ögonblicksbild av butiker"
 }
