@@ -4,6 +4,8 @@
 
 **En vidareutvecklad svensk version av [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view), av Kaj Obst**
 
+📣 [Läs om bygget på LinkedIn](https://www.linkedin.com/posts/kaj-obst_aemppnadata-opendata-gis-ugcPost-7524923240801181696-Kv62/)
+
 ![God's Eye View Sverige: titeln över Bottenviken med flyget live](docs/media/sverige/sverige-hero.gif)
 
 </div>

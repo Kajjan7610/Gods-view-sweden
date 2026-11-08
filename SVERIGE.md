@@ -76,6 +76,9 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-08 (länk till LinkedIn-inlägget)
+- README länkar till LinkedIn-inlägget om bygget, under rubriken.
+
 ### 2026-11-08 (under utveckling)
 - README har en rad under introt, på svenska och engelska: projektet är en
   grund som byggs vidare på, nya datalager kommer löpande och ändringarna
