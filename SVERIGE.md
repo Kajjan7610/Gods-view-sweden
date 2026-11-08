@@ -76,6 +76,11 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-08 (under utveckling)
+- README har en rad under introt, på svenska och engelska: projektet är en
+  grund som byggs vidare på, nya datalager kommer löpande och ändringarna
+  loggas här.
+
 ### 2026-11-08 (nämn projektet om du bygger vidare)
 - README har ett nytt avsnitt "Bygger du vidare?" på svenska och engelska:
   behåll LICENSE med båda copyrightraderna (licensens krav), nämn och länka

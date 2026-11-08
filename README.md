@@ -12,6 +12,10 @@ Ett digitalt jordklot med hela världen live: flyg, satelliter, fartyg, jordbäv
 
 Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av Bilawal Sidhu och Sameh Khamis ([Halfpixel](https://halfpixel.ai)), öppen källkod under [MIT-licensen](LICENSE). Den här forken är ett fristående hobbyprojekt utan koppling till eller stöd från originalets upphovsmän. Fel i de svenska delarna rapporteras här, inte i originalet.
 
+> 🚧 **Under utveckling.** Det här är en grund som byggs vidare på. Nya svenska datalager och funktioner kommer löpande, och en del kan ändras på vägen. Ändringarna loggas i [SVERIGE.md](SVERIGE.md).
+>
+> _English: Work in progress. This is a foundation that will keep growing, with more Swedish data layers on the way._
+
 ![110+ datakällor, 21 svenska API:er, 30 datatyper från Trafikverket, SMHI, Swedavia, Samtrafiken, Krisinformation.se, Polisen, Sveriges Radio, SCB, Kolada, Valmyndigheten, Strålsäkerhetsmyndigheten, Svenska kraftnät, Sjöfartsverket och Elpriset just nu](docs/media/sverige/kallor.webp)
 
 ### Det här är tillagt
