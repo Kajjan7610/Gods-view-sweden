@@ -3548,5 +3548,24 @@
     "other": "{km} km 以内に速度取締カメラ {count} 台"
   },
   "No speed cameras within {km} km": "{km} km 以内に速度取締カメラはありません",
-  "Speed Cameras (Sweden)": "速度取締カメラ（スウェーデン）"
+  "Speed Cameras (Sweden)": "速度取締カメラ（スウェーデン）",
+  "Fire Stations (Sweden)": "消防署（スウェーデン）",
+  "Full-time crew": "常備隊",
+  "Retained crew with a first-response officer": "初動指揮者付きの非常備隊",
+  "Retained crew": "非常備隊",
+  "Municipal rescue post": "自治体の救助拠点",
+  "Readiness not stated": "体制の記載なし",
+  "In {place}": "{place}",
+  "{km} km from {place}": "{place}から{km} km",
+  "Position as reported; accuracy varies": "登録上の位置。精度にばらつきあり",
+  "FIRE STATION · {station}": "消防署 · {station}",
+  "FIRE STATION": "消防署",
+  "Fire station data unavailable": "消防署データを取得できません",
+  "Dots are the municipal rescue services’ fire stations as MCF registers them, coloured by each station’s highest readiness: full-time crews on duty around the clock, retained crews called in from home or work, some with a first-response officer, and smaller municipal rescue posts. Positions vary in accuracy. Click a station for details.": "点は MCF が登録する自治体消防・救助組織の消防署で、各署の最も高い出動体制で色分けしています。24 時間勤務の常備隊、自宅や職場から呼び出される非常備隊（一部は初動指揮者付き）、小規模な自治体の救助拠点です。位置の精度はまちまちです。署をクリックすると詳細を表示します。",
+  "Malformed fire station snapshot": "消防署スナップショットが不正です",
+  "LIGHTNING FLASHES · 5 min accumulation": "雷放電 · 5 分間の累積",
+  "Lightning · Europe": "雷 · ヨーロッパ",
+  "Americas": "南北アメリカ",
+  "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "南北アメリカと太平洋上の NOAA/NWS 15 分間落雷密度",
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "ヨーロッパとアフリカ上空の EUMETSAT MTG 雷イメージャ。5 分ごとに更新"
 }

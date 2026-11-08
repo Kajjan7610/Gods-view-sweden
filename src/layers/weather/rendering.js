@@ -292,7 +292,8 @@ function createGlobeRendering({
         collection,
         kind,
         priority:
-          snapshot.product === 'lightning'
+          snapshot.product === 'lightning' ||
+          snapshot.product === 'lightning-europe'
             ? 3
             : ['radar', 'radar-nordic', 'radar-europe'].includes(
                   snapshot.product,

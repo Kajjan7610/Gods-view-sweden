@@ -27,6 +27,8 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (pilar i flödesriktningen, MW), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, flöde i m³/s var 15:e minut och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
+| Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
+| Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
 | Stadsdossier: när vyn stannar lågt över en svensk ort visar panelen STAD i högerkanten stadsvapen, foto och inledning, tätortens och kommunens folkmängd med kurva, skattesats, inkomst, arbetslöshet och kommunvalet, samt läget just nu (väder, luft, varningar, Polisen, sol) och en knapp för lokalradio | Kolada (RKA), Wikidata (CC0), Wikipedia (CC BY-SA 4.0), SMHI, Polisen; ingen nyckel | Panelen STAD i högerkanten (dyker upp vid första besöket) |
 | Stadsdossierns flikar Sevärt (slott, kyrkor, museer m.m. utpekade på kartan), besökspass, tåg från stadens station, köer runt staden, VMA-banner och norrsken i natt | Wikidata (CC0), Trafikverket, TomTom, Krisinformation.se, NOAA SWPC | Panelen STAD |
@@ -75,6 +77,24 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-08 (blixtar över Europa och brandstationer)
+- Blixtlagret har en ny region, **Europa**, som nu är förvald. Den visar
+  EUMETSAT:s blixtkamera på vädersatelliten MTG: blixtar sedda från rymden,
+  räknade per 2 km-ruta under 5 minuter, var 5:e minut och oftast 10–15
+  minuter efter. Både molnblixtar och nedslag räknas. Täckning 0–70° N,
+  70° V–70° Ö. Ingen nyckel och ingen avgift. Den amerikanska NOAA-produkten
+  finns kvar under knappen Amerika. Delningslänkar skriver regionen som
+  `lo=l.p.a` (Amerika); Europa skrivs inte ut eftersom den är förvald.
+- SMHI:s egna blixtdata valdes bort: realtidsflödet är en betaltjänst och
+  det fria arkivet ligger en dag efter.
+- Nytt lager **Brandstationer (Sverige)** (delningstoken `0m`) under
+  Infrastructure: räddningstjänstens 841 stationer från MCF:s register,
+  färgade efter högsta beredskapsform. Klick ger ett kort med beredskap och
+  avstånd till närmaste centralort. Stationerna saknar namn i registret,
+  och MCF anger att positionernas noggrannhet varierar.
+- Hittades via Sveriges dataportal (dataportal.se). Röst av för lagret som
+  för övriga svenska lager; alla tolv språk.
 
 ### 2026-11-08 (länk till LinkedIn-inlägget)
 - README länkar till LinkedIn-inlägget om bygget, under rubriken.

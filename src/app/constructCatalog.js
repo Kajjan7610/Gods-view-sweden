@@ -37,6 +37,7 @@ import { createApplicationPowerGrid } from './layers/powerGrid.js';
 import { createApplicationTransitAlerts } from './layers/transitAlerts.js';
 import { createApplicationSrTraffic } from './layers/srTraffic.js';
 import { createApplicationSeaWeather } from './layers/seaWeather.js';
+import { createApplicationFireStations } from './layers/fireStations.js';
 import { createApplicationSpeedCameras } from './layers/speedCameras.js';
 import { createApplicationRiverFlow } from './layers/riverFlow.js';
 import { createApplicationGammaRadiation } from './layers/gammaRadiation.js';
@@ -174,6 +175,9 @@ export function createApplicationCatalog({
         createApplicationSeaWeather({
           source: sources['sea-weather'],
         }),
+        createApplicationFireStations({
+          source: sources['fire-stations'],
+        }),
         createApplicationSpeedCameras({
           source: sources['speed-cameras'],
         }),
@@ -233,6 +237,8 @@ export function createApplicationCatalog({
         createWeatherLayer({
           feed: sources.weather,
           id: 'weather-lightning',
+          // Swedish fork: open on EUMETSAT's lightning over Europe.
+          lightningProduct: 'lightning-europe',
           clock: weatherClock,
         }),
         createCyclonesLayer({ feed: sources.cyclones }),

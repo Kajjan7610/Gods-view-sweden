@@ -3626,5 +3626,24 @@
     "other": "{count} trafiksäkerhetskameror inom {km} km"
   },
   "No speed cameras within {km} km": "Inga trafiksäkerhetskameror inom {km} km",
-  "Speed Cameras (Sweden)": "Fartkameror (Sverige)"
+  "Speed Cameras (Sweden)": "Fartkameror (Sverige)",
+  "Fire Stations (Sweden)": "Brandstationer (Sverige)",
+  "Full-time crew": "Heltidsstyrka",
+  "Retained crew with a first-response officer": "Deltidsstyrka (RiB) med första insatsperson",
+  "Retained crew": "Deltidsstyrka (RiB)",
+  "Municipal rescue post": "Kommunalt räddningsvärn",
+  "Readiness not stated": "Beredskap anges inte",
+  "In {place}": "I {place}",
+  "{km} km from {place}": "{km} km från {place}",
+  "Position as reported; accuracy varies": "Position enligt registret; noggrannheten varierar",
+  "FIRE STATION · {station}": "BRANDSTATION · {station}",
+  "FIRE STATION": "BRANDSTATION",
+  "Fire station data unavailable": "Brandstationsdata otillgängliga",
+  "Dots are the municipal rescue services’ fire stations as MCF registers them, coloured by each station’s highest readiness: full-time crews on duty around the clock, retained crews called in from home or work, some with a first-response officer, and smaller municipal rescue posts. Positions vary in accuracy. Click a station for details.": "Punkterna är räddningstjänstens brandstationer så som MCF registrerar dem, färgade efter varje stations högsta beredskapsform: heltidsstyrkor i tjänst dygnet runt, deltidsstyrkor (RiB) som larmas från hem eller arbete, vissa med första insatsperson, och mindre kommunala räddningsvärn. Positionernas noggrannhet varierar. Klicka på en station för detaljer.",
+  "Malformed fire station snapshot": "Felaktig ögonblicksbild av brandstationer",
+  "LIGHTNING FLASHES · 5 min accumulation": "BLIXTURLADDNINGAR · 5 min ackumulerat",
+  "Lightning · Europe": "Blixtar · Europa",
+  "Americas": "Amerika",
+  "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "NOAA/NWS blixttäthet per 15 minuter över Amerika och Stilla havet",
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "EUMETSAT:s blixtkamera på MTG över Europa och Afrika; uppdateras var 5:e minut"
 }

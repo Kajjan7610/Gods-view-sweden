@@ -3704,5 +3704,24 @@
     "other": "{count} autovelox entro {km} km"
   },
   "No speed cameras within {km} km": "Nessun autovelox entro {km} km",
-  "Speed Cameras (Sweden)": "Autovelox (Svezia)"
+  "Speed Cameras (Sweden)": "Autovelox (Svezia)",
+  "Fire Stations (Sweden)": "Caserme dei vigili del fuoco (Svezia)",
+  "Full-time crew": "Personale permanente",
+  "Retained crew with a first-response officer": "Personale volontario con funzionario di primo intervento",
+  "Retained crew": "Personale volontario",
+  "Municipal rescue post": "Presidio di soccorso comunale",
+  "Readiness not stated": "Disponibilità non indicata",
+  "In {place}": "A {place}",
+  "{km} km from {place}": "A {km} km da {place}",
+  "Position as reported; accuracy varies": "Posizione dichiarata; precisione variabile",
+  "FIRE STATION · {station}": "CASERMA · {station}",
+  "FIRE STATION": "CASERMA",
+  "Fire station data unavailable": "Dati delle caserme non disponibili",
+  "Dots are the municipal rescue services’ fire stations as MCF registers them, coloured by each station’s highest readiness: full-time crews on duty around the clock, retained crews called in from home or work, some with a first-response officer, and smaller municipal rescue posts. Positions vary in accuracy. Click a station for details.": "I punti sono le caserme dei servizi di soccorso comunali come le registra la MCF, colorate secondo la massima forma di disponibilità di ogni caserma: personale permanente in servizio giorno e notte, volontari allertati da casa o dal lavoro, alcuni con un funzionario di primo intervento, e piccoli presidi di soccorso comunali. La precisione delle posizioni varia. Fai clic su una caserma per i dettagli.",
+  "Malformed fire station snapshot": "Istantanea delle caserme non valida",
+  "LIGHTNING FLASHES · 5 min accumulation": "FULMINI · cumulo 5 min",
+  "Lightning · Europe": "Fulmini · Europa",
+  "Americas": "Americhe",
+  "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "Densità di fulmini NOAA/NWS su 15 minuti sulle Americhe e sul Pacifico",
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "Lightning Imager MTG di EUMETSAT su Europa e Africa; aggiornamento ogni 5 minuti"
 }

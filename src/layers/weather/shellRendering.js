@@ -12,6 +12,7 @@ export const WEATHER_SHELL_HEIGHTS = Object.freeze({
   'radar-nordic': 6_200,
   'radar-europe': 6_200,
   lightning: 6_600,
+  'lightning-europe': 6_600,
 });
 // Decoded canvases per renderer, full-extent and detail images alike: the shown
 // frame and the warmed next frame, each full-extent and detail (four 4096×2048

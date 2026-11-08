@@ -3782,5 +3782,24 @@
     "other": "{count} камеры скорости в радиусе {km} км"
   },
   "No speed cameras within {km} km": "Нет камер скорости в радиусе {km} км",
-  "Speed Cameras (Sweden)": "Камеры скорости (Швеция)"
+  "Speed Cameras (Sweden)": "Камеры скорости (Швеция)",
+  "Fire Stations (Sweden)": "Пожарные станции (Швеция)",
+  "Full-time crew": "Штатный расчёт",
+  "Retained crew with a first-response officer": "Резервный расчёт с офицером первой помощи",
+  "Retained crew": "Резервный расчёт",
+  "Municipal rescue post": "Муниципальный спасательный пост",
+  "Readiness not stated": "Готовность не указана",
+  "In {place}": "В {place}",
+  "{km} km from {place}": "{km} км от {place}",
+  "Position as reported; accuracy varies": "Положение по реестру; точность различается",
+  "FIRE STATION · {station}": "ПОЖАРНАЯ СТАНЦИЯ · {station}",
+  "FIRE STATION": "ПОЖАРНАЯ СТАНЦИЯ",
+  "Fire station data unavailable": "Данные о пожарных станциях недоступны",
+  "Dots are the municipal rescue services’ fire stations as MCF registers them, coloured by each station’s highest readiness: full-time crews on duty around the clock, retained crews called in from home or work, some with a first-response officer, and smaller municipal rescue posts. Positions vary in accuracy. Click a station for details.": "Точки — пожарные станции муниципальных спасательных служб по реестру MCF, окрашенные по высшей форме готовности каждой станции: штатные расчёты, дежурящие круглосуточно, резервные расчёты, вызываемые из дома или с работы, часть — с офицером первой помощи, и небольшие муниципальные спасательные посты. Точность положений различается. Нажмите на станцию, чтобы увидеть подробности.",
+  "Malformed fire station snapshot": "Неверный снимок данных о пожарных станциях",
+  "LIGHTNING FLASHES · 5 min accumulation": "МОЛНИИ · сумма за 5 мин",
+  "Lightning · Europe": "Молнии · Европа",
+  "Americas": "Америка",
+  "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "Плотность молний NOAA/NWS за 15 минут над Америкой и Тихим океаном",
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "Регистратор молний MTG EUMETSAT над Европой и Африкой; обновление каждые 5 минут"
 }

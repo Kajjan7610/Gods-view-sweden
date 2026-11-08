@@ -27,6 +27,42 @@ const PRODUCTS = Object.freeze({
     metadataTtlMs: 600_000,
     image: Object.freeze({ width: 4096, height: 2048 }),
   }),
+  // EUMETSAT's own WMS (EUMETView), not nowCOAST. Its time dimension is an
+  // interval with a 5-minute period, expanded here to the latest frames.
+  'lightning-europe': Object.freeze({
+    wms: 'https://view.eumetsat.int/geoserver/mtg_fd/li_afa/ows',
+    layer: 'li_afa',
+    style: '',
+    timeStepMs: 5 * 60_000,
+    // The advertised 70°S–70°N disc trimmed to a 2:1 box over Europe,
+    // Africa north of the equator and the Atlantic.
+    clip: Object.freeze({ west: -70, south: 0, east: 70, north: 70 }),
+    title: 'Lightning flash area (EUMETSAT MTG)',
+    coverage:
+      'Europe, North Africa, the Middle East and the Atlantic in view of Meteosat at 0°, up to 70°N; not global coverage.',
+    description:
+      'MTG-I Lightning Imager accumulated flash area: optical lightning flashes seen from geostationary orbit, counted per 2 km pixel over 5 minutes. Cloud-to-ground and in-cloud flashes alike; not a ground strike network.',
+    source: 'EUMETSAT',
+    attribution: 'EUMETSAT MTG Lightning Imager via EUMETView',
+    display: Object.freeze({
+      credit: 'EUMETSAT · MTG Lightning Imager',
+      units: 'flashes / 5 min',
+      legend: Object.freeze(
+        [
+          ['1', '#FFFFC9'],
+          ['4', '#FEC35E'],
+          ['10', '#FD8339'],
+          ['15', '#C90822'],
+          ['20+', '#86001D'],
+        ].map(([label, color]) => Object.freeze({ label, color })),
+      ),
+      extent: Object.freeze({ west: -70, south: 0, east: 70, north: 70 }),
+      coverage: 'Europe & Africa',
+      info: 'EUMETSAT MTG-I Lightning Imager accumulated flash area: lightning flashes seen from space, counted per 2 km pixel over 5 minutes; frames every 5 minutes, usually 10–15 minutes behind. In-cloud and cloud-to-ground flashes alike, so not a strike count. Colours are EUMETSAT’s own. Not a safety warning: when thunder can be heard, lightning is close enough to strike.',
+    }),
+    metadataTtlMs: 120_000,
+    image: Object.freeze({ width: 4096, height: 2048 }),
+  }),
   radar: Object.freeze({
     service: 'weather_radar',
     layer: 'conus_base_reflectivity_mosaic',
@@ -204,7 +240,9 @@ export function parseWeatherCapabilities(xml, product, nowMs = Date.now()) {
     !/\bunits\s*=\s*["']ISO8601["']/.test(dimensions[0][1])
   )
     throw failure('invalid_weather_metadata');
-  const raw = dimensions[0][2].trim().split(',');
+  const raw = spec.timeStepMs
+    ? intervalTimes(dimensions[0][2].trim(), spec.timeStepMs)
+    : dimensions[0][2].trim().split(',');
   if (!raw.length || raw.length > 512)
     throw failure('invalid_weather_metadata');
   const times = raw.map((value) => observationTime(value.trim()));
@@ -220,7 +258,35 @@ export function parseWeatherCapabilities(xml, product, nowMs = Date.now()) {
     .sort()
     .slice(-26);
   if (!recent.length) throw failure('weather_observations_expired');
+  if (spec.clip) {
+    bounds.west = Math.max(bounds.west, spec.clip.west);
+    bounds.south = Math.max(bounds.south, spec.clip.south);
+    bounds.east = Math.min(bounds.east, spec.clip.east);
+    bounds.north = Math.min(bounds.north, spec.clip.north);
+    if (bounds.west >= bounds.east || bounds.south >= bounds.north)
+      throw failure('invalid_weather_metadata');
+  }
   return { bounds, times: recent.slice(-13), allowedTimes: recent };
+}
+
+/**
+ * The last 26 instants of a `start/end/period` time dimension whose period is
+ * exactly the product's step, newest last. Only products that declare a step
+ * are expanded; anything else stays an invalid list.
+ */
+function intervalTimes(value, stepMs) {
+  const parts = value.split('/');
+  const minutes = /^PT(\d{1,3})M$/.exec(parts[2] ?? '')?.[1];
+  if (parts.length !== 3 || Number(minutes) * 60_000 !== stepMs)
+    throw failure('invalid_weather_metadata');
+  const start = Date.parse(observationTime(parts[0]) ?? '');
+  const end = Date.parse(observationTime(parts[1]) ?? '');
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start)
+    throw failure('invalid_weather_metadata');
+  const times = [];
+  for (let at = end; at >= start && times.length < 26; at -= stepMs)
+    times.unshift(new Date(at).toISOString().replace('.000Z', 'Z'));
+  return times;
 }
 
 /** A detail window `west,south,east,north` in degrees, rounded to 0.25° so cache
@@ -403,7 +469,9 @@ export function weatherProxy({
     try {
       const metadataKey = spec.provider
         ? `metadata:${spec.provider}`
-        : `metadata:${spec.service}`;
+        : spec.wms
+          ? `metadata:${product}`
+          : `metadata:${spec.service}`;
       if (
         now() - (attempts.get(product) ?? -Infinity) < 30_000 &&
         !operations.has(metadataKey)
@@ -421,7 +489,7 @@ export function weatherProxy({
               metadataKey,
               (activeSignal) =>
                 upstream(
-                  `${BASE}${spec.service}/ows?service=WMS&version=1.3.0&request=GetCapabilities`,
+                  `${spec.wms ?? `${BASE}${spec.service}/ows`}?service=WMS&version=1.3.0&request=GetCapabilities`,
                   activeSignal,
                 ),
               signal,
@@ -616,7 +684,9 @@ export function weatherProxy({
         if (now() - (tileFailures.get(key) ?? -Infinity) < 30_000)
           throw failure('weather_upstream_unavailable');
         const spec = PRODUCTS[product];
-        const upstreamUrl = new URL(`${BASE}${spec.service ?? 'none'}/ows`);
+        const upstreamUrl = new URL(
+          spec.wms ?? `${BASE}${spec.service ?? 'none'}/ows`,
+        );
         upstreamUrl.search = new URLSearchParams({
           service: 'WMS',
           version: '1.1.1',

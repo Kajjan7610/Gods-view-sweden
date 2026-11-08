@@ -129,6 +129,7 @@ test('shell heights stack every product with lightning highest', () => {
     'radar-nordic': 6_200,
     'radar-europe': 6_200,
     lightning: 6_600,
+    'lightning-europe': 6_600,
   });
   assert.equal(WEATHER_SHELL_CACHE_BYTES, 128 * 1024 * 1024);
 });

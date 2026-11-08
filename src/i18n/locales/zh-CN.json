@@ -3548,5 +3548,24 @@
     "other": "{km} 公里内有 {count} 个测速摄像头"
   },
   "No speed cameras within {km} km": "{km} 公里内没有测速摄像头",
-  "Speed Cameras (Sweden)": "测速摄像头（瑞典）"
+  "Speed Cameras (Sweden)": "测速摄像头（瑞典）",
+  "Fire Stations (Sweden)": "消防站（瑞典）",
+  "Full-time crew": "全职队伍",
+  "Retained crew with a first-response officer": "配备首批出动指挥员的兼职队伍",
+  "Retained crew": "兼职队伍",
+  "Municipal rescue post": "市政救援点",
+  "Readiness not stated": "未注明值守形式",
+  "In {place}": "位于{place}",
+  "{km} km from {place}": "距{place} {km} 公里",
+  "Position as reported; accuracy varies": "登记位置；精度不一",
+  "FIRE STATION · {station}": "消防站 · {station}",
+  "FIRE STATION": "消防站",
+  "Fire station data unavailable": "消防站数据不可用",
+  "Dots are the municipal rescue services’ fire stations as MCF registers them, coloured by each station’s highest readiness: full-time crews on duty around the clock, retained crews called in from home or work, some with a first-response officer, and smaller municipal rescue posts. Positions vary in accuracy. Click a station for details.": "圆点是 MCF 登记的市政救援部门消防站，按各站最高值守形式着色：全天候值班的全职队伍、从家中或工作单位召集的兼职队伍（部分配有首批出动指挥员），以及较小的市政救援点。位置精度不一。点击消防站查看详情。",
+  "Malformed fire station snapshot": "消防站快照格式错误",
+  "LIGHTNING FLASHES · 5 min accumulation": "闪电 · 5 分钟累计",
+  "Lightning · Europe": "闪电 · 欧洲",
+  "Americas": "美洲",
+  "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "美洲和太平洋上空 NOAA/NWS 15 分钟闪电密度",
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "欧洲和非洲上空的 EUMETSAT MTG 闪电成像仪；每 5 分钟更新"
 }

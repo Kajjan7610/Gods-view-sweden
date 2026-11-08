@@ -3704,5 +3704,24 @@
     "other": "{count} radares num raio de {km} km"
   },
   "No speed cameras within {km} km": "Nenhum radar num raio de {km} km",
-  "Speed Cameras (Sweden)": "Radares (Suécia)"
+  "Speed Cameras (Sweden)": "Radares (Suécia)",
+  "Fire Stations (Sweden)": "Quartéis de bombeiros (Suécia)",
+  "Full-time crew": "Equipa profissional",
+  "Retained crew with a first-response officer": "Equipa voluntária com oficial de primeira intervenção",
+  "Retained crew": "Equipa voluntária",
+  "Municipal rescue post": "Posto de socorro municipal",
+  "Readiness not stated": "Prontidão não indicada",
+  "In {place}": "Em {place}",
+  "{km} km from {place}": "A {km} km de {place}",
+  "Position as reported; accuracy varies": "Posição conforme registada; a precisão varia",
+  "FIRE STATION · {station}": "QUARTEL DE BOMBEIROS · {station}",
+  "FIRE STATION": "QUARTEL DE BOMBEIROS",
+  "Fire station data unavailable": "Dados dos quartéis de bombeiros indisponíveis",
+  "Dots are the municipal rescue services’ fire stations as MCF registers them, coloured by each station’s highest readiness: full-time crews on duty around the clock, retained crews called in from home or work, some with a first-response officer, and smaller municipal rescue posts. Positions vary in accuracy. Click a station for details.": "Os pontos são os quartéis dos serviços municipais de socorro tal como a MCF os regista, coloridos pela forma de prontidão mais elevada de cada quartel: equipas profissionais de serviço dia e noite, equipas voluntárias chamadas de casa ou do trabalho, algumas com oficial de primeira intervenção, e pequenos postos de socorro municipais. A precisão das posições varia. Clique num quartel para ver detalhes.",
+  "Malformed fire station snapshot": "Instantâneo de quartéis de bombeiros malformado",
+  "LIGHTNING FLASHES · 5 min accumulation": "RAIOS · acumulado 5 min",
+  "Lightning · Europe": "Raios · Europa",
+  "Americas": "Américas",
+  "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "Densidade de raios NOAA/NWS em 15 minutos sobre as Américas e o Pacífico",
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "Lightning Imager MTG da EUMETSAT sobre a Europa e a África; atualização a cada 5 minutos"
 }

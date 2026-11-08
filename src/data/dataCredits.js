@@ -358,6 +358,12 @@ export const DATA_CREDITS = [
       '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>); strongest echo per 2 km, resampled to latitude/longitude',
   },
   {
+    key: 'eumetsat-lightning',
+    html:
+      'Lightning (Europe): ' +
+      '<a href="https://view.eumetsat.int/" target="_blank" rel="noopener">EUMETSAT</a> MTG-I Lightning Imager, accumulated flash area via EUMETView',
+  },
+  {
     key: 'trafikverket-roads',
     html:
       'Road conditions &amp; incidents (Sweden): ' +
@@ -401,6 +407,12 @@ export const DATA_CREDITS = [
     html:
       'Sea weather (Sweden): ' +
       '<a href="https://viva.sjofartsverket.se/" target="_blank" rel="noopener">Sjöfartsverket ViVa</a>',
+  },
+  {
+    key: 'fire-stations',
+    html:
+      'Fire stations (Sweden): ' +
+      '<a href="https://www.geodata.se/geodataportalen/srv/swe/catalog.search#/metadata/1e3c8e08-df6c-4999-90ac-225d7bdae1a6" target="_blank" rel="noopener">Myndigheten för civilt försvar (MCF)</a>, brandstationer (INSPIRE)',
   },
   {
     key: 'speed-cameras',

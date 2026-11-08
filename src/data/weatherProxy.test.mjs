@@ -1159,3 +1159,73 @@ test('large tile validation checks requested dimensions and bounded compressed b
   });
   assert.equal((await request(`${tile()}&size=1024`)).statusCode, 200);
 });
+
+// EUMETSAT's MTG lightning: own WMS, interval time dimension, trimmed bounds.
+function eumetsat(
+  dimension = '2025-05-30T15:00:00.000Z/2026-09-16T02:05:00.000Z/PT5M',
+  defaultTime = '2026-09-16T02:05:00Z',
+) {
+  return `<WMS_Capabilities><Capability><Layer><Name>li_afa</Name><Title>LI Accumulated Flash Area</Title><EX_GeographicBoundingBox><westBoundLongitude>-70.0</westBoundLongitude><eastBoundLongitude>70.0</eastBoundLongitude><southBoundLatitude>-70.0</southBoundLatitude><northBoundLatitude>70.0</northBoundLatitude></EX_GeographicBoundingBox><Dimension name="time" default="${defaultTime}" units="ISO8601" nearestValue="1">${dimension}</Dimension></Layer></Capability></WMS_Capabilities>`;
+}
+
+test('European lightning expands its five-minute interval to the latest frames and trims to Europe', () => {
+  const parsed = parseWeatherCapabilities(eumetsat(), 'lightning-europe', NOW);
+  assert.equal(parsed.times.length, 13);
+  assert.equal(parsed.times.at(-1), '2026-09-16T02:05:00.000Z');
+  assert.equal(parsed.times[0], '2026-09-16T01:05:00.000Z');
+  assert.equal(parsed.allowedTimes.length, 26);
+  assert.deepEqual(parsed.bounds, { west: -70, south: 0, east: 70, north: 70 });
+  // A short interval yields only its own instants.
+  assert.deepEqual(
+    parseWeatherCapabilities(
+      eumetsat('2026-09-16T01:55:00Z/2026-09-16T02:05:00Z/PT5M'),
+      'lightning-europe',
+      NOW,
+    ).times,
+    [
+      '2026-09-16T01:55:00.000Z',
+      '2026-09-16T02:00:00.000Z',
+      '2026-09-16T02:05:00.000Z',
+    ],
+  );
+  for (const text of [
+    eumetsat('2026-09-16T01:00:00Z/2026-09-16T02:05:00Z/PT10M'),
+    eumetsat('2026-09-16T02:05:00Z'),
+    eumetsat('2026-09-16T03:00:00Z/2026-09-16T02:05:00Z/PT5M'),
+    eumetsat(undefined, '2026-09-16T02:02:00Z'),
+  ])
+    assert.throws(() =>
+      parseWeatherCapabilities(text, 'lightning-europe', NOW),
+    );
+});
+
+test('European lightning reads its own WMS and describes itself', async () => {
+  const calls = [];
+  const { request } = install({
+    fetchImpl: async (url, options) => {
+      calls.push({ url: new URL(url), options });
+      return url.includes('GetCapabilities')
+        ? new Response(eumetsat())
+        : image();
+    },
+  });
+  const manifest = body(await request('/manifest?product=lightning-europe'));
+  assert.equal(manifest.unavailable, false);
+  assert.equal(manifest.source, 'EUMETSAT');
+  assert.equal(manifest.display.units, 'flashes / 5 min');
+  assert.equal(manifest.display.legend.length, 5);
+  assert.equal(calls[0].url.origin, 'https://view.eumetsat.int');
+  assert.equal(calls[0].url.pathname, '/geoserver/mtg_fd/li_afa/ows');
+  const time = manifest.latest;
+  assert.equal(
+    (await request(tile({ product: 'lightning-europe', time, z: 2, x: 4 })))
+      .statusCode,
+    200,
+  );
+  const map = calls[1].url;
+  assert.equal(map.origin, 'https://view.eumetsat.int');
+  assert.equal(map.pathname, '/geoserver/mtg_fd/li_afa/ows');
+  assert.equal(map.searchParams.get('layers'), 'li_afa');
+  assert.equal(map.searchParams.get('styles'), '');
+  assert.equal(map.searchParams.get('time'), time);
+});

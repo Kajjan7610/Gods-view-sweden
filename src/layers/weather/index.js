@@ -27,6 +27,7 @@ function presentWeatherProblem(problem) {
 }
 
 const RADAR_PRODUCTS = Object.freeze(['radar', 'radar-nordic', 'radar-europe']);
+const LIGHTNING_PRODUCTS = Object.freeze(['lightning', 'lightning-europe']);
 const STOPS = [
   [10, '#00ecec'],
   [20, '#0000f6'],
@@ -62,6 +63,9 @@ export function createWeatherLayer({
   // Nordic composite in the Swedish fork (src/app/constructCatalog.js), which
   // also offers EUMETNET OPERA's European composite.
   radarProduct = 'radar',
+  // Which lightning map the layer opens on: NOAA's Americas density upstream,
+  // EUMETSAT's MTG Lightning Imager over Europe in the Swedish fork.
+  lightningProduct = 'lightning',
   cesium = Cesium,
   createRendering = createWeatherRendering,
   documentRef = globalThis.document,
@@ -78,7 +82,9 @@ export function createWeatherLayer({
       ? radarProduct
       : 'radar'
     : lightning
-      ? 'lightning'
+      ? LIGHTNING_PRODUCTS.includes(lightningProduct)
+        ? lightningProduct
+        : 'lightning'
       : 'clouds-regional';
   let opacity = 'strong';
   let infrared = 100;
@@ -451,7 +457,8 @@ export function createWeatherLayer({
       if (
         ((satellite &&
           ['clouds', 'clouds-regional'].includes(params.product)) ||
-          (radar && RADAR_PRODUCTS.includes(params.product))) &&
+          (radar && RADAR_PRODUCTS.includes(params.product)) ||
+          (lightning && LIGHTNING_PRODUCTS.includes(params.product))) &&
         params.product !== product
       ) {
         product = params.product;
@@ -631,7 +638,9 @@ export function createWeatherLayer({
           ? t('RADAR · {units}', { units: display.units })
           : t('RADAR REFLECTIVITY · dBZ')
         : lightning
-          ? t('LIGHTNING DENSITY · 15 min accumulation')
+          ? product === 'lightning-europe'
+            ? t('LIGHTNING FLASHES · 5 min accumulation')
+            : t('LIGHTNING DENSITY · 15 min accumulation')
           : product === 'clouds'
             ? t('GLOBAL INFRARED · hourly')
             : t('GOES INFRARED · ~5 min');
@@ -687,7 +696,9 @@ export function createWeatherLayer({
                 ? t('Rain radar · Europe')
                 : t('Rain radar · US')
             : lightning
-              ? t('Lightning density · 15 min')
+              ? product === 'lightning-europe'
+                ? t('Lightning · Europe')
+                : t('Lightning density · 15 min')
               : t('Satellite clouds'),
           coverage:
             display.coverage ??
@@ -739,6 +750,25 @@ export function createWeatherLayer({
                           'EUMETNET OPERA European radar composite; 5-minute updates',
                         )
                       : t('SMHI Nordic radar composite; 5-minute updates'),
+              }))
+            : []),
+          ...(lightning
+            ? [
+                ['lightning-europe', t('Europe')],
+                ['lightning', t('Americas')],
+              ].map(([value, label]) => ({
+                id: value,
+                label,
+                active: product === value,
+                params: { product: value },
+                title:
+                  value === 'lightning'
+                    ? t(
+                        'NOAA/NWS 15-minute lightning density over the Americas and the Pacific',
+                      )
+                    : t(
+                        'EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates',
+                      ),
               }))
             : []),
           ...(satellite
@@ -830,7 +860,7 @@ export function createWeatherLayer({
                 )),
       };
       controls.summary.settings = [
-        ...(radar
+        ...(radar || lightning
           ? [
               {
                 id: 'region',

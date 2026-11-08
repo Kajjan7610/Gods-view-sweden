@@ -3626,5 +3626,24 @@
     "other": "{count} Blitzer im Umkreis von {km} km"
   },
   "No speed cameras within {km} km": "Keine Blitzer im Umkreis von {km} km",
-  "Speed Cameras (Sweden)": "Blitzer (Schweden)"
+  "Speed Cameras (Sweden)": "Blitzer (Schweden)",
+  "Fire Stations (Sweden)": "Feuerwachen (Schweden)",
+  "Full-time crew": "Berufsfeuerwehr",
+  "Retained crew with a first-response officer": "Bereitschaftskräfte mit Ersteinsatzführer",
+  "Retained crew": "Bereitschaftskräfte",
+  "Municipal rescue post": "Kommunaler Rettungsposten",
+  "Readiness not stated": "Bereitschaft nicht angegeben",
+  "In {place}": "In {place}",
+  "{km} km from {place}": "{km} km von {place}",
+  "Position as reported; accuracy varies": "Position laut Register; Genauigkeit schwankt",
+  "FIRE STATION · {station}": "FEUERWACHE · {station}",
+  "FIRE STATION": "FEUERWACHE",
+  "Fire station data unavailable": "Feuerwachendaten nicht verfügbar",
+  "Dots are the municipal rescue services’ fire stations as MCF registers them, coloured by each station’s highest readiness: full-time crews on duty around the clock, retained crews called in from home or work, some with a first-response officer, and smaller municipal rescue posts. Positions vary in accuracy. Click a station for details.": "Punkte sind die Feuerwachen der kommunalen Rettungsdienste, wie die MCF sie registriert, gefärbt nach der höchsten Bereitschaftsform jeder Wache: rund um die Uhr besetzte Berufsfeuerwehr, Bereitschaftskräfte, die von zu Hause oder der Arbeit alarmiert werden, teils mit Ersteinsatzführer, und kleinere kommunale Rettungsposten. Die Positionen sind unterschiedlich genau. Klicken Sie auf eine Wache für Details.",
+  "Malformed fire station snapshot": "Fehlerhafter Feuerwachen-Snapshot",
+  "LIGHTNING FLASHES · 5 min accumulation": "BLITZE · 5 Min. kumuliert",
+  "Lightning · Europe": "Blitze · Europa",
+  "Americas": "Amerika",
+  "NOAA/NWS 15-minute lightning density over the Americas and the Pacific": "NOAA/NWS-Blitzdichte über 15 Minuten über Amerika und dem Pazifik",
+  "EUMETSAT MTG Lightning Imager over Europe and Africa; 5-minute updates": "EUMETSAT MTG Lightning Imager über Europa und Afrika; Aktualisierung alle 5 Minuten"
 }

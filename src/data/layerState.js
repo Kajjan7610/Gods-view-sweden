@@ -324,6 +324,16 @@ const OPTION_GROUPS = Object.freeze({
       light: 'l',
       strong: 's',
     }),
+    enumOption(
+      'product',
+      'p',
+      'lightning-europe',
+      ['lightning', 'lightning-europe'],
+      {
+        lightning: 'a',
+        'lightning-europe': 'e',
+      },
+    ),
   ]),
   'weather-radar': Object.freeze([
     enumOption('opacity', 'o', 'strong', ['light', 'strong'], {
@@ -642,6 +652,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
   Object.freeze({
     id: 'fire-perimeters',
     token: '2',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
+    id: 'fire-stations',
+    token: '0m',
     disposition: 'enabled-only',
   }),
   Object.freeze({
