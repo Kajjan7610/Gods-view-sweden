@@ -80,6 +80,15 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-08 (Coop saknade butiker)
+- Butikskedjorna hittade bara 481 av Coops drygt 800 butiker. Coop är märkt
+  på flera sätt i OpenStreetMap: ett äldre Wikidata-id ("Coop (Sweden)", ca
+  190 butiker), egna id:n för X:-tra och Coop Forum, och ca 140 butiker med
+  bara namnet ("Coop …", "Stora Coop …"). Nu räknas alla id:n, och en butik
+  utan id hittas på namnet, för alla kedjor. Coop visas som Stora Coop,
+  Coop och X:-tra. Coop har nu 779 butiker (tidigare 481), och alla kedjor
+  ökade något: totalt 3 250 butiker.
+
 ### 2026-11-08 (butikskedjor)
 - Nytt lager **Butikskedjor (Sverige)** (delningstoken `0k`) under
   Infrastructure: butikerna för ICA (Nära, Supermarket, Kvantum, Maxi), Coop,

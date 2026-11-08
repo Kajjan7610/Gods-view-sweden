@@ -150,3 +150,27 @@ test('concept spellings are read as the company’s own concepts', () => {
   assert.equal(canonicalBrand(ica, 'ICA ToGo'), 'ICA ToGo');
   assert.equal(canonicalBrand(ica, undefined), 'ICA');
 });
+
+test('untagged and older-tagged stores find their company and concept', () => {
+  const coop = (tags) =>
+    normalizeStore(node(20, { shop: 'supermarket', ...tags }));
+  assert.equal(coop({ name: 'Stora Coop Bromma' }).brand, 'Stora Coop');
+  assert.equal(coop({ name: 'Stora Coop Bromma' }).company, 'coop');
+  assert.equal(
+    coop({ brand: 'Coop (Sweden)', 'brand:wikidata': 'Q15229319' }).brand,
+    'Coop',
+  );
+  assert.equal(coop({ name: 'X:-tra Rinkeby' }).brand, 'X:-tra');
+  assert.equal(coop({ brand: 'Coop Konsum', name: 'Konsum' }).brand, 'Coop');
+  assert.equal(coop({ name: 'ICA Nära Ankaret', brand: 'ICA' }).company, 'ica');
+  assert.equal(
+    coop({ name: 'ICA Nära Ankaret', brand: 'ICA' }).brand,
+    'ICA Nära',
+  );
+  // A shop tagged with another brand item is not taken by its name.
+  assert.equal(
+    coop({ name: 'Coop Prix Moss', 'brand:wikidata': 'Q5167705' }),
+    null,
+  );
+  assert.equal(coop({ name: 'Coopers bageri' }), null);
+});

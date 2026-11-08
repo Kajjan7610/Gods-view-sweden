@@ -13,13 +13,17 @@
  * data, so it is licensed ODbL and says so.
  *
  * Run it by hand, about weekly, never from the app: public Overpass
- * instances are shared. OVERPASS_UPSTREAMS (first URL) wins over --endpoint.
+ * instances are shared. OVERPASS_UPSTREAMS (first URL) wins over --endpoint;
+ * busy instances are retried in turn. Each answer is kept for 12 hours in
+ * the system temp directory, so a run cut short resumes where it stopped.
  *
  * Usage:
  *   node scripts/build-company-stores.mjs [--endpoint <overpass-url>]
  */
 
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -40,10 +44,13 @@ const BOX = '55.0,10.5,69.2,24.2';
 const argEndpoint = process.argv.includes('--endpoint')
   ? process.argv[process.argv.indexOf('--endpoint') + 1]
   : null;
-const ENDPOINT =
-  (process.env.OVERPASS_UPSTREAMS || '').split(',')[0].trim() ||
-  argEndpoint ||
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter';
+// Tried in order; a busy public instance answers 504 and the next is asked.
+const ENDPOINTS = [
+  (process.env.OVERPASS_UPSTREAMS || '').split(',')[0].trim(),
+  argEndpoint,
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
+].filter(Boolean);
 
 async function countries() {
   const pack = JSON.parse(
@@ -78,21 +85,45 @@ function countryOf(byIso, [lon, lat]) {
   return best?.iso ?? null;
 }
 
+const CACHE = path.join(os.tmpdir(), 'gev-company-stores');
+const CACHE_MS = 12 * 60 * 60_000;
+
 async function overpass(query) {
-  for (let attempt = 1; attempt <= 4; attempt++) {
-    const response = await fetch(ENDPOINT, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': USER_AGENT,
-      },
-      body: new URLSearchParams({ data: query }),
-    });
-    const body = await response.text();
-    if (response.ok && body.startsWith('{')) return JSON.parse(body);
-    console.warn(`  Overpass HTTP ${response.status}, attempt ${attempt}`);
-    await new Promise((resolve) => setTimeout(resolve, attempt * 20_000));
+  const file = path.join(
+    CACHE,
+    `${createHash('sha256').update(query).digest('hex').slice(0, 16)}.json`,
+  );
+  try {
+    if (Date.now() - (await stat(file)).mtimeMs < CACHE_MS)
+      return JSON.parse(await readFile(file, 'utf8'));
+  } catch {
+    // Not cached yet.
+  }
+  for (let attempt = 1; attempt <= 3 * ENDPOINTS.length; attempt++) {
+    const endpoint = ENDPOINTS[(attempt - 1) % ENDPOINTS.length];
+    let status;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': USER_AGENT,
+        },
+        body: new URLSearchParams({ data: query }),
+        signal: AbortSignal.timeout(240_000),
+      });
+      const body = await response.text();
+      if (response.ok && body.startsWith('{')) {
+        await mkdir(CACHE, { recursive: true });
+        await writeFile(file, body);
+        return JSON.parse(body);
+      }
+      status = `HTTP ${response.status}`;
+    } catch (error) {
+      status = error?.cause?.code || error?.name || 'network error';
+    }
+    console.warn(`  ${new URL(endpoint).host} ${status}, attempt ${attempt}`);
+    await new Promise((resolve) => setTimeout(resolve, 15_000));
   }
   throw new Error('Overpass unavailable');
 }
@@ -149,16 +180,23 @@ async function wikidataFacts(ids) {
 
 const byIso = await countries();
 const elements = [];
+// The oldest data any answer came from, so the snapshot never claims more.
 let osmBase = null;
+/** A name as a literal inside an Overpass regular expression. */
+const escape = (value) => value.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
 for (const company of COMPANIES) {
-  for (const id of company.brandWikidata) {
-    console.log(`${company.name} (${id})`);
-    const result = await overpass(
-      `[out:json][timeout:180][bbox:${BOX}];nwr["brand:wikidata"="${id}"];out tags center;`,
-    );
-    osmBase = result.osm3s?.timestamp_osm_base ?? osmBase;
-    elements.push(...result.elements);
-  }
+  console.log(company.name);
+  // Its brand items, then shops with no brand item named like its stores.
+  const result = await overpass(
+    `[out:json][timeout:180][bbox:${BOX}];(` +
+      `nwr["brand:wikidata"~"^(${company.brandWikidata.join('|')})$"];` +
+      `nwr["shop"][!"brand:wikidata"]["name"~"^(${company.names.map(escape).join('|')})( |$)"];` +
+      `nwr["shop"][!"brand:wikidata"]["brand"~"^(${company.names.map(escape).join('|')})( |$)"];` +
+      `);out tags center;`,
+  );
+  const base = result.osm3s?.timestamp_osm_base ?? null;
+  if (base && (!osmBase || base < osmBase)) osmBase = base;
+  elements.push(...result.elements);
 }
 const stores = normalizeStores(elements).filter(
   (row) => countryOf(byIso, row.point) === 'SWE',
