@@ -76,6 +76,14 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-08 (nämn projektet om du bygger vidare)
+- README har ett nytt avsnitt "Bygger du vidare?" på svenska och engelska:
+  behåll LICENSE med båda copyrightraderna (licensens krav), nämn och länka
+  projektet (en begäran, med en färdig rad att klistra in), och ge egna
+  projekt ett eget namn.
+- Ny `CITATION.cff` så att GitHub visar knappen "Cite this repository" med
+  Kaj Obst som upphovsman och originalet som referens.
+
 ### 2026-11-07 (riktlinjer för bidrag)
 - `CONTRIBUTING.md` och `SECURITY.md` börjar med ett svenskt stycke (och en
   rad på engelska): det här är forken, inte originalet; issues och pull

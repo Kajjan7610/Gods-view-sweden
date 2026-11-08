@@ -50,6 +50,21 @@ npm run dev
 
 Öppna http://localhost:4173/?lang=sv (kräver Node 24 eller 26). De flesta svenska källor behöver ingen nyckel. Kameror, tåg, kollektivtrafik och flygtavlorna kräver kostnadsfria nycklar från Trafikverket, Trafiklab och Swedavia, som läggs i `.env` (se `.env.example`) eller i appen. Alla svenska tillägg, nycklarna och en logg över varje ändring finns i **[SVERIGE.md](SVERIGE.md)**. Källor och villkor finns i **[DATA_SOURCES.md](DATA_SOURCES.md)**.
 
+### Bygger du vidare?
+
+Du får gärna använda, ändra och bygga vidare på projektet. Licensen är MIT. Jag vill bara att du nämner var det kommer ifrån:
+
+- **Behåll [LICENSE](LICENSE)** med båda copyrightraderna (Bilawal Sidhu och Kaj Obst). Det är licensens enda krav.
+- **Nämn projektet** i din README, i appen eller i ditt inlägg och länka hit. Det är en vänlig begäran, inte ett licenskrav, men den betyder mycket. Till exempel:
+
+  > Bygger på [God's Eye View Sverige](https://github.com/Kajjan7610/Gods-view-sweden) av Kaj Obst, som i sin tur bygger på [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av Bilawal Sidhu.
+
+- **Kalla inte ditt projekt "God's Eye View Sverige"** och ge inte sken av att det är mitt eller originalets. Ge det ett eget namn.
+
+Knappen **Cite this repository** i sidopanelen på GitHub ger en färdig källhänvisning ([CITATION.cff](CITATION.cff)).
+
+> **English:** You are welcome to use, modify and build on this project under the MIT license. Keep the [LICENSE](LICENSE) file with both copyright lines; that is the license's only requirement. I also ask that you credit the project, for example: *"Based on [God's Eye View Sverige](https://github.com/Kajjan7610/Gods-view-sweden) by Kaj Obst, built on [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) by Bilawal Sidhu."* Please give your project its own name rather than presenting it as this one.
+
 <sub>Bilderna är tagna i God's Eye View Sverige med Google Photorealistic 3D Tiles och de svenska datalagren, med källhänvisningen synlig i bild. Se [docs/media/README.md](docs/media/README.md).</sub>
 
 ---

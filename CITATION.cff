@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "Bygger du vidare på projektet, nämn det gärna så här. If you build on this project, please credit it like this."
+title: "God's Eye View Sverige"
+abstract: "En vidareutvecklad svensk version av God's Eye View: ett digitalt jordklot med Sveriges öppna data live. A Swedish fork of God's Eye View with Swedish open data."
+type: software
+authors:
+  - family-names: Obst
+    given-names: Kaj
+    alias: Kajjan7610
+repository-code: "https://github.com/Kajjan7610/Gods-view-sweden"
+url: "https://github.com/Kajjan7610/Gods-view-sweden"
+license: MIT
+keywords:
+  - sverige
+  - open-data
+  - oppna-data
+  - cesium
+  - 3d-globe
+  - gis
+references:
+  - type: software
+    title: "God's Eye View"
+    authors:
+      - family-names: Sidhu
+        given-names: Bilawal
+      - family-names: Khamis
+        given-names: Sameh
+    repository-code: "https://github.com/bilawalsidhu/gods-eye-view"
+    license: MIT
