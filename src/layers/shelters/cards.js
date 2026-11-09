@@ -15,8 +15,10 @@ const CARD_BASE = Object.freeze({
 /** A distance in metres or kilometres. */
 export function formatShelterDistance(metres) {
   if (!Number.isFinite(metres)) return '';
-  return metres < 1000
-    ? `${formatNumber(Math.round(metres / 10) * 10)} m`
+  // Rounded first, so 996 m reads "1 km" and not "1,000 m".
+  const tens = Math.round(metres / 10) * 10;
+  return tens < 1000
+    ? `${formatNumber(tens)} m`
     : `${formatNumber(Math.round(metres / 100) / 10)} km`;
 }
 
@@ -48,7 +50,7 @@ export function buildShelterCard(row) {
   return {
     ...CARD_BASE,
     id: `shelters-card:${row.id}`,
-    interactive: false,
+    interactive: true,
     title: row.number
       ? t('SHELTER · {number}', { number: row.number })
       : t('SHELTER'),

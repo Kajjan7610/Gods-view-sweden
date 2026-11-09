@@ -88,6 +88,39 @@ export function distanceMeters([lon1, lat1], [lon2, lat2]) {
   return 2 * 6371008.8 * Math.asin(Math.min(1, Math.sqrt(a)));
 }
 
+/** A view wider than this (degrees) is a country, not a neighbourhood. */
+export const SHELTERS_MAX_SPAN_DEG = 3;
+
+const E4 = 1e4;
+/** One axis of a view in 1e-4 degrees, at most `span` wide about `mid`. */
+function clipAxis(low, high, mid, span) {
+  if (high - low <= span) return [low, high];
+  const from = Math.max(low, mid - span / 2);
+  const to = Math.min(high, mid + span / 2);
+  // A centre outside the view (the camera's own place, when the middle of
+  // the screen shows sky) gets the box around itself.
+  return from < to ? [from, to] : [mid - span / 2, mid + span / 2];
+}
+
+/**
+ * The view box cut to at most SHELTERS_MAX_SPAN_DEG a side about the centre:
+ * a tilted camera sees to the horizon, and the shelters wanted are the ones
+ * nearest the centre. Edges come out at 1e-4 degrees, so a cut box is never
+ * a hair wider than the span.
+ * @param {number[]} bbox [west, south, east, north].
+ * @param {number[]} center [lon, lat].
+ */
+export function clipViewBox(bbox, center, span = SHELTERS_MAX_SPAN_DEG) {
+  const [west, south, east, north, lon, lat, max] = [
+    ...bbox,
+    ...center,
+    span,
+  ].map((value) => Math.round(value * E4));
+  const [w, e] = clipAxis(west, east, lon, max);
+  const [s, n] = clipAxis(south, north, lat, max);
+  return [w, s, e, n].map((value) => value / E4);
+}
+
 /**
  * The shelters in a box: how many and their places, and the nearest `limit`
  * to the centre, nearest first, each with its distance.

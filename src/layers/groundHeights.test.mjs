@@ -230,3 +230,32 @@ test('requests from every layer keep their distance', async () => {
   assert.equal(at.length, 2);
   assert.ok(at[1] - at[0] >= 55, `${at[1] - at[0]} ms apart`);
 });
+
+test('rows of a newer view are asked as soon as the lookup before them ends', async () => {
+  const asked = [];
+  let release;
+  const gate = new Promise((resolve) => (release = resolve));
+  const terrain = {
+    async resolveEllipsoidalGround(coords) {
+      asked.push(coords.map((c) => c.lat));
+      // The first view's lookup is slow.
+      if (asked.length === 1) await gate;
+      return coords.map(() => ({ ellipsoid: 30, source: 'reearth' }));
+    },
+  };
+  const timers = manualTimers();
+  let redraws = 0;
+  const ground = createGroundHeights(terrain, () => redraws++, timers);
+  const first = ground.place([rows[0]]);
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  // The camera moved on meanwhile.
+  const second = ground.place([rows[1]]);
+  release();
+  await Promise.all([first, second]);
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  assert.deepEqual(asked, [[59.33], [67.85]]);
+  assert.equal(ground.heightOf('b'), 30);
+  assert.equal(ground.isReal('b'), true);
+  assert.equal(redraws, 2);
+  assert.equal(timers.pending.size, 0, 'no back-off for a first lookup');
+});

@@ -1,4 +1,5 @@
 import {
+  SHELTERS_MAX_SPAN_DEG,
   normalizeShelters,
   sheltersInView,
 } from '../../src/layers/shelters/records.js';
@@ -18,8 +19,8 @@ const TTL_MS = 24 * 60 * 60_000;
 const STALE_MAX_MS = 7 * 24 * 60 * 60_000;
 const MAX_PAGE_BYTES = 16 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 90_000;
-/** A view wider than this (degrees) is a country, not a neighbourhood. */
-const MAX_SPAN_DEG = 3;
+/** After a failed download MCF is left alone this long. */
+export const SHELTERS_RETRY_AFTER_FAILURE_MS = 5 * 60_000;
 const MAX_LIMIT = 2000;
 
 const numbers = (value, count) => {
@@ -28,6 +29,7 @@ const numbers = (value, count) => {
     .map(Number);
   return parts.length === count && parts.every(Number.isFinite) ? parts : null;
 };
+const onEarth = (lon, lat) => Math.abs(lon) <= 180 && Math.abs(lat) <= 90;
 
 /** Bounded MCF shelter route for dev and preview. */
 export function sheltersProxy({
@@ -35,6 +37,7 @@ export function sheltersProxy({
   now = () => Date.now(),
 } = {}) {
   let cached = null;
+  let retryAfter = 0;
   const inFlight = new Map();
   const allow = makeRateLimiter({
     windowMs: 60_000,
@@ -92,19 +95,32 @@ export function sheltersProxy({
     };
   }
 
+  /** The last snapshot marked stale, or null once it is too old to serve. */
+  const staleSnapshot = () =>
+    cached && now() - cached.savedAt <= STALE_MAX_MS
+      ? { ...cached.value, stale: true }
+      : null;
+
   async function snapshot() {
     if (cached && now() - cached.savedAt < TTL_MS)
       return { ...cached.value, stale: false };
+    if (now() < retryAfter) {
+      const stale = staleSnapshot();
+      if (stale) return stale;
+      throw new Error('shelter download paused after a failure');
+    }
     try {
       const { promise } = coalesceProxyRequest(inFlight, 'shelters', load);
       const value = await promise;
       cached = { value, savedAt: now() };
+      retryAfter = 0;
       console.log(`[shelters] ${value.count} shelters, ${value.places} places`);
       return { ...value, stale: false };
     } catch (error) {
       console.warn(`[shelters] refresh failed: ${error?.message || error}`);
-      if (cached && now() - cached.savedAt <= STALE_MAX_MS)
-        return { ...cached.value, stale: true };
+      retryAfter = now() + SHELTERS_RETRY_AFTER_FAILURE_MS;
+      const stale = staleSnapshot();
+      if (stale) return stale;
       throw error;
     }
   }
@@ -127,7 +143,15 @@ export function sheltersProxy({
     const params = new URLSearchParams(search);
     const bbox = numbers(params.get('bbox'), 4);
     const center = numbers(params.get('center'), 2);
-    if (!bbox || !center || bbox[0] >= bbox[2] || bbox[1] >= bbox[3])
+    if (
+      !bbox ||
+      !center ||
+      bbox[0] >= bbox[2] ||
+      bbox[1] >= bbox[3] ||
+      !onEarth(bbox[0], bbox[1]) ||
+      !onEarth(bbox[2], bbox[3]) ||
+      !onEarth(...center)
+    )
       return json(400, { error: 'bbox_and_center_required' });
     if (!allow(clientKey(req)))
       return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
@@ -143,7 +167,10 @@ export function sheltersProxy({
       fetchedAt: value.fetchedAt,
       stale: value.stale,
     };
-    if (bbox[2] - bbox[0] > MAX_SPAN_DEG || bbox[3] - bbox[1] > MAX_SPAN_DEG)
+    // The layer cuts its box to the span at 1e-4 degrees; the sliver allows
+    // for the subtraction's own rounding.
+    const widest = SHELTERS_MAX_SPAN_DEG + 1e-9;
+    if (bbox[2] - bbox[0] > widest || bbox[3] - bbox[1] > widest)
       return json(
         200,
         { ...base, tooWide: true, total: null, places: null, shelters: [] },

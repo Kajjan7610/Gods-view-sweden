@@ -157,6 +157,7 @@ export async function resolveGroundHeights(
  * Keep one layer's ground heights: ask for the rows without a real height, at
  * most one request at a time, call `onHeights` when a height changed, and ask
  * again later, backing off, while some rows only have the geoid stand-in.
+ * Rows that arrive while a request is out are asked for as soon as it ends.
  * @param {{resolveEllipsoidalGround: Function}|null} terrain
  * @param {(heights: Map<string, number>) => void} onHeights
  * @param {object} [timers] Injectable for tests.
@@ -197,8 +198,10 @@ export function createGroundHeights(
       retryMs = GROUND_RETRY_FIRST_MS;
       return;
     }
+    const asked = new Set(missing.map((row) => row.id));
     const controller = new AbortController();
     request = controller;
+    let failed = false;
     try {
       const found = await resolveGroundHeights(terrain, missing, {
         signal: controller.signal,
@@ -213,6 +216,7 @@ export function createGroundHeights(
       }
       if (changed) onHeights(heights);
     } catch (error) {
+      failed = true;
       if (!controller.signal.aborted)
         console.warn('[GroundHeights] lookup failed:', error?.message || error);
     } finally {
@@ -220,6 +224,10 @@ export function createGroundHeights(
     }
     if (controller.signal.aborted) return;
     stopRetry();
+    // Rows of a newer view came in meanwhile: theirs is a first lookup, not a
+    // retry, so it does not wait out the back-off.
+    if (!failed && rows.some((row) => unsettled(row) && !asked.has(row.id)))
+      return place();
     if (rows.some(unsettled)) {
       retryTimer = setTimer(() => {
         retryTimer = null;

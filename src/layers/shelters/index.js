@@ -1,7 +1,7 @@
 import * as Cesium from 'cesium';
 import { formatNumber, msg, t, tn } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { SHELTER_STATES, shelterColor } from './records.js';
+import { SHELTER_STATES, clipViewBox, shelterColor } from './records.js';
 import {
   SHELTERS_OVERLAY_SOURCE_ID,
   buildShelterCard,
@@ -77,7 +77,6 @@ export function createSheltersLayer({
   let _places = null;
   let _count = null;
   let _selectedId = null;
-  let _selectedCardId = null;
   let _shown = [];
   const _shelterById = new Map();
 
@@ -89,13 +88,11 @@ export function createSheltersLayer({
     const row = _selectedId ? _shelterById.get(_selectedId) : null;
     if (!row) {
       _selectedId = null;
-      _selectedCardId = null;
       overlayHost.setEntries(SHELTERS_OVERLAY_SOURCE_ID, [], CARD_HOST_OPTIONS);
       return;
     }
     const card = buildShelterCard(row);
     card.position = position(row);
-    _selectedCardId = card.id;
     overlayHost.setEntries(
       SHELTERS_OVERLAY_SOURCE_ID,
       [card],
@@ -116,19 +113,14 @@ export function createSheltersLayer({
     _clickHandler = screenSpaceEventHandlerFactory(_viewer);
     _clickHandler.setInputAction((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-        {
-          sourceId: SHELTERS_OVERLAY_SOURCE_ID,
-        },
-      );
-      if (cardHit && cardHit.entryId === _selectedCardId) return;
+      // A card under the click, this layer's or another's, is not the ground.
+      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedShelter(picked) : null;
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        _rowListener?.();
         return;
       }
       if (picked) {
@@ -138,13 +130,13 @@ export function createSheltersLayer({
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        _rowListener?.();
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
   }
 
   function clearOverlays() {
     _selectedId = null;
-    _selectedCardId = null;
     if (!overlayHost) return;
     overlayHost.clearSource(SHELTERS_OVERLAY_SOURCE_ID);
     overlayHost.setVisible?.(SHELTERS_OVERLAY_SOURCE_ID, false);
@@ -197,10 +189,25 @@ export function createSheltersLayer({
     const centre = middle
       ? Cesium.Cartographic.fromCartesian(middle)
       : camera.positionCartographic;
+    const center = [deg(centre.longitude), deg(centre.latitude)];
     return {
-      bbox: [deg(rect.west), deg(rect.south), deg(rect.east), deg(rect.north)],
-      center: [deg(centre.longitude), deg(centre.latitude)],
+      // A tilted view reaches the horizon: ask for the part about the centre.
+      bbox: clipViewBox(
+        [deg(rect.west), deg(rect.south), deg(rect.east), deg(rect.north)],
+        center,
+      ),
+      center,
     };
+  }
+
+  /** Forget the view's shelters: the camera is too high, or the layer off. */
+  function clearRows() {
+    _zoomIn = true;
+    _shown = [];
+    _total = null;
+    _places = null;
+    _shelterById.clear();
+    _ground.cancel();
   }
 
   async function refresh() {
@@ -209,12 +216,7 @@ export function createSheltersLayer({
     const query = viewQuery();
     if (!query) {
       _request = null;
-      _zoomIn = true;
-      _shown = [];
-      _total = null;
-      _places = null;
-      _shelterById.clear();
-      _ground.cancel();
+      clearRows();
       render();
       _rowListener?.();
       return true;
@@ -227,8 +229,10 @@ export function createSheltersLayer({
         ...query,
         limit: SHOWN,
       });
-      if (request.signal.aborted || _request !== request || !_enabled)
-        return false;
+      // Switched off meanwhile: not this layer's data any more. A request the
+      // layer itself replaced (the camera moved on) is no failure.
+      if (!_enabled) return false;
+      if (request.signal.aborted || _request !== request) return true;
       _stale = snapshot.stale;
       _lastUpdate =
         _stale && Number.isFinite(snapshot.fetchedAt)
@@ -251,8 +255,8 @@ export function createSheltersLayer({
       _rowListener?.();
       return true;
     } catch (e) {
-      if (request.signal.aborted || _request !== request || !_enabled)
-        return false;
+      if (!_enabled) return false;
+      if (request.signal.aborted || _request !== request) return true;
       console.warn('[Data:Shelters] Fetch error:', e?.message || e);
       _lastError = e?.message || msg('Shelter data unavailable');
       _stale = false;
@@ -302,12 +306,14 @@ export function createSheltersLayer({
       _moveTimer = null;
       _removeMove?.();
       _removeMove = null;
-      _ground.cancel();
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
       _clickHandler?.destroy();
       _clickHandler = null;
       clearOverlays();
+      // The next enable starts from its own view, not this one's dots and list.
+      clearRows();
+      render();
     },
 
     update() {
@@ -316,6 +322,7 @@ export function createSheltersLayer({
 
     /** Select a shelter in the view and fly to it (the row's nearest list). */
     setParams(params = {}) {
+      if (!_enabled) return false;
       const row = params.shelterId
         ? _shelterById.get(String(params.shelterId))
         : null;
@@ -341,8 +348,6 @@ export function createSheltersLayer({
     destroy(viewer = _viewer) {
       layer.disable();
       _ground.clear();
-      _shelterById.clear();
-      _shown = [];
       if (_dataSource) {
         viewer.dataSources.remove(_dataSource, true);
         _dataSource = null;

@@ -127,6 +127,32 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-09 (skyddsrum: rättningar efter kodgranskning)
+- Lagret stängde av sig självt när kameran hann flytta sig innan förra
+  svaret kommit: den avbrutna hämtningen räknades som ett fel. En hämtning
+  som en nyare har gått om är nu inget fel; bara en som avbryts av att
+  lagret stängs av är det.
+- Ett klick på det valda skyddsrummets eget kort släcker inte längre
+  markeringen: kortet är träffbart i etikettlagret, och ett klick som
+  hamnar på något kort räknas inte som ett klick på marken.
+- Avstängt behåller lagret varken punkter eller lista, och `setParams` gör
+  ingenting medan lagret är av.
+- I en lutad vy når kartrutan till horisonten och blev bredare än de 3° som
+  servern svarar för, så lagret bad om inzoomning fast kameran stod lågt.
+  Lagret frågar nu efter en ruta på högst 3° kring skärmens mitt
+  (`clipViewBox`), så de närmaste skyddsrummen ritas även då. Antalet "i
+  vyn" gäller den rutan.
+- Efter en misslyckad hämtning lämnas MCF i fred i fem minuter i stället för
+  att få ett nytt försök vid varje fråga; under tiden visas den senaste
+  ögonblicksbilden som inaktuell. En ruta eller mittpunkt utanför jordklotet
+  nekas, och en ruta som är precis 3° bred räknas inte längre som för bred
+  på grund av avrundning.
+- Avståndet avrundas innan enheten väljs: 996 m står som "1 km", inte
+  "1 000 m".
+- Gemensamma markhöjder (`groundHeights.js`): rader från en nyare vy som
+  kommer medan en höjdfråga pågår frågas direkt när den är klar, i stället
+  för att vänta på nästa kameraflytt.
+
 ### 2026-11-09 (sjukhus och akuter: rättningar efter kodgranskning)
 - Ett klick på det valda sjukhusets eget kort släcker inte längre
   markeringen: kortet är träffbart i etikettlagret, och ett klick som
