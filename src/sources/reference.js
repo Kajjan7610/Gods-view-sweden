@@ -25,6 +25,7 @@ import { createRiverFlowSource } from '../layers/riverFlow/source.js';
 import { createGammaRadiationSource } from '../layers/gammaRadiation/source.js';
 import { createAuroraSource } from '../layers/aurora/source.js';
 import { createSmhiWeatherSource } from '../layers/smhiWeather/source.js';
+import { createWildlifeSightingsSource } from '../layers/wildlifeSightings/source.js';
 
 /** Construct the existing reference feeds independently of application setup. */
 export function createReferenceSources() {
@@ -37,6 +38,7 @@ export function createReferenceSources() {
     ]),
     'fire-perimeters': createWfigsPerimeterSource(),
     'drone-airspace': createDroneAirspaceSource(),
+    'wildlife-sightings': createWildlifeSightingsSource(),
     cables: createBundledCableSource(),
     'gnss-integrity': createAdsbGnssSource(),
     'trafikverket-roads': createTrafikverketRoadsSource(),

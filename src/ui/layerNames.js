@@ -53,6 +53,7 @@ export const LAYER_NAME_KEYS = Object.freeze({
   'gamma-radiation': msg('Radiation (Sweden)'),
   aurora: msg('Aurora Forecast'),
   'smhi-weather': msg('Weather Now (Sweden)'),
+  'wildlife-sightings': msg('Wildlife Sightings'),
   's2-ghostmaps': msg('S2 GhostMaps'),
   wind: msg('Wind'),
   'weather-radar': msg('Rain radar'),
@@ -77,12 +78,19 @@ export const PANEL_LABEL_KEYS = Object.freeze({
   'local-firms': msg('Active Fires'),
 });
 
+/** What the loading status names for a load that is not a layer's. */
+export const LOADING_NAME_KEYS = Object.freeze({
+  'place-names': msg('Place names'),
+});
+
 // Looked up by the English text, so a surface that holds `layer.name` keeps
 // its English data and only the shown text translates.
 const MODULE_NAME_KEYS = new Map(
-  [...Object.values(LAYER_NAME_KEYS), ...Object.values(PANEL_LABEL_KEYS)].map(
-    (key) => [key, key],
-  ),
+  [
+    ...Object.values(LAYER_NAME_KEYS),
+    ...Object.values(PANEL_LABEL_KEYS),
+    ...Object.values(LOADING_NAME_KEYS),
+  ].map((key) => [key, key]),
 );
 
 /**

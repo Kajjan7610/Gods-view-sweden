@@ -44,19 +44,6 @@ const AIRCRAFT_FIELDS = {
 
 const layers = [
   {
-    id: 'trafikverket-roads',
-    aliases: [
-      'road conditions',
-      'swedish road conditions',
-      'road incidents',
-      'roadworks',
-      'trafikverket',
-      'väglag',
-    ],
-    context: false,
-    noQuery: 'road stretches and incidents; no countable analyst records',
-  },
-  {
     id: 'gnss-integrity',
     aliases: [
       'gnss integrity',
@@ -466,11 +453,12 @@ const layers = [
 export const VOICE_OFF_LAYERS = Object.freeze({
   'bhote-koshi-2026': 'scene-driven event layer (control_scene)',
   'bhote-koshi-locator': 'scene-driven event layer (control_scene)',
-  // The Realtime prompt is at its 52,000-character budget; voice toggle and
+  // The Realtime prompt is at its 55,500-character budget; voice toggle and
   // query for this layer wait until there is room.
   'drone-airspace':
     'informational airspace layer; no room in the prompt budget',
   // Swedish fork layers: the prompt budget has no room for them either.
+  'trafikverket-roads': 'Swedish road conditions; no room in the prompt budget',
   'trafikverket-weather':
     'Swedish road weather stations; no room in the prompt budget',
   'smhi-warnings': 'Swedish weather warnings; no room in the prompt budget',
@@ -492,6 +480,8 @@ export const VOICE_OFF_LAYERS = Object.freeze({
   'power-grid': 'Swedish power flows; no room in the prompt budget',
   'transit-alerts':
     'Swedish public-transport disruptions; no room in the prompt budget',
+  'wildlife-sightings':
+    'community observation layer; no room in the prompt budget',
 });
 
 const TYPE_NAMES = Object.freeze({

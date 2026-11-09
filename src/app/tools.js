@@ -21,7 +21,13 @@ import { usePowerDayStore } from '../ui/stores/powerDay.js';
 import { useAirportBoardStore } from '../ui/stores/airportBoard.js';
 import { initGevVoiceCommands } from '../voice/gevRealtime.js';
 import { installViews, isEmbeddedInline } from './embed.js';
-import { installScopeMask, destroyScopeMask } from '../scopeMask.js';
+import {
+  installScopeMask,
+  destroyScopeMask,
+  isScopeMaskEnabled,
+} from '../scopeMask.js';
+import { KEYHOLE_OUTER_RADIUS } from '../celestialRing.js';
+import { installGlobeInViewRecovery } from './viewer.js';
 import { installLayerReleaseTrim } from '../sceneCommandRelease.js';
 import {
   installRenderGovernor,
@@ -42,6 +48,7 @@ export function createApplicationTools({
   startChrome,
   onSceneDirector,
   sceneDataPacks,
+  drawMarkActions = [],
   signal,
   defer,
 }) {
@@ -57,6 +64,14 @@ export function createApplicationTools({
     .get('bhote-koshi-2026')
     ?.module.attachSceneController(sceneDirector);
   defer(() => sceneDirector.destroy());
+  defer(
+    installGlobeInViewRecovery(viewer, {
+      // The scope mask hides everything outside its keyhole.
+      keyholeRadius: () => (isScopeMaskEnabled() ? KEYHOLE_OUTER_RADIUS : 0),
+      // An authored scene frames its own shots, holds included.
+      paused: () => sceneDirector.running,
+    }),
+  );
   onSceneDirector?.(sceneDirector);
   const annotations = initAnnotations({
     viewer,
@@ -79,12 +94,15 @@ export function createApplicationTools({
   // while a session is open, so its teardown belongs to the application
   // lifetime rather than to whoever last pressed the button. A row's fly-to
   // goes through the shell's navigation policy, as Import's does.
+  // `drawMarkActions` are an application's own buttons on a drawn area's or
+  // line's row (annotations/drawMarks.js); the standalone shell adds none.
   const drawTool = initDrawTool({
     viewer,
     annotations,
     navigation: styleManager,
     publish: (view) => displayStore.publishDraw(view),
     connect: connectDisplay,
+    markActions: drawMarkActions,
   });
   defer(() => drawTool?.destroy());
   // UTILITIES ▸ Import: the person's own GeoJSON/KML/KMZ/GPX files, each its

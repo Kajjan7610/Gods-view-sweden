@@ -17,6 +17,7 @@ import { CockpitCoordinator } from './cockpitCoordinator.js';
 import { ContextControls } from './context.js';
 import { CctvControls } from './cctv.js';
 import { StreetLevelControls } from './streetLevelControls.js';
+import { createWildlifeSightingCard } from './wildlifeSightingCard.js';
 import { RadioControls } from './radio.js';
 import { LocalSdrControls } from './localSdrControls.js';
 import { LocationNavigation } from './locationNavigation.js';
@@ -63,6 +64,9 @@ import { useLocationStore } from './stores/location.js';
 import { useCockpitStore } from './stores/cockpit.js';
 import { useGlobeActionsStore } from './stores/globeActions.js';
 import { useRecordingStore } from './stores/recording.js';
+import { onPlacePacksLoadingChange } from '../data/placeBelow.js';
+import { withPlacePacks } from './placePacksLoading.js';
+import { preloadOwnerFlags } from './ownerFlag.js';
 
 /**
  * Central UI orchestrator for the God's Eye View application.
@@ -157,8 +161,15 @@ export class StyleManager extends ShellFacade {
     // Vue views share this runtime and its stores; dispose unmounts them.
     this._ui = createUiRuntime({ pinia: applicationPinia() });
     this._feedback = new ShellFeedback({
-      readLayers: () => this._dataManager?.getAll?.() || [],
+      readLayers: () => withPlacePacks(this._dataManager?.getAll?.() || []),
     });
+    // The satellite owner flags load with the app, not on the first ride.
+    preloadOwnerFlags();
+    // The place names under a Cockpit load on its first lookup: the loading
+    // status names them meanwhile.
+    this._offPlacePacks = onPlacePacksLoadingChange(() =>
+      this._updateGlobalLoadingFeedback(),
+    );
     this.viewer = viewer;
     this.mapStackController = mapStackController;
     this.placeSearch = placeSearch;
@@ -360,6 +371,10 @@ export class StyleManager extends ShellFacade {
       services: {
         flightsLayer: services.flightsLayer,
         militaryFlightsLayer: services.militaryFlightsLayer,
+        aisLiveVesselsLayer: services.aisLiveVesselsLayer,
+        satellitesLayer: services.satellitesLayer,
+        // Orbit's Live Signals rows list and focus its mapped sites.
+        militaryInstallationsLayer: services.militaryInstallationsLayer,
         isTr3b: services.isTr3b,
         toggleTr3b: services.toggleTr3b,
         militaryAwarenessLayer: services.militaryAwarenessLayer,
@@ -374,6 +389,13 @@ export class StyleManager extends ShellFacade {
         fetchRegionalBrief: services.fetchRegionalBrief,
         regionalDistanceM: services.regionalDistanceM,
         weatherCodeLabel: services.weatherCodeLabel,
+        // Orbit reads flat Esri imagery: Google 3D tiles stay coarse from
+        // hundreds of kilometres up. The lease puts the map back on exit.
+        acquireOrbitImagery: () =>
+          this.mapStackController?.acquireImageryComparison?.({
+            owner: 'cockpit-orbit',
+            switchPolicy: 'esri-if-photoreal',
+          }) ?? null,
       },
       elements: {
         _ppToggles: this._ppToggles,
@@ -399,6 +421,10 @@ export class StyleManager extends ShellFacade {
             useCockpitStore(applicationPinia()).publishVision(view),
           signals: (rows) =>
             useCockpitStore(applicationPinia()).publishSignals(rows),
+          radar: (view) =>
+            useCockpitStore(applicationPinia()).publishRadar(view),
+          orbital: (view) =>
+            useCockpitStore(applicationPinia()).publishOrbital(view),
           utilityLayout: (layout) =>
             useCockpitStore(applicationPinia()).publishUtilityLayout(layout),
         },
@@ -409,7 +435,6 @@ export class StyleManager extends ShellFacade {
         _stampNavigation: (...args) => this._stampNavigation(...args),
         getAircraftTrackingTarget: (...args) =>
           this.getAircraftTrackingTarget(...args),
-        enterTrackedCockpit: () => this.enterTrackedCockpit(),
         _scheduleRightPanelLayout: (...args) =>
           this._scheduleRightPanelLayout(...args),
       },
@@ -590,6 +615,7 @@ export class StyleManager extends ShellFacade {
     this._initRadioPanel();
     this._initCctvPanel();
     this._initStreetLevelPanel();
+    this._initWildlifeSightingCard();
     this._initGlobalContextPanel();
     this._initLocationBar();
     this._initMobileShell();
@@ -685,53 +711,6 @@ export class StyleManager extends ShellFacade {
   /** Return the aircraft tracker owned before a multi-step Cockpit transaction. */
   getAircraftTrackingTarget() {
     return aircraftTrackingTarget(this.cockpitView?.readAircraftInfo?.());
-  }
-
-  /**
-   * Enter Cockpit on the tracked aircraft from the map. Cockpit rides inside
-   * Contacts, so Contacts starts first when it is off, as the voice command
-   * does, and goes back off when entry fails.
-   */
-  async enterTrackedCockpit() {
-    if (this._disposed || this.cockpitView?.active) return false;
-    const priorTarget = this.getAircraftTrackingTarget();
-    const context = this.getContextModeState();
-    if (!priorTarget || !context || context.changing) return false;
-    const priorMode = context.mode || null;
-    let startedContacts = false;
-    if (priorMode !== 'flights') {
-      let result = null;
-      try {
-        // Cockpit's own precondition, not an operator Context request: it
-        // leaves a pending shared style or detection restore alone.
-        result = await this.setContextMode('contacts', {
-          claimVisualAuthority: false,
-        });
-      } catch {
-        result = null;
-      }
-      if (this._disposed) return false;
-      if (!result?.ok) {
-        if (!result?.cancelled)
-          this._showToast(
-            t(
-              'Contacts could not complete the requested transition; try again',
-            ),
-          );
-        return false;
-      }
-      startedContacts = true;
-    }
-    // Contacts keeps the tracked aircraft; should it have let go, track the
-    // one the operator clicked again.
-    const entry = await this.controlCockpit('enter', {
-      selectedTarget: this.getAircraftTrackingTarget() ? null : priorTarget,
-      rollbackTarget: priorTarget,
-    });
-    if (entry?.ok) return true;
-    if (startedContacts && !this._disposed)
-      await this.setContextMode(priorMode, { claimVisualAuthority: false });
-    return false;
   }
 
   /** Apply a temporary cockpit-only CRT/NVG/FLIR/NOIR post-process override. */
@@ -1121,6 +1100,19 @@ export class StyleManager extends ShellFacade {
     return this._runExplicitNavigation('camera', () => focus(cameraId));
   }
 
+  /** Keep one compact card anchored to the selected wildlife sighting. */
+  _initWildlifeSightingCard() {
+    this._wildlifeSightingCard?.destroy();
+    this._wildlifeSightingCard = null;
+    const layer = this.services.wildlifeSightingsLayer;
+    if (!layer) return;
+    this._wildlifeSightingCard = createWildlifeSightingCard({
+      layer,
+      ui: this._ui,
+      viewer: this.viewer,
+    });
+  }
+
   /** Compose the Street Level panel controls from its layer and application actions. */
   _initStreetLevelPanel() {
     const { streetLevelLayer } = this.services;
@@ -1187,6 +1179,7 @@ export class StyleManager extends ShellFacade {
         _cctvSummary: this._cctvSummary,
       },
       cctv: cctvLayer,
+      viewer: this.viewer,
       actions: {
         isEnabled: () => this._dataManager?.isEnabled('cctv'),
         setParams: (params, options) =>
@@ -1839,8 +1832,10 @@ export class StyleManager extends ShellFacade {
     this._recording.destroy();
     this._mobileShell?.destroy();
     this._panelNavigation?.destroy();
+    this._wildlifeSightingCard?.destroy();
     this._ui.destroy();
     this._panelChrome.destroy();
+    this._offPlacePacks();
     this._feedback.destroy();
 
     this._displayBindings.destroy();

@@ -208,6 +208,7 @@ export function createLifecycle({
       layerState._enabled = false;
       layerState._activeCameraId = null;
       layerState._autoHopSuspended = false;
+      layerState._openingCameraProvisional = false;
       layerState._lastHopAt = 0;
       layerState._lastViewContext = '';
       layerState._calibrationById = parts.calibration.loadCalibrationStore();
@@ -418,6 +419,7 @@ export function createLifecycle({
         layerState._horizonCullListener = () => {
           layerState._cameraMoving = false;
           stopViewMotionTimer();
+          parts.navigation.reopenNearestCamera();
           settleView();
         };
         layerState._viewer.camera.moveEnd.addEventListener(
@@ -572,6 +574,7 @@ export function createLifecycle({
       ) {
         pickDefaultCamera();
         layerState._autoHopSuspended = false;
+        layerState._openingCameraProvisional = true;
       }
       const activeRecord = parts.selection.getActiveRecord();
       if (activeRecord) {
@@ -692,6 +695,7 @@ export function createLifecycle({
       layerState._enabled = false;
       layerState._activeCameraId = null;
       layerState._autoHopSuspended = false;
+      layerState._openingCameraProvisional = false;
       // Clear existing subscribers rather than replacing the Set —
       // replacing would silently orphan any unsubscribe() closures
       layerState._listeners.clear();

@@ -36,7 +36,7 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 | Stadsdossierns flikar Sevärt (slott, kyrkor, museer m.m. utpekade på kartan), besökspass, tåg från stadens station, köer runt staden, VMA-banner och norrsken i natt | Wikidata (CC0), Trafikverket, TomTom, Krisinformation.se, NOAA SWPC | Panelen STAD |
 | Flygtavla: Swedavias tio flygplatser, hela dagens avgångar och ankomster, köerna i säkerhetskontrollen över terminalerna, följ planet i luften och dagens rutter på globen | Swedavia FlightInfo och WaitTime (gratisnycklar) | Kortet över en Swedavia-flygplats och tavlans egen panel |
 | Flygväder: METAR och TAF för flygplatserna | NOAA Aviation Weather Center (ingen nyckel) | Flygtavlan och cockpit |
-| Cockpit: knapp vid kartan när ett plan är valt, Swedavias rader för planet, svensk lägesbild i genomgången (ort och län, SMHI:s väder, varningar och VMA) | Swedavia, SMHI, Krisinformation.se, NOAA (METAR/TAF) | Cockpit |
+| Cockpit: knapp vid kartan och C-tangenten när ett plan, fartyg eller en satellit är valt, Swedavias rader för planet, svensk lägesbild i genomgången (ort och län, SMHI:s väder, varningar och VMA) | Swedavia, SMHI, Krisinformation.se, NOAA (METAR/TAF) | Cockpit |
 | Fartkameror: ca 2 800 fasta trafiksäkerhetskameror som pilar i kamerans riktning, och de närmaste i dossiern | Trafikverket (CC0) | Speed Cameras (Sweden), under Infrastructure, och NU-fliken |
 | Sverige-turen "Sverige just nu" | Lagren ovan | Scener |
 | Sparläge: starta utan Google 3D Tiles | – | Knappen 3D/2D, eller `?globe=lite` |
@@ -79,6 +79,39 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-09 (uppdaterad från originalet: 30 PR:er)
+- Originalets senaste 300 commits är inslagna. Vår app är grunden: där
+  båda ändrat samma sak gäller vårt beteende, och originalets nya lager
+  är avslagna tills man slår på dem.
+- Nytt från originalet: fartygens bryggvy (gå in i cockpit på ett valt
+  AIS-fartyg, titta runt med pilarna, bryggradar), satellitens omloppsvy
+  (åk med en satellit, sensorstråk, zoom, nadir), satellitklasser med
+  egna knappar (stationer, avbildning, telekom, Starlink, sonder, skrot),
+  världsklocka med tidslinje för uppskjutningar, ritmarkeringar med
+  åtgärder, nytt lager **Wildlife Sightings** (iNaturalist; heter Djur-
+  och naturobservationer på svenska), trafiklinjer som alternativ till
+  prickar, åldersfilter i S2 GhostMaps, kameror från Island och fler
+  kamerakällor, samt rättningar i röst, chatt och sökning.
+- Cockpit: originalet kräver inte längre att Kontakter är på, bara att
+  ämnets eget lager är på. Vår knapp vid kartan och C-tangenten går nu
+  direkt in, och fungerar för flygplan, fartyg och satelliter. Vår väg
+  som först startade Kontakter är borttagen.
+- C-tangenten: originalet har slutat låta C växla cockpit, eftersom C
+  också öppnar kamerorna. Vi behåller växlingen: C går in i och ur
+  cockpit när något är valt som går att gå in i, annars öppnar C
+  kamerorna som förut. Originalets fyra tester för detta är omskrivna.
+- Röststyrning: originalets tillägg fyllde röstassistentens promptbudget
+  (55 500 tecken), så **Road Conditions (Sweden)** stängs av för
+  röststyrning precis som våra övriga svenska lager och originalets nya
+  djurlager. Lagret fungerar som vanligt i övrigt.
+- Kameror: vi behåller vårt automatval som följer vyn, och originalets
+  nya omval när en kamera faller bort följer med.
+- Delningstoken: originalets nya lager tog token 9, så **Road Conditions
+  (Sweden)** flyttar till `0j` i vår egen nedräkningsserie, där originalet
+  aldrig hamnar. Gamla delade länkar med vägförhållanden öppnar i stället
+  djurobservationerna.
+- 202 nya svenska strängar för originalets nya delar.
 
 ### 2026-11-09 (kraftsystemet: veckokurva)
 - KRAFT-panelen har val mellan I dag och Vecka. Svenska kraftnät lämnar

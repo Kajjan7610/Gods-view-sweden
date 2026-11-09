@@ -172,26 +172,34 @@ test('entering shows the HUD and focuses the exit once it renders; exiting retur
   assert.equal(document.activeElement?.id, 'cockpit-entry');
 });
 
-test('with Contacts off, a tracked aircraft shows the map entry, which asks the owner to enter', async (t) => {
+test('a tracked aircraft shows the map entry; it and the C key enter and leave', async (t) => {
   const { $, cockpit } = fixture(t);
-  const requests = [];
-  cockpit.isEntryAllowed = () => false;
-  cockpit.requestEntry = () => requests.push('entry');
   assert.equal($('#cockpit-quick-entry').hidden, true);
   cockpit.syncEntry();
   await nextTick();
-  assert.equal($('#cockpit-entry').hidden, true, 'the Context entry waits');
   assert.equal($('#cockpit-quick-entry').hidden, false);
 
   $('#cockpit-quick-entry').click();
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'c' }));
-  assert.deepEqual(requests, ['entry', 'entry']);
-  assert.equal(cockpit.active, false);
-
-  cockpit.isEntryAllowed = () => true;
-  cockpit.enter();
+  assert.equal(cockpit.active, true);
   await nextTick();
   assert.equal($('#cockpit-quick-entry').hidden, true, 'hidden inside');
+
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'c' }));
+  assert.equal(cockpit.active, false);
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'c' }));
+  assert.equal(cockpit.active, true);
+});
+
+test('with its layer off, the map entry and the C key stay out of the way', async (t) => {
+  const { $, cockpit } = fixture(t);
+  cockpit.isEntryAllowed = () => false;
+  cockpit.syncEntry();
+  await nextTick();
+  assert.equal($('#cockpit-quick-entry').hidden, true);
+  const key = new KeyboardEvent('keydown', { key: 'c', cancelable: true });
+  document.dispatchEvent(key);
+  assert.equal(key.defaultPrevented, false);
+  assert.equal(cockpit.active, false);
 });
 
 test('exiting leaves focus alone when the entry is no longer available', async (t) => {
