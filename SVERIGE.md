@@ -80,6 +80,17 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-09 (butikskedjor laggade)
+- Appen frös i 2–3 sekunder per bildruta med Butikskedjor påslaget och
+  fotorealistiska 3D-tiles, tydligast när man klickade på en butik. Orsaken
+  var de 3 201 punkterna fästa vid marken (CLAMP_TO_GROUND): för varje ny
+  3D-tile mätte Cesium höjden igen för varje butik inom tilen och läste
+  tillbaka tilens geometri från grafikkortet (75 000 anrop på tre
+  bildrutor). Varje butik har nu sin markhöjd i ögonblicksbilden (Re:Earth
+  Terrain, CC BY 4.0, samma källa som appen redan använder) och fästs bara
+  mot jordglobens terräng, som är billig; med fotorealistiska tiles ligger
+  punkten kvar på sin egen höjd.
+
 ### 2026-11-09 (mer butiksdata)
 - Butikskortet visar nu mer, bara från öppna källor och utan nya nycklar:
   om butiken är öppen nu och när den stänger eller öppnar (läst ur

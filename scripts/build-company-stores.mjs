@@ -13,8 +13,9 @@
  * head office, website, founded) come from Wikidata. Each store also gets the
  * nearest named public-transport stop within 600 m (OSM) and the people
  * living within 2 km, summed from SCB's open 1 km population grid
- * (geodata.scb.se, CC0, newest year). The snapshot is OSM data, so it is
- * licensed ODbL and says so.
+ * (geodata.scb.se, CC0, newest year), and its ground height above the
+ * ellipsoid from Re:Earth Terrain (Mapterhorn, CC BY 4.0). The snapshot is
+ * OSM data, so it is licensed ODbL and says so.
  *
  * Run it by hand, about weekly, never from the app: public Overpass
  * instances are shared. OVERPASS_UPSTREAMS (first URL) wins over --endpoint;
@@ -407,6 +408,23 @@ for (const row of stores) {
   if (best) row.stop = best;
   row.population = populationNear(grid, row.point);
 }
+// Ground height above the ellipsoid, so the layer can draw each store on the
+// ground without clamping 3,000 points to photorealistic 3D tiles: Cesium
+// re-picks every clamped point inside each tile as it streams in.
+console.log('Re:Earth ground heights');
+for (let start = 0; start < stores.length; start += 64) {
+  const chunk = stores.slice(start, start + 64);
+  const points = chunk
+    .map((row) => row.point.map((value) => value.toFixed(5)).join(','))
+    .join(';');
+  const answer = await cachedJson(
+    `https://terrain.reearth.land/heights.json?points=${encodeURIComponent(points)}`,
+  );
+  chunk.forEach((row, index) => {
+    const height = answer.results?.[index]?.ellipsoid;
+    if (Number.isFinite(height)) row.height = Math.round(height);
+  });
+}
 const facts = await wikidataFacts(COMPANIES.map((company) => company.wikidata));
 const snapshot = {
   schemaVersion: 1,
@@ -417,6 +435,7 @@ const snapshot = {
   populationSource: 'SCB, Befolkning 1 km-rutor',
   populationLicense: 'CC0-1.0',
   populationYear: grid.year,
+  heightSource: 'Re:Earth Terrain (Mapterhorn, CC BY 4.0), metres above WGS84',
   builtAt: new Date().toISOString(),
   companies: COMPANIES.map((company) => ({
     id: company.id,

@@ -7,6 +7,10 @@ export * from './cards.js';
 export { createCompanyStoresSource } from './source.js';
 
 const PICK_PREFIX = 'se-store:';
+
+/** A store on the ground: its bundled height above the ellipsoid, else 0. */
+const storePosition = (row) =>
+  Cesium.Cartesian3.fromDegrees(row.point[0], row.point[1], row.height ?? 0);
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
   collisionCapacity: 1,
@@ -73,7 +77,7 @@ export function createCompanyStoresLayer({
         openExternal(row.website);
         return true;
       };
-    card.position = Cesium.Cartesian3.fromDegrees(...row.point);
+    card.position = storePosition(row);
     _selectedCardId = card.id;
     overlayHost.setEntries(
       COMPANY_STORES_OVERLAY_SOURCE_ID,
@@ -145,13 +149,16 @@ export function createCompanyStoresLayer({
       for (const row of visible()) {
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...row.point),
+          position: storePosition(row),
           point: {
             pixelSize: 8,
             color: Cesium.Color.fromCssColorString(storeColor(row)),
             outlineColor: Cesium.Color.fromCssColorString('#101418'),
             outlineWidth: 1.5,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            // Terrain only: clamping thousands of points to photorealistic 3D
+            // tiles re-picks each one inside every tile that streams in,
+            // seconds per frame. Without a globe the point keeps its height.
+            heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
             scaleByDistance: new Cesium.NearFarScalar(2e4, 1.3, 2e6, 0.6),
           },
