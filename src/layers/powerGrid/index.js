@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { createPowerDay } from './dayPanel.js';
 import {
   SWEDISH_AREAS,
   exchangeByCountry,
@@ -127,6 +128,8 @@ export function createPowerGridLayer({
   let _focus = null;
   let _offLocale = null;
   let _ticker = null;
+  /** The day's production, consumption and exchange on the right rail. */
+  const _day = createPowerDay({ source });
   /**
    * Each drawing gives its lines new ids: Cesium takes an entity removed and
    * added again under the same id as "changed", and its polyline visualizer
@@ -387,7 +390,10 @@ export function createPowerGridLayer({
       _dataSource.show = false;
       viewer.dataSources.add(_dataSource);
       // Country names on the map follow the reader's language.
-      _offLocale = onLocaleChange(() => publishLabels());
+      _offLocale = onLocaleChange(() => {
+        publishLabels();
+        _day.publish();
+      });
     },
 
     enable() {
@@ -399,6 +405,7 @@ export function createPowerGridLayer({
       publishLabels();
       _settleUntil = Date.now() + SETTLE_MS;
       syncTicker();
+      _day.setActive(true);
     },
 
     disable() {
@@ -407,6 +414,7 @@ export function createPowerGridLayer({
       _ground.cancel();
       _enabled = false;
       syncTicker();
+      _day.setActive(false);
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
       clearOverlays();
@@ -430,6 +438,7 @@ export function createPowerGridLayer({
         _snapshot = snapshot;
         render();
         _ground.place(groundRows());
+        _day.refresh();
         _rowListener?.();
         return true;
       } catch (e) {
@@ -449,6 +458,7 @@ export function createPowerGridLayer({
       layer.disable();
       _offLocale?.();
       _offLocale = null;
+      _day.destroy();
       _ground.clear();
       _snapshot = { links: [], areas: [], production: {}, updated: null };
       if (_dataSource) {
@@ -459,6 +469,13 @@ export function createPowerGridLayer({
       _lastUpdate = null;
       _lastError = null;
       _stale = false;
+    },
+
+    /**
+     * Connect the right-rail day panel: `{publish(view|null), connect(actions)}`.
+     */
+    attachDayPanel(panel) {
+      _day.attach(panel);
     },
 
     setRowControlsListener(listener) {

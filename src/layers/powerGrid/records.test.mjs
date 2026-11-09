@@ -10,7 +10,9 @@ import {
   linkTouches,
   normalizeFlows,
   normalizeProduction,
+  normalizeProductionDay,
 } from './records.js';
+import { buildDayChart, dayStartOf, pointAt } from './dayChart.js';
 import { buildAreaCard, netText, zoneName } from './cards.js';
 import { flowRepeat, flowSpeed } from './flowMaterial.js';
 import { createPowerGridLayer } from './index.js';
@@ -265,4 +267,71 @@ test('faster chevrons for larger flows, more of them on longer links', () => {
   assert.equal(flowSpeed(1e6), 2.5);
   assert.equal(flowRepeat(100), 3);
   assert.equal(flowRepeat(1200), 10);
+});
+
+test('the day reads as quarter-hours and as a chart', () => {
+  const at = Date.parse('2026-11-08T23:00:00Z'); // 00:00 in Stockholm
+  const points = normalizeProductionDay({
+    Data: [
+      {
+        id: '2',
+        data: [
+          { x: at, y: 3600 },
+          { x: at + 900_000, y: 3650 },
+        ],
+      },
+      {
+        id: '3',
+        data: [
+          { x: at, y: 5000 },
+          { x: at + 900_000, y: 5100 },
+        ],
+      },
+      {
+        id: '1',
+        data: [
+          { x: at, y: 8600 },
+          { x: at + 900_000, y: 8750 },
+        ],
+      },
+      {
+        id: '7',
+        data: [
+          { x: at, y: 8000 },
+          { x: at + 900_000, y: 9000 },
+        ],
+      },
+      {
+        id: '8',
+        data: [
+          { x: at, y: 600 },
+          { x: at + 900_000, y: -250 },
+        ],
+      },
+    ],
+  });
+  assert.deepEqual(points[1], {
+    at: at + 900_000,
+    nuclear: 3650,
+    hydro: 5100,
+    total: 8750,
+    consumption: 9000,
+    net: -250,
+  });
+  const chart = buildDayChart(points);
+  assert.equal(dayStartOf(points), at);
+  assert.deepEqual(
+    chart.areas.map((area) => area.id),
+    ['nuclear', 'hydro'],
+  );
+  assert.ok(chart.consumption.startsWith('M34,'));
+  assert.ok(chart.net.exported.length > 0 && chart.net.imported.length > 0);
+  assert.deepEqual(chart.totals, {
+    production: 4338,
+    consumption: 4250,
+    exported: 150,
+    imported: 63,
+  });
+  assert.equal(pointAt(chart, 1000).at, at + 900_000);
+  assert.equal(buildDayChart([]), null);
 });

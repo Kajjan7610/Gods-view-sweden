@@ -3860,5 +3860,19 @@
   "Which flows to show": "Які потоки показувати",
   "{country}: in {import} MW · out {export} MW": "{country}: ввезення {import} МВт · вивезення {export} МВт",
   "Moving chevrons show the power flowing now on each link to and between the four bidding zones, as thick and as fast as the flow. Pick a direction, or a neighbouring country to see its links alone. Click a zone for its import, export and Sweden’s production by type.": "Рухомі шеврони показують потужність, що тече зараз кожною лінією до чотирьох цінових зон і між ними, завтовшки й зі швидкістю за величиною потоку. Виберіть напрямок або сусідню країну, щоб бачити лише її лінії. Натисніть на зону, щоб побачити її імпорт, експорт і виробництво Швеції за видами.",
-  "At {time}: in {import} MW · out {export} MW · net {net}": "О {time}: ввезення {import} МВт · вивезення {export} МВт · сальдо {net}"
+  "At {time}: in {import} MW · out {export} MW · net {net}": "О {time}: ввезення {import} МВт · вивезення {export} МВт · сальдо {net}",
+  "{gw} GW": "{gw} ГВт",
+  "production": "виробництво",
+  "consumption": "споживання",
+  "exchange": "обмін",
+  "Out {exported} GWh · in {imported} GWh": "Вивезення {exported} ГВт·год · ввезення {imported} ГВт·год",
+  "export": "експорт",
+  "import": "імпорт",
+  "POWER": "ЕНЕРГІЯ",
+  "Power day unavailable": "Дані за день недоступні",
+  "Loading…": "Завантаження…",
+  "Production by type and consumption": "Виробництво за видами та споживання",
+  "Exchange: export up, import down": "Обмін: експорт угору, імпорт униз",
+  "Malformed power day": "Некоректні дані за день",
+  "So far today: produced {production} GWh, used {consumption} GWh": "Сьогодні поки: вироблено {production} ГВт·год, спожито {consumption} ГВт·год"
 }

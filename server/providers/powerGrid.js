@@ -1,6 +1,7 @@
 import {
   normalizeFlows,
   normalizeProduction,
+  normalizeProductionDay,
 } from '../../src/layers/powerGrid/records.js';
 import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
@@ -45,6 +46,8 @@ export function powerGridProxy({
 } = {}) {
   let cached = null;
   const inFlight = new Map();
+  /** Day route answers by date, as {value, savedAt}. */
+  const days = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 600 });
 
   async function getJson(url, signal) {
@@ -91,6 +94,48 @@ export function powerGridProxy({
     }
   }
 
+  /** The production quarter-hours of one Stockholm date. */
+  async function loadDay(date) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const points = normalizeProductionDay(
+        await getJson(PRODUCTION_URL(date), controller.signal),
+      );
+      return { date, points, fetchedAt: now() };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  // The control room answers the current day only (an earlier date is a
+  // 403), so the day route serves today's quarter-hours.
+  async function dayHandler(url, json, req) {
+    const today = stockholmDate(now());
+    const date = url.searchParams.get('date') || today;
+    if (date !== today)
+      return json(400, { error: 'date_out_of_range', dates: [today] });
+    const hit = days.get(date);
+    if (hit && now() - hit.savedAt < TTL_MS) return json(200, hit.value);
+    if (!allow(clientKey(req)))
+      return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
+    try {
+      const { promise } = coalesceProxyRequest(inFlight, `day:${date}`, () =>
+        loadDay(date),
+      );
+      const value = await promise;
+      days.set(date, { value, savedAt: now() });
+      for (const key of days.keys()) if (key !== today) days.delete(key);
+      return json(200, value);
+    } catch (error) {
+      console.warn(
+        `[power-grid] day ${date} failed: ${error?.message || error}`,
+      );
+      if (hit) return json(200, { ...hit.value, stale: true });
+      return json(502, { error: 'power_grid_day_unavailable' });
+    }
+  }
+
   async function handler(req, res) {
     const json = (status, value, headers = {}) => {
       if (res.destroyed) return;
@@ -104,6 +149,7 @@ export function powerGridProxy({
     if (req.method !== 'GET')
       return json(405, { error: 'method_not_allowed' }, { Allow: 'GET' });
     const url = new URL(req.url || '/', 'http://local');
+    if (url.pathname === '/day') return dayHandler(url, json, req);
     if (url.pathname !== '/' && url.pathname !== '')
       return json(404, { error: 'unknown_route' });
     if (cached && now() - cached.savedAt < TTL_MS)

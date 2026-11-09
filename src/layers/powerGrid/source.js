@@ -46,5 +46,42 @@ export function createPowerGridSource({
           : null,
       };
     },
+
+    /**
+     * One Stockholm date's production quarter-hours (today when no date).
+     * @param {string|null} date "2026-11-09"
+     * @returns {Promise<{date: string, points: object[], stale: boolean}>}
+     */
+    async getDay(date = null, { signal } = {}) {
+      signal?.throwIfAborted();
+      const query = date ? `?date=${encodeURIComponent(date)}` : '';
+      const response = await fetchImpl(`/api/power-grid/day${query}`, {
+        signal,
+      });
+      if (!response.ok) {
+        try {
+          await response.body?.cancel();
+        } catch {
+          /* no-op */
+        }
+        throw Object.assign(
+          new Error(`Power day unavailable (HTTP ${response.status})`),
+          { status: response.status },
+        );
+      }
+      const payload = await readResponseJsonCapped(
+        response,
+        1024 * 1024,
+        signal,
+      );
+      signal?.throwIfAborted();
+      if (!Array.isArray(payload?.points))
+        throw new Error(msg('Malformed power day'));
+      return {
+        date: String(payload.date ?? date ?? ''),
+        points: payload.points.filter((point) => Number.isFinite(point?.at)),
+        stale: payload.stale === true,
+      };
+    },
   };
 }

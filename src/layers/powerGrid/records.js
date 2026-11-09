@@ -159,6 +159,31 @@ export function normalizeProduction(payload) {
   return out;
 }
 
+/**
+ * The production answer as the day's quarter-hours, oldest first: each with
+ * its time and MW per type (total, nuclear, hydro, thermal, wind,
+ * unspecified, consumption and net, positive when Sweden exports).
+ * @param {object} payload
+ * @returns {Array<{at: number} & Record<string, number>>}
+ */
+export function normalizeProductionDay(payload) {
+  const byTime = new Map();
+  for (const series of Array.isArray(payload?.Data) ? payload.Data : []) {
+    const type = PRODUCTION_TYPES[series?.id];
+    if (!type) continue;
+    for (const point of Array.isArray(series.data) ? series.data : []) {
+      const at = Number(point?.x);
+      if (point?.y == null || !Number.isFinite(at)) continue;
+      const value = Number(point.y);
+      if (!Number.isFinite(value)) continue;
+      const entry = byTime.get(at) ?? { at };
+      entry[type] = Math.round(value);
+      byTime.set(at, entry);
+    }
+  }
+  return [...byTime.values()].sort((a, b) => a.at - b.at);
+}
+
 /** The country of a bidding zone: "NO3" is "NO", "FI" is "FI". */
 export const countryOf = (area) => String(area ?? '').slice(0, 2);
 

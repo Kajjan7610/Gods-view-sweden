@@ -1,0 +1,180 @@
+/* ── Power day (right rail, Swedish fork) ─────────────────────
+   Laid out like the CITY panel: the rail lets clicks through, so the panel
+   takes them back; only the body scrolls. ─────────────────── */
+#right-context-rail > #power-panel {
+  position: relative;
+  inset: auto;
+  flex: 0 0 auto;
+  width: 100%;
+  max-height: 100%;
+  pointer-events: auto;
+}
+#right-context-rail > #power-panel:not(.collapsed) {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 1;
+  min-height: 0;
+}
+#right-context-rail #power-panel.collapsed {
+  width: var(--right-display-collapsed-width);
+  margin-inline-start: auto;
+}
+#right-context-rail #power-panel.collapsed .power-panel-inner {
+  height: 50px;
+  min-height: 50px;
+  box-sizing: border-box;
+}
+#right-context-rail.layout-focus > #power-panel:not(.collapsed) {
+  flex: 0 1 var(--right-panel-allocated-height);
+  height: var(--right-panel-allocated-height);
+  min-height: 0;
+  max-height: var(--right-panel-allocated-height);
+}
+#right-context-rail.layout-focus
+  > #power-panel:not(.collapsed)
+  .power-panel-inner {
+  height: 100%;
+  box-sizing: border-box;
+}
+#right-context-rail[data-rail-measuring]
+  > #power-panel:not(.collapsed)
+  > .power-panel-inner {
+  height: auto !important;
+  max-height: none !important;
+}
+.power-panel-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  max-height: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--panel-radius);
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+#power-panel .panel-header {
+  flex: 0 0 auto;
+}
+#power-panel-name {
+  color: var(--text-secondary);
+  font: 10.5px var(--font-mono);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+#power-panel-body {
+  min-height: 0;
+  max-height: calc(var(--right-stack-max-height, 50svh) - 64px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#power-panel.collapsed #power-panel-body,
+#power-panel.collapsed #power-panel-name,
+#power-panel[hidden],
+#power-panel [hidden] {
+  display: none !important;
+}
+#power-panel.collapsed .panel-header {
+  margin-bottom: 2px;
+}
+
+/* Phones: the POWER panel belongs to the Context sheet, like CITY. */
+body.mobile-shell #right-context-rail > #power-panel {
+  display: none;
+}
+body.mobile-shell[data-mobile-sheet='context']
+  #right-context-rail
+  > #power-panel:not([hidden]) {
+  position: relative;
+  inset: auto;
+  display: block;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  transform: none;
+}
+/* In the sheet the panel takes its own height; the sheet itself scrolls. */
+body.mobile-shell[data-mobile-sheet='context']
+  #right-context-rail
+  > #power-panel:not([hidden]) {
+  flex: 0 0 auto;
+  height: auto;
+  max-height: none;
+}
+body.mobile-shell #power-panel .power-panel-inner,
+body.mobile-shell #power-panel-body {
+  height: auto;
+  max-height: none;
+}
+
+.power-day {
+  display: grid;
+  gap: 6px;
+  color: #dceeff;
+  font: 500 11px/1.45 var(--font-mono);
+}
+.power-day-caption,
+.power-day-source {
+  color: var(--text-secondary);
+  font-size: 9.5px;
+}
+.power-day-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  cursor: crosshair;
+}
+.power-day-grid {
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 1;
+}
+.power-day-axis {
+  fill: var(--text-secondary);
+  font: 8px var(--font-mono);
+}
+.power-day-cursor {
+  stroke: rgba(255, 255, 255, 0.7);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+.power-day-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 10px;
+}
+.power-day-readout strong {
+  width: 100%;
+  color: #fff;
+}
+.power-day-readout i,
+.power-day-legend i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  border-radius: 2px;
+  vertical-align: baseline;
+}
+.power-day-summary,
+.power-day-note {
+  margin: 0;
+}
+.power-day-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 9.5px;
+}

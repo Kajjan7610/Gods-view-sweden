@@ -11,6 +11,7 @@ import { useSceneStore } from '../stores/scenes.js';
 import AwarenessPanel from './panels/AwarenessPanel.vue';
 import BhoteKoshiPanel from './panels/BhoteKoshiPanel.vue';
 import CityDossierPanel from './panels/CityDossierPanel.vue';
+import PowerDayPanel from './panels/PowerDayPanel.vue';
 import AirportBoardPanel from './panels/AirportBoardPanel.vue';
 import TextSizeButton from './panels/TextSizeButton.vue';
 import GlobeSaverButton from './panels/GlobeSaverButton.vue';
@@ -44,6 +45,7 @@ const sceneRuntime = computed(() => scenePanel.value?.runtime ?? '');
       <div id="recent-imagery-panel-body" class="ui-scroll" data-rail-scroller></div>
     </RailPanel>
     <CityDossierPanel />
+    <PowerDayPanel />
     <AirportBoardPanel />
     <GlobeSaverButton />
     <VmaBanner />

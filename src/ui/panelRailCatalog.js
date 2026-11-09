@@ -27,6 +27,7 @@ export const PANEL_RAIL_ITEMS = Object.freeze({
     label: msg('RECENT IMAGERY'),
   },
   'city-panel': { icon: 'location_on', label: msg('CITY') },
+  'power-panel': { icon: 'bolt', label: msg('POWER') },
   'street-level-panel': { icon: 'streetview', label: msg('STREET LEVEL') },
   'global-context-panel': { icon: 'radar', label: msg('CONTEXT') },
 });

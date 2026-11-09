@@ -3702,5 +3702,19 @@
   "Which flows to show": "Welche Flüsse angezeigt werden",
   "{country}: in {import} MW · out {export} MW": "{country}: rein {import} MW · raus {export} MW",
   "Moving chevrons show the power flowing now on each link to and between the four bidding zones, as thick and as fast as the flow. Pick a direction, or a neighbouring country to see its links alone. Click a zone for its import, export and Sweden’s production by type.": "Bewegte Winkel zeigen den Strom, der gerade auf jeder Verbindung zu und zwischen den vier Gebotszonen fließt, so dick und so schnell wie der Fluss. Wählen Sie eine Richtung oder ein Nachbarland, um nur dessen Verbindungen zu sehen. Klicken Sie auf eine Zone für ihren Import, Export und Schwedens Erzeugung nach Art.",
-  "At {time}: in {import} MW · out {export} MW · net {net}": "Um {time}: rein {import} MW · raus {export} MW · netto {net}"
+  "At {time}: in {import} MW · out {export} MW · net {net}": "Um {time}: rein {import} MW · raus {export} MW · netto {net}",
+  "{gw} GW": "{gw} GW",
+  "production": "Erzeugung",
+  "consumption": "Verbrauch",
+  "exchange": "Austausch",
+  "Out {exported} GWh · in {imported} GWh": "Raus {exported} GWh · rein {imported} GWh",
+  "export": "Export",
+  "import": "Import",
+  "POWER": "STROM",
+  "Power day unavailable": "Tagesdaten nicht verfügbar",
+  "Loading…": "Wird geladen…",
+  "Production by type and consumption": "Erzeugung nach Art und Verbrauch",
+  "Exchange: export up, import down": "Austausch: Export oben, Import unten",
+  "Malformed power day": "Fehlerhafter Stromtag",
+  "So far today: produced {production} GWh, used {consumption} GWh": "Heute bisher: erzeugt {production} GWh, verbraucht {consumption} GWh"
 }

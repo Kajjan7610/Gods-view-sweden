@@ -17,6 +17,7 @@ import { useVmaBannerStore } from '../ui/stores/vmaBanner.js';
 import { useCockpitFlightLegStore } from '../ui/stores/cockpitFlightLeg.js';
 import * as worldOverlays from '../overlays/worldOverlay.js';
 import { useCityDossierStore } from '../ui/stores/cityDossier.js';
+import { usePowerDayStore } from '../ui/stores/powerDay.js';
 import { useAirportBoardStore } from '../ui/stores/airportBoard.js';
 import { initGevVoiceCommands } from '../voice/gevRealtime.js';
 import { installViews, isEmbeddedInline } from './embed.js';
@@ -135,6 +136,15 @@ export function createApplicationTools({
       imageryBoxTool?.destroy();
     });
   }
+  // The POWER panel: the day's production, consumption and exchange while the
+  // power grid layer is on (Swedish fork).
+  const powerDayStore = usePowerDayStore(applicationPinia());
+  const powerGrid = dataManager.layers.get('power-grid')?.module;
+  powerGrid?.attachDayPanel?.({
+    publish: (view) => powerDayStore.publish(view),
+    connect: (actions) => powerDayStore.connect(actions),
+  });
+  defer(() => powerGrid?.attachDayPanel?.(null));
   // The CITY panel follows the town the view settles over (Swedish fork).
   const cityDossierStore = useCityDossierStore(applicationPinia());
   const cityDossier = createCityDossier({

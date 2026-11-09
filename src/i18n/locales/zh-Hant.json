@@ -3623,5 +3623,19 @@
   "Which flows to show": "顯示哪些潮流",
   "{country}: in {import} MW · out {export} MW": "{country}：流入 {import} MW · 流出 {export} MW",
   "Moving chevrons show the power flowing now on each link to and between the four bidding zones, as thick and as fast as the flow. Pick a direction, or a neighbouring country to see its links alone. Click a zone for its import, export and Sweden’s production by type.": "移動的箭頭顯示目前在通往四個競價區及其之間的每條聯絡線上流動的電力，粗細與速度隨潮流大小變化。選擇方向或鄰國，只看其聯絡線。點擊競價區查看其進口、出口以及瑞典分類型發電量。",
-  "At {time}: in {import} MW · out {export} MW · net {net}": "{time}：流入 {import} MW · 流出 {export} MW · 淨 {net}"
+  "At {time}: in {import} MW · out {export} MW · net {net}": "{time}：流入 {import} MW · 流出 {export} MW · 淨 {net}",
+  "{gw} GW": "{gw} GW",
+  "production": "發電",
+  "consumption": "用電",
+  "exchange": "交換",
+  "Out {exported} GWh · in {imported} GWh": "流出 {exported} GWh · 流入 {imported} GWh",
+  "export": "出口",
+  "import": "進口",
+  "POWER": "電力",
+  "Power day unavailable": "當日資料無法取得",
+  "Loading…": "載入中…",
+  "Production by type and consumption": "分類型發電與用電",
+  "Exchange: export up, import down": "交換：上為出口，下為進口",
+  "Malformed power day": "當日資料格式錯誤",
+  "So far today: produced {production} GWh, used {consumption} GWh": "今天至今：發電 {production} GWh，用電 {consumption} GWh"
 }

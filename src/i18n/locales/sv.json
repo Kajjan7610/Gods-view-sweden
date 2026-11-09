@@ -3702,5 +3702,19 @@
   "Which flows to show": "Vilka flöden som visas",
   "{country}: in {import} MW · out {export} MW": "{country}: in {import} MW · ut {export} MW",
   "Moving chevrons show the power flowing now on each link to and between the four bidding zones, as thick and as fast as the flow. Pick a direction, or a neighbouring country to see its links alone. Click a zone for its import, export and Sweden’s production by type.": "Rörliga vinklar visar effekten som flödar just nu på varje förbindelse till och mellan de fyra elområdena, lika tjocka och snabba som flödet. Välj en riktning, eller ett grannland för att se bara dess förbindelser. Klicka på ett elområde för dess import, export och Sveriges produktion per kraftslag.",
-  "At {time}: in {import} MW · out {export} MW · net {net}": "Kl. {time}: in {import} MW · ut {export} MW · netto {net}"
+  "At {time}: in {import} MW · out {export} MW · net {net}": "Kl. {time}: in {import} MW · ut {export} MW · netto {net}",
+  "{gw} GW": "{gw} GW",
+  "production": "produktion",
+  "consumption": "förbrukning",
+  "exchange": "utbyte",
+  "Out {exported} GWh · in {imported} GWh": "Ut {exported} GWh · in {imported} GWh",
+  "export": "export",
+  "import": "import",
+  "POWER": "KRAFT",
+  "Power day unavailable": "Dygnsdata otillgängliga",
+  "Loading…": "Laddar…",
+  "Production by type and consumption": "Produktion per kraftslag och förbrukning",
+  "Exchange: export up, import down": "Utbyte: export uppåt, import nedåt",
+  "Malformed power day": "Felaktigt dygn från kraftsystemet",
+  "So far today: produced {production} GWh, used {consumption} GWh": "Hittills i dag: producerat {production} GWh, förbrukat {consumption} GWh"
 }

@@ -4018,5 +4018,19 @@
   "Which flows to show": "التدفقات المعروضة",
   "{country}: in {import} MW · out {export} MW": "{country}: داخل {import} ميغاواط · خارج {export} ميغاواط",
   "Moving chevrons show the power flowing now on each link to and between the four bidding zones, as thick and as fast as the flow. Pick a direction, or a neighbouring country to see its links alone. Click a zone for its import, export and Sweden’s production by type.": "تُظهر الأسهم المتحركة الكهرباء المتدفقة الآن على كل وصلة إلى مناطق العطاء الأربع وبينها، بسماكة وسرعة تتناسبان مع التدفق. اختر اتجاهًا، أو بلدًا مجاورًا لرؤية وصلاته وحدها. انقر على منطقة لمعرفة وارداتها وصادراتها وإنتاج السويد حسب النوع.",
-  "At {time}: in {import} MW · out {export} MW · net {net}": "عند {time}: داخل {import} ميغاواط · خارج {export} ميغاواط · الصافي {net}"
+  "At {time}: in {import} MW · out {export} MW · net {net}": "عند {time}: داخل {import} ميغاواط · خارج {export} ميغاواط · الصافي {net}",
+  "{gw} GW": "{gw} غيغاواط",
+  "production": "الإنتاج",
+  "consumption": "الاستهلاك",
+  "exchange": "التبادل",
+  "Out {exported} GWh · in {imported} GWh": "خارج {exported} غيغاواط ساعة · داخل {imported} غيغاواط ساعة",
+  "export": "تصدير",
+  "import": "استيراد",
+  "POWER": "الكهرباء",
+  "Power day unavailable": "بيانات اليوم غير متاحة",
+  "Loading…": "جارٍ التحميل…",
+  "Production by type and consumption": "الإنتاج حسب النوع والاستهلاك",
+  "Exchange: export up, import down": "التبادل: التصدير للأعلى والاستيراد للأسفل",
+  "Malformed power day": "بيانات يوم غير صالحة",
+  "So far today: produced {production} GWh, used {consumption} GWh": "اليوم حتى الآن: أُنتج {production} غيغاواط ساعة، واستُهلك {consumption} غيغاواط ساعة"
 }

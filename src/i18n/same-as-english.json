@@ -233,7 +233,8 @@
     "Museum",
     "In {place}",
     "{distance} m",
-    "{distance} km"
+    "{distance} km",
+    "{gw} GW"
   ],
   "es": [
     "1090 MHz",
@@ -389,7 +390,8 @@
     "2D",
     "3D",
     "{distance} m",
-    "{distance} km"
+    "{distance} km",
+    "{gw} GW"
   ],
   "fr": [
     "1090 MHz",
@@ -613,7 +615,11 @@
     "{distance} m",
     "{distance} km",
     "export {mw} MW",
-    "import {mw} MW"
+    "import {mw} MW",
+    "{gw} GW",
+    "production",
+    "export",
+    "import"
   ],
   "it": [
     "1090 MHz",
@@ -817,7 +823,10 @@
     "{distance} m",
     "{distance} km",
     "export {mw} MW",
-    "import {mw} MW"
+    "import {mw} MW",
+    "{gw} GW",
+    "export",
+    "import"
   ],
   "ja": [
     "1090 MHz",
@@ -881,7 +890,8 @@
     "2D",
     "3D",
     "{distance} m",
-    "{distance} km"
+    "{distance} km",
+    "{gw} GW"
   ],
   "pt": [
     "1090 MHz",
@@ -1039,7 +1049,8 @@
     "2D",
     "3D",
     "{distance} m",
-    "{distance} km"
+    "{distance} km",
+    "{gw} GW"
   ],
   "ru": [
     "AIS: --",
@@ -1253,7 +1264,10 @@
     "{distance} m",
     "{distance} km",
     "export {mw} MW",
-    "import {mw} MW"
+    "import {mw} MW",
+    "{gw} GW",
+    "export",
+    "import"
   ],
   "uk": [
     "AIS: --",
@@ -1338,7 +1352,8 @@
     "2D",
     "3D",
     "{distance} m",
-    "{distance} km"
+    "{distance} km",
+    "{gw} GW"
   ],
   "zh-Hant": [
     "1090 MHz",
@@ -1405,6 +1420,7 @@
     "2D",
     "3D",
     "{distance} m",
-    "{distance} km"
+    "{distance} km",
+    "{gw} GW"
   ]
 }

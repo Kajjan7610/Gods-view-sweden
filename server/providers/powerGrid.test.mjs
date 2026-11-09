@@ -77,3 +77,52 @@ test('an upstream failure is a 502 without a previous snapshot', async (t) => {
   const request = harness(async () => new Response('<html>', { status: 403 }));
   assert.equal((await request()).status, 502);
 });
+
+test('the day route answers today’s quarter-hours and no other day', async () => {
+  const calls = [];
+  const request = harness(async (url) => {
+    calls.push(String(url));
+    return new Response(
+      JSON.stringify({
+        Data: [
+          {
+            id: '1',
+            data: [
+              { x: NOW - 1_800_000, y: 17000 },
+              { x: NOW - 900_000, y: 17100 },
+            ],
+          },
+          {
+            id: '7',
+            data: [
+              { x: NOW - 1_800_000, y: 18000 },
+              { x: NOW - 900_000, y: 18200 },
+            ],
+          },
+          {
+            id: '8',
+            data: [
+              { x: NOW - 1_800_000, y: -1000 },
+              { x: NOW - 900_000, y: null },
+            ],
+          },
+        ],
+      }),
+    );
+  });
+  const today = await request('/day');
+  assert.equal(today.status, 200);
+  const body = today.json();
+  assert.equal(body.date, '2026-11-04');
+  assert.deepEqual(body.points, [
+    { at: NOW - 1_800_000, total: 17000, consumption: 18000, net: -1000 },
+    { at: NOW - 900_000, total: 17100, consumption: 18200 },
+  ]);
+  assert.equal(calls.at(-1), PRODUCTION_URL('2026-11-04'));
+  await request('/day?date=2026-11-04');
+  assert.equal(calls.length, 1, 'served from cache');
+  // The control room serves the current day only.
+  assert.equal((await request('/day?date=2026-11-03')).status, 400);
+  assert.equal((await request('/day?date=2026-10-01')).status, 400);
+  assert.equal((await request('/day?date=2026-11-05')).status, 400);
+});
