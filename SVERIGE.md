@@ -129,7 +129,7 @@ git merge origin/main
   hålls isär, MIK i tipset, antal först där plural saknas, "inaktivt ljud",
   OSÄKER, KN för knop, riktiga ellipser, Ladda ned och VÄNTLÄGE, Olagligt
   ingripande och FÖRHANDSVY.
-- `sv.json` ingår nu i formatkontrollen, och 46 onödiga rader i listan över
+- `sv.json` ingår nu i formatkontrollen, och 42 onödiga rader i listan över
   strängar som får vara likadana som på engelska är borttagna.
 
 ### 2026-11-09 (kom igång: guide och nycklar i appen)
