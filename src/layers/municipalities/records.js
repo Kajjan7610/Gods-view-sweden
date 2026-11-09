@@ -49,6 +49,16 @@ export function decodeLine(encoded) {
 }
 
 /**
+ * Whether a line goes anywhere: at least two points that differ. Simplifying
+ * leaves a few boundary lines as one point twice; rings still walk them, but
+ * there is nothing to draw.
+ */
+export function hasLength(points) {
+  const [lon, lat] = points[0] ?? [];
+  return points.some((point) => point[0] !== lon || point[1] !== lat);
+}
+
+/**
  * Douglas–Peucker in local metres, keeping both ends, so lines that meet at
  * an end still meet after simplifying.
  * @param {number[][]} points [lon, lat] pairs.

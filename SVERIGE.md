@@ -127,6 +127,35 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-09 (kommuner och län: rättningar efter kodgranskning)
+- Ett klick på ett annat lagers objekt (ett sjukhus, en kamera) markerar
+  inte längre kommunen under det. Bara kartan själv och lagrets egna linjer
+  räknas som mark (`scenePick.isSurfacePick`), och klickpunkten tas från ytan
+  linjerna ligger på (`pickGroundPosition`) i stället för ellipsoiden.
+- Ett klick på kommunens eget kort faller inte längre igenom och släcker
+  markeringen: kortet är nu träffbart i etikettlagret.
+- Med knappen Län släckt försvann även de kommungränser som råkar vara
+  länsgränser, så kommunerna längs länsgränsen stod öppna. De ritas nu som
+  kommungränser från en egen datakälla som fylls första gången den behövs.
+  Namnen följer knapparna: är den ena sorten släckt visas den andra på alla
+  höjder.
+- Knapparna och kartbytet bygger inte längre om linjerna. Varje sorts linjer
+  ligger i en egen datakälla som bara tänds och släcks, och vid byte mellan
+  globen och 3D-tiles ändras bara linjernas yta, och bara medan lagret är på.
+- Fem linjer som förenklingen krympt till en punkt ritas inte (1 787 + 411
+  linjer i stället för 1 792 + 411).
+- `setParams` gör ingenting medan lagret är av, och radens kartmitt nollas
+  när lagret stängs av.
+- Byggskriptet avbryter om SCB publicerar en ny månad mellan två anrop (annars
+  kunde två perioder blandas under ett datum) och avkodar linjerna med lagrets
+  egen `decodeLine`. SCB lägger från referensår 2025 brus på småtal (Cell Key
+  Method), så ett län behöver inte vara exakt summan av sina kommuner; båda
+  visas som SCB publicerar dem.
+- Kvar att känna till: de flesta andra svenska lagers kort är inte träffbara,
+  så ett klick på ett sådant kort kan fortfarande nå kommunen under det.
+  Etiketter och kort står på höjd 0, och radens kartmitt räknas mot
+  ellipsoiden.
+
 ### 2026-11-09 (kommuner och län)
 - Nytt lager **Kommuner och län (Sverige)** (delningstoken `0f`) under
   Infrastructure, efter Sjukhus och akuter: gränserna för Sveriges 290

@@ -6,6 +6,7 @@ import {
   areaAt,
   decodeLine,
   encodeLine,
+  hasLength,
   indexAreas,
   ringPoints,
   ringsContain,
@@ -52,6 +53,27 @@ test('simplifying keeps both ends and drops points within the tolerance', () => 
   assert.ok(
     simple.some((p) => p[0] === 16.003),
     'a 1 km spike stays',
+  );
+});
+
+test('a line has length only when two of its points differ', () => {
+  assert.equal(hasLength([]), false);
+  assert.equal(hasLength([[16, 59]]), false);
+  assert.equal(
+    hasLength([
+      [16, 59],
+      [16, 59],
+    ]),
+    false,
+    'one point twice goes nowhere',
+  );
+  assert.equal(
+    hasLength([
+      [16, 59],
+      [16, 59],
+      [16.1, 59],
+    ]),
+    true,
   );
 });
 
@@ -155,6 +177,10 @@ test('the bundled snapshot has every municipality and county, closed and populat
       municipality.code,
       municipality.name,
     );
+  // Simplifying leaves a handful of lines as one point twice. Rings still
+  // walk them (they closed above); the layer skips them when drawing.
+  const pointless = lines.filter((points) => !hasLength(points));
+  assert.ok(pointless.length < 10, `${pointless.length} lines go nowhere`);
   const total = snapshot.municipalities.reduce(
     (sum, row) => sum + row.population,
     0,

@@ -1,9 +1,11 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { cableClassificationTypeForScene } from '../submarineCables/surface.js';
 import {
   BOUNDARY_KINDS,
   areaAt,
   decodeLine,
+  hasLength,
   indexAreas,
   ringPoints,
 } from './records.js';
@@ -32,18 +34,19 @@ const LABEL_HOST_OPTIONS = Object.freeze({
 const COUNTY_NAMES_ABOVE_M = 250_000;
 const LABELS_SHOWN = 40;
 const MOVE_SETTLE_MS = 400;
-
+const KIND = Object.freeze(
+  Object.fromEntries(BOUNDARY_KINDS.map((kind) => [kind.id, kind])),
+);
 /**
- * Lines on the ground for the surface the map shows: the globe's terrain,
- * or the photorealistic 3D tiles when the globe is hidden (see
- * submarineCables/surface.js, which draws its cables the same way).
+ * The border lines' data sources: what the lines are in the snapshot ("m"
+ * municipal only, "c" county and municipal at once) and the kind they are
+ * drawn as.
  */
-function classificationFor(scene) {
-  if (!scene?.globe) return Cesium.ClassificationType.BOTH;
-  return scene.globe.show === false
-    ? Cesium.ClassificationType.CESIUM_3D_TILE
-    : Cesium.ClassificationType.TERRAIN;
-}
+const BORDER_SETS = Object.freeze([
+  ['municipality', 'm', 'municipality'],
+  ['county', 'c', 'county'],
+  ['countyAsMunicipality', 'c', 'municipality'],
+]);
 
 const groundPositions = (points) =>
   Cesium.Cartesian3.fromDegreesArray(points.flat());
@@ -60,17 +63,24 @@ export function createMunicipalitiesLayer({
   source,
   overlayHost = null,
   screenSpaceEventHandlerFactory = null,
-  picking = null,
+  scenePick = null,
   pointer = null,
   mapStackEventTarget = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Municipalities require a snapshot source');
   let _viewer = null;
-  let _dataSource = null;
+  // One data source per border set, so the chips only show and hide lines
+  // that are already there. A county border is a municipal border too: with
+  // the counties hidden it is drawn as a municipal one, from a set that is
+  // filled the first time it is asked for.
+  let _borders = null;
   // The selected municipality's outline, apart from the lines, so selecting
   // one never rebuilds the batched border lines.
   let _highlight = null;
+  // The surface the lines are drawn on: the globe's terrain, or the
+  // photorealistic 3D tiles when the globe is hidden (the cables' rule).
+  let _classificationType;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -91,7 +101,7 @@ export function createMunicipalitiesLayer({
   const _shown = new Set(BOUNDARY_KINDS.map((kind) => kind.id));
 
   const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+    overlayHost && screenSpaceEventHandlerFactory && scenePick;
   const labelPosition = (area) =>
     Cesium.Cartesian3.fromDegrees(area.label[0], area.label[1], 0);
 
@@ -121,11 +131,14 @@ export function createMunicipalitiesLayer({
   function publishLabels() {
     if (!overlayHost) return;
     const height = _viewer?.camera?.positionCartographic?.height;
-    const counties = !(height < COUNTY_NAMES_ABOVE_M);
-    const kind = counties ? 'county' : 'municipality';
+    const preferred = height < COUNTY_NAMES_ABOVE_M ? 'municipality' : 'county';
+    // A hidden kind takes its names with it; the other kind's stand in.
+    const kind = _shown.has(preferred)
+      ? preferred
+      : (BOUNDARY_KINDS.find((entry) => _shown.has(entry.id))?.id ?? null);
     const areas =
-      _enabled && _loaded && _view && _shown.has(kind)
-        ? counties
+      _enabled && _loaded && _view && kind
+        ? kind === 'county'
           ? _snapshot.counties
           : _snapshot.municipalities
         : [];
@@ -151,7 +164,7 @@ export function createMunicipalitiesLayer({
         position: labelPosition(area),
         variant: 'label',
         title: area.name,
-        accent: BOUNDARY_KINDS.find((entry) => entry.id === kind).color,
+        accent: KIND[kind].color,
         priority: 900 - index,
         collisionGroup: 'ambient-label',
         paintLane: 'ambient-label',
@@ -181,43 +194,73 @@ export function createMunicipalitiesLayer({
     }
   }
 
-  function render() {
-    if (!_dataSource) return;
-    const classificationType = classificationFor(_viewer?.scene);
-    const entities = _dataSource.entities;
+  /** Fill one border set with its lines, drawn as its kind. */
+  function addLines(dataSource, code, kind) {
+    const material = Cesium.Color.fromCssColorString(kind.color).withAlpha(
+      0.85,
+    );
+    const entities = dataSource.entities;
     entities.suspendEvents();
     try {
-      entities.removeAll();
-      // Municipal lines first, so county lines draw over them.
-      for (const kind of [...BOUNDARY_KINDS].reverse()) {
-        if (!_shown.has(kind.id)) continue;
-        const code = kind.id === 'county' ? 'c' : 'm';
-        const material = Cesium.Color.fromCssColorString(kind.color).withAlpha(
-          0.85,
-        );
-        _lines.forEach((points, index) => {
-          const line = _snapshot.lines[index];
-          if (line.s || line.k !== code || points.length < 2) return;
-          entities.add({
-            polyline: {
-              positions: groundPositions(points),
-              width: kind.width,
-              material,
-              clampToGround: true,
-              classificationType,
-            },
-          });
+      _lines.forEach((points, index) => {
+        const line = _snapshot.lines[index];
+        if (line.s || line.k !== code || !hasLength(points)) return;
+        entities.add({
+          polyline: {
+            positions: groundPositions(points),
+            width: kind.width,
+            material,
+            clampToGround: true,
+            classificationType: _classificationType,
+          },
         });
-      }
+      });
     } finally {
       entities.resumeEvents();
     }
-    renderSelection();
+  }
+
+  /** Show the border sets the chips ask for; build nothing twice. */
+  function applyShown() {
+    if (!_borders) return;
+    const municipal = _enabled && _shown.has('municipality');
+    const county = _enabled && _shown.has('county');
+    const show = {
+      municipality: municipal,
+      county,
+      countyAsMunicipality: municipal && !county,
+    };
+    for (const [id, code, kind] of BORDER_SETS) {
+      const dataSource = _borders[id];
+      if (show[id] && _loaded && dataSource.entities.values.length === 0)
+        addLines(dataSource, code, KIND[kind]);
+      dataSource.show = show[id];
+    }
+    if (_highlight) _highlight.show = _enabled;
+    _viewer?.scene?.requestRender?.();
+  }
+
+  /** Move the lines to the surface the map shows now, if it changed. */
+  function applyClassification() {
+    const next = cableClassificationTypeForScene(_viewer?.scene);
+    if (next === _classificationType) return;
+    _classificationType = next;
+    for (const dataSource of [...Object.values(_borders ?? {}), _highlight]) {
+      if (!dataSource) continue;
+      const entities = dataSource.entities;
+      entities.suspendEvents();
+      try {
+        for (const entity of entities.values)
+          if (entity.polyline) entity.polyline.classificationType = next;
+      } finally {
+        entities.resumeEvents();
+      }
+    }
+    _viewer?.scene?.requestRender?.();
   }
 
   function renderSelection() {
     if (!_highlight) return;
-    const classificationType = classificationFor(_viewer?.scene);
     const entities = _highlight.entities;
     entities.suspendEvents();
     try {
@@ -230,7 +273,7 @@ export function createMunicipalitiesLayer({
               width: 4,
               material: Cesium.Color.WHITE.withAlpha(0.9),
               clampToGround: true,
-              classificationType,
+              classificationType: _classificationType,
             },
           });
     } finally {
@@ -282,27 +325,28 @@ export function createMunicipalitiesLayer({
     _rowListener?.();
   }
 
+  /** Whether a pick is one of this layer's own lines. */
+  function isOwnLine(picked) {
+    const owner = picked?.id?.entityCollection?.owner;
+    return Boolean(
+      owner &&
+      (owner === _highlight || Object.values(_borders ?? {}).includes(owner)),
+    );
+  }
+
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
     _clickHandler = screenSpaceEventHandlerFactory(_viewer);
     _clickHandler.setInputAction((click) => {
       if (!_loaded || (pointer && !pointer.isPointerFree())) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-        { sourceId: MUNICIPALITIES_OVERLAY_SOURCE_ID },
-      );
-      if (cardHit) return;
-      // Another layer's object under the click is that layer's to select.
+      // A card under the click, this layer's or another's, is not the ground.
+      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
+      // Nor is another layer's object: that click is that layer's to select.
+      // Only the map itself and these borders count.
       const picked = _viewer.scene.pick(click.position);
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
-      const point = _viewer.camera.pickEllipsoid(
-        click.position,
-        Cesium.Ellipsoid.WGS84,
-      );
+      if (!scenePick.isSurfacePick(picked) && !isOwnLine(picked)) return;
+      // The surface the lines lie on, not the ellipsoid under it.
+      const point = scenePick.pickGroundPosition(_viewer, click.position);
       if (!point) return;
       const where = Cesium.Cartographic.fromCartesian(point);
       const hit = areaAt(_municipalityIndex, [
@@ -324,16 +368,22 @@ export function createMunicipalitiesLayer({
       if (_viewer)
         throw new Error('Municipalities layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('municipalities');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
-      _highlight = new Cesium.CustomDataSource('municipality-selected');
-      _highlight.show = false;
-      viewer.dataSources.add(_highlight);
+      _classificationType = cableClassificationTypeForScene(viewer?.scene);
+      const addDataSource = (name) => {
+        const dataSource = new Cesium.CustomDataSource(name);
+        dataSource.show = false;
+        viewer.dataSources.add(dataSource);
+        return dataSource;
+      };
+      _borders = Object.fromEntries(
+        BORDER_SETS.map(([id]) => [id, addDataSource(`municipalities-${id}`)]),
+      );
+      _highlight = addDataSource('municipality-selected');
       if (mapStackEventTarget?.addEventListener) {
         // Switching between the globe and 3D tiles moves the lines' surface.
+        // While the layer is off that waits for enable().
         _stackListener = () => {
-          if (_loaded) render();
+          if (_enabled) applyClassification();
         };
         mapStackEventTarget.addEventListener(
           'gev:map-stack-changed',
@@ -344,8 +394,8 @@ export function createMunicipalitiesLayer({
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
-      if (_highlight) _highlight.show = true;
+      applyClassification();
+      applyShown();
       for (const id of [
         MUNICIPALITIES_OVERLAY_SOURCE_ID,
         MUNICIPALITY_LABELS_SOURCE_ID,
@@ -372,10 +422,13 @@ export function createMunicipalitiesLayer({
       _removeMove?.();
       _removeMove = null;
       _enabled = false;
-      if (_dataSource) _dataSource.show = false;
-      if (_highlight) _highlight.show = false;
+      applyShown();
       _clickHandler?.destroy();
       _clickHandler = null;
+      // Nothing of the view outlives the layer being off: no selection, no
+      // map centre in the row.
+      _centre = null;
+      _view = null;
       if (_selected) {
         _selected = null;
         renderSelection();
@@ -384,7 +437,7 @@ export function createMunicipalitiesLayer({
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_borders) return false;
       // The snapshot is bundled; one read per session is enough.
       if (_loaded) return true;
       _request?.abort();
@@ -405,7 +458,8 @@ export function createMunicipalitiesLayer({
         _lastError = null;
         _view = readView();
         _centre = _view ? areaAt(_municipalityIndex, _view.center) : null;
-        render();
+        applyShown();
+        renderSelection();
         console.log(
           `[Data:Municipalities] Loaded: ${snapshot.municipalities.length} municipalities, ${snapshot.counties.length} counties`,
         );
@@ -423,9 +477,10 @@ export function createMunicipalitiesLayer({
       }
     },
 
-    /** Select a municipality by its code and fly over it. */
+    /** Select a municipality by its code and fly over it, while it is on. */
     setParams(params = {}) {
-      const municipality = _snapshot?.municipalities.find(
+      if (!_enabled || !_loaded) return false;
+      const municipality = _snapshot.municipalities.find(
         (entry) => entry.code === String(params.municipalityCode ?? ''),
       );
       if (!municipality || !_viewer) return false;
@@ -453,10 +508,9 @@ export function createMunicipalitiesLayer({
       _municipalityIndex = [];
       _countyByCode = new Map();
       _loaded = false;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      for (const dataSource of Object.values(_borders ?? {}))
+        viewer.dataSources.remove(dataSource, true);
+      _borders = null;
       if (_highlight) {
         viewer.dataSources.remove(_highlight, true);
         _highlight = null;
@@ -491,7 +545,8 @@ export function createMunicipalitiesLayer({
           onClick: () => {
             if (_shown.has(kind.id)) _shown.delete(kind.id);
             else _shown.add(kind.id);
-            render();
+            applyShown();
+            publishLabels();
             _rowListener?.();
           },
         })),

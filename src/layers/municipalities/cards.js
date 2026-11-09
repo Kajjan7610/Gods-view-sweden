@@ -84,7 +84,8 @@ export function buildMunicipalityCard(
   return {
     ...CARD_BASE,
     id: `municipalities-card:${municipality.code}`,
-    interactive: false,
+    // Interactive only so a click on the card is told from one on the ground.
+    interactive: true,
     title: t('MUNICIPALITY · {name}', { name: municipality.name }),
     details,
     accent: '#80deea',

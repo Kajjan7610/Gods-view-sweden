@@ -13,11 +13,13 @@
  * src/layers/municipalities/records.js). Ways tagged maritime are kept for
  * the areas but not drawn. Population is SCB's newest monthly figure per
  * municipality and county, and the figure twelve months before it
- * (statistikdatabasen TAB6473, BE0101, CC0). The snapshot is OSM data, so it
- * is licensed ODbL and says so.
+ * (statistikdatabasen TAB6473, BE0101, CC0). From 2025 SCB adds a little
+ * noise to each figure on its own (the Cell Key Method), so a county need not
+ * equal the sum of its municipalities; both are kept as published. The
+ * snapshot is OSM data, so it is licensed ODbL and says so.
  *
- * Run it by hand when boundaries or a new population year change, never from
- * the app.
+ * Run it by hand when boundaries change or SCB publishes a new month, never
+ * from the app.
  *
  * Usage:
  *   node scripts/build-municipalities.mjs [--endpoint <overpass-url>]
@@ -27,6 +29,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { ROOT, createCache } from './lib/osmSnapshot.mjs';
 import {
+  decodeLine,
   encodeLine,
   ringPoints,
   ringsContain,
@@ -128,17 +131,7 @@ function assemble(rel) {
   return rings;
 }
 
-const decoded = lines.map((line) => {
-  const out = [];
-  let x = 0;
-  let y = 0;
-  for (let i = 0; i < line.p.length; i += 2) {
-    x += line.p[i];
-    y += line.p[i + 1];
-    out.push([x / 1e5, y / 1e5]);
-  }
-  return out;
-});
+const decoded = lines.map((line) => decodeLine(line.p));
 
 /**
  * A point well inside an area for its name: the grid point inside the
@@ -181,7 +174,7 @@ const round = ([lon, lat]) => [
   Math.round(lat * 1e5) / 1e5,
 ];
 
-// SCB's newest year-end population for every municipality and county.
+// SCB's newest monthly population for every municipality and county.
 const codes = [
   ...counties.map((rel) => rel.tags['ref:SE:scb'] ?? rel.tags['ref:scb']),
   ...municipalities.map((rel) => rel.tags['ref:scb'] ?? rel.tags.ref),
@@ -207,9 +200,15 @@ for (let start = 0; start < codes.length; start += 100) {
   if (scb.id.join() !== 'Region,Forandringar,Kon,ContentsCode,Tid')
     throw new Error(`Unexpected SCB dimensions ${scb.id.join()}`);
   const tid = scb.dimension.Tid.category.index;
-  periods = Object.keys(tid).sort();
-  if (periods.length !== 13)
-    throw new Error(`Expected 13 months, got ${periods.length}`);
+  const months = Object.keys(tid).sort();
+  if (months.length !== 13)
+    throw new Error(`Expected 13 months, got ${months.length}`);
+  // A month published between two requests would mix periods under one date.
+  if (periods.length && months.join() !== periods.join())
+    throw new Error(
+      `SCB periods differ between requests: ${periods.at(-1)} and ${months.at(-1)}; run again`,
+    );
+  periods = months;
   const at = (code, period) =>
     scb.value[scb.dimension.Region.category.index[code] * 13 + tid[period]] ??
     null;
