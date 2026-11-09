@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { createGroundHeights } from '../groundHeights.js';
 import { ALERT_KINDS, alertColor } from './records.js';
 import { TRANSIT_ALERTS_OVERLAY_SOURCE_ID, buildStopCard } from './cards.js';
 export * from './records.js';
@@ -30,9 +31,18 @@ export function createTransitAlertsLayer({
   screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
+  terrain = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Transit disruptions require a snapshot source');
+  // With ground heights the dots clamp to terrain only (see groundHeights.js).
+  const _ground = createGroundHeights(terrain, () => render());
+  const position = (row) =>
+    Cesium.Cartesian3.fromDegrees(
+      row.point[0],
+      row.point[1],
+      _ground.heightOf(row.id),
+    );
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -65,7 +75,7 @@ export function createTransitAlertsLayer({
       return;
     }
     const card = buildStopCard(row);
-    card.position = Cesium.Cartesian3.fromDegrees(...row.point);
+    card.position = position(row);
     _selectedCardId = card.id;
     overlayHost.setEntries(
       TRANSIT_ALERTS_OVERLAY_SOURCE_ID,
@@ -133,13 +143,15 @@ export function createTransitAlertsLayer({
       for (const row of _stops)
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...row.point),
+          position: position(row),
           point: {
             pixelSize: KIND_SIZE[row.kind] || 8,
             color: Cesium.Color.fromCssColorString(alertColor(row.kind)),
             outlineColor: Cesium.Color.BLACK.withAlpha(0.7),
             outlineWidth: 1.5,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            heightReference: _ground.enabled
+              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+              : Cesium.HeightReference.CLAMP_TO_GROUND,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
             scaleByDistance: new Cesium.NearFarScalar(2e4, 1.4, 2e6, 0.6),
           },
@@ -178,6 +190,7 @@ export function createTransitAlertsLayer({
     disable() {
       _request?.abort();
       _request = null;
+      _ground.cancel();
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
@@ -204,6 +217,7 @@ export function createTransitAlertsLayer({
         _stopById.clear();
         for (const row of _stops) _stopById.set(row.id, row);
         render();
+        _ground.place(_stops);
         _rowListener?.();
         return true;
       } catch (e) {
@@ -221,6 +235,7 @@ export function createTransitAlertsLayer({
 
     destroy(viewer = _viewer) {
       layer.disable();
+      _ground.clear();
       _stopById.clear();
       _stops = [];
       _pending = [];

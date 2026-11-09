@@ -152,6 +152,7 @@ export function createApplicationCatalog({
         }),
         createApplicationTrafikverketRoads({
           source: sources['trafikverket-roads'],
+          terrain: surface.terrain,
         }),
         createApplicationTrafikverketWeather({
           source: sources['trafikverket-weather'],
@@ -159,6 +160,7 @@ export function createApplicationCatalog({
         }),
         createApplicationSmhiWarnings({
           source: sources['smhi-warnings'],
+          terrain: surface.terrain,
         }),
         createApplicationPolisenEvents({
           source: sources['polisen-events'],
@@ -166,18 +168,23 @@ export function createApplicationCatalog({
         }),
         createApplicationElectricityPrices({
           source: sources['electricity-prices'],
+          terrain: surface.terrain,
         }),
         createApplicationPowerGrid({
           source: sources['power-grid'],
+          terrain: surface.terrain,
         }),
         createApplicationSrTraffic({
           source: sources['sr-traffic'],
+          terrain: surface.terrain,
         }),
         createApplicationTransitAlerts({
           source: sources['transit-alerts'],
+          terrain: surface.terrain,
         }),
         createApplicationSeaWeather({
           source: sources['sea-weather'],
+          terrain: surface.terrain,
         }),
         createApplicationCompanyStores({
           source: sources['company-stores'],
@@ -195,15 +202,18 @@ export function createApplicationCatalog({
         }),
         createApplicationRiverFlow({
           source: sources['river-flow'],
+          terrain: surface.terrain,
         }),
         createApplicationGammaRadiation({
           source: sources['gamma-radiation'],
+          terrain: surface.terrain,
         }),
         createApplicationAurora({
           source: sources.aurora,
         }),
         createApplicationSmhiWeather({
           source: sources['smhi-weather'],
+          terrain: surface.terrain,
         }),
         createApplicationGhostMaps({ source: sources['s2-ghostmaps'] }),
         createApplicationDroneAirspace({

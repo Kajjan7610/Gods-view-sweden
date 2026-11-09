@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { createGroundHeights } from '../groundHeights.js';
 import { SR_PRIORITIES, priorityColor } from './records.js';
 import {
   PRIORITY_LABELS,
@@ -30,9 +31,18 @@ export function createSrTrafficLayer({
   screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
+  terrain = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('SR traffic requires a snapshot source');
+  // With ground heights the dots clamp to terrain only (see groundHeights.js).
+  const _ground = createGroundHeights(terrain, () => render());
+  const position = (row) =>
+    Cesium.Cartesian3.fromDegrees(
+      row.point[0],
+      row.point[1],
+      _ground.heightOf(row.id),
+    );
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -68,7 +78,7 @@ export function createSrTrafficLayer({
       return;
     }
     const card = buildSrCard(row);
-    card.position = Cesium.Cartesian3.fromDegrees(...row.point);
+    card.position = position(row);
     _selectedCardId = card.id;
     overlayHost.setEntries(
       SR_TRAFFIC_OVERLAY_SOURCE_ID,
@@ -139,7 +149,7 @@ export function createSrTrafficLayer({
       for (const row of [...shown].reverse()) {
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...row.point),
+          position: position(row),
           point: {
             pixelSize: PRIORITY_PIXELS[row.priority] || 7,
             color: Cesium.Color.fromCssColorString(priorityColor(row.priority)),
@@ -148,7 +158,9 @@ export function createSrTrafficLayer({
                 ? Cesium.Color.WHITE
                 : Cesium.Color.BLACK.withAlpha(0.8),
             outlineWidth: row.priority <= 2 ? 2.5 : 1.5,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            heightReference: _ground.enabled
+              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+              : Cesium.HeightReference.CLAMP_TO_GROUND,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
         });
@@ -193,6 +205,7 @@ export function createSrTrafficLayer({
     disable() {
       _request?.abort();
       _request = null;
+      _ground.cancel();
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
@@ -225,6 +238,7 @@ export function createSrTrafficLayer({
           render();
           console.log(`[Data:SrTraffic] Updated: ${_messages.length} messages`);
         }
+        _ground.place(_messages);
         _rowListener?.();
         return true;
       } catch (e) {
@@ -242,6 +256,7 @@ export function createSrTrafficLayer({
 
     destroy(viewer = _viewer) {
       layer.disable();
+      _ground.clear();
       _messageById.clear();
       _messages = [];
       _signature = null;

@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { formatNumber, msg, t } from '../../i18n/index.js';
+import { createGroundHeights } from '../groundHeights.js';
 import {
   NO_READING_COLOR,
   TEMPERATURE_CLASSES,
@@ -57,9 +58,18 @@ export function createSmhiWeatherLayer({
   screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
+  terrain = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('SMHI weather requires a snapshot source');
+  // With ground heights the dots clamp to terrain only (see groundHeights.js).
+  const _ground = createGroundHeights(terrain, () => render());
+  const position = (row) =>
+    Cesium.Cartesian3.fromDegrees(
+      row.point[0],
+      row.point[1],
+      _ground.heightOf(row.id),
+    );
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -106,7 +116,7 @@ export function createSmhiWeatherLayer({
       forecast: entry?.forecast ?? null,
       forecastState: entry?.state ?? 'loading',
     });
-    card.position = Cesium.Cartesian3.fromDegrees(...row.point);
+    card.position = position(row);
     _selectedCardId = card.id;
     overlayHost.setEntries(
       SMHI_WEATHER_OVERLAY_SOURCE_ID,
@@ -202,7 +212,7 @@ export function createSmhiWeatherLayer({
         if (!Number.isFinite(value)) continue;
         entries.push({
           id: `smhi-weather-label:${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...row.point),
+          position: position(row),
           variant: 'label',
           title:
             _mode === 'wind'
@@ -236,7 +246,7 @@ export function createSmhiWeatherLayer({
         const has = Number.isFinite(shownValue(row));
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...row.point),
+          position: position(row),
           point: {
             pixelSize: has ? 10 : 6,
             color: Cesium.Color.fromCssColorString(
@@ -244,7 +254,9 @@ export function createSmhiWeatherLayer({
             ).withAlpha(has ? 1 : 0.6),
             outlineColor: Cesium.Color.WHITE.withAlpha(0.9),
             outlineWidth: 1.5,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            heightReference: _ground.enabled
+              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+              : Cesium.HeightReference.CLAMP_TO_GROUND,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
         });
@@ -291,6 +303,7 @@ export function createSmhiWeatherLayer({
     disable() {
       _request?.abort();
       _request = null;
+      _ground.cancel();
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
@@ -325,6 +338,7 @@ export function createSmhiWeatherLayer({
             `[Data:SmhiWeather] Updated: ${_stations.length} stations`,
           );
         }
+        _ground.place(_stations);
         _rowListener?.();
         return true;
       } catch (e) {
@@ -342,6 +356,7 @@ export function createSmhiWeatherLayer({
 
     destroy(viewer = _viewer) {
       layer.disable();
+      _ground.clear();
       _stationById.clear();
       _forecasts.clear();
       _stations = [];

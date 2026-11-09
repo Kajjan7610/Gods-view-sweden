@@ -80,6 +80,17 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-09 (alla svenska lager på marken utan 3D-tiles-mätning)
+- De tio återstående svenska lagren med punkter fästa mot 3D-tiles får
+  samma markhöjd via appens höjdtjänst: elpriser, gammastrålning,
+  kraftnät (elområden och grannländernas ändpunkter), vattenföring,
+  vägförhållanden (händelsepunkterna), sjöväder, SMHI-varningar (VMA och
+  krismeddelanden), SMHI-väder, Sveriges Radio trafik och
+  kollektivtrafikstörningar. Vägarnas linjer och varningsområdena är kvar
+  som förut: de ritas som markklassning på grafikkortet och mäter inte
+  höjd per tile. Med alla 15 svenska lagren påslagna och fotorealistiska
+  tiles: värsta bildrutan 21 ms. Upstreams egna lager är orörda.
+
 ### 2026-11-09 (väderstationer, polishändelser och blixtnedslag)
 - Samma rättelse för de tre sista lagren som fäste punkterna mot 3D-tiles.
   Väderstationer vid väg (813, även temperaturetiketterna) och

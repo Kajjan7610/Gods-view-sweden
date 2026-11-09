@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { formatNumber, msg, t } from '../../i18n/index.js';
+import { createGroundHeights } from '../groundHeights.js';
 import {
   LEVEL_CLASSES,
   NO_VALUE_COLOR,
@@ -56,9 +57,18 @@ export function createSeaWeatherLayer({
   screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
+  terrain = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Sea weather requires a snapshot source');
+  // With ground heights the dots clamp to terrain only (see groundHeights.js).
+  const _ground = createGroundHeights(terrain, () => render());
+  const position = (row) =>
+    Cesium.Cartesian3.fromDegrees(
+      row.point[0],
+      row.point[1],
+      _ground.heightOf(row.id),
+    );
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -95,7 +105,7 @@ export function createSeaWeatherLayer({
       return;
     }
     const card = buildSeaCard(row, { mode: _mode });
-    card.position = Cesium.Cartesian3.fromDegrees(...row.point);
+    card.position = position(row);
     _selectedCardId = card.id;
     overlayHost.setEntries(
       SEA_WEATHER_OVERLAY_SOURCE_ID,
@@ -165,7 +175,7 @@ export function createSeaWeatherLayer({
         if (!Number.isFinite(value)) continue;
         entries.push({
           id: `sea-weather-label:${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...row.point),
+          position: position(row),
           variant: 'label',
           title:
             _mode === 'level'
@@ -199,7 +209,7 @@ export function createSeaWeatherLayer({
         const has = Number.isFinite(shownValue(row));
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...row.point),
+          position: position(row),
           point: {
             pixelSize: has ? 10 : 6,
             color: Cesium.Color.fromCssColorString(
@@ -207,7 +217,9 @@ export function createSeaWeatherLayer({
             ).withAlpha(has ? 1 : 0.6),
             outlineColor: Cesium.Color.fromCssColorString('#0d47a1'),
             outlineWidth: 2,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            heightReference: _ground.enabled
+              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+              : Cesium.HeightReference.CLAMP_TO_GROUND,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
         });
@@ -254,6 +266,7 @@ export function createSeaWeatherLayer({
     disable() {
       _request?.abort();
       _request = null;
+      _ground.cancel();
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
@@ -288,6 +301,7 @@ export function createSeaWeatherLayer({
             `[Data:SeaWeather] Updated: ${_stations.length} stations`,
           );
         }
+        _ground.place(_stations);
         _rowListener?.();
         return true;
       } catch (e) {
@@ -305,6 +319,7 @@ export function createSeaWeatherLayer({
 
     destroy(viewer = _viewer) {
       layer.disable();
+      _ground.clear();
       _stationById.clear();
       _stations = [];
       _signature = null;

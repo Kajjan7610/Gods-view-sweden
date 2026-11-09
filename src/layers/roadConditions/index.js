@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { createGroundHeights } from '../groundHeights.js';
 import {
   INCIDENT_KINDS,
   OTHER_INCIDENT,
@@ -60,9 +61,13 @@ export function createTrafikverketRoadsLayer({
   picking = null,
   pointer = null,
   openExternal = null,
+  terrain = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Trafikverket roads require a snapshot source');
+  // With ground heights the incident dots clamp to terrain only (see
+  // groundHeights.js); road lines stay ground-clamped, which is cheap.
+  const _ground = createGroundHeights(terrain, () => render());
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -116,7 +121,11 @@ export function createTrafikverketRoadsLayer({
       _selected.kind === 'c'
         ? buildConditionCard(row)
         : buildIncidentCard(row, { linkable: Boolean(openExternal) });
-    card.position = Cesium.Cartesian3.fromDegrees(anchor[0], anchor[1]);
+    card.position = Cesium.Cartesian3.fromDegrees(
+      anchor[0],
+      anchor[1],
+      _selected.kind === 'i' ? _ground.heightOf(row.id) : 0,
+    );
     if (card.interactive && row.link) {
       card.activate = () => {
         openExternal(row.link);
@@ -240,7 +249,11 @@ export function createTrafikverketRoadsLayer({
           );
           entities.add({
             id: `${PICK_PREFIX}i:${row.id}:point`,
-            position: Cesium.Cartesian3.fromDegrees(row.point[0], row.point[1]),
+            position: Cesium.Cartesian3.fromDegrees(
+              row.point[0],
+              row.point[1],
+              _ground.heightOf(row.id),
+            ),
             point: {
               pixelSize:
                 row.kind === 'minor' ? 6 : severityPixels(row.severity),
@@ -249,7 +262,9 @@ export function createTrafikverketRoadsLayer({
                 ? CLOSURE_RING
                 : Cesium.Color.BLACK.withAlpha(0.8),
               outlineWidth: closure ? 3 : 1.5,
-              heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+              heightReference: _ground.enabled
+                ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+                : Cesium.HeightReference.CLAMP_TO_GROUND,
               disableDepthTestDistance: Number.POSITIVE_INFINITY,
             },
           });
@@ -294,6 +309,7 @@ export function createTrafikverketRoadsLayer({
     disable() {
       _request?.abort();
       _request = null;
+      _ground.cancel();
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
@@ -332,6 +348,7 @@ export function createTrafikverketRoadsLayer({
             `[Data:TrafikverketRoads] Updated: ${_conditions.length} stretches, ${_incidents.length} incidents`,
           );
         } else if (_selected) publishSelectedCard();
+        _ground.place(_incidents);
         _rowListener?.();
         return true;
       } catch (e) {
@@ -351,6 +368,7 @@ export function createTrafikverketRoadsLayer({
 
     destroy(viewer = _viewer) {
       layer.disable();
+      _ground.clear();
       _conditionById.clear();
       _incidentById.clear();
       _conditions = [];

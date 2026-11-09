@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { createGroundHeights } from '../groundHeights.js';
 import { FLOW_CLASSES, flowClass } from './records.js';
 import {
   RIVER_FLOW_OVERLAY_SOURCE_ID,
@@ -42,9 +43,18 @@ export function createRiverFlowLayer({
   screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
+  terrain = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('River flow requires a snapshot source');
+  // With ground heights the dots clamp to terrain only (see groundHeights.js).
+  const _ground = createGroundHeights(terrain, () => render());
+  const position = (row) =>
+    Cesium.Cartesian3.fromDegrees(
+      row.point[0],
+      row.point[1],
+      _ground.heightOf(row.id),
+    );
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -78,7 +88,7 @@ export function createRiverFlowLayer({
       return;
     }
     const card = buildFlowCard(row);
-    card.position = Cesium.Cartesian3.fromDegrees(...row.point);
+    card.position = position(row);
     _selectedCardId = card.id;
     overlayHost.setEntries(
       RIVER_FLOW_OVERLAY_SOURCE_ID,
@@ -146,7 +156,7 @@ export function createRiverFlowLayer({
       for (const row of _stations) {
         entries.push({
           id: `river-flow-label:${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...row.point),
+          position: position(row),
           variant: 'label',
           title: `${formatFlow(row.flow)} m³/s`, // i18n-ignore: unit
           accent: flowColor(row.flow),
@@ -177,13 +187,15 @@ export function createRiverFlowLayer({
         const entry = flowClass(row.flow);
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...row.point),
+          position: position(row),
           point: {
             pixelSize: entry?.size ?? 6,
             color: Cesium.Color.fromCssColorString(flowColor(row.flow)),
             outlineColor: Cesium.Color.WHITE.withAlpha(0.85),
             outlineWidth: 1.5,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            heightReference: _ground.enabled
+              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+              : Cesium.HeightReference.CLAMP_TO_GROUND,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
         });
@@ -223,6 +235,7 @@ export function createRiverFlowLayer({
     disable() {
       _request?.abort();
       _request = null;
+      _ground.cancel();
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
@@ -255,6 +268,7 @@ export function createRiverFlowLayer({
           render();
           console.log(`[Data:RiverFlow] Updated: ${_stations.length} stations`);
         }
+        _ground.place(_stations);
         _rowListener?.();
         return true;
       } catch (e) {
@@ -272,6 +286,7 @@ export function createRiverFlowLayer({
 
     destroy(viewer = _viewer) {
       layer.disable();
+      _ground.clear();
       _stationById.clear();
       _stations = [];
       _signature = null;

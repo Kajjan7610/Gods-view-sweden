@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { createGroundHeights } from '../groundHeights.js';
 import { WARNING_LEVELS, levelColor, warningLevel } from './records.js';
 import { CRISIS_KINDS } from './crisis.js';
 import { spreadAroundPlaces } from '../policeEvents/records.js';
@@ -54,9 +55,14 @@ export function createSmhiWarningsLayer({
   picking = null,
   pointer = null,
   openExternal = null,
+  terrain = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('SMHI warnings require a snapshot source');
+  // With ground heights the crisis dots clamp to terrain only (see
+  // groundHeights.js); the warning areas stay ground-clamped, which is cheap.
+  // A dot spread around its place keeps the place's height.
+  const _ground = createGroundHeights(terrain, () => render());
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -77,6 +83,10 @@ export function createSmhiWarningsLayer({
   /** Crisis items sharing a place (often the whole country) spread ~20 km apart. */
   let _crisisPositions = new Map();
   const crisisPoint = (row) => _crisisPositions.get(row.id) || row.point;
+  const crisisPosition = (row) => {
+    const [lon, lat] = crisisPoint(row);
+    return Cesium.Cartesian3.fromDegrees(lon, lat, _ground.heightOf(row.id));
+  };
   const visibleCrisis = () => (_show.crisis ? _crisis : []);
 
   const canSelect = () =>
@@ -93,7 +103,7 @@ export function createSmhiWarningsLayer({
     const crisis = _selectedId ? _crisisById.get(_selectedId) : null;
     if (crisis) {
       const card = buildCrisisCard(crisis, { linkable: Boolean(openExternal) });
-      card.position = Cesium.Cartesian3.fromDegrees(...crisisPoint(crisis));
+      card.position = crisisPosition(crisis);
       if (card.interactive) {
         card.activate = () => {
           openExternal(crisis.link);
@@ -257,7 +267,7 @@ export function createSmhiWarningsLayer({
         const vma = row.kind === 'vma';
         entities.add({
           id: `${CRISIS_PICK_PREFIX}${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...crisisPoint(row)),
+          position: crisisPosition(row),
           point: {
             pixelSize: vma ? 16 : 11,
             color: Cesium.Color.fromCssColorString(
@@ -266,7 +276,9 @@ export function createSmhiWarningsLayer({
             ),
             outlineColor: Cesium.Color.WHITE,
             outlineWidth: vma ? 3 : 2,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            heightReference: _ground.enabled
+              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+              : Cesium.HeightReference.CLAMP_TO_GROUND,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
         });
@@ -317,6 +329,7 @@ export function createSmhiWarningsLayer({
     disable() {
       _request?.abort();
       _request = null;
+      _ground.cancel();
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
@@ -365,6 +378,7 @@ export function createSmhiWarningsLayer({
             `[Data:SmhiWarnings] Updated: ${_areas.length} warning areas, ${_crisis.length} crisis messages`,
           );
         } else if (_selectedId) publishSelectedCard();
+        _ground.place(_crisis);
         _rowListener?.();
         return true;
       } catch (e) {
@@ -384,6 +398,7 @@ export function createSmhiWarningsLayer({
 
     destroy(viewer = _viewer) {
       layer.disable();
+      _ground.clear();
       _areaById.clear();
       _areas = [];
       _crisisById.clear();

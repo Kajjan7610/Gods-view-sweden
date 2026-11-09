@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { createGroundHeights } from '../groundHeights.js';
 import {
   PRICE_CLASSES,
   priceAt,
@@ -48,9 +49,18 @@ export function createElectricityPricesLayer({
   screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
+  terrain = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Electricity prices require a snapshot source');
+  // With ground heights the dots clamp to terrain only (see groundHeights.js).
+  const _ground = createGroundHeights(terrain, () => render());
+  const position = (row) =>
+    Cesium.Cartesian3.fromDegrees(
+      row.point[0],
+      row.point[1],
+      _ground.heightOf(row.id),
+    );
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -91,7 +101,7 @@ export function createElectricityPricesLayer({
       return;
     }
     const card = buildZoneCard(zone, Date.now());
-    card.position = Cesium.Cartesian3.fromDegrees(...zone.point);
+    card.position = position(zone);
     _selectedCardId = card.id;
     overlayHost.setEntries(
       ELECTRICITY_OVERLAY_SOURCE_ID,
@@ -159,7 +169,7 @@ export function createElectricityPricesLayer({
           const price = shownPrice(zone);
           return {
             id: `electricity-label:${zone.id}`,
-            position: Cesium.Cartesian3.fromDegrees(...zone.point),
+            position: position(zone),
             variant: 'label',
             title: Number.isFinite(price)
               ? t('{zone} · {price} kr', {
@@ -193,7 +203,7 @@ export function createElectricityPricesLayer({
       for (const zone of _zones) {
         entities.add({
           id: `${PICK_PREFIX}${zone.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...zone.point),
+          position: position(zone),
           point: {
             pixelSize: 20,
             color: Cesium.Color.fromCssColorString(
@@ -201,7 +211,9 @@ export function createElectricityPricesLayer({
             ),
             outlineColor: Cesium.Color.WHITE,
             outlineWidth: 3,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            heightReference: _ground.enabled
+              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+              : Cesium.HeightReference.CLAMP_TO_GROUND,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
         });
@@ -250,6 +262,7 @@ export function createElectricityPricesLayer({
     disable() {
       _request?.abort();
       _request = null;
+      _ground.cancel();
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
@@ -276,6 +289,7 @@ export function createElectricityPricesLayer({
         for (const zone of _zones) _zoneById.set(zone.id, zone);
         // Rendered on every update: the current quarter-hour moves on.
         render();
+        _ground.place(_zones);
         _rowListener?.();
         return true;
       } catch (e) {
@@ -293,6 +307,7 @@ export function createElectricityPricesLayer({
 
     destroy(viewer = _viewer) {
       layer.disable();
+      _ground.clear();
       _zoneById.clear();
       _zones = [];
       if (_dataSource) {

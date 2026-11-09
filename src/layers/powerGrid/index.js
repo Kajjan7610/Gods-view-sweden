@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { createGroundHeights } from '../groundHeights.js';
 import { FLOW_KINDS, SWEDISH_AREAS, flowColor, flowWidth } from './records.js';
 import {
   POWER_GRID_OVERLAY_SOURCE_ID,
@@ -48,9 +49,25 @@ export function createPowerGridLayer({
   screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
+  terrain = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Power grid requires a snapshot source');
+  // With ground heights the zone and neighbour dots clamp to terrain only
+  // (see groundHeights.js).
+  const _ground = createGroundHeights(terrain, () => render());
+  const onGround = (id, [lon, lat]) =>
+    Cesium.Cartesian3.fromDegrees(lon, lat, _ground.heightOf(id));
+  const groundRows = () => [
+    ...SWEDISH_AREAS.map((area) => ({ id: area.id, point: area.point })),
+    ..._snapshot.links
+      .filter((link) => link.kind !== 'internal')
+      .map((link) =>
+        link.kind === 'import'
+          ? { id: `end:${link.from}`, point: link.fromPoint }
+          : { id: `end:${link.to}`, point: link.toPoint },
+      ),
+  ];
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -81,7 +98,7 @@ export function createPowerGridLayer({
       return;
     }
     const card = buildAreaCard(area, _snapshot);
-    card.position = Cesium.Cartesian3.fromDegrees(...area.point);
+    card.position = onGround(area.id, area.point);
     _selectedCardId = card.id;
     overlayHost.setEntries(
       POWER_GRID_OVERLAY_SOURCE_ID,
@@ -163,7 +180,7 @@ export function createPowerGridLayer({
         entries.push({
           ...LABEL_BASE,
           id: `power-grid-area:${area.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...area.point),
+          position: onGround(area.id, area.point),
           title: area.id,
           accent: flowColor('internal'),
           priority: 2000,
@@ -187,7 +204,7 @@ export function createPowerGridLayer({
           entries.push({
             ...LABEL_BASE,
             id: `power-grid-end:${link.id}`,
-            position: Cesium.Cartesian3.fromDegrees(...foreignPoint),
+            position: onGround(`end:${foreign}`, foreignPoint),
             title: foreign,
             accent: '#b0bec5',
             priority: 500,
@@ -226,15 +243,18 @@ export function createPowerGridLayer({
         if (link.kind !== 'internal')
           entities.add({
             id: `power-grid-end:${link.id}`,
-            position: Cesium.Cartesian3.fromDegrees(
-              ...(link.kind === 'import' ? link.fromPoint : link.toPoint),
-            ),
+            position:
+              link.kind === 'import'
+                ? onGround(`end:${link.from}`, link.fromPoint)
+                : onGround(`end:${link.to}`, link.toPoint),
             point: {
               pixelSize: 8,
               color: Cesium.Color.fromCssColorString('#b0bec5'),
               outlineColor: Cesium.Color.BLACK.withAlpha(0.6),
               outlineWidth: 1,
-              heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+              heightReference: _ground.enabled
+                ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+                : Cesium.HeightReference.CLAMP_TO_GROUND,
               disableDepthTestDistance: Number.POSITIVE_INFINITY,
             },
           });
@@ -242,13 +262,15 @@ export function createPowerGridLayer({
       for (const area of SWEDISH_AREAS)
         entities.add({
           id: `${PICK_PREFIX}${area.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...area.point),
+          position: onGround(area.id, area.point),
           point: {
             pixelSize: 18,
             color: Cesium.Color.fromCssColorString(flowColor('internal')),
             outlineColor: Cesium.Color.WHITE,
             outlineWidth: 3,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            heightReference: _ground.enabled
+              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+              : Cesium.HeightReference.CLAMP_TO_GROUND,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
         });
@@ -288,6 +310,7 @@ export function createPowerGridLayer({
     disable() {
       _request?.abort();
       _request = null;
+      _ground.cancel();
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
@@ -311,6 +334,7 @@ export function createPowerGridLayer({
         _lastError = null;
         _snapshot = snapshot;
         render();
+        _ground.place(groundRows());
         _rowListener?.();
         return true;
       } catch (e) {
@@ -328,6 +352,7 @@ export function createPowerGridLayer({
 
     destroy(viewer = _viewer) {
       layer.disable();
+      _ground.clear();
       _snapshot = { links: [], areas: [], production: {}, updated: null };
       if (_dataSource) {
         viewer.dataSources.remove(_dataSource, true);

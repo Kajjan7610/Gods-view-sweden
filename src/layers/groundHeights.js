@@ -71,6 +71,12 @@ export function createGroundHeights(
   let retryTimer = null;
   let retryMs = GROUND_RETRY_FIRST_MS;
 
+  /** A row with a place but no Re:Earth height yet. */
+  const unsettled = (row) =>
+    !real.has(row.id) &&
+    Number.isFinite(row.point?.[0]) &&
+    Number.isFinite(row.point?.[1]);
+
   function stopRetry() {
     if (retryTimer !== null) clearTimer(retryTimer);
     retryTimer = null;
@@ -79,7 +85,7 @@ export function createGroundHeights(
   async function place(next = rows) {
     rows = next;
     if (request) return;
-    const missing = rows.filter((row) => !real.has(row.id));
+    const missing = rows.filter(unsettled);
     if (!missing.length) {
       stopRetry();
       retryMs = GROUND_RETRY_FIRST_MS;
@@ -107,7 +113,7 @@ export function createGroundHeights(
     }
     if (controller.signal.aborted) return;
     stopRetry();
-    if (rows.some((row) => !real.has(row.id))) {
+    if (rows.some(unsettled)) {
       retryTimer = setTimer(() => {
         retryTimer = null;
         place();
