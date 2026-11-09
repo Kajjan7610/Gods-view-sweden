@@ -503,6 +503,12 @@ export const DATA_CREDITS = [
       '<a href="https://www.geodata.se/geodataportalen/srv/swe/catalog.search#/metadata/1e3c8e08-df6c-4999-90ac-225d7bdae1a6" target="_blank" rel="noopener">Myndigheten för civilt försvar (MCF)</a>, brandstationer (INSPIRE)',
   },
   {
+    key: 'police-stations',
+    html:
+      'Police stations (Sweden): ' +
+      '<a href="https://polisen.se/om-polisen/om-webbplatsen/oppna-data/" target="_blank" rel="noopener">Polismyndigheten</a>, öppna data',
+  },
+  {
     key: 'speed-cameras',
     html:
       'Speed Cameras (Sweden): ' +

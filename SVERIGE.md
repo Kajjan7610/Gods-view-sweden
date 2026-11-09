@@ -29,6 +29,7 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, flöde i m³/s var 15:e minut och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
 | Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp), Lidls, City Gross och Systembolagets butiker, färgade efter företag och koncept, med en knapp per företag; klick ger adress, om butiken är öppen nu, kartlagd storlek, webbsida, telefon, rullstol och paketombud, hur många som bor inom 2 km, närmaste hållplats, närmaste andra kedjor och företaget (org.nr och huvudkontor); klick på kortet öppnar butikens webbsida. Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0), befolkning från SCB:s 1 km-rutor (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
 | Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
+| Polisstationer: Polisens 261 stationer, färgade efter vad receptionen erbjuder (pass och id-kort, andra ärenden, inga angivna); klick ger adress, tjänster och närmaste passexpedition, klick på kortet öppnar stationens sida med öppettider | Polismyndighetens öppna data (ingen nyckel; Polisen anges som källa) | Police Stations (Sweden) / Polisstationer, under Infrastructure |
 | Blixtnedslag: varje urladdning den senaste timmen som punkt, färgad efter ålder (vit = senaste 5 min), stora för nedslag i marken och små för blixtar i molnet; klick ger tid, typ och toppström | DMI:s blixtdata (CC BY 4.0, ingen nyckel; DMI:s sensornät och grannländernas sensorer) | Lightning Strikes (Sweden) / Blixtnedslag, under Weather |
 | Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
@@ -79,6 +80,25 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-09 (polisstationer)
+- Nytt lager **Polisstationer (Sverige)** (delningstoken `0i`) under
+  Infrastructure, efter Brandstationer: Polisens 261 stationer från
+  Polisens öppna API (`polisen.se/api/policestations`, ingen nyckel,
+  Polisen anges som källa). Servern hämtar listan en gång per dygn
+  (`/api/police-stations`) och visar den senaste i upp till en vecka om
+  Polisen inte svarar.
+- Prickarna färgas efter receptionen: mörkblå där man kan ansöka om pass
+  och id-kort (110), ljusblå för andra ärenden som att anmäla brott eller
+  lämna in hittegods (100), grå där Polisen inte anger några
+  besökstjänster (51).
+- Klick på en station visar adress och tjänster, och för stationer utan
+  passansökan den närmaste stationen med pass. Klick på kortet öppnar
+  stationens sida på polisen.se, där öppettiderna står (de finns inte i
+  API:t).
+- Bara det Polisen själv publicerar för allmänheten; inga insatser eller
+  rörelser. Lagret ligger på markhöjd precis som brandstationerna och är
+  avstängt för röststyrning, som övriga svenska lager.
 
 ### 2026-11-09 (uppdaterad från originalet: 30 PR:er)
 - Originalets senaste 300 commits är inslagna. Vår app är grunden: där

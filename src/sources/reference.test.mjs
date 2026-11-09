@@ -32,6 +32,7 @@ test('reference factories retain compatibility without starting acquisition or s
     'company-stores',
     'lightning-strikes',
     'fire-stations',
+    'police-stations',
     'speed-cameras',
     'river-flow',
     'gamma-radiation',
