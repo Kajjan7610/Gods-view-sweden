@@ -224,6 +224,7 @@ export function createSpeedCamerasLayer({
     disable() {
       _request?.abort();
       _request = null;
+      _ground.cancel();
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();

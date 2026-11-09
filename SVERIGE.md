@@ -92,6 +92,10 @@ git merge origin/main
   samma som utan lager.
 - Kvar med samma mönster: väderstationer vid väg (813), polishändelser
   (500) och blixtnedslag (upp till 20 000 vid åska).
+- Om Re:Earth inte svarar ritas punkten på geoidmodellens höjd (ungefär
+  havsnivån) och frågas om efter 2, 4, 8 … upp till 30 minuter tills en
+  riktig höjd kommer, så att den inte ser förskjuten ut i lutad vy i
+  fjällen. Bara höjden påverkas; latitud och longitud ändras aldrig.
 
 ### 2026-11-09 (butikskedjor laggade)
 - Appen frös i 2–3 sekunder per bildruta med Butikskedjor påslaget och
