@@ -1,12 +1,29 @@
 import * as Cesium from 'cesium';
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { FLOW_KINDS, SWEDISH_AREAS, flowColor, flowWidth } from './records.js';
+import {
+  SWEDISH_AREAS,
+  exchangeByCountry,
+  exchangeTotals,
+  flowColor,
+  flowWidth,
+  linkTouches,
+} from './records.js';
 import {
   POWER_GRID_OVERLAY_SOURCE_ID,
   buildAreaCard,
+  countryName,
+  formatClock,
   formatMw,
+  netText,
+  zoneName,
 } from './cards.js';
+import {
+  FlowMaterialProperty,
+  flowRepeat,
+  flowSpeed,
+  reducedMotion,
+} from './flowMaterial.js';
 export * from './records.js';
 export * from './cards.js';
 export { createPowerGridSource } from './source.js';
@@ -25,16 +42,43 @@ const LABEL_HOST_OPTIONS = Object.freeze({
   collisionCapacity: 40,
   moving: false,
 });
-const KIND_LABELS = Object.freeze({
-  internal: msg('Between Swedish zones'),
-  import: msg('Into Sweden'),
-  export: msg('Out of Sweden'),
-});
+/** Which flows the map shows. */
+const SHOW_OPTIONS = Object.freeze([
+  Object.freeze({ id: 'all', label: msg('All') }),
+  Object.freeze({ id: 'import', label: msg('Imports') }),
+  Object.freeze({ id: 'export', label: msg('Exports') }),
+  Object.freeze({ id: 'internal', label: msg('In Sweden') }),
+]);
 const AREA_BY_ID = new Map(SWEDISH_AREAS.map((area) => [area.id, area]));
+/**
+ * The scene renders on request when nothing else animates; moving chevrons
+ * ask for a frame this often (about 15 a second, a quarter of continuous
+ * rendering), and for a while after each redraw so new lines finish building.
+ */
+const ANIMATION_FRAME_MS = 66;
+const SETTLE_MS = 2000;
+/** How faint a link outside the highlighted country draws. */
+const DIMMED_ALPHA = 0.18;
 
 /** The point halfway along a link, for its label. */
 function midpoint([lon1, lat1], [lon2, lat2]) {
   return [(lon1 + lon2) / 2, (lat1 + lat2) / 2];
+}
+
+/** The foreign end of a link to or from Sweden: its zone and landing place. */
+const foreignZone = (link) => (link.kind === 'import' ? link.from : link.to);
+const foreignPoint = (link) =>
+  link.kind === 'import' ? link.fromPoint : link.toPoint;
+
+/** Kilometres between two [lon, lat] points. */
+function kilometres([lon1, lat1], [lon2, lat2]) {
+  const rad = Math.PI / 180;
+  const a =
+    Math.sin(((lat2 - lat1) * rad) / 2) ** 2 +
+    Math.cos(lat1 * rad) *
+      Math.cos(lat2 * rad) *
+      Math.sin(((lon2 - lon1) * rad) / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(a)));
 }
 
 /**
@@ -50,6 +94,7 @@ export function createPowerGridLayer({
   picking = null,
   pointer = null,
   terrain = null,
+  requestRender = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Power grid requires a snapshot source');
@@ -62,11 +107,7 @@ export function createPowerGridLayer({
     ...SWEDISH_AREAS.map((area) => ({ id: area.id, point: area.point })),
     ..._snapshot.links
       .filter((link) => link.kind !== 'internal')
-      .map((link) =>
-        link.kind === 'import'
-          ? { id: `end:${link.from}`, point: link.fromPoint }
-          : { id: `end:${link.to}`, point: link.toPoint },
-      ),
+      .map((link) => ({ id: `end:${link.id}`, point: foreignPoint(link) })),
   ];
   let _viewer = null;
   let _dataSource = null;
@@ -80,9 +121,51 @@ export function createPowerGridLayer({
   let _selectedId = null;
   let _selectedCardId = null;
   let _snapshot = { links: [], areas: [], production: {}, updated: null };
+  /** 'all', 'import', 'export' or 'internal'. */
+  let _show = 'all';
+  /** A neighbouring country whose links stand out, or null. */
+  let _focus = null;
+  let _offLocale = null;
+  let _ticker = null;
+  /**
+   * Each drawing gives its lines new ids: Cesium takes an entity removed and
+   * added again under the same id as "changed", and its polyline visualizer
+   * ignores changed entities, so the old line would stay.
+   */
+  let _drawing = 0;
+  let _settleUntil = 0;
+
+  const frame = () =>
+    requestRender
+      ? requestRender('power-grid-flow')
+      : _viewer?.scene?.requestRender?.();
+  const moving = () =>
+    !reducedMotion() &&
+    shownLinks().some((link) => link.mw >= 1 && !dimmed(link));
+
+  /** Ask for frames while chevrons move or new lines settle; stop after. */
+  function syncTicker() {
+    const wanted = _enabled && (moving() || Date.now() < _settleUntil);
+    if (wanted && !_ticker)
+      _ticker = setInterval(() => {
+        if (!_enabled || (!moving() && Date.now() >= _settleUntil)) {
+          clearInterval(_ticker);
+          _ticker = null;
+          return;
+        }
+        if (!globalThis.document?.hidden) frame();
+      }, ANIMATION_FRAME_MS);
+    else if (!wanted && _ticker) {
+      clearInterval(_ticker);
+      _ticker = null;
+    }
+  }
 
   const canSelect = () =>
     overlayHost && screenSpaceEventHandlerFactory && picking;
+  const shownLinks = () =>
+    _snapshot.links.filter((link) => _show === 'all' || link.kind === _show);
+  const dimmed = (link) => _focus !== null && !linkTouches(link, _focus);
 
   function publishSelectedCard() {
     if (!canSelect()) return;
@@ -185,7 +268,9 @@ export function createPowerGridLayer({
           accent: flowColor('internal'),
           priority: 2000,
         });
-      for (const link of _snapshot.links) {
+      for (const link of shownLinks()) {
+        // A highlighted country keeps the labels to itself.
+        if (dimmed(link)) continue;
         entries.push({
           ...LABEL_BASE,
           id: `power-grid-flow:${link.id}`,
@@ -193,19 +278,20 @@ export function createPowerGridLayer({
             ...midpoint(link.fromPoint, link.toPoint),
             LINE_HEIGHT_M,
           ),
-          title: t('{mw} MW', { mw: formatMw(link.mw) }),
+          // "Polen → SE4 · 483 MW": where it comes from, where it goes.
+          title: `${zoneName(link.from)} → ${zoneName(link.to)} · ${t(
+            '{mw} MW',
+            { mw: formatMw(link.mw) },
+          )}`,
           accent: flowColor(link.kind),
           priority: 1000 + link.mw,
         });
-        const foreign = link.kind === 'import' ? link.from : link.to;
-        const foreignPoint =
-          link.kind === 'import' ? link.fromPoint : link.toPoint;
         if (link.kind !== 'internal')
           entries.push({
             ...LABEL_BASE,
             id: `power-grid-end:${link.id}`,
-            position: onGround(`end:${foreign}`, foreignPoint),
-            title: foreign,
+            position: onGround(`end:${link.id}`, foreignPoint(link)),
+            title: zoneName(foreignZone(link)),
             accent: '#b0bec5',
             priority: 500,
           });
@@ -220,10 +306,12 @@ export function createPowerGridLayer({
     entities.suspendEvents();
     try {
       entities.removeAll();
-      for (const link of _snapshot.links) {
+      _drawing++;
+      for (const link of shownLinks()) {
         if (link.mw < 1) continue;
+        const faint = dimmed(link);
         entities.add({
-          id: `power-grid-line:${link.id}`,
+          id: `power-grid-line:${link.id}:${_drawing}`,
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
               ...link.fromPoint,
@@ -233,20 +321,20 @@ export function createPowerGridLayer({
             ]),
             width: flowWidth(link.mw) * 2,
             arcType: Cesium.ArcType.GEODESIC,
-            material: new Cesium.PolylineArrowMaterialProperty(
+            // Chevrons running the way the power flows, faster as it grows.
+            material: new FlowMaterialProperty(
               Cesium.Color.fromCssColorString(flowColor(link.kind)).withAlpha(
-                0.9,
+                faint ? DIMMED_ALPHA : 0.9,
               ),
+              flowRepeat(kilometres(link.fromPoint, link.toPoint)),
+              faint ? 0 : flowSpeed(link.mw),
             ),
           },
         });
-        if (link.kind !== 'internal')
+        if (link.kind !== 'internal' && !faint)
           entities.add({
             id: `power-grid-end:${link.id}`,
-            position:
-              link.kind === 'import'
-                ? onGround(`end:${link.from}`, link.fromPoint)
-                : onGround(`end:${link.to}`, link.toPoint),
+            position: onGround(`end:${link.id}`, foreignPoint(link)),
             point: {
               pixelSize: 8,
               color: Cesium.Color.fromCssColorString('#b0bec5'),
@@ -279,7 +367,9 @@ export function createPowerGridLayer({
     }
     publishLabels();
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    frame();
+    _settleUntil = Date.now() + SETTLE_MS;
+    syncTicker();
   }
 
   const layer = {
@@ -296,6 +386,8 @@ export function createPowerGridLayer({
       _dataSource = new Cesium.CustomDataSource('power-grid');
       _dataSource.show = false;
       viewer.dataSources.add(_dataSource);
+      // Country names on the map follow the reader's language.
+      _offLocale = onLocaleChange(() => publishLabels());
     },
 
     enable() {
@@ -305,6 +397,8 @@ export function createPowerGridLayer({
       overlayHost?.setVisible?.(LABEL_SOURCE_ID, true);
       installClickHandler();
       publishLabels();
+      _settleUntil = Date.now() + SETTLE_MS;
+      syncTicker();
     },
 
     disable() {
@@ -312,6 +406,7 @@ export function createPowerGridLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      syncTicker();
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
       clearOverlays();
@@ -352,6 +447,8 @@ export function createPowerGridLayer({
 
     destroy(viewer = _viewer) {
       layer.disable();
+      _offLocale?.();
+      _offLocale = null;
       _ground.clear();
       _snapshot = { links: [], areas: [], production: {}, updated: null };
       if (_dataSource) {
@@ -369,25 +466,67 @@ export function createPowerGridLayer({
     },
 
     getRowControls() {
-      const counts = new Map();
-      for (const link of _snapshot.links)
-        counts.set(link.kind, (counts.get(link.kind) || 0) + 1);
-      const legend = FLOW_KINDS.map(({ id, color }) => ({
-        label: t(KIND_LABELS[id]),
-        color,
-        count: counts.get(id) || 0,
-      }));
-      return {
-        legend: legend.map((item, index) =>
-          index === 0
-            ? {
-                ...item,
-                blurb: t(
-                  'Arrows show the power flowing now on each link to and between the four bidding zones, as thick as the flow. Click a zone for its import, export and Sweden’s production by type.',
-                ),
-              }
-            : item,
+      const links = _snapshot.links;
+      if (!links.length) return {};
+      const totals = exchangeTotals(links);
+      const countries = exchangeByCountry(links);
+      const redraw = () => {
+        render();
+        _rowListener?.();
+      };
+      const legend = [
+        ...countries.map((entry) => ({
+          label: `${countryName(entry.country)}: ${netText(entry.net)}`,
+          color: flowColor(entry.net >= 0 ? 'export' : 'import'),
+        })),
+        { label: t('Between Swedish zones'), color: flowColor('internal') },
+      ];
+      legend[0] = {
+        ...legend[0],
+        blurb: t(
+          'Moving chevrons show the power flowing now on each link to and between the four bidding zones, as thick and as fast as the flow. Pick a direction, or a neighbouring country to see its links alone. Click a zone for its import, export and Sweden’s production by type.',
         ),
+      };
+      return {
+        info: Number.isFinite(_snapshot.updated)
+          ? t('At {time}: in {import} MW · out {export} MW · net {net}', {
+              time: formatClock(_snapshot.updated),
+              import: formatMw(totals.import),
+              export: formatMw(totals.export),
+              net: netText(totals.net),
+            })
+          : '',
+        infoTitle: t(
+          'Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).',
+        ),
+        segmented: {
+          id: 'power-grid-show',
+          ariaLabel: t('Which flows to show'),
+          options: SHOW_OPTIONS.map((option) => ({
+            id: `show-${option.id}`,
+            label: t(option.label),
+            active: _show === option.id,
+            onClick: () => {
+              _show = option.id;
+              redraw();
+            },
+          })),
+        },
+        chips: countries.map((entry) => ({
+          id: `country-${entry.country}`,
+          label: countryName(entry.country),
+          active: _focus === entry.country,
+          title: t('{country}: in {import} MW · out {export} MW', {
+            country: countryName(entry.country),
+            import: formatMw(entry.import),
+            export: formatMw(entry.export),
+          }),
+          onClick: () => {
+            _focus = _focus === entry.country ? null : entry.country;
+            redraw();
+          },
+        })),
+        legend,
       };
     },
 

@@ -3419,10 +3419,7 @@
   "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
   "POWER GRID · {zone} {name}": "RED ELÉCTRICA · {zone} {name}",
   "Between Swedish zones": "Entre zonas suecas",
-  "Into Sweden": "Hacia Suecia",
-  "Out of Sweden": "Desde Suecia",
   "Power grid unavailable": "Red eléctrica no disponible",
-  "Arrows show the power flowing now on each link to and between the four bidding zones, as thick as the flow. Click a zone for its import, export and Sweden’s production by type.": "Las flechas muestran la potencia que fluye ahora por cada enlace hacia y entre las cuatro zonas de oferta, tan gruesas como el flujo. Haz clic en una zona para ver su importación, exportación y la producción sueca por tipo.",
   "Malformed power grid snapshot": "Instantánea de la red eléctrica mal formada",
   "Power Grid (Sweden)": "Red eléctrica (Suecia)",
   "{mw} MW": "{mw} MW",
@@ -3773,5 +3770,16 @@
   },
   "Store web page ↗ · click card to open": "Web de la tienda ↗ · haz clic en la tarjeta para abrir",
   "Open the web page of {title}": "Abrir la web de {title}",
-  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.": "Los puntos son las tiendas de grandes cadenas en Suecia tal como están cartografiadas en OpenStreetMap, coloreadas por empresa y concepto de tienda. Las recopilan cartógrafos voluntarios, no las empresas, así que algunas pueden faltar o estar desactualizadas. Solo se muestran tiendas. Haz clic en una tienda para ver su dirección, si está abierta ahora, su tamaño, la población cercana, la parada más cercana y las otras cadenas más cercanas."
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.": "Los puntos son las tiendas de grandes cadenas en Suecia tal como están cartografiadas en OpenStreetMap, coloreadas por empresa y concepto de tienda. Las recopilan cartógrafos voluntarios, no las empresas, así que algunas pueden faltar o estar desactualizadas. Solo se muestran tiendas. Haz clic en una tienda para ver su dirección, si está abierta ahora, su tamaño, la población cercana, la parada más cercana y las otras cadenas más cercanas.",
+  "Imports": "Importaciones",
+  "Exports": "Exportaciones",
+  "In Sweden": "En Suecia",
+  "export {mw} MW": "exportación {mw} MW",
+  "import {mw} MW": "importación {mw} MW",
+  "balanced": "equilibrado",
+  "Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).": "Intercambio de Suecia con sus vecinos, sumado sobre los enlaces del último cuarto de hora (Svenska kraftnät).",
+  "Which flows to show": "Qué flujos mostrar",
+  "{country}: in {import} MW · out {export} MW": "{country}: entra {import} MW · sale {export} MW",
+  "Moving chevrons show the power flowing now on each link to and between the four bidding zones, as thick and as fast as the flow. Pick a direction, or a neighbouring country to see its links alone. Click a zone for its import, export and Sweden’s production by type.": "Unos galones en movimiento muestran la electricidad que fluye ahora por cada enlace hacia y entre las cuatro zonas de oferta, tan gruesos y rápidos como el flujo. Elige un sentido, o un país vecino para ver solo sus enlaces. Haz clic en una zona para ver su importación, exportación y la producción sueca por tipo.",
+  "At {time}: in {import} MW · out {export} MW · net {net}": "A las {time}: entra {import} MW · sale {export} MW · neto {net}"
 }

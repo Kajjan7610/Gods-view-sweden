@@ -3269,10 +3269,7 @@
   "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
   "POWER GRID · {zone} {name}": "电网 · {zone} {name}",
   "Between Swedish zones": "瑞典电价区之间",
-  "Into Sweden": "流入瑞典",
-  "Out of Sweden": "流出瑞典",
   "Power grid unavailable": "电网不可用",
-  "Arrows show the power flowing now on each link to and between the four bidding zones, as thick as the flow. Click a zone for its import, export and Sweden’s production by type.": "箭头显示当前每条通往四个电价区及其之间的联络线上的潮流，粗细与潮流成正比。点击电价区查看其输入、输出及瑞典分类型发电量。",
   "Malformed power grid snapshot": "电网快照格式错误",
   "Power Grid (Sweden)": "电网（瑞典）",
   "{mw} MW": "{mw} MW",
@@ -3615,5 +3612,16 @@
   },
   "Store web page ↗ · click card to open": "门店网页 ↗ · 点击卡片打开",
   "Open the web page of {title}": "打开 {title} 的网页",
-  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.": "圆点是 OpenStreetMap 中记录的瑞典大型零售连锁门店，按公司和门店业态着色。数据由制图者而非公司收集，因此个别门店可能缺失或过时。仅显示门店。点击门店可查看地址、当前是否营业、规模、附近人口、最近的站点和最近的其他连锁店。"
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.": "圆点是 OpenStreetMap 中记录的瑞典大型零售连锁门店，按公司和门店业态着色。数据由制图者而非公司收集，因此个别门店可能缺失或过时。仅显示门店。点击门店可查看地址、当前是否营业、规模、附近人口、最近的站点和最近的其他连锁店。",
+  "Imports": "进口",
+  "Exports": "出口",
+  "In Sweden": "瑞典国内",
+  "export {mw} MW": "出口 {mw} MW",
+  "import {mw} MW": "进口 {mw} MW",
+  "balanced": "持平",
+  "Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).": "瑞典与邻国的电力交换，按最近一刻钟各联络线汇总（Svenska kraftnät）。",
+  "Which flows to show": "显示哪些潮流",
+  "{country}: in {import} MW · out {export} MW": "{country}：流入 {import} MW · 流出 {export} MW",
+  "Moving chevrons show the power flowing now on each link to and between the four bidding zones, as thick and as fast as the flow. Pick a direction, or a neighbouring country to see its links alone. Click a zone for its import, export and Sweden’s production by type.": "移动的箭头显示当前在通往四个竞价区及其之间的每条联络线上流动的电力，粗细和速度随潮流大小变化。选择方向或邻国，只看其联络线。点击竞价区查看其进口、出口以及瑞典分类型发电量。",
+  "At {time}: in {import} MW · out {export} MW · net {net}": "{time}：流入 {import} MW · 流出 {export} MW · 净 {net}"
 }

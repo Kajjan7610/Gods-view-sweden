@@ -3419,10 +3419,7 @@
   "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
   "POWER GRID · {zone} {name}": "RÉSEAU ÉLECTRIQUE · {zone} {name}",
   "Between Swedish zones": "Entre zones suédoises",
-  "Into Sweden": "Vers la Suède",
-  "Out of Sweden": "Hors de Suède",
   "Power grid unavailable": "Réseau électrique indisponible",
-  "Arrows show the power flowing now on each link to and between the four bidding zones, as thick as the flow. Click a zone for its import, export and Sweden’s production by type.": "Les flèches montrent la puissance qui transite en ce moment sur chaque liaison vers et entre les quatre zones de prix, aussi épaisses que le flux. Cliquez sur une zone pour ses importations, exportations et la production suédoise par filière.",
   "Malformed power grid snapshot": "Instantané du réseau électrique mal formé",
   "Power Grid (Sweden)": "Réseau électrique (Suède)",
   "{mw} MW": "{mw} MW",
@@ -3773,5 +3770,16 @@
   },
   "Store web page ↗ · click card to open": "Site web du magasin ↗ · cliquez sur la carte pour ouvrir",
   "Open the web page of {title}": "Ouvrir le site web de {title}",
-  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.": "Les points sont les magasins des grandes enseignes en Suède tels que cartographiés dans OpenStreetMap, colorés par entreprise et concept de magasin. Ce sont des contributeurs qui les recensent, pas les entreprises, donc certains peuvent manquer ou être obsolètes. Seuls les magasins sont affichés. Cliquez sur un magasin pour son adresse, s’il est ouvert maintenant, sa taille, la population à proximité, l’arrêt le plus proche et les autres enseignes les plus proches."
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.": "Les points sont les magasins des grandes enseignes en Suède tels que cartographiés dans OpenStreetMap, colorés par entreprise et concept de magasin. Ce sont des contributeurs qui les recensent, pas les entreprises, donc certains peuvent manquer ou être obsolètes. Seuls les magasins sont affichés. Cliquez sur un magasin pour son adresse, s’il est ouvert maintenant, sa taille, la population à proximité, l’arrêt le plus proche et les autres enseignes les plus proches.",
+  "Imports": "Importations",
+  "Exports": "Exportations",
+  "In Sweden": "En Suède",
+  "export {mw} MW": "export {mw} MW",
+  "import {mw} MW": "import {mw} MW",
+  "balanced": "équilibré",
+  "Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).": "Échanges de la Suède avec ses voisins, additionnés sur les liaisons pour le dernier quart d’heure (Svenska kraftnät).",
+  "Which flows to show": "Flux à afficher",
+  "{country}: in {import} MW · out {export} MW": "{country} : entrée {import} MW · sortie {export} MW",
+  "Moving chevrons show the power flowing now on each link to and between the four bidding zones, as thick and as fast as the flow. Pick a direction, or a neighbouring country to see its links alone. Click a zone for its import, export and Sweden’s production by type.": "Des chevrons mobiles montrent l’électricité qui circule maintenant sur chaque liaison vers et entre les quatre zones de prix, aussi épais et rapides que le flux. Choisissez un sens, ou un pays voisin pour ne voir que ses liaisons. Cliquez sur une zone pour ses importations, exportations et la production suédoise par type.",
+  "At {time}: in {import} MW · out {export} MW · net {net}": "À {time} : entrée {import} MW · sortie {export} MW · net {net}"
 }

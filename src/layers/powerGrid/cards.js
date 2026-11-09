@@ -1,5 +1,5 @@
 /** Card model for a selected Swedish bidding zone. Pure — no Cesium types. */
-import { formatNumber, t } from '../../i18n/index.js';
+import { formatNumber, getLocale, t } from '../../i18n/index.js';
 import { flowColor } from './records.js';
 
 export const POWER_GRID_OVERLAY_SOURCE_ID = 'power-grid';
@@ -14,6 +14,48 @@ const CLOCK = new Intl.DateTimeFormat('sv-SE', {
 /** "5 699" (whole megawatts, locale grouping). */
 export function formatMw(value) {
   return formatNumber(value, { maximumFractionDigits: 0 });
+}
+
+/** "11:15" on the Swedish clock. */
+export const formatClock = (ms) => CLOCK.format(ms);
+
+const regionNames = new Map();
+/** A country's name in the reader's language: "FI" is "Finland". */
+export function countryName(code) {
+  const locale = getLocale();
+  if (!regionNames.has(locale))
+    try {
+      regionNames.set(
+        locale,
+        new Intl.DisplayNames([locale, 'en'], { type: 'region' }),
+      );
+    } catch {
+      regionNames.set(locale, null);
+    }
+  try {
+    return regionNames.get(locale)?.of(code) || code;
+  } catch {
+    return code;
+  }
+}
+
+/**
+ * A bidding zone as a reader knows it: Swedish zones by code, a country
+ * with one zone by its name, a split country by name and zone.
+ */
+export function zoneName(zone) {
+  const country = String(zone).slice(0, 2);
+  if (country === 'SE') return zone;
+  return zone.length > 2
+    ? `${countryName(country)} ${zone}`
+    : countryName(zone);
+}
+
+/** "export 1 284 MW", "import 483 MW" or "balanced": a net seen from Sweden. */
+export function netText(net) {
+  if (net > 0) return t('export {mw} MW', { mw: formatMw(net) });
+  if (net < 0) return t('import {mw} MW', { mw: formatMw(-net) });
+  return t('balanced');
 }
 
 const CARD_BASE = Object.freeze({

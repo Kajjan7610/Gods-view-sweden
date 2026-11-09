@@ -3,11 +3,16 @@ import test from 'node:test';
 
 import {
   LINKS,
+  countryOf,
+  exchangeByCountry,
+  exchangeTotals,
   flowWidth,
+  linkTouches,
   normalizeFlows,
   normalizeProduction,
 } from './records.js';
-import { buildAreaCard } from './cards.js';
+import { buildAreaCard, netText, zoneName } from './cards.js';
+import { flowRepeat, flowSpeed } from './flowMaterial.js';
 import { createPowerGridLayer } from './index.js';
 
 // Shaped like svk.se/services/controlroom/v2/map/flow.
@@ -142,7 +147,7 @@ test('a zone card lists its flows and Sweden’s production', () => {
   assert.match(card.details[4], /^Svenska kraftnät · \d\d:\d\d$/);
 });
 
-test('the layer draws its links and reports them by kind', async () => {
+test('the layer draws its links and sums the exchange per country', async () => {
   const layer = createPowerGridLayer({
     source: {
       getSnapshot: async () => ({
@@ -171,10 +176,93 @@ test('the layer draws its links and reports them by kind', async () => {
     4,
     'one arrow per link',
   );
+  const controls = layer.getRowControls();
   assert.deepEqual(
-    layer.getRowControls().legend.map((item) => item.count),
-    [2, 1, 1],
+    controls.legend.map((item) => item.label),
+    [
+      'Finland: export 387 MW',
+      'Germany: import 188 MW',
+      'Between Swedish zones',
+    ],
+  );
+  assert.deepEqual(
+    controls.chips.map((chip) => chip.id),
+    ['country-FI', 'country-DE'],
   );
   assert.equal(layer.getStats().count, 4);
+
+  // Exports alone: the one link out of Sweden.
+  controls.segmented.options.find((o) => o.id === 'show-export').onClick();
+  assert.equal(added.filter((entity) => entity.polyline).length, 1);
+  assert.equal(
+    layer.getRowControls().segmented.options.find((o) => o.active).id,
+    'show-export',
+  );
+
+  // All again, Germany highlighted: every link stays, the rest go faint.
+  layer
+    .getRowControls()
+    .segmented.options.find((o) => o.id === 'show-all')
+    .onClick();
+  layer
+    .getRowControls()
+    .chips.find((chip) => chip.id === 'country-DE')
+    .onClick();
+  const lines = added.filter((entity) => entity.polyline);
+  assert.equal(lines.length, 4);
+  const alpha = (id) =>
+    lines.find((entity) => entity.id.startsWith(`power-grid-line:${id}:`))
+      .polyline.material.color.alpha;
+  assert.ok(alpha('DE_SE4') > 0.5);
+  assert.ok(alpha('FI_SE3') < 0.5);
+  assert.equal(
+    layer.getRowControls().chips.find((chip) => chip.active).id,
+    'country-DE',
+  );
   layer.destroy(viewer);
+});
+
+test('the exchange sums in, out and net per neighbouring country', () => {
+  const links = [
+    { from: 'DE', to: 'SE4', kind: 'import', mw: 339 },
+    { from: 'SE3', to: 'DK1', kind: 'export', mw: 180 },
+    { from: 'SE1', to: 'FI', kind: 'export', mw: 1083 },
+    { from: 'SE3', to: 'FI', kind: 'export', mw: 201 },
+    { from: 'SE3', to: 'NO1', kind: 'export', mw: 300 },
+    { from: 'NO3', to: 'SE2', kind: 'import', mw: 193 },
+    { from: 'NO4', to: 'SE1', kind: 'import', mw: 41 },
+    { from: 'SE2', to: 'NO4', kind: 'export', mw: 32 },
+    { from: 'DK2', to: 'SE4', kind: 'import', mw: 138 },
+    { from: 'SE2', to: 'SE3', kind: 'internal', mw: 6367 },
+  ];
+  assert.deepEqual(exchangeTotals(links), {
+    import: 711,
+    export: 1796,
+    net: 1085,
+  });
+  assert.deepEqual(exchangeByCountry(links), [
+    { country: 'FI', import: 0, export: 1284, net: 1284 },
+    { country: 'DE', import: 339, export: 0, net: -339 },
+    { country: 'NO', import: 234, export: 332, net: 98 },
+    { country: 'DK', import: 138, export: 180, net: 42 },
+  ]);
+  assert.equal(countryOf('NO3'), 'NO');
+  assert.equal(linkTouches(links[0], 'DE'), true);
+  assert.equal(linkTouches(links[9], 'DE'), false);
+});
+
+test('zones and nets read as a reader knows them', () => {
+  assert.equal(zoneName('SE4'), 'SE4');
+  assert.equal(zoneName('FI'), 'Finland');
+  assert.equal(zoneName('NO3'), 'Norway NO3');
+  assert.equal(netText(1284), 'export 1,284 MW');
+  assert.equal(netText(-475), 'import 475 MW');
+  assert.equal(netText(0), 'balanced');
+});
+
+test('faster chevrons for larger flows, more of them on longer links', () => {
+  assert.ok(flowSpeed(6000) > flowSpeed(100));
+  assert.equal(flowSpeed(1e6), 2.5);
+  assert.equal(flowRepeat(100), 3);
+  assert.equal(flowRepeat(1200), 10);
 });

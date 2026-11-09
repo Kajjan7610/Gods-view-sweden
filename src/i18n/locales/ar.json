@@ -3644,10 +3644,7 @@
   "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
   "POWER GRID · {zone} {name}": "شبكة الكهرباء · {zone} {name}",
   "Between Swedish zones": "بين المناطق السويدية",
-  "Into Sweden": "إلى السويد",
-  "Out of Sweden": "من السويد",
   "Power grid unavailable": "شبكة الكهرباء غير متاحة",
-  "Arrows show the power flowing now on each link to and between the four bidding zones, as thick as the flow. Click a zone for its import, export and Sweden’s production by type.": "تُظهر الأسهم الطاقة المتدفقة الآن على كل وصلة إلى مناطق العطاءات الأربع وبينها، بسماكة تتناسب مع التدفق. انقر على منطقة لعرض استيرادها وتصديرها وإنتاج السويد حسب النوع.",
   "Malformed power grid snapshot": "لقطة شبكة الكهرباء مشوّهة",
   "Power Grid (Sweden)": "شبكة الكهرباء (السويد)",
   "{mw} MW": "{mw} MW",
@@ -4010,5 +4007,16 @@
   },
   "Store web page ↗ · click card to open": "موقع المتجر ↗ · انقر على البطاقة لفتحه",
   "Open the web page of {title}": "فتح موقع {title}",
-  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.": "النقاط هي متاجر سلاسل البيع الكبرى في السويد كما هي مرسومة في OpenStreetMap، ملونة حسب الشركة ومفهوم المتجر. يجمعها رسامو الخرائط وليس الشركات، لذا قد يغيب بعضها أو يكون قديمًا. تُعرض المتاجر فقط. انقر على متجر لمعرفة عنوانه، وهل هو مفتوح الآن، وحجمه، والسكان القريبين، وأقرب محطة، وأقرب سلاسل أخرى."
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.": "النقاط هي متاجر سلاسل البيع الكبرى في السويد كما هي مرسومة في OpenStreetMap، ملونة حسب الشركة ومفهوم المتجر. يجمعها رسامو الخرائط وليس الشركات، لذا قد يغيب بعضها أو يكون قديمًا. تُعرض المتاجر فقط. انقر على متجر لمعرفة عنوانه، وهل هو مفتوح الآن، وحجمه، والسكان القريبين، وأقرب محطة، وأقرب سلاسل أخرى.",
+  "Imports": "الواردات",
+  "Exports": "الصادرات",
+  "In Sweden": "داخل السويد",
+  "export {mw} MW": "تصدير {mw} ميغاواط",
+  "import {mw} MW": "استيراد {mw} ميغاواط",
+  "balanced": "متوازن",
+  "Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).": "تبادل السويد مع جيرانها، مجموعًا على الوصلات لآخر ربع ساعة (Svenska kraftnät).",
+  "Which flows to show": "التدفقات المعروضة",
+  "{country}: in {import} MW · out {export} MW": "{country}: داخل {import} ميغاواط · خارج {export} ميغاواط",
+  "Moving chevrons show the power flowing now on each link to and between the four bidding zones, as thick and as fast as the flow. Pick a direction, or a neighbouring country to see its links alone. Click a zone for its import, export and Sweden’s production by type.": "تُظهر الأسهم المتحركة الكهرباء المتدفقة الآن على كل وصلة إلى مناطق العطاء الأربع وبينها، بسماكة وسرعة تتناسبان مع التدفق. اختر اتجاهًا، أو بلدًا مجاورًا لرؤية وصلاته وحدها. انقر على منطقة لمعرفة وارداتها وصادراتها وإنتاج السويد حسب النوع.",
+  "At {time}: in {import} MW · out {export} MW · net {net}": "عند {time}: داخل {import} ميغاواط · خارج {export} ميغاواط · الصافي {net}"
 }

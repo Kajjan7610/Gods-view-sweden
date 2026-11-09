@@ -25,7 +25,7 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 | Väder nu: ca 185 SMHI-stationer (temperatur, vind, byar, nederbörd senaste timmen) och SMHI:s prognos för platsen vid klick | SMHI metobs och prognos snow1g (CC BY 4.0, ingen nyckel) | Weather Now (Sweden) / Väder nu, under Weather |
 | Luftkvalitet: ca 75 SMHI-mätstationer (NO2, PM10, PM2.5, O3) på europeiska EAQI-skalan, tillsammans med Kanadas stationer | SMHI Datavärdskap luft (CC BY 4.0, ingen nyckel) | Air quality / Luftkvalitet, under Weather |
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
-| Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (pilar i flödesriktningen, MW), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
+| Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (rörliga vinklar i flödesriktningen, MW), Sveriges import, export och netto totalt och per grannland, val av import/export/inrikes och en knapp per land som lyfter fram dess förbindelser, import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, flöde i m³/s var 15:e minut och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
 | Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp), Lidls, City Gross och Systembolagets butiker, färgade efter företag och koncept, med en knapp per företag; klick ger adress, om butiken är öppen nu, kartlagd storlek, webbsida, telefon, rullstol och paketombud, hur många som bor inom 2 km, närmaste hållplats, närmaste andra kedjor och företaget (org.nr och huvudkontor); klick på kortet öppnar butikens webbsida. Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0), befolkning från SCB:s 1 km-rutor (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
 | Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
@@ -79,6 +79,27 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-09 (kraftsystemet: import och export)
+- Raden för Kraftsystemet visar Sveriges import, export och netto för
+  senaste kvarten, nettot per grannland (Finland, Norge, Danmark, Tyskland,
+  Polen, Litauen) och en växel Alla / Import / Export / Inrikes. En knapp
+  per land lyfter fram dess förbindelser och tonar ner resten.
+- Pilarna är rörliga vinklar i flödets riktning, snabbare ju större
+  flödet är (stilla för den som valt reducerad rörelse i systemet).
+  Scenen ritar bara vid behov, så lagret ber om ca 15 bilder i sekunden
+  medan något rör sig, en fjärdedel av kontinuerlig ritning.
+  Etiketterna säger varifrån och vart, t.ex. "Polen → SE4 · 459 MW", på
+  läsarens språk.
+- Svenska kraftnäts flödeskarta ligger ungefär en timme efter, så raden
+  skriver "Kl. 10:45" i stället för "Nu".
+- Rättat: linjerna fick samma id vid varje omritning, och Cesium behöll då
+  de gamla; en förbindelse som bytt riktning kunde visa den gamla pilen
+  tills sidan laddades om.
+- Markhöjderna (groundHeights.js) sparas nu i webbläsaren och hämtas i
+  gemensam takt, högst ett anrop i sekunden, eftersom höjdproxyn tillåter
+  90 anrop i minuten per klient och alla lager vid första laddningen
+  behövde ungefär så många. Senare besök behöver inga höjdanrop.
 
 ### 2026-11-09 (alla svenska lager på marken utan 3D-tiles-mätning)
 - De tio återstående svenska lagren med punkter fästa mot 3D-tiles får

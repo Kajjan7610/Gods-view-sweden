@@ -3494,10 +3494,7 @@
   "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
   "POWER GRID · {zone} {name}": "ЕНЕРГОСИСТЕМА · {zone} {name}",
   "Between Swedish zones": "Між шведськими зонами",
-  "Into Sweden": "До Швеції",
-  "Out of Sweden": "Зі Швеції",
   "Power grid unavailable": "Енергосистема недоступна",
-  "Arrows show the power flowing now on each link to and between the four bidding zones, as thick as the flow. Click a zone for its import, export and Sweden’s production by type.": "Стрілки показують поточний перетік потужності кожною лінією до чотирьох цінових зон і між ними; товщина — за величиною потоку. Натисніть на зону, щоб побачити її імпорт, експорт і виробництво Швеції за типами.",
   "Malformed power grid snapshot": "Некоректний знімок енергосистеми",
   "Power Grid (Sweden)": "Енергосистема (Швеція)",
   "{mw} MW": "{mw} МВт",
@@ -3852,5 +3849,16 @@
   },
   "Store web page ↗ · click card to open": "Сайт магазину ↗ · натисніть картку, щоб відкрити",
   "Open the web page of {title}": "Відкрити сайт {title}",
-  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.": "Точки — магазини великих торговельних мереж Швеції за даними OpenStreetMap, розфарбовані за компанією та форматом. Їх збирають картографи, а не самі компанії, тож деяких може бракувати або дані можуть застаріти. Показано лише магазини. Натисніть на магазин, щоб побачити адресу, чи відчинений він зараз, розмір, населення поблизу, найближчу зупинку та найближчі інші мережі."
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.": "Точки — магазини великих торговельних мереж Швеції за даними OpenStreetMap, розфарбовані за компанією та форматом. Їх збирають картографи, а не самі компанії, тож деяких може бракувати або дані можуть застаріти. Показано лише магазини. Натисніть на магазин, щоб побачити адресу, чи відчинений він зараз, розмір, населення поблизу, найближчу зупинку та найближчі інші мережі.",
+  "Imports": "Імпорт",
+  "Exports": "Експорт",
+  "In Sweden": "У Швеції",
+  "export {mw} MW": "експорт {mw} МВт",
+  "import {mw} MW": "імпорт {mw} МВт",
+  "balanced": "баланс",
+  "Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).": "Обмін Швеції з сусідами, підсумований за лініями за останні чверть години (Svenska kraftnät).",
+  "Which flows to show": "Які потоки показувати",
+  "{country}: in {import} MW · out {export} MW": "{country}: ввезення {import} МВт · вивезення {export} МВт",
+  "Moving chevrons show the power flowing now on each link to and between the four bidding zones, as thick and as fast as the flow. Pick a direction, or a neighbouring country to see its links alone. Click a zone for its import, export and Sweden’s production by type.": "Рухомі шеврони показують потужність, що тече зараз кожною лінією до чотирьох цінових зон і між ними, завтовшки й зі швидкістю за величиною потоку. Виберіть напрямок або сусідню країну, щоб бачити лише її лінії. Натисніть на зону, щоб побачити її імпорт, експорт і виробництво Швеції за видами.",
+  "At {time}: in {import} MW · out {export} MW · net {net}": "О {time}: ввезення {import} МВт · вивезення {export} МВт · сальдо {net}"
 }

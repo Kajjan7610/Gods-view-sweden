@@ -159,6 +159,46 @@ export function normalizeProduction(payload) {
   return out;
 }
 
+/** The country of a bidding zone: "NO3" is "NO", "FI" is "FI". */
+export const countryOf = (area) => String(area ?? '').slice(0, 2);
+
+/** Whether a link touches a country, on either end. */
+export const linkTouches = (link, country) =>
+  countryOf(link.from) === country || countryOf(link.to) === country;
+
+/**
+ * Sweden's exchange with each neighbouring country now, from the link flows:
+ * MW in, MW out and the net (positive when Sweden exports), largest first.
+ * @param {ReadonlyArray<{from: string, to: string, kind: string, mw: number}>} links
+ */
+export function exchangeByCountry(links) {
+  const byCountry = new Map();
+  for (const link of links) {
+    if (link.kind !== 'import' && link.kind !== 'export') continue;
+    const country = countryOf(link.kind === 'import' ? link.from : link.to);
+    const entry = byCountry.get(country) ?? { country, import: 0, export: 0 };
+    entry[link.kind] += link.mw;
+    byCountry.set(country, entry);
+  }
+  return [...byCountry.values()]
+    .map((entry) => ({ ...entry, net: entry.export - entry.import }))
+    .sort(
+      (a, b) =>
+        Math.abs(b.net) - Math.abs(a.net) || a.country.localeCompare(b.country),
+    );
+}
+
+/** Sweden's total import, export and net (positive when exporting) now. */
+export function exchangeTotals(links) {
+  let imported = 0;
+  let exported = 0;
+  for (const link of links) {
+    if (link.kind === 'import') imported += link.mw;
+    else if (link.kind === 'export') exported += link.mw;
+  }
+  return { import: imported, export: exported, net: exported - imported };
+}
+
 /** Line width in pixels for a flow: thin at a trickle, thick at 6 GW. */
 export function flowWidth(mw) {
   return Math.min(14, 3 + Math.sqrt(Math.max(0, mw)) / 7);

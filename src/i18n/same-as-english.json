@@ -611,7 +611,9 @@
     "Monument",
     "Nature",
     "{distance} m",
-    "{distance} km"
+    "{distance} km",
+    "export {mw} MW",
+    "import {mw} MW"
   ],
   "it": [
     "1090 MHz",
@@ -813,7 +815,9 @@
     "2D",
     "3D",
     "{distance} m",
-    "{distance} km"
+    "{distance} km",
+    "export {mw} MW",
+    "import {mw} MW"
   ],
   "ja": [
     "1090 MHz",
@@ -1247,7 +1251,9 @@
     "3D",
     "Museum",
     "{distance} m",
-    "{distance} km"
+    "{distance} km",
+    "export {mw} MW",
+    "import {mw} MW"
   ],
   "uk": [
     "AIS: --",
