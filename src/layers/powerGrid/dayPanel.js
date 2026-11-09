@@ -1,10 +1,12 @@
 /**
- * The power day on the right rail: today's quarter-hours of Sweden's
- * production by type, consumption and exchange, while the power grid layer is
- * on (Svenska kraftnät's control room serves the current day only). Fetches
- * through the layer's source and publishes a view the panel draws. No Cesium.
+ * The power day on the right rail while the power grid layer is on: today's
+ * quarter-hours of Sweden's production by type, consumption and exchange, or
+ * the last seven days. Svenska kraftnät's control room serves the current day
+ * only, so the week is the days the server kept (gaps where it did not run).
+ * Fetches through the layer's source and publishes a view the panel draws;
+ * the panel answers with `show`. No Cesium.
  */
-import { formatNumber, t } from '../../i18n/index.js';
+import { formatNumber, getLocale, t } from '../../i18n/index.js';
 import { formatClock, formatMw, netText } from './cards.js';
 import {
   CONSUMPTION_COLOR,
@@ -12,8 +14,12 @@ import {
   EXPORT_COLOR,
   IMPORT_COLOR,
   buildDayChart,
+  midnightBefore,
 } from './dayChart.js';
 
+const WEEK_DAYS = 7;
+/** A kept day with fewer quarter-hours than this has a hole in it. */
+const WHOLE_DAY = 92;
 const TYPE_LABEL = Object.freeze({
   nuclear: () => t('nuclear'),
   hydro: () => t('hydro'),
@@ -35,15 +41,29 @@ const gw = (mw) =>
       });
 const mwText = (mw) => t('{mw} MW', { mw: formatMw(mw) });
 
+/** "mån" or "Mon": a weekday in the reader's language, Swedish clock. */
+function weekday(ms) {
+  try {
+    return new Intl.DateTimeFormat(getLocale(), {
+      timeZone: 'Europe/Stockholm',
+      weekday: 'short',
+    }).format(ms);
+  } catch {
+    return '';
+  }
+}
+
 /**
- * @param {{source: {getDay: Function}}} options
+ * @param {{source: {getDay: Function, getWeek: Function}}} options
  */
 export function createPowerDay({ source }) {
   let panel = null;
   let offConnect = null;
   let active = false;
-  let day = null;
-  let loading = false;
+  /** 'today' or 'week'. */
+  let span = 'today';
+  /** The fetched quarter-hours: {points, start, days, missing}. */
+  let data = null;
   let failed = false;
   let request = null;
 
@@ -72,18 +92,48 @@ export function createPowerDay({ source }) {
         value: netText(point.net),
         color: point.net >= 0 ? EXPORT_COLOR : IMPORT_COLOR,
       });
-    return { time: formatClock(point.at), lines };
+    const time = formatClock(point.at);
+    return {
+      time: span === 'week' ? `${weekday(point.at)} ${time}` : time,
+      lines,
+    };
+  }
+
+  /** Hours under a day, weekdays under a week (between their midnights). */
+  function xLabels(chart) {
+    if (chart.days === 1)
+      return chart.xTicks.map((tick) => ({
+        x: tick.x,
+        text: String(tick.hour).padStart(2, '0'),
+      }));
+    return chart.xTicks.slice(0, -1).map((tick, i) => ({
+      x: Math.round(((tick.x + chart.xTicks[i + 1].x) / 2) * 10) / 10,
+      text: weekday(tick.at + 12 * 3_600_000),
+    }));
   }
 
   function view() {
     if (!active) return null;
-    const chart = day?.points?.length ? buildDayChart(day.points) : null;
+    const chart = data?.points.length
+      ? buildDayChart(data.points, { start: data.start, days: data.days })
+      : null;
     const totals = chart?.totals;
     const shown = new Set(chart?.areas.map((area) => area.id));
+    const values = totals && {
+      production: gwh(totals.production),
+      consumption: gwh(totals.consumption),
+    };
     return {
-      loading,
+      span,
+      loading: request !== null,
       failed,
+      spans: [
+        { id: 'today', label: t('Today') },
+        { id: 'week', label: t('Week') },
+      ],
       chart,
+      dayLines: chart && chart.days > 1 ? chart.xTicks.slice(1, -1) : [],
+      xLabels: chart ? xLabels(chart) : [],
       colors: {
         consumption: CONSUMPTION_COLOR,
         export: EXPORT_COLOR,
@@ -93,18 +143,30 @@ export function createPowerDay({ source }) {
         ? chart.yTicks.map((tick) => ({ y: tick.y, text: gw(tick.mw) }))
         : [],
       netLabel: chart ? `±${gw(chart.net.max)}` : '',
-      summary: totals
-        ? t('So far today: produced {production} GWh, used {consumption} GWh', {
-            production: gwh(totals.production),
-            consumption: gwh(totals.consumption),
-          })
-        : '',
+      // Two literal keys, so the catalog check finds both.
+      summary: !values
+        ? ''
+        : span === 'week'
+          ? t(
+              'Last 7 days: produced {production} GWh, used {consumption} GWh',
+              values,
+            )
+          : t(
+              'So far today: produced {production} GWh, used {consumption} GWh',
+              values,
+            ),
       exchange: totals
         ? t('Out {exported} GWh · in {imported} GWh', {
             exported: gwh(totals.exported),
             imported: gwh(totals.imported),
           })
         : '',
+      note:
+        span === 'week' && data?.missing
+          ? t(
+              'Svenska kraftnät shows the current day only, so the week is the days this server kept; gaps are times it was not running.',
+            )
+          : '',
       legend: [
         ...DAY_TYPES.filter((type) => shown.has(type.id)).map((type) => ({
           id: type.id,
@@ -130,17 +192,33 @@ export function createPowerDay({ source }) {
     panel?.publish(view());
   }
 
+  async function fetchSpan(signal) {
+    if (span === 'today') {
+      const day = await source.getDay(null, { signal });
+      return { points: day.points, start: null, days: 1, missing: false };
+    }
+    const week = await source.getWeek({ signal });
+    const days = week.days.slice(-WEEK_DAYS);
+    const first = days[0]?.date;
+    return {
+      points: days.flatMap((day) => day.points).sort((a, b) => a.at - b.at),
+      // Noon UTC is the same Stockholm date; its midnight starts the axis.
+      start: first ? midnightBefore(Date.parse(`${first}T12:00:00Z`)) : null,
+      days: days.length || WEEK_DAYS,
+      missing: days.slice(0, -1).some((day) => day.points.length < WHOLE_DAY),
+    };
+  }
+
   async function load() {
     if (!active) return;
     request?.abort();
     const controller = new AbortController();
     request = controller;
-    loading = true;
     publish();
     try {
-      const next = await source.getDay(null, { signal: controller.signal });
+      const next = await fetchSpan(controller.signal);
       if (controller.signal.aborted) return;
-      day = next;
+      data = next;
       failed = false;
     } catch (error) {
       if (controller.signal.aborted) return;
@@ -152,7 +230,6 @@ export function createPowerDay({ source }) {
     } finally {
       if (request === controller) {
         request = null;
-        loading = false;
         publish();
       }
     }
@@ -163,7 +240,15 @@ export function createPowerDay({ source }) {
     attach(next) {
       offConnect?.();
       panel = next;
-      offConnect = panel?.connect?.({}) ?? null;
+      offConnect =
+        panel?.connect?.({
+          show: (id) => {
+            if ((id !== 'today' && id !== 'week') || id === span) return;
+            span = id;
+            data = null;
+            load();
+          },
+        }) ?? null;
       if (!panel) return;
       if (active) load();
       else publish();
@@ -175,7 +260,6 @@ export function createPowerDay({ source }) {
       else {
         request?.abort();
         request = null;
-        loading = false;
         publish();
       }
     },
@@ -187,6 +271,7 @@ export function createPowerDay({ source }) {
     publish,
     destroy() {
       request?.abort();
+      request = null;
       active = false;
       publish();
       offConnect?.();

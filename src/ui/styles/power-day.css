@@ -178,3 +178,23 @@ body.mobile-shell #power-panel-body {
   list-style: none;
   font-size: 9.5px;
 }
+.power-day-choices {
+  display: flex;
+  gap: 4px;
+}
+.power-day-choice {
+  flex: 1;
+  padding: 3px 6px;
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: 600 10px var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.power-day-choice.active {
+  border-color: #40c4ff;
+  color: #40c4ff;
+}

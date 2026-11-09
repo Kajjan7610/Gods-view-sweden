@@ -3874,5 +3874,10 @@
   "Production by type and consumption": "Производство по видам и потребление",
   "Exchange: export up, import down": "Обмен: экспорт вверх, импорт вниз",
   "Malformed power day": "Некорректные данные за день",
-  "So far today: produced {production} GWh, used {consumption} GWh": "Сегодня пока: произведено {production} ГВт·ч, потреблено {consumption} ГВт·ч"
+  "So far today: produced {production} GWh, used {consumption} GWh": "Сегодня пока: произведено {production} ГВт·ч, потреблено {consumption} ГВт·ч",
+  "Week": "Неделя",
+  "Last 7 days: produced {production} GWh, used {consumption} GWh": "Последние 7 дней: произведено {production} ГВт·ч, потреблено {consumption} ГВт·ч",
+  "Svenska kraftnät shows the current day only, so the week is the days this server kept; gaps are times it was not running.": "Svenska kraftnät показывает только текущий день, поэтому неделя — это дни, сохранённые этим сервером; пропуски — время, когда он не работал.",
+  "Malformed power week": "Некорректные данные за неделю",
+  "Time span": "Период"
 }

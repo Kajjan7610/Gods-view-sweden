@@ -1,8 +1,10 @@
 /**
- * The power day as a chart: Sweden's production stacked by type with the
- * consumption on top of it, and below it the exchange with the neighbours,
- * export up and import down, per quarter-hour on the Swedish clock. Pure —
- * SVG path strings and numbers for the panel to draw, no Cesium, no DOM.
+ * The power day (or week) as a chart: Sweden's production stacked by type
+ * with the consumption on top of it, and below it the exchange with the
+ * neighbours, export up and import down, per quarter-hour on the Swedish
+ * clock. A stretch without quarter-hours (a day the server did not keep)
+ * stays a gap. Pure — SVG path strings and numbers for the panel to draw, no
+ * Cesium, no DOM.
  */
 
 /** Production types bottom to top, with their colours. */
@@ -19,6 +21,8 @@ export const IMPORT_COLOR = '#69f0ae';
 
 const DAY_MS = 24 * 60 * 60_000;
 const QUARTER_HOURS = 0.25;
+/** Two quarter-hours apart or more is a gap in the curve. */
+const GAP_MS = 30 * 60_000;
 const PAD = Object.freeze({ left: 34, right: 6, top: 6, bottom: 4 });
 
 const CLOCK_PARTS = new Intl.DateTimeFormat('en-GB', {
@@ -36,10 +40,15 @@ function localMinutes(ms) {
   return Number(parts.hour) * 60 + Number(parts.minute);
 }
 
+/** Stockholm midnight before `ms`. */
+export function midnightBefore(ms) {
+  return ms - localMinutes(ms) * 60_000 - (ms % 60_000);
+}
+
 /** Stockholm midnight before the first quarter-hour. */
 export function dayStartOf(points) {
   const first = points[0]?.at;
-  return Number.isFinite(first) ? first - localMinutes(first) * 60_000 : null;
+  return Number.isFinite(first) ? midnightBefore(first) : null;
 }
 
 /** A round top for an axis: 4 000, 5 000, 10 000, 20 000 … */
@@ -52,10 +61,21 @@ function niceMax(value) {
 }
 
 const round = (value) => Math.round(value * 10) / 10;
-const path = (xy) =>
+const line = (xy) =>
   xy.length
     ? `M${xy.map(([x, y]) => `${round(x)},${round(y)}`).join('L')}`
     : '';
+
+/** Runs of quarter-hours without a gap between them. */
+function runs(points) {
+  const out = [];
+  for (const point of points) {
+    const last = out.at(-1)?.at(-1);
+    if (last && point.at - last.at < GAP_MS) out.at(-1).push(point);
+    else out.push([point]);
+  }
+  return out;
+}
 
 /**
  * Energy over the quarter-hours, in MWh: production, consumption, and the
@@ -78,18 +98,22 @@ export function dayTotals(points) {
 }
 
 /**
- * The chart for one day of quarter-hours.
+ * The chart for quarter-hours over whole Stockholm days.
  * @param {Array<{at: number} & Record<string, number>>} points Oldest first.
- * @param {{width?: number, height?: number, netHeight?: number}} [size]
+ * @param {{start?: number, days?: number, width?: number, height?: number,
+ *   netHeight?: number}} [options] `start` is the first midnight (by default
+ *   the one before the first point); `days` how many days the axis spans.
  */
 export function buildDayChart(
   points,
-  { width = 300, height = 120, netHeight = 48 } = {},
+  { start = null, days = 1, width = 300, height = 120, netHeight = 48 } = {},
 ) {
-  const start = dayStartOf(points);
-  if (start === null) return null;
+  const from = start ?? dayStartOf(points);
+  if (from === null || !points.length) return null;
+  const span = days * DAY_MS;
   const plotWidth = width - PAD.left - PAD.right;
-  const x = (at) => PAD.left + ((at - start) / DAY_MS) * plotWidth;
+  const x = (at) => PAD.left + ((at - from) / span) * plotWidth;
+  const stretches = runs(points);
 
   // Production stacked by type, consumption as a line over it.
   const top = Math.max(
@@ -104,26 +128,32 @@ export function buildDayChart(
   const yMax = niceMax(top * 1.05);
   const plotHeight = height - PAD.top - PAD.bottom;
   const y = (mw) => PAD.top + plotHeight * (1 - mw / yMax);
-  const base = points.map(() => 0);
+  const base = new Map(points.map((point) => [point, 0]));
   const areas = DAY_TYPES.map((type) => {
-    const lower = base.slice();
-    points.forEach((point, i) => (base[i] += Math.max(0, point[type.id] ?? 0)));
     if (!points.some((point) => (point[type.id] ?? 0) > 0)) return null;
-    const upperLine = points.map((point, i) => [x(point.at), y(base[i])]);
-    const lowerLine = points
-      .map((point, i) => [x(point.at), y(lower[i])])
-      .reverse();
-    return {
-      id: type.id,
-      color: type.color,
-      d: `${path(upperLine)}L${path(lowerLine).slice(1)}Z`,
-    };
+    const lower = new Map(base);
+    for (const point of points)
+      base.set(point, base.get(point) + Math.max(0, point[type.id] ?? 0));
+    const d = stretches
+      .map((run) => {
+        const upper = run.map((point) => [x(point.at), y(base.get(point))]);
+        const below = run
+          .map((point) => [x(point.at), y(lower.get(point))])
+          .reverse();
+        return `${line(upper)}L${line(below).slice(1)}Z`;
+      })
+      .join('');
+    return { id: type.id, color: type.color, d };
   }).filter(Boolean);
-  const consumption = path(
-    points
-      .filter((point) => Number.isFinite(point.consumption))
-      .map((point) => [x(point.at), y(point.consumption)]),
-  );
+  const consumption = stretches
+    .map((run) =>
+      line(
+        run
+          .filter((point) => Number.isFinite(point.consumption))
+          .map((point) => [x(point.at), y(point.consumption)]),
+      ),
+    )
+    .join('');
 
   // The exchange: export above the zero line, import below it.
   const withNet = points.filter((point) => Number.isFinite(point.net));
@@ -132,30 +162,41 @@ export function buildDayChart(
   );
   const netMid = netHeight / 2;
   const netY = (mw) => netMid - (mw / netMax) * (netHeight / 2 - 2);
-  const band = (sign) => {
-    if (!withNet.length) return '';
-    const line = withNet.map((point) => [
-      x(point.at),
-      netY(sign * Math.max(0, sign * point.net)),
-    ]);
-    const first = line[0][0];
-    const last = line.at(-1)[0];
-    return `M${round(first)},${netMid}L${path(line).slice(1)}L${round(last)},${netMid}Z`;
-  };
+  const band = (sign) =>
+    runs(withNet)
+      .map((run) => {
+        const edge = run.map((point) => [
+          x(point.at),
+          netY(sign * Math.max(0, sign * point.net)),
+        ]);
+        const first = round(edge[0][0]);
+        const last = round(edge.at(-1)[0]);
+        return `M${first},${netMid}L${line(edge).slice(1)}L${last},${netMid}Z`;
+      })
+      .join('');
+
+  // One tick a quarter of a day, or one a day over several.
+  const every = days === 1 ? DAY_MS / 4 : DAY_MS;
+  const xTicks = [];
+  for (let at = from; at <= from + span + 1; at += every)
+    xTicks.push({
+      at,
+      x: round(x(at)),
+      hour: Math.round((at - from) / 3_600_000) % 24,
+    });
 
   return {
     width,
     height,
     netHeight,
+    days,
+    start: from,
     plotLeft: PAD.left,
     plotRight: width - PAD.right,
     areas,
     consumption,
     yTicks: [0, yMax / 2, yMax].map((mw) => ({ mw, y: round(y(mw)) })),
-    xTicks: [0, 6, 12, 18, 24].map((hour) => ({
-      hour,
-      x: round(PAD.left + (hour / 24) * plotWidth),
-    })),
+    xTicks,
     net: {
       zeroY: netMid,
       max: netMax,

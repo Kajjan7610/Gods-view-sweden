@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 
 import { FLOW_URL, PRODUCTION_URL, powerGridProxy } from './powerGrid.js';
@@ -12,9 +15,22 @@ const production = (y) => ({
   Data: y == null ? [] : [{ id: '1', data: [{ x: NOW - 900_000, y }] }],
 });
 
-function harness(fetchImpl) {
+/** A fresh day store per harness, removed when the run ends. */
+const dirs = [];
+test.after(() => {
+  for (const dir of dirs) rmSync(dir, { recursive: true, force: true });
+});
+
+function harness(fetchImpl, { cacheDir } = {}) {
   let handler;
-  powerGridProxy({ now: () => NOW, fetchImpl }).configureServer({
+  const dir = cacheDir ?? mkdtempSync(path.join(os.tmpdir(), 'gev-power-'));
+  if (!cacheDir) dirs.push(dir);
+  powerGridProxy({
+    now: () => NOW,
+    fetchImpl,
+    cacheDir: dir,
+    schedule: () => null,
+  }).configureServer({
     middlewares: { use: (_path, fn) => (handler = fn) },
   });
   return async (url = '/') => {
@@ -125,4 +141,56 @@ test('the day route answers today’s quarter-hours and no other day', async () 
   assert.equal((await request('/day?date=2026-11-03')).status, 400);
   assert.equal((await request('/day?date=2026-10-01')).status, 400);
   assert.equal((await request('/day?date=2026-11-05')).status, 400);
+});
+
+test('the week puts kept days beside today, and keeps today for later', async () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), 'gev-power-'));
+  dirs.push(dir);
+  const point = (at, total) => ({ at, total });
+  // Two days kept earlier; one too old to show.
+  writeFileSync(
+    path.join(dir, '2026-11-02.json'),
+    JSON.stringify({
+      date: '2026-11-02',
+      points: [point(NOW - 2 * 86_400_000, 15000)],
+    }),
+  );
+  writeFileSync(
+    path.join(dir, '2026-10-20.json'),
+    JSON.stringify({ date: '2026-10-20', points: [point(1, 1)] }),
+  );
+  const request = harness(
+    async () =>
+      new Response(
+        JSON.stringify({
+          Data: [{ id: '1', data: [{ x: NOW - 900_000, y: 17100 }] }],
+        }),
+      ),
+    { cacheDir: dir },
+  );
+  const week = (await request('/week')).json();
+  assert.deepEqual(
+    week.days.map((day) => day.date),
+    [
+      '2026-10-29',
+      '2026-10-30',
+      '2026-10-31',
+      '2026-11-01',
+      '2026-11-02',
+      '2026-11-03',
+      '2026-11-04',
+    ],
+  );
+  assert.deepEqual(
+    week.days.map((day) => day.points.length),
+    [0, 0, 0, 0, 1, 0, 1],
+  );
+  // Today went to disk, and the old day was cleared away.
+  const again = harness(async () => new Response('', { status: 403 }), {
+    cacheDir: dir,
+  });
+  const kept = (await again('/week')).json();
+  assert.equal(kept.days.at(-1).points[0].total, 17100);
+  const { readdirSync } = await import('node:fs');
+  assert.ok(!readdirSync(dir).includes('2026-10-20.json'));
 });

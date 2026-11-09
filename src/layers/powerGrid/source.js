@@ -83,5 +83,41 @@ export function createPowerGridSource({
         stale: payload.stale === true,
       };
     },
+
+    /**
+     * The last seven Stockholm days: the ones the server kept, and today.
+     * @returns {Promise<{days: Array<{date: string, points: object[]}>}>}
+     */
+    async getWeek({ signal } = {}) {
+      signal?.throwIfAborted();
+      const response = await fetchImpl('/api/power-grid/week', { signal });
+      if (!response.ok) {
+        try {
+          await response.body?.cancel();
+        } catch {
+          /* no-op */
+        }
+        throw Object.assign(
+          new Error(`Power week unavailable (HTTP ${response.status})`),
+          { status: response.status },
+        );
+      }
+      const payload = await readResponseJsonCapped(
+        response,
+        4 * 1024 * 1024,
+        signal,
+      );
+      signal?.throwIfAborted();
+      if (!Array.isArray(payload?.days))
+        throw new Error(msg('Malformed power week'));
+      return {
+        days: payload.days.map((day) => ({
+          date: String(day?.date ?? ''),
+          points: (Array.isArray(day?.points) ? day.points : []).filter(
+            (point) => Number.isFinite(point?.at),
+          ),
+        })),
+      };
+    },
   };
 }

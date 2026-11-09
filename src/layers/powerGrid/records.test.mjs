@@ -335,3 +335,29 @@ test('the day reads as quarter-hours and as a chart', () => {
   assert.equal(pointAt(chart, 1000).at, at + 900_000);
   assert.equal(buildDayChart([]), null);
 });
+
+test('a week chart spans seven midnights and leaves gaps open', () => {
+  const start = Date.parse('2026-11-02T23:00:00Z'); // Tue 3 Nov, 00:00 Stockholm
+  const quarter = 900_000;
+  const day = 86_400_000;
+  const point = (at) => ({
+    at,
+    nuclear: 3600,
+    total: 3600,
+    consumption: 4000,
+    net: -400,
+  });
+  // Two quarter-hours on the first day, two on the last; nothing between.
+  const points = [
+    point(start),
+    point(start + quarter),
+    point(start + 6 * day),
+    point(start + 6 * day + quarter),
+  ];
+  const chart = buildDayChart(points, { start, days: 7 });
+  assert.equal(chart.days, 7);
+  assert.equal(chart.xTicks.length, 8, 'one tick per midnight');
+  assert.equal(chart.areas[0].d.split('Z').length - 1, 2, 'two runs, a gap');
+  assert.equal(chart.consumption.split('M').length - 1, 2);
+  assert.ok(chart.points[2].x > 250, 'the last day sits at the right');
+});

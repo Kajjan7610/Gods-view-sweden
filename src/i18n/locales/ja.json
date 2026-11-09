@@ -3637,5 +3637,10 @@
   "Production by type and consumption": "電源別発電量と消費",
   "Exchange: export up, import down": "融通: 上が輸出、下が輸入",
   "Malformed power day": "不正な日次データ",
-  "So far today: produced {production} GWh, used {consumption} GWh": "今日これまで: 発電 {production} GWh、消費 {consumption} GWh"
+  "So far today: produced {production} GWh, used {consumption} GWh": "今日これまで: 発電 {production} GWh、消費 {consumption} GWh",
+  "Week": "週",
+  "Last 7 days: produced {production} GWh, used {consumption} GWh": "直近 7 日: 発電 {production} GWh、消費 {consumption} GWh",
+  "Svenska kraftnät shows the current day only, so the week is the days this server kept; gaps are times it was not running.": "Svenska kraftnät は当日分のみ公開しているため、週はこのサーバーが保存した日の分です。空白はサーバーが動いていなかった時間です。",
+  "Malformed power week": "不正な週次データ",
+  "Time span": "期間"
 }

@@ -3637,5 +3637,10 @@
   "Production by type and consumption": "分類型發電與用電",
   "Exchange: export up, import down": "交換：上為出口，下為進口",
   "Malformed power day": "當日資料格式錯誤",
-  "So far today: produced {production} GWh, used {consumption} GWh": "今天至今：發電 {production} GWh，用電 {consumption} GWh"
+  "So far today: produced {production} GWh, used {consumption} GWh": "今天至今：發電 {production} GWh，用電 {consumption} GWh",
+  "Week": "一週",
+  "Last 7 days: produced {production} GWh, used {consumption} GWh": "最近 7 天：發電 {production} GWh，用電 {consumption} GWh",
+  "Svenska kraftnät shows the current day only, so the week is the days this server kept; gaps are times it was not running.": "Svenska kraftnät 只提供當天資料，所以一週是本伺服器保存的各天；空白是伺服器未執行的時段。",
+  "Malformed power week": "一週資料格式錯誤",
+  "Time span": "時間範圍"
 }

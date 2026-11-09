@@ -25,7 +25,7 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 | Väder nu: ca 185 SMHI-stationer (temperatur, vind, byar, nederbörd senaste timmen) och SMHI:s prognos för platsen vid klick | SMHI metobs och prognos snow1g (CC BY 4.0, ingen nyckel) | Weather Now (Sweden) / Väder nu, under Weather |
 | Luftkvalitet: ca 75 SMHI-mätstationer (NO2, PM10, PM2.5, O3) på europeiska EAQI-skalan, tillsammans med Kanadas stationer | SMHI Datavärdskap luft (CC BY 4.0, ingen nyckel) | Air quality / Luftkvalitet, under Weather |
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
-| Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (rörliga vinklar i flödesriktningen, MW), Sveriges import, export och netto totalt och per grannland, val av import/export/inrikes och en knapp per land som lyfter fram dess förbindelser, en KRAFT-panel i högerkanten med dygnet hittills per kvart (produktion per kraftslag, förbrukning och utbyte), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
+| Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (rörliga vinklar i flödesriktningen, MW), Sveriges import, export och netto totalt och per grannland, val av import/export/inrikes och en knapp per land som lyfter fram dess förbindelser, en KRAFT-panel i högerkanten med dygnet hittills eller senaste veckan per kvart (produktion per kraftslag, förbrukning och utbyte), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, flöde i m³/s var 15:e minut och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
 | Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp), Lidls, City Gross och Systembolagets butiker, färgade efter företag och koncept, med en knapp per företag; klick ger adress, om butiken är öppen nu, kartlagd storlek, webbsida, telefon, rullstol och paketombud, hur många som bor inom 2 km, närmaste hållplats, närmaste andra kedjor och företaget (org.nr och huvudkontor); klick på kortet öppnar butikens webbsida. Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0), befolkning från SCB:s 1 km-rutor (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
 | Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
@@ -79,6 +79,16 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-09 (kraftsystemet: veckokurva)
+- KRAFT-panelen har val mellan I dag och Vecka. Svenska kraftnät lämnar
+  bara ut innevarande dygn, så servern sparar varje dygn den ser i
+  .gev-cache/power-grid-days/ (åtta dygn, äldre tas bort). När lagret
+  väl har använts hämtar servern dygnet var 15:e minut så länge den är
+  igång, så att dygnet blir helt även om ingen tittar vid midnatt.
+- Veckan ritas per kvart med en markering per dygn och veckodagar under;
+  tider då servern inte var igång blir luckor, och panelen säger varför.
+  Kurvan fylls på dag för dag från och med i dag.
 
 ### 2026-11-09 (kraftsystemet: dygnskurva)
 - Ny panel KRAFT i högerkanten medan Kraftsystemet är på: dygnet hittills

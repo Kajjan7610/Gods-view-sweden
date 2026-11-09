@@ -3795,5 +3795,10 @@
   "Production by type and consumption": "Producción por tipo y consumo",
   "Exchange: export up, import down": "Intercambio: exportación arriba, importación abajo",
   "Malformed power day": "Día eléctrico mal formado",
-  "So far today: produced {production} GWh, used {consumption} GWh": "Hoy hasta ahora: producido {production} GWh, consumido {consumption} GWh"
+  "So far today: produced {production} GWh, used {consumption} GWh": "Hoy hasta ahora: producido {production} GWh, consumido {consumption} GWh",
+  "Week": "Semana",
+  "Last 7 days: produced {production} GWh, used {consumption} GWh": "Últimos 7 días: producido {production} GWh, consumido {consumption} GWh",
+  "Svenska kraftnät shows the current day only, so the week is the days this server kept; gaps are times it was not running.": "Svenska kraftnät solo muestra el día en curso, así que la semana son los días que este servidor guardó; los huecos son momentos en que no estaba en marcha.",
+  "Malformed power week": "Semana eléctrica mal formada",
+  "Time span": "Periodo"
 }

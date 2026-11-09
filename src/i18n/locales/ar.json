@@ -4032,5 +4032,10 @@
   "Production by type and consumption": "الإنتاج حسب النوع والاستهلاك",
   "Exchange: export up, import down": "التبادل: التصدير للأعلى والاستيراد للأسفل",
   "Malformed power day": "بيانات يوم غير صالحة",
-  "So far today: produced {production} GWh, used {consumption} GWh": "اليوم حتى الآن: أُنتج {production} غيغاواط ساعة، واستُهلك {consumption} غيغاواط ساعة"
+  "So far today: produced {production} GWh, used {consumption} GWh": "اليوم حتى الآن: أُنتج {production} غيغاواط ساعة، واستُهلك {consumption} غيغاواط ساعة",
+  "Week": "الأسبوع",
+  "Last 7 days: produced {production} GWh, used {consumption} GWh": "آخر 7 أيام: أُنتج {production} غيغاواط ساعة، واستُهلك {consumption} غيغاواط ساعة",
+  "Svenska kraftnät shows the current day only, so the week is the days this server kept; gaps are times it was not running.": "تعرض Svenska kraftnät اليوم الحالي فقط، لذا فالأسبوع هو الأيام التي حفظها هذا الخادم؛ والفجوات أوقات لم يكن يعمل فيها.",
+  "Malformed power week": "بيانات أسبوع غير صالحة",
+  "Time span": "المدة"
 }
