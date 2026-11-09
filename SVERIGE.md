@@ -80,6 +80,16 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-09 (väderstationer, polishändelser och blixtnedslag)
+- Samma rättelse för de tre sista lagren som fäste punkterna mot 3D-tiles.
+  Väderstationer vid väg (813, även temperaturetiketterna) och
+  polishändelser (500, på kommunens höjd även när de sprids runt den) får
+  markhöjd via appens höjdtjänst. Blixtnedslag (upp till 20 000 vid åska,
+  byts varje minut) frågar inte Re:Earth alls: de ritas på geoidmodellens
+  höjd, ungefär havsnivån, vilket räcker eftersom DMI anger 0,5–2 km
+  osäkerhet i positionen. Med alla sex berörda lagren påslagna och
+  fotorealistiska tiles: värsta bildrutan 20 ms under samma rörelser.
+
 ### 2026-11-09 (brandstationer och fartkameror laggade)
 - Samma frysning som Butikskedjor hade, mätt med fotorealistiska tiles över
   Stockholm: brandstationerna (841) gav ryck på upp till 937 ms när kartan
@@ -90,8 +100,6 @@ git merge origin/main
   som reserv) och fästs bara mot jordglobens terräng. Gemensam modul
   src/layers/groundHeights.js. Med båda påslagna: värsta bildrutan 15 ms,
   samma som utan lager.
-- Kvar med samma mönster: väderstationer vid väg (813), polishändelser
-  (500) och blixtnedslag (upp till 20 000 vid åska).
 - Om Re:Earth inte svarar ritas punkten på geoidmodellens höjd (ungefär
   havsnivån) och frågas om efter 2, 4, 8 … upp till 30 minuter tills en
   riktig höjd kommer, så att den inte ser förskjuten ut i lutad vy i

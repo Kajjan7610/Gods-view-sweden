@@ -155,12 +155,14 @@ export function createApplicationCatalog({
         }),
         createApplicationTrafikverketWeather({
           source: sources['trafikverket-weather'],
+          terrain: surface.terrain,
         }),
         createApplicationSmhiWarnings({
           source: sources['smhi-warnings'],
         }),
         createApplicationPolisenEvents({
           source: sources['polisen-events'],
+          terrain: surface.terrain,
         }),
         createApplicationElectricityPrices({
           source: sources['electricity-prices'],

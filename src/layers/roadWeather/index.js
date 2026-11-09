@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { createGroundHeights } from '../groundHeights.js';
 import {
   ICE_RISK_COLOR,
   NO_READING_COLOR,
@@ -51,9 +52,18 @@ export function createTrafikverketWeatherLayer({
   screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
+  terrain = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Trafikverket road weather requires a snapshot source');
+  // With ground heights the dots clamp to terrain only (see groundHeights.js).
+  const _ground = createGroundHeights(terrain, () => render());
+  const position = (row) =>
+    Cesium.Cartesian3.fromDegrees(
+      row.point[0],
+      row.point[1],
+      _ground.heightOf(row.id),
+    );
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -92,7 +102,7 @@ export function createTrafikverketWeatherLayer({
       return;
     }
     const card = buildStationCard(row, { mode: _mode });
-    card.position = Cesium.Cartesian3.fromDegrees(row.point[0], row.point[1]);
+    card.position = position(row);
     _selectedCardId = card.id;
     overlayHost.setEntries(
       ROAD_WEATHER_OVERLAY_SOURCE_ID,
@@ -162,7 +172,7 @@ export function createTrafikverketWeatherLayer({
         if (!Number.isFinite(value)) continue;
         entries.push({
           id: `trafikverket-weather-label:${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(row.point[0], row.point[1]),
+          position: position(row),
           variant: 'label',
           title: formatCelsius(value),
           accent: temperatureColor(value),
@@ -197,7 +207,7 @@ export function createTrafikverketWeatherLayer({
         ).withAlpha(faded ? 0.45 : 1);
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(row.point[0], row.point[1]),
+          position: position(row),
           point: {
             pixelSize: row.risk ? 11 : 9,
             color,
@@ -205,7 +215,9 @@ export function createTrafikverketWeatherLayer({
               ? Cesium.Color.fromCssColorString(ICE_RISK_COLOR)
               : Cesium.Color.BLACK.withAlpha(0.75),
             outlineWidth: row.risk ? 3 : 1.5,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            heightReference: _ground.enabled
+              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+              : Cesium.HeightReference.CLAMP_TO_GROUND,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
         });
@@ -262,6 +274,7 @@ export function createTrafikverketWeatherLayer({
     disable() {
       _request?.abort();
       _request = null;
+      _ground.cancel();
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
@@ -308,6 +321,7 @@ export function createTrafikverketWeatherLayer({
             } with risk of ice`,
           );
         } else if (_selectedId) publishSelectedCard();
+        _ground.place(_stations);
         _rowListener?.();
         return true;
       } catch (e) {
@@ -330,6 +344,7 @@ export function createTrafikverketWeatherLayer({
 
     destroy(viewer = _viewer) {
       layer.disable();
+      _ground.clear();
       _stationById.clear();
       _stations = [];
       _signature = null;

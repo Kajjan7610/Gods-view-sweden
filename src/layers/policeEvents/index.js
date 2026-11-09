@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { createGroundHeights } from '../groundHeights.js';
 import {
   EVENT_CATEGORIES,
   categoryColor,
@@ -48,9 +49,15 @@ export function createPolisenEventsLayer({
   picking = null,
   pointer = null,
   openExternal = null,
+  terrain = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Polisen events require a snapshot source');
+  // With ground heights the dots clamp to terrain only (see groundHeights.js).
+  // A notice is spread a little around its place, at the place's height.
+  const _ground = createGroundHeights(terrain, () => render());
+  const position = (row, [lon, lat]) =>
+    Cesium.Cartesian3.fromDegrees(lon, lat, _ground.heightOf(row.id));
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -90,7 +97,7 @@ export function createPolisenEventsLayer({
       return;
     }
     const card = buildPoliceCard(row, { linkable: Boolean(openExternal) });
-    card.position = Cesium.Cartesian3.fromDegrees(point[0], point[1]);
+    card.position = position(row, point);
     if (card.interactive && row.link) {
       card.activate = () => {
         openExternal(row.link);
@@ -168,11 +175,10 @@ export function createPolisenEventsLayer({
       entities.removeAll();
       // Oldest first, so the newest dot of a place is drawn on top.
       for (const row of [...shown].reverse()) {
-        const [lon, lat] = _positions.get(row.id) || row.point;
         const fresh = now - row.time < FRESH_MS;
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(lon, lat),
+          position: position(row, _positions.get(row.id) || row.point),
           point: {
             pixelSize: fresh ? 10 : 8,
             color: Cesium.Color.fromCssColorString(
@@ -183,7 +189,9 @@ export function createPolisenEventsLayer({
                 ? Cesium.Color.WHITE.withAlpha(0.85)
                 : Cesium.Color.BLACK.withAlpha(0.8),
             outlineWidth: row.precision === 'county' ? 2 : 1.5,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            heightReference: _ground.enabled
+              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+              : Cesium.HeightReference.CLAMP_TO_GROUND,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
         });
@@ -237,6 +245,7 @@ export function createPolisenEventsLayer({
     disable() {
       _request?.abort();
       _request = null;
+      _ground.cancel();
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
@@ -272,6 +281,7 @@ export function createPolisenEventsLayer({
         }
         // Rendered on every refresh: the time window moves on.
         render();
+        _ground.place(_events.filter((row) => Array.isArray(row.point)));
         _rowListener?.();
         return true;
       } catch (e) {
@@ -291,6 +301,7 @@ export function createPolisenEventsLayer({
 
     destroy(viewer = _viewer) {
       layer.disable();
+      _ground.clear();
       _eventById.clear();
       _events = [];
       _positions = new Map();

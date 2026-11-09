@@ -34,9 +34,23 @@ export function createLightningStrikesLayer({
   picking = null,
   pointer = null,
   now = () => Date.now(),
+  geoid = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Lightning strikes require a snapshot source');
+  // Strokes are too many and too short-lived to look up ground heights, and
+  // their positions are good to 0.5–2 km: they sit at sea level by the bundled
+  // geoid, clamped to terrain only (see ../groundHeights.js for why not to
+  // clamp them to 3D tiles). Only the height is set, never the position.
+  // `geoid`: {ensureReady(): Promise, heightAt(lat, lon): number}.
+  let _geoidReady = false;
+  let _geoidAsked = false;
+  const position = ([lon, lat]) =>
+    Cesium.Cartesian3.fromDegrees(
+      lon,
+      lat,
+      _geoidReady ? geoid.heightAt(lat, lon) : 0,
+    );
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -73,7 +87,7 @@ export function createLightningStrikesLayer({
       return;
     }
     const card = buildStrikeCard(row, now());
-    card.position = Cesium.Cartesian3.fromDegrees(...row.point);
+    card.position = position(row.point);
     _selectedCardId = card.id;
     overlayHost.setEntries(
       LIGHTNING_STRIKES_OVERLAY_SOURCE_ID,
@@ -146,7 +160,7 @@ export function createLightningStrikesLayer({
         const ground = row.kind !== 'cloud';
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...row.point),
+          position: position(row.point),
           point: {
             pixelSize: ground ? 9 : 6,
             color: Cesium.Color.fromCssColorString(age.color).withAlpha(
@@ -156,7 +170,9 @@ export function createLightningStrikesLayer({
               ground ? '#3a1600' : '#5c3b00',
             ),
             outlineWidth: ground ? 1.5 : 1,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            heightReference: geoid
+              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+              : Cesium.HeightReference.CLAMP_TO_GROUND,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
             scaleByDistance: new Cesium.NearFarScalar(2e4, 1.3, 3e6, 0.7),
           },
@@ -190,6 +206,22 @@ export function createLightningStrikesLayer({
       if (_dataSource) _dataSource.show = true;
       overlayHost?.setVisible?.(LIGHTNING_STRIKES_OVERLAY_SOURCE_ID, true);
       installClickHandler();
+      // The geoid grid is code-split; load it when the layer is first used.
+      if (geoid && !_geoidAsked) {
+        _geoidAsked = true;
+        geoid
+          .ensureReady()
+          .then(() => {
+            _geoidReady = true;
+            render();
+          })
+          .catch((error) =>
+            console.warn(
+              '[Data:LightningStrikes] Geoid unavailable:',
+              error?.message || error,
+            ),
+          );
+      }
     },
 
     disable() {
