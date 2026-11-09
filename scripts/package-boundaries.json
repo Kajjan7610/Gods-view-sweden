@@ -2316,6 +2316,7 @@
       "./standalone/catalog"
     ],
     "modules": [
+      "src/layers/groundHeights.js",
       "src/layers/companyStores/openingHours.js",
       "src/ui/citySights.js",
       "src/ui/krisinformationModel.js",
@@ -3054,6 +3055,7 @@
       "src/layers/lightningStrikes/source.js",
       "src/app/layers/lightningStrikes.js",
       "src/layers/fireStations/index.js",
+      "src/layers/groundHeights.js",
       "src/layers/fireStations/records.js",
       "src/layers/fireStations/cards.js",
       "src/layers/fireStations/source.js",
@@ -3896,6 +3898,7 @@
       "src/layers/lightningStrikes/source.js",
       "src/app/layers/lightningStrikes.js",
       "src/layers/fireStations/index.js",
+      "src/layers/groundHeights.js",
       "src/layers/fireStations/records.js",
       "src/layers/fireStations/cards.js",
       "src/layers/fireStations/source.js",

@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { createGroundHeights } from '../groundHeights.js';
 import { READINESS_CLASSES, UNKNOWN_COLOR, readinessColor } from './records.js';
 import {
   FIRE_STATIONS_OVERLAY_SOURCE_ID,
@@ -35,9 +36,18 @@ export function createFireStationsLayer({
   screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
+  terrain = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Fire stations require a snapshot source');
+  // With ground heights the dots clamp to terrain only (see groundHeights.js).
+  const _ground = createGroundHeights(terrain, () => render());
+  const position = (row) =>
+    Cesium.Cartesian3.fromDegrees(
+      row.point[0],
+      row.point[1],
+      _ground.heightOf(row.id),
+    );
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -70,7 +80,7 @@ export function createFireStationsLayer({
       return;
     }
     const card = buildFireStationCard(row);
-    card.position = Cesium.Cartesian3.fromDegrees(...row.point);
+    card.position = position(row);
     _selectedCardId = card.id;
     overlayHost.setEntries(
       FIRE_STATIONS_OVERLAY_SOURCE_ID,
@@ -139,7 +149,7 @@ export function createFireStationsLayer({
       for (const row of [..._stations].reverse()) {
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...row.point),
+          position: position(row),
           point: {
             pixelSize: PIXEL_SIZE[row.readiness] ?? 7,
             color: Cesium.Color.fromCssColorString(
@@ -147,7 +157,9 @@ export function createFireStationsLayer({
             ),
             outlineColor: Cesium.Color.fromCssColorString('#2b0b0b'),
             outlineWidth: 1.5,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            heightReference: _ground.enabled
+              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+              : Cesium.HeightReference.CLAMP_TO_GROUND,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
             scaleByDistance: new Cesium.NearFarScalar(2e4, 1.2, 2e6, 0.7),
           },
@@ -220,6 +232,7 @@ export function createFireStationsLayer({
             `[Data:FireStations] Updated: ${_stations.length} stations`,
           );
         }
+        _ground.place(_stations);
         _rowListener?.();
         return true;
       } catch (e) {
@@ -237,6 +250,7 @@ export function createFireStationsLayer({
 
     destroy(viewer = _viewer) {
       layer.disable();
+      _ground.clear();
       _stationById.clear();
       _stations = [];
       _signature = null;

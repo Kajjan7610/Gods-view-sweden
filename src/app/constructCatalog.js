@@ -185,9 +185,11 @@ export function createApplicationCatalog({
         }),
         createApplicationFireStations({
           source: sources['fire-stations'],
+          terrain: surface.terrain,
         }),
         createApplicationSpeedCameras({
           source: sources['speed-cameras'],
+          terrain: surface.terrain,
         }),
         createApplicationRiverFlow({
           source: sources['river-flow'],

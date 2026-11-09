@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { createGroundHeights } from '../groundHeights.js';
 import {
   CAMERA_COLOR,
   SPEED_CAMERAS_OVERLAY_SOURCE_ID,
@@ -56,9 +57,18 @@ export function createSpeedCamerasLayer({
   screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
+  terrain = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Speed cameras require a snapshot source');
+  // With ground heights the arrows clamp to terrain only (see groundHeights.js).
+  const _ground = createGroundHeights(terrain, () => render());
+  const position = (row) =>
+    Cesium.Cartesian3.fromDegrees(
+      row.point[0],
+      row.point[1],
+      _ground.heightOf(row.id),
+    );
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -91,7 +101,7 @@ export function createSpeedCamerasLayer({
       return;
     }
     const card = buildSpeedCameraCard(row);
-    card.position = Cesium.Cartesian3.fromDegrees(...row.point);
+    card.position = position(row);
     _selectedCardId = card.id;
     overlayHost.setEntries(
       SPEED_CAMERAS_OVERLAY_SOURCE_ID,
@@ -162,7 +172,7 @@ export function createSpeedCamerasLayer({
       for (const row of _cameras) {
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
-          position: Cesium.Cartesian3.fromDegrees(...row.point),
+          position: position(row),
           billboard: {
             image,
             width: 24,
@@ -172,7 +182,9 @@ export function createSpeedCamerasLayer({
               ? -Cesium.Math.toRadians(row.bearing)
               : 0,
             alignedAxis: Cesium.Cartesian3.UNIT_Z,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            heightReference: _ground.enabled
+              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+              : Cesium.HeightReference.CLAMP_TO_GROUND,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
             distanceDisplayCondition: show,
             scaleByDistance: scale,
@@ -246,6 +258,7 @@ export function createSpeedCamerasLayer({
             `[Data:SpeedCameras] Updated: ${_cameras.length} camera sites`,
           );
         }
+        _ground.place(_cameras);
         _rowListener?.();
         return true;
       } catch (e) {
@@ -275,6 +288,7 @@ export function createSpeedCamerasLayer({
 
     destroy(viewer = _viewer) {
       layer.disable();
+      _ground.clear();
       _cameraById.clear();
       _cameras = [];
       _signature = null;

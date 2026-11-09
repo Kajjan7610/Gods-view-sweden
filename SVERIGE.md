@@ -80,6 +80,19 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-09 (brandstationer och fartkameror laggade)
+- Samma frysning som Butikskedjor hade, mätt med fotorealistiska tiles över
+  Stockholm: brandstationerna (841) gav ryck på upp till 937 ms när kartan
+  rörde sig, och fartkamerorna (2 825) hör till samma sort. Ett avstängt
+  lager fortsatte dessutom kosta tills sidan laddades om, eftersom
+  punkterna bara döljs. Båda lagren hämtar nu sina markhöjder i bakgrunden
+  via appens egen höjdtjänst (Re:Earth, diskcachad 30 dagar, geoidmodellen
+  som reserv) och fästs bara mot jordglobens terräng. Gemensam modul
+  src/layers/groundHeights.js. Med båda påslagna: värsta bildrutan 15 ms,
+  samma som utan lager.
+- Kvar med samma mönster: väderstationer vid väg (813), polishändelser
+  (500) och blixtnedslag (upp till 20 000 vid åska).
+
 ### 2026-11-09 (butikskedjor laggade)
 - Appen frös i 2–3 sekunder per bildruta med Butikskedjor påslaget och
   fotorealistiska 3D-tiles, tydligast när man klickade på en butik. Orsaken
