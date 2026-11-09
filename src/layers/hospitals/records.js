@@ -34,24 +34,33 @@ export const HOSPITAL_COLOR = '#b0bec5';
 export const NO_FIGURE_COLOR = '#eceff1';
 const BAND_SHARE = 0.15;
 
-/** The year's median in minutes for a metric, or null. */
-export function edMinutes(row, metric) {
-  const value = row?.ed?.[`${metric}2025`];
+/**
+ * The median in minutes for a metric in the statistics' year, or null. The
+ * figures are keyed by year (`ttl2025`); `statistics.year` says which is now.
+ */
+export function edMinutes(row, metric, statistics) {
+  const value = row?.ed?.[`${metric}${statistics?.year}`];
+  return Number.isFinite(value) ? value : null;
+}
+
+/** Sweden's median in minutes for a metric in the statistics' year, or null. */
+export function nationalMinutes(metric, statistics) {
+  const value = statistics?.national?.[`${metric}${statistics.year}`];
   return Number.isFinite(value) ? value : null;
 }
 
 /** The band of a department against the national median, or null. */
-export function edBand(row, metric, national) {
-  const value = edMinutes(row, metric);
-  const median = national?.[`${metric}2025`];
-  if (value === null || !Number.isFinite(median)) return null;
+export function edBand(row, metric, statistics) {
+  const value = edMinutes(row, metric, statistics);
+  const median = nationalMinutes(metric, statistics);
+  if (value === null || median === null) return null;
   if (value < median * (1 - BAND_SHARE)) return 'shorter';
   if (value > median * (1 + BAND_SHARE)) return 'longer';
   return 'near';
 }
 
-export function hospitalColor(row, metric, national) {
-  const band = edBand(row, metric, national);
+export function hospitalColor(row, metric, statistics) {
+  const band = edBand(row, metric, statistics);
   if (band) return ED_BANDS.find((entry) => entry.id === band).color;
   return row?.ed ? NO_FIGURE_COLOR : HOSPITAL_COLOR;
 }
@@ -161,13 +170,21 @@ export function dedupeHospitals(rows, keep = new Set()) {
  * The hospitals with an emergency department in the statistics, nearest to
  * a point first, or the shortest median in a box first.
  * @param {object[]} rows Hospitals.
- * @param {{center: number[], bbox?: number[]|null, metric?: string,
- *   order?: 'nearest'|'shortest', limit?: number}} query
+ * @param {{center: number[], statistics: object, bbox?: number[]|null,
+ *   metric?: string, order?: 'nearest'|'shortest', limit?: number}} query
  */
 export function rankDepartments(
   rows,
-  { center, bbox = null, metric = 'ttl', order = 'nearest', limit = 5 },
+  {
+    center,
+    statistics,
+    bbox = null,
+    metric = 'ttl',
+    order = 'nearest',
+    limit = 5,
+  },
 ) {
+  const minutes = (row) => edMinutes(row, metric, statistics);
   const inBox = (row) => {
     if (!bbox) return true;
     const [west, south, east, north] = bbox;
@@ -178,7 +195,7 @@ export function rankDepartments(
     .filter((row) =>
       order === 'nearest'
         ? Boolean(row.ed)
-        : edMinutes(row, metric) !== null && inBox(row),
+        : minutes(row) !== null && inBox(row),
     )
     .map((row) => ({
       row,
@@ -186,8 +203,7 @@ export function rankDepartments(
     }));
   ranked.sort((a, b) =>
     order === 'shortest'
-      ? edMinutes(a.row, metric) - edMinutes(b.row, metric) ||
-        a.distance - b.distance
+      ? minutes(a.row) - minutes(b.row) || a.distance - b.distance
       : a.distance - b.distance,
   );
   return ranked.slice(0, Math.max(0, limit));

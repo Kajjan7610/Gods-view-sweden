@@ -50,7 +50,7 @@
     "iNaturalist ↗",
     "{direction} {angle}°",
     "{direction} · {elevation}",
-    "{label}: {now} (2024: {before})",
+    "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
     "{county}: {population}"
   ],
@@ -268,7 +268,7 @@
     "{division}, {country}",
     "{hours} h {minutes} min",
     "{hours} h",
-    "{label}: {now} (2024: {before})",
+    "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
     "{county}: {population}"
   ],
@@ -449,7 +449,7 @@
     "iNaturalist",
     "{hours} h {minutes} min",
     "{hours} h",
-    "{label}: {now} (2024: {before})",
+    "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
     "HOSPITAL · {name}",
     "{county}: {population}"
@@ -931,7 +931,7 @@
     "SATELLITE",
     "{hours} h {minutes} min",
     "{hours} h",
-    "{label}: {now} (2024: {before})",
+    "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
     "{county}: {population}"
   ],
@@ -1190,7 +1190,7 @@
     "iNaturalist",
     "{hours} h {minutes} min",
     "{hours} h",
-    "{label}: {now} (2024: {before})",
+    "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
     "HOSPITAL · {name}",
     "{county}: {population}"
@@ -1230,7 +1230,7 @@
     "{direction} · {elevation}",
     "{direction} {angle}°",
     "{division}, {country}",
-    "{label}: {now} (2024: {before})",
+    "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
     "{county}: {population}"
   ],
@@ -1412,7 +1412,7 @@
     "EXPORT",
     "{hours} h {minutes} min",
     "{hours} h",
-    "{label}: {now} (2024: {before})",
+    "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
     "{county}: {population}"
   ],
@@ -1446,7 +1446,7 @@
     "{direction} · {elevation}",
     "{direction} {angle}°",
     "{division}, {country}",
-    "{label}: {now} (2024: {before})",
+    "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
     "{county}: {population}"
   ],

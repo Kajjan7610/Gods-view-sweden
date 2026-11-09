@@ -102,7 +102,7 @@ const DEPARTMENT_SITES = {
   'Sahlgrenska universitetssjukhuset': ['r18627335', 'r10757570', 'r12707317'],
   'Skaraborgs sjukhus': ['w1362430855', 'r280131'],
   'Norra Älvsborgs Länssjukhus och Uddevalla sjukhus': ['w394646100'],
-  'Sjukhusen i väster': ['w585734883'],
+  'Sjukhusen i väster': ['w585734883', 'w206662524'],
   'Universitetssjukhuset Örebro': ['w360413263'],
   'Karlskoga lasarett': ['w395221047'],
   'Lindesbergs lasarett': ['r18022442'],
@@ -114,6 +114,10 @@ const DEPARTMENT_SITES = {
 const SITE_NAMES = { r18022442: 'Lindesbergs lasarett' };
 
 const stats = JSON.parse(await readFile(STATS, 'utf8'));
+// The layer reads the figures of `year`, so the sheet must carry them.
+for (const metric of ['ttl', 'tvt'])
+  if (!Number.isFinite(stats.national?.[`${metric}${stats.year}`]))
+    throw new Error(`No national ${metric} for ${stats.year}`);
 const departments = new Map(stats.departments.map((row) => [row.name, row]));
 for (const name of departments.keys())
   if (!DEPARTMENT_SITES[name]) throw new Error(`No site for ${name}`);

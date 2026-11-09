@@ -9,6 +9,7 @@ import {
   edBand,
   edMinutes,
   hospitalColor,
+  nationalMinutes,
   rankDepartments,
 } from './records.js';
 import {
@@ -64,9 +65,9 @@ export function createHospitalsLayer({
   let _lastUpdate = null;
   let _lastError = null;
   let _selectedId = null;
-  let _selectedCardId = null;
   let _hospitals = [];
-  let _national = {};
+  // The snapshot's statistics: their year, Sweden's medians, when published.
+  let _statistics = {};
   let _metric = 'ttl';
   let _order = 'nearest';
   let _view = null;
@@ -80,7 +81,6 @@ export function createHospitalsLayer({
     const row = _selectedId ? _hospitalById.get(_selectedId) : null;
     if (!row) {
       _selectedId = null;
-      _selectedCardId = null;
       overlayHost.setEntries(
         HOSPITALS_OVERLAY_SOURCE_ID,
         [],
@@ -95,10 +95,9 @@ export function createHospitalsLayer({
             distance: Math.round(distanceMeters(_view.center, row.point)),
           }
         : row,
-      { metric: _metric, national: _national },
+      { metric: _metric, statistics: _statistics },
     );
     card.position = hospitalPosition(row);
-    _selectedCardId = card.id;
     overlayHost.setEntries(
       HOSPITALS_OVERLAY_SOURCE_ID,
       [card],
@@ -119,12 +118,8 @@ export function createHospitalsLayer({
     _clickHandler = screenSpaceEventHandlerFactory(_viewer);
     _clickHandler.setInputAction((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-        { sourceId: HOSPITALS_OVERLAY_SOURCE_ID },
-      );
-      if (cardHit && cardHit.entryId === _selectedCardId) return;
+      // A card under the click, this layer's or another's, is not the ground.
+      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedHospital(picked) : null;
       if (hit) {
@@ -147,7 +142,6 @@ export function createHospitalsLayer({
 
   function clearOverlays() {
     _selectedId = null;
-    _selectedCardId = null;
     if (!overlayHost) return;
     overlayHost.clearSource(HOSPITALS_OVERLAY_SOURCE_ID);
     overlayHost.setVisible?.(HOSPITALS_OVERLAY_SOURCE_ID, false);
@@ -170,7 +164,7 @@ export function createHospitalsLayer({
           point: {
             pixelSize: row.ed ? 11 : 7,
             color: Cesium.Color.fromCssColorString(
-              hospitalColor(row, _metric, _national),
+              hospitalColor(row, _metric, _statistics),
             ),
             outlineColor: Cesium.Color.fromCssColorString('#3b0d0d'),
             outlineWidth: row.ed ? 2 : 1.5,
@@ -279,7 +273,7 @@ export function createHospitalsLayer({
         if (request.signal.aborted || _request !== request || !_enabled)
           return false;
         _hospitals = snapshot.hospitals;
-        _national = snapshot.national;
+        _statistics = snapshot.statistics ?? {};
         _hospitalById.clear();
         for (const row of _hospitals) _hospitalById.set(row.id, row);
         _loaded = true;
@@ -302,12 +296,13 @@ export function createHospitalsLayer({
       }
     },
 
-    /** Select a hospital and fly to it (the row's list). */
+    /** Select a hospital and fly to it (the row's list), while it is on. */
     setParams(params = {}) {
+      if (!_enabled || !_loaded) return false;
       const row = params.hospitalId
         ? _hospitalById.get(String(params.hospitalId))
         : null;
-      if (!row || !_viewer) return false;
+      if (!row) return false;
       _selectedId = row.id;
       publishSelectedCard();
       if (params.focus) {
@@ -330,7 +325,7 @@ export function createHospitalsLayer({
       layer.disable();
       _hospitalById.clear();
       _hospitals = [];
-      _national = {};
+      _statistics = {};
       _loaded = false;
       _view = null;
       if (_dataSource) {
@@ -349,9 +344,10 @@ export function createHospitalsLayer({
     getRowControls() {
       if (!_loaded) return {};
       const bandCount = (id) =>
-        _hospitals.filter((row) => edBand(row, _metric, _national) === id)
+        _hospitals.filter((row) => edBand(row, _metric, _statistics) === id)
           .length;
-      const median = _national[`${_metric}2025`];
+      const year = _statistics.year;
+      const median = nationalMinutes(_metric, _statistics);
       const bandLabels = {
         shorter: t('Shorter than Sweden’s median'),
         near: t('Near Sweden’s median'),
@@ -367,7 +363,7 @@ export function createHospitalsLayer({
           label: t('Emergency department without this figure'),
           color: NO_FIGURE_COLOR,
           count: _hospitals.filter(
-            (row) => row.ed && edBand(row, _metric, _national) === null,
+            (row) => row.ed && edBand(row, _metric, _statistics) === null,
           ).length,
         },
         {
@@ -382,8 +378,8 @@ export function createHospitalsLayer({
             ? {
                 ...item,
                 blurb: t(
-                  'Large dots are emergency departments in Socialstyrelsen’s statistics for 2025, coloured by their median against Sweden’s ({median}): more than 15 % shorter, within 15 %, or longer. Medians are for the whole year and for adults, so they compare departments; they are not today’s wait. Small dots are other hospitals from OpenStreetMap. Life-threatening: call 112; for advice, 1177.',
-                  { median: formatMinutes(median) },
+                  'Large dots are emergency departments in Socialstyrelsen’s statistics for {year}, coloured by their median against Sweden’s ({median}): more than 15 % shorter, within 15 %, or longer. Medians are for the whole year and for adults, so they compare departments; they are not today’s wait. Small dots are other hospitals from OpenStreetMap. Life-threatening: call 112; for advice, 1177.',
+                  { year, median: formatMinutes(median) },
                 ),
               }
             : item,
@@ -392,6 +388,7 @@ export function createHospitalsLayer({
         ? rankDepartments(_hospitals, {
             center: _view.center,
             bbox: _view.bbox,
+            statistics: _statistics,
             metric: _metric,
             order: _order,
             limit: LISTED,
@@ -427,15 +424,17 @@ export function createHospitalsLayer({
           },
         ],
         legend,
-        info: Number.isFinite(median)
-          ? t('Sweden 2025: {ttl} to physician, {tvt} in total (medians)', {
-              ttl: formatMinutes(_national.ttl2025),
-              tvt: formatMinutes(_national.tvt2025),
-            })
-          : '',
+        info:
+          median === null
+            ? ''
+            : t('Sweden {year}: {ttl} to physician, {tvt} in total (medians)', {
+                year,
+                ttl: formatMinutes(nationalMinutes('ttl', _statistics)),
+                tvt: formatMinutes(nationalMinutes('tvt', _statistics)),
+              }),
         infoTitle: t(
           'Socialstyrelsen, Patientregistret: emergency departments with two or more specialties at the hospital, visits by patients aged 19 and over. Published {date}.',
-          { date: '2026-05-25' },
+          { date: _statistics.published ?? '' },
         ),
         list: {
           ariaLabel:
@@ -447,13 +446,13 @@ export function createHospitalsLayer({
             ordinal: index + 1,
             lead:
               _order === 'shortest'
-                ? formatMinutes(edMinutes(row, _metric))
+                ? formatMinutes(edMinutes(row, _metric, _statistics))
                 : formatHospitalDistance(distance),
             text: [
               row.name,
               _order === 'shortest'
                 ? formatHospitalDistance(distance)
-                : formatMinutes(edMinutes(row, _metric)),
+                : formatMinutes(edMinutes(row, _metric, _statistics)),
             ]
               .filter(Boolean)
               .join(' · '),

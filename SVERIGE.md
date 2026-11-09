@@ -127,6 +127,35 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-09 (sjukhus och akuter: rättningar efter kodgranskning)
+- Ett klick på det valda sjukhusets eget kort släcker inte längre
+  markeringen: kortet är träffbart i etikettlagret, och ett klick som
+  hamnar på något kort (lagrets eget eller ett annat lagers) räknas inte som
+  ett klick på marken.
+- `setParams` gör ingenting medan lagret är av.
+- Alingsås lasarett ritades grått fast Socialstyrelsen redovisar det
+  tillsammans med Kungälvs sjukhus som "Sjukhusen i väster". Båda får nu de
+  gemensamma siffrorna (67 sjukhus med statistik i stället för 66), och
+  kortet säger att de gäller samlat.
+- Faktabladets publiceringsdatum var fel: 2026-06-16 enligt
+  Socialstyrelsens publikationssida, inte 2026-05-25. Datumet står nu i
+  faktabladets fil och följer med ögonblicksbilden in i lagret i stället för
+  att vara inskrivet i koden.
+- Året är inte längre inskrivet i lagret och texterna. Lagret läser
+  `statistics.year` ur ögonblicksbilden och visar det året mot året innan,
+  så nästa års faktablad kräver ingen ändring i lagrets kod eller
+  översättningar. Bygget avbryter om faktabladet saknar rikets median för
+  året.
+- De handkörda byggena (`scripts/lib/osmSnapshot.mjs`, som även butiks- och
+  kommunbyggena använder) behåller inte längre ett Overpass-svar med
+  `remark`: en fråga som fått slut på tid eller minne svarar 200 med det den
+  hunnit samla. Ett sådant svar räknas som misslyckat och nästa spegel
+  prövas, som i appens egen Overpass-transport. Saknas en markhöjd i svaret
+  från Re:Earth avbryts bygget i stället för att lämna raden utan höjd.
+- Kvar att känna till: butiksbyggets hämtning av befolkningsrutor och
+  Wikidata saknar statuskontroll och nya försök, och avståndet räknas på
+  fyra ställen med var sin kopia av samma formel.
+
 ### 2026-11-09 (kommuner och län: rättningar efter kodgranskning)
 - Ett klick på ett annat lagers objekt (ett sjukhus, en kamera) markerar
   inte längre kommunen under det. Bara kartan själv och lagrets egna linjer
@@ -188,7 +217,7 @@ git merge origin/main
   akuten (1177, Vården i siffror och Socialstyrelsens API saknar dem), så
   lagret visar Socialstyrelsens årsstatistik i stället: faktabladet
   "Statistik om akutmottagningar, väntetider och besök 2025" (art.nr
-  2026-6-10339, publicerat 2026-05-25), bilaga 1 med besök, mediantid till
+  2026-6-10339, publicerat 2026-06-16), bilaga 1 med besök, mediantid till
   läkare och median total vistelsetid per akutmottagning för 2024 och 2025.
   Siffrorna ligger tolkade i `src/data/local_data/se_hospitals/akut-2025.json`
   (62 mottagningar, stickprov mot PDF:en i testet).

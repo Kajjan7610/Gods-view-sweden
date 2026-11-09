@@ -109,8 +109,14 @@ export function createCache(name) {
         if (Number.isFinite(base) && Date.now() - base > MAX_LAG_MS) {
           status = `data from ${new Date(base).toISOString().slice(0, 10)}`;
         } else if (response.ok && body.startsWith('{')) {
-          await keep(query, body);
-          return JSON.parse(body);
+          // A query that timed out or ran out of memory answers 200 with a
+          // `remark` and whatever it had gathered: not an answer to keep.
+          const answer = JSON.parse(body);
+          if (Array.isArray(answer.elements) && !answer.remark) {
+            await keep(query, body);
+            return answer;
+          }
+          status = String(answer.remark || 'no elements').slice(0, 80);
         } else status = `HTTP ${response.status}`;
       } catch (error) {
         status = error?.cause?.code || error?.name || 'network error';
@@ -121,8 +127,11 @@ export function createCache(name) {
     throw new Error('Overpass unavailable');
   }
 
-  /** A GET answer as JSON, kept in the cache like the Overpass answers. */
-  async function json(url) {
+  /**
+   * A GET answer as JSON, kept in the cache like the Overpass answers.
+   * `accept` throws on an answer not worth keeping, which is asked for again.
+   */
+  async function json(url, accept = () => {}) {
     const hit = await cached(url);
     if (hit) return hit;
     for (let attempt = 1; ; attempt++) {
@@ -133,8 +142,10 @@ export function createCache(name) {
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const body = await response.text();
+        const answer = JSON.parse(body);
+        accept(answer);
         await keep(url, body);
-        return JSON.parse(body);
+        return answer;
       } catch (error) {
         if (attempt >= 3) throw error;
         console.warn(`  ${new URL(url).host} ${error.message}, attempt ${attempt}`);
@@ -145,18 +156,25 @@ export function createCache(name) {
 
   /**
    * Ground height above the ellipsoid for each row's `point`, as `height`,
-   * so a layer can draw it on the ground without clamping to 3D tiles.
+   * so a layer can draw it on the ground without clamping to 3D tiles. An
+   * answer that lacks a height fails the build rather than leave a row bare.
    */
   async function groundHeights(rows) {
     for (let start = 0; start < rows.length; start += 64) {
       const chunk = rows.slice(start, start + 64);
       const points = chunk.map((row) => row.point.map((value) => value.toFixed(5)).join(',')).join(';');
+      const heights = (answer) =>
+        chunk.map((row, index) => {
+          const height = answer.results?.[index]?.ellipsoid;
+          if (!Number.isFinite(height)) throw new Error(`no ground height at ${row.point.join(',')}`);
+          return Math.round(height);
+        });
       const answer = await json(
         `https://terrain.reearth.land/heights.json?points=${encodeURIComponent(points)}`,
+        heights,
       );
-      chunk.forEach((row, index) => {
-        const height = answer.results?.[index]?.ellipsoid;
-        if (Number.isFinite(height)) row.height = Math.round(height);
+      heights(answer).forEach((height, index) => {
+        chunk[index].height = height;
       });
     }
   }

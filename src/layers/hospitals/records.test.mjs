@@ -34,6 +34,7 @@ const sheet = JSON.parse(
   ),
 );
 const national = { ttl2025: 61, tvt2025: 256 };
+const statistics = { year: 2025, national };
 
 test('hospital names keep hospitals and drop clinics inside them', () => {
   for (const name of [
@@ -101,13 +102,13 @@ test('a site mapped twice is one hospital; a children’s hospital stays', () =>
 
 test('bands compare a department with the national median', () => {
   const row = (ttl) => ({ ed: { ttl2025: ttl } });
-  assert.equal(edBand(row(45), 'ttl', national), 'shorter');
-  assert.equal(edBand(row(61), 'ttl', national), 'near');
-  assert.equal(edBand(row(70), 'ttl', national), 'near');
-  assert.equal(edBand(row(71), 'ttl', national), 'longer');
-  assert.equal(edBand({ ed: { ttl2025: null } }, 'ttl', national), null);
-  assert.equal(hospitalColor({ ed: {} }, 'ttl', national), NO_FIGURE_COLOR);
-  assert.equal(hospitalColor({}, 'ttl', national), HOSPITAL_COLOR);
+  assert.equal(edBand(row(45), 'ttl', statistics), 'shorter');
+  assert.equal(edBand(row(61), 'ttl', statistics), 'near');
+  assert.equal(edBand(row(70), 'ttl', statistics), 'near');
+  assert.equal(edBand(row(71), 'ttl', statistics), 'longer');
+  assert.equal(edBand({ ed: { ttl2025: null } }, 'ttl', statistics), null);
+  assert.equal(hospitalColor({ ed: {} }, 'ttl', statistics), NO_FIGURE_COLOR);
+  assert.equal(hospitalColor({}, 'ttl', statistics), HOSPITAL_COLOR);
 });
 
 test('the nearest list takes every department; the shortest needs a figure in view', () => {
@@ -120,12 +121,13 @@ test('the nearest list takes every department; the shortest needs a figure in vi
   ];
   const center = [18.0, 59.3];
   assert.deepEqual(
-    rankDepartments(rows, { center, limit: 3 }).map(({ row }) => row.id),
+    rankDepartments(rows, { center, statistics, limit: 3 }).map(({ row }) => row.id),
     ['a', 'b', 'c'],
   );
   assert.deepEqual(
     rankDepartments(rows, {
       center,
+      statistics,
       bbox: [17.5, 59, 19, 59.6],
       order: 'shortest',
     }).map(({ row }) => row.id),
@@ -157,7 +159,7 @@ test('the card gives the figures, the comparison and where to call', () => {
         tvt2025: 324,
       },
     },
-    { metric: 'ttl', national },
+    { metric: 'ttl', statistics },
   );
   assert.equal(card.title, 'EMERGENCY · Södersjukhuset');
   assert.ok(card.details.includes('Time to physician: 78 min (2024: 81 min)'));
@@ -180,6 +182,9 @@ test('the bundled snapshot carries every department in the sheet', () => {
   for (const { name } of sheet.departments)
     assert.ok(departments.has(name), name);
   assert.deepEqual(snapshot.statistics.national, national);
+  assert.equal(snapshot.statistics.year, 2025);
+  assert.equal(snapshot.statistics.published, sheet.published);
+  assert.match(sheet.published, /^\d{4}-\d{2}-\d{2}$/);
   assert.equal(snapshot.license, 'ODbL-1.0');
   for (const row of snapshot.hospitals) {
     assert.match(row.id, /^[nwr]\d+$/);
@@ -200,4 +205,10 @@ test('the bundled snapshot carries every department in the sheet', () => {
     [93631, 41, 306],
   );
   assert.equal(byDepartment['Västmanlands sjukhus Västerås'].ttl2025, null);
+  // Alingsås and Kungälv report together, so both carry the shared figures.
+  for (const id of ['w206662524', 'w585734883']) {
+    const { ed } = snapshot.hospitals.find((row) => row.id === id);
+    assert.equal(ed.department, 'Sjukhusen i väster');
+    assert.equal(ed.shared, true);
+  }
 });

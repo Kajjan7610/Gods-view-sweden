@@ -1,6 +1,6 @@
 /** Card model for a selected hospital. Pure — no Cesium types. */
 import { formatNumber, t } from '../../i18n/index.js';
-import { hospitalColor } from './records.js';
+import { hospitalColor, nationalMinutes } from './records.js';
 
 export const HOSPITALS_OVERLAY_SOURCE_ID = 'hospitals';
 
@@ -32,52 +32,64 @@ export function formatHospitalDistance(metres) {
     : `${formatNumber(Math.round(metres / 100) / 10)} km`;
 }
 
-/** One median line with last year's figure when there is one. */
-function medianLine(label, now, before) {
+/** One median line with the year before's figure when there is one. */
+function medianLine(label, ed, metric, year) {
+  const now = ed[`${metric}${year}`];
+  const before = ed[`${metric}${year - 1}`];
   if (!Number.isFinite(now)) return null;
   return Number.isFinite(before)
-    ? t('{label}: {now} (2024: {before})', {
+    ? t('{label}: {now} ({previous}: {before})', {
         label,
         now: formatMinutes(now),
+        previous: year - 1,
         before: formatMinutes(before),
       })
     : t('{label}: {now}', { label, now: formatMinutes(now) });
 }
 
-function visitsLine(ed) {
-  if (!Number.isFinite(ed.visits2025)) return null;
-  const visits = formatNumber(ed.visits2025);
-  if (!Number.isFinite(ed.visits2024) || ed.visits2024 <= 0)
-    return t('Visits 2025: {visits}', { visits });
-  const change = Math.round(
-    ((ed.visits2025 - ed.visits2024) / ed.visits2024) * 100,
-  );
-  return t('Visits 2025: {visits} ({change} % on 2024)', {
+function visitsLine(ed, year) {
+  const now = ed[`visits${year}`];
+  const before = ed[`visits${year - 1}`];
+  if (!Number.isFinite(now)) return null;
+  const visits = formatNumber(now);
+  if (!Number.isFinite(before) || before <= 0)
+    return t('Visits {year}: {visits}', { year, visits });
+  const change = Math.round(((now - before) / before) * 100);
+  return t('Visits {year}: {visits} ({change} % on {previous})', {
+    year,
     visits,
     change: change > 0 ? `+${change}` : String(change),
+    previous: year - 1,
   });
 }
 
 /**
  * Card for one hospital.
  * @param {object} row A hospital, with `distance` from the map centre if any.
- * @param {{metric?: string, national?: object}} [context]
+ * @param {{metric?: string, statistics?: object}} [context] The snapshot's
+ *   statistics: their `year` and Sweden's medians.
  */
-export function buildHospitalCard(row, { metric = 'ttl', national = {} } = {}) {
+export function buildHospitalCard(
+  row,
+  { metric = 'ttl', statistics = {} } = {},
+) {
   const ed = row.ed;
+  const year = statistics.year;
+  const ttl = nationalMinutes('ttl', statistics);
+  const tvt = nationalMinutes('tvt', statistics);
   const details = [
     ...(row.operator ? [row.operator] : []),
     ...(ed
       ? [
-          medianLine(t('Time to physician'), ed.ttl2025, ed.ttl2024),
-          medianLine(t('Total stay'), ed.tvt2025, ed.tvt2024),
-          Number.isFinite(national.ttl2025) && Number.isFinite(national.tvt2025)
+          medianLine(t('Time to physician'), ed, 'ttl', year),
+          medianLine(t('Total stay'), ed, 'tvt', year),
+          ttl !== null && tvt !== null
             ? t('Sweden: {ttl} to physician, {tvt} in total', {
-                ttl: formatMinutes(national.ttl2025),
-                tvt: formatMinutes(national.tvt2025),
+                ttl: formatMinutes(ttl),
+                tvt: formatMinutes(tvt),
               })
             : null,
-          visitsLine(ed),
+          visitsLine(ed, year),
           ed.shared
             ? t('Figures for {department} as a whole', {
                 department: ed.department,
@@ -100,11 +112,12 @@ export function buildHospitalCard(row, { metric = 'ttl', national = {} } = {}) {
   return {
     ...CARD_BASE,
     id: `hospitals-card:${row.id}`,
-    interactive: false,
+    // Interactive only so a click on the card is told from one on the ground.
+    interactive: true,
     title: ed
       ? t('EMERGENCY · {name}', { name: row.name })
       : t('HOSPITAL · {name}', { name: row.name }),
     details,
-    accent: hospitalColor(row, metric, national),
+    accent: hospitalColor(row, metric, statistics),
   };
 }

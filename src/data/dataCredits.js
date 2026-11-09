@@ -525,7 +525,7 @@ export const DATA_CREDITS = [
     key: 'hospitals',
     html:
       'Hospitals (Sweden): ' +
-      '<a href="https://www.socialstyrelsen.se/statistik-och-data/statistik/statistikamnen/vantetider-och-besok-vid-sjukhusbundna-akutmottagningar/" target="_blank" rel="noopener">Socialstyrelsen</a>, Patientregistret (emergency departments 2025); hospitals from OpenStreetMap contributors, a snapshot ' +
+      '<a href="https://www.socialstyrelsen.se/statistik-och-data/statistik/statistikamnen/vantetider-och-besok-vid-sjukhusbundna-akutmottagningar/" target="_blank" rel="noopener">Socialstyrelsen</a>, Patientregistret (emergency departments); hospitals from OpenStreetMap contributors, a snapshot ' +
       '(<a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL</a>)',
   },
   {

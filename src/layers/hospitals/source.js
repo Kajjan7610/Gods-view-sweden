@@ -10,8 +10,8 @@ export function createHospitalsSource({
 } = {}) {
   return {
     /**
-     * @returns {Promise<{hospitals: object[], national: object,
-     *   statistics: object|null, osmBase: string|null}>}
+     * @returns {Promise<{hospitals: object[], statistics: object|null,
+     *   osmBase: string|null}>}
      */
     async getSnapshot({ signal } = {}) {
       signal?.throwIfAborted();
@@ -41,7 +41,6 @@ export function createHospitalsSource({
           : null;
       return {
         hospitals: payload.hospitals,
-        national: statistics?.national || {},
         statistics,
         osmBase: typeof payload.osmBase === 'string' ? payload.osmBase : null,
       };
