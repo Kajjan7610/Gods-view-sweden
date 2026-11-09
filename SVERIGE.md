@@ -121,6 +121,17 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-09 (svenska texter efter granskningen i originalet)
+- Granskningen av den svenska översättningen i originalprojektet (PR #1630)
+  är införd här också: exportknapparna i Senaste bilder heter EXP. A/B så
+  att de får plats, "1 HÖRT" i singular, INTE FARA ÖVER genomgående, VÄ/HÖ
+  för vänster/höger (V är väst på kompassen), STYRD KURS och KURS Ö. GRUND
+  hålls isär, MIK i tipset, antal först där plural saknas, "inaktivt ljud",
+  OSÄKER, KN för knop, riktiga ellipser, Ladda ned och VÄNTLÄGE, Olagligt
+  ingripande och FÖRHANDSVY.
+- `sv.json` ingår nu i formatkontrollen, och 46 onödiga rader i listan över
+  strängar som får vara likadana som på engelska är borttagna.
+
 ### 2026-11-09 (kom igång: guide och nycklar i appen)
 - Ny guide [docs/KOM-IGANG.md](docs/KOM-IGANG.md): installera med Pinokio,
   Docker eller Node, skaffa de gratis nycklarna och hitta i appen. Länkad
