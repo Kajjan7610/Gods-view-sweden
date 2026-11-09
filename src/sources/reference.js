@@ -17,6 +17,7 @@ import { createPowerGridSource } from '../layers/powerGrid/source.js';
 import { createTransitAlertsSource } from '../layers/transitAlerts/source.js';
 import { createSrTrafficSource } from '../layers/srTraffic/source.js';
 import { createSeaWeatherSource } from '../layers/seaWeather/source.js';
+import { createHospitalsSource } from '../layers/hospitals/source.js';
 import { createSheltersSource } from '../layers/shelters/source.js';
 import { createPoliceStationsSource } from '../layers/policeStations/source.js';
 import { createCompanyStoresSource } from '../layers/companyStores/source.js';
@@ -57,6 +58,7 @@ export function createReferenceSources() {
     'fire-stations': createFireStationsSource(),
     'police-stations': createPoliceStationsSource(),
     shelters: createSheltersSource(),
+    hospitals: createHospitalsSource(),
     'speed-cameras': createSpeedCamerasSource(),
     'river-flow': createRiverFlowSource(),
     'gamma-radiation': createGammaRadiationSource(),

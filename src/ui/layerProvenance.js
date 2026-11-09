@@ -88,6 +88,16 @@ export const LAYER_PROVENANCE = Object.freeze({
     updates: msg('Daily'),
     licence: msg('No conditions apply (INSPIRE)'),
   }),
+  hospitals: own({
+    source: 'Socialstyrelsen · OpenStreetMap',
+    coverage: msg(
+      'About 120 hospitals; waiting-time medians for the 62 emergency departments in the statistics',
+    ),
+    updates: msg('Yearly statistics; snapshot in the app, rebuilt by hand'),
+    licence: msg(
+      'Statistics free to use, source credited (Socialstyrelsen) · ODbL (OpenStreetMap)',
+    ),
+  }),
   'company-stores': own({
     source: 'OpenStreetMap · Wikidata · SCB',
     coverage: msg(
@@ -234,6 +244,9 @@ const PHRASES = new Set([
   msg('Public domain (US government)'),
   msg('Free to use, source credited'),
   msg('No conditions apply (INSPIRE)'),
+  msg(
+    'Statistics free to use, source credited (Socialstyrelsen) · ODbL (OpenStreetMap)',
+  ),
 ]);
 function translatedOrName(text) {
   return PHRASES.has(text) ? t(text) : text;

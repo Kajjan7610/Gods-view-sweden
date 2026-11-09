@@ -31,6 +31,7 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 | Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
 | Polisstationer: Polisens 261 stationer, färgade efter vad receptionen erbjuder (pass och id-kort, andra ärenden, inga angivna); klick ger adress, tjänster och närmaste passexpedition, klick på kortet öppnar stationens sida med öppettider | Polismyndighetens öppna data (ingen nyckel; Polisen anges som källa) | Police Stations (Sweden) / Polisstationer, under Infrastructure |
 | Skyddsrum: MCF:s cirka 63 000 skyddsrum med 6,8 miljoner platser, i vyn när man zoomat in (de 1 500 närmaste kartans mitt), storlek efter platser; de fem närmaste listas klickbart i raden; klick ger fastighet, platser och om skyddsrummet har tillfällig begränsning | Myndigheten för civilt försvar (MCF), INSPIRE (ingen nyckel, inga villkor) | Shelters (Sweden) / Skyddsrum, under Infrastructure |
+| Sjukhus och akuter: cirka 120 sjukhus, där de 62 akutmottagningarna i Socialstyrelsens statistik för 2025 färgas efter mediantid till läkare eller total vistelsetid jämfört med rikets (61 min respektive 4 h 16 min); raden listar de fem närmaste akutmottagningarna eller de med kortast median i vyn, klickbart; kortet visar medianerna 2025 och 2024, besök och förändring, och "ring 112 / 1177". Årsmedianer för vuxna, inte aktuell väntetid (öppna livetider finns inte i Sverige). | Socialstyrelsen, Patientregistret (faktablad 2026-6-10339), och OpenStreetMap (ODbL) som ögonblicksbild i repot | Hospitals & Emergency (Sweden) / Sjukhus och akuter, under Infrastructure |
 | Blixtnedslag: varje urladdning den senaste timmen som punkt, färgad efter ålder (vit = senaste 5 min), stora för nedslag i marken och små för blixtar i molnet; klick ger tid, typ och toppström | DMI:s blixtdata (CC BY 4.0, ingen nyckel; DMI:s sensornät och grannländernas sensorer) | Lightning Strikes (Sweden) / Blixtnedslag, under Weather |
 | Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
@@ -66,6 +67,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Brandstationer (Sverige) | Myndigheten för civilt försvar (MCF) | Räddningstjänsternas alla brandstationer | En gång per dygn | EU-värdefullt dataset, källan anges |
 | SE | Polisstationer (Sverige) | Polismyndigheten | Alla polisstationer, cirka 260 | En gång per dygn | Öppna data, källan anges |
 | SE | Skyddsrum (Sverige) | Myndigheten för civilt försvar (MCF) | Alla skyddsrum, cirka 63 000 med 6,8 miljoner platser | En gång per dygn | Inga tillämpliga villkor (INSPIRE) |
+| SE | Sjukhus och akuter (Sverige) | Socialstyrelsen · OpenStreetMap | Cirka 120 sjukhus; väntetidsmedianer för de 62 akutmottagningarna i statistiken | Årlig statistik; ögonblicksbild i appen, byggs om för hand | Statistiken fri att använda med källa (Socialstyrelsen) · ODbL (OpenStreetMap) |
 | SE | Butikskedjor (Sverige) | OpenStreetMap · Wikidata · SCB | Elva kedjors butiker och apotek i hela Sverige; kartlagda av frivilliga | Ögonblicksbild i appen, byggs om för hand | ODbL (OpenStreetMap) · CC0 1.0 (Wikidata, SCB) |
 | SE | Väglag (Sverige) | Trafikverket | Väglag och aktuella händelser i hela Sverige | Var 3:e minut | CC0 1.0 |
 | SE | Vägväder (Sverige) | Trafikverket | Cirka 830 vägväderstationer | Var 5:e minut | CC0 1.0 |
@@ -122,6 +124,38 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-09 (sjukhus och akuter)
+- Nytt lager **Sjukhus och akuter (Sverige)** (delningstoken `0g`) under
+  Infrastructure, efter Skyddsrum. Sverige har inga öppna livetider för
+  akuten (1177, Vården i siffror och Socialstyrelsens API saknar dem), så
+  lagret visar Socialstyrelsens årsstatistik i stället: faktabladet
+  "Statistik om akutmottagningar, väntetider och besök 2025" (art.nr
+  2026-6-10339, publicerat 2026-05-25), bilaga 1 med besök, mediantid till
+  läkare och median total vistelsetid per akutmottagning för 2024 och 2025.
+  Siffrorna ligger tolkade i `src/data/local_data/se_hospitals/akut-2025.json`
+  (62 mottagningar, stickprov mot PDF:en i testet).
+- Sjukhusen kommer från OpenStreetMap (ODbL) via det handkörda
+  `scripts/build-hospitals.mjs`: cirka 120 sjukhus i Sverige, utan
+  vårdcentraler, mottagningar, ingångar och dubbletter. Varje akutmottagning
+  är kopplad till sitt sjukhus för hand; där Socialstyrelsen redovisar flera
+  sjukhus samlat (Sahlgrenska, Hallands sjukhus, Skaraborgs sjukhus) får
+  varje sjukhus de gemensamma siffrorna och kortet säger det. Markhöjder från
+  Re:Earth Terrain ligger i ögonblicksbilden, så appen hämtar ingenting
+  efter den första läsningen.
+- Stora prickar är akutmottagningarna, färgade efter medianen jämfört med
+  rikets: mer än 15 % kortare, inom 15 % eller längre. Ett reglage växlar
+  mellan tid till läkare och total vistelsetid. Raden listar de fem närmaste
+  akutmottagningarna från kartans mitt, eller med knappen "Kortast i vyn"
+  de fem med kortast median i vyn; listan följer kameran ur minnet. Små
+  grå prickar är övriga sjukhus.
+- Kortet visar medianerna 2025 med 2024 inom parentes, rikets medianer,
+  besök 2025 och förändringen mot 2024, att det är årsmedianer för vuxna och
+  inte aktuell väntetid, samt "Akut livshotande: ring 112 · Rådgivning: 1177".
+- Byggskriptens gemensamma delar (Overpass med speglar och cache, land för en
+  punkt, markhöjder) ligger nu i `scripts/lib/osmSnapshot.mjs`, som även
+  `build-company-stores.mjs` använder. Åland räknas nu som eget område så
+  att Ålands centralsjukhus inte hamnar i Sverige.
 
 ### 2026-11-09 (skyddsrum)
 - Nytt lager **Skyddsrum (Sverige)** (delningstoken `0h`) under

@@ -26,176 +26,33 @@
  *   node scripts/build-company-stores.mjs [--endpoint <overpass-url>]
  */
 
-import { createHash } from 'node:crypto';
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
-import os from 'node:os';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import {
   COMPANIES,
   normalizeStores,
   storeCounts,
 } from '../src/layers/companyStores/records.js';
-import { decodeRing, polygonsContain } from '../src/data/adminBoundaries.js';
+import {
+  BOX,
+  ROOT,
+  USER_AGENT,
+  countries,
+  countryOf,
+  createCache,
+} from './lib/osmSnapshot.mjs';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(
   ROOT,
   'src/data/local_data/se_company_stores/stores.json',
 );
-const USER_AGENT =
-  'gods-eye-view-sverige/0.1 (+https://github.com/Kajjan7610/Gods-view-sweden)';
-const BOX = '55.0,10.5,69.2,24.2';
-const argEndpoint = process.argv.includes('--endpoint')
-  ? process.argv[process.argv.indexOf('--endpoint') + 1]
-  : null;
-// Tried in order; a busy public instance answers 504 and the next is asked.
-const ENDPOINTS = [
-  (process.env.OVERPASS_UPSTREAMS || '').split(',')[0].trim(),
-  argEndpoint,
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-  'https://overpass.private.coffee/api/interpreter',
-].filter(Boolean);
-
-const AROUND_SWEDEN = [
-  'SWE',
-  'NOR',
-  'FIN',
-  'DNK',
-  'EST',
-  'LVA',
-  'LTU',
-  'RUS',
-  'DEU',
-  'POL',
-];
-
-async function countries() {
-  const pack = JSON.parse(
-    await readFile(
-      path.join(ROOT, 'src/data/local_data/natural_earth/countries.json'),
-      'utf8',
-    ),
-  );
-  const decimals = pack.meta.decimals;
-  const byIso = {};
-  for (const feature of pack.features) {
-    // Every country the box reaches, so a Baltic store is not taken for a
-    // Swedish one on the nearest coast.
-    if (!AROUND_SWEDEN.includes(feature.iso)) continue;
-    byIso[feature.iso] = feature.polygons.map((poly) =>
-      poly.map((ring) => decodeRing(ring, decimals)),
-    );
-  }
-  return byIso;
-}
-
-/** The country a point belongs to: containing polygon, else nearest vertex. */
-function countryOf(byIso, [lon, lat]) {
-  for (const [iso, polygons] of Object.entries(byIso))
-    if (polygonsContain(polygons, lat, lon)) return iso;
-  let best = null;
-  const cos = Math.cos((lat * Math.PI) / 180);
-  for (const [iso, polygons] of Object.entries(byIso))
-    for (const [outer] of polygons)
-      for (const [x, y] of outer) {
-        const d = ((x - lon) * cos) ** 2 + (y - lat) ** 2;
-        if (!best || d < best.d) best = { iso, d };
-      }
-  return best?.iso ?? null;
-}
-
 const STOP_RADIUS_M = 600;
 const POPULATION_RADIUS_M = 2000;
 const SCB_WFS = 'https://geodata.scb.se/geoserver/stat/wfs';
 
-const CACHE = path.join(os.tmpdir(), 'gev-company-stores');
-const CACHE_MS = 12 * 60 * 60_000;
-/** Oldest OSM data an answer may carry; older mirrors are skipped. */
-const MAX_LAG_MS = 14 * 24 * 60 * 60_000;
-
-async function overpass(query) {
-  const file = path.join(
-    CACHE,
-    `${createHash('sha256').update(query).digest('hex').slice(0, 16)}.json`,
-  );
-  try {
-    if (Date.now() - (await stat(file)).mtimeMs < CACHE_MS)
-      return JSON.parse(await readFile(file, 'utf8'));
-  } catch {
-    // Not cached yet.
-  }
-  for (let attempt = 1; attempt <= 3 * ENDPOINTS.length; attempt++) {
-    const endpoint = ENDPOINTS[(attempt - 1) % ENDPOINTS.length];
-    let status;
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': USER_AGENT,
-        },
-        body: new URLSearchParams({ data: query }),
-        signal: AbortSignal.timeout(240_000),
-      });
-      const body = await response.text();
-      // A mirror that lags months behind answers fine but stale: try another.
-      const base = Date.parse(
-        body.match(/"timestamp_osm_base":\s*"([^"]+)"/)?.[1] ?? '',
-      );
-      if (Number.isFinite(base) && Date.now() - base > MAX_LAG_MS) {
-        status = `data from ${new Date(base).toISOString().slice(0, 10)}`;
-        console.warn(`  ${new URL(endpoint).host} ${status}, attempt ${attempt}`);
-        await new Promise((resolve) => setTimeout(resolve, 15_000));
-        continue;
-      }
-      if (response.ok && body.startsWith('{')) {
-        await mkdir(CACHE, { recursive: true });
-        await writeFile(file, body);
-        return JSON.parse(body);
-      }
-      status = `HTTP ${response.status}`;
-    } catch (error) {
-      status = error?.cause?.code || error?.name || 'network error';
-    }
-    console.warn(`  ${new URL(endpoint).host} ${status}, attempt ${attempt}`);
-    await new Promise((resolve) => setTimeout(resolve, 15_000));
-  }
-  throw new Error('Overpass unavailable');
-}
-
-/** A GET answer as JSON, kept in the cache like the Overpass answers. */
-async function cachedJson(url) {
-  const file = path.join(
-    CACHE,
-    `${createHash('sha256').update(url).digest('hex').slice(0, 16)}.json`,
-  );
-  try {
-    if (Date.now() - (await stat(file)).mtimeMs < CACHE_MS)
-      return JSON.parse(await readFile(file, 'utf8'));
-  } catch {
-    // Not cached yet.
-  }
-  for (let attempt = 1; ; attempt++) {
-    try {
-      const response = await fetch(url, {
-        headers: { 'User-Agent': USER_AGENT },
-        signal: AbortSignal.timeout(240_000),
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const body = await response.text();
-      await mkdir(CACHE, { recursive: true });
-      await writeFile(file, body);
-      return JSON.parse(body);
-    } catch (error) {
-      if (attempt >= 3) throw error;
-      console.warn(
-        `  ${new URL(url).host} ${error.message}, attempt ${attempt}`,
-      );
-      await new Promise((resolve) => setTimeout(resolve, 15_000));
-    }
-  }
-}
+const cache = createCache('gev-company-stores');
+const overpass = cache.overpass;
+const cachedJson = cache.json;
 
 /** WGS84 to SWEREF 99 TM (EPSG:3006), Lantmäteriet's Gauss–Krüger formulas. */
 function sweref99tm([lon, lat]) {
@@ -430,19 +287,7 @@ for (const row of stores) {
 // ground without clamping 3,000 points to photorealistic 3D tiles: Cesium
 // re-picks every clamped point inside each tile as it streams in.
 console.log('Re:Earth ground heights');
-for (let start = 0; start < stores.length; start += 64) {
-  const chunk = stores.slice(start, start + 64);
-  const points = chunk
-    .map((row) => row.point.map((value) => value.toFixed(5)).join(','))
-    .join(';');
-  const answer = await cachedJson(
-    `https://terrain.reearth.land/heights.json?points=${encodeURIComponent(points)}`,
-  );
-  chunk.forEach((row, index) => {
-    const height = answer.results?.[index]?.ellipsoid;
-    if (Number.isFinite(height)) row.height = Math.round(height);
-  });
-}
+await cache.groundHeights(stores);
 const facts = await wikidataFacts(COMPANIES.map((company) => company.wikidata));
 const snapshot = {
   schemaVersion: 1,

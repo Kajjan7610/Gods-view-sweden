@@ -1,0 +1,574 @@
+{
+ "schemaVersion": 1,
+ "source": "Socialstyrelsen, Patientregistret",
+ "publication": "Statistik om akutmottagningar, väntetider och besök 2025",
+ "articleNumber": "2026-6-10339",
+ "published": "2026-05-25",
+ "url": "https://www.socialstyrelsen.se/statistik-och-data/statistik/statistikamnen/vantetider-och-besok-vid-sjukhusbundna-akutmottagningar/",
+ "scope": "Sjukhusbundna akutmottagningar med två eller fler samlokaliserade somatiska specialiteter; besök av patienter 19 år och äldre. TTL och TVT är medianer i minuter.",
+ "year": 2025,
+ "national": {
+  "ttl2025": 61,
+  "tvt2025": 256
+ },
+ "departments": [
+  {
+   "name": "Blekingesjukhuset",
+   "visits2024": 25119,
+   "visits2025": 25832,
+   "ttl2024": 81,
+   "ttl2025": 63,
+   "tvt2024": 250,
+   "tvt2025": 248
+  },
+  {
+   "name": "Falu lasarett",
+   "visits2024": 37186,
+   "visits2025": 36543,
+   "ttl2024": 71,
+   "ttl2025": 72,
+   "tvt2024": 261,
+   "tvt2025": 258
+  },
+  {
+   "name": "Mora lasarett",
+   "visits2024": 20272,
+   "visits2025": 20650,
+   "ttl2024": 49,
+   "ttl2025": 46,
+   "tvt2024": 198,
+   "tvt2025": 200
+  },
+  {
+   "name": "Visby lasarett",
+   "visits2024": 19536,
+   "visits2025": 19796,
+   "ttl2024": 50,
+   "ttl2025": 46,
+   "tvt2024": 194,
+   "tvt2025": 186
+  },
+  {
+   "name": "Länssjukhuset Gävle-Sandviken",
+   "visits2024": 27118,
+   "visits2025": 31554,
+   "ttl2024": 54,
+   "ttl2025": 51,
+   "tvt2024": 242,
+   "tvt2025": 255
+  },
+  {
+   "name": "Hudiksvalls sjukhus",
+   "visits2024": 17795,
+   "visits2025": 17763,
+   "ttl2024": 59,
+   "ttl2025": 58,
+   "tvt2024": 258,
+   "tvt2025": 281
+  },
+  {
+   "name": "Bollnäs närsjukhus",
+   "visits2024": null,
+   "visits2025": 13111,
+   "ttl2024": null,
+   "ttl2025": 46,
+   "tvt2024": null,
+   "tvt2025": 161
+  },
+  {
+   "name": "Hallands sjukhus",
+   "visits2024": 64357,
+   "visits2025": 65351,
+   "ttl2024": 71,
+   "ttl2025": 80,
+   "tvt2024": 257,
+   "tvt2025": 276
+  },
+  {
+   "name": "Östersunds sjukhus",
+   "visits2024": 23229,
+   "visits2025": 24934,
+   "ttl2024": 59,
+   "ttl2025": 63,
+   "tvt2024": 236,
+   "tvt2025": 240
+  },
+  {
+   "name": "Höglandssjukhuset",
+   "visits2024": 20205,
+   "visits2025": 20878,
+   "ttl2024": 39,
+   "ttl2025": 40,
+   "tvt2024": 198,
+   "tvt2025": 199
+  },
+  {
+   "name": "Länssjukhuset Ryhov",
+   "visits2024": 31903,
+   "visits2025": 32854,
+   "ttl2024": 56,
+   "ttl2025": 53,
+   "tvt2024": 192,
+   "tvt2025": 179
+  },
+  {
+   "name": "Värnamo sjukhus",
+   "visits2024": 17448,
+   "visits2025": 17146,
+   "ttl2024": 32,
+   "ttl2025": 34,
+   "tvt2024": 160,
+   "tvt2025": 170
+  },
+  {
+   "name": "Länssjukhuset i Kalmar",
+   "visits2024": 29730,
+   "visits2025": 29982,
+   "ttl2024": 60,
+   "ttl2025": 62,
+   "tvt2024": 216,
+   "tvt2025": 224
+  },
+  {
+   "name": "Oskarshamns sjukhus",
+   "visits2024": 6540,
+   "visits2025": 6715,
+   "ttl2024": 39,
+   "ttl2025": 36,
+   "tvt2024": 185,
+   "tvt2025": 177
+  },
+  {
+   "name": "Västerviks sjukhus",
+   "visits2024": 15862,
+   "visits2025": 17194,
+   "ttl2024": 40,
+   "ttl2025": 42,
+   "tvt2024": 156,
+   "tvt2025": 164
+  },
+  {
+   "name": "Ljungby lasarett",
+   "visits2024": 10891,
+   "visits2025": 11515,
+   "ttl2024": 38,
+   "ttl2025": 39,
+   "tvt2024": 219,
+   "tvt2025": 217
+  },
+  {
+   "name": "Centrallasarettet i Växjö",
+   "visits2024": 26754,
+   "visits2025": 27785,
+   "ttl2024": 68,
+   "ttl2025": 84,
+   "tvt2024": 248,
+   "tvt2025": 270
+  },
+  {
+   "name": "Gällivare sjukhus",
+   "visits2024": 6925,
+   "visits2025": 7899,
+   "ttl2024": 28,
+   "ttl2025": 30,
+   "tvt2024": 202,
+   "tvt2025": 220
+  },
+  {
+   "name": "Kalix sjukhus",
+   "visits2024": 4289,
+   "visits2025": 9994,
+   "ttl2024": 16,
+   "ttl2025": 19,
+   "tvt2024": 204,
+   "tvt2025": 197
+  },
+  {
+   "name": "Kiruna sjukhus",
+   "visits2024": 7332,
+   "visits2025": 8044,
+   "ttl2024": 26,
+   "ttl2025": 25,
+   "tvt2024": 189,
+   "tvt2025": 199
+  },
+  {
+   "name": "Piteå Älvdals sjukhus",
+   "visits2024": 10010,
+   "visits2025": 11646,
+   "ttl2024": 27,
+   "ttl2025": 37,
+   "tvt2024": 204,
+   "tvt2025": 208
+  },
+  {
+   "name": "Sunderby sjukhus",
+   "visits2024": 23282,
+   "visits2025": 26410,
+   "ttl2024": 75,
+   "ttl2025": 84,
+   "tvt2024": 312,
+   "tvt2025": 368
+  },
+  {
+   "name": "Helsingborgs lasarett",
+   "visits2024": 49453,
+   "visits2025": 51249,
+   "ttl2024": 69,
+   "ttl2025": 78,
+   "tvt2024": 294,
+   "tvt2025": 307
+  },
+  {
+   "name": "Centralsjukhuset i Kristianstad",
+   "visits2024": 36060,
+   "visits2025": 37333,
+   "ttl2024": 74,
+   "ttl2025": 69,
+   "tvt2024": 250,
+   "tvt2025": 247
+  },
+  {
+   "name": "Skånes universitetssjukhus Lund",
+   "visits2024": 41913,
+   "visits2025": 43887,
+   "ttl2024": 73,
+   "ttl2025": 79,
+   "tvt2024": 333,
+   "tvt2025": 333
+  },
+  {
+   "name": "Skånes universitetssjukhus Malmö",
+   "visits2024": 55521,
+   "visits2025": 56320,
+   "ttl2024": 96,
+   "ttl2025": 82,
+   "tvt2024": 319,
+   "tvt2025": 302
+  },
+  {
+   "name": "Lasarettet i Ystad",
+   "visits2024": 21967,
+   "visits2025": 21198,
+   "ttl2024": 72,
+   "ttl2025": 77,
+   "tvt2024": 307,
+   "tvt2025": 326
+  },
+  {
+   "name": "Ängelholms sjukhus",
+   "visits2024": 9697,
+   "visits2025": 722,
+   "ttl2024": 52,
+   "ttl2025": 48,
+   "tvt2024": 228,
+   "tvt2025": 226
+  },
+  {
+   "name": "Capio Sankt Görans sjukhus",
+   "visits2024": 86168,
+   "visits2025": 86363,
+   "ttl2024": 47,
+   "ttl2025": 49,
+   "tvt2024": 255,
+   "tvt2025": 272
+  },
+  {
+   "name": "Danderyds sjukhus",
+   "visits2024": 90440,
+   "visits2025": 93631,
+   "ttl2024": 47,
+   "ttl2025": 41,
+   "tvt2024": 313,
+   "tvt2025": 306
+  },
+  {
+   "name": "Karolinska universitetssjukhuset Huddinge",
+   "visits2024": 41657,
+   "visits2025": 43140,
+   "ttl2024": 78,
+   "ttl2025": 70,
+   "tvt2024": 335,
+   "tvt2025": 328
+  },
+  {
+   "name": "Nya Karolinska Solna",
+   "visits2024": 10711,
+   "visits2025": 11014,
+   "ttl2024": 31,
+   "ttl2025": 29,
+   "tvt2024": 239,
+   "tvt2025": 244
+  },
+  {
+   "name": "Norrtälje sjukhus",
+   "visits2024": 12689,
+   "visits2025": 12261,
+   "ttl2024": 44,
+   "ttl2025": 42,
+   "tvt2024": 210,
+   "tvt2025": 221
+  },
+  {
+   "name": "Södersjukhuset",
+   "visits2024": 79666,
+   "visits2025": 82920,
+   "ttl2024": 81,
+   "ttl2025": 78,
+   "tvt2024": 331,
+   "tvt2025": 324
+  },
+  {
+   "name": "Södertälje sjukhus",
+   "visits2024": 31724,
+   "visits2025": 33241,
+   "ttl2024": 40,
+   "ttl2025": 36,
+   "tvt2024": 215,
+   "tvt2025": 201
+  },
+  {
+   "name": "Mälarsjukhuset",
+   "visits2024": 38452,
+   "visits2025": 38734,
+   "ttl2024": 48,
+   "ttl2025": 54,
+   "tvt2024": 249,
+   "tvt2025": 268
+  },
+  {
+   "name": "Kullbergska sjukhuset",
+   "visits2024": 13911,
+   "visits2025": 14538,
+   "ttl2024": 75,
+   "ttl2025": 69,
+   "tvt2024": 252,
+   "tvt2025": 249
+  },
+  {
+   "name": "Nyköpings lasarett",
+   "visits2024": 20486,
+   "visits2025": 20555,
+   "ttl2024": 56,
+   "ttl2025": 66,
+   "tvt2024": 253,
+   "tvt2025": 262
+  },
+  {
+   "name": "Lasarettet i Enköping",
+   "visits2024": 19952,
+   "visits2025": 19904,
+   "ttl2024": 52,
+   "ttl2025": 58,
+   "tvt2024": 208,
+   "tvt2025": 224
+  },
+  {
+   "name": "Akademiska sjukhuset",
+   "visits2024": 39793,
+   "visits2025": 42492,
+   "ttl2024": 85,
+   "ttl2025": 69,
+   "tvt2024": 365,
+   "tvt2025": 335
+  },
+  {
+   "name": "Sjukhuset i Arvika",
+   "visits2024": 9774,
+   "visits2025": 10525,
+   "ttl2024": 31,
+   "ttl2025": 35,
+   "tvt2024": 170,
+   "tvt2025": 179
+  },
+  {
+   "name": "Centralsjukhuset i Karlstad",
+   "visits2024": 38474,
+   "visits2025": 39089,
+   "ttl2024": 73,
+   "ttl2025": 65,
+   "tvt2024": 267,
+   "tvt2025": 247
+  },
+  {
+   "name": "Sjukhuset i Torsby",
+   "visits2024": 11444,
+   "visits2025": 11655,
+   "ttl2024": 35,
+   "ttl2025": 41,
+   "tvt2024": 209,
+   "tvt2025": 216
+  },
+  {
+   "name": "Lycksele lasarett",
+   "visits2024": 7277,
+   "visits2025": 7943,
+   "ttl2024": 33,
+   "ttl2025": 40,
+   "tvt2024": 186,
+   "tvt2025": 209
+  },
+  {
+   "name": "Skellefteå lasarett",
+   "visits2024": 15484,
+   "visits2025": 17681,
+   "ttl2024": 43,
+   "ttl2025": 60,
+   "tvt2024": 248,
+   "tvt2025": 261
+  },
+  {
+   "name": "Norrlands Universitetssjukhus",
+   "visits2024": 28270,
+   "visits2025": 29604,
+   "ttl2024": 54,
+   "ttl2025": 66,
+   "tvt2024": 240,
+   "tvt2025": 253
+  },
+  {
+   "name": "Sollefteå sjukhus",
+   "visits2024": 10593,
+   "visits2025": 9877,
+   "ttl2024": null,
+   "ttl2025": 42,
+   "tvt2024": 219,
+   "tvt2025": 219
+  },
+  {
+   "name": "Länssjukhuset i Sundsvall-Härnösand",
+   "visits2024": 35178,
+   "visits2025": 35543,
+   "ttl2024": 53,
+   "ttl2025": 58,
+   "tvt2024": 232,
+   "tvt2025": 250
+  },
+  {
+   "name": "Örnsköldsviks sjukhus",
+   "visits2024": 17396,
+   "visits2025": 16406,
+   "ttl2024": null,
+   "ttl2025": 68,
+   "tvt2024": 262,
+   "tvt2025": 270
+  },
+  {
+   "name": "Västmanlands sjukhus Köping",
+   "visits2024": 9060,
+   "visits2025": 8029,
+   "ttl2024": 39,
+   "ttl2025": 39,
+   "tvt2024": 207,
+   "tvt2025": 194
+  },
+  {
+   "name": "Västmanlands sjukhus Västerås",
+   "visits2024": 53811,
+   "visits2025": 54953,
+   "ttl2024": null,
+   "ttl2025": null,
+   "tvt2024": 206,
+   "tvt2025": 210
+  },
+  {
+   "name": "Södra Älvsborgs sjukhus",
+   "visits2024": 35039,
+   "visits2025": 35797,
+   "ttl2024": 75,
+   "ttl2025": 84,
+   "tvt2024": 276,
+   "tvt2025": 286
+  },
+  {
+   "name": "Sahlgrenska universitetssjukhuset",
+   "visits2024": 98585,
+   "visits2025": 98307,
+   "ttl2024": 101,
+   "ttl2025": 97,
+   "tvt2024": 283,
+   "tvt2025": 270
+  },
+  {
+   "name": "Skaraborgs sjukhus",
+   "visits2024": 43646,
+   "visits2025": 43523,
+   "ttl2024": 90,
+   "ttl2025": 91,
+   "tvt2024": 283,
+   "tvt2025": 298
+  },
+  {
+   "name": "Norra Älvsborgs Länssjukhus och Uddevalla sjukhus",
+   "visits2024": 44397,
+   "visits2025": 45203,
+   "ttl2024": 77,
+   "ttl2025": 95,
+   "tvt2024": 302,
+   "tvt2025": 332
+  },
+  {
+   "name": "Sjukhusen i väster",
+   "visits2024": 42080,
+   "visits2025": 42424,
+   "ttl2024": 68,
+   "ttl2025": 70,
+   "tvt2024": 250,
+   "tvt2025": 244
+  },
+  {
+   "name": "Universitetssjukhuset Örebro",
+   "visits2024": 55759,
+   "visits2025": 46222,
+   "ttl2024": 58,
+   "ttl2025": 55,
+   "tvt2024": 236,
+   "tvt2025": 239
+  },
+  {
+   "name": "Karlskoga lasarett",
+   "visits2024": 11558,
+   "visits2025": 17906,
+   "ttl2024": 65,
+   "ttl2025": 58,
+   "tvt2024": 211,
+   "tvt2025": 208
+  },
+  {
+   "name": "Lindesbergs lasarett",
+   "visits2024": 7672,
+   "visits2025": 11864,
+   "ttl2024": 58,
+   "ttl2025": 61,
+   "tvt2024": 227,
+   "tvt2025": 239
+  },
+  {
+   "name": "Universitetssjukhuset i Linköping",
+   "visits2024": 37312,
+   "visits2025": 33011,
+   "ttl2024": 53,
+   "ttl2025": 43,
+   "tvt2024": 226,
+   "tvt2025": 226
+  },
+  {
+   "name": "Lasarettet i Motala",
+   "visits2024": 18810,
+   "visits2025": 18453,
+   "ttl2024": 45,
+   "ttl2025": 46,
+   "tvt2024": 207,
+   "tvt2025": 206
+  },
+  {
+   "name": "Vrinnevisjukhuset i Norrköping",
+   "visits2024": 41827,
+   "visits2025": 40965,
+   "ttl2024": 57,
+   "ttl2025": 65,
+   "tvt2024": 266,
+   "tvt2025": 270
+  }
+ ]
+}

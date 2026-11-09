@@ -49,7 +49,9 @@
     "iNaturalist",
     "iNaturalist ↗",
     "{direction} {angle}°",
-    "{direction} · {elevation}"
+    "{direction} · {elevation}",
+    "{label}: {now} (2024: {before})",
+    "{label}: {now}"
   ],
   "de": [
     "1090 MHz",
@@ -262,7 +264,11 @@
     "iNaturalist ↗",
     "{direction} {angle}°",
     "{direction} · {elevation}",
-    "{division}, {country}"
+    "{division}, {country}",
+    "{hours} h {minutes} min",
+    "{hours} h",
+    "{label}: {now} (2024: {before})",
+    "{label}: {now}"
   ],
   "es": [
     "1090 MHz",
@@ -438,7 +444,12 @@
     "Reptiles",
     "acartia.io ↗",
     "iNaturalist ↗",
-    "iNaturalist"
+    "iNaturalist",
+    "{hours} h {minutes} min",
+    "{hours} h",
+    "{label}: {now} (2024: {before})",
+    "{label}: {now}",
+    "HOSPITAL · {name}"
   ],
   "fr": [
     "1090 MHz",
@@ -688,7 +699,9 @@
     "{division}, {country}",
     "SATELLITE",
     "Licence",
-    "{count} places"
+    "{count} places",
+    "{hours} h {minutes} min",
+    "{hours} h"
   ],
   "it": [
     "1090 MHz",
@@ -912,7 +925,11 @@
     "acartia.io ↗",
     "iNaturalist ↗",
     "iNaturalist",
-    "SATELLITE"
+    "SATELLITE",
+    "{hours} h {minutes} min",
+    "{hours} h",
+    "{label}: {now} (2024: {before})",
+    "{label}: {now}"
   ],
   "ja": [
     "1090 MHz",
@@ -1166,7 +1183,12 @@
     "CC BY 4.0",
     "acartia.io ↗",
     "iNaturalist ↗",
-    "iNaturalist"
+    "iNaturalist",
+    "{hours} h {minutes} min",
+    "{hours} h",
+    "{label}: {now} (2024: {before})",
+    "{label}: {now}",
+    "HOSPITAL · {name}"
   ],
   "ru": [
     "AIS: --",
@@ -1202,7 +1224,9 @@
     "iNaturalist ↗",
     "{direction} · {elevation}",
     "{direction} {angle}°",
-    "{division}, {country}"
+    "{division}, {country}",
+    "{label}: {now} (2024: {before})",
+    "{label}: {now}"
   ],
   "sv": [
     "1090 MHz",
@@ -1379,7 +1403,11 @@
     "Salish Sea",
     "iNaturalist",
     "Be Whale Wise",
-    "EXPORT"
+    "EXPORT",
+    "{hours} h {minutes} min",
+    "{hours} h",
+    "{label}: {now} (2024: {before})",
+    "{label}: {now}"
   ],
   "uk": [
     "AIS: --",
@@ -1410,7 +1438,9 @@
     "iNaturalist ↗",
     "{direction} · {elevation}",
     "{direction} {angle}°",
-    "{division}, {country}"
+    "{division}, {country}",
+    "{label}: {now} (2024: {before})",
+    "{label}: {now}"
   ],
   "zh-CN": [
     "1090 MHz",

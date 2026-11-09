@@ -712,6 +712,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     disposition: 'enabled-only',
   }),
   Object.freeze({
+    id: 'hospitals',
+    token: '0g',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'lightning-strikes',
     token: '0l',
     disposition: 'enabled-only',

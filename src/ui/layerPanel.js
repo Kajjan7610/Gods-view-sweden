@@ -78,6 +78,7 @@ const PANEL_GROUPS = [
       'fire-stations',
       'police-stations',
       'shelters',
+      'hospitals',
       'company-stores',
       'sea-marks',
       'ski-pistes',
