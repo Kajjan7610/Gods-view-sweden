@@ -133,9 +133,9 @@ git merge origin/main
 
 ### 2026-11-09 (apotek i Butikskedjor)
 - Butikskedjor visar nu också apoteken hos Apotek Hjärtat (229), Apoteket
-  (328), Kronans Apotek (264), Apoteksgruppen (53) och DOZ Apotek (44, före
-  detta Lloyds Apotek), med en knapp per kedja. Totalt 4 119 butiker och
-  apotek.
+  (333), Kronans Apotek (271), Apoteksgruppen (53) och DOZ Apotek (45, före
+  detta Lloyds Apotek), med en knapp per kedja. Totalt 4 132 butiker och
+  apotek, med OSM-data från 9 november.
 - Apotek är `amenity=pharmacy` i OpenStreetMap, inte butiker, så byggskriptet
   frågar efter apotek för apotekskedjorna. Kedjornas Wikidata-id kommer från
   Name Suggestion Index. Ett apotek har alltid kedjans namn som koncept,
