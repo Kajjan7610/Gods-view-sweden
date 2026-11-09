@@ -515,6 +515,13 @@ export const DATA_CREDITS = [
       '<a href="https://www.geodata.se/geodataportalen/srv/swe/catalog.search#/metadata/6341813c-bfa3-45df-8234-13cf583bf533" target="_blank" rel="noopener">Myndigheten för civilt försvar (MCF)</a>, skyddsrum (INSPIRE)',
   },
   {
+    key: 'municipalities',
+    html:
+      'Municipalities and counties (Sweden): borders from OpenStreetMap contributors, a snapshot ' +
+      '(<a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL</a>); population from ' +
+      '<a href="https://www.statistikdatabasen.scb.se/" target="_blank" rel="noopener">SCB</a> (CC0)',
+  },
+  {
     key: 'hospitals',
     html:
       'Hospitals (Sweden): ' +

@@ -51,7 +51,8 @@
     "{direction} {angle}°",
     "{direction} · {elevation}",
     "{label}: {now} (2024: {before})",
-    "{label}: {now}"
+    "{label}: {now}",
+    "{county}: {population}"
   ],
   "de": [
     "1090 MHz",
@@ -268,7 +269,8 @@
     "{hours} h {minutes} min",
     "{hours} h",
     "{label}: {now} (2024: {before})",
-    "{label}: {now}"
+    "{label}: {now}",
+    "{county}: {population}"
   ],
   "es": [
     "1090 MHz",
@@ -449,7 +451,8 @@
     "{hours} h",
     "{label}: {now} (2024: {before})",
     "{label}: {now}",
-    "HOSPITAL · {name}"
+    "HOSPITAL · {name}",
+    "{county}: {population}"
   ],
   "fr": [
     "1090 MHz",
@@ -929,7 +932,8 @@
     "{hours} h {minutes} min",
     "{hours} h",
     "{label}: {now} (2024: {before})",
-    "{label}: {now}"
+    "{label}: {now}",
+    "{county}: {population}"
   ],
   "ja": [
     "1090 MHz",
@@ -1188,7 +1192,8 @@
     "{hours} h",
     "{label}: {now} (2024: {before})",
     "{label}: {now}",
-    "HOSPITAL · {name}"
+    "HOSPITAL · {name}",
+    "{county}: {population}"
   ],
   "ru": [
     "AIS: --",
@@ -1226,7 +1231,8 @@
     "{direction} {angle}°",
     "{division}, {country}",
     "{label}: {now} (2024: {before})",
-    "{label}: {now}"
+    "{label}: {now}",
+    "{county}: {population}"
   ],
   "sv": [
     "1090 MHz",
@@ -1407,7 +1413,8 @@
     "{hours} h {minutes} min",
     "{hours} h",
     "{label}: {now} (2024: {before})",
-    "{label}: {now}"
+    "{label}: {now}",
+    "{county}: {population}"
   ],
   "uk": [
     "AIS: --",
@@ -1440,7 +1447,8 @@
     "{direction} {angle}°",
     "{division}, {country}",
     "{label}: {now} (2024: {before})",
-    "{label}: {now}"
+    "{label}: {now}",
+    "{county}: {population}"
   ],
   "zh-CN": [
     "1090 MHz",

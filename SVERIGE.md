@@ -32,6 +32,7 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 | Polisstationer: Polisens 261 stationer, färgade efter vad receptionen erbjuder (pass och id-kort, andra ärenden, inga angivna); klick ger adress, tjänster och närmaste passexpedition, klick på kortet öppnar stationens sida med öppettider | Polismyndighetens öppna data (ingen nyckel; Polisen anges som källa) | Police Stations (Sweden) / Polisstationer, under Infrastructure |
 | Skyddsrum: MCF:s cirka 63 000 skyddsrum med 6,8 miljoner platser, i vyn när man zoomat in (de 1 500 närmaste kartans mitt), storlek efter platser; de fem närmaste listas klickbart i raden; klick ger fastighet, platser och om skyddsrummet har tillfällig begränsning | Myndigheten för civilt försvar (MCF), INSPIRE (ingen nyckel, inga villkor) | Shelters (Sweden) / Skyddsrum, under Infrastructure |
 | Sjukhus och akuter: cirka 120 sjukhus, där de 62 akutmottagningarna i Socialstyrelsens statistik för 2025 färgas efter mediantid till läkare eller total vistelsetid jämfört med rikets (61 min respektive 4 h 16 min); raden listar de fem närmaste akutmottagningarna eller de med kortast median i vyn, klickbart; kortet visar medianerna 2025 och 2024, besök och förändring, och "ring 112 / 1177". Årsmedianer för vuxna, inte aktuell väntetid (öppna livetider finns inte i Sverige). | Socialstyrelsen, Patientregistret (faktablad 2026-6-10339), och OpenStreetMap (ODbL) som ögonblicksbild i repot | Hospitals & Emergency (Sweden) / Sjukhus och akuter, under Infrastructure |
+| Kommuner och län: gränserna för alla 290 kommuner och 21 län som linjer på marken (länsgränser gula och tjockare, gränser till havs utelämnade), namnen följer vyn (län på hög höjd, kommuner närmare), kartans mitt i raden med kommun, län och folkmängd; klick på en kommun markerar den och visar län, folkmängd med förändring på ett år och kommunkod | OpenStreetMap (ODbL) som ögonblicksbild i repot; folkmängd per månad från SCB (TAB6473, CC0) | Municipalities & Counties (Sweden) / Kommuner och län, under Infrastructure |
 | Blixtnedslag: varje urladdning den senaste timmen som punkt, färgad efter ålder (vit = senaste 5 min), stora för nedslag i marken och små för blixtar i molnet; klick ger tid, typ och toppström | DMI:s blixtdata (CC BY 4.0, ingen nyckel; DMI:s sensornät och grannländernas sensorer) | Lightning Strikes (Sweden) / Blixtnedslag, under Weather |
 | Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
@@ -68,6 +69,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Polisstationer (Sverige) | Polismyndigheten | Alla polisstationer, cirka 260 | En gång per dygn | Öppna data, källan anges |
 | SE | Skyddsrum (Sverige) | Myndigheten för civilt försvar (MCF) | Alla skyddsrum, cirka 63 000 med 6,8 miljoner platser | En gång per dygn | Inga tillämpliga villkor (INSPIRE) |
 | SE | Sjukhus och akuter (Sverige) | Socialstyrelsen · OpenStreetMap | Cirka 120 sjukhus; väntetidsmedianer för de 62 akutmottagningarna i statistiken | Årlig statistik; ögonblicksbild i appen, byggs om för hand | Statistiken fri att använda med källa (Socialstyrelsen) · ODbL (OpenStreetMap) |
+| SE | Kommuner och län (Sverige) | OpenStreetMap · SCB | Alla 290 kommuner och 21 län, med folkmängd per månad | Ögonblicksbild i appen, byggs om för hand | ODbL (OpenStreetMap) · CC0 1.0 (SCB) |
 | SE | Butikskedjor (Sverige) | OpenStreetMap · Wikidata · SCB | Elva kedjors butiker och apotek i hela Sverige; kartlagda av frivilliga | Ögonblicksbild i appen, byggs om för hand | ODbL (OpenStreetMap) · CC0 1.0 (Wikidata, SCB) |
 | SE | Väglag (Sverige) | Trafikverket | Väglag och aktuella händelser i hela Sverige | Var 3:e minut | CC0 1.0 |
 | SE | Vägväder (Sverige) | Trafikverket | Cirka 830 vägväderstationer | Var 5:e minut | CC0 1.0 |
@@ -124,6 +126,32 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-09 (kommuner och län)
+- Nytt lager **Kommuner och län (Sverige)** (delningstoken `0f`) under
+  Infrastructure, efter Sjukhus och akuter: gränserna för Sveriges 290
+  kommuner och 21 län.
+- Gränserna kommer från OpenStreetMap via det handkörda
+  `scripts/build-municipalities.mjs`. SCB:s öppna gränsfiler (CC0) prövades
+  först men är förenklade för statistikkartor (cirka 34 punkter per kommun)
+  och såg kantiga ut mot flygbilderna. Varje gränslinje lagras en gång och
+  delas av kommunerna på båda sidor, så grannar möts exakt; linjerna är
+  förenklade med 25 m tolerans (cirka 56 000 punkter, 600 kB). Gränser till
+  havs (`maritime=yes`) används för ytorna men ritas inte.
+- Linjerna ligger på marken (terrängen, eller 3D-tiles när globen är dold,
+  som undervattenskablarna) och ritas i en batch per färg; markeringen av en
+  vald kommun ligger i en egen datakälla så att ett klick aldrig bygger om
+  gränslinjerna. Namnen visas via appens etikettlager: länen på hög höjd,
+  kommunerna närmare, högst 40 åt gången närmast kartans mitt.
+- Folkmängden är SCB:s senaste månadssiffra (tabell TAB6473, augusti 2026)
+  och samma månad året innan, så kortet visar förändringen på ett år.
+  Namnen tas från SCB ("Stockholm", inte OSM:s "Stockholms kommun"). SCB:s
+  årstabell slutar på 2024; den nyare månadstabellen hittades genom att
+  jämföra tabellernas senaste period.
+- Raden visar kommun, län och folkmängd för kartans mitt; ett klick på en
+  kommun markerar den med vit kontur och visar län, folkmängd med datum,
+  länets folkmängd och kommunkod. Knapparna Kommuner och Län tänder och
+  släcker respektive linjer.
 
 ### 2026-11-09 (sjukhus och akuter)
 - Nytt lager **Sjukhus och akuter (Sverige)** (delningstoken `0g`) under

@@ -98,6 +98,14 @@ export const LAYER_PROVENANCE = Object.freeze({
       'Statistics free to use, source credited (Socialstyrelsen) · ODbL (OpenStreetMap)',
     ),
   }),
+  municipalities: own({
+    source: 'OpenStreetMap · SCB',
+    coverage: msg(
+      'All 290 municipalities and 21 counties, with population by month',
+    ),
+    updates: msg('Snapshot in the app, rebuilt by hand'),
+    licence: `ODbL (OpenStreetMap) · ${CC0} (SCB)`,
+  }),
   'company-stores': own({
     source: 'OpenStreetMap · Wikidata · SCB',
     coverage: msg(
