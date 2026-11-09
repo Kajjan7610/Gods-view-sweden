@@ -80,6 +80,14 @@ export const LAYER_PROVENANCE = Object.freeze({
     updates: msg('Daily'),
     licence: CREDIT,
   }),
+  shelters: own({
+    source: 'Myndigheten för civilt försvar (MCF)',
+    coverage: msg(
+      'All civil-defence shelters, about 63,000 with 6.8 million places',
+    ),
+    updates: msg('Daily'),
+    licence: msg('No conditions apply (INSPIRE)'),
+  }),
   'company-stores': own({
     source: 'OpenStreetMap · Wikidata · SCB',
     coverage: msg(
@@ -225,6 +233,7 @@ const PHRASES = new Set([
   msg('EU high-value dataset, source credited'),
   msg('Public domain (US government)'),
   msg('Free to use, source credited'),
+  msg('No conditions apply (INSPIRE)'),
 ]);
 function translatedOrName(text) {
   return PHRASES.has(text) ? t(text) : text;

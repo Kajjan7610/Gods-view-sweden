@@ -3926,5 +3926,28 @@
   "Sources and coverage": "出典と範囲",
   "Swedish road cameras, trains, road conditions, road weather and speed cameras": "スウェーデンの道路カメラ、列車、路面状況、道路気象、速度取締カメラ",
   "Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys": "スウェーデンのバス・地下鉄・路面電車のリアルタイム位置（路線番号付き）と運行障害：GTFS Regional Realtime と Static のキー",
-  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Swedavia の 10 空港の出発・到着と保安検査の待ち列：FlightInfo と WaitTime のキー"
+  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Swedavia の 10 空港の出発・到着と保安検査の待ち列：FlightInfo と WaitTime のキー",
+  "{count} places": {
+    "other": "{count} 人分"
+  },
+  "Property {name}": "地番 {name}",
+  "Temporarily restricted": "一時的な制限",
+  "Special shelter": "特別シェルター",
+  "{distance} from the map centre": "地図の中心から {distance}",
+  "For use in heightened alert; listen to VMA": "高度警戒時に使用。VMA の警報に従ってください",
+  "SHELTER · {number}": "シェルター · {number}",
+  "SHELTER": "シェルター",
+  "Shelter data unavailable": "シェルターデータを利用できません",
+  "Zoom in to see shelters: they show below {height} km": "ズームインするとシェルターが表示されます（{height} km 以下）",
+  "Shelter": "シェルター",
+  "Dots are the civil-defence shelters MCF registers, sized by their places; the nearest to the map centre are drawn. Shelters are for use in heightened alert, when VMA tells you to seek shelter. Click one for its property and places.": "点は MCF が登録する民間防衛シェルターで、収容人数で大きさを変えています。地図の中心に近いものを表示します。シェルターは高度警戒時、VMA が避難を呼びかけたときに使います。クリックで地番と収容人数を表示します。",
+  "{count} shelters with {places} in view": {
+    "other": "表示範囲にシェルター {count} か所、{places}"
+  },
+  "Nearest shelters to the map centre": "地図の中心に最も近いシェルター",
+  "Shelters need a view to show": "シェルターの表示には地図範囲が必要です",
+  "Malformed shelter snapshot": "シェルタースナップショットの形式が不正です",
+  "Shelters (Sweden)": "シェルター（スウェーデン）",
+  "All civil-defence shelters, about 63,000 with 6.8 million places": "すべての民間防衛シェルター、約 63,000 か所・680 万人分",
+  "No conditions apply (INSPIRE)": "条件なし（INSPIRE）"
 }

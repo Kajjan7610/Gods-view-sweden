@@ -4326,5 +4326,38 @@
   "Sources and coverage": "المصادر والتغطية",
   "Swedish road cameras, trains, road conditions, road weather and speed cameras": "كاميرات الطرق والقطارات وحالة الطرق وطقس الطرق وكاميرات السرعة في السويد",
   "Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys": "الحافلات والمترو والترام في السويد مباشرة مع أرقام الخطوط والاضطرابات: مفتاحا GTFS Regional Realtime وStatic",
-  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "المغادرة والوصول وطوابير التفتيش الأمني في مطارات Swedavia العشرة: مفتاحا FlightInfo وWaitTime"
+  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "المغادرة والوصول وطوابير التفتيش الأمني في مطارات Swedavia العشرة: مفتاحا FlightInfo وWaitTime",
+  "{count} places": {
+    "zero": "{count} مكان",
+    "one": "مكان واحد ({count})",
+    "two": "مكانان ({count})",
+    "few": "{count} أماكن",
+    "many": "{count} مكانًا",
+    "other": "{count} مكان"
+  },
+  "Property {name}": "العقار {name}",
+  "Temporarily restricted": "تقييد مؤقت",
+  "Special shelter": "ملجأ خاص",
+  "{distance} from the map centre": "{distance} من مركز الخريطة",
+  "For use in heightened alert; listen to VMA": "للاستخدام في حالة التأهب القصوى؛ استمع إلى تنبيهات VMA",
+  "SHELTER · {number}": "ملجأ · {number}",
+  "SHELTER": "ملجأ",
+  "Shelter data unavailable": "بيانات الملاجئ غير متاحة",
+  "Zoom in to see shelters: they show below {height} km": "كبّر الخريطة لرؤية الملاجئ: تظهر تحت {height} كم",
+  "Shelter": "ملجأ",
+  "Dots are the civil-defence shelters MCF registers, sized by their places; the nearest to the map centre are drawn. Shelters are for use in heightened alert, when VMA tells you to seek shelter. Click one for its property and places.": "النقاط هي ملاجئ الدفاع المدني المسجلة لدى MCF، بحجم يتبع عدد الأماكن؛ تُرسم الأقرب إلى مركز الخريطة. تُستخدم الملاجئ في حالة التأهب القصوى عندما يدعو تنبيه VMA إلى الاحتماء. انقر على ملجأ لمعرفة العقار وعدد الأماكن.",
+  "{count} shelters with {places} in view": {
+    "zero": "{count} ملجأ مع {places} في العرض",
+    "one": "ملجأ واحد ({count}) مع {places} في العرض",
+    "two": "ملجآن ({count}) مع {places} في العرض",
+    "few": "{count} ملاجئ مع {places} في العرض",
+    "many": "{count} ملجأً مع {places} في العرض",
+    "other": "{count} ملجأ مع {places} في العرض"
+  },
+  "Nearest shelters to the map centre": "أقرب الملاجئ إلى مركز الخريطة",
+  "Shelters need a view to show": "تحتاج الملاجئ إلى عرض للخريطة",
+  "Malformed shelter snapshot": "لقطة الملاجئ غير صالحة",
+  "Shelters (Sweden)": "الملاجئ (السويد)",
+  "All civil-defence shelters, about 63,000 with 6.8 million places": "جميع ملاجئ الدفاع المدني، نحو 63 000 ملجأ بسعة 6,8 مليون مكان",
+  "No conditions apply (INSPIRE)": "لا شروط (INSPIRE)"
 }

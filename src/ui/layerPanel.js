@@ -77,6 +77,7 @@ const PANEL_GROUPS = [
       'gamma-radiation',
       'fire-stations',
       'police-stations',
+      'shelters',
       'company-stores',
       'sea-marks',
       'ski-pistes',

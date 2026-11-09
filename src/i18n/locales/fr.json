@@ -4086,5 +4086,32 @@
   "Sources and coverage": "Sources et couverture",
   "Swedish road cameras, trains, road conditions, road weather and speed cameras": "Caméras routières, trains, état des routes, météo routière et radars de Suède",
   "Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys": "Bus, métro et tramways suédois en direct avec numéros de ligne, et perturbations : clés GTFS Regional Realtime et Static",
-  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Départs, arrivées et files d'attente au contrôle de sûreté des dix aéroports Swedavia : clés FlightInfo et WaitTime"
+  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Départs, arrivées et files d'attente au contrôle de sûreté des dix aéroports Swedavia : clés FlightInfo et WaitTime",
+  "{count} places": {
+    "one": "{count} place",
+    "many": "{count} de places",
+    "other": "{count} places"
+  },
+  "Property {name}": "Parcelle {name}",
+  "Temporarily restricted": "Restriction temporaire",
+  "Special shelter": "Abri spécial",
+  "{distance} from the map centre": "{distance} du centre de la carte",
+  "For use in heightened alert; listen to VMA": "Pour l’état d’alerte renforcée ; écoutez les alertes VMA",
+  "SHELTER · {number}": "ABRI · {number}",
+  "SHELTER": "ABRI",
+  "Shelter data unavailable": "Abris indisponibles",
+  "Zoom in to see shelters: they show below {height} km": "Zoomez pour voir les abris : ils apparaissent sous {height} km",
+  "Shelter": "Abri",
+  "Dots are the civil-defence shelters MCF registers, sized by their places; the nearest to the map centre are drawn. Shelters are for use in heightened alert, when VMA tells you to seek shelter. Click one for its property and places.": "Les points sont les abris de protection civile enregistrés par le MCF, leur taille selon leurs places ; les plus proches du centre de la carte sont dessinés. Les abris servent en état d’alerte renforcée, quand une alerte VMA invite à se mettre à l’abri. Cliquez sur l’un d’eux pour sa parcelle et ses places.",
+  "{count} shelters with {places} in view": {
+    "one": "{count} abri avec {places} dans la vue",
+    "many": "{count} d’abris avec {places} dans la vue",
+    "other": "{count} abris avec {places} dans la vue"
+  },
+  "Nearest shelters to the map centre": "Abris les plus proches du centre de la carte",
+  "Shelters need a view to show": "Les abris ont besoin d’une vue",
+  "Malformed shelter snapshot": "Instantané des abris mal formé",
+  "Shelters (Sweden)": "Abris (Suède)",
+  "All civil-defence shelters, about 63,000 with 6.8 million places": "Tous les abris de protection civile, environ 63 000 pour 6,8 millions de places",
+  "No conditions apply (INSPIRE)": "Aucune condition (INSPIRE)"
 }

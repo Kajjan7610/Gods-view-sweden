@@ -798,6 +798,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     token: '0u',
     disposition: 'enabled-only',
   }),
+  Object.freeze({
+    id: 'shelters',
+    token: '0h',
+    disposition: 'enabled-only',
+  }),
   Object.freeze({ id: 'ski-pistes', token: '7', disposition: 'enabled-only' }),
   Object.freeze({
     id: 'smhi-warnings',

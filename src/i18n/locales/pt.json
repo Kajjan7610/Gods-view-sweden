@@ -4086,5 +4086,32 @@
   "Sources and coverage": "Fontes e cobertura",
   "Swedish road cameras, trains, road conditions, road weather and speed cameras": "Câmaras rodoviárias, comboios, estado das estradas, meteorologia rodoviária e radares da Suécia",
   "Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys": "Autocarros, metro e elétricos suecos em direto com números de linha, e perturbações: chaves GTFS Regional Realtime e Static",
-  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Partidas, chegadas e filas no controlo de segurança dos dez aeroportos da Swedavia: chaves FlightInfo e WaitTime"
+  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Partidas, chegadas e filas no controlo de segurança dos dez aeroportos da Swedavia: chaves FlightInfo e WaitTime",
+  "{count} places": {
+    "one": "{count} lugar",
+    "many": "{count} de lugares",
+    "other": "{count} lugares"
+  },
+  "Property {name}": "Prédio {name}",
+  "Temporarily restricted": "Restrição temporária",
+  "Special shelter": "Abrigo especial",
+  "{distance} from the map centre": "{distance} do centro do mapa",
+  "For use in heightened alert; listen to VMA": "Para estado de alerta elevado; ouça os avisos VMA",
+  "SHELTER · {number}": "ABRIGO · {number}",
+  "SHELTER": "ABRIGO",
+  "Shelter data unavailable": "Abrigos indisponíveis",
+  "Zoom in to see shelters: they show below {height} km": "Aproxime para ver os abrigos: aparecem abaixo de {height} km",
+  "Shelter": "Abrigo",
+  "Dots are the civil-defence shelters MCF registers, sized by their places; the nearest to the map centre are drawn. Shelters are for use in heightened alert, when VMA tells you to seek shelter. Click one for its property and places.": "Os pontos são os abrigos de proteção civil registados pelo MCF, com tamanho segundo os lugares; desenham-se os mais próximos do centro do mapa. Os abrigos usam-se em alerta elevado, quando um aviso VMA pede para procurar abrigo. Clique num para ver o prédio e os lugares.",
+  "{count} shelters with {places} in view": {
+    "one": "{count} abrigo com {places} na vista",
+    "many": "{count} de abrigos com {places} na vista",
+    "other": "{count} abrigos com {places} na vista"
+  },
+  "Nearest shelters to the map centre": "Abrigos mais próximos do centro do mapa",
+  "Shelters need a view to show": "Os abrigos precisam de uma vista",
+  "Malformed shelter snapshot": "Instantâneo de abrigos malformado",
+  "Shelters (Sweden)": "Abrigos (Suécia)",
+  "All civil-defence shelters, about 63,000 with 6.8 million places": "Todos os abrigos de proteção civil, cerca de 63 000 com 6,8 milhões de lugares",
+  "No conditions apply (INSPIRE)": "Sem condições (INSPIRE)"
 }

@@ -3926,5 +3926,28 @@
   "Sources and coverage": "来源与覆盖范围",
   "Swedish road cameras, trains, road conditions, road weather and speed cameras": "瑞典道路摄像头、火车、路况、道路气象和测速摄像头",
   "Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys": "瑞典公交、地铁和有轨电车实时位置（含线路号）及运营中断：GTFS Regional Realtime 和 Static 密钥",
-  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Swedavia 十座机场的出发、到达和安检排队：FlightInfo 和 WaitTime 密钥"
+  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Swedavia 十座机场的出发、到达和安检排队：FlightInfo 和 WaitTime 密钥",
+  "{count} places": {
+    "other": "{count} 个位置"
+  },
+  "Property {name}": "地块 {name}",
+  "Temporarily restricted": "临时限制",
+  "Special shelter": "特殊掩蔽所",
+  "{distance} from the map centre": "距地图中心 {distance}",
+  "For use in heightened alert; listen to VMA": "用于高度戒备状态；请留意 VMA 警报",
+  "SHELTER · {number}": "掩蔽所 · {number}",
+  "SHELTER": "掩蔽所",
+  "Shelter data unavailable": "掩蔽所数据不可用",
+  "Zoom in to see shelters: they show below {height} km": "放大后可查看掩蔽所：在 {height} 公里以下显示",
+  "Shelter": "掩蔽所",
+  "Dots are the civil-defence shelters MCF registers, sized by their places; the nearest to the map centre are drawn. Shelters are for use in heightened alert, when VMA tells you to seek shelter. Click one for its property and places.": "圆点是 MCF 登记的民防掩蔽所，大小按容纳人数；显示离地图中心最近的。掩蔽所在高度戒备状态下、VMA 号召避险时使用。点击可查看地块和容纳人数。",
+  "{count} shelters with {places} in view": {
+    "other": "视图内 {count} 个掩蔽所，{places}"
+  },
+  "Nearest shelters to the map centre": "离地图中心最近的掩蔽所",
+  "Shelters need a view to show": "掩蔽所需要地图视图",
+  "Malformed shelter snapshot": "掩蔽所快照格式错误",
+  "Shelters (Sweden)": "掩蔽所（瑞典）",
+  "All civil-defence shelters, about 63,000 with 6.8 million places": "全部民防掩蔽所，约 63,000 个，可容纳 680 万人",
+  "No conditions apply (INSPIRE)": "无适用条件（INSPIRE）"
 }

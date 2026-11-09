@@ -4086,5 +4086,32 @@
   "Sources and coverage": "Fonti e copertura",
   "Swedish road cameras, trains, road conditions, road weather and speed cameras": "Telecamere stradali, treni, condizioni stradali, meteo stradale e autovelox svedesi",
   "Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys": "Autobus, metropolitana e tram svedesi dal vivo con numeri di linea, e disservizi: chiavi GTFS Regional Realtime e Static",
-  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Partenze, arrivi e code ai controlli di sicurezza nei dieci aeroporti Swedavia: chiavi FlightInfo e WaitTime"
+  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Partenze, arrivi e code ai controlli di sicurezza nei dieci aeroporti Swedavia: chiavi FlightInfo e WaitTime",
+  "{count} places": {
+    "one": "{count} posto",
+    "many": "{count} di posti",
+    "other": "{count} posti"
+  },
+  "Property {name}": "Particella {name}",
+  "Temporarily restricted": "Limitazione temporanea",
+  "Special shelter": "Rifugio speciale",
+  "{distance} from the map centre": "{distance} dal centro della mappa",
+  "For use in heightened alert; listen to VMA": "Per lo stato di allerta elevata; ascolta gli avvisi VMA",
+  "SHELTER · {number}": "RIFUGIO · {number}",
+  "SHELTER": "RIFUGIO",
+  "Shelter data unavailable": "Rifugi non disponibili",
+  "Zoom in to see shelters: they show below {height} km": "Ingrandisci per vedere i rifugi: compaiono sotto {height} km",
+  "Shelter": "Rifugio",
+  "Dots are the civil-defence shelters MCF registers, sized by their places; the nearest to the map centre are drawn. Shelters are for use in heightened alert, when VMA tells you to seek shelter. Click one for its property and places.": "I punti sono i rifugi di protezione civile registrati dal MCF, dimensionati in base ai posti; sono disegnati i più vicini al centro della mappa. I rifugi si usano in allerta elevata, quando un avviso VMA invita a cercare riparo. Fai clic su uno per particella e posti.",
+  "{count} shelters with {places} in view": {
+    "one": "{count} rifugio con {places} nella vista",
+    "many": "{count} di rifugi con {places} nella vista",
+    "other": "{count} rifugi con {places} nella vista"
+  },
+  "Nearest shelters to the map centre": "Rifugi più vicini al centro della mappa",
+  "Shelters need a view to show": "I rifugi richiedono una vista",
+  "Malformed shelter snapshot": "Istantanea dei rifugi non valida",
+  "Shelters (Sweden)": "Rifugi (Svezia)",
+  "All civil-defence shelters, about 63,000 with 6.8 million places": "Tutti i rifugi di protezione civile, circa 63.000 con 6,8 milioni di posti",
+  "No conditions apply (INSPIRE)": "Nessuna condizione (INSPIRE)"
 }

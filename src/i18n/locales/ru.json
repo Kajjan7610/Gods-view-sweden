@@ -4166,5 +4166,34 @@
   "Sources and coverage": "Источники и охват",
   "Swedish road cameras, trains, road conditions, road weather and speed cameras": "Шведские дорожные камеры, поезда, состояние дорог, дорожная погода и камеры скорости",
   "Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys": "Шведские автобусы, метро и трамваи в реальном времени с номерами маршрутов и нарушениями: ключи GTFS Regional Realtime и Static",
-  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Вылеты, прилёты и очереди на досмотре в десяти аэропортах Swedavia: ключи FlightInfo и WaitTime"
+  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Вылеты, прилёты и очереди на досмотре в десяти аэропортах Swedavia: ключи FlightInfo и WaitTime",
+  "{count} places": {
+    "one": "{count} место",
+    "few": "{count} места",
+    "many": "{count} мест",
+    "other": "{count} места"
+  },
+  "Property {name}": "Участок {name}",
+  "Temporarily restricted": "Временное ограничение",
+  "Special shelter": "Специальное убежище",
+  "{distance} from the map centre": "{distance} от центра карты",
+  "For use in heightened alert; listen to VMA": "Для режима повышенной готовности; слушайте оповещения VMA",
+  "SHELTER · {number}": "УБЕЖИЩЕ · {number}",
+  "SHELTER": "УБЕЖИЩЕ",
+  "Shelter data unavailable": "Убежища недоступны",
+  "Zoom in to see shelters: they show below {height} km": "Приблизьте карту, чтобы увидеть убежища: они видны ниже {height} км",
+  "Shelter": "Убежище",
+  "Dots are the civil-defence shelters MCF registers, sized by their places; the nearest to the map centre are drawn. Shelters are for use in heightened alert, when VMA tells you to seek shelter. Click one for its property and places.": "Точки — убежища гражданской обороны из реестра MCF, размер по числу мест; показаны ближайшие к центру карты. Убежища используются в режиме повышенной готовности, когда оповещение VMA призывает укрыться. Нажмите на убежище, чтобы увидеть участок и число мест.",
+  "{count} shelters with {places} in view": {
+    "one": "{count} убежище с {places} в обзоре",
+    "few": "{count} убежища с {places} в обзоре",
+    "many": "{count} убежищ с {places} в обзоре",
+    "other": "{count} убежища с {places} в обзоре"
+  },
+  "Nearest shelters to the map centre": "Ближайшие убежища к центру карты",
+  "Shelters need a view to show": "Убежищам нужен участок карты",
+  "Malformed shelter snapshot": "Некорректный снимок убежищ",
+  "Shelters (Sweden)": "Убежища (Швеция)",
+  "All civil-defence shelters, about 63,000 with 6.8 million places": "Все убежища гражданской обороны, около 63 000 на 6,8 млн мест",
+  "No conditions apply (INSPIRE)": "Без условий (INSPIRE)"
 }

@@ -4006,5 +4006,30 @@
   "Sources and coverage": "Quellen und Abdeckung",
   "Swedish road cameras, trains, road conditions, road weather and speed cameras": "Schwedische Straßenkameras, Züge, Straßenzustand, Straßenwetter und Blitzer",
   "Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys": "Schwedische Busse, U-Bahn und Straßenbahnen live mit Liniennummern sowie Störungen: Schlüssel GTFS Regional Realtime und Static",
-  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Abflüge, Ankünfte und Warteschlangen an der Sicherheitskontrolle der zehn Swedavia-Flughäfen: Schlüssel FlightInfo und WaitTime"
+  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Abflüge, Ankünfte und Warteschlangen an der Sicherheitskontrolle der zehn Swedavia-Flughäfen: Schlüssel FlightInfo und WaitTime",
+  "{count} places": {
+    "one": "{count} Platz",
+    "other": "{count} Plätze"
+  },
+  "Property {name}": "Grundstück {name}",
+  "Temporarily restricted": "Vorübergehend eingeschränkt",
+  "Special shelter": "Sonderschutzraum",
+  "{distance} from the map centre": "{distance} von der Kartenmitte",
+  "For use in heightened alert; listen to VMA": "Für den Verteidigungsfall; auf VMA-Warnungen achten",
+  "SHELTER · {number}": "SCHUTZRAUM · {number}",
+  "SHELTER": "SCHUTZRAUM",
+  "Shelter data unavailable": "Schutzräume nicht verfügbar",
+  "Zoom in to see shelters: they show below {height} km": "Hineinzoomen, um Schutzräume zu sehen: sie erscheinen unter {height} km",
+  "Shelter": "Schutzraum",
+  "Dots are the civil-defence shelters MCF registers, sized by their places; the nearest to the map centre are drawn. Shelters are for use in heightened alert, when VMA tells you to seek shelter. Click one for its property and places.": "Punkte sind die von MCF registrierten Zivilschutzräume, ihre Größe zeigt die Plätze; die der Kartenmitte nächsten werden gezeichnet. Schutzräume sind für den Verteidigungsfall gedacht, wenn VMA dazu auffordert, Schutz zu suchen. Einen anklicken für Grundstück und Plätze.",
+  "{count} shelters with {places} in view": {
+    "one": "{count} Schutzraum mit {places} im Ausschnitt",
+    "other": "{count} Schutzräume mit {places} im Ausschnitt"
+  },
+  "Nearest shelters to the map centre": "Nächste Schutzräume zur Kartenmitte",
+  "Shelters need a view to show": "Schutzräume brauchen einen Kartenausschnitt",
+  "Malformed shelter snapshot": "Fehlerhafter Schutzraum-Schnappschuss",
+  "Shelters (Sweden)": "Schutzräume (Schweden)",
+  "All civil-defence shelters, about 63,000 with 6.8 million places": "Alle Zivilschutzräume, etwa 63.000 mit 6,8 Millionen Plätzen",
+  "No conditions apply (INSPIRE)": "Keine Bedingungen (INSPIRE)"
 }

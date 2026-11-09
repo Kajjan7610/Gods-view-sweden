@@ -42,6 +42,7 @@ import { createApplicationCompanyStores } from './layers/companyStores.js';
 import { createApplicationLightningStrikes } from './layers/lightningStrikes.js';
 import { createApplicationFireStations } from './layers/fireStations.js';
 import { createApplicationPoliceStations } from './layers/policeStations.js';
+import { createApplicationShelters } from './layers/shelters.js';
 import { createApplicationSpeedCameras } from './layers/speedCameras.js';
 import { createApplicationRiverFlow } from './layers/riverFlow.js';
 import { createApplicationGammaRadiation } from './layers/gammaRadiation.js';
@@ -191,6 +192,10 @@ export function createApplicationCatalog({
         }),
         createApplicationPoliceStations({
           source: sources['police-stations'],
+          terrain: surface.terrain,
+        }),
+        createApplicationShelters({
+          source: sources['shelters'],
           terrain: surface.terrain,
         }),
         createApplicationCompanyStores({

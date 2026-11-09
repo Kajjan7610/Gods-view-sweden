@@ -687,7 +687,8 @@
     "{direction} · {elevation}",
     "{division}, {country}",
     "SATELLITE",
-    "Licence"
+    "Licence",
+    "{count} places"
   ],
   "it": [
     "1090 MHz",

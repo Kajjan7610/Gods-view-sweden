@@ -4006,5 +4006,30 @@
   "Sources and coverage": "Källor och omfattning",
   "Swedish road cameras, trains, road conditions, road weather and speed cameras": "Svenska vägkameror, tåg, väglag, vägväder och fartkameror",
   "Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys": "Svenska bussar, tunnelbana och spårvagnar live med linjenummer, och störningar: nycklarna GTFS Regional Realtime och Static",
-  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Avgångar, ankomster och köer i säkerhetskontrollen på Swedavias tio flygplatser: nycklarna FlightInfo och WaitTime"
+  "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Avgångar, ankomster och köer i säkerhetskontrollen på Swedavias tio flygplatser: nycklarna FlightInfo och WaitTime",
+  "{count} places": {
+    "one": "{count} plats",
+    "other": "{count} platser"
+  },
+  "Property {name}": "Fastighet {name}",
+  "Temporarily restricted": "Tillfällig begränsning",
+  "Special shelter": "Specialskyddsrum",
+  "{distance} from the map centre": "{distance} från kartans mitt",
+  "For use in heightened alert; listen to VMA": "Används vid höjd beredskap; lyssna på VMA",
+  "SHELTER · {number}": "SKYDDSRUM · {number}",
+  "SHELTER": "SKYDDSRUM",
+  "Shelter data unavailable": "Skyddsrummen är otillgängliga",
+  "Zoom in to see shelters: they show below {height} km": "Zooma in för att se skyddsrum: de visas under {height} km",
+  "Shelter": "Skyddsrum",
+  "Dots are the civil-defence shelters MCF registers, sized by their places; the nearest to the map centre are drawn. Shelters are for use in heightened alert, when VMA tells you to seek shelter. Click one for its property and places.": "Prickarna är de skyddsrum som MCF registrerar, storlek efter antal platser; de närmaste kartans mitt ritas. Skyddsrum används vid höjd beredskap, när VMA uppmanar dig att söka skydd. Klicka på ett för fastighet och antal platser.",
+  "{count} shelters with {places} in view": {
+    "one": "{count} skyddsrum med {places} i vyn",
+    "other": "{count} skyddsrum med {places} i vyn"
+  },
+  "Nearest shelters to the map centre": "Närmaste skyddsrum från kartans mitt",
+  "Shelters need a view to show": "Skyddsrummen behöver en vy att visas i",
+  "Malformed shelter snapshot": "Felaktig ögonblicksbild av skyddsrum",
+  "Shelters (Sweden)": "Skyddsrum (Sverige)",
+  "All civil-defence shelters, about 63,000 with 6.8 million places": "Alla skyddsrum, cirka 63 000 med 6,8 miljoner platser",
+  "No conditions apply (INSPIRE)": "Inga tillämpliga villkor (INSPIRE)"
 }

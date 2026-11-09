@@ -509,6 +509,12 @@ export const DATA_CREDITS = [
       '<a href="https://polisen.se/om-polisen/om-webbplatsen/oppna-data/" target="_blank" rel="noopener">Polismyndigheten</a>, öppna data',
   },
   {
+    key: 'shelters',
+    html:
+      'Shelters (Sweden): ' +
+      '<a href="https://www.geodata.se/geodataportalen/srv/swe/catalog.search#/metadata/6341813c-bfa3-45df-8234-13cf583bf533" target="_blank" rel="noopener">Myndigheten för civilt försvar (MCF)</a>, skyddsrum (INSPIRE)',
+  },
+  {
     key: 'speed-cameras',
     html:
       'Speed Cameras (Sweden): ' +
