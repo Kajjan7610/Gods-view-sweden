@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import test, { beforeEach } from 'node:test';
 import {
   GROUND_RETRY_FIRST_MS,
+  GROUND_CHUNK,
   GROUND_RETRY_MAX_MS,
+  clearGroundHeightStore,
   createGroundHeights,
   resolveGroundHeights,
 } from './groundHeights.js';
@@ -29,21 +31,26 @@ function fakeTerrain(table, asked = []) {
   };
 }
 
+beforeEach(() => clearGroundHeightStore());
+
 /** Timers a test can run by hand. */
 function manualTimers() {
   const pending = new Map();
   let next = 1;
   return {
+    gapMs: 0,
     pending,
     setTimer: (fn, ms) => {
       pending.set(next, { fn, ms });
       return next++;
     },
     clearTimer: (id) => pending.delete(id),
+    // A retry does not hand back its lookup; let it finish before looking.
     async fire() {
       const [[id, { fn }]] = pending;
       pending.delete(id);
-      await fn();
+      fn();
+      await new Promise((resolve) => setTimeout(resolve, 5));
     },
   };
 }
@@ -52,6 +59,7 @@ test('heights come back by row id with where they came from', async () => {
   const heights = await resolveGroundHeights(
     fakeTerrain({ 59.33: [38, 'reearth'] }),
     rows,
+    { gapMs: 0 },
   );
   assert.deepEqual([...heights], [['a', { height: 38, real: true }]]);
   assert.equal((await resolveGroundHeights(null, rows)).size, 0);
@@ -164,4 +172,61 @@ test('a failed lookup leaves the dots where they are and tries again', async () 
   assert.equal(ground.heightOf('a'), 0);
   assert.equal(timers.pending.size, 1);
   ground.clear();
+});
+
+test('kept heights answer a later layer without asking again', async () => {
+  const asked = [];
+  const terrain = fakeTerrain({ 59.33: [38, 'reearth'] }, asked);
+  await resolveGroundHeights(terrain, [rows[0]], { gapMs: 0 });
+  const again = await resolveGroundHeights(
+    terrain,
+    [{ id: 'other', point: [18.06, 59.33] }],
+    { gapMs: 0 },
+  );
+  assert.deepEqual([...again], [['other', { height: 38, real: true }]]);
+  assert.equal(asked.length, 1, 'the second layer asked nothing');
+});
+
+test('rows at one place share a lookup; many places go in chunks', async () => {
+  const calls = [];
+  const terrain = {
+    async resolveEllipsoidalGround(coords) {
+      calls.push(coords.length);
+      return coords.map(() => ({ ellipsoid: 40, source: 'reearth' }));
+    },
+  };
+  const same = [
+    { id: 'x', point: [15, 60] },
+    { id: 'y', point: [15, 60] },
+  ];
+  const heights = await resolveGroundHeights(terrain, same, { gapMs: 0 });
+  assert.deepEqual(calls, [1]);
+  assert.equal(heights.get('y').height, 40);
+  const many = Array.from({ length: GROUND_CHUNK + 5 }, (_, i) => ({
+    id: `p${i}`,
+    point: [16 + i / 1000, 61],
+  }));
+  calls.length = 0;
+  await resolveGroundHeights(terrain, many, { gapMs: 0 });
+  assert.deepEqual(calls, [GROUND_CHUNK, 5]);
+});
+
+test('requests from every layer keep their distance', async () => {
+  const at = [];
+  const terrain = {
+    async resolveEllipsoidalGround(coords) {
+      at.push(Date.now());
+      return coords.map(() => ({ ellipsoid: 1, source: 'geoid-fallback' }));
+    },
+  };
+  await Promise.all([
+    resolveGroundHeights(terrain, [{ id: 'a', point: [11, 57] }], {
+      gapMs: 60,
+    }),
+    resolveGroundHeights(terrain, [{ id: 'b', point: [12, 57] }], {
+      gapMs: 60,
+    }),
+  ]);
+  assert.equal(at.length, 2);
+  assert.ok(at[1] - at[0] >= 55, `${at[1] - at[0]} ms apart`);
 });
