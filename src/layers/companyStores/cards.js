@@ -26,6 +26,9 @@ export function companyLine(company, facts) {
     parts.push(t('org. no. {number}', { number: facts.orgNumber }));
   if (facts?.headOffice)
     parts.push(t('head office {place}', { place: facts.headOffice }));
+  if (company?.group)
+    parts.push(t('part of {group}', { group: company.group }));
+  if (company?.stateOwned) parts.push(t('state-owned'));
   return parts.join(' · ');
 }
 

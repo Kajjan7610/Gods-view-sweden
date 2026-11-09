@@ -20,6 +20,7 @@ export const COMPANIES = Object.freeze(
     {
       id: 'ica',
       name: 'ICA',
+      group: 'ICA Gruppen',
       wikidata: 'Q1663776',
       brandWikidata: ['Q1663776'],
       names: ['ICA'],
@@ -78,14 +79,70 @@ export const COMPANIES = Object.freeze(
     {
       id: 'systembolaget',
       name: 'Systembolaget',
+      stateOwned: true,
       wikidata: 'Q1476113',
       brandWikidata: ['Q1476113'],
       names: ['Systembolaget'],
       concepts: [],
       color: '#f5f5f5',
     },
+    // Pharmacy chains: OSM maps them as amenity=pharmacy, not as shops.
+    {
+      id: 'apotek-hjartat',
+      name: 'Apotek Hjärtat',
+      group: 'ICA Gruppen',
+      kind: 'pharmacy',
+      wikidata: 'Q10416114',
+      brandWikidata: ['Q10416114'],
+      names: ['Apotek Hjärtat'],
+      concepts: [],
+      color: '#ec407a',
+    },
+    {
+      id: 'apoteket',
+      name: 'Apoteket',
+      stateOwned: true,
+      kind: 'pharmacy',
+      wikidata: 'Q1785637',
+      brandWikidata: ['Q1785637'],
+      names: ['Apoteket'],
+      concepts: [],
+      color: '#00897b',
+    },
+    {
+      id: 'kronans-apotek',
+      name: 'Kronans Apotek',
+      kind: 'pharmacy',
+      wikidata: 'Q10549422',
+      brandWikidata: ['Q10549422'],
+      names: ['Kronans Apotek'],
+      concepts: [],
+      color: '#4dd0e1',
+    },
+    {
+      id: 'apoteksgruppen',
+      name: 'Apoteksgruppen',
+      kind: 'pharmacy',
+      wikidata: 'Q10416129',
+      brandWikidata: ['Q10416129'],
+      names: ['Apoteksgruppen'],
+      concepts: [],
+      color: '#7986cb',
+    },
+    {
+      id: 'doz-apotek',
+      name: 'DOZ Apotek',
+      kind: 'pharmacy',
+      wikidata: 'Q10475311',
+      brandWikidata: ['Q10475311'],
+      // Lloyds Apotek became DOZ Apotek; old names linger on the map.
+      names: ['DOZ Apotek', 'Lloyds Apotek'],
+      concepts: [],
+      color: '#a1887f',
+    },
   ].map((company) =>
     Object.freeze({
+      kind: 'store',
       ...company,
       brandWikidata: Object.freeze(company.brandWikidata),
       names: Object.freeze(company.names),
@@ -106,6 +163,13 @@ export const STORE_SHOPS = Object.freeze([
   'department_store',
   'wholesale',
 ]);
+
+/** Whether a mapped place is a store of its company's kind. */
+export function isStoreOfKind(company, tags) {
+  if (company?.kind === 'pharmacy')
+    return tags.amenity === 'pharmacy' || tags.healthcare === 'pharmacy';
+  return STORE_SHOPS.includes(tags.shop);
+}
 
 const BY_BRAND_WIKIDATA = new Map(
   COMPANIES.flatMap((company) =>
@@ -259,7 +323,7 @@ export function normalizeStore(element) {
     !company ||
     !type ||
     !Number.isInteger(element.id) ||
-    !STORE_SHOPS.includes(tags.shop) ||
+    !isStoreOfKind(company, tags) ||
     !Number.isFinite(lat) ||
     !Number.isFinite(lon) ||
     lat < 55 ||
@@ -288,7 +352,11 @@ export function normalizeStore(element) {
   return {
     id: `${type}${element.id}`,
     company: company.id,
-    brand: canonicalBrand(company, tags.brand, tags.name),
+    // A pharmacy chain has one concept: its own name, whatever the tags add.
+    brand:
+      company.kind === 'pharmacy'
+        ? company.name
+        : canonicalBrand(company, tags.brand, tags.name),
     name: text(tags.name, 80) || text(tags.brand, 60) || company.name,
     point: [Math.round(lon * 1e5) / 1e5, Math.round(lat * 1e5) / 1e5],
     address: storeAddress(tags),

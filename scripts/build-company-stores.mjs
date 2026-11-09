@@ -111,6 +111,8 @@ const SCB_WFS = 'https://geodata.scb.se/geoserver/stat/wfs';
 
 const CACHE = path.join(os.tmpdir(), 'gev-company-stores');
 const CACHE_MS = 12 * 60 * 60_000;
+/** Oldest OSM data an answer may carry; older mirrors are skipped. */
+const MAX_LAG_MS = 14 * 24 * 60 * 60_000;
 
 async function overpass(query) {
   const file = path.join(
@@ -137,6 +139,16 @@ async function overpass(query) {
         signal: AbortSignal.timeout(240_000),
       });
       const body = await response.text();
+      // A mirror that lags months behind answers fine but stale: try another.
+      const base = Date.parse(
+        body.match(/"timestamp_osm_base":\s*"([^"]+)"/)?.[1] ?? '',
+      );
+      if (Number.isFinite(base) && Date.now() - base > MAX_LAG_MS) {
+        status = `data from ${new Date(base).toISOString().slice(0, 10)}`;
+        console.warn(`  ${new URL(endpoint).host} ${status}, attempt ${attempt}`);
+        await new Promise((resolve) => setTimeout(resolve, 15_000));
+        continue;
+      }
       if (response.ok && body.startsWith('{')) {
         await mkdir(CACHE, { recursive: true });
         await writeFile(file, body);
@@ -370,12 +382,15 @@ let osmBase = null;
 const escape = (value) => value.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
 for (const company of COMPANIES) {
   console.log(company.name);
-  // Its brand items, then shops with no brand item named like its stores.
+  // Its brand items, then shops (pharmacies for a pharmacy chain) with no
+  // brand item named like its stores.
+  const place =
+    company.kind === 'pharmacy' ? '["amenity"="pharmacy"]' : '["shop"]';
   const result = await overpass(
     `[out:json][timeout:180][bbox:${BOX}];(` +
       `nwr["brand:wikidata"~"^(${company.brandWikidata.join('|')})$"];` +
-      `nwr["shop"][!"brand:wikidata"]["name"~"^(${company.names.map(escape).join('|')})( |$)"];` +
-      `nwr["shop"][!"brand:wikidata"]["brand"~"^(${company.names.map(escape).join('|')})( |$)"];` +
+      `nwr${place}[!"brand:wikidata"]["name"~"^(${company.names.map(escape).join('|')})( |$)"];` +
+      `nwr${place}[!"brand:wikidata"]["brand"~"^(${company.names.map(escape).join('|')})( |$)"];` +
       // Outlines give the mapped area; then the named stops near them.
       `)->.s;.s out tags geom;(` +
       `node(around.s:${STOP_RADIUS_M})["highway"="bus_stop"];` +
@@ -386,7 +401,10 @@ for (const company of COMPANIES) {
   const base = result.osm3s?.timestamp_osm_base ?? null;
   if (base && (!osmBase || base < osmBase)) osmBase = base;
   for (const element of result.elements) {
-    const stop = element.tags?.shop ? null : stopOf(element);
+    const stop =
+      element.tags?.shop || element.tags?.amenity === 'pharmacy'
+        ? null
+        : stopOf(element);
     if (stop) stops.set(`${element.type}${element.id}`, stop);
     else elements.push(element);
   }

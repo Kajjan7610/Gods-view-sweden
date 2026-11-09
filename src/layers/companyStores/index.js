@@ -310,7 +310,7 @@ export function createCompanyStoresLayer({
             ? {
                 ...item,
                 blurb: t(
-                  'Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.',
+                  'Dots are the stores and pharmacies of large chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores and pharmacies are shown. Click one for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.',
                 ),
               }
             : item,

@@ -11,6 +11,12 @@ import {
 } from './layerNames.js';
 export { localizeLayerName } from './layerNames.js';
 import { createWeatherPanel } from './weatherPanel.js';
+import {
+  hasSwedishData,
+  presentProvenanceDetails,
+  presentProvenanceMark,
+  provenanceMetaSource,
+} from './layerProvenance.js';
 import { translateFeedError, translateStatusLine } from './statusText.js';
 import {
   formatNumber,
@@ -125,6 +131,26 @@ const PANEL_GROUPS = [
     ids: ['radio'],
   },
 ];
+// Data Layers can show only the layers with the fork's Swedish data; the
+// choice is a per-viewer convenience, so storage may fail without harm.
+const FILTER_STORAGE_KEY = 'gev:layer-filter:v1';
+function readLayerFilter() {
+  try {
+    return globalThis.localStorage?.getItem(FILTER_STORAGE_KEY) === 'sweden'
+      ? 'sweden'
+      : 'all';
+  } catch {
+    return 'all';
+  }
+}
+function saveLayerFilter(value) {
+  try {
+    globalThis.localStorage?.setItem(FILTER_STORAGE_KEY, value);
+  } catch {
+    // Kept for this page only.
+  }
+}
+
 const PANEL_ORDER = PANEL_GROUPS.flatMap(({ label, ids, containerId }) =>
   ids.map((id) => ({ id, label, containerId })),
 );
@@ -304,6 +330,16 @@ export class LayerPanel {
     this._rows = [];
     this._rowViews = new Map();
     this._pending = new Set();
+    this._filter = readLayerFilter();
+  }
+
+  /** Show every layer, or only those with Swedish data ('sweden'). */
+  setLayerFilter(value) {
+    const next = value === 'sweden' ? 'sweden' : 'all';
+    if (next === this._filter) return;
+    this._filter = next;
+    saveLayerFilter(next);
+    this._paint();
   }
   mount(container) {
     if (this._destroyed) return;
@@ -442,17 +478,30 @@ export class LayerPanel {
     if (this._destroyed || !this._toggleContainer) return;
     const layers = new Map(this.getAll().map((layer) => [layer.id, layer]));
     // Each list renders its own rows: Data Layers, and any group's own list.
-    const lists = new Map([[null, []]]);
+    const lists = new Map([[null, [this._presentFilter()]]]);
     for (const id of this._groupContainers.keys()) lists.set(id, []);
+    let heading = null;
     for (const row of this._rows) {
-      let item;
-      if (row.heading) item = { key: row.key, heading: t(row.heading) };
-      else {
-        const layer = layers.get(row.id);
-        if (layer) this._rowViews.set(row.id, this._presentRow(row, layer));
-        item = this._rowViews.get(row.id);
+      if (row.heading) {
+        heading = { key: row.key, heading: t(row.heading) };
+        continue;
       }
-      if (item) lists.get(row.container ?? null).push(item);
+      const layer = layers.get(row.id);
+      if (layer) this._rowViews.set(row.id, this._presentRow(row, layer));
+      const item = this._rowViews.get(row.id);
+      if (!item) continue;
+      // An enabled layer always shows, so the filter never hides one in use.
+      if (
+        !row.container &&
+        this._filter === 'sweden' &&
+        !hasSwedishData(row.id) &&
+        !layer?.enabled
+      )
+        continue;
+      const list = lists.get(row.container ?? null);
+      if (heading && !row.container) list.push(heading);
+      heading = null;
+      list.push(item);
     }
     const generation = this._generation;
     for (const [id, items] of lists)
@@ -466,9 +515,36 @@ export class LayerPanel {
             this._selectListItem(layerId, itemId, generation),
           onSlider: (layerId, sliderId, value) =>
             this._moveSlider(layerId, sliderId, value, generation),
+          onFilter: (value) => this.setLayerFilter(value),
         }),
         id === null ? this._toggleContainer : this._groupContainers.get(id),
       );
+  }
+
+  /** The Data Layers filter: every layer, or those with Swedish data. */
+  _presentFilter() {
+    return {
+      key: 'filter',
+      filter: {
+        id: 'layer-filter',
+        ariaLabel: t('Show layers'),
+        options: [
+          {
+            id: 'all',
+            label: t('All layers'),
+            active: this._filter === 'all',
+          },
+          {
+            id: 'sweden',
+            label: t('Swedish data'),
+            title: t(
+              'Only layers with Swedish data, and any other layer that is on',
+            ),
+            active: this._filter === 'sweden',
+          },
+        ],
+      },
+    };
   }
 
   _presentRow(row, layer) {
@@ -490,6 +566,9 @@ export class LayerPanel {
       count: row.count ? presentLayerCount(layer.stats) : null,
       toggle,
       meta: this._buildMetaText(layer),
+      // The fork's Swedish data: its mark and where the data comes from.
+      mark: presentProvenanceMark(layer.id),
+      provenance: presentProvenanceDetails(layer.id),
       controls: row.controls ? this._presentControls(row, layer) : null,
     };
   }
@@ -671,9 +750,10 @@ export class LayerPanel {
     const stateLabel = t(FEED_STATE_LABEL_KEYS[feedState]);
     // A layer marks source text that is data rather than a catalog name.
     const source =
-      stats.sourceVerbatim === true && stats.source
+      provenanceMetaSource(layer.id) ??
+      (stats.sourceVerbatim === true && stats.source
         ? stats.source
-        : sourceLabel(stats.source || layer.source);
+        : sourceLabel(stats.source || layer.source));
     const lifecycleState =
       layer.lifecycleState || (layer.enabled ? 'enabled' : 'disabled');
     if (lifecycleState === 'enabling' || lifecycleState === 'disabling') {

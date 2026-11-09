@@ -57,6 +57,43 @@ export const KEY_SETUP_KEYS = Object.freeze([
     tier: 'metered',
     hidden: true,
   }),
+  // Swedish fork: free keys for the Swedish layers.
+  Object.freeze({
+    id: 'trafikverket',
+    title: 'TRAFIKVERKET', // i18n-ignore: provider product name
+    unlocks: msg(
+      'Swedish road cameras, trains, road conditions, road weather and speed cameras',
+    ),
+    getUrl: 'https://data.trafikverket.se/home',
+    envVars: Object.freeze(['TRAFIKVERKET_API_KEY']),
+    tier: 'free',
+  }),
+  Object.freeze({
+    id: 'trafiklab',
+    title: 'TRAFIKLAB', // i18n-ignore: provider product name
+    unlocks: msg(
+      'Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys',
+    ),
+    getUrl: 'https://developer.trafiklab.se',
+    envVars: Object.freeze([
+      'TRAFIKLAB_GTFS_RT_KEY',
+      'TRAFIKLAB_GTFS_STATIC_KEY',
+    ]),
+    tier: 'free',
+  }),
+  Object.freeze({
+    id: 'swedavia',
+    title: 'SWEDAVIA', // i18n-ignore: provider product name
+    unlocks: msg(
+      "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys",
+    ),
+    getUrl: 'https://apideveloper.swedavia.se',
+    envVars: Object.freeze([
+      'SWEDAVIA_FLIGHTINFO_KEY',
+      'SWEDAVIA_WAITTIME_KEY',
+    ]),
+    tier: 'free',
+  }),
   Object.freeze({
     id: 'openai',
     title: 'OPENAI', // i18n-ignore: provider product name

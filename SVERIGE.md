@@ -27,7 +27,7 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (rörliga vinklar i flödesriktningen, MW), Sveriges import, export och netto totalt och per grannland, val av import/export/inrikes och en knapp per land som lyfter fram dess förbindelser, en KRAFT-panel i högerkanten med dygnet hittills eller senaste veckan per kvart (produktion per kraftslag, förbrukning och utbyte), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, flöde i m³/s var 15:e minut och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
-| Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp), Lidls, City Gross och Systembolagets butiker, färgade efter företag och koncept, med en knapp per företag; klick ger adress, om butiken är öppen nu, kartlagd storlek, webbsida, telefon, rullstol och paketombud, hur många som bor inom 2 km, närmaste hållplats, närmaste andra kedjor och företaget (org.nr och huvudkontor); klick på kortet öppnar butikens webbsida. Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0), befolkning från SCB:s 1 km-rutor (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
+| Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp), Lidls, City Gross och Systembolagets butiker samt apoteken hos Apotek Hjärtat (ICA Gruppen), Apoteket, Kronans Apotek, Apoteksgruppen och DOZ Apotek, färgade efter företag och koncept, med en knapp per företag; klick ger adress, om butiken är öppen nu, kartlagd storlek, webbsida, telefon, rullstol och paketombud, hur många som bor inom 2 km, närmaste hållplats, närmaste andra kedjor och företaget (org.nr och huvudkontor); klick på kortet öppnar butikens webbsida. Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0), befolkning från SCB:s 1 km-rutor (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
 | Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
 | Polisstationer: Polisens 261 stationer, färgade efter vad receptionen erbjuder (pass och id-kort, andra ärenden, inga angivna); klick ger adress, tjänster och närmaste passexpedition, klick på kortet öppnar stationens sida med öppettider | Polismyndighetens öppna data (ingen nyckel; Polisen anges som källa) | Police Stations (Sweden) / Polisstationer, under Infrastructure |
 | Blixtnedslag: varje urladdning den senaste timmen som punkt, färgad efter ålder (vit = senaste 5 min), stora för nedslag i marken och små för blixtar i molnet; klick ger tid, typ och toppström | DMI:s blixtdata (CC BY 4.0, ingen nyckel; DMI:s sensornät och grannländernas sensorer) | Lightning Strikes (Sweden) / Blixtnedslag, under Weather |
@@ -46,6 +46,42 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s radar och varningar samt OPERA:s radar är CC BY 4.0 (källa: SMHI respektive EUMETNET OPERA). Källor, villkor och tekniska detaljer står i
 [DATA_SOURCES.md](DATA_SOURCES.md).
 
+## Källor och omfattning per lager
+
+<!-- källor:start (scripts/sweden-sources.mjs) -->
+
+Genereras ur `src/ui/layerProvenance.js`, samma tabell som Datalager visar
+under ⓘ. SE = vårt eget lager; +SE = originalets lager där vi lagt till
+svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
+
+| | Lager | Källa | Omfattning | Uppdateras | Licens |
+|---|---|---|---|---|---|
+| +SE | Kollektivtrafik | Trafiklab (Samtrafiken) · Trafikverket | Bussar, tunnelbana, spårvagn och pendeltåg från 16 regionala trafikbolag, och tåg med förseningar. Originalet: Öppna GTFS-RT-flöden i USA, Kanada, Finland, Nederländerna, Norge, Australien och Brasilien | Var 15:e sekund | CC0 1.0 (Trafiklab, Trafikverket) |
+| +SE | Kameror | Trafikverket | Cirka 1 550 vägkameror med livebilder. Originalet: Offentliga trafikkameror i många länder | Bilderna uppdateras medan de visas | CC0 1.0 (Trafikverket) |
+| SE | Fartkameror (Sverige) | Trafikverket | Cirka 2 800 fasta fartkameror i hela Sverige | Varje timme | CC0 1.0 |
+| SE | Elpris (Sverige) | elprisetjustnu.se · Nord Pool | Spotpris per kvart i elområdena SE1–SE4 | Varje minut | Öppna data, källan anges |
+| SE | Kraftsystemet (Sverige) | Svenska kraftnät | Sveriges förbindelser mellan elområdena och till grannländerna | Varannan minut | Ingen angiven licens; källan anges |
+| SE | Strålning (Sverige) | Strålsäkerhetsmyndigheten (SSM) | Cirka 25 gammastationer | Var 10:e minut | Ingen angiven licens; källan anges |
+| SE | Brandstationer (Sverige) | Myndigheten för civilt försvar (MCF) | Räddningstjänsternas alla brandstationer | En gång per dygn | EU-värdefullt dataset, källan anges |
+| SE | Polisstationer (Sverige) | Polismyndigheten | Alla polisstationer, cirka 260 | En gång per dygn | Öppna data, källan anges |
+| SE | Butikskedjor (Sverige) | OpenStreetMap · Wikidata · SCB | Elva kedjors butiker och apotek i hela Sverige; kartlagda av frivilliga | Ögonblicksbild i appen, byggs om för hand | ODbL (OpenStreetMap) · CC0 1.0 (Wikidata, SCB) |
+| SE | Väglag (Sverige) | Trafikverket | Väglag och aktuella händelser i hela Sverige | Var 3:e minut | CC0 1.0 |
+| SE | Vägväder (Sverige) | Trafikverket | Cirka 830 vägväderstationer | Var 5:e minut | CC0 1.0 |
+| SE | Polishändelser (Sverige) | Polismyndigheten | De 500 senaste notiserna, cirka tio dagar, hela Sverige | Var 5:e minut | Öppna data, källan anges |
+| SE | Trafikmeddelanden (SR) | Sveriges Radio | Aktuella trafikmeddelanden i hela Sverige | Var 3:e minut | Öppna data, källan anges |
+| SE | Kollektivtrafikstörningar (Sverige) | Trafiklab (Samtrafiken) | Störningar vid hållplatserna hos 16 regionala trafikbolag | Varannan minut | CC0 1.0 |
+| +SE | Luftkvalitet | SMHI | Cirka 75 mätstationer på den europeiska EAQI-skalan. Originalet: Kanadensiska stationer (ECCC AQHI) | Var 20:e minut | CC BY 4.0 (SMHI) |
+| +SE | Regnradar | SMHI · EUMETNET OPERA | Nordisk radar från SMHI och europeisk radar från OPERA. Originalet: Radar över USA (NOAA) | Var 5:e minut | CC BY 4.0 (SMHI, OPERA) |
+| SE | Vädervarningar (Sverige) | SMHI · Krisinformation.se | Vädervarningar, VMA och krisnyheter i hela Sverige | Var 5:e minut | CC BY 4.0 (SMHI) |
+| SE | Väder nu (Sverige) | SMHI | Cirka 185 väderstationer, och en prognos där du klickar | Var 10:e minut | CC BY 4.0 |
+| SE | Sjöväder (Sverige) | Sjöfartsverket ViVa | Cirka 160 stationer längs kusten, i de stora sjöarna och kanalerna | Var 10:e minut | Öppna data, källan anges |
+| SE | Vattenföring (Sverige) | SMHI | Cirka 150 stationer i vattendragen | Var 15:e minut | CC BY 4.0 |
+| SE | Norrskensprognos | NOAA SWPC | Norra halvklotet, med chansen över nio svenska orter | Var 10:e minut | Allmän egendom (USA:s statsförvaltning) |
+| +SE | Blixttäthet | EUMETSAT (MTG) | Blixtar över Europa och Afrika från satelliten MTG. Originalet: Blixttäthet över Nord- och Sydamerika (NOAA) | Var 5:e minut | Fri att använda, källan anges |
+| SE | Blixtnedslag (Sverige) | DMI | Varje urladdning över Norden den senaste timmen | Varje minut | CC BY 4.0 |
+
+<!-- källor:end -->
+
 ## Nycklar (`.env`, checkas aldrig in)
 
 | Variabel | Används till | Var den skaffas |
@@ -57,11 +93,15 @@ Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s radar och varningar samt O
 | `SWEDAVIA_WAITTIME_KEY` | köerna i säkerhetskontrollen | apideveloper.swedavia.se → WaitTime Free |
 | `CESIUM_ION_TOKEN` | fotorealistiska 3D-städer | ion.cesium.com |
 
+Nycklarna kan klistras in i appen under **KOPPLA PÅ** (nere till höger); appen skriver då `.env` själv.
+
 Utan nyckel hoppas respektive del över med en förklarande rad; inget annat slutar fungera.
 Trafiklabs gratisnivå (Bronze) räcker till ungefär 125 timmars tittande på ett län i
 månaden – begär den kostnadsfria Silver-uppgraderingen vid tyngre användning.
 
 ## Starta lokalt
+
+Steg för steg, med Pinokio, Docker eller Node och de gratis nycklarna: [docs/KOM-IGANG.md](docs/KOM-IGANG.md).
 
 ```
 npm ci
@@ -80,6 +120,52 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-09 (kom igång: guide och nycklar i appen)
+- Ny guide [docs/KOM-IGANG.md](docs/KOM-IGANG.md): installera med Pinokio,
+  Docker eller Node, skaffa de gratis nycklarna och hitta i appen. Länkad
+  överst i README.
+- Trafikverket, Trafiklab och Swedavia finns nu i appens nyckelpanel
+  **KOPPLA PÅ**, direkt efter Google. Den som installerar klistrar in sina
+  gratisnycklar i appen i stället för att redigera `.env`; appen sparar dem
+  och startar om. Pinokio-startaren för också vidare de fem svenska
+  nycklarna.
+
+### 2026-11-09 (apotek i Butikskedjor)
+- Butikskedjor visar nu också apoteken hos Apotek Hjärtat (229), Apoteket
+  (328), Kronans Apotek (264), Apoteksgruppen (53) och DOZ Apotek (44, före
+  detta Lloyds Apotek), med en knapp per kedja. Totalt 4 119 butiker och
+  apotek.
+- Apotek är `amenity=pharmacy` i OpenStreetMap, inte butiker, så byggskriptet
+  frågar efter apotek för apotekskedjorna. Kedjornas Wikidata-id kommer från
+  Name Suggestion Index. Ett apotek har alltid kedjans namn som koncept,
+  också när OSM lägger till orten ("Apotek Hjärtat Stattena").
+- Företagsraden i kortet visar ägarförhållanden där de är säkra: Apotek
+  Hjärtat och ICA är del av ICA Gruppen, Apoteket och Systembolaget är
+  statligt ägda. (Wikidata saknar Apotek Hjärtats ägare och anger
+  "Regeringskansliet" för de statliga, så det står i koden i stället.)
+- Byggskriptet underkänner nu Overpass-svar med data äldre än 14 dagar och
+  frågar nästa server: en spegel svarade med OSM-data från juni.
+
+### 2026-11-09 (Datalager: källor och omfattning)
+- Varje lager med svenska data har ett märke på källraden: **SE** för
+  våra egna lager (18 st) och **+SE** för originalets lager där vi lagt
+  till svenska data (Kollektivtrafik, Kameror, Regnradar, Blixttäthet,
+  Luftkvalitet).
+- ⓘ-knappen i slutet av källraden fäller ut källa, omfattning, hur ofta
+  datan uppdateras och licens. I +SE-lagren står vårt tillägg och
+  originalets del var för sig, så att det syns vad som kommer varifrån.
+- Kollektivtrafikens källrad säger nu "GTFS-RT · Trafiklab · Trafikverket"
+  i stället för bara "GTFS-RT".
+- Filter överst i Datalager: *Alla lager* eller *Svenska data*. Med
+  svenska data visas bara de 23 lagren med svenska data, plus andra lager
+  som är påslagna, så att inget som är på försvinner ur listan. Valet
+  sparas i webbläsaren.
+- Allt kommer ur en enda tabell, `src/ui/layerProvenance.js`. Avsnittet
+  *Källor och omfattning per lager* här ovanför skrivs ur samma tabell med
+  `node scripts/sweden-sources.mjs`, och ett test larmar om de glider isär.
+  Ett test kräver också att varje nytt svenskt lager får en rad i tabellen.
+  Översatt till alla 12 språk.
 
 ### 2026-11-09 (polisstationer)
 - Nytt lager **Polisstationer (Sverige)** (delningstoken `0i`) under

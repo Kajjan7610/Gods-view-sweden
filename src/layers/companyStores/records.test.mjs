@@ -147,7 +147,10 @@ test('the card names the store, its address, hours and company', () => {
   assert.ok(card.details.includes('Storgatan 1, Falun'));
   assert.ok(card.details.some((line) => line.includes('556582-1559')));
   assert.ok(card.details.some((line) => line.includes('ODbL')));
-  assert.equal(companyLine(COMPANIES[0], undefined), 'ICA');
+  assert.equal(
+    companyLine(COMPANIES[0], undefined),
+    'ICA · part of ICA Gruppen',
+  );
 });
 
 test('concept spellings are read as the company’s own concepts', () => {
@@ -273,4 +276,43 @@ test('the card adds open now, size, people, stop, nearby chains and a link', () 
   assert.equal(within, 2);
   assert.equal(formatDistance(4), '10 m');
   assert.ok(distanceMeters([18, 59], [18, 60]) > 111_000);
+});
+
+test('pharmacy chains keep pharmacies, not shops, and name their owner', () => {
+  const place = (tags) => normalizeStore(node(30, tags));
+  const hjartat = place({
+    amenity: 'pharmacy',
+    brand: 'Apotek Hjärtat',
+    'brand:wikidata': 'Q10416114',
+    name: 'Apotek Hjärtat Falun',
+  });
+  assert.equal(hjartat.company, 'apotek-hjartat');
+  assert.equal(hjartat.brand, 'Apotek Hjärtat');
+  // Untagged, by name; the old Lloyds name still finds DOZ Apotek.
+  assert.equal(
+    place({ amenity: 'pharmacy', name: 'Apoteket Kronan' }).company,
+    'apoteket',
+  );
+  assert.equal(
+    place({ amenity: 'pharmacy', name: 'Lloyds Apotek Borlänge' }).company,
+    'doz-apotek',
+  );
+  // A pharmacy brand on something else, or a shop item at a pharmacy, is dropped.
+  assert.equal(
+    place({ shop: 'chemist', 'brand:wikidata': 'Q10416114' }),
+    null,
+  );
+  assert.equal(
+    place({ amenity: 'pharmacy', 'brand:wikidata': 'Q1663776' }),
+    null,
+  );
+  const company = (id) => COMPANIES.find((entry) => entry.id === id);
+  assert.equal(
+    companyLine(company('apotek-hjartat'), undefined),
+    'Apotek Hjärtat · part of ICA Gruppen',
+  );
+  assert.equal(
+    companyLine(company('apoteket'), { legalName: 'Apoteket AB' }),
+    'Apoteket AB · state-owned',
+  );
 });

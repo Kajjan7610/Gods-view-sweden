@@ -738,6 +738,7 @@
       "src/ui/layers.js",
       "src/ui/layerPanel.js",
       "src/ui/layerNames.js",
+      "src/ui/layerProvenance.js",
       "src/ui/weatherPanel.js",
       "src/ui/railCards.js",
       "src/ui/railCardBlocks.js",
@@ -911,7 +912,8 @@
       "src/i18n/locales/uk.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/layerNames.js"
+      "src/ui/layerNames.js",
+      "src/ui/layerProvenance.js"
     ],
     "external": []
   },
@@ -982,6 +984,7 @@
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
       "src/ui/layerNames.js",
+      "src/ui/layerProvenance.js",
       "src/ui/unitLabels.js"
     ],
     "external": ["cesium"]
@@ -1215,6 +1218,7 @@
       "src/ui/unitLabels.js",
       "src/ui/keyGuidance.js",
       "src/ui/layerNames.js",
+      "src/ui/layerProvenance.js",
       "src/ui/statusText.js",
       "src/scopeMaskPolicy.js",
       "src/visualStylePolicy.js",
@@ -1906,6 +1910,7 @@
       "src/loadingFeedback.js",
       "src/data/installationFeedback.js",
       "src/ui/layerNames.js",
+      "src/ui/layerProvenance.js",
       "src/ui/unitLabels.js"
     ],
     "external": ["cesium"]
@@ -2379,6 +2384,7 @@
       "src/voice/speech.js",
       "src/cityPois.js",
       "src/ui/layerNames.js",
+      "src/ui/layerProvenance.js",
       "src/ui/unitLabels.js",
       "src/ui/placeNames.js",
       "src/voice/narration.js",
@@ -3087,6 +3093,7 @@
       "src/agent/worldPacket.js",
       "src/voice/speech.js",
       "src/ui/layerNames.js",
+      "src/ui/layerProvenance.js",
       "src/voice/earcon.js",
       "src/voice/narration.js",
       "src/voice/turnMetrics.js",
@@ -4308,6 +4315,7 @@
       "src/layers/airQuality/source.js",
       "src/ui/statusText.js",
       "src/ui/layerNames.js",
+      "src/ui/layerProvenance.js",
       "src/layers/streetLevel/providers/mapillary/policy.js",
       "src/data/geoImportImages.js",
       "src/data/geoImportPins.js",
@@ -4774,6 +4782,7 @@
       "src/voice/speech.js",
       "src/cityPois.js",
       "src/ui/layerNames.js",
+      "src/ui/layerProvenance.js",
       "src/ui/unitLabels.js",
       "src/voice/pointerReticle.js",
       "src/i18n/index.js",
@@ -5246,7 +5255,8 @@
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
       "src/ui/statusText.js",
-      "src/ui/layerNames.js"
+      "src/ui/layerNames.js",
+      "src/ui/layerProvenance.js"
     ],
     "external": ["cesium"]
   },
@@ -5573,7 +5583,8 @@
       "src/i18n/locales/zh-Hant.json",
       "src/ui/cardText.js",
       "src/ui/statusText.js",
-      "src/ui/layerNames.js"
+      "src/ui/layerNames.js",
+      "src/ui/layerProvenance.js"
     ],
     "external": ["cesium"]
   },
@@ -5640,6 +5651,7 @@
       "src/layers/wildlifeSightings/acartiaTaxa.js",
       "src/ui/statusText.js",
       "src/ui/layerNames.js",
+      "src/ui/layerProvenance.js",
       "src/layers/wildlifeSightings/gridViewport.js",
       "src/layers/wildlifeSightings/billboardModel.js",
       "src/layers/wildlifeSightings/sprites.js",
