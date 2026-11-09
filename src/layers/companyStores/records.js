@@ -144,6 +144,32 @@ export function storeAddress(tags) {
   return [street, place].filter(Boolean).join(', ') || null;
 }
 
+/** The store's own web page, when mappers gave an http(s) link. */
+export function storeWebsite(tags) {
+  const url = text(tags.website || tags['contact:website'], 200);
+  return url && /^https?:\/\/\S+$/i.test(url) ? url : null;
+}
+
+/**
+ * The area in m² of a store mapped as an outline (an Overpass way with
+ * `geometry`), rounded to 10 m², or null for points and implausible shapes.
+ */
+export function outlineArea(geometry) {
+  if (!Array.isArray(geometry) || geometry.length < 4) return null;
+  const lat0 = (geometry[0].lat * Math.PI) / 180;
+  const m = 6371008.8 * (Math.PI / 180);
+  let sum = 0;
+  for (let i = 0; i < geometry.length - 1; i++) {
+    const a = geometry[i];
+    const b = geometry[i + 1];
+    sum +=
+      a.lon * Math.cos(lat0) * m * (b.lat * m) -
+      b.lon * Math.cos(lat0) * m * (a.lat * m);
+  }
+  const area = Math.abs(sum) / 2;
+  return area >= 30 && area <= 60_000 ? Math.round(area / 10) * 10 : null;
+}
+
 /** Brand spellings mappers use for a concept, read as that concept. */
 const BRAND_ALIASES = new Map([
   ['ica maxi', 'Maxi ICA Stormarknad'],
@@ -217,8 +243,17 @@ export function normalizeStore(element) {
   const tags = element?.tags || {};
   const company =
     BY_BRAND_WIKIDATA.get(tags['brand:wikidata']) || companyByName(tags);
-  const lat = Number(element?.center?.lat ?? element?.lat);
-  const lon = Number(element?.center?.lon ?? element?.lon);
+  const bounds = element?.bounds;
+  const lat = Number(
+    element?.center?.lat ??
+      element?.lat ??
+      (bounds ? (bounds.minlat + bounds.maxlat) / 2 : NaN),
+  );
+  const lon = Number(
+    element?.center?.lon ??
+      element?.lon ??
+      (bounds ? (bounds.minlon + bounds.maxlon) / 2 : NaN),
+  );
   const type = { node: 'n', way: 'w', relation: 'r' }[element?.type];
   if (
     !company ||
@@ -233,6 +268,23 @@ export function normalizeStore(element) {
     lon > 24.2
   )
     return null;
+  const checked = String(
+    tags['check_date:opening_hours'] || tags.check_date || '',
+  ).match(/^\d{4}-\d{2}-\d{2}$/)?.[0];
+  const post =
+    tags.post_office && tags.post_office !== 'no'
+      ? text(tags['post_office:brand'], 40) || ''
+      : null;
+  const extra = {
+    website: storeWebsite(tags),
+    phone: text(tags.phone || tags['contact:phone'], 40),
+    wheelchair: ['yes', 'limited', 'no'].includes(tags.wheelchair)
+      ? tags.wheelchair
+      : null,
+    post,
+    area: type === 'w' ? outlineArea(element.geometry) : null,
+    checked: checked || null,
+  };
   return {
     id: `${type}${element.id}`,
     company: company.id,
@@ -241,6 +293,10 @@ export function normalizeStore(element) {
     point: [Math.round(lon * 1e5) / 1e5, Math.round(lat * 1e5) / 1e5],
     address: storeAddress(tags),
     hours: text(tags.opening_hours, 160),
+    // Only what is known, to keep the snapshot small.
+    ...Object.fromEntries(
+      Object.entries(extra).filter(([, value]) => value !== null),
+    ),
   };
 }
 

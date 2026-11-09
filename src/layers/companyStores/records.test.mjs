@@ -8,8 +8,16 @@ import {
   storeAddress,
   storeColor,
   storeCounts,
+  storeWebsite,
+  outlineArea,
 } from './records.js';
-import { buildStoreCard, companyLine } from './cards.js';
+import {
+  buildStoreCard,
+  companyLine,
+  distanceMeters,
+  formatDistance,
+  storeNeighbours,
+} from './cards.js';
 
 const node = (id, tags, lat = 59.33, lon = 18.06) => ({
   type: 'node',
@@ -173,4 +181,96 @@ test('untagged and older-tagged stores find their company and concept', () => {
     null,
   );
   assert.equal(coop({ name: 'Coopers bageri' }), null);
+});
+
+test('a store keeps its web page, phone, access, parcel service and size', () => {
+  // A 60 m by 40 m outline.
+  const dLat = 40 / 111195;
+  const dLon = 60 / (111195 * Math.cos((59.33 * Math.PI) / 180));
+  const geometry = [
+    { lat: 59.33, lon: 18.06 },
+    { lat: 59.33, lon: 18.06 + dLon },
+    { lat: 59.33 + dLat, lon: 18.06 + dLon },
+    { lat: 59.33 + dLat, lon: 18.06 },
+    { lat: 59.33, lon: 18.06 },
+  ];
+  assert.equal(outlineArea(geometry), 2400);
+  assert.equal(outlineArea(geometry.slice(0, 2)), null);
+  const row = normalizeStore({
+    type: 'way',
+    id: 11,
+    bounds: { minlat: 59.33, minlon: 18.06, maxlat: 59.34, maxlon: 18.07 },
+    geometry,
+    tags: {
+      shop: 'supermarket',
+      'brand:wikidata': 'Q10720214',
+      brand: 'Willys',
+      website: 'https://www.willys.se/butik/2110',
+      'contact:phone': '+46 8 123 45 67',
+      wheelchair: 'limited',
+      post_office: 'post_partner',
+      'post_office:brand': 'PostNord',
+      check_date: '2026-05-01',
+    },
+  });
+  assert.deepEqual(row.point, [18.065, 59.335]);
+  assert.equal(row.website, 'https://www.willys.se/butik/2110');
+  assert.equal(row.phone, '+46 8 123 45 67');
+  assert.equal(row.wheelchair, 'limited');
+  assert.equal(row.post, 'PostNord');
+  assert.equal(row.area, 2400);
+  assert.equal(row.checked, '2026-05-01');
+  assert.equal(storeWebsite({ website: 'javascript:alert(1)' }), null);
+  assert.equal(storeWebsite({ website: 'www.ica.se' }), null);
+});
+
+test('the card adds open now, size, people, stop, nearby chains and a link', () => {
+  const row = {
+    id: 'n1',
+    company: 'ica',
+    brand: 'ICA Nära',
+    name: 'ICA Nära Bagarmossen',
+    point: [18.13, 59.276],
+    hours: 'Mo-Su 07:00-22:00',
+    website: 'https://www.ica.se/butiker/nara/stockholm/ica-nara-bagarmossen/',
+    area: 850,
+    wheelchair: 'yes',
+    post: '',
+    population: 21450,
+    stop: { name: 'Bagarmossen', distance: 120 },
+  };
+  const stores = [
+    row,
+    { id: 'n2', company: 'axfood', brand: 'Willys', point: [18.15, 59.276] },
+    { id: 'n3', company: 'lidl', brand: 'Lidl', point: [18.3, 59.276] },
+    { id: 'n4', company: 'ica', brand: 'ICA Kvantum', point: [18.131, 59.276] },
+  ];
+  const card = buildStoreCard(
+    row,
+    {},
+    {
+      stores,
+      populationYear: 2025,
+      linkable: true,
+      now: new Date('2026-11-09T10:00:00Z'),
+    },
+  );
+  const text = card.details.join('\n');
+  assert.match(text, /Open now · closes 22:00/);
+  assert.match(text, /850 m² mapped/);
+  assert.match(text, /Wheelchair accessible · Parcel service/);
+  assert.match(text, /21,450 people live within 2 km \(SCB 2025\)/);
+  assert.match(text, /Nearest stop: Bagarmossen, 120 m/);
+  assert.match(text, /Nearest other chains: Willys 1\.1 km · Lidl 9\.7 km/);
+  assert.match(text, /2 chain stores within 5 km/);
+  assert.equal(card.interactive, true);
+  assert.equal(buildStoreCard(row).interactive, false);
+  const { nearest, within } = storeNeighbours(row, stores);
+  assert.deepEqual(
+    nearest.map((entry) => entry.store.id),
+    ['n2', 'n3'],
+  );
+  assert.equal(within, 2);
+  assert.equal(formatDistance(4), '10 m');
+  assert.ok(distanceMeters([18, 59], [18, 60]) > 111_000);
 });

@@ -25,6 +25,7 @@ export function createCompanyStoresLayer({
   screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
+  openExternal = null,
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Company stores require a snapshot source');
@@ -41,6 +42,7 @@ export function createCompanyStoresLayer({
   let _selectedCardId = null;
   let _stores = [];
   let _facts = {};
+  let _populationYear = null;
   const _shown = new Set(COMPANIES.map((company) => company.id));
   const _storeById = new Map();
 
@@ -61,7 +63,16 @@ export function createCompanyStoresLayer({
       );
       return;
     }
-    const card = buildStoreCard(row, _facts);
+    const card = buildStoreCard(row, _facts, {
+      stores: _stores,
+      populationYear: _populationYear,
+      linkable: Boolean(openExternal),
+    });
+    if (card.interactive)
+      card.activate = () => {
+        openExternal(row.website);
+        return true;
+      };
     card.position = Cesium.Cartesian3.fromDegrees(...row.point);
     _selectedCardId = card.id;
     overlayHost.setEntries(
@@ -89,7 +100,11 @@ export function createCompanyStoresLayer({
         click.position?.y,
         { sourceId: COMPANY_STORES_OVERLAY_SOURCE_ID },
       );
-      if (cardHit && cardHit.entryId === _selectedCardId) return;
+      if (cardHit && cardHit.entryId === _selectedCardId) {
+        const row = _storeById.get(_selectedId);
+        if (row?.website && openExternal) openExternal(row.website);
+        return;
+      }
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedStore(picked) : null;
       if (hit) {
@@ -196,6 +211,7 @@ export function createCompanyStoresLayer({
         _facts = Object.fromEntries(
           snapshot.companies.map((entry) => [entry.id, entry]),
         );
+        _populationYear = snapshot.populationYear ?? null;
         _storeById.clear();
         for (const row of _stores) _storeById.set(row.id, row);
         _loaded = true;
@@ -222,6 +238,7 @@ export function createCompanyStoresLayer({
       _storeById.clear();
       _stores = [];
       _facts = {};
+      _populationYear = null;
       _loaded = false;
       if (_dataSource) {
         viewer.dataSources.remove(_dataSource, true);
@@ -286,7 +303,7 @@ export function createCompanyStoresLayer({
             ? {
                 ...item,
                 blurb: t(
-                  'Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.',
+                  'Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.',
                 ),
               }
             : item,

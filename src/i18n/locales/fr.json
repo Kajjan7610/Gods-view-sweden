@@ -3747,6 +3747,31 @@
   "Store data unavailable": "Données des magasins indisponibles",
   "{company}, other": "{company}, autres",
   "Show or hide {company} stores": "Afficher ou masquer les magasins {company}",
-  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.": "Les points sont les magasins des grandes chaînes en Suède tels que cartographiés dans OpenStreetMap, colorés par entreprise et par enseigne. Ils sont relevés par des contributeurs, pas par les entreprises, donc quelques-uns peuvent manquer ou être périmés. Seuls les magasins sont affichés. Cliquez sur un magasin pour son adresse, ses horaires et son entreprise.",
-  "Malformed store snapshot": "Instantané des magasins mal formé"
+  "Malformed store snapshot": "Instantané des magasins mal formé",
+  "{distance} m": "{distance} m",
+  "{distance} km": "{distance} km",
+  "Open now · closes {time}": "Ouvert · ferme à {time}",
+  "Open around the clock": "Ouvert 24 h/24",
+  "Closed now · opens {time}": "Fermé · ouvre à {time}",
+  "Closed now · opens tomorrow {time}": "Fermé · ouvre demain à {time}",
+  "Closed now": "Fermé actuellement",
+  "Wheelchair accessible": "Accessible en fauteuil roulant",
+  "Partly wheelchair accessible": "Partiellement accessible en fauteuil roulant",
+  "Not wheelchair accessible": "Non accessible en fauteuil roulant",
+  "about {area} m² mapped": "environ {area} m² cartographiés",
+  "Parcel service ({brand})": "Point relais colis ({brand})",
+  "Parcel service": "Point relais colis",
+  "Hours checked on site {date}": "Horaires vérifiés sur place le {date}",
+  "Phone {phone}": "Téléphone {phone}",
+  "About {count} people live within 2 km (SCB {year})": "Environ {count} habitants dans un rayon de 2 km (SCB {year})",
+  "Nearest stop: {name}, {distance}": "Arrêt le plus proche : {name}, {distance}",
+  "Nearest other chains: {list}": "Autres enseignes les plus proches : {list}",
+  "{count} chain stores within 5 km": {
+    "one": "{count} magasin d’enseigne dans un rayon de 5 km",
+    "many": "{count} magasins d’enseigne dans un rayon de 5 km",
+    "other": "{count} magasins d’enseigne dans un rayon de 5 km"
+  },
+  "Store web page ↗ · click card to open": "Site web du magasin ↗ · cliquez sur la carte pour ouvrir",
+  "Open the web page of {title}": "Ouvrir le site web de {title}",
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.": "Les points sont les magasins des grandes enseignes en Suède tels que cartographiés dans OpenStreetMap, colorés par entreprise et concept de magasin. Ce sont des contributeurs qui les recensent, pas les entreprises, donc certains peuvent manquer ou être obsolètes. Seuls les magasins sont affichés. Cliquez sur un magasin pour son adresse, s’il est ouvert maintenant, sa taille, la population à proximité, l’arrêt le plus proche et les autres enseignes les plus proches."
 }

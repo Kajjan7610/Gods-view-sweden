@@ -412,7 +412,8 @@ export const DATA_CREDITS = [
     key: 'company-stores',
     html:
       'Retail chains (Sweden): store locations from OpenStreetMap contributors, a snapshot ' +
-      '(<a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL</a>); company facts from Wikidata (CC0)',
+      '(<a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL</a>); company facts from Wikidata (CC0); people nearby from ' +
+      '<a href="https://geodata.scb.se/" target="_blank" rel="noopener">SCB</a> 1 km population grid (CC0)',
   },
   {
     key: 'lightning-strikes',

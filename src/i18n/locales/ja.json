@@ -3591,6 +3591,29 @@
   "Store data unavailable": "店舗データを取得できません",
   "{company}, other": "{company}・その他",
   "Show or hide {company} stores": "{company} の店舗を表示／非表示",
-  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.": "点は OpenStreetMap に登録されたスウェーデンの大手小売チェーンの店舗で、企業と店舗業態で色分けしています。企業ではなくマッパーが集めた情報のため、一部が欠けていたり古かったりすることがあります。店舗のみを表示します。店舗をクリックすると住所、営業時間、企業を表示します。",
-  "Malformed store snapshot": "店舗スナップショットが不正です"
+  "Malformed store snapshot": "店舗スナップショットが不正です",
+  "{distance} m": "{distance} m",
+  "{distance} km": "{distance} km",
+  "Open now · closes {time}": "営業中 · {time} 閉店",
+  "Open around the clock": "24時間営業",
+  "Closed now · opens {time}": "閉店中 · {time} 開店",
+  "Closed now · opens tomorrow {time}": "閉店中 · 明日 {time} 開店",
+  "Closed now": "閉店中",
+  "Wheelchair accessible": "車椅子対応",
+  "Partly wheelchair accessible": "一部車椅子対応",
+  "Not wheelchair accessible": "車椅子非対応",
+  "about {area} m² mapped": "地図上の面積 約 {area} m²",
+  "Parcel service ({brand})": "荷物取扱所（{brand}）",
+  "Parcel service": "荷物取扱所",
+  "Hours checked on site {date}": "営業時間は {date} に現地で確認済み",
+  "Phone {phone}": "電話 {phone}",
+  "About {count} people live within 2 km (SCB {year})": "半径 2 km 以内に約 {count} 人が居住（SCB {year}）",
+  "Nearest stop: {name}, {distance}": "最寄りの停留所: {name}、{distance}",
+  "Nearest other chains: {list}": "最寄りの他チェーン: {list}",
+  "{count} chain stores within 5 km": {
+    "other": "半径 5 km 以内のチェーン店 {count} 店"
+  },
+  "Store web page ↗ · click card to open": "店舗のウェブページ ↗ · カードをクリックして開く",
+  "Open the web page of {title}": "{title} のウェブページを開く",
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.": "点は OpenStreetMap に記録されたスウェーデンの大手小売チェーンの店舗で、企業と店舗形態ごとに色分けされています。企業ではなくマッパーが収集しているため、一部が欠けていたり古かったりすることがあります。表示されるのは店舗のみです。店舗をクリックすると、住所、現在営業中かどうか、規模、周辺人口、最寄りの停留所、最寄りの他チェーンが表示されます。"
 }

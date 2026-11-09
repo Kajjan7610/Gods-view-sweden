@@ -27,7 +27,7 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (pilar i flödesriktningen, MW), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, flöde i m³/s var 15:e minut och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
-| Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp), Lidls, City Gross och Systembolagets butiker, färgade efter företag och koncept, med en knapp per företag; klick ger adress, öppettider och företaget (org.nr och huvudkontor). Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
+| Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp), Lidls, City Gross och Systembolagets butiker, färgade efter företag och koncept, med en knapp per företag; klick ger adress, om butiken är öppen nu, kartlagd storlek, webbsida, telefon, rullstol och paketombud, hur många som bor inom 2 km, närmaste hållplats, närmaste andra kedjor och företaget (org.nr och huvudkontor); klick på kortet öppnar butikens webbsida. Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0), befolkning från SCB:s 1 km-rutor (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
 | Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
 | Blixtnedslag: varje urladdning den senaste timmen som punkt, färgad efter ålder (vit = senaste 5 min), stora för nedslag i marken och små för blixtar i molnet; klick ger tid, typ och toppström | DMI:s blixtdata (CC BY 4.0, ingen nyckel; DMI:s sensornät och grannländernas sensorer) | Lightning Strikes (Sweden) / Blixtnedslag, under Weather |
 | Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
@@ -79,6 +79,23 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-09 (mer butiksdata)
+- Butikskortet visar nu mer, bara från öppna källor och utan nya nycklar:
+  om butiken är öppen nu och när den stänger eller öppnar (läst ur
+  OSM-öppettiderna; former som inte går att läsa säkert visas inte),
+  när öppettiderna senast kontrollerades på plats, kartlagd yta i m²
+  (när butiken är ritad som byggnad, ca 40 %), telefon, rullstolsanpassning,
+  paketombud, närmaste namngivna hållplats inom 600 m (OSM, 93 % av
+  butikerna), hur många som bor inom 2 km (SCB:s öppna befolkningsrutor
+  1 km, CC0, 2025) och de närmaste butikerna från andra kedjor med avstånd
+  plus antal kedjebutiker inom 5 km. Klick på kortet öppnar butikens egen
+  webbsida när OSM har en (55 %).
+- Rättat: landsgränsfiltret jämförde bara med Sverige och grannländerna,
+  så butiker i Estland, Lettland och Litauen hamnade på närmaste svenska
+  kust. Lidl hade 47 baltiska butiker för mycket (nu 209) och Coop 2 (nu
+  777). Totalt 3 201 butiker. Hållplatsnamn som bara är en plattformsbokstav
+  ("B", "C1") hoppas över.
 
 ### 2026-11-08 (Coop saknade butiker)
 - Butikskedjorna hittade bara 481 av Coops drygt 800 butiker. Coop är märkt

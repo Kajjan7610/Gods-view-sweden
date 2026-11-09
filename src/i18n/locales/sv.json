@@ -3669,6 +3669,30 @@
   "Store data unavailable": "Butiksdata otillgängliga",
   "{company}, other": "{company}, övriga",
   "Show or hide {company} stores": "Visa eller dölj butiker från {company}",
-  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, opening hours and company.": "Punkterna är stora butikskedjors butiker i Sverige så som de är kartlagda i OpenStreetMap, färgade efter företag och butikskoncept. Det är kartläggare som samlar in dem, inte företagen, så enstaka kan saknas eller vara inaktuella. Bara butiker visas. Klicka på en butik för adress, öppettider och företag.",
-  "Malformed store snapshot": "Felaktig ögonblicksbild av butiker"
+  "Malformed store snapshot": "Felaktig ögonblicksbild av butiker",
+  "{distance} m": "{distance} m",
+  "{distance} km": "{distance} km",
+  "Open now · closes {time}": "Öppet nu · stänger {time}",
+  "Open around the clock": "Öppet dygnet runt",
+  "Closed now · opens {time}": "Stängt nu · öppnar {time}",
+  "Closed now · opens tomorrow {time}": "Stängt nu · öppnar i morgon {time}",
+  "Closed now": "Stängt nu",
+  "Wheelchair accessible": "Rullstolsanpassad",
+  "Partly wheelchair accessible": "Delvis rullstolsanpassad",
+  "Not wheelchair accessible": "Inte rullstolsanpassad",
+  "about {area} m² mapped": "cirka {area} m² kartlagt",
+  "Parcel service ({brand})": "Paketombud ({brand})",
+  "Parcel service": "Paketombud",
+  "Hours checked on site {date}": "Öppettider kontrollerade på plats {date}",
+  "Phone {phone}": "Telefon {phone}",
+  "About {count} people live within 2 km (SCB {year})": "Cirka {count} personer bor inom 2 km (SCB {year})",
+  "Nearest stop: {name}, {distance}": "Närmaste hållplats: {name}, {distance}",
+  "Nearest other chains: {list}": "Närmaste andra kedjor: {list}",
+  "{count} chain stores within 5 km": {
+    "one": "{count} kedjebutik inom 5 km",
+    "other": "{count} kedjebutiker inom 5 km"
+  },
+  "Store web page ↗ · click card to open": "Butikens webbsida ↗ · klicka på kortet för att öppna",
+  "Open the web page of {title}": "Öppna webbsidan för {title}",
+  "Dots are the stores of large retail chains in Sweden as mapped in OpenStreetMap, coloured by company and store concept. Mappers collect them, not the companies, so a few may be missing or out of date. Only stores are shown. Click a store for its address, whether it is open now, its size, the people living nearby, the nearest stop and the nearest other chains.": "Punkterna är stora butikskedjors butiker i Sverige så som de är kartlagda i OpenStreetMap, färgade efter företag och butikskoncept. Det är kartläggare som samlar in dem, inte företagen, så enstaka kan saknas eller vara inaktuella. Bara butiker visas. Klicka på en butik för adress, om den är öppen nu, storlek, hur många som bor i närheten, närmaste hållplats och närmaste andra kedjor."
 }

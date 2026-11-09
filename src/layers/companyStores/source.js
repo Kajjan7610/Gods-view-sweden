@@ -11,7 +11,7 @@ export function createCompanyStoresSource({
   return {
     /**
      * @returns {Promise<{stores: object[], companies: object[],
-     *   osmBase: string|null}>}
+     *   osmBase: string|null, populationYear: number|null}>}
      */
     async getSnapshot({ signal } = {}) {
       signal?.throwIfAborted();
@@ -39,6 +39,9 @@ export function createCompanyStoresSource({
         stores: payload.stores,
         companies: Array.isArray(payload.companies) ? payload.companies : [],
         osmBase: typeof payload.osmBase === 'string' ? payload.osmBase : null,
+        populationYear: Number.isInteger(payload.populationYear)
+          ? payload.populationYear
+          : null,
       };
     },
   };

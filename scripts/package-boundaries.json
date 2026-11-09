@@ -2316,6 +2316,7 @@
       "./standalone/catalog"
     ],
     "modules": [
+      "src/layers/companyStores/openingHours.js",
       "src/ui/citySights.js",
       "src/ui/krisinformationModel.js",
       "src/ui/vmaBanner.js",
@@ -3043,6 +3044,7 @@
       "src/app/layers/seaWeather.js",
       "src/layers/companyStores/index.js",
       "src/layers/companyStores/records.js",
+      "src/layers/companyStores/openingHours.js",
       "src/layers/companyStores/cards.js",
       "src/layers/companyStores/source.js",
       "src/app/layers/companyStores.js",
@@ -3884,6 +3886,7 @@
       "src/app/layers/seaWeather.js",
       "src/layers/companyStores/index.js",
       "src/layers/companyStores/records.js",
+      "src/layers/companyStores/openingHours.js",
       "src/layers/companyStores/cards.js",
       "src/layers/companyStores/source.js",
       "src/app/layers/companyStores.js",
