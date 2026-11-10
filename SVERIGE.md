@@ -127,6 +127,25 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (SMHI-väder: rättningar efter kodgranskning)
+- Lagret ritar om när en stations vind, byar eller nederbörd ändras, inte
+  bara temperaturen eller mättiden. Förut kunde vind som kom tillbaka efter
+  en misslyckad hämtning saknas i upp till en timme (grå prickar i
+  vindläget, kort utan vind).
+- Proxyn lämnar SMHI i fred i 1 minut efter en misslyckad hämtning och
+  svarar under tiden med de senaste mätningarna, märkta `X-Data-Stale`
+  (eller 502 om inga finns). Ett svar där vind-, by- eller
+  nederbördsfilen saknades sparas 1 minut i stället för 10. Loggraden och
+  cachen skrivs en gång per hämtning.
+- En ritning som misslyckades loggas som ritfel, inte hämtfel, och görs
+  om vid nästa uppdatering. Ett avstängt lager bär inte kvar sitt senaste
+  fel. Prognosens halvtimmesgräns följer lagrets egen klocka.
+- Symbolen för närmaste dygnet är den första i prognosen (vädret nu), som
+  kommentaren i koden sade; förut togs den från mitten av dygnet, kl. 06
+  nästa morgon om man klickade kl. 18. Dagarna har kvar middagens symbol.
+- Prognosen sammanfattas med en enda datumformaterare i stället för en ny
+  per tidssteg (cirka 100 per prognos).
+
 ### 2026-11-10 (polishändelser: rättningar efter kodgranskning; dev-servern)
 - Kategorierna läser "rån" som ett eget ord: "Trafikolycka, smitning
   från" är trafik och "Olaga intrång" stöld och skadegörelse, inte våld

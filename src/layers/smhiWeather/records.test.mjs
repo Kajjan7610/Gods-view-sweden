@@ -118,3 +118,35 @@ test('the card shows the reading, then the forecast once it has arrived', () => 
     'SMHI forecast unavailable',
   );
 });
+
+test("the next 24 hours show the coming hour's symbol, a day its midday one", () => {
+  const steps = [];
+  for (let h = 0; h < 48; h += 1)
+    steps.push({
+      time: new Date(NOW + h * 3600e3).toISOString(),
+      data: {
+        air_temperature: 1,
+        // Clear now, rain through the night, snow at Swedish midday.
+        symbol_code: h === 0 ? 1 : h === 13 ? 25 : 18,
+      },
+    });
+  const summary = summarizeForecast({ timeSeries: steps }, NOW);
+  assert.equal(summary.next24.symbol, 1);
+  // 22:00 UTC is 23:00 in Stockholm; the next day runs from step 1 to 24,
+  // and its middle step is 12:00 Swedish time.
+  assert.equal(summary.days[0].day, '2026-11-05');
+  assert.equal(summary.days[0].symbol, 25);
+});
+
+test('a forecast is summarised without a new date formatter per step', (t) => {
+  const steps = [];
+  for (let h = 0; h < 240; h += 1)
+    steps.push({
+      time: new Date(NOW + h * 3600e3).toISOString(),
+      data: { air_temperature: 1, symbol_code: 1 },
+    });
+  const made = t.mock.method(Intl, 'DateTimeFormat');
+  const summary = summarizeForecast({ timeSeries: steps }, NOW);
+  assert.equal(summary.days.length, 4);
+  assert.equal(made.mock.callCount(), 0);
+});

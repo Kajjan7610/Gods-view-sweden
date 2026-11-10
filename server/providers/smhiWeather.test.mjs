@@ -90,3 +90,108 @@ test('forecasts are per rounded point, inside the Nordic area only, and cached',
   t.mock.method(console, 'warn', () => {});
   assert.equal((await request('/other')).status, 404);
 });
+
+test('after a failed refresh SMHI is left alone for a minute', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  let clock = NOW;
+  let fail = false;
+  let calls = 0;
+  const request = harness({
+    now: () => clock,
+    fetchImpl: async () => {
+      calls += 1;
+      return fail ? new Response('down', { status: 503 }) : Response.json(OBS);
+    },
+  });
+  await request();
+  assert.equal(calls, 4);
+  fail = true;
+  clock += 11 * 60_000;
+  const first = await request();
+  assert.equal(first.json().stale, true);
+  assert.equal(calls, 8);
+  // Within the minute: the last observations again, SMHI not asked.
+  clock += 30_000;
+  for (let i = 0; i < 3; i += 1)
+    assert.equal((await request()).json().stale, true);
+  assert.equal(calls, 8);
+  // After it, asked once more.
+  clock += 31_000;
+  fail = false;
+  assert.equal((await request()).json().stale, undefined);
+  assert.equal(calls, 12);
+});
+
+test('without any observations a failed refresh is a 502, also during the pause', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  let calls = 0;
+  const request = harness({
+    now: () => NOW,
+    fetchImpl: async () => {
+      calls += 1;
+      return new Response('down', { status: 503 });
+    },
+  });
+  assert.equal((await request()).status, 502);
+  const paused = await request();
+  assert.equal(paused.status, 502);
+  assert.equal(paused.json().error, 'smhi_weather_unavailable');
+  assert.equal(calls, 4);
+});
+
+test('an answer missing a parameter file is asked for again after a minute', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  let clock = NOW;
+  let windDown = true;
+  const urls = [];
+  const request = harness({
+    now: () => clock,
+    fetchImpl: async (url) => {
+      urls.push(String(url));
+      return windDown && String(url).includes('/parameter/4/')
+        ? new Response('down', { status: 503 })
+        : Response.json(OBS);
+    },
+  });
+  assert.equal((await request()).json().stations[0].wind, null);
+  clock += 30_000;
+  await request();
+  assert.equal(urls.length, 4, 'kept for a minute');
+  windDown = false;
+  clock += 31_000;
+  assert.equal((await request()).json().stations[0].wind, 3.9);
+  assert.equal(urls.length, 8);
+  // A complete answer is kept the full ten minutes.
+  clock += 9 * 60_000;
+  await request();
+  assert.equal(urls.length, 8);
+});
+
+test('requests waiting on one refresh share it, logged and saved once', async (t) => {
+  const log = t.mock.method(console, 'log', () => {});
+  let release;
+  const gate = new Promise((resolve) => (release = resolve));
+  let calls = 0;
+  const request = harness({
+    now: () => NOW,
+    fetchImpl: async () => {
+      calls += 1;
+      await gate;
+      return Response.json(OBS);
+    },
+  });
+  const waiting = [request(), request(), request()];
+  await new Promise((resolve) => setImmediate(resolve));
+  release();
+  const answers = await Promise.all(waiting);
+  assert.deepEqual(
+    answers.map((answer) => answer.status),
+    [200, 200, 200],
+  );
+  assert.equal(calls, 4);
+  assert.deepEqual(
+    log.mock.calls.map((call) => call.arguments[0]),
+    ['[smhi-weather] 1 stations'],
+  );
+});

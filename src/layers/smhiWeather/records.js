@@ -42,6 +42,9 @@ export function symbolEmoji(code) {
   return '';
 }
 
+// The forecast's days are Swedish days.
+const DAY = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Stockholm' });
+
 const finite = (value) => {
   if (value == null || value === '') return null;
   const n = Number(value);
@@ -98,7 +101,7 @@ export function summarizeForecast(payload, nowMs) {
     .map((step) => ({ at: Date.parse(step?.time), data: step?.data || {} }))
     .filter((step) => Number.isFinite(step.at) && step.at >= nowMs - 3600e3)
     .sort((a, b) => a.at - b.at);
-  const sumUp = (list) => {
+  const sumUp = (list, symbolAt) => {
     const temps = list
       .map((s) => finite(s.data.air_temperature))
       .filter((v) => v != null);
@@ -119,19 +122,17 @@ export function summarizeForecast(payload, nowMs) {
           precipitation: rain.length
             ? Math.round(rain.reduce((a, b) => a + b, 0) * 10) / 10
             : null,
-          // The midday symbol speaks for the day; the first one for 24 h.
-          symbol:
-            symbols[
-              Math.min(symbols.length - 1, Math.floor(symbols.length / 2))
-            ] ?? null,
+          symbol: symbols[symbolAt(symbols.length)] ?? null,
         }
       : null;
   };
-  const next24 = sumUp(steps.filter((s) => s.at < nowMs + 24 * 3600e3));
-  const dayKey = (ms) =>
-    new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Stockholm' }).format(
-      ms,
-    );
+  // The first symbol speaks for the coming 24 hours, the midday one for a day.
+  const next24 = sumUp(
+    steps.filter((s) => s.at < nowMs + 24 * 3600e3),
+    () => 0,
+  );
+  const midday = (count) => Math.floor(count / 2);
+  const dayKey = (ms) => DAY.format(ms);
   const today = dayKey(nowMs);
   const groups = new Map();
   for (const step of steps) {
@@ -142,7 +143,7 @@ export function summarizeForecast(payload, nowMs) {
   }
   const days = [...groups.entries()]
     .slice(0, 4)
-    .map(([day, list]) => ({ day, at: list[0].at, ...sumUp(list) }))
+    .map(([day, list]) => ({ day, at: list[0].at, ...sumUp(list, midday) }))
     .filter((day) => day.min != null);
   const coords = payload?.geometry?.coordinates;
   return {

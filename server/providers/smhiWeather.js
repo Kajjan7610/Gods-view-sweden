@@ -16,6 +16,11 @@ const OBS_URL = (parameter) =>
 export const FORECAST_URL = (lon, lat) =>
   `https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/${lon}/lat/${lat}/data.json`;
 const OBS_TTL_MS = 10 * 60_000;
+/**
+ * How long SMHI is left alone after a failed refresh, and how long an answer
+ * missing one of the wind, gust or precipitation files is kept.
+ */
+export const SMHI_RETRY_AFTER_FAILURE_MS = 60_000;
 const FORECAST_TTL_MS = 30 * 60_000;
 const FORECAST_CACHE_MAX = 300;
 /** Longest a failed refresh keeps serving the last observations, marked stale. */
@@ -29,6 +34,7 @@ export function smhiWeatherProxy({
   now = () => Date.now(),
 } = {}) {
   let observations = null;
+  let retryAfter = 0;
   const forecasts = new Map();
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 60, globalMax: 900 });
@@ -70,7 +76,39 @@ export function smhiWeatherProxy({
         byField[field] = answers[index].value;
     });
     const at = now();
-    return { stations: mergeObservations(byField, at), fetchedAt: at };
+    return {
+      value: { stations: mergeObservations(byField, at), fetchedAt: at },
+      complete: answers.every(({ status }) => status === 'fulfilled'),
+    };
+  }
+
+  /** The last observations marked stale, or null once they are too old. */
+  const lastKnown = () =>
+    observations && now() - observations.savedAt <= STALE_MAX_MS
+      ? { ...observations.value, stale: true }
+      : null;
+
+  /**
+   * One read of SMHI, shared by everyone waiting on it: the new observations,
+   * or after a failure the last ones (null without them). An answer missing
+   * a parameter file is asked for again after a minute, not ten.
+   */
+  async function refresh() {
+    try {
+      const { value, complete } = await loadObservations();
+      observations = {
+        value,
+        savedAt: now(),
+        ttl: complete ? OBS_TTL_MS : SMHI_RETRY_AFTER_FAILURE_MS,
+      };
+      retryAfter = 0;
+      console.log(`[smhi-weather] ${value.stations.length} stations`);
+      return value;
+    } catch (error) {
+      console.warn(`[smhi-weather] refresh failed: ${error?.message || error}`);
+      retryAfter = now() + SMHI_RETRY_AFTER_FAILURE_MS;
+      return lastKnown();
+    }
   }
 
   async function handler(req, res) {
@@ -125,30 +163,16 @@ export function smhiWeatherProxy({
     }
     if (url.pathname !== '/' && url.pathname !== '')
       return json(404, { error: 'unknown_route' });
-    if (observations && now() - observations.savedAt < OBS_TTL_MS)
+    if (observations && now() - observations.savedAt < observations.ttl)
       return json(200, observations.value);
     if (!allow(clientKey(req)))
       return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
-    try {
-      const { promise } = coalesceProxyRequest(
-        inFlight,
-        'observations',
-        loadObservations,
-      );
-      const value = await promise;
-      observations = { value, savedAt: now() };
-      console.log(`[smhi-weather] ${value.stations.length} stations`);
-      return json(200, value);
-    } catch (error) {
-      console.warn(`[smhi-weather] refresh failed: ${error?.message || error}`);
-      if (observations && now() - observations.savedAt <= STALE_MAX_MS)
-        return json(
-          200,
-          { ...observations.value, stale: true },
-          { 'X-Data-Stale': 'true' },
-        );
-      return json(502, { error: 'smhi_weather_unavailable' });
-    }
+    const value =
+      now() < retryAfter
+        ? lastKnown()
+        : await coalesceProxyRequest(inFlight, 'observations', refresh).promise;
+    if (!value) return json(502, { error: 'smhi_weather_unavailable' });
+    return json(200, value, value.stale ? { 'X-Data-Stale': 'true' } : {});
   }
 
   return {

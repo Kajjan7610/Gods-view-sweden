@@ -61,6 +61,7 @@ export function createSmhiWeatherLayer({
   picking = null,
   pointer = null,
   terrain = null,
+  now = () => Date.now(),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('SMHI weather requires a snapshot source');
@@ -165,17 +166,17 @@ export function createSmhiWeatherLayer({
     if (!row || typeof source.getForecast !== 'function') return;
     if (
       known &&
-      (known.state === 'loading' || Date.now() - known.at < FORECAST_REUSE_MS)
+      (known.state === 'loading' || now() - known.at < FORECAST_REUSE_MS)
     )
       return;
-    _forecasts.set(id, { state: 'loading', forecast: null, at: Date.now() });
+    _forecasts.set(id, { state: 'loading', forecast: null, at: now() });
     publishSelectedCard();
     try {
       const forecast = await source.getForecast({
         lat: row.point[1],
         lon: row.point[0],
       });
-      _forecasts.set(id, { state: 'ready', forecast, at: Date.now() });
+      _forecasts.set(id, { state: 'ready', forecast, at: now() });
     } catch (e) {
       console.warn('[Data:SmhiWeather] Forecast error:', e?.message || e);
       _forecasts.set(id, { state: 'failed', forecast: null, at: 0 });
@@ -312,6 +313,7 @@ export function createSmhiWeatherLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      _lastError = null;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
       clearOverlays();
@@ -330,19 +332,37 @@ export function createSmhiWeatherLayer({
         _lastUpdate =
           _stale && Number.isFinite(snapshot.fetchedAt)
             ? snapshot.fetchedAt
-            : Date.now();
+            : now();
         _lastError = null;
+        // Every reading counts: wind, gusts or rain can come back within the
+        // hour while the temperature and its time stay the same.
         const signature = JSON.stringify(
-          snapshot.stations.map((row) => [row.id, row.updated, row.airTemp]),
+          snapshot.stations.map((row) => [
+            row.id,
+            row.updated,
+            row.airTemp,
+            row.wind,
+            row.gust,
+            row.precipitation,
+          ]),
         );
         if (signature !== _signature) {
-          _signature = signature;
+          // Not trusted until drawn: a drawing that fails is made again.
+          _signature = null;
           _stations = snapshot.stations;
           _stationById.clear();
           for (const row of _stations) _stationById.set(row.id, row);
           // Heights first: the ones this browser kept are drawn at once.
           _ground.place(_stations);
-          render();
+          try {
+            render();
+          } catch (e) {
+            console.warn('[Data:SmhiWeather] Draw error:', e?.message || e);
+            _lastError = e?.message || msg('SMHI weather unavailable');
+            _rowListener?.();
+            return true;
+          }
+          _signature = signature;
           console.log(
             `[Data:SmhiWeather] Updated: ${_stations.length} stations`,
           );
