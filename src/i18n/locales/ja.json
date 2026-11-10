@@ -3571,6 +3571,7 @@
   "Cloud to cloud": "雲間放電",
   "Type not stated": "種別の記載なし",
   "{amp} kA peak current": "ピーク電流 {amp} kA",
+  "Located by 1 sensor": "1 台のセンサーで標定",
   "Located by {count} sensors": "{count} 台のセンサーで標定",
   "Within about 0.5–2 km near Denmark, less precise farther away": "デンマーク付近で約 0.5〜2 km の精度、遠いほど低下",
   "LIGHTNING · IN CLOUD": "雷 · 雲内",

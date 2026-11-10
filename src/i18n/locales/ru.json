@@ -3805,6 +3805,7 @@
   "Cloud to cloud": "Облако — облако",
   "Type not stated": "Тип не указан",
   "{amp} kA peak current": "Пиковый ток {amp} кА",
+  "Located by 1 sensor": "Определено 1 датчиком",
   "Located by {count} sensors": "Определено {count} датчиками",
   "Within about 0.5–2 km near Denmark, less precise farther away": "Точность около 0,5–2 км у Дании, дальше ниже",
   "LIGHTNING · IN CLOUD": "МОЛНИЯ · В ОБЛАКЕ",

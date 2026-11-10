@@ -47,7 +47,11 @@ export function buildStrikeCard(row, nowMs = Date.now()) {
           }),
         ]),
     ...(row.sensors
-      ? [t('Located by {count} sensors', { count: row.sensors })]
+      ? [
+          row.sensors === 1
+            ? t('Located by 1 sensor')
+            : t('Located by {count} sensors', { count: row.sensors }),
+        ]
       : []),
     // i18n-ignore: agency name
     `${t('Within about 0.5–2 km near Denmark, less precise farther away')} · DMI`,

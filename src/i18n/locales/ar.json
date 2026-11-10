@@ -3961,6 +3961,7 @@
   "Cloud to cloud": "من سحابة إلى سحابة",
   "Type not stated": "النوع غير محدد",
   "{amp} kA peak current": "تيار ذروة {amp} كيلوأمبير",
+  "Located by 1 sensor": "حددها مستشعر واحد",
   "Located by {count} sensors": "حددها {count} مستشعرات",
   "Within about 0.5–2 km near Denmark, less precise farther away": "بدقة نحو 0.5–2 كم قرب الدنمارك، وأقل دقة كلما ابتعدت",
   "LIGHTNING · IN CLOUD": "برق · داخل السحابة",

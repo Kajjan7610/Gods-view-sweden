@@ -8,12 +8,15 @@ import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 // DMI's open lightning API (CC BY 4.0, no key). One request covers the
 // Nordic window for the last hour, newest first; strokes arrive within a few
 // minutes, so a minute of cache keeps the layer live without hammering DMI.
+// A failed read is left alone for a minute as well.
 export const DMI_LIGHTNING_URL =
   'https://opendataapi.dmi.dk/v2/lightningdata/collections/observation/items';
 const NORDIC_BBOX = '4,54,32,71';
 const PAGE = 10_000;
 const MAX_PAGES = 2;
 const TTL_MS = 60_000;
+/** How long DMI is left alone after a failed refresh. */
+export const LIGHTNING_RETRY_AFTER_FAILURE_MS = 60_000;
 /** Longest a failed refresh keeps serving the last snapshot, marked stale. */
 const STALE_MAX_MS = 10 * 60_000;
 const MAX_BODY_BYTES = 12 * 1024 * 1024;
@@ -38,6 +41,7 @@ export function lightningStrikesProxy({
   now = () => Date.now(),
 } = {}) {
   let cached = null;
+  let retryAfter = 0;
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 600 });
 
@@ -85,6 +89,32 @@ export function lightningStrikesProxy({
     }
   }
 
+  /** The last snapshot marked stale, or null once it is too old to show. */
+  const lastKnown = () =>
+    cached && now() - cached.savedAt <= STALE_MAX_MS
+      ? { ...cached.value, stale: true }
+      : null;
+
+  /**
+   * One read of DMI, shared by everyone waiting on it: the new snapshot, or
+   * after a failure the last one (null without one).
+   */
+  async function refresh() {
+    try {
+      const value = await load();
+      cached = { value, savedAt: now() };
+      retryAfter = 0;
+      console.log(`[lightning-strikes] ${value.strikes.length} strokes`);
+      return value;
+    } catch (error) {
+      console.warn(
+        `[lightning-strikes] refresh failed: ${error?.message || error}`,
+      );
+      retryAfter = now() + LIGHTNING_RETRY_AFTER_FAILURE_MS;
+      return lastKnown();
+    }
+  }
+
   async function handler(req, res) {
     const json = (status, value, headers = {}) => {
       if (res.destroyed) return;
@@ -104,24 +134,12 @@ export function lightningStrikesProxy({
       return json(200, cached.value);
     if (!allow(clientKey(req)))
       return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
-    try {
-      const { promise } = coalesceProxyRequest(inFlight, 'strikes', load);
-      const value = await promise;
-      cached = { value, savedAt: now() };
-      console.log(`[lightning-strikes] ${value.strikes.length} strokes`);
-      return json(200, value);
-    } catch (error) {
-      console.warn(
-        `[lightning-strikes] refresh failed: ${error?.message || error}`,
-      );
-      if (cached && now() - cached.savedAt <= STALE_MAX_MS)
-        return json(
-          200,
-          { ...cached.value, stale: true },
-          { 'X-Data-Stale': 'true' },
-        );
-      return json(502, { error: 'lightning_strikes_unavailable' });
-    }
+    const value =
+      now() < retryAfter
+        ? lastKnown()
+        : await coalesceProxyRequest(inFlight, 'strikes', refresh).promise;
+    if (!value) return json(502, { error: 'lightning_strikes_unavailable' });
+    return json(200, value, value.stale ? { 'X-Data-Stale': 'true' } : {});
   }
 
   return {

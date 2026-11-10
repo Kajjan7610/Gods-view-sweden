@@ -37,13 +37,19 @@ const KINDS = Object.freeze({
   2: 'cloud',
 });
 
+/** A number, or a string holding one; null and '' are no value, not 0. */
+const numeric = (value) =>
+  typeof value === 'number' || (typeof value === 'string' && value.trim())
+    ? Number(value)
+    : NaN;
+
 /**
  * One stroke, or null without a time or a place in the Nordic window.
  * @param {object} feature A GeoJSON Point feature from DMI.
  */
 export function normalizeStrike(feature) {
   const [lon, lat] = Array.isArray(feature?.geometry?.coordinates)
-    ? feature.geometry.coordinates.map(Number)
+    ? feature.geometry.coordinates.map(numeric)
     : [];
   const props = feature?.properties || {};
   const at = Date.parse(props.observed);
@@ -61,7 +67,7 @@ export function normalizeStrike(feature) {
     lon > 35
   )
     return null;
-  const amp = Number(props.amp);
+  const amp = numeric(props.amp);
   const sensors =
     typeof props.sensors === 'string'
       ? props.sensors.split(',').filter(Boolean).length

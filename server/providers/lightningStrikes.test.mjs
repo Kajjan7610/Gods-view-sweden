@@ -1,7 +1,11 @@
 // The DMI lightning route: the last hour over the Nordics, a minute of cache.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { dmiLightningUrl, lightningStrikesProxy } from './lightningStrikes.js';
+import {
+  LIGHTNING_RETRY_AFTER_FAILURE_MS,
+  dmiLightningUrl,
+  lightningStrikesProxy,
+} from './lightningStrikes.js';
 
 function route(options) {
   let handler = null;
@@ -11,8 +15,9 @@ function route(options) {
   return async (url = '/') => {
     const res = {
       destroyed: false,
-      writeHead(status) {
+      writeHead(status, headers) {
         this.status = status;
+        this.headers = headers;
       },
       end(body) {
         this.body = JSON.parse(body);
@@ -76,9 +81,96 @@ test('the route serves the last hour, caches a minute and goes stale on failure'
   const stale = await get();
   assert.equal(stale.status, 200);
   assert.equal(stale.body.stale, true);
+  assert.equal(stale.headers['X-Data-Stale'], 'true');
   now += 11 * 60_000;
   assert.equal((await get()).status, 502);
   assert.equal((await get('/other')).status, 404);
+});
+
+test('a failed read leaves DMI alone for a minute', async (t) => {
+  const warn = t.mock.method(console, 'warn', () => {});
+  t.mock.method(console, 'log', () => {});
+  let now = NOW;
+  let down = true;
+  let calls = 0;
+  const get = route({
+    now: () => now,
+    fetchImpl: async () => {
+      calls++;
+      if (down) throw new Error('down');
+      return new Response(JSON.stringify({ features: [strike('a', 1)] }));
+    },
+  });
+  // Nothing to fall back on: 502, and no second try inside the minute.
+  assert.equal((await get()).status, 502);
+  now += LIGHTNING_RETRY_AFTER_FAILURE_MS - 1;
+  assert.equal((await get()).status, 502);
+  assert.equal(calls, 1);
+  assert.equal(warn.mock.callCount(), 1);
+  // The minute is up, and DMI answers again.
+  down = false;
+  now += 1;
+  const fresh = await get();
+  assert.equal(fresh.status, 200);
+  assert.equal(fresh.headers['X-Data-Stale'], undefined);
+  assert.equal(calls, 2);
+  // Down again once the cache has run out: the last snapshot, marked stale.
+  down = true;
+  now += 61_000;
+  const stale = await get();
+  assert.equal(stale.status, 200);
+  assert.equal(stale.body.stale, true);
+  assert.equal(stale.headers['X-Data-Stale'], 'true');
+  assert.equal(calls, 3);
+  // The same answer inside the pause, without asking DMI.
+  now += 20_000;
+  const paused = await get();
+  assert.equal(paused.status, 200);
+  assert.equal(paused.body.stale, true);
+  assert.equal(paused.headers['X-Data-Stale'], 'true');
+  assert.equal(calls, 3);
+  assert.equal(warn.mock.callCount(), 2);
+});
+
+test('requests waiting on one read share it, and its log line', async (t) => {
+  const log = t.mock.method(console, 'log', () => {});
+  const warn = t.mock.method(console, 'warn', () => {});
+  let now = NOW;
+  let down = false;
+  let calls = 0;
+  let release = null;
+  const get = route({
+    now: () => now,
+    fetchImpl: async () => {
+      calls++;
+      await new Promise((resolve) => (release = resolve));
+      if (down) throw new Error('down');
+      return new Response(JSON.stringify({ features: [strike('a', 1)] }));
+    },
+  });
+  const settle = async (waiting) => {
+    while (!release) await new Promise((resolve) => setImmediate(resolve));
+    release();
+    release = null;
+    return Promise.all(waiting);
+  };
+  const served = await settle([get(), get(), get()]);
+  assert.deepEqual(
+    served.map((res) => res.status),
+    [200, 200, 200],
+  );
+  assert.equal(calls, 1);
+  assert.equal(log.mock.callCount(), 1);
+  // A failed read is shared the same way: one warning for all three.
+  down = true;
+  now += 61_000;
+  const stale = await settle([get(), get(), get()]);
+  assert.deepEqual(
+    stale.map((res) => res.body.stale),
+    [true, true, true],
+  );
+  assert.equal(calls, 2);
+  assert.equal(warn.mock.callCount(), 1);
 });
 
 test('a full first page reads one more and marks the cap', async () => {

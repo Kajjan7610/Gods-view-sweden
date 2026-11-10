@@ -127,6 +127,30 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (blixtnedslag: rättningar efter kodgranskning)
+- Prickarna ändras på plats varje minut i stället för att alla tas bort
+  och ritas om: nya nedslag läggs till, de som passerat en timme tas
+  bort, och bara de som bytt åldersklass får ny färg. Mätt i
+  förhandsvisningen med en minuts normal omsättning: 2 000 nedslag gick
+  från cirka 0,1–0,2 s hack till under 0,01 s, 5 000 från cirka 0,3–0,4 s
+  till cirka 0,02 s och 20 000 från cirka 1,2–2,5 s till cirka 0,1 s.
+  Första ritningen, när lagret slås på, tar lika lång tid som förut.
+- Proxyn lämnar DMI i fred i 1 minut efter en misslyckad hämtning och
+  svarar under tiden med den senaste listan, märkt `X-Data-Stale` (eller
+  502 om ingen finns). Loggraden om en lyckad hämtning skrivs en gång per
+  hämtning, inte en gång per väntande fråga.
+- Ett nedslag utan angiven toppström får ingen rad om ström på kortet, i
+  stället för "0 kA toppström". Ett nedslag utan koordinater släpps, i
+  stället för att hamna på longitud 0.
+- En ritning som misslyckades loggas som ritfel, inte hämtfel, och görs
+  om från början vid nästa omgång i stället för att vänta en minut.
+- Ett valt nedslag som passerar en timme tappar sitt kort samtidigt som
+  pricken, inte upp till ett par minuter senare.
+- Ett avstängt lager bär inte kvar sitt senaste fel. En geoid som inte
+  gick att ladda efterfrågas igen nästa gång lagret slås på. Kortet säger
+  "1 sensor" i stället för "1 sensorer", på alla 12 språk. Tiden för
+  senaste uppdatering följer samma klocka som resten av lagret.
+
 ### 2026-11-10 (fartkameror: rättningar efter kodgranskning)
 - En kameraplats utan känd riktning ritas som en prick utan pil, och
   kortet säger ingenting om riktning. Det gäller både platser som saknar

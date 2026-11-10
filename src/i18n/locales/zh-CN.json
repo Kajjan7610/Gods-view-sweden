@@ -3571,6 +3571,7 @@
   "Cloud to cloud": "云间闪",
   "Type not stated": "未注明类型",
   "{amp} kA peak current": "峰值电流 {amp} kA",
+  "Located by 1 sensor": "由 1 个传感器定位",
   "Located by {count} sensors": "由 {count} 个传感器定位",
   "Within about 0.5–2 km near Denmark, less precise farther away": "丹麦附近精度约 0.5–2 公里，越远越低",
   "LIGHTNING · IN CLOUD": "闪电 · 云内",

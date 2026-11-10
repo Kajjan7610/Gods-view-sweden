@@ -3805,6 +3805,7 @@
   "Cloud to cloud": "Хмара — хмара",
   "Type not stated": "Тип не вказано",
   "{amp} kA peak current": "Піковий струм {amp} кА",
+  "Located by 1 sensor": "Визначено 1 датчиком",
   "Located by {count} sensors": "Визначено {count} датчиками",
   "Within about 0.5–2 km near Denmark, less precise farther away": "Точність близько 0,5–2 км біля Данії, далі нижча",
   "LIGHTNING · IN CLOUD": "БЛИСКАВКА · У ХМАРІ",

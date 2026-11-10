@@ -57,6 +57,24 @@ test('a stroke keeps its place, time, kind, current and sensor count', () => {
   );
 });
 
+test('a missing current or coordinate is no value, not zero', () => {
+  for (const amp of [null, '', ' ', undefined, 'x'])
+    assert.equal(
+      normalizeStrike(feature('a', 1, undefined, { amp })).amp,
+      null,
+    );
+  // Longitude 0 is inside the window, so a blank one must not become it.
+  for (const coordinates of [[null, 58], ['', 58], [15, null], [15, ''], [15]])
+    assert.equal(normalizeStrike(feature('a', 1, coordinates)), null);
+  // Numbers sent as text still count.
+  const texted = normalizeStrike(
+    feature('a', 1, ['14.2', '55.7'], { amp: '-8.26' }),
+  );
+  assert.deepEqual(texted.point, [14.2, 55.7]);
+  assert.equal(texted.amp, -8.3);
+  assert.equal(normalizeStrike(feature('a', 1, undefined, { amp: 0 })).amp, 0);
+});
+
 test('the collection keeps the last hour, newest first, without repeats', () => {
   const rows = normalizeStrikes(
     [
