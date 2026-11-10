@@ -124,9 +124,12 @@ en dokumenterad källa eller godkännas av myndigheten:
 
 - **Kraftsystemet:** Svenska kraftnäts kontrollrumstjänst, samma som sidan
   svk.se/om-kraftsystemet/kontrollrummet använder. Odokumenterad, ingen
-  licens. Nästa steg: fråga Svenska kraftnät, eller byta till en dokumenterad
-  källa (till exempel ENTSO-E:s transparensplattform, om den täcker samma
-  flöden).
+  licens. Svenska kraftnät är tillfrågat (2026-11-10). Som reserv kan lagret
+  läsa ENTSO-E:s transparensplattform i stället (`POWER_GRID_SOURCE=entsoe`
+  och en gratis nyckel, se Nycklar): flödena är där fria att återanvända
+  (CC BY 4.0), medan produktion per kraftslag och förbrukning kräver Svenska
+  kraftnäts godkännande även där. ENTSO-E publicerar senast en timme efter
+  driftperioden, så reserven visar senaste publicerade kvarten, inte nuet.
 - **Strålning:** Strålsäkerhetsmyndighetens gammastationskarta. Ingen licens
   angiven. Nästa steg: fråga Strålsäkerhetsmyndigheten.
 
@@ -139,6 +142,7 @@ en dokumenterad källa eller godkännas av myndigheten:
 | `TRAFIKLAB_GTFS_STATIC_KEY` | linjenummer och fordonstyp | trafiklab.se → GTFS Regional Static |
 | `SWEDAVIA_FLIGHTINFO_KEY` | avgångar och ankomster i dossiern, tavlan och cockpit | apideveloper.swedavia.se → FlightInfo Free |
 | `SWEDAVIA_WAITTIME_KEY` | köerna i säkerhetskontrollen | apideveloper.swedavia.se → WaitTime Free |
+| `ENTSOE_SECURITY_TOKEN` | kraftsystemet från ENTSO-E i stället för Svenska kraftnäts kontrollrum; används bara med `POWER_GRID_SOURCE=entsoe` | transparency.entsoe.eu → registrera, mejla transparency@entsoe.eu "RESTful API access", sedan My Account → Generate token |
 | `CESIUM_ION_TOKEN` | fotorealistiska 3D-städer | ion.cesium.com |
 
 Nycklarna kan klistras in i appen under **KOPPLA PÅ** (nere till höger); appen skriver då `.env` själv.
@@ -168,6 +172,23 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-10 (kraftsystemet: reserv från ENTSO-E)
+- Kraftsystemets adresser (`/api/power-grid`, `/day`, `/week`) kan läsas
+  från ENTSO-E:s transparensplattform i stället för Svenska kraftnäts
+  kontrollrum. Det är avstängt från början: kontrollrummet är kvar tills
+  Svenska kraftnät svarat på frågan om villkor. Reserven slås på med
+  `POWER_GRID_SOURCE=entsoe` och en gratis nyckel i `ENTSOE_SECURITY_TOKEN`
+  (stöds bara via `.env` än så länge, inte under KOPPLA PÅ).
+- Svaren har samma form som kontrollrummets, så lagret och KRAFT-panelen
+  fungerar som förut: fysiska flöden på de 14 förbindelserna (båda
+  riktningarna), produktion per kraftslag och förbrukning summerade över
+  SE1–SE4, och veckan direkt från ENTSO-E i stället för sparade dagar.
+  Svaret bär `source: "entsoe"`.
+- En uppdatering är 36 förfrågningar (ENTSO-E tillåter 400 i minuten per
+  nyckel) och sparas en kvart. Efter ett fel lämnas ENTSO-E i fred i 1
+  minut, och en avvisad nyckel skickas inte om. Nyckeln skickas bara till
+  ENTSO-E och syns aldrig i svar eller loggar.
 
 ### 2026-11-10 (avgränsningar och säkerhet)
 - Nytt avsnitt **Avgränsningar och säkerhet** överst i den här filen. Det
