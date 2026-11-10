@@ -88,6 +88,56 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 
 <!-- källor:end -->
 
+## Avgränsningar och säkerhet
+
+Varje lager visar uppgifter som redan finns publicerade. Men när många källor
+ligger i samma vy kan helheten säga mer än varje källa för sig. Därför gäller
+de här gränserna, även för nya lager:
+
+- **Inga personer.** Inga funktioner för att söka efter, känna igen eller
+  spåra enskilda personer (samma gräns som originalet, se
+  [CONTRIBUTING.md](CONTRIBUTING.md)). Inga personuppgifter i koden eller i
+  ögonblicksbilderna.
+- **Inga rörelser hos polis eller räddningstjänst.** Polisbilars positioner
+  är inte offentliga och byggs inte. Polisstationerna visar adress och vad
+  receptionen erbjuder. Polishändelserna är Polisens egna notiser, placerade
+  vid kommunens centralort och ofta publicerade timmar i efterhand.
+  Brandstationerna visar den beredskapsform MCF själv publicerar, inga larm
+  eller fordon.
+- **Bara butiker och apotek.** Butikskedjorna visar inga lager,
+  distributionscentraler, kontor eller bankomater.
+- **Platser, inte aktiv övervakning.** Fartkamerorna är Trafikverkets
+  kameraplatser; polisen flyttar utrustningen mellan dem.
+- **Ingen egen insamling från webbsidor.** Kedjornas butikssökare och
+  regionernas väntetidssidor används inte. Ögonblicksbilder från
+  OpenStreetMap byggs med skript som körs för hand; appen frågar aldrig
+  Overpass själv.
+- **Nycklar bara i `.env`**, som aldrig checkas in. Hela historiken är
+  genomsökt efter nycklar utan träff, och varje commit söks igenom innan den
+  görs.
+
+### Källor utan publicerad licens
+
+Två svenska lager läser tjänster som är öppet nåbara men saknar dokumentation
+eller angiven licens. De visas med källan angiven, och ska helst ersättas med
+en dokumenterad källa eller godkännas av myndigheten:
+
+- **Kraftsystemet:** Svenska kraftnäts kontrollrumstjänst, samma som sidan
+  svk.se/om-kraftsystemet/kontrollrummet använder. Odokumenterad, ingen
+  licens. Nästa steg: fråga Svenska kraftnät, eller byta till en dokumenterad
+  källa (till exempel ENTSO-E:s transparensplattform, om den täcker samma
+  flöden).
+- **Strålning:** Strålsäkerhetsmyndighetens gammastationskarta. Ingen licens
+  angiven. Nästa steg: fråga Strålsäkerhetsmyndigheten.
+
+### Från originalet
+
+Originalets lager **Kartlagda anläggningar** (Mapped Installations) visar
+militära områden med namn från OpenStreetMap, i Sverige bland annat
+garnisoner, skjutfält och övningsområden. Uppgifterna är offentliga i
+OpenStreetMap och lagret hör till originalet, inte till de svenska
+tilläggen. Om det ska vara kvar i den svenska versionen är inte bestämt.
+
 ## Nycklar (`.env`, checkas aldrig in)
 
 | Variabel | Används till | Var den skaffas |
@@ -126,6 +176,16 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-10 (avgränsningar och säkerhet)
+- Nytt avsnitt **Avgränsningar och säkerhet** överst i den här filen. Det
+  samlar gränserna som tidigare låg utspridda i loggen (inga personer, inga
+  polisfordon, bara butiker, ingen insamling från webbsidor, nycklar),
+  nämner de två svenska källorna utan publicerad licens (Svenska kraftnät
+  och Strålsäkerhetsmyndigheten) med nästa steg, och originalets lager med
+  militära områden från OpenStreetMap.
+- Skälet är frågan om vad en sammanställning av öppna källor blir, som
+  kom upp i en kommentar på LinkedIn.
 
 ### 2026-11-10 (SR trafik: rättningar efter kodgranskning)
 - Kortet läser alltid den senaste texten från SR. Förut bytte lagret ut
