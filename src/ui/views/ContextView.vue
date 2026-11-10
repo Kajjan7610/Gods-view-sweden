@@ -76,7 +76,7 @@ const sceneRuntime = computed(() => scenePanel.value?.runtime ?? '');
               <span class="material-symbols-outlined" aria-hidden="true">{{ entry.icon }}</span>
               <span>{{ entry.label }}</span>
             </button>
-            <button id="installations-search-btn" class="panel-layer-toggle" type="button" :aria-disabled="ctx && String(ctx.installationsBusy)" :aria-busy="ctx && String(ctx.installationsBusy)">{{ t('SEARCH NEARBY SITES') }}</button>
+            <button id="installations-search-btn" class="panel-layer-toggle" type="button" hidden :aria-disabled="ctx && String(ctx.installationsBusy)" :aria-busy="ctx && String(ctx.installationsBusy)">{{ t('SEARCH NEARBY SITES') }}</button>
             <UiButton id="tr3b-toggle" class="tr3b-toggle" :pressed="!!cockpit?.tr3b?.converted" :hidden="!cockpit?.tr3b" :aria-label="t('Reclassify tracked contact as TR-3B')" :title="cockpit?.tr3b?.converted ? t('Restore real aircraft') : t('Reclassify as TR-3B')">🛸</UiButton>
           </div>
           <AwarenessPanel />

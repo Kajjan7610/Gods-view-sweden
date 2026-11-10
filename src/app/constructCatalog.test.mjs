@@ -93,6 +93,12 @@ test('catalogs construct distinct layers and classification from their supplied 
     true,
     'ordinary data layer entries remain visible',
   );
+  // Swedish fork: mapped installations stay registered for the layers that
+  // read them, but are never listed.
+  assert.equal(
+    rows.find((row) => row.id === 'military-installations')?.showInTogglePanel,
+    false,
+  );
   assert.deepEqual(
     first.layers.map(({ id }) => id),
     second.layers.map(({ id }) => id),

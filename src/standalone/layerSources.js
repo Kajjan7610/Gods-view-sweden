@@ -11,7 +11,7 @@ import { createRadioSource } from '../layers/radio/source.js';
 import { createTransitSource } from '../layers/transit/source.js';
 import { createTrafficSource } from '../layers/traffic/source.js';
 import { createBikeshareSource } from '../layers/bikeshare/source.js';
-import { createInstallationSource } from '../layers/installations/source.js';
+import { createEmptyInstallationSource } from '../layers/installations/emptySource.js';
 import { createSatelliteSource } from '../layers/satellites/source.js';
 import { createLaunchSource } from '../layers/launches/source.js';
 import { createAlprTileSource } from '../layers/alpr/source.js';
@@ -34,9 +34,6 @@ export function createStandaloneLayerSources(
   const trafficTiles = createMapTiles({
     selectDecoded: ({ roads }) => ({ roads }),
   });
-  const installationTiles = createMapTiles({
-    selectDecoded: ({ military }) => ({ military }),
-  });
   const defaults = {
     ...createReferenceSources(),
     directions: createDirectionsSource(),
@@ -54,7 +51,8 @@ export function createStandaloneLayerSources(
     traffic: createTrafficSource({ mapTiles: trafficTiles }),
     transit: createTransitSource(),
     bikeshare: createBikeshareSource(),
-    installations: createInstallationSource({ mapTiles: installationTiles }),
+    // Swedish fork: mapped installations are not offered.
+    installations: createEmptyInstallationSource(),
     satellites: createSatelliteSource(),
     launches: createLaunchSource(),
     alpr: createAlprTileSource(),

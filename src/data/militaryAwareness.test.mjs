@@ -425,7 +425,7 @@ test('a dependency the user adopts stays on when Contacts turns off', async () =
     assert.deepEqual(
       released,
       AWARENESS_DEPENDENCIES.filter((layerId) => layerId !== 'flights').sort(),
-      'the adopted layer is the user\'s now; the rest are still released',
+      "the adopted layer is the user's now; the rest are still released",
     );
   } finally {
     runtime.restore();
@@ -523,11 +523,10 @@ test('pending mapped installations render as unknown instead of a false zero', a
       'loading is not an observed empty cohort',
     );
     assert.match(installations?.reason || '', /unavailable/i);
-    assert.equal(
-      panelCount(runtime, 'Mapped installations'),
-      '?',
-      'the operator sees ? rather than an all-clear 0 while installations load',
-    );
+    // Swedish fork: mapped installations are not offered, so the Contacts
+    // panel has no row for them at all, neither a count nor a "?".
+    assert.equal(panelCount(runtime, 'Mapped installations'), undefined);
+    assert.equal(panelCount(runtime, 'Flights'), '0');
   } finally {
     restoreCollections();
     runtime.restore();

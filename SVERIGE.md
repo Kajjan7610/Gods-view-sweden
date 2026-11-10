@@ -130,14 +130,6 @@ en dokumenterad källa eller godkännas av myndigheten:
 - **Strålning:** Strålsäkerhetsmyndighetens gammastationskarta. Ingen licens
   angiven. Nästa steg: fråga Strålsäkerhetsmyndigheten.
 
-### Från originalet
-
-Originalets lager **Kartlagda anläggningar** (Mapped Installations) visar
-militära områden med namn från OpenStreetMap, i Sverige bland annat
-garnisoner, skjutfält och övningsområden. Uppgifterna är offentliga i
-OpenStreetMap och lagret hör till originalet, inte till de svenska
-tilläggen. Om det ska vara kvar i den svenska versionen är inte bestämt.
-
 ## Nycklar (`.env`, checkas aldrig in)
 
 | Variabel | Används till | Var den skaffas |
@@ -182,8 +174,7 @@ git merge origin/main
   samlar gränserna som tidigare låg utspridda i loggen (inga personer, inga
   polisfordon, bara butiker, ingen insamling från webbsidor, nycklar),
   nämner de två svenska källorna utan publicerad licens (Svenska kraftnät
-  och Strålsäkerhetsmyndigheten) med nästa steg, och originalets lager med
-  militära områden från OpenStreetMap.
+  och Strålsäkerhetsmyndigheten) med nästa steg.
 - Skälet är frågan om vad en sammanställning av öppna källor blir, som
   kom upp i en kommentar på LinkedIn.
 

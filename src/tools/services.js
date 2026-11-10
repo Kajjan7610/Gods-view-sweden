@@ -15,7 +15,7 @@ import { createCctvSource } from '../layers/cctv/source.js';
 import { createCycloneSource } from '../layers/cyclones/source.js';
 import { createUsgsEarthquakeSource } from '../layers/earthquakes/source.js';
 import { createFirmsSource } from '../layers/firms/source.js';
-import { createInstallationSource } from '../layers/installations/source.js';
+import { createEmptyInstallationSource } from '../layers/installations/emptySource.js';
 import { createLaunchSource } from '../layers/launches/source.js';
 import { createWfigsPerimeterSource } from '../layers/perimeters/source.js';
 import { createRadioSource } from '../layers/radio/source.js';
@@ -82,10 +82,8 @@ export function createToolServices({ fetchImpl, appUrl, panelKey }) {
     features: requests.features,
     cyclones: createCycloneSource({ fetchImpl }),
     perimeters: createWfigsPerimeterSource({ fetchImpl }),
-    installations: createInstallationSource({
-      fetchImpl,
-      tileFetchImpl: fetchImpl,
-    }),
+    // Swedish fork: mapped installations are not offered.
+    installations: createEmptyInstallationSource(),
     places: createGeocodePlaceService({ fetchImpl }),
   };
 }
