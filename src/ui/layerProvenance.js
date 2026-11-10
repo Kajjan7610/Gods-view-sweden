@@ -49,10 +49,15 @@ export const LAYER_PROVENANCE = Object.freeze({
     licence: CC0,
   }),
   'electricity-prices': own({
-    source: 'elprisetjustnu.se · Nord Pool',
+    source: 'elprisetjustnu.se · Nord Pool via ENTSO-E',
     coverage: msg('Spot price per quarter hour in bidding areas SE1–SE4'),
     updates: msg('Every minute'),
-    licence: CREDIT,
+    // Elpriset just nu offers its API free for any use, but the prices are
+    // Nord Pool's, read from ENTSO-E, where day-ahead prices are not on the
+    // list of data free for re-use.
+    licence: msg(
+      'Free to use per Elpriset just nu; prices from Nord Pool via ENTSO-E',
+    ),
   }),
   'power-grid': own({
     source: 'Svenska kraftnät',
@@ -137,7 +142,9 @@ export const LAYER_PROVENANCE = Object.freeze({
     source: 'Sveriges Radio',
     coverage: msg('Current traffic messages, all of Sweden'),
     updates: msg('Every 3 minutes'),
-    licence: CREDIT,
+    licence: msg(
+      "Sveriges Radio's API terms: shown unmodified, credited and linked",
+    ),
   }),
   'transit-alerts': own({
     source: 'Trafiklab (Samtrafiken)',
@@ -180,7 +187,8 @@ export const LAYER_PROVENANCE = Object.freeze({
       'About 160 stations on the coast, the large lakes and canals',
     ),
     updates: msg('Every 10 minutes'),
-    licence: CREDIT,
+    // No terms are published for ViVa.
+    licence: NO_LICENCE,
   }),
   'river-flow': own({
     source: 'SMHI',

@@ -8,7 +8,7 @@ import {
   parseSrDate,
   priorityColor,
 } from './records.js';
-import { buildSrCard } from './cards.js';
+import { SR_TRAFFIC_PAGE, buildSrCard } from './cards.js';
 
 // Shaped like a live message from api.sr.se/api/v2/traffic/messages.
 const MESSAGE = {
@@ -84,4 +84,29 @@ test('the card reads kind, road, place, report and priority', () => {
     'Sveriges Radio traffic report',
   ]);
   assert.equal(card.accent, priorityColor(2));
+});
+
+test('the whole report is shown as SR published it, and a linked card says so', () => {
+  // A long report: SR's terms forbid modifying the material, so nothing is cut.
+  const description = Array.from(
+    { length: 40 },
+    (_, index) => `Mening ${index + 1} om omledningen.`,
+  ).join(' ');
+  const row = normalizeSrMessage({ ...MESSAGE, description });
+  assert.equal(row.description, description);
+  const card = buildSrCard(row, { linkable: true });
+  const shown = card.details.slice(1, -3).join(' ');
+  assert.equal(shown, description);
+  assert.ok(!shown.includes('…'));
+  assert.equal(card.details.at(-2), 'Sveriges Radio traffic report');
+  assert.equal(card.details.at(-1), 'sverigesradio.se ↗ · click card to open');
+  assert.equal(
+    card.accessibilityLabel,
+    'Open VÄGARBETE · RV 62 DEJE-FORSHAGA at Sveriges Radio',
+  );
+  // Without a way to open pages the card offers none.
+  const plain = buildSrCard(row);
+  assert.equal(plain.accessibilityLabel, undefined);
+  assert.ok(!plain.details.some((line) => line.includes('↗')));
+  assert.match(SR_TRAFFIC_PAGE, /^https:\/\/www\.sverigesradio\.se\/trafik$/);
 });

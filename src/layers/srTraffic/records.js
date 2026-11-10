@@ -62,7 +62,8 @@ export function normalizeSrMessage(message) {
     kind: text(message.subcategory, 60),
     title: text(message.title, 160),
     location: text(message.exactlocation, 200),
-    description: text(message.description, 800),
+    // Shown as published: SR's terms forbid modifying the material.
+    description: text(message.description, 4000),
     created: parseSrDate(message.createddate),
   };
 }

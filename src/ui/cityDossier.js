@@ -1205,7 +1205,7 @@ export function createCityDossier({
       arrival,
       // Provider names; the live transport ones only once they show.
       source: [
-        'SCB · Kolada (RKA) · Valmyndigheten · Wikidata · Wikipedia · SMHI · Polisen', // i18n-ignore: provider names
+        'SCB · Kolada · Valmyndigheten · Wikidata · Wikipedia · SMHI · Polisen', // i18n-ignore: provider names
         live?.transit?.trains?.station ? 'Trafikverket' : null, // i18n-ignore: provider name
         live?.transit?.jams ? 'TomTom' : null, // i18n-ignore: provider name
         live?.transit?.flights?.airports?.length ? 'Swedavia' : null, // i18n-ignore: provider name

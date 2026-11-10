@@ -36,7 +36,7 @@ function harness(t, messages = []) {
   };
   const feed = { messages, error: null, stale: false, fetchedAt: NOW };
   const clock = { now: NOW };
-  const state = { cards: [], click: null };
+  const state = { cards: [], click: null, cardHit: null, opened: [] };
   const layer = createSrTrafficLayer({
     source: {
       getSnapshot: async () => {
@@ -55,8 +55,9 @@ function harness(t, messages = []) {
       },
       clearSource: () => (state.cards = []),
       setVisible() {},
-      hitTest: () => null,
+      hitTest: () => state.cardHit,
     },
+    openExternal: (url) => state.opened.push(url),
     screenSpaceEventHandlerFactory: () => ({
       setInputAction: (callback) => (state.click = callback),
       destroy: () => (state.click = null),
@@ -171,5 +172,25 @@ test('the time of the last update follows the injected clock', async (t) => {
   feed.fetchedAt = NOW + MINUTE;
   await layer.update();
   assert.equal(layer.getStats().lastUpdate, NOW + MINUTE);
+  layer.destroy();
+});
+
+test("a click on the selected card opens SR's traffic page; another card does not", async (t) => {
+  const { layer, state, select } = harness(t, [message('1')]);
+  layer.enable();
+  await layer.update();
+  select('1');
+  const [card] = state.cards;
+  assert.equal(card.details.at(-1), 'sverigesradio.se ↗ · click card to open');
+  // Another layer's card under the pointer: not this one, nothing opens.
+  state.cardHit = { sourceId: 'polisen-events', entryId: card.id };
+  state.click({ position: { x: 10, y: 20 } });
+  assert.deepEqual(state.opened, []);
+  state.cardHit = { sourceId: SR_TRAFFIC_OVERLAY_SOURCE_ID, entryId: card.id };
+  state.click({ position: { x: 10, y: 20 } });
+  assert.deepEqual(state.opened, ['https://www.sverigesradio.se/trafik']);
+  // The keyboard path does the same.
+  assert.equal(card.activate(), true);
+  assert.equal(state.opened.length, 2);
   layer.destroy();
 });

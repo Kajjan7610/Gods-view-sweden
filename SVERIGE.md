@@ -62,7 +62,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | +SE | Kollektivtrafik | Trafiklab (Samtrafiken) · Trafikverket | Bussar, tunnelbana, spårvagn och pendeltåg från 16 regionala trafikbolag, och tåg med förseningar. Originalet: Öppna GTFS-RT-flöden i USA, Kanada, Finland, Nederländerna, Norge, Australien och Brasilien | Var 15:e sekund | CC0 1.0 (Trafiklab, Trafikverket) |
 | +SE | Kameror | Trafikverket | Cirka 1 550 vägkameror med livebilder. Originalet: Offentliga trafikkameror i många länder | Bilderna uppdateras medan de visas | CC0 1.0 (Trafikverket) |
 | SE | Fartkameror (Sverige) | Trafikverket | Cirka 2 800 fasta fartkameror i hela Sverige | Varje timme | CC0 1.0 |
-| SE | Elpris (Sverige) | elprisetjustnu.se · Nord Pool | Spotpris per kvart i elområdena SE1–SE4 | Varje minut | Öppna data, källan anges |
+| SE | Elpris (Sverige) | elprisetjustnu.se · Nord Pool via ENTSO-E | Spotpris per kvart i elområdena SE1–SE4 | Varje minut | Fri att använda enligt Elpriset just nu; priserna kommer från Nord Pool via ENTSO-E |
 | SE | Kraftsystemet (Sverige) | Svenska kraftnät | Sveriges förbindelser mellan elområdena och till grannländerna | Var 5:e minut | Ingen angiven licens; källan anges |
 | SE | Strålning (Sverige) | Strålsäkerhetsmyndigheten (SSM) | Cirka 25 gammastationer | Var 10:e minut | Ingen angiven licens; källan anges |
 | SE | Brandstationer (Sverige) | Myndigheten för civilt försvar (MCF) | Räddningstjänsternas alla brandstationer | En gång per dygn | EU-värdefullt dataset, källan anges |
@@ -74,13 +74,13 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Väglag (Sverige) | Trafikverket | Väglag och aktuella händelser i hela Sverige | Var 3:e minut | CC0 1.0 |
 | SE | Vägväder (Sverige) | Trafikverket | Cirka 830 vägväderstationer | Var 5:e minut | CC0 1.0 |
 | SE | Polishändelser (Sverige) | Polismyndigheten | De 500 senaste notiserna, cirka tio dagar, hela Sverige | Var 5:e minut | Öppna data, källan anges |
-| SE | Trafikmeddelanden (SR) | Sveriges Radio | Aktuella trafikmeddelanden i hela Sverige | Var 3:e minut | Öppna data, källan anges |
+| SE | Trafikmeddelanden (SR) | Sveriges Radio | Aktuella trafikmeddelanden i hela Sverige | Var 3:e minut | Sveriges Radios API-villkor: visas oförändrat, med källa och länk |
 | SE | Kollektivtrafikstörningar (Sverige) | Trafiklab (Samtrafiken) | Störningar vid hållplatserna hos 16 regionala trafikbolag | Varannan minut | CC0 1.0 |
 | +SE | Luftkvalitet | SMHI | Cirka 75 mätstationer på den europeiska EAQI-skalan. Originalet: Kanadensiska stationer (ECCC AQHI) | Var 20:e minut | CC BY 4.0 (SMHI) |
 | +SE | Regnradar | SMHI · EUMETNET OPERA | Nordisk radar från SMHI och europeisk radar från OPERA. Originalet: Radar över USA (NOAA) | Var 5:e minut | CC BY 4.0 (SMHI, OPERA) |
 | SE | Vädervarningar (Sverige) | SMHI · Krisinformation.se | Vädervarningar, VMA och krisnyheter i hela Sverige | Var 5:e minut | CC BY 4.0 (SMHI) |
 | SE | Väder nu (Sverige) | SMHI | Cirka 185 väderstationer, och en prognos där du klickar | Var 10:e minut | CC BY 4.0 |
-| SE | Sjöväder (Sverige) | Sjöfartsverket ViVa | Cirka 160 stationer längs kusten, i de stora sjöarna och kanalerna | Var 10:e minut | Öppna data, källan anges |
+| SE | Sjöväder (Sverige) | Sjöfartsverket ViVa | Cirka 160 stationer längs kusten, i de stora sjöarna och kanalerna | Var 10:e minut | Ingen angiven licens; källan anges |
 | SE | Vattenföring (Sverige) | SMHI | Cirka 150 stationer i vattendragen | Var 15:e minut | CC BY 4.0 |
 | SE | Norrskensprognos | NOAA SWPC | Norra halvklotet, med chansen över nio svenska orter | Var 10:e minut | Allmän egendom (USA:s statsförvaltning) |
 | +SE | Blixttäthet | EUMETSAT (MTG) | Blixtar över Europa och Afrika från satelliten MTG. Originalet: Blixttäthet över Nord- och Sydamerika (NOAA) | Var 5:e minut | Fri att använda, källan anges |
@@ -126,11 +126,14 @@ de här gränserna, även för nya lager:
   licens, om dataägarens godkännande krävs, om villkoren tillåter
   användningen, och vad källan tillför helheten. Utfallet skrivs in här.
 
-### Källor utan publicerad licens
+### Källor med oklara eller särskilda villkor
 
-Två svenska lager läser tjänster som är öppet nåbara men saknar dokumentation
-eller angiven licens. De visas med källan angiven, och ska helst ersättas med
-en dokumenterad källa eller godkännas av myndigheten:
+Alla svenska källor är genomgångna (2026-11-10). De flesta har en öppen
+licens eller öppna data med källan angiven: Trafikverket, Trafiklab, SCB och
+Wikidata (CC0), SMHI och DMI (CC BY 4.0), MCF, Polisen, Socialstyrelsen,
+Krisinformation, NOAA, EUMETSAT och OpenStreetMap (ODbL). Följande har
+oklara eller särskilda villkor. De visas med källan angiven, och de utan
+licens ska helst ersättas med en dokumenterad källa eller godkännas:
 
 - **Kraftsystemet:** Svenska kraftnäts kontrollrumstjänst, samma som sidan
   svk.se/om-kraftsystemet/kontrollrummet använder. Odokumenterad, ingen
@@ -141,7 +144,27 @@ en dokumenterad källa eller godkännas av myndigheten:
   kraftnäts godkännande även där. ENTSO-E publicerar senast en timme efter
   driftperioden, så reserven visar senaste publicerade kvarten, inte nuet.
 - **Strålning:** Strålsäkerhetsmyndighetens gammastationskarta. Ingen licens
-  angiven. Nästa steg: fråga Strålsäkerhetsmyndigheten.
+  angiven.
+- **Sjöväder:** Sjöfartsverkets ViVa. Inga villkor publicerade. Sjöfartsverket
+  kräver tillstånd för att visa "sjögeografisk information" på webben; om
+  ViVa:s mätvärden räknas dit är oklart.
+- **Trafikmeddelanden (SR):** Sveriges Radios API-villkor: materialet får
+  användas där det länkas till SR, ska tydligt anges som Sveriges Radios och
+  får inte ändras, och det får inte användas i marknadsföring utan SR:s
+  godkännande. Korten visar därför hela texten som SR publicerat den, med
+  "Sveriges Radio" och en länk till sverigesradio.se/trafik. SR:s API
+  underhålls inte längre.
+- **Elpris:** Elpriset just nu säger att API:et är fritt för vem som helst,
+  för vad som helst. Priserna är Nord Pools och hämtas från ENTSO-E, där
+  dagens priser inte står på listan över data som är fri att återanvända.
+  Källan anges som "Elpriset just nu.se (Nord Pool via ENTSO-E)".
+- **Swedavia (flygtavlan, dossiern):** inga villkor publicerade; Swedavias
+  öppna API:er "kan delas" enligt deras frågor och svar. Swedavia anges som
+  källa.
+- **Kolada (dossiern):** fritt, även kommersiellt, men källan ska anges som
+  "Kolada", värden vi själva räknar fram får inte anges med Kolada som källa,
+  och appen får inte framstå som ett officiellt samarbete.
+- **OpenSky (flyg, originalets lager):** bara icke-kommersiellt, se ovan.
 
 ## Nycklar (`.env`, checkas aldrig in)
 
@@ -183,6 +206,22 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-10 (genomgång av alla svenska källors villkor)
+- Alla svenska källor är genomgångna. Avsnittet i Avgränsningar heter nu
+  **Källor med oklara eller särskilda villkor** och listar strålning,
+  sjöväder, SR:s trafikmeddelanden, elpris, Swedavia, Kolada och OpenSky
+  utöver kraftsystemet, med vad som gäller för var och en.
+- **SR:s trafikmeddelanden** följer SR:s API-villkor: kortet visar hela
+  meddelandet som SR publicerat det (förut kortades det till fyra rader),
+  anger Sveriges Radio och öppnar sverigesradio.se/trafik vid klick på
+  kortet, med text på alla 12 språk.
+- **Kolada** anges som "Kolada" i dossiern, som Kolada ber om, i stället för
+  "Kolada (RKA)".
+- Licensraderna under ⓘ: elpriset säger "Fri att använda enligt Elpriset
+  just nu; priserna kommer från Nord Pool via ENTSO-E", SR:s trafik nämner
+  SR:s API-villkor, och sjövädret säger "Ingen angiven licens; källan anges".
+  DATA_SOURCES.md har samma uppgifter.
 
 ### 2026-11-10 (egna nycklar och källornas villkor)
 - README, Kom igång och avsnittet **Avgränsningar och säkerhet** säger nu

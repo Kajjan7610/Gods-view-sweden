@@ -13,6 +13,7 @@ export function createApplicationSrTraffic(options) {
       clearSource: overlays.clearOverlaySource,
       hitTest: overlays.hitTestWorldOverlay,
     },
+    openExternal: (url) => window.open(url, '_blank', 'noopener,noreferrer'),
     screenSpaceEventHandlerFactory: (viewer) =>
       new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas),
     picking,
