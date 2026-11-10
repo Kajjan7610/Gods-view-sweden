@@ -21,10 +21,14 @@ const CARD_HOST_OPTIONS = Object.freeze({
 /** The arrows show within this camera distance; Sweden whole is a blur. */
 const SHOW_WITHIN_M = 400_000;
 
-/** One arrow on a dark disc, drawn once and shared by every site. */
-let arrowImage = null;
-function arrow() {
-  if (arrowImage || typeof document === 'undefined') return arrowImage;
+/**
+ * The two markers on a dark disc, each drawn once and shared by every site
+ * it fits: an arrow for a site with a direction, a dot for one without.
+ */
+const markerImages = { arrow: null, dot: null };
+function marker(kind) {
+  if (markerImages[kind] || typeof document === 'undefined')
+    return markerImages[kind];
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 32;
   const ctx = canvas.getContext('2d');
@@ -37,21 +41,25 @@ function arrow() {
   ctx.stroke();
   ctx.fillStyle = CAMERA_COLOR;
   ctx.beginPath();
-  ctx.moveTo(16, 6);
-  ctx.lineTo(23, 22);
-  ctx.lineTo(16, 18);
-  ctx.lineTo(9, 22);
-  ctx.closePath();
+  if (kind === 'arrow') {
+    ctx.moveTo(16, 6);
+    ctx.lineTo(23, 22);
+    ctx.lineTo(16, 18);
+    ctx.lineTo(9, 22);
+    ctx.closePath();
+  } else {
+    ctx.arc(16, 16, 4.5, 0, Math.PI * 2);
+  }
   ctx.fill();
-  arrowImage = canvas;
-  return arrowImage;
+  markerImages[kind] = canvas;
+  return canvas;
 }
 
 /**
  * Own one Swedish speed camera display: Trafikverket's fixed traffic safety
- * camera sites as arrows facing the camera's direction, shown when the view
- * is within reach, with click-to-card selection. Share links carry it as
- * token 0n.
+ * camera sites as arrows facing the camera's direction (a dot where none is
+ * given), shown when the view is within reach, with click-to-card selection.
+ * Share links carry it as token 0n.
  */
 export function createSpeedCamerasLayer({
   source,
@@ -76,6 +84,7 @@ export function createSpeedCamerasLayer({
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
+  let _moveEndRemove = null;
   let _rowListener = null;
   let _signature = null;
   let _lastUpdate = null;
@@ -83,6 +92,7 @@ export function createSpeedCamerasLayer({
   let _stale = false;
   let _selectedId = null;
   let _cameras = [];
+  let _withoutDirection = 0;
   const _cameraById = new Map();
 
   const canSelect = () =>
@@ -147,6 +157,21 @@ export function createSpeedCamerasLayer({
     _clickHandler = null;
   }
 
+  /**
+   * After a camera move: the card of a site whose marker the move put out of
+   * reach goes with it. Nothing to do without a selected site.
+   */
+  function dropCardOutOfReach() {
+    if (!_selectedId) return;
+    const row = _cameraById.get(_selectedId);
+    const eye = _viewer?.camera?.positionWC;
+    if (!row || !eye) return;
+    if (Cesium.Cartesian3.distance(eye, position(row)) <= SHOW_WITHIN_M) return;
+    _selectedId = null;
+    publishSelectedCard();
+    _viewer?.scene?.requestRender?.();
+  }
+
   function clearOverlays() {
     _selectedId = null;
     if (!overlayHost) return;
@@ -173,22 +198,23 @@ export function createSpeedCamerasLayer({
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    const image = arrow();
+    const arrow = marker('arrow');
+    const dot = marker('dot');
     const show = new Cesium.DistanceDisplayCondition(0, SHOW_WITHIN_M);
     const scale = new Cesium.NearFarScalar(2_000, 1, SHOW_WITHIN_M, 0.45);
     redrawEntities(entities, () => {
       for (const row of _cameras) {
+        const facing = Number.isFinite(row.bearing);
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
           position: position(row),
           billboard: {
-            image,
+            // No direction is no arrow: an arrow would point north.
+            image: facing ? arrow : dot,
             width: 24,
             height: 24,
             // Turned clockwise from north by the camera's bearing.
-            rotation: Number.isFinite(row.bearing)
-              ? -Cesium.Math.toRadians(row.bearing)
-              : 0,
+            rotation: facing ? -Cesium.Math.toRadians(row.bearing) : 0,
             alignedAxis: Cesium.Cartesian3.UNIT_Z,
             heightReference: _ground.enabled
               ? Cesium.HeightReference.CLAMP_TO_TERRAIN
@@ -225,6 +251,9 @@ export function createSpeedCamerasLayer({
       if (_dataSource) _dataSource.show = true;
       overlayHost?.setVisible?.(SPEED_CAMERAS_OVERLAY_SOURCE_ID, true);
       installClickHandler();
+      _moveEndRemove ??=
+        _viewer?.camera?.moveEnd?.addEventListener?.(dropCardOutOfReach) ??
+        null;
     },
 
     disable() {
@@ -234,6 +263,10 @@ export function createSpeedCamerasLayer({
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
+      _moveEndRemove?.();
+      _moveEndRemove = null;
+      // Switched on again it starts without the last round's failure.
+      _lastError = null;
       clearOverlays();
     },
 
@@ -252,17 +285,23 @@ export function createSpeedCamerasLayer({
             ? snapshot.fetchedAt
             : Date.now();
         _lastError = null;
-        const signature = JSON.stringify(
-          snapshot.cameras.map((row) => [row.id, row.point, row.bearing]),
-        );
+        // The whole rows: a new name, road or county shows on the card too.
+        const signature = JSON.stringify(snapshot.cameras);
         if (signature !== _signature) {
-          _signature = signature;
-          _cameras = snapshot.cameras;
+          // Once drawn the signature is kept; a drawing that failed is not,
+          // so the next round makes it again.
+          _signature = null;
           _cameraById.clear();
-          for (const row of _cameras) _cameraById.set(row.id, row);
+          for (const row of snapshot.cameras) _cameraById.set(row.id, row);
+          // One marker per id, whatever the answer repeats.
+          _cameras = [..._cameraById.values()];
+          _withoutDirection = _cameras.filter(
+            (row) => !Number.isFinite(row.bearing),
+          ).length;
           // Heights first: the ones this browser kept are drawn at once.
           _ground.place(_cameras);
           render();
+          _signature = signature;
           console.log(
             `[Data:SpeedCameras] Updated: ${_cameras.length} camera sites`,
           );
@@ -302,6 +341,7 @@ export function createSpeedCamerasLayer({
       _ground.clear();
       _cameraById.clear();
       _cameras = [];
+      _withoutDirection = 0;
       _signature = null;
       if (_dataSource) {
         viewer.dataSources.remove(_dataSource, true);
@@ -325,11 +365,23 @@ export function createSpeedCamerasLayer({
           {
             label: t('Camera site, arrow in the direction it faces'),
             color: CAMERA_COLOR,
-            count: _cameras.length,
+            count: _cameras.length - _withoutDirection,
             blurb: t(
               'Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.',
             ),
           },
+          ...(_withoutDirection
+            ? [
+                {
+                  label: t('Camera site, direction not given'),
+                  color: CAMERA_COLOR,
+                  count: _withoutDirection,
+                  blurb: t(
+                    'Sites where Trafikverket gives no direction, or gives 0 degrees, which mostly stands for none. They are drawn as a dot without an arrow.',
+                  ),
+                },
+              ]
+            : []),
         ],
       };
     },

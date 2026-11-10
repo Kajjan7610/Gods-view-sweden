@@ -7,6 +7,7 @@ import {
   COMPASS,
   normalizeSpeedCamera,
   normalizeSpeedCameras,
+  unreadCountyNumbers,
 } from './records.js';
 
 const row = (over = {}) => ({
@@ -87,4 +88,93 @@ test('nearby sites are nearest first, within the radius', () => {
     ['close', 'mid'],
   );
   assert.ok(near[0].km < 1 && near[1].km > 7);
+});
+
+const answerOf = (rows) => ({
+  RESPONSE: { RESULT: [{ TrafficSafetyCamera: rows }] },
+});
+
+test('a coordinate that is no number is no site', () => {
+  for (const point of [
+    'POINT (- 59.47)',
+    'POINT (1.2.3 59.47)',
+    'POINT (17.9 5-9)',
+    'POINT (17.9 .)',
+  ])
+    assert.equal(
+      normalizeSpeedCamera(row({ Geometry: { WGS84: point } })),
+      null,
+      point,
+    );
+});
+
+test('0 degrees and no direction are both no direction', () => {
+  for (const bearing of [0, 360, -360, '', 'x', undefined])
+    assert.equal(
+      normalizeSpeedCamera(row({ Bearing: bearing })).bearing,
+      null,
+      String(bearing),
+    );
+  assert.equal(normalizeSpeedCamera(row({ Bearing: 0.5 })).bearing, 0.5);
+  assert.equal(normalizeSpeedCamera(row({ Bearing: 359 })).bearing, 359);
+});
+
+test('the county is the first number that is one, list or single value', () => {
+  const county = (CountyNo) => normalizeSpeedCamera(row({ CountyNo })).county;
+  assert.equal(county([0, 12]), 'Skåne län');
+  assert.equal(county(14), 'Västra Götalands län');
+  assert.equal(county('3'), 'Uppsala län');
+  assert.equal(county([2]), null);
+  assert.equal(county([]), null);
+  assert.equal(county(undefined), null);
+});
+
+test('the county numbers nothing could be read from are counted, most first', () => {
+  assert.deepEqual(
+    unreadCountyNumbers(
+      answerOf([
+        row({ Id: 'a', CountyNo: [1] }),
+        row({ Id: 'b', CountyNo: [2] }),
+        row({ Id: 'c', CountyNo: [2] }),
+        row({ Id: 'd', CountyNo: [] }),
+        row({ Id: 'e', CountyNo: [0, 99] }),
+        row({ Id: 'f', CountyNo: ['<x>'] }),
+      ]),
+    ),
+    [
+      ['2', 2],
+      ['none', 1],
+      ['0+99', 1],
+      ['?x?', 1],
+    ],
+  );
+  assert.deepEqual(unreadCountyNumbers(answerOf([row()])), []);
+  assert.throws(() => unreadCountyNumbers({}), /Malformed/);
+});
+
+test('a site that comes twice is kept once, the first of them', () => {
+  assert.deepEqual(
+    normalizeSpeedCameras(
+      answerOf([
+        row({ Id: 'a', Name: 'First' }),
+        row({ Id: 'a', Name: 'Second' }),
+        row({ Id: 'b' }),
+      ]),
+    ).map((camera) => [camera.id, camera.name]),
+    [
+      ['a', 'First'],
+      ['b', 'Rotebro'],
+    ],
+  );
+});
+
+test('a road with a name keeps it whole', () => {
+  assert.equal(
+    normalizeSpeedCamera(row({ RoadNumber: ' Saltsjöbadsleden ' })).road,
+    'Saltsjöbadsleden',
+  );
+  assert.equal(
+    normalizeSpeedCamera(row({ RoadNumber: 'V'.repeat(60) })).road.length,
+    40,
+  );
 });

@@ -3768,6 +3768,8 @@
   "Speed camera data unavailable": "Данные о камерах скорости недоступны",
   "Camera site, arrow in the direction it faces": "Место камеры, стрелка — направление съёмки",
   "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "Стационарные камеры безопасности движения Trafikverket: места, где скорость контролируется камерой. Полиция переставляет оборудование между точками, поэтому не каждая точка снимает постоянно. Стрелки видны, когда обзор ближе примерно 400 км. Нажмите на точку, чтобы увидеть дорогу и направление.",
+  "Camera site, direction not given": "Место камеры, направление не указано",
+  "Sites where Trafikverket gives no direction, or gives 0 degrees, which mostly stands for none. They are drawn as a dot without an arrow.": "Места, для которых Trafikverket не указывает направление или указывает 0 градусов, что чаще всего означает его отсутствие. Они показаны точкой без стрелки.",
   "Speed cameras need the Trafikverket key": "Для камер скорости нужен ключ Trafikverket",
   "Malformed speed camera snapshot": "Некорректные данные о камерах скорости",
   "{count} speed cameras within {km} km": {

@@ -3691,6 +3691,8 @@
   "Speed camera data unavailable": "Dati degli autovelox non disponibili",
   "Camera site, arrow in the direction it faces": "Sito autovelox, freccia nella direzione in cui guarda",
   "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "Le telecamere fisse per la sicurezza stradale di Trafikverket: i siti dove la velocità è controllata con telecamera. La polizia sposta le apparecchiature tra i siti, quindi non tutti fotografano sempre. Le frecce compaiono quando la vista è entro circa 400 km. Fai clic su un sito per la strada e la direzione.",
+  "Camera site, direction not given": "Sito autovelox, direzione non indicata",
+  "Sites where Trafikverket gives no direction, or gives 0 degrees, which mostly stands for none. They are drawn as a dot without an arrow.": "Siti per cui Trafikverket non indica alcuna direzione, o indica 0 gradi, che per lo più significa nessuna. Sono disegnati come un punto senza freccia.",
   "Speed cameras need the Trafikverket key": "Gli autovelox richiedono la chiave Trafikverket",
   "Malformed speed camera snapshot": "Dati degli autovelox malformati",
   "{count} speed cameras within {km} km": {

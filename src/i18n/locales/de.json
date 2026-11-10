@@ -3614,6 +3614,8 @@
   "Speed camera data unavailable": "Blitzerdaten nicht verfügbar",
   "Camera site, arrow in the direction it faces": "Kamerastandort, Pfeil in Blickrichtung",
   "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "Die festen Verkehrssicherheitskameras von Trafikverket: Standorte, an denen die Geschwindigkeit per Kamera überwacht wird. Die Polizei wechselt die Technik zwischen den Standorten, daher blitzt nicht jeder Standort ständig. Die Pfeile erscheinen, wenn die Ansicht näher als etwa 400 km ist. Ein Klick zeigt Straße und Richtung.",
+  "Camera site, direction not given": "Kamerastandort, Richtung nicht angegeben",
+  "Sites where Trafikverket gives no direction, or gives 0 degrees, which mostly stands for none. They are drawn as a dot without an arrow.": "Standorte, für die Trafikverket keine Richtung angibt oder 0 Grad, was meist für keine Angabe steht. Sie werden als Punkt ohne Pfeil gezeichnet.",
   "Speed cameras need the Trafikverket key": "Blitzer benötigen den Trafikverket-Schlüssel",
   "Malformed speed camera snapshot": "Fehlerhafte Blitzerdaten",
   "{count} speed cameras within {km} km": {

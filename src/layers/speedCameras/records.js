@@ -49,6 +49,23 @@ export const COMPASS = Object.freeze([
 export const compassIndex = (bearing) =>
   Math.round((((Number(bearing) % 360) + 360) % 360) / 45) % 8;
 
+/** A site's county numbers as Trafikverket gives them: a list, or one value. */
+const countyNumbers = (row) =>
+  Array.isArray(row?.CountyNo)
+    ? row.CountyNo
+    : row?.CountyNo == null
+      ? []
+      : [row.CountyNo];
+
+/** The first of a site's county numbers that is a county, or null. */
+const countyOf = (row) => {
+  for (const number of countyNumbers(row)) {
+    const county = COUNTIES[Number(number)];
+    if (county) return county;
+  }
+  return null;
+};
+
 /**
  * One camera site, or null without a Swedish position.
  * @param {object} row One TrafficSafetyCamera object.
@@ -60,10 +77,12 @@ export function normalizeSpeedCamera(row) {
   if (!match || row?.Deleted === true || row?.Id == null) return null;
   const lon = Number(match[1]);
   const lat = Number(match[2]);
+  // "-" and "1.2.3" pass the pattern and are no numbers.
+  if (!Number.isFinite(lon) || !Number.isFinite(lat)) return null;
   if (lat < 54 || lat > 70 || lon < 9 || lon > 25) return null;
   const bearing =
     row.Bearing == null || row.Bearing === '' ? NaN : Number(row.Bearing);
-  const county = Array.isArray(row.CountyNo) ? row.CountyNo[0] : row.CountyNo;
+  const turned = Number.isFinite(bearing) ? ((bearing % 360) + 360) % 360 : 0;
   return {
     id: String(row.Id).slice(0, 20),
     name:
@@ -73,25 +92,57 @@ export function normalizeSpeedCamera(row) {
     road:
       String(row.RoadNumber ?? '')
         .trim()
-        .slice(0, 12) || null,
-    bearing: Number.isFinite(bearing) ? ((bearing % 360) + 360) % 360 : null,
-    county: COUNTIES[Number(county)] ?? null,
+        .slice(0, 40) || null,
+    // Exactly 0 is Trafikverket's value for a direction not given far more
+    // often than it is due north: both sites of a pair on one road carry it.
+    bearing: turned === 0 ? null : turned,
+    county: countyOf(row),
     point: [Math.round(lon * 1e5) / 1e5, Math.round(lat * 1e5) / 1e5],
   };
 }
 
-/** Every site from Trafikverket's answer, by road then name. */
-export function normalizeSpeedCameras(payload) {
+const camerasIn = (payload) => {
   const rows = payload?.RESPONSE?.RESULT?.[0]?.TrafficSafetyCamera;
   if (!Array.isArray(rows)) throw new Error('Malformed speed camera answer');
-  return rows
+  return rows;
+};
+
+/** Every site from Trafikverket's answer, once each, by road then name. */
+export function normalizeSpeedCameras(payload) {
+  const seen = new Set();
+  return camerasIn(payload)
     .map(normalizeSpeedCamera)
-    .filter(Boolean)
+    .filter((camera) => {
+      if (!camera || seen.has(camera.id)) return false;
+      seen.add(camera.id);
+      return true;
+    })
     .sort(
       (a, b) =>
         String(a.road).localeCompare(String(b.road), 'sv', { numeric: true }) ||
         a.name.localeCompare(b.name, 'sv'),
     );
+}
+
+/**
+ * What the answer's rows carry where no county could be read: each such
+ * CountyNo as text ("none" where the row has none) with how many rows have
+ * it, most first. For the proxy's log, so a new numbering shows.
+ */
+export function unreadCountyNumbers(payload) {
+  const counts = new Map();
+  for (const row of camerasIn(payload)) {
+    if (countyOf(row)) continue;
+    const numbers = countyNumbers(row);
+    const label = numbers.length
+      ? numbers
+          .map((number) => String(number).replace(/[^\w.-]/g, '?'))
+          .join('+')
+          .slice(0, 16)
+      : 'none';
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+  return [...counts].sort((a, b) => b[1] - a[1]);
 }
 
 const distanceKm = ([lon1, lat1], [lon2, lat2]) => {

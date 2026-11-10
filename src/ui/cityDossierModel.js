@@ -1,7 +1,8 @@
 /**
  * The city dossier's pure parts: sunrise and sunset, the election year
  * behind Kolada's figures, the population trend, the police notices and the
- * air quality reading that belong to a town. No DOM, no Cesium, no i18n.
+ * air quality reading that belong to a town, and the wait for a layer's
+ * first read. No DOM, no Cesium, no i18n.
  */
 import { greatCircleKm } from '../geoDistance.js';
 
@@ -169,4 +170,26 @@ export function nearestReading(readings, point, maxKm = 30) {
     if (km <= maxKm && (!best || km < best.km)) best = { row, km };
   }
   return best ? { ...best.row, km: best.km } : null;
+}
+
+/**
+ * Ask `step` again and again until it answers: true or false ends the wait
+ * with that answer, anything else waits `intervalMs` and asks once more.
+ * False when `timeoutMs` has gone without an answer.
+ * @param {() => boolean | undefined} step
+ */
+export async function pollUntil(
+  step,
+  {
+    timeoutMs,
+    intervalMs = 100,
+    sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  } = {},
+) {
+  for (let waited = 0; ; waited += intervalMs) {
+    const answer = step();
+    if (answer === true || answer === false) return answer;
+    if (waited >= timeoutMs) return false;
+    await sleep(intervalMs);
+  }
 }

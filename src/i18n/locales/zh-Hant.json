@@ -3537,6 +3537,8 @@
   "Speed camera data unavailable": "測速照相資料無法取得",
   "Camera site, arrow in the direction it faces": "相機點位，箭頭為其朝向",
   "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "Trafikverket 的固定交通安全相機：以相機檢測車速的點位。警方會在各點位之間輪換設備，因此並非每個點位都一直在拍攝。視圖在約 400 公里以內時顯示箭頭。點選點位可查看道路和朝向。",
+  "Camera site, direction not given": "相機點位，未提供朝向",
+  "Sites where Trafikverket gives no direction, or gives 0 degrees, which mostly stands for none. They are drawn as a dot without an arrow.": "Trafikverket 未提供朝向或標為 0 度的點位，0 度多半代表沒有朝向。它們顯示為不帶箭頭的圓點。",
   "Speed cameras need the Trafikverket key": "測速照相需要 Trafikverket 金鑰",
   "Malformed speed camera snapshot": "測速照相資料格式錯誤",
   "{count} speed cameras within {km} km": {

@@ -21,6 +21,7 @@ import {
   electionYear,
   nearestReading,
   policeEventsFor,
+  pollUntil,
   populationChange,
   sparklinePoints,
   sunTimes,
@@ -109,6 +110,8 @@ const SIGHT_VIEW_HEIGHT_M = 900;
 /** A speed camera is looked at from closer and lower than a sight. */
 const CAMERA_VIEW_SOUTH_DEG = 0.006;
 const CAMERA_VIEW_HEIGHT_M = 500;
+/** The proxy gives Trafikverket 30 seconds for the sites; a little more. */
+const CAMERA_CARD_WAIT_MS = 35_000;
 const AURORA_CHANCES = Object.freeze({
   low: msg('low'),
   possible: msg('possible'),
@@ -1080,12 +1083,15 @@ export function createCityDossier({
     });
     await dataManager?.setEnabled?.('speed-cameras', true, { origin: 'user' });
     const layer = dataManager?.layers?.get?.('speed-cameras')?.module;
-    // The first read of the sites may still be on its way.
-    for (let i = 0; i < 50; i += 1) {
-      if (destroyed || layer?.selectById?.(id)) return true;
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    return false;
+    // The first read of the sites may still be on its way: wait for it, and
+    // give up at once when it has failed.
+    return pollUntil(
+      () => {
+        if (destroyed || layer?.selectById?.(id)) return true;
+        return layer?.getStats?.().error ? false : undefined;
+      },
+      { timeoutMs: CAMERA_CARD_WAIT_MS },
+    );
   }
 
   /**

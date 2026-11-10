@@ -127,6 +127,38 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (fartkameror: rättningar efter kodgranskning)
+- En kameraplats utan känd riktning ritas som en prick utan pil, och
+  kortet säger ingenting om riktning. Det gäller både platser som saknar
+  riktning och platser där Trafikverket anger 0 grader, vilket oftast står
+  för ingen riktning alls. Förut ritades de som en pil rakt norrut. I dag
+  är det 45 av 2 825 platser. Priset är att de få platser som verkligen
+  pekar rakt norrut också blir prickar. Förklaringen har fått en egen rad
+  för prickarna, på alla 12 språk.
+- Länet läses ur alla värden i Trafikverkets lista, inte bara det första,
+  och serverloggen räknar de länsnummer som inte gick att läsa. Loggen
+  visar att Trafikverket självt skickar länsnummer 0 för 360 platser. De
+  saknar därför fortfarande län på kortet.
+- Proxyn lämnar Trafikverket i fred i 5 minuter efter en misslyckad
+  hämtning och svarar under tiden med den senaste listan, märkt
+  `X-Data-Stale` (eller 502 om ingen finns). Ett tomt svar räknas som en
+  misslyckad hämtning i stället för att sparas ett dygn.
+- En trasig koordinat ("-", "1.2.3") släpps inte igenom. En plats som
+  kommer två gånger ritas en gång, och en ritning som misslyckades görs om
+  vid nästa omgång.
+- En halv position (`?lat=59` utan `lon`) besvaras med 400 i stället för
+  200 med noll kameror.
+- Vägnamn klipps vid 40 tecken i stället för 12, så Saltsjöbadsleden
+  står utskrivet.
+- Ett nytt namn, en ny väg eller ett nytt län på en plats når kortet utan
+  omladdning. Loggraden om en lyckad hämtning skrivs en gång per hämtning,
+  inte en gång per väntande fråga.
+- Ett valt kort släpps när vyn zoomas ut bortom 400 km, där markörerna
+  ändå är dolda. Stadsdossierns "visa kamera" väntar upp till 35 sekunder
+  på lagrets första läsning i stället för 5, och ger upp direkt om
+  läsningen misslyckades. Ett avstängt lager bär inte kvar sitt senaste
+  fel.
+
 ### 2026-11-10 (brandstationer: rättningar efter kodgranskning)
 - Ett klick på ett kort är aldrig ett klick på marken. Förut räknades
   bara kort som ledde till en sida som klickbara, och bara lagrets egna:

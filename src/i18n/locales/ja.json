@@ -3537,6 +3537,8 @@
   "Speed camera data unavailable": "速度取締カメラのデータを取得できません",
   "Camera site, arrow in the direction it faces": "カメラ地点、矢印は向いている方向",
   "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "Trafikverket の固定式交通安全カメラ：カメラで速度を取り締まる地点です。警察は機材を地点間で移動させるため、すべての地点が常に撮影しているわけではありません。矢印は表示範囲が約 400 km 以内のときに表示されます。地点をクリックすると道路と向きが分かります。",
+  "Camera site, direction not given": "カメラ地点、向きの記載なし",
+  "Sites where Trafikverket gives no direction, or gives 0 degrees, which mostly stands for none. They are drawn as a dot without an arrow.": "Trafikverket が向きを示していない地点、または 0 度としている地点です。0 度はたいてい「記載なし」を意味します。矢印のない点で表示します。",
   "Speed cameras need the Trafikverket key": "速度取締カメラには Trafikverket のキーが必要です",
   "Malformed speed camera snapshot": "速度取締カメラのデータが不正です",
   "{count} speed cameras within {km} km": {

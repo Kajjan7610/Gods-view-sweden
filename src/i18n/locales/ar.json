@@ -3922,6 +3922,8 @@
   "Speed camera data unavailable": "بيانات كاميرات السرعة غير متاحة",
   "Camera site, arrow in the direction it faces": "موقع كاميرا، والسهم باتجاهها",
   "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "كاميرات السلامة المرورية الثابتة لدى Trafikverket: المواقع التي تُراقَب فيها السرعة بالكاميرا. تنقل الشرطة المعدات بين المواقع، لذا لا يصوّر كل موقع طوال الوقت. تظهر الأسهم عندما يكون العرض ضمن نحو 400 كم. انقر على موقع لمعرفة الطريق والاتجاه.",
+  "Camera site, direction not given": "موقع كاميرا، الاتجاه غير محدد",
+  "Sites where Trafikverket gives no direction, or gives 0 degrees, which mostly stands for none. They are drawn as a dot without an arrow.": "مواقع لا تذكر لها Trafikverket اتجاهًا، أو تذكر 0 درجة، وهو ما يعني في الغالب عدم وجود اتجاه. تُرسم كنقطة بلا سهم.",
   "Speed cameras need the Trafikverket key": "تتطلب كاميرات السرعة مفتاح Trafikverket",
   "Malformed speed camera snapshot": "بيانات كاميرات السرعة تالفة",
   "{count} speed cameras within {km} km": {

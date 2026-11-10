@@ -1,6 +1,7 @@
 import {
   camerasNear,
   normalizeSpeedCameras,
+  unreadCountyNumbers,
 } from '../../src/layers/speedCameras/records.js';
 import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
@@ -14,6 +15,8 @@ import { TRAFIKVERKET_API_URL, xmlAttr } from './trafikverketProxy.js';
 const TTL_MS = 24 * 60 * 60_000;
 /** Longest a failed refresh keeps serving the last list, marked stale. */
 const STALE_MAX_MS = 7 * 24 * 60 * 60_000;
+/** A failed refresh leaves Trafikverket alone this long. */
+export const SPEED_CAMERAS_RETRY_AFTER_FAILURE_MS = 5 * 60_000;
 const MAX_BODY_BYTES = 8 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 30_000;
 const NEAR_KM = 15;
@@ -40,9 +43,11 @@ export function speedCamerasProxy({
   env = process.env,
 } = {}) {
   let cached = null;
+  let retryAfter = 0;
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 60, globalMax: 600 });
 
+  /** Trafikverket's answer as it came, with when it was read. */
   async function load(key) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -68,9 +73,7 @@ export function speedCamerasProxy({
       }
       const fetchedAt = now();
       return {
-        cameras: normalizeSpeedCameras(
-          await readResponseJsonCapped(response, MAX_BODY_BYTES),
-        ),
+        payload: await readResponseJsonCapped(response, MAX_BODY_BYTES),
         fetchedAt,
       };
     } finally {
@@ -78,32 +81,68 @@ export function speedCamerasProxy({
     }
   }
 
-  async function cameras(key) {
-    if (cached && now() - cached.savedAt < TTL_MS) return cached.value;
+  /** The last list while it is young enough to show, marked stale. */
+  const lastKnown = () =>
+    cached && now() - cached.savedAt <= STALE_MAX_MS
+      ? { ...cached.value, stale: true }
+      : null;
+
+  /** How many sites lack a county, and what Trafikverket gave instead. */
+  function countyGaps(cameras, payload) {
+    const without = cameras.filter((camera) => !camera.county).length;
+    if (!without) return '';
+    const given = unreadCountyNumbers(payload)
+      .slice(0, 5)
+      .map(([number, count]) => `${number}: ${count}`)
+      .join(', ');
+    return `, ${without} without a county (CountyNo ${given})`;
+  }
+
+  /**
+   * One read of Trafikverket, shared by everyone waiting on it: the new list,
+   * or after a failure the last one (null without one).
+   */
+  async function refresh(key) {
     try {
-      const { promise } = coalesceProxyRequest(inFlight, 'cameras', () =>
-        load(key),
+      const { payload, fetchedAt } = await load(key);
+      const cameras = normalizeSpeedCameras(payload);
+      // Sweden has thousands of sites: none at all is a broken answer, and
+      // would otherwise empty the map for a day.
+      if (!cameras.length) throw new Error('empty speed camera list');
+      cached = { value: { cameras, fetchedAt }, savedAt: now() };
+      retryAfter = 0;
+      console.log(
+        `[speed-cameras] ${cameras.length} camera sites${countyGaps(cameras, payload)}`,
       );
-      const value = await promise;
-      cached = { value, savedAt: now() };
-      console.log(`[speed-cameras] ${value.cameras.length} camera sites`);
-      return value;
+      return cached.value;
     } catch (error) {
       console.warn(
         `[speed-cameras] refresh failed: ${error?.message || error}`,
       );
-      if (cached && now() - cached.savedAt <= STALE_MAX_MS)
-        return { ...cached.value, stale: true };
-      throw error;
+      retryAfter = now() + SPEED_CAMERAS_RETRY_AFTER_FAILURE_MS;
+      return lastKnown();
     }
   }
 
+  /** The list, the last one marked stale, or null when there is none. */
+  async function cameras(key) {
+    if (cached && now() - cached.savedAt < TTL_MS) return cached.value;
+    if (now() < retryAfter) return lastKnown();
+    return coalesceProxyRequest(inFlight, 'cameras', () => refresh(key))
+      .promise;
+  }
+
+  /** A query value as a number; missing and blank are no number. */
+  const coordinate = (text) =>
+    text == null || text.trim() === '' ? NaN : Number(text);
+
   async function handler(req, res) {
-    const json = (status, value) => {
+    const json = (status, value, headers = {}) => {
       if (res.destroyed) return;
       res.writeHead(status, {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store',
+        ...headers,
       });
       res.end(JSON.stringify(value));
     };
@@ -114,24 +153,36 @@ export function speedCamerasProxy({
     const key = String(env.TRAFIKVERKET_API_KEY ?? '').trim();
     if (!key) return json(503, { error: 'trafikverket_key_missing' });
     if (!allow(clientKey(req))) return json(429, { error: 'rate_limited' });
+    // A town is both or neither: one alone is not every site in the country.
+    const near =
+      url.searchParams.has('lat') || url.searchParams.has('lon')
+        ? [
+            coordinate(url.searchParams.get('lon')),
+            coordinate(url.searchParams.get('lat')),
+          ]
+        : null;
+    if (near && !near.every(Number.isFinite))
+      return json(400, { error: 'lat_lon_required' });
     try {
       const value = await cameras(key);
-      if (!url.searchParams.has('lat')) return json(200, value);
-      const lat = Number(url.searchParams.get('lat'));
-      const lon = Number(url.searchParams.get('lon'));
-      if (!Number.isFinite(lat) || !Number.isFinite(lon))
-        return json(400, { error: 'lat_lon_required' });
-      const near = camerasNear(value.cameras, [lon, lat], NEAR_KM);
-      return json(200, {
-        radiusKm: NEAR_KM,
-        count: near.length,
-        nearest: near.slice(0, NEAR_MAX).map((camera) => ({
-          ...camera,
-          km: Math.round(camera.km * 10) / 10,
-        })),
-        fetchedAt: value.fetchedAt,
-        stale: value.stale === true,
-      });
+      if (!value) return json(502, { error: 'speed_cameras_unavailable' });
+      const headers = value.stale ? { 'X-Data-Stale': 'true' } : {};
+      if (!near) return json(200, value, headers);
+      const found = camerasNear(value.cameras, near, NEAR_KM);
+      return json(
+        200,
+        {
+          radiusKm: NEAR_KM,
+          count: found.length,
+          nearest: found.slice(0, NEAR_MAX).map((camera) => ({
+            ...camera,
+            km: Math.round(camera.km * 10) / 10,
+          })),
+          fetchedAt: value.fetchedAt,
+          stale: value.stale === true,
+        },
+        headers,
+      );
     } catch {
       return json(502, { error: 'speed_cameras_unavailable' });
     }

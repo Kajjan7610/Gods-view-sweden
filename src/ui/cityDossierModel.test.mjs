@@ -1,11 +1,13 @@
 // The city dossier's pure parts: sun, election year, population trend,
-// the town's police notices and the nearest air quality reading.
+// the town's police notices, the nearest air quality reading and the wait
+// for a layer's first read.
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   electionYear,
   nearestReading,
   policeEventsFor,
+  pollUntil,
   populationChange,
   sparklinePoints,
   sunTimes,
@@ -101,4 +103,38 @@ test('the nearest air quality reading within reach', () => {
     'Gävle Staketgatan',
   );
   assert.equal(nearestReading(readings, [20.2, 67.85]), null);
+});
+
+test('a wait ends with the first answer, or false when the time is up', async () => {
+  const waits = [];
+  const sleep = async (ms) => void waits.push(ms);
+
+  // Unanswered twice, then true: two waits.
+  let asked = 0;
+  assert.equal(
+    await pollUntil(() => (++asked === 3 ? true : undefined), {
+      timeoutMs: 1_000,
+      sleep,
+    }),
+    true,
+  );
+  assert.deepEqual(waits, [100, 100]);
+
+  // A false is an answer too, and ends the wait at once.
+  waits.length = 0;
+  assert.equal(await pollUntil(() => false, { timeoutMs: 1_000, sleep }), false);
+  assert.deepEqual(waits, []);
+
+  // Never answered: asked until the time is up, then false.
+  asked = 0;
+  assert.equal(
+    await pollUntil(() => void asked++, {
+      timeoutMs: 300,
+      intervalMs: 100,
+      sleep,
+    }),
+    false,
+  );
+  assert.equal(asked, 4);
+  assert.deepEqual(waits, [100, 100, 100]);
 });

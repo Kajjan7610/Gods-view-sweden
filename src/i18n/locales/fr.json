@@ -3691,6 +3691,8 @@
   "Speed camera data unavailable": "Données des radars indisponibles",
   "Camera site, arrow in the direction it faces": "Site de radar, flèche dans le sens où il vise",
   "Trafikverket’s fixed traffic safety cameras: the sites where speed is checked by camera. The police move the camera equipment between sites, so not every site photographs all the time. The arrows show when the view is within about 400 km. Click a site for its road and direction.": "Les radars fixes de Trafikverket : les sites où la vitesse est contrôlée par caméra. La police déplace l’équipement entre les sites, donc tous ne photographient pas en permanence. Les flèches apparaissent quand la vue est à moins de 400 km environ. Cliquez sur un site pour sa route et sa direction.",
+  "Camera site, direction not given": "Site de radar, direction non indiquée",
+  "Sites where Trafikverket gives no direction, or gives 0 degrees, which mostly stands for none. They are drawn as a dot without an arrow.": "Sites pour lesquels Trafikverket n’indique aucune direction, ou indique 0 degré, ce qui signifie le plus souvent aucune. Ils sont dessinés comme un point sans flèche.",
   "Speed cameras need the Trafikverket key": "Les radars nécessitent la clé Trafikverket",
   "Malformed speed camera snapshot": "Données de radars mal formées",
   "{count} speed cameras within {km} km": {
