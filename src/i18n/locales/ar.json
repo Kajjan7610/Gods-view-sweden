@@ -3587,6 +3587,8 @@
   "Malformed SR traffic snapshot": "لقطة مرور SR مشوّهة",
   "Traffic Reports (Sweden)": "رسائل المرور (السويد)",
   "Water level {level} cm against mean water": "منسوب المياه {level} سم مقارنة بالمتوسط",
+  "Water level {level} cm against {reference}": "منسوب المياه {level} سم مقارنة بـ {reference}",
+  "Water level {level} cm": "منسوب المياه {level} سم",
   "Water {value}": "الماء {value}",
   "Wave height {height} m": "ارتفاع الموج {height} م",
   "Measured {time} · Sjöfartsverket ViVa": "قيس في {time} · Sjöfartsverket ViVa",

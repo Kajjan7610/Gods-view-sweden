@@ -8,6 +8,7 @@ import {
   NO_VALUE_COLOR,
   WIND_CLASSES,
   classOf,
+  meanWaterLevel,
 } from './records.js';
 import {
   SEA_WEATHER_OVERLAY_SOURCE_ID,
@@ -60,6 +61,7 @@ export function createSeaWeatherLayer({
   picking = null,
   pointer = null,
   terrain = null,
+  now = () => Date.now(),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Sea weather requires a snapshot source');
@@ -90,7 +92,9 @@ export function createSeaWeatherLayer({
 
   const canSelect = () =>
     overlayHost && screenSpaceEventHandlerFactory && picking;
-  const shownValue = (row) => (_mode === 'level' ? row.level : row.meanWind);
+  // A level counts only against mean water: other zeros share no scale.
+  const shownValue = (row) =>
+    _mode === 'level' ? meanWaterLevel(row) : row.meanWind;
 
   function publishSelectedCard() {
     if (!canSelect()) return;
@@ -104,7 +108,7 @@ export function createSeaWeatherLayer({
       );
       return;
     }
-    const card = buildSeaCard(row, { mode: _mode });
+    const card = buildSeaCard(row, { mode: _mode, nowMs: now() });
     card.position = position(row);
     overlayHost.setEntries(
       SEA_WEATHER_OVERLAY_SOURCE_ID,
@@ -275,6 +279,7 @@ export function createSeaWeatherLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      _lastError = null;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
       clearOverlays();
@@ -293,26 +298,39 @@ export function createSeaWeatherLayer({
         _lastUpdate =
           _stale && Number.isFinite(snapshot.fetchedAt)
             ? snapshot.fetchedAt
-            : Date.now();
+            : now();
         _lastError = null;
+        // What a dot and its label look like; the time alone redraws nothing.
         const signature = JSON.stringify(
-          snapshot.stations.map((row) => [row.id, row.updated, row.meanWind]),
+          snapshot.stations.map((row) => [
+            row.id,
+            row.meanWind,
+            row.level,
+            row.levelReference,
+          ]),
         );
+        // The newest rows always: the card reads them, drawn again or not.
+        _stations = snapshot.stations;
+        _stationById.clear();
+        for (const row of _stations) _stationById.set(row.id, row);
+        // Heights first: the ones this browser kept are drawn at once.
+        _ground.place(_stations);
         if (signature !== _signature) {
+          // Not trusted until drawn: a drawing that fails is made again.
+          _signature = null;
+          try {
+            render();
+          } catch (e) {
+            console.warn('[Data:SeaWeather] Draw error:', e?.message || e);
+            _lastError = e?.message || msg('Sea weather unavailable');
+            _rowListener?.();
+            return true;
+          }
           _signature = signature;
-          _stations = snapshot.stations;
-          _stationById.clear();
-          for (const row of _stations) _stationById.set(row.id, row);
-          // Heights first: the ones this browser kept are drawn at once.
-          _ground.place(_stations);
-          render();
           console.log(
             `[Data:SeaWeather] Updated: ${_stations.length} stations`,
           );
-        } else {
-          // Takes up again what a switched-off layer had left to ask.
-          _ground.place(_stations);
-        }
+        } else if (_selectedId) publishSelectedCard();
         _rowListener?.();
         return true;
       } catch (e) {

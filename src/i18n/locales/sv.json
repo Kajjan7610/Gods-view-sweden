@@ -3274,6 +3274,8 @@
   "Malformed SR traffic snapshot": "Felaktig ögonblicksbild av SR:s trafikmeddelanden",
   "Traffic Reports (Sweden)": "Trafikmeddelanden (SR)",
   "Water level {level} cm against mean water": "Vattenstånd {level} cm mot medelvattenstånd",
+  "Water level {level} cm against {reference}": "Vattenstånd {level} cm mot {reference}",
+  "Water level {level} cm": "Vattenstånd {level} cm",
   "Water {value}": "Vatten {value}",
   "Wave height {height} m": "Våghöjd {height} m",
   "Measured {time} · Sjöfartsverket ViVa": "Mätt {time} · Sjöfartsverket ViVa",

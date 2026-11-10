@@ -3212,6 +3212,8 @@
   "Malformed SR traffic snapshot": "SR 交通快照格式错误",
   "Traffic Reports (Sweden)": "交通信息（瑞典）",
   "Water level {level} cm against mean water": "水位 {level} cm（相对平均水位）",
+  "Water level {level} cm against {reference}": "水位 {level} cm（相对 {reference}）",
+  "Water level {level} cm": "水位 {level} cm",
   "Water {value}": "水温 {value}",
   "Wave height {height} m": "浪高 {height} m",
   "Measured {time} · Sjöfartsverket ViVa": "{time} 测量 · Sjöfartsverket ViVa",

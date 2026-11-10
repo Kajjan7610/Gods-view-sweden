@@ -1,20 +1,18 @@
 /** Card model for a selected ViVa station. Pure — no Cesium types. */
 import { formatNumber, t } from '../../i18n/index.js';
+import { measuredWhen } from '../measuredWhen.js';
 import { formatCelsius } from '../roadWeather/cards.js';
 import {
   LEVEL_CLASSES,
   NO_VALUE_COLOR,
   WIND_CLASSES,
   classOf,
+  isMeanWater,
+  meanWaterLevel,
 } from './records.js';
 
 export const SEA_WEATHER_OVERLAY_SOURCE_ID = 'sea-weather';
 
-const CLOCK = new Intl.DateTimeFormat('sv-SE', {
-  timeZone: 'Europe/Stockholm',
-  hour: '2-digit',
-  minute: '2-digit',
-});
 const oneDecimal = (value) =>
   formatNumber(value, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
@@ -26,11 +24,14 @@ const CARD_BASE = Object.freeze({
   placement: 'above',
 });
 
-/** The colour a station takes for the shown quantity ('wind' or 'level'). */
+/**
+ * The colour a station takes for the shown quantity ('wind' or 'level'). A
+ * level against another zero than mean water has no class, so no colour.
+ */
 export function seaColor(row, mode) {
   const entry =
     mode === 'level'
-      ? classOf(LEVEL_CLASSES, row.level)
+      ? classOf(LEVEL_CLASSES, meanWaterLevel(row))
       : classOf(WIND_CLASSES, row.meanWind);
   return entry?.color || NO_VALUE_COLOR;
 }
@@ -50,16 +51,38 @@ function windLine(row) {
   return t('Wind {speed} m/s', { speed });
 }
 
-/** Card for one station. */
-export function buildSeaCard(row, { mode = 'wind' } = {}) {
+/** ViVa's reference as it reads in a sentence: "sjökortsnivå", "RH 2000". */
+function referenceName(reference) {
+  if (/^RH\s?\d+$/i.test(reference))
+    return reference.toUpperCase().replace(/^RH\s?/, 'RH ');
+  return /^\p{Lu}\p{Ll}+$/u.test(reference)
+    ? reference.toLocaleLowerCase('sv-SE')
+    : reference;
+}
+
+/** The water level against the zero the station itself measures from. */
+function levelLine(row) {
+  const level = formatNumber(row.level, { signDisplay: 'exceptZero' });
+  if (isMeanWater(row.levelReference))
+    return t('Water level {level} cm against mean water', { level });
+  if (row.levelReference)
+    return t('Water level {level} cm against {reference}', {
+      level,
+      reference: referenceName(row.levelReference),
+    });
+  return t('Water level {level} cm', { level });
+}
+
+/**
+ * Card for one station.
+ * @param {object} row A normalized station.
+ * @param {{mode?: string, nowMs?: number}} [options] The shown quantity, and
+ *   the clock the reading's age is judged by.
+ */
+export function buildSeaCard(row, { mode = 'wind', nowMs = Date.now() } = {}) {
   const details = [];
   if (row.meanWind != null) details.push(windLine(row));
-  if (row.level != null)
-    details.push(
-      t('Water level {level} cm against mean water', {
-        level: formatNumber(row.level, { signDisplay: 'exceptZero' }),
-      }),
-    );
+  if (row.level != null) details.push(levelLine(row));
   if (row.waterTemp != null)
     details.push(t('Water {value}', { value: formatCelsius(row.waterTemp) }));
   if (row.airTemp != null)
@@ -71,7 +94,7 @@ export function buildSeaCard(row, { mode = 'wind' } = {}) {
   details.push(
     Number.isFinite(row.updated)
       ? t('Measured {time} · Sjöfartsverket ViVa', {
-          time: CLOCK.format(row.updated),
+          time: measuredWhen(row.updated, nowMs),
         })
       : 'Sjöfartsverket ViVa',
   );

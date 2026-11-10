@@ -26,6 +26,24 @@ export const LEVEL_CLASSES = Object.freeze([
   Object.freeze({ id: 'very-high', max: Infinity, color: '#ff1744' }),
 ]);
 export const NO_VALUE_COLOR = '#9e9e9e';
+/** A sample older than this is no longer the weather at the station. */
+export const SEA_SAMPLE_MAX_AGE_MS = 3 * 60 * 60_000;
+
+/** ViVa's name for mean water (medelvattenyta), the zero the classes assume. */
+export const isMeanWater = (reference) =>
+  String(reference ?? '')
+    .trim()
+    .toUpperCase() === 'MVY';
+
+/**
+ * The level when it is measured against mean water, else null: a level in
+ * RH 2000 or above chart datum is another quantity and shares no classes.
+ */
+export function meanWaterLevel(row) {
+  return row?.level != null && isMeanWater(row.levelReference)
+    ? row.level
+    : null;
+}
 
 export function classOf(classes, value) {
   if (!Number.isFinite(value)) return null;
@@ -85,8 +103,9 @@ const text = (value, max) => {
  * Sweden's waters or without any of wind, level or temperature.
  * @param {object} station {ID, Name, Lat, Lon} from the station list.
  * @param {object[]} samples GetSingleStationResult.Samples.
+ * @param {number} [nowMs] The clock a sample's age is judged by.
  */
-export function normalizeSeaStation(station, samples) {
+export function normalizeSeaStation(station, samples, nowMs = Date.now()) {
   const lat = Number(station?.Lat);
   const lon = Number(station?.Lon);
   if (station?.ID == null || !Number.isFinite(lat) || !Number.isFinite(lon))
@@ -113,6 +132,8 @@ export function normalizeSeaStation(station, samples) {
     const value = sampleNumber(sample?.Value);
     if (value == null) continue;
     const when = stockholmTime(sample.Updated);
+    // Hours old: no longer the weather, whatever the other samples say.
+    if (when && nowMs - when > SEA_SAMPLE_MAX_AGE_MS) continue;
     if (when && (!row.updated || when > row.updated)) row.updated = when;
     if (name === 'Medelvind') {
       row.meanWind = value;

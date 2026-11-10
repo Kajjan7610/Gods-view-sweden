@@ -214,6 +214,30 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (sjöväder: rättningar efter kodgranskning; SMHI-hämtning)
+- Vattenstånd jämförs bara när nollpunkten är densamma. ViVa anger tre
+  referenser: medelvattenyta (58 stationer vid kontrollen), sjökortsnivå
+  (10) och RH 2000 (6). Kortet skrev förut "mot medelvattenstånd" för alla,
+  och Vänerns stationer såg ut att ha mycket högt vatten. Nu namnger kortet
+  referensen ("+48 cm mot sjökortsnivå"), och bara stationer mot medelvatten
+  färgas, räknas i teckenförklaringen och får värdet utskrivet i
+  vattenståndsläget.
+- Ett mätvärde som är äldre än 3 timmar räknas inte som aktuellt väder,
+  även om stationens andra givare är färska. Kortet visar datum när
+  mätningen inte är från i dag.
+- Proxyn lämnar ViVa i fred i 5 minuter efter en runda där ingen station
+  svarade (en runda är ett anrop per station) och svarar under tiden med de
+  senaste stationerna, märkta X-Data-Stale (eller 502 om inga finns).
+  Loggraden och cachen skrivs en gång per runda.
+- En station som inte svarar en runda behåller sina senaste värden så länge
+  de är aktuella, i stället för att försvinna från kartan i tio minuter.
+- En ritning som misslyckades loggas som ritfel och görs om vid nästa
+  uppdatering. Ett avstängt lager bär inte kvar sitt senaste fel. Det öppna
+  kortet följer de nyaste värdena även när punkterna inte ritas om.
+- Vattenföring: proxyn frågar först SMHI när datat senast ändrades och
+  laddar bara ner när det är nytt (dock minst en gång i timmen), enligt
+  SMHI:s riktlinje att inte hämta samma data flera gånger.
+
 ### 2026-11-10 (vattenföring: rättningar efter kodgranskning)
 - Ett prov utan värde eller tid räknas inte längre som 0 m³/s. Förut gav
   ett saknat sista värde "0 m³/s, sjunker 12,5 m³/s". SMHI skriver null när

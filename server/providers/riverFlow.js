@@ -7,7 +7,12 @@ import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 // hour of every station.
 export const SMHI_FLOW_URL =
   'https://opendata-download-hydroobs.smhi.se/api/version/1.0/parameter/2/station-set/all/period/latest-hour/data.json';
+/** The period level: small, and it says when the data last changed. */
+export const SMHI_FLOW_PERIOD_URL =
+  'https://opendata-download-hydroobs.smhi.se/api/version/1.0/parameter/2/station-set/all/period/latest-hour.json';
 const TTL_MS = 15 * 60_000;
+/** Longest an unchanged update time is believed before a download anyway. */
+const DOWNLOAD_ANYWAY_MS = 60 * 60_000;
 /** How long SMHI is left alone after a failed refresh. */
 export const RIVER_FLOW_RETRY_AFTER_FAILURE_MS = 60_000;
 /** Longest a failed refresh keeps serving the last snapshot, marked stale. */
@@ -22,28 +27,63 @@ export function riverFlowProxy({
 } = {}) {
   let cached = null;
   let retryAfter = 0;
+  /** The last download: SMHI's update time for it, when, and the snapshot. */
+  let downloaded = null;
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 600 });
+
+  async function getJson(url, signal) {
+    const response = await fetchImpl(url, {
+      signal,
+      redirect: 'manual',
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) {
+      try {
+        await response.body?.cancel();
+      } catch {
+        /* no-op */
+      }
+      throw new Error(`upstream HTTP ${response.status}`);
+    }
+    return readResponseJsonCapped(response, MAX_BODY_BYTES);
+  }
+
+  /**
+   * When SMHI last changed the data, read from the small period level; null
+   * when it does not say.
+   */
+  async function dataStamp(signal) {
+    try {
+      const period = await getJson(SMHI_FLOW_PERIOD_URL, signal);
+      const stamp = Number(period?.data?.[0]?.updated ?? period?.updated);
+      return Number.isFinite(stamp) && stamp > 0 ? stamp : null;
+    } catch {
+      return null;
+    }
+  }
 
   async function load() {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
-      const response = await fetchImpl(SMHI_FLOW_URL, {
-        signal: controller.signal,
-        redirect: 'manual',
-        headers: { Accept: 'application/json' },
-      });
-      if (!response.ok) {
-        try {
-          await response.body?.cancel();
-        } catch {
-          /* no-op */
-        }
-        throw new Error(`upstream HTTP ${response.status}`);
-      }
-      const payload = await readResponseJsonCapped(response, MAX_BODY_BYTES);
-      return { stations: normalizeFlowStations(payload), fetchedAt: now() };
+      // SMHI asks that the same data is not downloaded twice: nothing new
+      // since the last download, and the snapshot from then stands.
+      const stamp = await dataStamp(controller.signal);
+      if (
+        stamp != null &&
+        downloaded?.stamp === stamp &&
+        now() - downloaded.at < DOWNLOAD_ANYWAY_MS
+      )
+        return downloaded.value;
+      if (stamp == null) console.warn('[river-flow] SMHI names no update time');
+      const payload = await getJson(SMHI_FLOW_URL, controller.signal);
+      const value = {
+        stations: normalizeFlowStations(payload),
+        fetchedAt: now(),
+      };
+      downloaded = { stamp, at: now(), value };
+      return value;
     } finally {
       clearTimeout(timer);
     }
@@ -62,9 +102,14 @@ export function riverFlowProxy({
   async function refresh() {
     try {
       const value = await load();
+      const unchanged = value === cached?.value;
       cached = { value, savedAt: now() };
       retryAfter = 0;
-      console.log(`[river-flow] ${value.stations.length} stations`);
+      console.log(
+        unchanged
+          ? '[river-flow] nothing new at SMHI'
+          : `[river-flow] ${value.stations.length} stations`,
+      );
       return value;
     } catch (error) {
       console.warn(`[river-flow] refresh failed: ${error?.message || error}`);
