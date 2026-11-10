@@ -84,8 +84,6 @@ const ARRIVAL_ORBIT_S = 30;
 /** The glide to the circle's first position, and the circle's tilt. */
 const ARRIVAL_FLY_S = 1.5;
 const ARRIVAL_PITCH_DEG = -32;
-/** How long the title card and its offer stay. */
-const ARRIVAL_TITLE_MS = 12_000;
 /** The start view (or a shared link) is a visit too, but not an arrival. */
 const STARTUP_QUIET_MS = 20_000;
 const STAMP_COLOR = '#ffc94d';
@@ -183,10 +181,8 @@ export function createCityDossier({
   let destroyed = false;
   const createdAt = now();
   const passport = loadPassport(storage);
+  /** The first-visit card: `{ key, town, facts }`, or null. */
   let arrival = null;
-  /** The town the title card offers the flight in to. */
-  let arrivalTown = null;
-  let arrivalTimer = null;
   let orbit = null;
   let orbitWatch = null;
   let journey = null;
@@ -258,7 +254,14 @@ export function createCityDossier({
     // A chosen sight may lie over the border: the town stays while it shows.
     if (tab === 'sights' && chosenSight) return;
     const center = viewCenter();
-    if (!center) return;
+    if (!center) {
+      // Zoomed far out or over the border: no town's card is left behind.
+      if (arrival) {
+        closeArrival();
+        render();
+      }
+      return;
+    }
     request?.abort();
     const controller = new AbortController();
     request = controller;
@@ -274,6 +277,8 @@ export function createCityDossier({
         status = body.error ? 'error' : 'ready';
         live = null;
         liveAt = 0;
+        // The card belongs to the town it was shown for.
+        closeArrival();
         // The start view (or a shared link) is shown, not travelled to: no
         // stamp and no arrival while the page is still starting.
         if (now() - createdAt >= STARTUP_QUIET_MS) {
@@ -373,8 +378,10 @@ export function createCityDossier({
 
   // ---- arrival and passport ------------------------------------------------
   /**
-   * A first visit's title card. Nothing moves by itself: the card offers the
-   * flight in, and flyIn() makes it when the offer is taken.
+   * A first visit's card at the side of the map: the town's name and a few
+   * facts, the new stamp, and the offer to fly in. Nothing moves by itself,
+   * and the card keeps out of the view's way until it is dismissed, the offer
+   * is taken or the view leaves the town.
    */
   function arrive(town, townFacts) {
     if (
@@ -382,31 +389,35 @@ export function createCityDossier({
       documentRef?.body?.classList?.contains('cockpit-mode')
     )
       return;
-    const town$ = townFacts?.town;
-    arrivalTown = town;
-    arrival = {
-      key: `${town.code}:${now()}`,
-      name: town.name,
-      line: [
-        Number.isFinite(town$?.population)
-          ? t('{count} inhabitants', { count: whole(town$.population) })
-          : null,
-        Number.isFinite(town$?.founded)
-          ? t('founded {year}', { year: town$.founded })
-          : null,
-        town.county,
-      ]
-        .filter(Boolean)
-        .join(' · '),
-      // The button under the name, until it is pressed.
-      offer: true,
+    arrival = { key: `${town.code}:${now()}`, town, facts: townFacts };
+  }
+
+  function closeArrival() {
+    arrival = null;
+  }
+
+  /** The card as the panel shows it, in the language of the moment. */
+  function arrivalView() {
+    if (!arrival) return null;
+    const town$ = arrival.facts?.town;
+    const stats = [];
+    if (Number.isFinite(town$?.population))
+      stats.push({ label: t('POPULATION'), value: whole(town$.population) });
+    if (Number.isFinite(town$?.founded))
+      stats.push({ label: t('Founded'), value: String(town$.founded) });
+    if (Number.isFinite(town$?.elevation))
+      stats.push({
+        label: t('Elevation'),
+        value: `${whole(town$.elevation)} m`, // i18n-ignore: unit
+      });
+    return {
+      key: arrival.key,
+      name: arrival.town.name,
+      county: arrival.town.county || '',
+      coatOfArms: town$?.coatOfArms || null,
+      image: arrival.facts?.wikipedia?.image || null,
+      stats,
     };
-    clearTimeout(arrivalTimer);
-    arrivalTimer = setTimeout(() => {
-      arrival = null;
-      arrivalTown = null;
-      render();
-    }, ARRIVAL_TITLE_MS);
   }
 
   /** Unfold the CITY panel if it is folded. */
@@ -421,7 +432,7 @@ export function createCityDossier({
    * begins, then the circle, with the town's panel open beside it.
    */
   function flyIn() {
-    const town = arrivalTown;
+    const town = arrival?.town;
     if (
       !town ||
       isCameraBusy() ||
@@ -484,7 +495,8 @@ export function createCityDossier({
         if (orbit === controller) stopOrbit();
       },
     });
-    if (arrival) arrival = { ...arrival, offer: false };
+    // The panel takes over from the card.
+    closeArrival();
     openPanel();
     render();
   }
@@ -1322,7 +1334,7 @@ export function createCityDossier({
       now: nowView(),
       sights: tab === 'sights' ? sightsView() : null,
       pass: passView(),
-      arrival,
+      arrival: arrivalView(),
       // Provider names; the live transport ones only once they show.
       source: [
         'SCB · Kolada · Valmyndigheten · Wikidata · Wikipedia · SMHI · Polisen', // i18n-ignore: provider names
@@ -1358,6 +1370,10 @@ export function createCityDossier({
     },
     playRadio,
     flyIn,
+    dismissArrival() {
+      closeArrival();
+      render();
+    },
     showCamera: (id) => showCamera(id),
     // The original's aurora oval (NOAA OVATION) on the map.
     async showAurora() {
@@ -1403,7 +1419,6 @@ export function createCityDossier({
       removeLocaleListener();
       stopWatchingPanel?.();
       stopOrbit();
-      clearTimeout(arrivalTimer);
       if (journey) viewer.dataSources.remove(journey, true);
       journey = null;
       sightsRequest?.abort();

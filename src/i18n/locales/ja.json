@@ -3359,6 +3359,7 @@
   "No answer from: {sources}": "応答なし：{sources}",
   "Speed cameras": "速度取締カメラ",
   "Fly in and read more": "近づいて詳しく見る",
+  "New stamp in your passport": "パスポートに新しいスタンプ",
   "wind {value} m/s": "風 {value} m/s",
   "Measured at {station}": "測定地点: {station}",
   "{count} notices in the last 24 hours": {
@@ -3389,8 +3390,6 @@
   "Every municipality in Sweden": "スウェーデンの全自治体",
   "Show my journey on the map": "旅の軌跡を地図に表示",
   "Cinematic arrival": "映画のような到着",
-  "{count} inhabitants": "人口 {count} 人",
-  "founded {year}": "{year} 年創設",
   "River Flows in Norrland": "ノールランドの河川流量",
   "Radiation Monitoring": "放射線モニタリング",
   "Flights at {airport}": "{airport}のフライト",

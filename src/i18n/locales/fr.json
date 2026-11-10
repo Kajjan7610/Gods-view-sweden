@@ -3509,6 +3509,7 @@
   "No answer from: {sources}": "Pas de réponse de : {sources}",
   "Speed cameras": "Radars de vitesse",
   "Fly in and read more": "S’y rendre en vol et en savoir plus",
+  "New stamp in your passport": "Nouveau tampon dans votre passeport",
   "wind {value} m/s": "vent {value} m/s",
   "Measured at {station}": "Mesuré à {station}",
   "{count} notices in the last 24 hours": {
@@ -3541,8 +3542,6 @@
   "Every municipality in Sweden": "Toutes les communes de Suède",
   "Show my journey on the map": "Afficher mon voyage sur la carte",
   "Cinematic arrival": "Arrivée cinématique",
-  "{count} inhabitants": "{count} habitants",
-  "founded {year}": "fondée en {year}",
   "River Flows in Norrland": "Débits des rivières du Norrland",
   "Radiation Monitoring": "Surveillance de la radioactivité",
   "Flights at {airport}": "Vols à {airport}",

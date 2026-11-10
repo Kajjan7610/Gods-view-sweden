@@ -3584,6 +3584,7 @@
   "No answer from: {sources}": "Нет ответа от: {sources}",
   "Speed cameras": "Камеры контроля скорости",
   "Fly in and read more": "Подлететь и узнать больше",
+  "New stamp in your passport": "Новый штамп в паспорте",
   "wind {value} m/s": "ветер {value} м/с",
   "Measured at {station}": "Измерено: {station}",
   "{count} notices in the last 24 hours": {
@@ -3617,8 +3618,6 @@
   "Every municipality in Sweden": "Все коммуны Швеции",
   "Show my journey on the map": "Показать моё путешествие на карте",
   "Cinematic arrival": "Кинематографичное прибытие",
-  "{count} inhabitants": "Жителей: {count}",
-  "founded {year}": "основан в {year}",
   "River Flows in Norrland": "Расход рек в Норрланде",
   "Radiation Monitoring": "Радиационный мониторинг",
   "Flights at {airport}": "Рейсы в {airport}",

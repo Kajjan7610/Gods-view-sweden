@@ -3734,6 +3734,7 @@
   "No answer from: {sources}": "لا رد من: {sources}",
   "Speed cameras": "كاميرات السرعة",
   "Fly in and read more": "حلّق إلى هناك واقرأ المزيد",
+  "New stamp in your passport": "ختم جديد في جواز سفرك",
   "wind {value} m/s": "الرياح {value} م/ث",
   "Measured at {station}": "مقيس في {station}",
   "{count} notices in the last 24 hours": {
@@ -3769,8 +3770,6 @@
   "Every municipality in Sweden": "جميع بلديات السويد",
   "Show my journey on the map": "عرض رحلتي على الخريطة",
   "Cinematic arrival": "وصول سينمائي",
-  "{count} inhabitants": "{count} نسمة",
-  "founded {year}": "تأسست عام {year}",
   "River Flows in Norrland": "تدفق الأنهار في نورلاند",
   "Radiation Monitoring": "رصد الإشعاع",
   "Flights at {airport}": "الرحلات في {airport}",

@@ -214,6 +214,17 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (stadsdossiern: ortskort vid sidan i stället för skylt mitt i bilden)
+- Första besöket i en ort visar ett kort till vänster om kartan i stället
+  för skylten mitt i bilden: ortens foto och vapen, "Ny stämpel i passet",
+  invånare, grundad och höjd, och knappen "Flyg in och läs mer". Orten syns
+  hela tiden bakom kortet.
+- Kortet ligger kvar tills man stänger det, trycker på knappen eller lämnar
+  orten (förut 12 sekunder). Inget rör sig förrän knappen trycks; då glider
+  kameran in, STAD-panelen öppnas och kortet lämnar plats.
+- Kortets rörelser stängs av för den som har bett om minskad rörelse i
+  systemet. Inställningen "Filmisk ankomst" styr om kortet visas.
+
 ### 2026-11-10 (stadsdossiern: ingen automatisk inflygning, nuläget bara när det visas)
 - Första besöket i en ort flyger inte längre in av sig självt. Namnskylten
   visas med knappen "Flyg in och läs mer"; först när den trycks glider

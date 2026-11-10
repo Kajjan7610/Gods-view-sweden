@@ -677,61 +677,279 @@
   font-size: 9px;
 }
 
-/* ── Arrival title card (first visit) ─────────────────────── */
+/* ── A first visit's card: at the left side of the map, out of the view's
+   way, with the town, a few facts, the new stamp and the offer to fly in. */
 .city-arrival {
   position: fixed;
-  z-index: 120;
-  left: 50%;
-  bottom: 22vh;
+  /* Below the rails and their panels: a panel someone opens goes on top. */
+  z-index: 105;
+  left: 28px;
+  bottom: 150px;
+  width: min(300px, calc(100vw - 56px));
+  overflow: hidden;
+  border: 1px solid rgba(255, 201, 77, 0.3);
+  border-radius: 14px;
+  background: linear-gradient(
+    165deg,
+    rgba(12, 19, 31, 0.92),
+    rgba(6, 10, 18, 0.84)
+  );
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 0 44px rgba(255, 201, 77, 0.08);
+  backdrop-filter: blur(14px) saturate(1.3);
+  color: #fff;
+}
+/* The gold line across the top draws itself as the card arrives. */
+.city-arrival::before {
+  position: absolute;
+  z-index: 2;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #ffc94d 30%,
+    #fff3c4 50%,
+    #ffc94d 70%,
+    transparent
+  );
+  content: '';
+  transform-origin: left;
+  animation: city-arrival-line 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) 0.25s both;
+}
+.city-arrival-hero {
+  position: relative;
+  height: 104px;
+  overflow: hidden;
+}
+.city-arrival-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* The photograph drifts slowly, as a postcard held in the hand. */
+  animation: city-arrival-drift 16s ease-in-out infinite alternate;
+}
+.city-arrival-hero::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 13, 22, 0.05) 30%,
+    rgba(9, 14, 24, 0.94)
+  );
+  content: '';
+}
+/* Without a photograph: a low gold glow, and no more height than it needs. */
+.city-arrival-hero.plain {
+  height: 34px;
+  background: radial-gradient(
+    120% 160% at 20% 0%,
+    rgba(255, 201, 77, 0.22),
+    transparent 70%
+  );
+}
+.city-arrival-hero.plain::after {
+  content: none;
+}
+.city-arrival-close {
+  position: absolute;
+  z-index: 3;
+  top: 8px;
+  right: 8px;
   display: grid;
-  justify-items: center;
-  gap: 6px;
-  transform: translateX(-50%);
-  pointer-events: none;
-  text-align: center;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.85);
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  background: rgba(6, 10, 18, 0.6);
+  color: rgba(255, 255, 255, 0.8);
+  font: 400 16px / 1 var(--font-mono);
+  cursor: pointer;
+}
+.city-arrival-close:hover,
+.city-arrival-close:focus-visible {
+  border-color: #ffc94d;
+  color: #fff;
+}
+.city-arrival-body {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  margin-top: -30px;
+  padding: 0 18px 16px;
+}
+.city-arrival-hero.plain + .city-arrival-close + .city-arrival-body {
+  margin-top: -14px;
+}
+.city-arrival-arms {
+  width: 40px;
+  height: 46px;
+  margin-bottom: 4px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.7));
+}
+.city-arrival-eyebrow {
+  color: #ffc94d;
+  font: 600 9px / 1.2 var(--font-mono);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
 }
 .city-arrival strong {
-  color: #fff;
-  font: 300 clamp(28px, 5vw, 56px) / 1 var(--font-mono);
-  letter-spacing: 0.32em;
+  overflow: hidden;
+  font: 300 clamp(20px, 2.4vw, 26px) / 1.15 var(--font-mono);
+  letter-spacing: 0.2em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  animation: city-arrival-name 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s both;
+}
+.city-arrival-county {
+  color: rgba(255, 255, 255, 0.62);
+  font: 500 10px / 1.3 var(--font-mono);
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
-.city-arrival span {
-  color: #ffc94d;
-  font: 600 clamp(10px, 1.2vw, 13px) / 1.2 var(--font-mono);
-  letter-spacing: 0.18em;
+.city-arrival-stats {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 8px;
+  margin: 10px 0 2px;
+  padding: 10px 0;
+  border-block: 1px solid rgba(255, 255, 255, 0.1);
+}
+.city-arrival-stats div {
+  display: grid;
+  gap: 3px;
+}
+.city-arrival-stats dd {
+  margin: 0;
+  font: 500 15px / 1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.city-arrival-stats dt {
+  color: rgba(255, 255, 255, 0.5);
+  font: 600 8px / 1.2 var(--font-mono);
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
-/* The offer under the name: the only part of the card that takes a click. */
+/* The offer: the one bright thing on the card, with a slow sheen across it. */
 .city-arrival-offer {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   margin-top: 10px;
-  padding: 9px 18px;
-  border: 1px solid rgba(255, 201, 77, 0.7);
-  border-radius: 999px;
-  background: rgba(8, 14, 22, 0.72);
-  color: #ffc94d;
-  font: 600 12px / 1 var(--font-mono);
+  padding: 11px 14px;
+  border: 1px solid rgba(255, 201, 77, 0.75);
+  border-radius: 10px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 201, 77, 0.2),
+    rgba(255, 201, 77, 0.06)
+  );
+  color: #ffe3a0;
+  font: 600 11px / 1 var(--font-mono);
   letter-spacing: 0.14em;
-  text-shadow: none;
+  text-align: left;
   text-transform: uppercase;
   cursor: pointer;
-  pointer-events: auto;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.city-arrival-offer::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.28) 50%,
+    transparent 65%
+  );
+  content: '';
+  transform: translateX(-120%);
+  animation: city-arrival-sheen 4.5s ease-in-out 1.4s infinite;
+}
+.city-arrival-offer i {
+  font-style: normal;
+  transition: transform 0.25s ease;
 }
 .city-arrival-offer:hover,
 .city-arrival-offer:focus-visible {
-  background: rgba(255, 201, 77, 0.2);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 201, 77, 0.38),
+    rgba(255, 201, 77, 0.14)
+  );
+  box-shadow: 0 0 26px rgba(255, 201, 77, 0.28);
   color: #fff;
+}
+.city-arrival-offer:hover i,
+.city-arrival-offer:focus-visible i {
+  transform: translateX(4px);
 }
 .city-arrival-enter-active,
 .city-arrival-leave-active {
   transition:
-    opacity 1.2s ease,
-    letter-spacing 2.4s ease;
+    opacity 0.55s ease,
+    transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 .city-arrival-enter-from,
 .city-arrival-leave-to {
   opacity: 0;
+  transform: translateX(-28px);
+}
+@keyframes city-arrival-line {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes city-arrival-name {
+  from {
+    letter-spacing: 0.5em;
+    opacity: 0;
+  }
+}
+@keyframes city-arrival-drift {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1.12) translateY(-3%);
+  }
+}
+@keyframes city-arrival-sheen {
+  0%,
+  55% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .city-arrival::before,
+  .city-arrival strong,
+  .city-arrival-hero img,
+  .city-arrival-offer::after {
+    animation: none;
+  }
+  .city-arrival-enter-active,
+  .city-arrival-leave-active {
+    transition: opacity 0.2s ease;
+  }
+  .city-arrival-enter-from,
+  .city-arrival-leave-to {
+    transform: none;
+  }
 }
 body.cockpit-mode .city-arrival {
   display: none;
@@ -767,7 +985,8 @@ body.mobile-shell #city-panel-body {
   max-height: none;
 }
 body.mobile-shell .city-arrival {
-  bottom: calc(var(--mobile-tab-space, 64px) + 150px);
+  left: 12px;
+  bottom: calc(var(--mobile-tab-space, 64px) + 90px);
 }
 /* Visits: the town's count under its name, counts in the passport. */
 .city-dossier-visits {

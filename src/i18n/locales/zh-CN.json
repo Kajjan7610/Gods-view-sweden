@@ -3359,6 +3359,7 @@
   "No answer from: {sources}": "未响应：{sources}",
   "Speed cameras": "测速摄像头",
   "Fly in and read more": "飞近并了解更多",
+  "New stamp in your passport": "护照新增印章",
   "wind {value} m/s": "风速 {value} 米/秒",
   "Measured at {station}": "测量站：{station}",
   "{count} notices in the last 24 hours": {
@@ -3389,8 +3390,6 @@
   "Every municipality in Sweden": "瑞典所有市镇",
   "Show my journey on the map": "在地图上显示我的旅程",
   "Cinematic arrival": "电影式抵达",
-  "{count} inhabitants": "{count} 名居民",
-  "founded {year}": "建于 {year} 年",
   "River Flows in Norrland": "诺尔兰河流流量",
   "Radiation Monitoring": "辐射监测",
   "Flights at {airport}": "{airport}航班",

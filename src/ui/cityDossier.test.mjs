@@ -53,6 +53,7 @@ function harness(t, { stamps = {} } = {}) {
   const state = {
     now: NOW,
     town: TOWNS.arboga,
+    height: 3000,
     panelOpen: false,
     panelChanged: null,
     urls: [],
@@ -73,7 +74,9 @@ function harness(t, { stamps = {} } = {}) {
     dataSources: { add() {}, remove() {} },
     camera: {
       heading: 0.5,
-      positionCartographic: { height: 3000 },
+      get positionCartographic() {
+        return { height: state.height };
+      },
       get positionWC() {
         return Cesium.Cartesian3.fromDegrees(...state.town.point, 3000);
       },
@@ -226,17 +229,19 @@ test('a first visit offers the flight in; nothing moves until it is taken', asyn
   // Past the quiet start: the view was travelled to.
   state.now += 21_000;
   await visit(TOWNS.arboga);
-  // The title card with its offer, and the camera left where it is.
+  // The card at the side with the town and its facts, and the camera left
+  // where it is.
   assert.equal(state.view.arrival.name, 'Arboga');
-  assert.equal(state.view.arrival.offer, true);
+  assert.equal(state.view.arrival.county, 'Västmanlands län');
+  assert.deepEqual(state.view.arrival.stats, [
+    { label: 'POPULATION', value: '10,807' },
+  ]);
   assert.equal(state.flights.length, 0);
   assert.equal(state.orbits.length, 0);
   // The offer taken: one glide to the orbit's first position, the card
-  // without its button, and the orbit not yet begun.
-  const card = state.view.arrival.key;
+  // giving way to the panel, and the orbit not yet begun.
   state.actions.flyIn();
-  assert.equal(state.view.arrival.offer, false);
-  assert.equal(state.view.arrival.key, card, 'the same card, not a new one');
+  assert.equal(state.view.arrival, null);
   assert.equal(state.flights.length, 1);
   assert.equal(state.orbits.length, 0);
   const [{ sphere, options }] = state.flights;
@@ -302,11 +307,36 @@ test('without a card there is nothing to fly in to', async (t) => {
   assert.equal(state.view.arrival, null);
   state.actions.flyIn();
   assert.equal(state.flights.length, 0);
-  // A first visit whose card has gone again: the same.
+  // A first visit: the card stays while the town is looked at…
   await visit(TOWNS.koping);
   assert.equal(state.view.arrival.name, 'Köping');
-  t.mock.timers.tick(12_000);
+  t.mock.timers.tick(60_000);
+  await settle();
+  assert.equal(state.view.arrival.name, 'Köping');
+  // …until it is dismissed; then there is nothing to fly in to.
+  state.actions.dismissArrival();
   assert.equal(state.view.arrival, null);
   state.actions.flyIn();
   assert.equal(state.flights.length, 0);
+});
+
+test('the card goes when the view leaves its town', async (t) => {
+  const { state, visit } = harness(t, {
+    stamps: {
+      1984: { name: 'Arboga', count: 1, first: NOW - 864e5, last: NOW - 864e5 },
+    },
+  });
+  state.now += 21_000;
+  // On to a town already stamped: the first town's card is not that town's.
+  await visit(TOWNS.koping);
+  assert.equal(state.view.arrival.name, 'Köping');
+  await visit(TOWNS.arboga);
+  assert.equal(state.view.name, 'Arboga');
+  assert.equal(state.view.arrival, null);
+  // Zoomed far out over a new town's card: no town is visited, no card shown.
+  await visit(TOWNS.orebro);
+  assert.equal(state.view.arrival.name, 'Örebro');
+  state.height = 200_000;
+  await visit(TOWNS.orebro);
+  assert.equal(state.view.arrival, null);
 });

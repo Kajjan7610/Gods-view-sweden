@@ -199,14 +199,26 @@ watch(
       </template>
     </div>
   </RailPanel>
-  <!-- A first visit's title card over the map, offering the flight in. -->
+  <!-- A first visit's card at the side of the map: the town, a few facts and
+       the offer to fly in. Nothing moves until the offer is taken. -->
   <Teleport to="body">
     <Transition name="city-arrival">
-      <div v-if="d?.arrival" :key="d.arrival.key" class="city-arrival" aria-live="polite">
-        <strong>{{ d.arrival.name }}</strong>
-        <span>{{ d.arrival.line }}</span>
-        <button v-if="d.arrival.offer" type="button" class="city-arrival-offer" @click="store.act('flyIn')">{{ t('Fly in and read more') }}</button>
-      </div>
+      <aside v-if="d?.arrival" :key="d.arrival.key" class="city-arrival" aria-live="polite">
+        <div class="city-arrival-hero" :class="{ plain: !d.arrival.image }">
+          <img v-if="d.arrival.image" :src="d.arrival.image" alt="" loading="lazy" referrerpolicy="no-referrer" />
+        </div>
+        <button type="button" class="city-arrival-close" :aria-label="t('Close')" :title="t('Close')" @click="store.act('dismissArrival')">×</button>
+        <div class="city-arrival-body">
+          <img v-if="d.arrival.coatOfArms" class="city-arrival-arms" :src="d.arrival.coatOfArms" alt="" loading="lazy" referrerpolicy="no-referrer" />
+          <small class="city-arrival-eyebrow">{{ t('New stamp in your passport') }}</small>
+          <strong>{{ d.arrival.name }}</strong>
+          <span v-if="d.arrival.county" class="city-arrival-county">{{ d.arrival.county }}</span>
+          <dl v-if="d.arrival.stats.length" class="city-arrival-stats">
+            <div v-for="stat in d.arrival.stats" :key="stat.label"><dd>{{ stat.value }}</dd><dt>{{ stat.label }}</dt></div>
+          </dl>
+          <button type="button" class="city-arrival-offer" @click="store.act('flyIn')">{{ t('Fly in and read more') }}<i aria-hidden="true">→</i></button>
+        </div>
+      </aside>
     </Transition>
   </Teleport>
 </template>
