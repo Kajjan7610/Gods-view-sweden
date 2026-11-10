@@ -64,7 +64,11 @@ test('alerts are placed by stop; operators without stops wait', async (t) => {
   assert.deepEqual(body.pending, ['sl']);
   assert.ok(urls[0].startsWith(`${ALERTS_URL('otraf')}?key=`));
   await request();
-  assert.equal(urls.length, 2, 'cached, if only for a minute while waiting');
+  assert.equal(
+    urls.length,
+    2,
+    'one read per operator; the waiting alerts are kept, not asked for again',
+  );
 });
 
 test('no key is "not configured"; failures never show the key', async (t) => {
@@ -90,4 +94,114 @@ test('an operator without an alert feed (404) has no alerts', async (t) => {
   });
   const body = (await request()).json();
   assert.deepEqual([body.stops, body.failed], [[], 0]);
+});
+
+test('alerts read while stops load are placed when they arrive, with no new request', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  let stopsReady = false;
+  const urls = [];
+  let clock = NOW;
+  const request = harness({
+    now: () => clock,
+    operators: [{ operator: 'sl', name: 'SL' }],
+    stopsFor: () => (stopsReady ? STOPS : null),
+    fetchImpl: async (url) => {
+      urls.push(String(url));
+      return new Response(FEED);
+    },
+  });
+  assert.deepEqual((await request()).json().pending, ['sl']);
+  // A minute on, still waiting: nothing is asked of Trafiklab.
+  clock += 60_000;
+  assert.deepEqual((await request()).json().pending, ['sl']);
+  // The stop list arrives: the alerts read before are placed.
+  stopsReady = true;
+  clock += 60_000;
+  const placed = (await request()).json();
+  assert.deepEqual(placed.pending, []);
+  assert.equal(placed.stops[0].name, 'Hagaskolan');
+  assert.equal(urls.length, 1, 'one read of SL in all');
+  // The quarter-hour is the only thing that asks again.
+  clock += 14 * 60_000;
+  await request();
+  assert.equal(urls.length, 2);
+});
+
+test('when every operator fails Trafiklab is left alone for a quarter-hour', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  let clock = NOW;
+  let fail = false;
+  let calls = 0;
+  const request = harness({
+    now: () => clock,
+    operators: [
+      { operator: 'otraf', name: 'Östgötatrafiken' },
+      { operator: 'ul', name: 'UL' },
+    ],
+    stopsFor: () => STOPS,
+    fetchImpl: async () => {
+      calls += 1;
+      return fail ? new Response('quota', { status: 429 }) : new Response(FEED);
+    },
+  });
+  await request();
+  assert.equal(calls, 2);
+  fail = true;
+  clock += 16 * 60_000;
+  const stale = await request();
+  assert.equal(stale.json().stale, true);
+  assert.equal(calls, 4);
+  // Within the pause: the last answer again, nobody asked.
+  clock += 10 * 60_000;
+  assert.equal((await request()).json().stale, true);
+  assert.equal(calls, 4);
+  // After it, asked once more.
+  clock += 6 * 60_000;
+  fail = false;
+  const back = (await request()).json();
+  assert.equal(calls, 6);
+  assert.equal(back.stale, undefined);
+});
+
+test('an operator that fails alone keeps its last alerts', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  let clock = NOW;
+  let ulDown = false;
+  const stops = new Map([
+    ['s1', [16.19, 58.59, 'Hagaskolan', '']],
+    ['u1', [17.64, 59.86, 'Uppsala C', '']],
+  ]);
+  const request = harness({
+    now: () => clock,
+    operators: [
+      { operator: 'otraf', name: 'Östgötatrafiken' },
+      { operator: 'ul', name: 'UL' },
+    ],
+    stopsFor: () => stops,
+    fetchImpl: async (url) =>
+      String(url).includes('/ul/')
+        ? ulDown
+          ? new Response('down', { status: 503 })
+          : new Response(
+              encodeAlerts([{ id: 'u', header: 'Inställd', stops: ['u1'] }]),
+            )
+        : new Response(FEED),
+  });
+  assert.equal((await request()).json().stops.length, 2);
+  ulDown = true;
+  clock += 16 * 60_000;
+  const kept = (await request()).json();
+  assert.deepEqual(kept.stops.map((row) => row.name).sort(), [
+    'Hagaskolan',
+    'Uppsala C',
+  ]);
+  assert.equal(kept.failed, 1);
+  // Past two hours UL's old alerts are no longer shown.
+  clock += 2 * 60 * 60_000;
+  assert.deepEqual(
+    (await request()).json().stops.map((row) => row.name),
+    ['Hagaskolan'],
+  );
 });

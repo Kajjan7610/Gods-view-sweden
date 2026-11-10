@@ -16,14 +16,15 @@ import zlib from 'node:zlib';
  * its alerts by.
  *
  * Static downloads are rationed: the default Bronze key allows 50 a month,
- * so each operator's join is cached on disk for a week and a failed download
- * waits six hours before the next try. Everything here runs in the
+ * so each operator's join is cached on disk for two weeks (16 operators
+ * renewed weekly would need about 69 a month; every two weeks, about 35) and
+ * a failed download waits six hours before the next try. Everything here runs in the
  * background; until a join is ready, vehicles pass through unchanged.
  */
 
 export const TRAFIKLAB_STATIC_URL = (operator) =>
   `https://opendata.samtrafiken.se/gtfs/${operator}/${operator}.zip`;
-export const TRAFIKLAB_STATIC_MAX_AGE_MS = 7 * 24 * 60 * 60_000;
+export const TRAFIKLAB_STATIC_MAX_AGE_MS = 14 * 24 * 60 * 60_000;
 export const TRAFIKLAB_STATIC_RETRY_MS = 6 * 60 * 60_000;
 export const TRAFIKLAB_STATIC_KEYLESS_RETRY_MS = 60 * 60_000;
 export const TRAFIKLAB_STATIC_FETCH_TIMEOUT_MS = 5 * 60_000;

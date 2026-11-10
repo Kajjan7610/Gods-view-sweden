@@ -13,7 +13,13 @@ import { PbfReader } from 'pbf';
 const NO_SERVICE_EFFECTS = new Set([1, 2]);
 const STOP_MOVED_EFFECT = 9;
 const CLOSED_TEXT =
-  /stängd|avstängd|inställd|indrag|stannar inte|trafikerar inte|ersätt|no service|cancel/i;
+  /stängd|avstängd|inställd|indrag|stannar (?:inte|ej)|trafiker(?:ar|as) (?:inte|ej)|ersätt|no service|cancel/i;
+/**
+ * A closed lift, escalator or entrance: the station is still served. Read
+ * from the heading, which names what is closed.
+ */
+const FACILITY_TEXT =
+  /hiss|rulltrapp|entré|uppgång|ingång|toalett|väntsal|biljettautomat/i;
 const MOVED_TEXT = /flytta|flyttad|tillfällig hållplats|moved/i;
 
 /** Disruption kinds, most serious first, with their colour. */
@@ -44,6 +50,8 @@ export function classifyAlert(alert) {
   if (alert.effect === STOP_MOVED_EFFECT) return 'moved';
   const text = `${alert.header || ''} ${alert.description || ''}`;
   if (MOVED_TEXT.test(text)) return 'moved';
+  if (FACILITY_TEXT.test(alert.header || alert.description || ''))
+    return 'other';
   if (CLOSED_TEXT.test(text)) return 'closed';
   return 'other';
 }

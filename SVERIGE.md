@@ -207,6 +207,29 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (kollektivtrafikstörningar: rättningar efter kodgranskning)
+- Störningar som hämtats medan en operatörs hållplatslista laddas ned
+  sparas och placeras ut när listan finns, utan att Trafiklab tillfrågas
+  igen. Förut frågades alla 16 operatörer varje minut tills listan fanns,
+  vilket kunde tömma nyckelns månadskvot (30 000 anrop) på drygt ett dygn
+  med lagret påslaget.
+- När alla operatörer misslyckas (till exempel med slut kvot) lämnas
+  Trafiklab i fred en kvart och den senaste listan visas, märkt som
+  gammal. En operatör som misslyckas ensam behåller sina senaste
+  störningar i upp till två timmar, i stället för att tappa dem.
+- Hållplatslistorna förnyas var fjortonde dag i stället för var sjunde: 16
+  operatörer en gång i veckan behövde cirka 69 nedladdningar i månaden,
+  medan gratisnivån (Bronze) tillåter 50; nu högst cirka 48.
+- En avstängd hiss, rulltrappa eller entré räknas som övrig störning, inte
+  som stängd hållplats; stationen trafikeras som vanligt (8 av dagens 396
+  störningar). "Trafikeras ej", "trafikerar ej" och "stannar ej" räknas som
+  stängd hållplats, som varianterna med "inte".
+- Lagret ritar inte om de cirka 460 prickarna varannan minut när svaret är
+  detsamma (proxyn svarar likadant en kvart), men korten läser alltid de
+  senaste texterna. Mätt i förhandsvisningen: en oförändrad uppdatering tar
+  cirka 4 ms. Ett ritfel loggas som ritfel och görs om; ett avstängt lager
+  bär inte kvar sitt senaste fel; tiden följer lagrets egen klocka.
+
 ### 2026-11-10 (genomgång av alla svenska källors villkor)
 - Alla svenska källor är genomgångna. Avsnittet i Avgränsningar heter nu
   **Källor med oklara eller särskilda villkor** och listar strålning,

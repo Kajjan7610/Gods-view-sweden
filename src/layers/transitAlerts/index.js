@@ -34,6 +34,7 @@ export function createTransitAlertsLayer({
   picking = null,
   pointer = null,
   terrain = null,
+  now = () => Date.now(),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Transit disruptions require a snapshot source');
@@ -51,6 +52,7 @@ export function createTransitAlertsLayer({
   let _enabled = false;
   let _clickHandler = null;
   let _rowListener = null;
+  let _signature = null;
   let _lastUpdate = null;
   let _lastError = null;
   let _stale = false;
@@ -198,6 +200,7 @@ export function createTransitAlertsLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      _lastError = null;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
       clearOverlays();
@@ -216,15 +219,33 @@ export function createTransitAlertsLayer({
         _lastUpdate =
           _stale && Number.isFinite(snapshot.fetchedAt)
             ? snapshot.fetchedAt
-            : Date.now();
+            : now();
         _lastError = null;
+        // Always the newest rows, so a card reads the alerts as they are now.
         _stops = snapshot.stops;
         _pending = snapshot.pending;
         _stopById.clear();
         for (const row of _stops) _stopById.set(row.id, row);
         // Heights first: the ones this browser kept are drawn at once.
         _ground.place(_stops);
-        render();
+        // The proxy answers the same for a quarter of an hour: the dots are
+        // drawn again only when one of them would look different.
+        const signature = JSON.stringify(
+          _stops.map((row) => [row.id, row.kind, row.point]),
+        );
+        if (signature !== _signature) {
+          // Not trusted until drawn: a drawing that fails is made again.
+          _signature = null;
+          try {
+            render();
+          } catch (e) {
+            console.warn('[Data:TransitAlerts] Draw error:', e?.message || e);
+            _lastError = e?.message || msg('Transit disruptions unavailable');
+            _rowListener?.();
+            return true;
+          }
+          _signature = signature;
+        } else if (_selectedId) publishSelectedCard();
         _rowListener?.();
         return true;
       } catch (e) {
@@ -246,6 +267,7 @@ export function createTransitAlertsLayer({
       _stopById.clear();
       _stops = [];
       _pending = [];
+      _signature = null;
       if (_dataSource) {
         viewer.dataSources.remove(_dataSource, true);
         _dataSource = null;

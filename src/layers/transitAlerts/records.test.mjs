@@ -200,3 +200,23 @@ test('the layer draws one point per stop and counts them by kind', async () => {
   assert.match(legend[0].blurb, /still loading for 1 operators/);
   layer.destroy(viewer);
 });
+
+test('a closed lift or entrance is not a closed stop; "trafikeras ej" is', () => {
+  // As SL writes them: the station is served, a facility is not.
+  for (const header of [
+    'Stn.medd. Avstängd hiss Brommaplan',
+    'Avstängd hiss vid Vällingby',
+    'Entré vid Östermalmstorg stängd',
+    'Rulltrappan ur drift vid Slussen',
+  ])
+    assert.equal(classifyAlert({ header }), 'other', header);
+  for (const header of [
+    'Hållplats Sjöbrings väg trafikeras ej',
+    'Buss linje 163 trafikerar ej hållplats Ljungnäsvägen',
+    'Tåget stannar ej i Rimbo',
+    'Hållplatsen trafikeras inte',
+  ])
+    assert.equal(classifyAlert({ header }), 'closed', header);
+  // The stop's own effect still decides first.
+  assert.equal(classifyAlert({ effect: 1, header: 'Avstängd hiss' }), 'closed');
+});

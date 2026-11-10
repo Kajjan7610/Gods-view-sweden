@@ -6,6 +6,7 @@ import test from 'node:test';
 import zlib from 'node:zlib';
 
 import {
+  TRAFIKLAB_STATIC_MAX_AGE_MS,
   TRAFIKLAB_STATIC_RETRY_MS,
   buildTripRouteIndex,
   createTrafiklabStatic,
@@ -18,6 +19,7 @@ import {
   transitRouteLabel,
   transitModeFor,
 } from '../../src/data/transitFeeds.js';
+import { TRAFIKLAB_ALERT_OPERATORS } from './transitAlerts.js';
 
 /** A minimal ZIP writer: `deflate` members are compressed, others stored. */
 function makeZip(members) {
@@ -274,4 +276,16 @@ test('stops are kept from the same download, asked for once, one at a time', asy
   assert.equal(stops.has('BAD'), false);
   assert.ok(fs.existsSync(path.join(cacheDir, 'stops-sl.json')));
   assert.equal(requested.length, 2);
+});
+
+test("renewing every operator's stops fits the Bronze key's 50 downloads a month", () => {
+  // A month of 31 days asks each operator at most this many times.
+  const perOperator = Math.ceil(
+    (31 * 24 * 60 * 60_000) / TRAFIKLAB_STATIC_MAX_AGE_MS,
+  );
+  assert.ok(TRAFIKLAB_ALERT_OPERATORS.length >= 16);
+  assert.ok(
+    perOperator * TRAFIKLAB_ALERT_OPERATORS.length <= 50,
+    `${perOperator} × ${TRAFIKLAB_ALERT_OPERATORS.length} downloads`,
+  );
 });
