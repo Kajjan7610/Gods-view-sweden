@@ -36,16 +36,32 @@ export function priceColor(sek) {
   return priceClass(sek)?.color || '#9e9e9e';
 }
 
+const STOCKHOLM_DATE = new Intl.DateTimeFormat('sv-SE', {
+  timeZone: 'Europe/Stockholm',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+/** "2026-11-04": the Stockholm calendar date of `ms`. */
+export function stockholmDay(ms) {
+  return STOCKHOLM_DATE.format(ms);
+}
+
+/**
+ * A time inside the Stockholm calendar day after the one `ms` falls on. By
+ * the calendar, not 24 hours on: a day of 23 or 25 hours neither skips a
+ * day nor repeats one.
+ */
+export function dayAfter(ms) {
+  const [year, month, day] = stockholmDay(ms).split('-').map(Number);
+  // Noon UTC is the same date in Stockholm all year.
+  return Date.UTC(year, month - 1, day + 1, 12);
+}
+
 /** The day file URL for a zone, by the Stockholm calendar date. */
 export function priceUrl(zone, ms) {
-  const [year, month, day] = new Intl.DateTimeFormat('sv-SE', {
-    timeZone: 'Europe/Stockholm',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  })
-    .format(ms)
-    .split('-');
+  const [year, month, day] = stockholmDay(ms).split('-');
   return `https://www.elprisetjustnu.se/api/v1/prices/${year}/${month}-${day}_${zone}.json`;
 }
 

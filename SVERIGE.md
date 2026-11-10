@@ -207,6 +207,24 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (elpris: rättningar efter kodgranskning)
+- Ett elområde vars dagsfil inte går att hämta behåller de priser det hade,
+  medan de andra uppdateras. Förut fällde en enda misslyckad fil av åtta
+  hela svaret. Ett svar där någon fil saknades frågas om efter 5 minuter i
+  stället för 15.
+- Priserna sparas per datum. Efter midnatt är gårdagens "i morgon" dagens
+  priser även när Elpriset just nu inte svarar; förut låg gårdagens priser
+  kvar under "I dag" i upp till sex timmar, utan pris "nu".
+- Proxyn lämnar Elpriset just nu i fred i 5 minuter efter en hämtning där
+  inget gick att läsa, och svarar under tiden med de senaste priserna,
+  märkta `X-Data-Stale`. Loggraden skrivs en gång per hämtning.
+- "I morgon" räknas som nästa kalenderdag i stället för 24 timmar framåt,
+  som blev fel en timme per år vid vardera omställningen mellan sommar-
+  och vintertid.
+- Ett ritfel loggas som ritfel, inte hämtfel, och ritas om en minut senare.
+  Ett avstängt lager bär inte kvar sitt senaste fel. Priset "nu", färgen
+  och kortet följer lagrets egen klocka.
+
 ### 2026-11-10 (kollektivtrafikstörningar: rättningar efter kodgranskning)
 - Störningar som hämtats medan en operatörs hållplatslista laddas ned
   sparas och placeras ut när listan finns, utan att Trafiklab tillfrågas

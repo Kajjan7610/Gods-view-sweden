@@ -52,6 +52,7 @@ export function createElectricityPricesLayer({
   picking = null,
   pointer = null,
   terrain = null,
+  now = () => Date.now(),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Electricity prices require a snapshot source');
@@ -82,7 +83,7 @@ export function createElectricityPricesLayer({
     overlayHost && screenSpaceEventHandlerFactory && picking;
 
   /** The price a zone is coloured and labelled by in the current mode. */
-  function shownPrice(zone, nowMs = Date.now()) {
+  function shownPrice(zone, nowMs = now()) {
     if (_mode === 'today') return summarizeDay(zone.today)?.mean ?? null;
     if (_mode === 'tomorrow') return summarizeDay(zone.tomorrow)?.mean ?? null;
     return priceAt(zone.today, nowMs)?.sek ?? null;
@@ -100,7 +101,7 @@ export function createElectricityPricesLayer({
       );
       return;
     }
-    const card = buildZoneCard(zone, Date.now());
+    const card = buildZoneCard(zone, now());
     card.position = position(zone);
     overlayHost.setEntries(
       ELECTRICITY_OVERLAY_SOURCE_ID,
@@ -271,6 +272,7 @@ export function createElectricityPricesLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      _lastError = null;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
       clearOverlays();
@@ -289,7 +291,7 @@ export function createElectricityPricesLayer({
         _lastUpdate =
           _stale && Number.isFinite(snapshot.fetchedAt)
             ? snapshot.fetchedAt
-            : Date.now();
+            : now();
         _lastError = null;
         _zones = snapshot.zones;
         _zoneById.clear();
@@ -297,7 +299,13 @@ export function createElectricityPricesLayer({
         // Rendered on every update: the current quarter-hour moves on.
         // Heights first: the ones this browser kept are drawn at once.
         _ground.place(_zones);
-        render();
+        try {
+          render();
+        } catch (e) {
+          // Drawn again at the next update, a minute on.
+          console.warn('[Data:ElectricityPrices] Draw error:', e?.message || e);
+          _lastError = e?.message || msg('Electricity prices unavailable');
+        }
         _rowListener?.();
         return true;
       } catch (e) {

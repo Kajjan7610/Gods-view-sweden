@@ -4,10 +4,12 @@ import test from 'node:test';
 import {
   ELECTRICITY_ZONES,
   PRICE_CLASSES,
+  dayAfter,
   normalizePriceDay,
   priceAt,
   priceClass,
   priceUrl,
+  stockholmDay,
   summarizeDay,
 } from './records.js';
 import { buildZoneCard } from './cards.js';
@@ -96,4 +98,19 @@ test('the zone card gives now, today and tomorrow, or when tomorrow comes', () =
     Date.parse('2026-11-04T12:07:00+01:00'),
   );
   assert.equal(later.details[2], 'Tomorrow: low 1.10, high 1.10, mean 1.10');
+});
+
+test('the day after is the next calendar day in Stockholm, whatever its length', () => {
+  const next = (iso) => stockholmDay(dayAfter(Date.parse(iso)));
+  assert.equal(stockholmDay(Date.parse('2026-11-04T22:30:00Z')), '2026-11-04');
+  assert.equal(stockholmDay(Date.parse('2026-11-04T23:10:00Z')), '2026-11-05');
+  assert.equal(next('2026-11-04T10:00:00Z'), '2026-11-05');
+  // 00:30 on the 25-hour day, and 23:30 on the 23-hour day.
+  assert.equal(next('2026-10-24T22:30:00Z'), '2026-10-26');
+  assert.equal(next('2026-03-29T21:30:00Z'), '2026-03-30');
+  assert.equal(next('2026-12-31T12:00:00Z'), '2027-01-01');
+  assert.match(
+    priceUrl('SE3', Date.parse('2026-11-04T23:10:00Z')),
+    /\/2026\/11-05_SE3\.json$/,
+  );
 });
