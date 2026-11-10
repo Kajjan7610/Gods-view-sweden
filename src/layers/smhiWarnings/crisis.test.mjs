@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  CRISIS_NEWS_MAX_AGE_MS,
   SWEDEN_CENTRE,
   SWEDISH_COUNTIES,
   createCountyLookup,
@@ -109,4 +110,98 @@ test('the card names the scope, the preamble and the time', () => {
     'krisinformation.se ↗ · click card to open',
   ]);
   assert.equal(card.interactive, true);
+});
+
+test('only Sweden is the whole country; anything else has no place on the map', () => {
+  const unplaced = (place) => ({
+    point: [...SWEDEN_CENTRE],
+    place,
+    scope: 'unplaced',
+  });
+  // No area at all.
+  assert.deepEqual(placeCrisisItem([], lookups), unplaced(null));
+  assert.deepEqual(placeCrisisItem(undefined, lookups), unplaced(null));
+  // News about abroad.
+  assert.deepEqual(
+    placeCrisisItem([{ type: 'Country', description: 'Spanien' }], lookups),
+    unplaced('Spanien'),
+  );
+  // A municipality the gazetteer does not know is not all of Sweden either.
+  assert.deepEqual(
+    placeCrisisItem(
+      [{ type: 'Municipality', description: 'Atlantis kommun' }],
+      lookups,
+    ),
+    unplaced('Atlantis kommun'),
+  );
+  assert.equal(
+    placeCrisisItem([{ type: 'Country' }], lookups).scope,
+    'country',
+  );
+  assert.equal(
+    placeCrisisItem([{ type: 'Country', description: 'sverige' }], lookups)
+      .scope,
+    'country',
+  );
+});
+
+test('news neither published nor updated for three days drops; VMAs stay', () => {
+  const now = Date.parse('2026-11-10T12:00:00+01:00');
+  const at = (ms) => new Date(ms).toISOString();
+  const old = now - CRISIS_NEWS_MAX_AGE_MS - 60_000;
+  const items = normalizeCrisisItems(
+    {
+      vmas: [{ identifier: 'v', headline: 'VMA', published: at(old) }],
+      news: [
+        { identifier: 'gone', headline: 'Old', published: at(old) },
+        {
+          identifier: 'kept',
+          headline: 'Old but updated',
+          published: at(old),
+          updated: at(now - 3_600_000),
+        },
+        { identifier: 'fresh', headline: 'New', published: at(now - 60_000) },
+        { identifier: 'undated', headline: 'No date' },
+      ],
+    },
+    lookups,
+    now,
+  );
+  assert.deepEqual(
+    items.map((row) => row.id),
+    ['vma:v', 'news:fresh', 'news:kept', 'news:undated'],
+  );
+  // Without a clock nothing is dropped by age.
+  assert.equal(
+    normalizeCrisisItems(
+      { news: [{ identifier: 'gone', headline: 'Old', published: at(old) }] },
+      lookups,
+    ).length,
+    1,
+  );
+});
+
+test('the card of an unplaced item does not claim all of Sweden', () => {
+  const [abroad] = normalizeCrisisItems(
+    {
+      news: [
+        {
+          identifier: 'k',
+          headline: 'Oväder på Kanarieöarna',
+          area: [{ type: 'Country', description: 'Spanien' }],
+        },
+      ],
+    },
+    lookups,
+  );
+  assert.equal(buildCrisisCard(abroad).details[0], 'Spanien');
+  const [nowhere] = normalizeCrisisItems(
+    { news: [{ identifier: 'n', headline: 'Utan område', area: [] }] },
+    lookups,
+  );
+  assert.equal(nowhere.scope, 'unplaced');
+  assert.equal(
+    buildCrisisCard(nowhere).details[0],
+    'Krisinformation names no place',
+  );
 });

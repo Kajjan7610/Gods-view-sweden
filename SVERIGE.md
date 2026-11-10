@@ -127,6 +127,26 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (SMHI-varningar och krisinformation: rättningar efter kodgranskning)
+- Bara en nyhet som Krisinformation märkt med Sverige ritas som "Gäller
+  hela Sverige". En nyhet om utlandet, om ett område som ortsregistret
+  inte känner, eller helt utan område ritas fortfarande mitt i landet,
+  men kortet visar det område nyheten anger, eller "Krisinformation
+  anger ingen plats" (ny text på alla 12 språk).
+- Nyheter som varken publicerats eller uppdaterats på tre dygn släpps av
+  proxyn: `/v3/news?days=3` svarar även med äldre (i dag en 92 timmar
+  gammal nyhet om ett oväder som redan passerat). VMA berörs inte.
+- När Krisinformation inte svarar behålls den senaste krislistan i högst
+  1 timme, i stället för utan tidsgräns, så att ett VMA som upphört inte
+  ligger kvar på kartan.
+- Proxyn lämnar SMHI och Krisinformation i fred i 1 minut efter en
+  misslyckad hämtning och svarar under tiden med den senaste
+  ögonblicksbilden, märkt `X-Data-Stale` (eller 502 om ingen finns).
+  Loggraden och cachen skrivs en gång per hämtning.
+- En ritning som misslyckades loggas som ritfel, inte hämtfel, och görs
+  om vid nästa uppdatering. Ett avstängt lager bär inte kvar sitt senaste
+  fel. Tiden för senaste uppdatering följer lagrets egen klocka.
+
 ### 2026-11-10 (SMHI-väder: rättningar efter kodgranskning)
 - Lagret ritar om när en stations vind, byar eller nederbörd ändras, inte
   bara temperaturen eller mättiden. Förut kunde vind som kom tillbaka efter

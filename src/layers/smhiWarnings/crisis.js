@@ -7,7 +7,8 @@
  * authorities' crisis news of the last days. Each names its areas — the
  * country, a county or a municipality — usually without a coordinate, so the
  * proxy places it at the municipality seat, the mean of a county's seats, or
- * the middle of Sweden for the whole country.
+ * the middle of Sweden for the whole country. An item that names no Swedish
+ * area (news about abroad, or no area at all) is drawn there too, but says so.
  */
 
 /** Roughly the geographic middle of Sweden (Flataklocken, Ånge). */
@@ -17,6 +18,11 @@ export const CRISIS_KINDS = Object.freeze([
   Object.freeze({ id: 'news', color: '#40c4ff' }),
 ]);
 export const MAX_CRISIS_ITEMS = 100;
+/**
+ * News neither published nor updated for this long is dropped: /v3/news?days=3
+ * still answers with older items.
+ */
+export const CRISIS_NEWS_MAX_AGE_MS = 3 * 24 * 60 * 60_000;
 
 /** County codes (the first two digits of a municipality code) to names. */
 export const SWEDISH_COUNTIES = Object.freeze({
@@ -101,7 +107,7 @@ function coordinateOf(area) {
 
 /**
  * Where an item is drawn and how exact that is.
- * @returns {{point: number[], place: string|null, scope: 'point'|'municipality'|'county'|'country'}}
+ * @returns {{point: number[], place: string|null, scope: 'point'|'municipality'|'county'|'country'|'unplaced'}}
  */
 export function placeCrisisItem(areas, { places, counties }) {
   const list = Array.isArray(areas) ? areas : [];
@@ -124,10 +130,20 @@ export function placeCrisisItem(areas, { places, counties }) {
     }
   }
   const country = list.find((area) => /country/i.test(area?.type ?? ''));
+  const named = text(country?.description, 80);
+  if (country && (!named || /^(sverige|sweden)$/i.test(named)))
+    return {
+      point: [...SWEDEN_CENTRE],
+      place: named || 'Sverige',
+      scope: 'country',
+    };
+  // Another country, an area the gazetteer does not know, or no area at all:
+  // not "all of Sweden". The card names what the item names, if anything.
+  const other = list.map((area) => text(area?.description, 80)).find(Boolean);
   return {
     point: [...SWEDEN_CENTRE],
-    place: text(country?.description, 80) || 'Sverige',
-    scope: 'country',
+    place: named || other || null,
+    scope: 'unplaced',
   };
 }
 
@@ -135,9 +151,10 @@ export function placeCrisisItem(areas, { places, counties }) {
  * Normalize the two lists into drawable items, VMAs first, newest first.
  * @param {{vmas: object[], news: object[]}} lists
  * @param {{places: Function, counties: Function}} lookups
+ * @param {number} [nowMs] With it, news past CRISIS_NEWS_MAX_AGE_MS drops.
  * @returns {object[]}
  */
-export function normalizeCrisisItems({ vmas = [], news = [] }, lookups) {
+export function normalizeCrisisItems({ vmas = [], news = [] }, lookups, nowMs) {
   const items = [];
   const seen = new Set();
   for (const [kind, list] of [
@@ -152,6 +169,17 @@ export function normalizeCrisisItems({ vmas = [], news = [] }, lookups) {
       seen.add(`${kind}:${id}`);
       const published = Date.parse(String(entry.published ?? ''));
       const updated = Date.parse(String(entry.updated ?? ''));
+      const latest = Math.max(
+        Number.isFinite(published) ? published : -Infinity,
+        Number.isFinite(updated) ? updated : -Infinity,
+      );
+      if (
+        kind === 'news' &&
+        Number.isFinite(nowMs) &&
+        Number.isFinite(latest) &&
+        nowMs - latest > CRISIS_NEWS_MAX_AGE_MS
+      )
+        continue;
       const web = text(entry.web, 400);
       items.push({
         id: `${kind}:${id}`,

@@ -111,7 +111,9 @@ export function buildCrisisCard(row, { linkable = false } = {}) {
       ? t('Applies to all of Sweden')
       : row.scope === 'county'
         ? t('{place} · drawn at the county centre', { place: row.place })
-        : row.place;
+        : row.scope === 'unplaced'
+          ? row.place || t('Krisinformation names no place')
+          : row.place;
   if (where) details.push(where);
   if (row.preamble) details.push(...foldText(row.preamble, 4));
   const stamp = [

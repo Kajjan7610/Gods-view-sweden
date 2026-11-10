@@ -58,6 +58,7 @@ export function createSmhiWarningsLayer({
   pointer = null,
   openExternal = null,
   terrain = null,
+  now = () => Date.now(),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('SMHI warnings require a snapshot source');
@@ -348,6 +349,7 @@ export function createSmhiWarningsLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      _lastError = null;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
       clearSelection();
@@ -366,7 +368,7 @@ export function createSmhiWarningsLayer({
         _lastUpdate =
           _stale && Number.isFinite(snapshot.fetchedAt)
             ? snapshot.fetchedAt
-            : Date.now();
+            : now();
         _lastError = null;
         const signature = JSON.stringify(
           snapshot.areas
@@ -383,7 +385,8 @@ export function createSmhiWarningsLayer({
             ),
         );
         if (signature !== _signature) {
-          _signature = signature;
+          // Not trusted until drawn: a drawing that fails is made again.
+          _signature = null;
           _areas = snapshot.areas;
           _areaById.clear();
           for (const row of _areas) _areaById.set(row.id, row);
@@ -392,7 +395,15 @@ export function createSmhiWarningsLayer({
           for (const row of _crisis) _crisisById.set(row.id, row);
           // Heights first: the ones this browser kept are drawn at once.
           _ground.place(_crisis);
-          render();
+          try {
+            render();
+          } catch (e) {
+            console.warn('[Data:SmhiWarnings] Draw error:', e?.message || e);
+            _lastError = e?.message || msg('SMHI warnings unavailable');
+            _rowListener?.();
+            return true;
+          }
+          _signature = signature;
           console.log(
             `[Data:SmhiWarnings] Updated: ${_areas.length} warning areas, ${_crisis.length} crisis messages`,
           );

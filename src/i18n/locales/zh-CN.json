@@ -3162,6 +3162,7 @@
   "Towards {destination}": "开往 {destination}",
   "Applies to all of Sweden": "适用于瑞典全境",
   "{place} · drawn at the county centre": "{place} · 绘制在省中心",
+  "Krisinformation names no place": "Krisinformation 未注明地点",
   "krisinformation.se ↗ · click card to open": "krisinformation.se ↗ · 点击卡片打开",
   "CRISIS INFORMATION": "危机信息",
   "Open {title} at krisinformation.se": "在 krisinformation.se 打开 {title}",

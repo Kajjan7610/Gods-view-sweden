@@ -3162,6 +3162,7 @@
   "Towards {destination}": "{destination} 方面",
   "Applies to all of Sweden": "スウェーデン全土が対象",
   "{place} · drawn at the county centre": "{place} · 県の中心に表示",
+  "Krisinformation names no place": "Krisinformation は場所を示していません",
   "krisinformation.se ↗ · click card to open": "krisinformation.se ↗ · カードをクリックして開く",
   "CRISIS INFORMATION": "危機情報",
   "Open {title} at krisinformation.se": "krisinformation.se で {title} を開く",
