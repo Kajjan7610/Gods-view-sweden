@@ -72,10 +72,10 @@ export function createCache(name) {
   const fileOf = (key) =>
     path.join(dir, `${createHash('sha256').update(key).digest('hex').slice(0, 16)}.json`);
 
-  async function cached(key) {
+  async function cached(key, read = JSON.parse) {
     try {
       if (Date.now() - (await stat(fileOf(key))).mtimeMs < CACHE_MS)
-        return JSON.parse(await readFile(fileOf(key), 'utf8'));
+        return read(await readFile(fileOf(key), 'utf8'));
     } catch {
       // Not cached yet.
     }
@@ -128,11 +128,12 @@ export function createCache(name) {
   }
 
   /**
-   * A GET answer as JSON, kept in the cache like the Overpass answers.
-   * `accept` throws on an answer not worth keeping, which is asked for again.
+   * A GET answer, kept in the cache like the Overpass answers. `read` turns
+   * the body into the answer and throws on one not worth keeping, which is
+   * asked for again: three attempts in all.
    */
-  async function json(url, accept = () => {}) {
-    const hit = await cached(url);
+  async function get(url, read) {
+    const hit = await cached(url, read);
     if (hit) return hit;
     for (let attempt = 1; ; attempt++) {
       try {
@@ -142,8 +143,7 @@ export function createCache(name) {
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const body = await response.text();
-        const answer = JSON.parse(body);
-        accept(answer);
+        const answer = read(body);
         await keep(url, body);
         return answer;
       } catch (error) {
@@ -152,6 +152,23 @@ export function createCache(name) {
         await new Promise((resolve) => setTimeout(resolve, 15_000));
       }
     }
+  }
+
+  /** A GET answer as JSON; `accept` throws on an answer not worth keeping. */
+  function json(url, accept = () => {}) {
+    return get(url, (body) => {
+      const answer = JSON.parse(body);
+      accept(answer);
+      return answer;
+    });
+  }
+
+  /** A GET answer as text (XML), checked, retried and kept like `json`. */
+  function text(url, accept = () => {}) {
+    return get(url, (body) => {
+      accept(body);
+      return body;
+    });
   }
 
   /**
@@ -179,5 +196,5 @@ export function createCache(name) {
     }
   }
 
-  return { overpass, json, groundHeights };
+  return { overpass, json, text, groundHeights };
 }

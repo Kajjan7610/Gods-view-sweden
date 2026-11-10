@@ -27,7 +27,7 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (rörliga vinklar i flödesriktningen, MW), Sveriges import, export och netto totalt och per grannland, val av import/export/inrikes och en knapp per land som lyfter fram dess förbindelser, en KRAFT-panel i högerkanten med dygnet hittills eller senaste veckan per kvart (produktion per kraftslag, förbrukning och utbyte), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, flöde i m³/s var 15:e minut och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
-| Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp), Lidls, City Gross och Systembolagets butiker samt apoteken hos Apotek Hjärtat (ICA Gruppen), Apoteket, Kronans Apotek, Apoteksgruppen och DOZ Apotek, färgade efter företag och koncept, med en knapp per företag; klick ger adress, om butiken är öppen nu, kartlagd storlek, webbsida, telefon, rullstol och paketombud, hur många som bor inom 2 km, närmaste hållplats, närmaste andra kedjor och företaget (org.nr och huvudkontor); klick på kortet öppnar butikens webbsida. Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0), befolkning från SCB:s 1 km-rutor (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
+| Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp, City Gross), Lidls och Systembolagets butiker samt apoteken hos Apotek Hjärtat (ICA Gruppen), Apoteket, Kronans Apotek (med Apoteksgruppen) och DOZ Apotek, färgade efter företag och koncept, med en knapp per företag; klick ger adress, om butiken är öppen nu, kartlagd storlek, webbsida, telefon, rullstol och paketombud, hur många som bor inom 2 km, närmaste hållplats, närmaste andra kedjor och företaget (org.nr och huvudkontor); klick på kortet öppnar butikens webbsida. Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0), befolkning från SCB:s 1 km-rutor (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
 | Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
 | Polisstationer: Polisens 261 stationer, färgade efter vad receptionen erbjuder (pass och id-kort, andra ärenden, inga angivna); klick ger adress, tjänster och närmaste station som tar emot passansökan, klick på kortet öppnar stationens sida med öppettider | Polismyndighetens öppna data (ingen nyckel; Polisen anges som källa) | Police Stations (Sweden) / Polisstationer, under Infrastructure |
 | Skyddsrum: MCF:s cirka 63 000 skyddsrum med 6,8 miljoner platser, i vyn när man zoomat in (de 1 500 närmaste kartans mitt), storlek efter platser; de fem närmaste listas klickbart i raden; klick ger fastighet, platser och om skyddsrummet har tillfällig begränsning | Myndigheten för civilt försvar (MCF), INSPIRE (ingen nyckel, inga villkor) | Shelters (Sweden) / Skyddsrum, under Infrastructure |
@@ -70,7 +70,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Skyddsrum (Sverige) | Myndigheten för civilt försvar (MCF) | Alla skyddsrum, cirka 63 000 med 6,8 miljoner platser | En gång per dygn | Inga tillämpliga villkor (INSPIRE) |
 | SE | Sjukhus och akuter (Sverige) | Socialstyrelsen · OpenStreetMap | Cirka 120 sjukhus; väntetidsmedianer för de 62 akutmottagningarna i statistiken | Årlig statistik; ögonblicksbild i appen, byggs om för hand | Statistiken fri att använda med källa (Socialstyrelsen) · ODbL (OpenStreetMap) |
 | SE | Kommuner och län (Sverige) | OpenStreetMap · SCB | Alla 290 kommuner och 21 län, med folkmängd per månad | Ögonblicksbild i appen, byggs om för hand | ODbL (OpenStreetMap) · CC0 1.0 (SCB) |
-| SE | Butikskedjor (Sverige) | OpenStreetMap · Wikidata · SCB | Elva kedjors butiker och apotek i hela Sverige; kartlagda av frivilliga | Ögonblicksbild i appen, byggs om för hand | ODbL (OpenStreetMap) · CC0 1.0 (Wikidata, SCB) |
+| SE | Butikskedjor (Sverige) | OpenStreetMap · Wikidata · SCB | Nio kedjors butiker och apotek i hela Sverige; kartlagda av frivilliga | Ögonblicksbild i appen, byggs om för hand | ODbL (OpenStreetMap) · CC0 1.0 (Wikidata, SCB) |
 | SE | Väglag (Sverige) | Trafikverket | Väglag och aktuella händelser i hela Sverige | Var 3:e minut | CC0 1.0 |
 | SE | Vägväder (Sverige) | Trafikverket | Cirka 830 vägväderstationer | Var 5:e minut | CC0 1.0 |
 | SE | Polishändelser (Sverige) | Polismyndigheten | De 500 senaste notiserna, cirka tio dagar, hela Sverige | Var 5:e minut | Öppna data, källan anges |
@@ -126,6 +126,32 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-10 (butikskedjor: rättningar efter kodgranskning)
+- Ett klick på ett kort (lagrets eget eller ett annat lagers) räknas inte
+  som ett klick på marken; butikens kort är alltid träffbart.
+- City Gross ligger under Axfood (helägt av Axfood sedan 1 november 2024)
+  och Apoteksgruppen under Kronans Apotek (sammanslagna hösten 2022): nio
+  kedjor och nio knappar. Gamla rader i ögonblicksbilden förs över när de
+  läses.
+- Samma butik kartlagd två gånger (punkt och byggnadsyta) visas som en:
+  samma kedja inom 20 m, eller inom 45 m när den ena är en yta och
+  konceptet är detsamma.
+- Butikens webblänk visas bara när den går till kedjans egen domän; http
+  blir https.
+- Apotek som enligt namnet tillhör en annan kedja (t.ex. "Apotek Hjärtat …"
+  taggat som Apoteket) hamnar hos rätt kedja; ombud visas inte.
+- "Öppettider kontrollerade" visas bara när butiken har öppettider; avstånd
+  avrundas innan enheten väljs (995 m blir 1,0 km).
+- Öppettider: fler skrivsätt läses ("Mo-Fr 07:00-20:00, Sa-Su 08:00-20:00",
+  "Sa, Su", "07:00 - 23:00").
+- Byggskriptet: statuskontroll och omförsök mot SCB och Wikidata, vägrar
+  skriva över ögonblicksbilden om en kedja tappat över 20 % av butikerna
+  (utom med `--force`), sparar inte längre webbplats och grundår, och
+  huvudkontor bara när det ligger i Sverige. Skriptet har inte körts;
+  rättningarna görs när raderna läses, så Lidls rad (svenskt
+  organisationsnummer, tyskt huvudkontor) rättas först vid nästa handkörda
+  bygge.
 
 ### 2026-11-10 (polisstationer: rättningar efter kodgranskning)
 - Ett klick på ett annat lagers kort räknades som ett klick på marken och

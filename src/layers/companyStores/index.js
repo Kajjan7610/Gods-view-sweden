@@ -1,6 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
-import { COMPANIES, storeColor } from './records.js';
+import { COMPANIES, storeColor, tidyStores } from './records.js';
 import { COMPANY_STORES_OVERLAY_SOURCE_ID, buildStoreCard } from './cards.js';
 export * from './records.js';
 export * from './cards.js';
@@ -72,7 +72,7 @@ export function createCompanyStoresLayer({
       populationYear: _populationYear,
       linkable: Boolean(openExternal),
     });
-    if (card.interactive)
+    if (openExternal && row.website)
       card.activate = () => {
         openExternal(row.website);
         return true;
@@ -102,13 +102,16 @@ export function createCompanyStoresLayer({
       const cardHit = overlayHost.hitTest?.(
         click.position?.x,
         click.position?.y,
-        { sourceId: COMPANY_STORES_OVERLAY_SOURCE_ID },
       );
-      if (cardHit && cardHit.entryId === _selectedCardId) {
+      if (
+        cardHit?.sourceId === COMPANY_STORES_OVERLAY_SOURCE_ID &&
+        cardHit.entryId === _selectedCardId
+      ) {
         const row = _storeById.get(_selectedId);
         if (row?.website && openExternal) openExternal(row.website);
-        return;
       }
+      // A card under the click, this layer's or another's, is not the ground.
+      if (cardHit) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedStore(picked) : null;
       if (hit) {
@@ -214,7 +217,7 @@ export function createCompanyStoresLayer({
         const snapshot = await source.getSnapshot({ signal: request.signal });
         if (request.signal.aborted || _request !== request || !_enabled)
           return false;
-        _stores = snapshot.stores;
+        _stores = tidyStores(snapshot.stores);
         _facts = Object.fromEntries(
           snapshot.companies.map((entry) => [entry.id, entry]),
         );

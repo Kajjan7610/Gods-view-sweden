@@ -109,7 +109,7 @@ export const LAYER_PROVENANCE = Object.freeze({
   'company-stores': own({
     source: 'OpenStreetMap · Wikidata · SCB',
     coverage: msg(
-      'Stores and pharmacies of eleven chains, all of Sweden; mapped by volunteers',
+      'Stores and pharmacies of nine chains, all of Sweden; mapped by volunteers',
     ),
     updates: msg('Snapshot in the app, rebuilt by hand'),
     licence: `ODbL (OpenStreetMap) · ${CC0} (Wikidata, SCB)`,

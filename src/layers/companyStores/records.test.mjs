@@ -3,18 +3,22 @@ import test from 'node:test';
 import {
   COMPANIES,
   canonicalBrand,
+  chainWebsite,
+  companyById,
+  companyByName,
+  distanceMeters,
   normalizeStore,
   normalizeStores,
   storeAddress,
   storeColor,
   storeCounts,
   storeWebsite,
+  tidyStores,
   outlineArea,
 } from './records.js';
 import {
   buildStoreCard,
   companyLine,
-  distanceMeters,
   formatDistance,
   storeNeighbours,
 } from './cards.js';
@@ -99,12 +103,17 @@ test('the collection drops repeats, sorts by company and counts concepts', () =>
       'brand:wikidata': 'Q1663776',
       name: 'ICA Kvantum A',
     }),
-    node(8, {
-      shop: 'supermarket',
-      brand: 'Hemköp',
-      'brand:wikidata': 'Q10521746',
-      name: 'Hemköp A',
-    }),
+    node(
+      8,
+      {
+        shop: 'supermarket',
+        brand: 'Hemköp',
+        'brand:wikidata': 'Q10521746',
+        name: 'Hemköp A',
+      },
+      59.4,
+      18.1,
+    ),
   ]);
   assert.deepEqual(
     rows.map((row) => row.id),
@@ -267,7 +276,8 @@ test('the card adds open now, size, people, stop, nearby chains and a link', () 
   assert.match(text, /Nearest other chains: Willys 1\.1 km · Lidl 9\.7 km/);
   assert.match(text, /2 chain stores within 5 km/);
   assert.equal(card.interactive, true);
-  assert.equal(buildStoreCard(row).interactive, false);
+  // Without a way to open the page the card still takes its own clicks.
+  assert.equal(buildStoreCard(row).interactive, true);
   const { nearest, within } = storeNeighbours(row, stores);
   assert.deepEqual(
     nearest.map((entry) => entry.store.id),
@@ -315,4 +325,396 @@ test('pharmacy chains keep pharmacies, not shops, and name their owner', () => {
     companyLine(company('apoteket'), { legalName: 'Apoteket AB' }),
     'Apoteket AB · state-owned',
   );
+});
+
+test('nine companies remain, with City Gross and Apoteksgruppen folded in', () => {
+  assert.deepEqual(
+    COMPANIES.map((company) => company.id),
+    [
+      'ica',
+      'coop',
+      'axfood',
+      'lidl',
+      'systembolaget',
+      'apotek-hjartat',
+      'apoteket',
+      'kronans-apotek',
+      'doz-apotek',
+    ],
+  );
+  const gross = normalizeStore(
+    node(40, {
+      shop: 'supermarket',
+      brand: 'City Gross',
+      'brand:wikidata': 'Q10453555',
+      name: 'City Gross Norrköping',
+    }),
+  );
+  assert.equal(gross.company, 'axfood');
+  assert.equal(gross.brand, 'City Gross');
+  assert.equal(storeColor(gross), '#8e24aa');
+  assert.equal(
+    normalizeStore(node(41, { shop: 'supermarket', name: 'City Gross Växjö' }))
+      .company,
+    'axfood',
+  );
+  const group = normalizeStore(
+    node(42, {
+      amenity: 'pharmacy',
+      brand: 'Apoteksgruppen',
+      'brand:wikidata': 'Q10416129',
+      name: 'Apoteksgruppen Tierp',
+    }),
+  );
+  assert.equal(group.company, 'kronans-apotek');
+  assert.equal(group.brand, 'Kronans Apotek');
+  for (const company of COMPANIES) {
+    assert.ok(company.domains.length, company.id);
+    assert.ok(Object.isFrozen(company.domains));
+  }
+});
+
+test('a link is kept only when it leads to the company’s own pages', () => {
+  const ica = companyById('ica');
+  assert.equal(
+    chainWebsite(ica, 'https://www.ica.se/butiker/1/'),
+    'https://www.ica.se/butiker/1/',
+  );
+  assert.equal(chainWebsite(ica, 'https://ica.se'), 'https://ica.se');
+  // Read as https, and otherwise as written.
+  assert.equal(
+    chainWebsite(ica, 'http://www.ica.se/Butiker/?a=1#b'),
+    'https://www.ica.se/Butiker/?a=1#b',
+  );
+  assert.equal(chainWebsite(ica, 'HTTP://WWW.ICA.SE/x'), 'https://WWW.ICA.SE/x');
+  assert.equal(
+    chainWebsite(companyById('coop'), 'https://www.coopvarmland.se/'),
+    'https://www.coopvarmland.se/',
+  );
+  for (const url of [
+    'https://www.icabostrom.se/',
+    'https://ica.se.example.com/',
+    'https://notica.se/',
+    'https://www.facebook.com/ica',
+    'https://www.ica.se@example.com/',
+    'https://user:secret@www.ica.se/',
+    'https://www.willys.se/',
+    'javascript:alert(1)',
+    'www.ica.se',
+    'https://www.ica.se/a b',
+    '',
+    null,
+    undefined,
+    42,
+  ])
+    assert.equal(chainWebsite(ica, url), null, String(url));
+  assert.equal(chainWebsite(null, 'https://www.ica.se/'), null);
+  const shop = (website) =>
+    normalizeStore(
+      node(50, { shop: 'supermarket', 'brand:wikidata': 'Q1663776', website }),
+    );
+  assert.equal(shop('http://www.ica.se/x').website, 'https://www.ica.se/x');
+  assert.equal('website' in shop('https://www.maxisolna.se/'), false);
+});
+
+test('a pharmacy named after another chain is that chain’s', () => {
+  const tagged = (name, item = 'Q1785637') =>
+    normalizeStore(
+      node(60, {
+        amenity: 'pharmacy',
+        brand: 'Apoteket',
+        'brand:wikidata': item,
+        name,
+      }),
+    );
+  for (const name of ['Apotek Hjärtat Broby', 'Apoteket Hjärtat ICA']) {
+    assert.equal(tagged(name).company, 'apotek-hjartat', name);
+    assert.equal(tagged(name).brand, 'Apotek Hjärtat', name);
+    assert.equal(tagged(name).name, name);
+  }
+  assert.equal(tagged('Kronans Apotek Torget').company, 'kronans-apotek');
+  // "Apoteket" alone is the pharmacy, any pharmacy: it moves none.
+  assert.equal(tagged('Apoteket Kronan').company, 'apoteket');
+  assert.equal(tagged('Apoteket', 'Q10549422').company, 'kronans-apotek');
+  assert.equal(
+    tagged('Apoteket Storgatan', 'Q10416114').company,
+    'apotek-hjartat',
+  );
+  assert.equal(
+    tagged('Lloyds Apotek Borlänge', 'Q10475311').company,
+    'doz-apotek',
+  );
+  assert.equal(tagged('Apotek Hjärtats vänner').company, 'apoteket');
+  // The longest name a place starts with decides, not the order of the list.
+  assert.equal(
+    companyByName({ name: 'Apoteket Hjärtat Nacka' }).id,
+    'apotek-hjartat',
+  );
+  assert.equal(companyByName({ name: 'Apoteket Nacka' }).id, 'apoteket');
+  assert.equal(companyByName({ name: 'Stora Coop Bromma' }).id, 'coop');
+  assert.equal(
+    companyByName({ name: 'Coop', 'brand:wikidata': 'Q5167705' }),
+    null,
+  );
+  // A shop is not a pharmacy, whatever it is called.
+  assert.equal(
+    normalizeStore(
+      node(61, {
+        shop: 'supermarket',
+        'brand:wikidata': 'Q1663776',
+        name: 'Apotek Hjärtat',
+      }),
+    ).company,
+    'ica',
+  );
+});
+
+test('an agent in someone else’s shop is not a store', () => {
+  const place = (tags) => normalizeStore(node(70, tags));
+  assert.equal(
+    place({
+      shop: 'alcohol',
+      'brand:wikidata': 'Q1476113',
+      name: 'Systembolaget ombud',
+    }),
+    null,
+  );
+  assert.equal(
+    place({
+      amenity: 'pharmacy',
+      'brand:wikidata': 'Q1785637',
+      name: 'Apoteket Ombud Storuman',
+    }),
+    null,
+  );
+  assert.equal(
+    place({
+      shop: 'supermarket',
+      'brand:wikidata': 'Q1663776',
+      name: 'ICA Nära Ombudsgatan',
+    }).name,
+    'ICA Nära Ombudsgatan',
+  );
+});
+
+/** A row as a snapshot holds it, `north` metres north of the first. */
+const store = (id, extra = {}, north = 0) => ({
+  id,
+  company: 'ica',
+  brand: 'ICA Nära',
+  name: 'ICA Nära',
+  point: [18.06, Math.round((59.33 + north * 0.000009) * 1e5) / 1e5],
+  address: null,
+  hours: null,
+  ...extra,
+});
+const ids = (rows) => rows.map((row) => row.id);
+
+test('tidy rows are of today’s companies, with their own links and no agents', () => {
+  const input = [
+    store('n1', {
+      company: 'city-gross',
+      brand: 'City Gross',
+      name: 'City Gross Kalmar',
+      website: 'http://www.citygross.se/butiker/kalmar',
+    }),
+    store(
+      'n2',
+      {
+        company: 'apoteksgruppen',
+        brand: 'Apoteksgruppen',
+        name: 'Apoteksgruppen Tierp',
+        website: 'https://www.apoteksgruppen.se/apotek/tierp/',
+      },
+      1000,
+    ),
+    store(
+      'n3',
+      {
+        company: 'apoteket',
+        brand: 'Apoteket',
+        name: 'Apoteket Hjärtat ICA',
+        website: 'https://www.apoteket.se/',
+      },
+      2000,
+    ),
+    store('n4', { company: 'apoteket', name: 'Apoteket ombud' }, 3000),
+    store('n5', { company: 'netto', name: 'Netto' }, 4000),
+    store('n6', { website: 'https://www.icabostrom.se/' }, 5000),
+    store('n7', { website: 'https://www.ica.se/butiker/7/' }, 6000),
+  ];
+  const before = JSON.stringify(input);
+  const rows = tidyStores(input);
+  assert.equal(JSON.stringify(input), before, 'the rows given are untouched');
+  assert.deepEqual(ids(rows), ['n1', 'n2', 'n3', 'n6', 'n7']);
+  assert.ok(rows.every((row) => !input.includes(row)));
+  const [gross, group, hjartat, off, own] = rows;
+  assert.equal(gross.company, 'axfood');
+  assert.equal(gross.brand, 'City Gross');
+  assert.equal(gross.website, 'https://www.citygross.se/butiker/kalmar');
+  assert.equal(group.company, 'kronans-apotek');
+  assert.equal(group.brand, 'Kronans Apotek');
+  assert.equal(group.website, 'https://www.apoteksgruppen.se/apotek/tierp/');
+  assert.equal(hjartat.company, 'apotek-hjartat');
+  assert.equal(hjartat.brand, 'Apotek Hjärtat');
+  // The link was Apoteket's, not the chain's the pharmacy turned out to be.
+  assert.equal('website' in hjartat, false);
+  assert.equal('website' in off, false);
+  assert.equal(own.website, 'https://www.ica.se/butiker/7/');
+  assert.deepEqual(tidyStores(rows), rows, 'tidy rows stay as they are');
+  assert.deepEqual(tidyStores([]), []);
+  assert.throws(() => tidyStores(null));
+  assert.throws(() => tidyStores({ stores: [] }));
+});
+
+test('a store mapped twice is one store, and two stores stay two', () => {
+  const pair = (a, b) => ids(tidyStores([a, b]));
+  // Within 20 m: one store, whatever the two are.
+  assert.deepEqual(pair(store('n1'), store('n2', {}, 17)), ['n1']);
+  assert.deepEqual(
+    pair(store('n1'), store('n2', { brand: 'ICA Kvantum' }, 17)),
+    ['n1'],
+  );
+  assert.deepEqual(pair(store('n1'), store('n2', {}, 23)), ['n1', 'n2']);
+  // Further apart, up to 45 m: only an outline and a point of one concept.
+  assert.deepEqual(pair(store('n1'), store('n2', {}, 30)), ['n1', 'n2']);
+  assert.deepEqual(pair(store('w1'), store('w2', {}, 30)), ['w1', 'w2']);
+  assert.deepEqual(pair(store('w1'), store('n2', {}, 30)), ['w1']);
+  assert.deepEqual(pair(store('n1'), store('r2', {}, 44)), ['n1']);
+  assert.deepEqual(
+    pair(store('w1'), store('n2', { brand: 'ICA Kvantum' }, 30)),
+    ['w1', 'n2'],
+  );
+  assert.deepEqual(pair(store('w1'), store('n2', {}, 47)), ['w1', 'n2']);
+  // Another company's store is never the same store.
+  assert.deepEqual(
+    pair(store('n1'), store('n2', { company: 'coop', brand: 'Coop' })),
+    ['n1', 'n2'],
+  );
+  // Three in a row, each within reach of the next, are one.
+  assert.deepEqual(
+    ids(tidyStores([store('n1'), store('n2', {}, 17), store('n3', {}, 34)])),
+    ['n1'],
+  );
+  // The merged store stands where its fullest row stood; the rest keep their order.
+  assert.deepEqual(
+    ids(
+      tidyStores([
+        store('n9', {}, 900),
+        store('n1'),
+        store('n5', {}, 500),
+        store('w2', { area: 500 }, 30),
+        store('n3', {}, 300),
+      ]),
+    ),
+    ['n9', 'n5', 'w2', 'n3'],
+  );
+});
+
+test('the merged store keeps the fullest row and takes what it lacks', () => {
+  const merged = (...rows) => {
+    const tidy = tidyStores(rows);
+    assert.equal(tidy.length, 1);
+    return tidy[0];
+  };
+  // The outline with an area first, though the point says more.
+  const outline = store('w1', { area: 900 });
+  const point = store(
+    'n2',
+    {
+      name: 'ICA Nära Lundmans',
+      address: 'Storgatan 1',
+      hours: 'Mo-Su 08:00-21:00',
+      checked: '2026-05-01',
+      phone: '+46 8 123',
+      website: 'https://www.ica.se/butiker/2/',
+    },
+    10,
+  );
+  assert.deepEqual(merged(point, outline), {
+    ...outline,
+    name: 'ICA Nära Lundmans',
+    address: 'Storgatan 1',
+    hours: 'Mo-Su 08:00-21:00',
+    checked: '2026-05-01',
+    phone: '+46 8 123',
+    website: 'https://www.ica.se/butiker/2/',
+  });
+  // Else the row with most known fields, and of equals the first.
+  assert.equal(merged(store('n1'), store('n2', { phone: '1' }, 5)).id, 'n2');
+  assert.equal(merged(store('n1'), store('n2', {}, 5)).id, 'n1');
+  assert.equal(
+    merged(store('n1', { phone: '1' }), store('n2', { phone: '2' }, 5)).phone,
+    '1',
+  );
+  // The date belongs to the hours it was checked with.
+  const dated = merged(
+    store('n1', { hours: 'Mo-Su 08:00-21:00', phone: '1' }),
+    store('n2', { hours: 'Mo-Su 07:00-22:00', checked: '2026-05-01' }, 5),
+  );
+  assert.equal(dated.hours, 'Mo-Su 08:00-21:00');
+  assert.equal('checked' in dated, false);
+  const undated = merged(
+    store('w1', { area: 900, checked: '2026-05-01' }),
+    store('n2', { hours: 'Mo-Su 07:00-22:00' }, 5),
+  );
+  assert.equal(undated.hours, 'Mo-Su 07:00-22:00');
+  assert.equal('checked' in undated, false);
+  // A name that says more than the chain or the concept, then the longest.
+  assert.equal(
+    merged(
+      store('n1', { name: 'ICA Supermarket', phone: '1' }),
+      store('n2', { name: 'Husby' }, 5),
+    ).name,
+    'Husby',
+  );
+  assert.equal(
+    merged(
+      store('n1', { name: 'ICA Nära Lund', phone: '1' }),
+      store('n2', { name: 'ICA Nära Lundmans' }, 5),
+    ).name,
+    'ICA Nära Lundmans',
+  );
+  assert.equal(
+    merged(store('n1', { name: 'Abc' }), store('n2', { name: 'Xyz' }, 5)).name,
+    'Abc',
+  );
+  // A concept from the other row, when the keeper has none.
+  assert.equal(
+    merged(store('w1', { area: 900, brand: 'ICA' }), store('n2', {}, 5)).brand,
+    'ICA Nära',
+  );
+  assert.equal(
+    merged(store('w1', { area: 900, brand: 'ICA Kvantum' }), store('n2', {}, 5))
+      .brand,
+    'ICA Kvantum',
+  );
+});
+
+test('tidying tidy stores changes nothing, also after a merge names a concept', () => {
+  // The outline is the first point's twin, and with its concept the second's.
+  const rows = tidyStores([
+    store('w1', { area: 900, brand: 'ICA' }),
+    store('n2', {}, 15),
+    store('n3', {}, -30),
+    store('n4', { company: 'coop', brand: 'Coop', name: 'Coop' }, -30),
+  ]);
+  assert.deepEqual(ids(rows), ['w1', 'n4']);
+  assert.equal(rows[0].brand, 'ICA Nära');
+  assert.deepEqual(tidyStores(rows), rows);
+});
+
+test('the collection merges a store mapped as an outline and as a point', () => {
+  const tags = {
+    shop: 'supermarket',
+    brand: 'Lidl',
+    'brand:wikidata': 'Q151954',
+  };
+  const rows = normalizeStores([
+    node(80, { ...tags, opening_hours: 'Mo-Su 08:00-21:00' }, 59.3303, 18.06),
+    { type: 'way', id: 81, center: { lat: 59.33, lon: 18.06 }, tags },
+    node(82, tags, 59.4, 18.06),
+  ]);
+  assert.deepEqual(ids(rows), ['n80', 'n82']);
+  assert.equal(rows[0].hours, 'Mo-Su 08:00-21:00');
 });

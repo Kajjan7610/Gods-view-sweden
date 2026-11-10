@@ -1,7 +1,7 @@
 /** Card model for a selected store. Pure — no Cesium types. */
 import { formatNumber, t, tn } from '../../i18n/index.js';
 import { openingState } from './openingHours.js';
-import { companyById, storeColor } from './records.js';
+import { companyById, distanceMeters, storeColor } from './records.js';
 
 export const COMPANY_STORES_OVERLAY_SOURCE_ID = 'company-stores';
 
@@ -32,17 +32,6 @@ export function companyLine(company, facts) {
   return parts.join(' · ');
 }
 
-/** Great-circle metres between two `[lon, lat]` points. */
-export function distanceMeters([lon1, lat1], [lon2, lat2]) {
-  const rad = Math.PI / 180;
-  const a =
-    Math.sin(((lat2 - lat1) * rad) / 2) ** 2 +
-    Math.cos(lat1 * rad) *
-      Math.cos(lat2 * rad) *
-      Math.sin(((lon2 - lon1) * rad) / 2) ** 2;
-  return 2 * 6371008.8 * Math.asin(Math.min(1, Math.sqrt(a)));
-}
-
 /**
  * The nearest store of each other company, nearest first, and how many other
  * stores of any listed chain lie within `NEIGHBOUR_RADIUS_M`.
@@ -67,12 +56,14 @@ export function storeNeighbours(row, stores, limit = 3) {
   };
 }
 
-/** A distance as "350 m" or "1.2 km" in the reader's number format. */
+/**
+ * A distance as "350 m" or "1.2 km" in the reader's number format: tens of
+ * metres up to "990 m", then kilometres, so 996 m reads "1.0 km".
+ */
 export function formatDistance(meters) {
-  return meters < 1000
-    ? t('{distance} m', {
-        distance: formatNumber(Math.max(10, Math.round(meters / 10) * 10)),
-      })
+  const tens = Math.max(10, Math.round(meters / 10) * 10);
+  return tens < 1000
+    ? t('{distance} m', { distance: formatNumber(tens) })
     : t('{distance} km', {
         distance: formatNumber(meters / 1000, {
           minimumFractionDigits: 1,
@@ -146,7 +137,7 @@ export function buildStoreCard(
     ...(row.address ? [row.address] : []),
     ...(opening ? [opening] : []),
     ...(row.hours ? [t('Hours: {hours}', { hours: row.hours })] : []),
-    ...(row.checked
+    ...(row.hours && row.checked
       ? [t('Hours checked on site {date}', { date: row.checked })]
       : []),
     ...(factsLine(row) ? [factsLine(row)] : []),
@@ -196,7 +187,8 @@ export function buildStoreCard(
   return {
     ...CARD_BASE,
     id: `company-stores-card:${row.id}`,
-    interactive: Boolean(link),
+    // Always, so a click on the card is the card's and not the map's.
+    interactive: true,
     ...(link
       ? { accessibilityLabel: t('Open the web page of {title}', { title }) }
       : undefined),

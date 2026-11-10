@@ -23,11 +23,63 @@ test('common opening hours read into a week of intervals', () => {
   assert.deepEqual(parseOpeningHours('Fr 18:00-02:00')[5], [[0, 120]]);
 });
 
+test('hours read as mappers often write them', () => {
+  // A comma where a semicolon belongs, between two rules.
+  const comma = parseOpeningHours('Mo-Fr 07:00-20:00, Sa-Su 08:00-20:00');
+  assert.deepEqual(comma[0], [[420, 1200]]);
+  assert.deepEqual(comma[4], [[420, 1200]]);
+  assert.deepEqual(comma[5], [[480, 1200]]);
+  assert.deepEqual(comma[6], [[480, 1200]]);
+  // A space in a day list.
+  const spaced = parseOpeningHours('Mo-Fr 08:00-20:00; Sa, Su 09:00-19:00');
+  assert.deepEqual(spaced[0], [[480, 1200]]);
+  assert.deepEqual(spaced[5], [[540, 1140]]);
+  assert.deepEqual(spaced[6], [[540, 1140]]);
+  // Spaces around the dash of a span.
+  assert.deepEqual(
+    parseOpeningHours('07:00 - 23:00'),
+    Array.from({ length: 7 }, () => [[420, 1380]]),
+  );
+  assert.deepEqual(parseOpeningHours('Mo-Fr 08:00 - 17:00')[4], [[480, 1020]]);
+  // All three at once, and a rule that closes a day.
+  const mixed = parseOpeningHours('Mo-Fr 07:00 - 20:00, Sa, Su 08:00-20:00');
+  assert.deepEqual(mixed[0], [[420, 1200]]);
+  assert.deepEqual(mixed[5], [[480, 1200]]);
+  assert.deepEqual(mixed[6], [[480, 1200]]);
+  const closed = parseOpeningHours('Mo-Sa 08:00-20:00, Su off');
+  assert.deepEqual(closed[5], [[480, 1200]]);
+  assert.deepEqual(closed[6], []);
+  assert.deepEqual(parseOpeningHours('Sa off, Su 10:00-16:00')[6], [
+    [600, 960],
+  ]);
+  // A comma between two spans of one rule is still that.
+  const lunch = parseOpeningHours('Mo-Fr 08:00-12:00,13:00-17:00; Sa off');
+  assert.deepEqual(lunch[0], [
+    [480, 720],
+    [780, 1020],
+  ]);
+  assert.deepEqual(lunch[5], []);
+  assert.deepEqual(
+    openingState(
+      'Mo-Fr 07:00-20:00, Sa-Su 08:00-20:00',
+      at('2026-11-14T06:30:00Z'),
+    ),
+    { open: false, opens: '08:00', inDays: 0 },
+  );
+});
+
 test('forms it does not read are unknown, not guessed', () => {
   assert.equal(parseOpeningHours(''), null);
   assert.equal(parseOpeningHours(null), null);
   assert.equal(parseOpeningHours('Jan-Mar Mo-Fr 08:00-17:00'), null);
+  assert.equal(parseOpeningHours('May 13-Sep 06 Mo-Su 10:00-18:00'), null);
   assert.equal(parseOpeningHours('Mo-Fr sunrise-sunset'), null);
+  assert.equal(parseOpeningHours('sunrise-sunset'), null);
+  assert.equal(parseOpeningHours('by appointment'), null);
+  assert.equal(
+    parseOpeningHours('Mo-Fr 08:00-17:00, Jan-Mar Sa 10:00-14:00'),
+    null,
+  );
   assert.equal(openingState('by appointment'), null);
 });
 

@@ -1,23 +1,31 @@
 /**
  * The common forms of OpenStreetMap `opening_hours` ("Mo-Fr 08:00-21:00;
  * Sa,Su 09:00-20:00", "24/7", "Mo-Su 07:00-22:00; PH off"), read into a
- * week of open intervals, and whether a store is open at a moment. Anything
- * richer (months, week numbers, "sunrise", fallbacks) reads as unknown, so the
- * card says nothing rather than guessing. Pure — no Cesium, no Node built-ins.
+ * week of open intervals, and whether a store is open at a moment. Also as
+ * mappers often write them: a comma between rules ("Mo-Fr 07:00-20:00, Sa-Su
+ * 08:00-20:00"), a space in a day list ("Sa, Su 09:00-19:00") and spaces
+ * around the dash of a time span ("07:00 - 23:00"). Anything richer (months,
+ * week numbers, "sunrise", fallbacks) reads as unknown, so the card says
+ * nothing rather than guessing. Pure — no Cesium, no Node built-ins.
  */
 
 const DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 const DAY = '(?:Mo|Tu|We|Th|Fr|Sa|Su|PH|SH)';
 const DAY_LIST = new RegExp(
-  `^(${DAY}(?:-${DAY})?(?:,${DAY}(?:-${DAY})?)*)\\s+(.+)$`,
+  `^(${DAY}(?:-${DAY})?(?:,\\s*${DAY}(?:-${DAY})?)*)\\s+(.+)$`,
 );
-const SPAN = /^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/;
+const SPAN = /^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/;
+/** A comma after a time, before a day: the next rule begins there. */
+const RULE_COMMA = new RegExp(
+  `(\\d|off|closed)\\s*,\\s*(?=${DAY}(?![A-Za-z]))`,
+  'gi',
+);
 
 /** The weekday indexes (Monday 0) a day list like "Mo-Fr,Su" names. */
 function dayIndexes(list) {
   const days = [];
   for (const part of list.split(',')) {
-    const [from, to = from] = part.split('-');
+    const [from, to = from] = part.trim().split('-');
     // Public and school holidays are not on the calendar this reads.
     if (!DAYS.includes(from) || !DAYS.includes(to)) continue;
     for (let i = DAYS.indexOf(from); ; i = (i + 1) % 7) {
@@ -40,7 +48,7 @@ export function parseOpeningHours(value) {
     return Array.from({ length: 7 }, () => [[0, 1440]]);
   const week = Array.from({ length: 7 }, () => []);
   const spill = Array.from({ length: 7 }, () => []);
-  for (const raw of value.split(';')) {
+  for (const raw of value.replace(RULE_COMMA, '$1;').split(';')) {
     const rule = raw.trim();
     if (!rule) continue;
     const match = rule.match(DAY_LIST);
