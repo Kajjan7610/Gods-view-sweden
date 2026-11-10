@@ -142,3 +142,113 @@ test('a refused key reports keyRefused without leaking the key', async (t) => {
     false,
   );
 });
+
+test('after a failed refresh Trafikverket is left alone for a minute', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  t.mock.method(console, 'log', () => {});
+  let clock = Date.parse('2026-11-04T17:00:00+01:00');
+  let fail = false;
+  let calls = 0;
+  const request = harness({
+    env: { TRAFIKVERKET_API_KEY: 'secret-key' },
+    now: () => clock,
+    fetchImpl: async () => {
+      calls += 1;
+      return fail
+        ? new Response('down', { status: 503 })
+        : Response.json(PAYLOAD);
+    },
+  });
+  await request();
+  fail = true;
+  clock += 6 * 60_000;
+  const first = await request();
+  assert.equal(first.json().stale, true);
+  assert.equal(first.headers['X-Data-Stale'], 'true');
+  assert.equal(calls, 2);
+  // Within the minute: the last snapshot again, Trafikverket not asked.
+  clock += 30_000;
+  for (let i = 0; i < 3; i += 1)
+    assert.equal((await request()).json().stale, true);
+  assert.equal(calls, 2);
+  // After it, asked once more; and once it answers, fresh again.
+  clock += 31_000;
+  fail = false;
+  const back = await request();
+  assert.equal(calls, 3);
+  assert.equal(back.json().stale, undefined);
+  assert.equal(back.headers['X-Data-Stale'], undefined);
+});
+
+test('a refused key is not sent again within the minute, and the answer still says so', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  t.mock.method(console, 'log', () => {});
+  let clock = Date.parse('2026-11-04T17:00:00+01:00');
+  let refused = true;
+  let calls = 0;
+  const request = harness({
+    env: { TRAFIKVERKET_API_KEY: 'secret-key' },
+    now: () => clock,
+    fetchImpl: async () => {
+      calls += 1;
+      return Response.json(
+        refused
+          ? {
+              RESPONSE: {
+                RESULT: [
+                  {
+                    ERROR: {
+                      SOURCE: 'Security',
+                      MESSAGE: 'Invalid authentication',
+                    },
+                  },
+                ],
+              },
+            }
+          : PAYLOAD,
+      );
+    },
+  });
+  assert.equal((await request()).json().keyRefused, true);
+  for (let i = 0; i < 3; i += 1) {
+    const paused = await request();
+    assert.equal(paused.status, 502);
+    assert.deepEqual(paused.json(), {
+      error: 'trafikverket_weather_unavailable',
+      keyRefused: true,
+    });
+  }
+  assert.equal(calls, 1);
+  // After the minute the key is tried again; accepted, it serves.
+  clock += 61_000;
+  refused = false;
+  const served = await request();
+  assert.equal(calls, 2);
+  assert.equal(served.status, 200);
+  assert.equal(served.json().stations.length, 1);
+});
+
+test('requests waiting on one refresh share it, logged and saved once', async (t) => {
+  const log = t.mock.method(console, 'log', () => {});
+  let release;
+  const gate = new Promise((resolve) => (release = resolve));
+  let calls = 0;
+  const request = harness({
+    env: { TRAFIKVERKET_API_KEY: 'secret-key' },
+    fetchImpl: async () => {
+      calls += 1;
+      await gate;
+      return Response.json(PAYLOAD);
+    },
+  });
+  const waiting = [request(), request(), request()];
+  await new Promise((resolve) => setImmediate(resolve));
+  release();
+  const answers = await Promise.all(waiting);
+  assert.deepEqual(
+    answers.map((answer) => answer.status),
+    [200, 200, 200],
+  );
+  assert.equal(calls, 1);
+  assert.equal(log.mock.callCount(), 1);
+});

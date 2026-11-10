@@ -8,6 +8,11 @@ export const TRAFIKVERKET_API_URL =
   'https://api.trafikinfo.trafikverket.se/v2/data.json';
 /** Longest a failed refresh keeps serving the last snapshot, marked stale. */
 const STALE_MAX_MS = 60 * 60_000;
+/**
+ * How long Trafikverket is left alone after a failed refresh; a refused key
+ * is not sent again on every request.
+ */
+export const TRAFIKVERKET_RETRY_AFTER_FAILURE_MS = 60_000;
 const MAX_BODY_BYTES = 64 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 30_000;
 
@@ -26,7 +31,8 @@ export const trafikverketIncludes = (fields, prefix = '') =>
 /**
  * One bounded, cached GET route over a Trafikverket query, for dev and
  * preview. A failed refresh serves the last snapshot marked stale for up to
- * an hour; without a key the route answers not_configured and never fetches.
+ * an hour and leaves Trafikverket alone for a minute; without a key the route
+ * answers not_configured and never fetches.
  * @param {object} options
  * @param {string} options.name Plugin and log name, e.g. "trafikverket-roads".
  * @param {(key: string) => string} options.query The XML request body.
@@ -48,6 +54,9 @@ export function trafikverketProxy({
 }) {
   const route = `/api/${name}`;
   let cached = null;
+  let retryAfter = 0;
+  /** Whether the last failed refresh was Trafikverket refusing the key. */
+  let keyRefused = false;
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 600 });
   let keylessLogged = false;
@@ -84,6 +93,34 @@ export function trafikverketProxy({
     }
   }
 
+  /** The last snapshot marked stale, or null once it is too old to show. */
+  const lastKnown = () =>
+    cached && now() - cached.savedAt <= STALE_MAX_MS
+      ? { ...cached.value, stale: true }
+      : null;
+
+  /**
+   * One read of Trafikverket, shared by everyone waiting on it: the new
+   * snapshot, or after a failure the last one (null without one).
+   */
+  async function refresh(key) {
+    try {
+      const value = await load(key);
+      cached = { value, savedAt: now() };
+      retryAfter = 0;
+      keyRefused = false;
+      console.log(`[${name}] ${describe(value)}`);
+      return value;
+    } catch (error) {
+      // The message names an HTTP status or Trafikverket's own refusal text,
+      // never the request body, so the key stays private.
+      console.warn(`[${name}] refresh failed: ${error?.message || error}`);
+      retryAfter = now() + TRAFIKVERKET_RETRY_AFTER_FAILURE_MS;
+      keyRefused = error?.status === 401 || error?.status === 403;
+      return lastKnown();
+    }
+  }
+
   async function handler(req, res) {
     const json = (status, value, headers = {}) => {
       if (res.destroyed) return;
@@ -117,29 +154,17 @@ export function trafikverketProxy({
       return json(200, cached.value);
     if (!allow(clientKey(req)))
       return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
-    try {
-      const { promise } = coalesceProxyRequest(inFlight, name, () => load(key));
-      const value = await promise;
-      cached = { value, savedAt: now() };
-      console.log(`[${name}] ${describe(value)}`);
-      return json(200, value);
-    } catch (error) {
-      // The message names an HTTP status or Trafikverket's own refusal text,
-      // never the request body, so the key stays private.
-      console.warn(`[${name}] refresh failed: ${error?.message || error}`);
-      if (cached && now() - cached.savedAt <= STALE_MAX_MS)
-        return json(
-          200,
-          { ...cached.value, stale: true },
-          {
-            'X-Data-Stale': 'true',
-          },
-        );
+    const value =
+      now() < retryAfter
+        ? lastKnown()
+        : await coalesceProxyRequest(inFlight, name, () => refresh(key))
+            .promise;
+    if (!value)
       return json(502, {
         error: `${name.replace(/-/g, '_')}_unavailable`,
-        keyRefused: error?.status === 401 || error?.status === 403,
+        keyRefused,
       });
-    }
+    return json(200, value, value.stale ? { 'X-Data-Stale': 'true' } : {});
   }
 
   return {

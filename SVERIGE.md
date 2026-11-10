@@ -127,6 +127,21 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (vägväder och Trafikverkets proxy: rättningar efter kodgranskning)
+- Den gemensamma proxyn för Trafikverket (vägväder och väglag) lämnar
+  Trafikverket i fred i 1 minut efter en misslyckad hämtning och svarar
+  under tiden med den senaste ögonblicksbilden, märkt `X-Data-Stale`
+  (eller 502 om ingen finns). En avvisad nyckel skickas inte om vid
+  varje fråga; svaret under pausen säger fortfarande att nyckeln
+  avvisades. Loggraden och cachen skrivs en gång per hämtning.
+- En vägväderstation vars mätning passerar en timme ritas blekt även när
+  datan står still, som under ett avbrott hos Trafikverket. Förut
+  räknades blekningen bara om när mätvärdena ändrades.
+- En ritning som misslyckades loggas som ritfel, inte hämtfel, och görs
+  om vid nästa uppdatering. Ett avstängt lager bär inte kvar sitt senaste
+  fel. Blekningen och tiden för senaste uppdatering följer lagrets egen
+  klocka.
+
 ### 2026-11-10 (SMHI-varningar och krisinformation: rättningar efter kodgranskning)
 - Bara en nyhet som Krisinformation märkt med Sverige ritas som "Gäller
   hela Sverige". En nyhet om utlandet, om ett område som ortsregistret

@@ -55,9 +55,11 @@ export function createTrafikverketWeatherLayer({
   picking = null,
   pointer = null,
   terrain = null,
+  now = () => Date.now(),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Trafikverket road weather requires a snapshot source');
+  const faded = (row, at) => at - row.sampled > FADE_AFTER_MS;
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
   const position = (row) =>
@@ -207,13 +209,12 @@ export function createTrafikverketWeatherLayer({
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    const now = Date.now();
+    const at = now();
     redrawEntities(entities, () => {
       for (const row of visibleStations()) {
-        const faded = now - row.sampled > FADE_AFTER_MS;
         const color = Cesium.Color.fromCssColorString(
           temperatureColor(shownValue(row)),
-        ).withAlpha(faded ? 0.45 : 1);
+        ).withAlpha(faded(row, at) ? 0.45 : 1);
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
           position: position(row),
@@ -283,6 +284,7 @@ export function createTrafikverketWeatherLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      _lastError = null;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
       clearSelection();
@@ -302,11 +304,14 @@ export function createTrafikverketWeatherLayer({
         if (request.signal.aborted || _request !== request || !_enabled)
           return false;
         _stale = snapshot.stale;
+        const at = now();
         _lastUpdate =
           _stale && Number.isFinite(snapshot.fetchedAt)
             ? snapshot.fetchedAt
-            : Date.now();
+            : at;
         _lastError = null;
+        // Fading is part of what is drawn: a station passes the hour while
+        // the data stands still, as it does through an outage.
         const signature = JSON.stringify(
           snapshot.stations.map((row) => [
             row.id,
@@ -314,16 +319,29 @@ export function createTrafikverketWeatherLayer({
             row.surfaceTemp,
             row.airTemp,
             row.risk,
+            faded(row, at),
           ]),
         );
         if (signature !== _signature) {
-          _signature = signature;
+          // Not trusted until drawn: a drawing that fails is made again.
+          _signature = null;
           _stations = snapshot.stations;
           _stationById.clear();
           for (const row of _stations) _stationById.set(row.id, row);
           // Heights first: the ones this browser kept are drawn at once.
           _ground.place(_stations);
-          render();
+          try {
+            render();
+          } catch (e) {
+            console.warn(
+              '[Data:TrafikverketWeather] Draw error:',
+              e?.message || e,
+            );
+            _lastError = e?.message || msg('Trafikverket feed unavailable');
+            _rowListener?.();
+            return true;
+          }
+          _signature = signature;
           console.log(
             `[Data:TrafikverketWeather] Updated: ${_stations.length} stations, ${
               _stations.filter((row) => row.risk).length
