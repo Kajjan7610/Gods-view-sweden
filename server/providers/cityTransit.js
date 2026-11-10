@@ -1,3 +1,4 @@
+import { sameSiteGated } from './common/same-site.js';
 import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 import { TRAFIKVERKET_API_URL, xmlAttr } from './trafikverketProxy.js';
@@ -105,8 +106,14 @@ export function departuresQuery(key, signature, nowMs) {
     `<EQ name="LocationSignature" value="${xmlAttr(signature)}" />` +
     '<EQ name="ActivityType" value="Avgang" />' +
     '<EQ name="Advertised" value="true" />' +
+    // A late train stays for as long as it is still expected, however long
+    // ago it was due; one that has left is not asked for at all.
+    '<OR>' +
     `<GT name="AdvertisedTimeAtLocation" value="${from}" />` +
+    `<GT name="EstimatedTimeAtLocation" value="${from}" />` +
+    '</OR>' +
     `<LT name="AdvertisedTimeAtLocation" value="${to}" />` +
+    '<EXISTS name="TimeAtLocation" value="false" />' +
     '</AND></FILTER>' +
     include +
     '</QUERY></REQUEST>'
@@ -266,23 +273,31 @@ export function cityTransitProxy({
     }).promise;
   }
 
-  async function loadStations(key) {
+  /**
+   * Every advertised station, read once a day by whoever asks first. An
+   * answer without a single station is an answer gone wrong: it is not kept,
+   * or every town would lack its station for a day.
+   */
+  function loadStations(key) {
     if (stations && now() - stations.at < STATIONS_TTL_MS)
-      return stations.value;
-    const value = normalizeStations(
-      await postTrafikverket(
-        '<REQUEST>' +
-          `<LOGIN authenticationkey="${xmlAttr(key)}" />` +
-          '<QUERY objecttype="TrainStation" schemaversion="1.4">' +
-          '<FILTER><EQ name="Advertised" value="true" /></FILTER>' +
-          '<INCLUDE>LocationSignature</INCLUDE>' +
-          '<INCLUDE>AdvertisedLocationName</INCLUDE>' +
-          '<INCLUDE>Geometry.WGS84</INCLUDE>' +
-          '</QUERY></REQUEST>',
-      ),
-    );
-    stations = { value, at: now() };
-    return value;
+      return Promise.resolve(stations.value);
+    return coalesceProxyRequest(inFlight, 'stations', async () => {
+      const value = normalizeStations(
+        await postTrafikverket(
+          '<REQUEST>' +
+            `<LOGIN authenticationkey="${xmlAttr(key)}" />` +
+            '<QUERY objecttype="TrainStation" schemaversion="1.4">' +
+            '<FILTER><EQ name="Advertised" value="true" /></FILTER>' +
+            '<INCLUDE>LocationSignature</INCLUDE>' +
+            '<INCLUDE>AdvertisedLocationName</INCLUDE>' +
+            '<INCLUDE>Geometry.WGS84</INCLUDE>' +
+            '</QUERY></REQUEST>',
+        ),
+      );
+      if (!value.length) throw new Error('no stations in the answer');
+      stations = { value, at: now() };
+      return value;
+    }).promise;
   }
 
   async function trains(point, townName) {
@@ -339,11 +354,15 @@ export function cityTransitProxy({
     const latitude = Number(url.searchParams.get('lat'));
     const longitude = Number(url.searchParams.get('lon'));
     const town = text(url.searchParams.get('town'), 60) || '';
+    // Sweden and its nearest surroundings only: the keys are not spent on
+    // anywhere else, and a missing value (read as 0) lies outside too.
     if (
       !Number.isFinite(latitude) ||
       !Number.isFinite(longitude) ||
-      Math.abs(latitude) > 90 ||
-      Math.abs(longitude) > 180
+      latitude < 54 ||
+      latitude > 70 ||
+      longitude < 9 ||
+      longitude > 25
     )
       return json(400, { error: 'lat_lon_required' });
     if (!allow(clientKey(req))) return json(429, { error: 'rate_limited' });
@@ -476,16 +495,16 @@ export function cityTransitProxy({
   return {
     name: 'city-transit',
     configureServer({ middlewares }) {
-      middlewares.use('/api/city-transit', handler);
-      middlewares.use('/api/airport-board', boardHandler);
-      middlewares.use('/api/airport-flight', flightHandler);
-      middlewares.use('/api/airport-routes', routesHandler);
+      middlewares.use('/api/city-transit', sameSiteGated(handler));
+      middlewares.use('/api/airport-board', sameSiteGated(boardHandler));
+      middlewares.use('/api/airport-flight', sameSiteGated(flightHandler));
+      middlewares.use('/api/airport-routes', sameSiteGated(routesHandler));
     },
     configurePreviewServer({ middlewares }) {
-      middlewares.use('/api/city-transit', handler);
-      middlewares.use('/api/airport-board', boardHandler);
-      middlewares.use('/api/airport-flight', flightHandler);
-      middlewares.use('/api/airport-routes', routesHandler);
+      middlewares.use('/api/city-transit', sameSiteGated(handler));
+      middlewares.use('/api/airport-board', sameSiteGated(boardHandler));
+      middlewares.use('/api/airport-flight', sameSiteGated(flightHandler));
+      middlewares.use('/api/airport-routes', sameSiteGated(routesHandler));
     },
   };
 }

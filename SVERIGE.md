@@ -214,6 +214,26 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (stadsdossierns serverdelar: rättningar efter kodgranskning)
+- Försenade tåg försvinner inte längre tio minuter efter sin annonserade
+  tid: frågan till Trafikverket tar med tåg som fortfarande väntas, och
+  hoppar över dem som redan har gått.
+- De svenska delar som använder en nyckel (transport och flyg, Trafikverket,
+  fartkameror, kollektivtrafikstörningar, ENTSO-E) svarar bara appens egen
+  sida. En annan webbsida i samma webbläsare kan inte längre förbruka
+  nycklarna. Transportdelen svarar dessutom bara för platser i Sverige.
+- Flyg och kötider som är äldre än en kvart visas inte som aktuella när
+  Swedavia inte svarar eller dagskvoten är slut.
+- Valresultatet från val.se hämtas med tidsgräns (60 s) och storleksgräns,
+  så en långsam val.se inte hänger varje ort. En sparad tabell som inte
+  täcker hela landet litas inte på och sparas inte.
+- En misslyckad hämtning från Wikipedia försöks igen efter tio minuter i
+  stället för ett dygn.
+- Saknade värden läses inte som 0: valdeltagande, tätortens folkmängd, Kp i
+  norrskensutsikten och molnighet (förut "klar himmel").
+- En tom stationslista från Trafikverket sparas inte i ett dygn.
+- Norrskensutsikten visar nattens starkaste stormnivå, inte den första.
+
 ### 2026-11-10 (stadsdossiern: ortskort vid sidan i stället för skylt mitt i bilden)
 - Första besöket i en ort visar ett kort till vänster om kartan i stället
   för skylten mitt i bilden: ortens foto och vapen, "Ny stämpel i passet",

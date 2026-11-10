@@ -130,3 +130,13 @@ test('lookups read the metadata once and query with the latest boundary', async 
   assert.deepEqual(calls[1][1][1], ['BasarTatort', 'T2023']);
   assert.equal((await scb.municipalityPopulation('2180')).value, 104008);
 });
+
+import { normalizeTownAnswer as townAnswer } from './cityDossierScb.js';
+
+test('a town without a count has no population, never 0', () => {
+  const answer = (cell) =>
+    townAnswer({ data: [{ key: ['T1', '2025'], values: [cell] }] });
+  assert.deepEqual(answer('86981'), { value: 86981, year: 2025 });
+  for (const empty of [null, '', '  ', '..', undefined])
+    assert.equal(answer(empty), null);
+});

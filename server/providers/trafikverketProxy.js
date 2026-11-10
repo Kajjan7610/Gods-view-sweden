@@ -1,3 +1,4 @@
+import { sameSiteGated } from './common/same-site.js';
 import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 
@@ -170,10 +171,10 @@ export function trafikverketProxy({
   return {
     name,
     configureServer({ middlewares }) {
-      middlewares.use(route, handler);
+      middlewares.use(route, sameSiteGated(handler));
     },
     configurePreviewServer({ middlewares }) {
-      middlewares.use(route, handler);
+      middlewares.use(route, sameSiteGated(handler));
     },
   };
 }

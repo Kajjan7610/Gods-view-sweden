@@ -231,3 +231,43 @@ test('the route answers the town near a point and caches its facts', async () =>
   assert.deepEqual((await get('/?lat=57&lon=20')).body, { city: null });
   assert.equal((await get('/?lat=x')).status, 400);
 });
+
+test('a Wikipedia failure is asked for again soon, not after a day', async () => {
+  let wikiDown = true;
+  let clock = Date.parse('2026-11-05T18:00:00Z');
+  const wikiCalls = [];
+  const get = route({
+    now: () => clock,
+    scb: {
+      townPopulation: async () => null,
+      municipalityPopulation: async () => null,
+    },
+    election: { forMunicipality: async () => null },
+    fetchImpl: async (url) => {
+      if (url.startsWith(KOLADA_URL))
+        return new Response(JSON.stringify(kolada));
+      if (url.startsWith(WIKIDATA_SPARQL_URL))
+        return new Response(JSON.stringify({ results: { bindings: [] } }));
+      if (url.startsWith(WIKIPEDIA_SUMMARY_URL)) {
+        wikiCalls.push(url);
+        return wikiDown
+          ? new Response('', { status: 429 })
+          : new Response(
+              JSON.stringify({ title: 'Gävle', extract: 'Gävle är en stad.' }),
+            );
+      }
+      return new Response('', { status: 404 });
+    },
+  });
+  const first = (await get('/?lat=60.67&lon=17.14')).body;
+  assert.equal(first.wikipedia, null);
+  assert.equal(first.partial, true);
+  wikiDown = false;
+  clock += 5 * 60_000;
+  await get('/?lat=60.67&lon=17.14');
+  assert.equal(wikiCalls.length, 1, 'kept for ten minutes');
+  clock += 6 * 60_000;
+  const later = (await get('/?lat=60.67&lon=17.14')).body;
+  assert.equal(later.wikipedia.extract, 'Gävle är en stad.');
+  assert.equal(later.partial, false);
+});

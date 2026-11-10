@@ -1,3 +1,4 @@
+import { sameSiteGated } from './common/same-site.js';
 import {
   ENTSOE_API_URL,
   ENTSOE_AREAS,
@@ -272,10 +273,10 @@ export function powerGridEntsoeProxy({
   return {
     name: 'power-grid',
     configureServer({ middlewares }) {
-      middlewares.use('/api/power-grid', handler);
+      middlewares.use('/api/power-grid', sameSiteGated(handler));
     },
     configurePreviewServer({ middlewares }) {
-      middlewares.use('/api/power-grid', handler);
+      middlewares.use('/api/power-grid', sameSiteGated(handler));
     },
   };
 }

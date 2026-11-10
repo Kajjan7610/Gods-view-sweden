@@ -534,3 +534,17 @@ test("today's routes: departures by destination, cancelled ones not counted", as
   );
   assert.equal(await service.routes('CPH'), null);
 });
+
+test('a fallback over a quarter of an hour old is not shown as the board', async () => {
+  const { flights, fail, advance } = swedavia({
+    SWEDAVIA_FLIGHTINFO_KEY: 'k',
+  });
+  await flights(STOCKHOLM);
+  fail('upstream HTTP 503');
+  // Ten minutes on the last board still stands in.
+  advance(10 * 60_000);
+  assert.equal((await flights(STOCKHOLM))[0].departures[0].flight, 'AY900');
+  // Twenty minutes on it is no longer the airport's present.
+  advance(10 * 60_000);
+  await assert.rejects(flights(STOCKHOLM), /too old/);
+});

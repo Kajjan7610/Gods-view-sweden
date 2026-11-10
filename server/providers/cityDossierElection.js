@@ -16,6 +16,19 @@ export const VAL_RAW_DATA_PAGE =
 export const ELECTION_YEAR = 2026;
 const WORKBOOK_LINK =
   /href="([^"]*\/download\/[^"]*slutligt[^"]*kommunvalen-2026\.xlsx)"/;
+/** val.se is waited for this long; the workbook is about 11 MB. */
+const FETCH_TIMEOUT_MS = 60_000;
+const MAX_WORKBOOK_BYTES = 64 * 1024 * 1024;
+/** Sweden has 290 municipalities: far fewer is not the country's result. */
+const MIN_MUNICIPALITIES = 250;
+const wholeCountry = (table) =>
+  Boolean(table) &&
+  typeof table === 'object' &&
+  Object.keys(table).length >= MIN_MUNICIPALITIES;
+/** A share cell as percent; NaN for an empty cell, never 0 %. */
+const percent = (cell) =>
+  cell == null || String(cell).trim() === '' ? NaN : Number(cell) * 100;
+
 const CACHE_FILE = path.join(
   defaultSourceRoot,
   '.gev-cache',
@@ -163,7 +176,7 @@ export function electionByMunicipality(voteRows, turnoutRows) {
   const turnout = new Map(
     turnoutRows.map((row) => [
       String(row.Kommunkod),
-      Number(row['Valdeltagande (%)']) * 100,
+      percent(row['Valdeltagande (%)']),
     ]),
   );
   const out = {};
@@ -240,27 +253,51 @@ export function parseElectionWorkbook(bytes) {
  * disk cache when present, else from Valmyndigheten.
  * @param {{fetchImpl: Function, cacheFile?: string|null}} options
  */
-export function createElectionResults({ fetchImpl, cacheFile = CACHE_FILE }) {
+export function createElectionResults({
+  fetchImpl,
+  cacheFile = CACHE_FILE,
+  timeoutMs = FETCH_TIMEOUT_MS,
+}) {
   let results = null;
 
   async function load() {
     if (cacheFile) {
       try {
-        return JSON.parse(await readFile(cacheFile, 'utf8'));
+        const kept = JSON.parse(await readFile(cacheFile, 'utf8'));
+        // A file that is not the whole country's result is read again.
+        if (wholeCountry(kept)) return kept;
       } catch {
         /* not cached yet */
       }
     }
-    const page = await fetchImpl(VAL_RAW_DATA_PAGE);
-    if (!page.ok) throw new Error(`val.se HTTP ${page.status}`);
-    const link = WORKBOOK_LINK.exec(await page.text())?.[1];
-    if (!link) throw new Error('no final municipal results on val.se');
-    const workbook = await fetchImpl(new URL(link, VAL_RAW_DATA_PAGE).href);
-    if (!workbook.ok) throw new Error(`val.se HTTP ${workbook.status}`);
-    const parsed = parseElectionWorkbook(
-      new Uint8Array(await workbook.arrayBuffer()),
-    );
-    if (cacheFile) {
+    // val.se may stall: the dossier waits this long for it, not for ever.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let parsed;
+    try {
+      const page = await fetchImpl(VAL_RAW_DATA_PAGE, {
+        signal: controller.signal,
+      });
+      if (!page.ok) throw new Error(`val.se HTTP ${page.status}`);
+      const link = WORKBOOK_LINK.exec(await page.text())?.[1];
+      if (!link) throw new Error('no final municipal results on val.se');
+      const workbook = await fetchImpl(new URL(link, VAL_RAW_DATA_PAGE).href, {
+        signal: controller.signal,
+      });
+      if (!workbook.ok) throw new Error(`val.se HTTP ${workbook.status}`);
+      if (
+        Number(workbook.headers?.get?.('content-length')) > MAX_WORKBOOK_BYTES
+      )
+        throw new Error('the val.se workbook is too large');
+      const bytes = new Uint8Array(await workbook.arrayBuffer());
+      if (bytes.byteLength > MAX_WORKBOOK_BYTES)
+        throw new Error('the val.se workbook is too large');
+      parsed = parseElectionWorkbook(bytes);
+    } finally {
+      clearTimeout(timer);
+    }
+    // Only the whole country's result is worth keeping on disk.
+    if (cacheFile && wholeCountry(parsed)) {
       await mkdir(path.dirname(cacheFile), { recursive: true });
       await writeFile(cacheFile, JSON.stringify(parsed));
     }

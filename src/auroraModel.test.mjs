@@ -89,3 +89,28 @@ test('the chance: activity over the need under a clear sky is high; cloud takes 
     'none',
   );
 });
+
+import { auroraOutlook as outlookFor } from './auroraModel.js';
+
+test("the storm level shown is the dark hours' strongest, not their first", () => {
+  const slot = (time, kp, scale) => ({
+    time: Date.parse(time),
+    kp,
+    observed: false,
+    scale,
+  });
+  const outlook = outlookFor({
+    kp: [
+      slot('2026-11-07T18:00:00Z', 4, null),
+      slot('2026-11-07T21:00:00Z', 5, 'G1'),
+      slot('2026-11-08T00:00:00Z', 7, 'G3'),
+      slot('2026-11-08T03:00:00Z', 6, 'G2'),
+    ],
+    clouds: [],
+    lat: 67.86,
+    lon: 20.23,
+    now: Date.parse('2026-11-07T12:00:00Z'),
+  });
+  assert.equal(outlook.maxKp, 7);
+  assert.equal(outlook.scale, 'G3');
+});

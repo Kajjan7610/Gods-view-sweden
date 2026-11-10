@@ -263,3 +263,69 @@ test('the airport board route: one Swedavia airport, today or tomorrow', async (
   assert.equal((await board('/?iata=ARN&only=security')).body.departures, null);
   assert.equal(calls.length, 2, 'queues alone ask no flight list');
 });
+
+import { departuresQuery as queryFor } from './cityTransit.js';
+
+test('a late train is still asked for; one that has left is not', () => {
+  const query = queryFor('k', 'Gä', Date.parse('2026-11-05T12:11:00Z'));
+  // Due 12:00 and expected 12:25: too old by its advertised time, not by
+  // the time it is expected.
+  assert.ok(
+    query.includes(
+      '<OR>' +
+        '<GT name="AdvertisedTimeAtLocation" value="2026-11-05T12:01:00.000Z" />' +
+        '<GT name="EstimatedTimeAtLocation" value="2026-11-05T12:01:00.000Z" />' +
+        '</OR>',
+    ),
+  );
+  assert.ok(
+    query.includes(
+      '<LT name="AdvertisedTimeAtLocation" value="2026-11-05T15:11:00.000Z" />',
+    ),
+  );
+  assert.ok(query.includes('<EXISTS name="TimeAtLocation" value="false" />'));
+});
+
+test('the keys are not spent outside Sweden', async () => {
+  const calls = [];
+  const keyed = route({
+    fetchImpl: async (url) => {
+      calls.push(url);
+      return new Response(JSON.stringify({ incidents: [] }));
+    },
+    env: { TOMTOM_API_KEY: 'b' },
+  });
+  // New York, and a request without a place (read as 0, 0).
+  assert.equal((await keyed('/?lat=40.71&lon=-74.01')).status, 400);
+  assert.equal((await keyed('/')).status, 400);
+  assert.equal(calls.length, 0);
+  assert.equal((await keyed('/?lat=59.33&lon=18.07')).status, 200);
+  assert.equal(calls.length, 1);
+});
+
+test('an answer without stations is not kept for a day', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  let empty = true;
+  const keyed = route({
+    fetchImpl: async (url, init) => {
+      if (/TrainStation/.test(init?.body ?? ''))
+        return new Response(
+          JSON.stringify(
+            empty
+              ? { RESPONSE: { RESULT: [{ TrainStation: [] }] } }
+              : stationPayload,
+          ),
+        );
+      return new Response(
+        JSON.stringify({ RESPONSE: { RESULT: [{ TrainAnnouncement: [] }] } }),
+      );
+    },
+    env: { TRAFIKVERKET_API_KEY: 'a' },
+  });
+  const first = (await keyed('/?lat=60.67&lon=17.14&town=G%C3%A4vle')).body;
+  assert.equal(first.trains.error, true);
+  // The next request asks again, and the town has its station.
+  empty = false;
+  const second = (await keyed('/?lat=60.67&lon=17.14&town=G%C3%A4vle')).body;
+  assert.equal(second.trains.station, 'Gävle C');
+});

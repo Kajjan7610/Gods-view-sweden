@@ -163,3 +163,59 @@ test('the results are fetched once through the raw-data page', async () => {
     /^https:\/\/www\.val\.se\/download\/18\.1\/2\/.*kommunvalen-2026\.xlsx$/,
   );
 });
+
+import * as fsMore from 'node:fs/promises';
+import * as osMore from 'node:os';
+import * as pathMore from 'node:path';
+import {
+  createElectionResults as resultsFrom,
+  electionByMunicipality as tableOf,
+} from './cityDossierElection.js';
+
+test('an empty turnout cell is no turnout, never 0 %', () => {
+  const votes = [{ Kommunkod: '2180', Kommun: 'Gävle', 'Lokala partiet': 100 }];
+  const turnout = (cell) =>
+    tableOf(votes, [{ Kommunkod: '2180', 'Valdeltagande (%)': cell }])['2180']
+      .turnout;
+  assert.equal(turnout(0.8298), 82.98);
+  for (const empty of [null, '', '  ', undefined])
+    assert.equal(turnout(empty), null);
+});
+
+test('val.se is not waited for for ever', async () => {
+  const election = resultsFrom({
+    cacheFile: null,
+    timeoutMs: 20,
+    fetchImpl: (url, { signal }) =>
+      new Promise((resolve, reject) =>
+        signal.addEventListener('abort', () => reject(new Error('aborted'))),
+      ),
+  });
+  await assert.rejects(election.forMunicipality('2180'), /aborted/);
+});
+
+test('a kept table that is not the whole country is read again', async (t) => {
+  const dir = await fsMore.mkdtemp(pathMore.join(osMore.tmpdir(), 'val-'));
+  t.after(() => fsMore.rm(dir, { recursive: true, force: true }));
+  const cacheFile = pathMore.join(dir, 'election.json');
+  await fsMore.writeFile(cacheFile, '{}');
+  const urls = [];
+  const election = resultsFrom({
+    cacheFile,
+    fetchImpl: async (url) => {
+      urls.push(url);
+      if (url.endsWith('radata-val-2026'))
+        return new Response(
+          '<a href="/download/18.1/2/roster-per-distrikt-slutligt-antal-roster-inklusive-totalt-valdeltagande-kommunvalen-2026.xlsx">x</a>',
+        );
+      return new Response(workbook);
+    },
+  });
+  assert.equal((await election.forMunicipality('2180')).parties[0].share, 60);
+  assert.equal(urls.length, 2, 'the empty file was not believed');
+  assert.equal(
+    await fsMore.readFile(cacheFile, 'utf8'),
+    '{}',
+    'a handful of municipalities is not kept as the country',
+  );
+});

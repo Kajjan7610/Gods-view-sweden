@@ -28,7 +28,8 @@ export function normalizeKp(rows) {
         ? row
         : [row?.time_tag, row?.kp, row?.observed, row?.noaa_scale];
       const time = Date.parse(`${String(timeTag ?? '').replace(' ', 'T')}Z`);
-      const value = Number(kp);
+      // A slot without a value is unknown, never a calm Kp 0.
+      const value = kp == null || String(kp).trim() === '' ? NaN : Number(kp);
       if (!Number.isFinite(time) || !Number.isFinite(value)) return null;
       return {
         time,
@@ -46,7 +47,11 @@ export function normalizeClouds(payload) {
   return (Array.isArray(payload?.timeSeries) ? payload.timeSeries : [])
     .map((step) => ({
       time: Date.parse(String(step?.time ?? step?.validTime ?? '')),
-      octas: Number(step?.data?.cloud_area_fraction),
+      // A step without cloud cover is an unknown sky, never a clear one.
+      octas:
+        step?.data?.cloud_area_fraction == null
+          ? NaN
+          : Number(step.data.cloud_area_fraction),
     }))
     .filter(
       (row) =>

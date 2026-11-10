@@ -1,3 +1,4 @@
+import { sameSiteGated } from './common/same-site.js';
 import {
   camerasNear,
   normalizeSpeedCameras,
@@ -191,10 +192,10 @@ export function speedCamerasProxy({
   return {
     name: 'speed-cameras',
     configureServer({ middlewares }) {
-      middlewares.use('/api/speed-cameras', handler);
+      middlewares.use('/api/speed-cameras', sameSiteGated(handler));
     },
     configurePreviewServer({ middlewares }) {
-      middlewares.use('/api/speed-cameras', handler);
+      middlewares.use('/api/speed-cameras', sameSiteGated(handler));
     },
   };
 }

@@ -91,3 +91,30 @@ test('the route: a Swedish point, Kp kept half an hour', async () => {
   assert.equal(urls.filter((u) => u === KP_FORECAST_URL).length, 1);
   assert.equal((await get('/?lat=40&lon=16')).status, 400);
 });
+
+import {
+  normalizeClouds as cloudsOf,
+  normalizeKp as kpOf,
+} from './auroraOutlook.js';
+
+test('a Kp or a cloud cover that is missing is unknown, never 0', () => {
+  assert.deepEqual(
+    kpOf([
+      { time_tag: '2026-11-05T18:00:00', kp: null, observed: 'predicted' },
+      { time_tag: '2026-11-05T21:00:00', kp: '', observed: 'predicted' },
+      { time_tag: '2026-11-06T00:00:00', kp: '4.33', observed: 'predicted' },
+    ]).map((row) => row.kp),
+    [4.33],
+  );
+  assert.deepEqual(
+    cloudsOf({
+      timeSeries: [
+        { time: '2026-11-05T18:00:00Z', data: { cloud_area_fraction: null } },
+        { time: '2026-11-05T19:00:00Z', data: {} },
+        { time: '2026-11-05T20:00:00Z', data: { cloud_area_fraction: 0 } },
+        { time: '2026-11-05T21:00:00Z', data: { cloud_area_fraction: 6 } },
+      ],
+    }).map((row) => row.octas),
+    [0, 6],
+  );
+});

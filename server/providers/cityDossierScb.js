@@ -54,7 +54,9 @@ export function newestTable(listing, titleStart) {
  */
 export function normalizeTownAnswer(payload) {
   const row = payload?.data?.[0];
-  const value = Number(row?.values?.[0]);
+  const cell = row?.values?.[0];
+  // An empty cell is no count, never a town of 0.
+  const value = cell == null || String(cell).trim() === '' ? NaN : Number(cell);
   const year = Number(row?.key?.at(-1));
   return Number.isFinite(value) && Number.isFinite(year)
     ? { value, year }

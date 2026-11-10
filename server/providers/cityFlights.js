@@ -277,6 +277,14 @@ export function createSwedaviaFlights({
   const answers = new Map();
   const inFlight = new Map();
   const budgets = new Map();
+  /** A fallback older than this is no longer the airport's present. */
+  const STALE_SHOW_MS = 15 * 60_000;
+  /** An answer fit to show: fresh, or a fallback from the last minutes. */
+  const current = (entry) => {
+    if (entry.stale && now() - entry.at > STALE_SHOW_MS)
+      throw new Error('the last Swedavia answer is too old');
+    return entry;
+  };
   const flightKey = () => String(env.SWEDAVIA_FLIGHTINFO_KEY ?? '').trim();
   const waitKey = () => String(env.SWEDAVIA_WAITTIME_KEY ?? '').trim();
 
@@ -334,13 +342,13 @@ export function createSwedaviaFlights({
   async function next(key, iata, kind) {
     const at = now();
     const today = stockholmDate(at);
-    const lists = [(await day(key, iata, kind, today)).value];
+    const lists = [current(await day(key, iata, kind, today)).value];
     let flights = upcoming(lists.flat(), kind, at);
     if (
       flights.length < MAX_FLIGHTS &&
       stockholmDate(at + LOOK_AHEAD_MS) !== today
     ) {
-      lists.push((await day(key, iata, kind, nextDate(today))).value);
+      lists.push(current(await day(key, iata, kind, nextDate(today))).value);
       flights = upcoming(lists.flat(), kind, at);
     }
     return flights;
@@ -376,7 +384,11 @@ export function createSwedaviaFlights({
           km: Math.round(airport.km),
           departures,
           arrivals,
-          security: queues?.value ?? null,
+          // Queue minutes from a quarter of an hour ago are not the queue.
+          security:
+            queues && !(queues.stale && now() - queues.at > STALE_SHOW_MS)
+              ? queues.value
+              : null,
         };
       }),
     );

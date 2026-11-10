@@ -1,3 +1,4 @@
+import { sameSiteGated } from './common/same-site.js';
 import { TRANSIT_FEED_REGISTRY } from '../../src/data/transitFeeds.js';
 import {
   decodeServiceAlerts,
@@ -226,10 +227,10 @@ export function transitAlertsProxy({
   return {
     name: 'transit-alerts',
     configureServer({ middlewares }) {
-      middlewares.use('/api/transit-alerts', handler);
+      middlewares.use('/api/transit-alerts', sameSiteGated(handler));
     },
     configurePreviewServer({ middlewares }) {
-      middlewares.use('/api/transit-alerts', handler);
+      middlewares.use('/api/transit-alerts', sameSiteGated(handler));
     },
   };
 }

@@ -138,10 +138,17 @@ export function auroraOutlook({ kp, clouds, lat, lon, now }) {
     requiredKp: required,
     cloudPct: meanOctas === null ? null : Math.round((meanOctas / 8) * 100),
     best,
+    // The dark hours' strongest storm level, not their first.
     scale:
-      kp.find(
-        (row) =>
-          row.scale && row.time + 3 * HOUR_MS > dark.from && row.time < dark.to,
-      )?.scale ?? null,
+      kp
+        .filter(
+          (row) =>
+            row.scale &&
+            row.time + 3 * HOUR_MS > dark.from &&
+            row.time < dark.to,
+        )
+        .map((row) => row.scale)
+        .sort()
+        .at(-1) ?? null,
   };
 }

@@ -352,6 +352,7 @@ export function cityDossierProxy({
         );
     const town = mergeTown(value(wikidata), value(scbTown));
     let wikipedia = null;
+    let wikipediaFailed = false;
     try {
       const title = town?.articleTitle || seat.locality;
       wikipedia = normalizeWikipedia(
@@ -361,6 +362,7 @@ export function cityDossierProxy({
       );
     } catch {
       wikipedia = null;
+      wikipediaFailed = true;
     }
     const municipality = mergeMunicipality(
       value(kolada),
@@ -377,7 +379,13 @@ export function cityDossierProxy({
       scbMonthly,
       latestElection,
     ].some((result) => result.status === 'rejected');
-    return { municipality, town, wikipedia, partial, fetchedAt: now() };
+    return {
+      municipality,
+      town,
+      wikipedia,
+      partial: partial || wikipediaFailed,
+      fetchedAt: now(),
+    };
   }
 
   async function handler(req, res) {
