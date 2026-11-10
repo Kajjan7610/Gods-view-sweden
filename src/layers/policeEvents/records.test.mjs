@@ -159,3 +159,62 @@ test('the card reads the notice, its time and how exact its place is', () => {
   assert.equal(buildPoliceCard(row).interactive, true);
   assert.equal(buildPoliceCard(row).accessibilityLabel, undefined);
 });
+
+test('a type word inside another word picks no category', () => {
+  // "från" and "intrång" hold "rån" but are not robberies.
+  assert.equal(eventCategory('Trafikolycka, smitning från'), 'traffic');
+  assert.equal(eventCategory('Olaga intrång'), 'property');
+  assert.equal(eventCategory('Rån'), 'violence');
+  assert.equal(eventCategory('Rån, försök'), 'violence');
+  assert.equal(eventCategory('Rån väpnat'), 'violence');
+  assert.equal(eventCategory('Mord/dråp'), 'violence');
+});
+
+test('arson, illness and suspicious objects land where a reader looks', () => {
+  assert.equal(eventCategory('Mordbrand'), 'fire');
+  assert.equal(eventCategory('Sjukdom/olycksfall'), 'fire');
+  assert.equal(eventCategory('Farligt föremål, misstänkt'), 'violence');
+  assert.equal(eventCategory('Detonation'), 'violence');
+  assert.equal(eventCategory('Bombhot'), 'violence');
+  // Not yet given a colour of their own.
+  assert.equal(eventCategory('Kontroll'), 'other');
+  assert.equal(eventCategory('Information'), 'other');
+});
+
+test('a time without a zone is Swedish time, summer or winter', () => {
+  assert.equal(
+    parseEventTime('2026-07-01 09:05:00'),
+    Date.parse('2026-07-01T07:05:00Z'),
+  );
+  assert.equal(
+    parseEventTime('2026-11-04 17:12:33'),
+    Date.parse('2026-11-04T16:12:33Z'),
+  );
+  // Summer time in 2026: 29 March to 25 October, changing at 01:00 UTC.
+  assert.equal(
+    parseEventTime('2026-03-29 01:30'),
+    Date.parse('2026-03-29T00:30:00Z'),
+  );
+  assert.equal(
+    parseEventTime('2026-03-29 03:30'),
+    Date.parse('2026-03-29T01:30:00Z'),
+  );
+  assert.equal(
+    parseEventTime('2026-10-25 04:00'),
+    Date.parse('2026-10-25T03:00:00Z'),
+  );
+  assert.equal(parseEventTime('2026-02-30 25:00'), null);
+});
+
+test('a coordinate with an empty half is missing, not 0', () => {
+  assert.equal(parseGps(',13.059643'), null);
+  assert.equal(parseGps('58.252793,'), null);
+  assert.equal(parseGps('58.2,13.0,1'), null);
+  assert.equal(parseGps(''), null);
+  assert.deepEqual(parseGps(' 58.2 , 13.0 '), [13.0, 58.2]);
+});
+
+test('a notice that names no place has a card title without a separator', () => {
+  const row = normalizePoliceEvent(EVENT, lookup);
+  assert.equal(buildPoliceCard({ ...row, place: null }).title, 'TRAFIKOLYCKA');
+});

@@ -197,9 +197,13 @@ test('directories the server writes while it runs are kept out of the dev watche
   );
   // Dev only: preview and build have no watcher.
   assert.equal(plugin.apply, 'serve');
+  // Half-finished browser downloads too: a locked one crashed the watcher.
   assert.deepEqual(plugin.config().server.watch.ignored, [
     '**/.gev-cache/**',
     '**/.gev-logs/**',
+    '**/*.crdownload',
+    '**/*.part',
+    '**/*.tmp',
   ]);
 });
 

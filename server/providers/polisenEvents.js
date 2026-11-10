@@ -10,6 +10,8 @@ import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 // no key): the 500 latest notices in one JSON document.
 export const POLISEN_EVENTS_URL = 'https://polisen.se/api/events';
 const TTL_MS = 5 * 60_000;
+/** How long Polisen is left alone after a failed refresh. */
+export const POLISEN_RETRY_AFTER_FAILURE_MS = 60_000;
 /** Longest a failed refresh keeps serving the last snapshot, marked stale. */
 const STALE_MAX_MS = 60 * 60_000;
 const MAX_BODY_BYTES = 16 * 1024 * 1024;
@@ -22,6 +24,7 @@ export function polisenEventsProxy({
   now = () => Date.now(),
 } = {}) {
   let cached = null;
+  let retryAfter = 0;
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 600 });
 
@@ -49,6 +52,32 @@ export function polisenEventsProxy({
     }
   }
 
+  /** The last snapshot marked stale, or null once it is too old to show. */
+  const lastKnown = () =>
+    cached && now() - cached.savedAt <= STALE_MAX_MS
+      ? { ...cached.value, stale: true }
+      : null;
+
+  /**
+   * One read of Polisen, shared by everyone waiting on it: the new snapshot,
+   * or after a failure the last one (null without one).
+   */
+  async function refresh() {
+    try {
+      const value = await load();
+      cached = { value, savedAt: now() };
+      retryAfter = 0;
+      console.log(`[polisen-events] ${value.events.length} notices`);
+      return value;
+    } catch (error) {
+      console.warn(
+        `[polisen-events] refresh failed: ${error?.message || error}`,
+      );
+      retryAfter = now() + POLISEN_RETRY_AFTER_FAILURE_MS;
+      return lastKnown();
+    }
+  }
+
   async function handler(req, res) {
     const json = (status, value, headers = {}) => {
       if (res.destroyed) return;
@@ -68,24 +97,12 @@ export function polisenEventsProxy({
       return json(200, cached.value);
     if (!allow(clientKey(req)))
       return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
-    try {
-      const { promise } = coalesceProxyRequest(inFlight, 'events', load);
-      const value = await promise;
-      cached = { value, savedAt: now() };
-      console.log(`[polisen-events] ${value.events.length} notices`);
-      return json(200, value);
-    } catch (error) {
-      console.warn(
-        `[polisen-events] refresh failed: ${error?.message || error}`,
-      );
-      if (cached && now() - cached.savedAt <= STALE_MAX_MS)
-        return json(
-          200,
-          { ...cached.value, stale: true },
-          { 'X-Data-Stale': 'true' },
-        );
-      return json(502, { error: 'polisen_events_unavailable' });
-    }
+    const value =
+      now() < retryAfter
+        ? lastKnown()
+        : await coalesceProxyRequest(inFlight, 'events', refresh).promise;
+    if (!value) return json(502, { error: 'polisen_events_unavailable' });
+    return json(200, value, value.stale ? { 'X-Data-Stale': 'true' } : {});
   }
 
   return {

@@ -17,7 +17,8 @@ export const EVENT_CATEGORIES = Object.freeze([
     id: 'violence',
     color: '#ff1744',
     match:
-      /misshandel|mord|dråp|rån|olaga hot|våld|knivlag|vapenlag|skottlossning|sexualbrott|ofredande|explosion|sprängning|människorov|bråk|upplopp/i,
+      // "rån" as a word of its own: not "smitning från", not "olaga intrång".
+      /misshandel|mord(?!brand)|dråp|(?<![a-zåäö])rån(?![a-zåäö])|olaga hot|våld|knivlag|vapenlag|skottlossning|sexualbrott|ofredande|explosion|sprängning|detonation|bombhot|farligt föremål|människorov|bråk|upplopp/i,
   }),
   Object.freeze({
     id: 'traffic',
@@ -27,7 +28,7 @@ export const EVENT_CATEGORIES = Object.freeze([
   Object.freeze({
     id: 'fire',
     color: '#ff9100',
-    match: /brand|olycka|drunkning|räddning/i,
+    match: /brand|olycka|olycksfall|sjukdom|drunkning|räddning/i,
   }),
   Object.freeze({
     id: 'property',
@@ -75,27 +76,52 @@ const text = (value, max = MAX_TEXT) => {
   return s ? s.slice(0, max) : null;
 };
 
-/** "2026-11-04 17:12:33 +01:00" to epoch milliseconds, or null. */
+/**
+ * Swedish clock time to epoch milliseconds: summer time (UTC+2) runs from
+ * 01:00 UTC on the last Sunday in March to the last Sunday in October.
+ * @param {string} wall "2026-07-01T09:05:00", Swedish local time.
+ */
+function swedishWallTime(wall) {
+  const asUtc = Date.parse(`${wall}Z`);
+  if (!Number.isFinite(asUtc)) return null;
+  const year = new Date(asUtc).getUTCFullYear();
+  const lastSunday = (month) => {
+    const last = new Date(Date.UTC(year, month + 1, 0));
+    return Date.UTC(year, month, last.getUTCDate() - last.getUTCDay(), 1);
+  };
+  const summer = asUtc - 2 * 3_600_000;
+  return summer >= lastSunday(2) && summer < lastSunday(9)
+    ? summer
+    : asUtc - 3_600_000;
+}
+
+/**
+ * "2026-11-04 17:12:33 +01:00" to epoch milliseconds, or null. A time
+ * without a zone is Swedish local time, summer or winter.
+ */
 export function parseEventTime(value) {
   const match =
     /^(\d{4}-\d{2}-\d{2})[ T](\d{1,2}):(\d{2})(?::(\d{2}))?\s*([+-]\d{2}:?\d{2}|Z)?$/.exec(
       String(value ?? '').trim(),
     );
   if (!match) return null;
-  const [, day, hour, minute, second = '00', zone = '+01:00'] = match;
+  const [, day, hour, minute, second = '00', zone] = match;
+  const wall = `${day}T${hour.padStart(2, '0')}:${minute}:${second}`;
+  if (!zone) return swedishWallTime(wall);
   const offset =
     zone === 'Z' ? 'Z' : zone.replace(/^([+-]\d{2})(\d{2})$/, '$1:$2');
-  const ms = Date.parse(
-    `${day}T${hour.padStart(2, '0')}:${minute}:${second}${offset}`,
-  );
+  const ms = Date.parse(`${wall}${offset}`);
   return Number.isFinite(ms) ? ms : null;
 }
 
 /** "58.252793,13.059643" (lat,lon) to [lon, lat], or null. */
 export function parseGps(value) {
-  const [lat, lon] = String(value ?? '')
+  const parts = String(value ?? '')
     .split(',')
-    .map((part) => Number(part.trim()));
+    .map((part) => part.trim());
+  // An empty half is a missing coordinate, not 0.
+  if (parts.length !== 2 || parts.includes('')) return null;
+  const [lat, lon] = parts.map(Number);
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
   if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
   return [lon, lat];

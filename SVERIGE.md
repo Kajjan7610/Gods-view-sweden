@@ -127,6 +127,28 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (polishändelser: rättningar efter kodgranskning; dev-servern)
+- Kategorierna läser "rån" som ett eget ord: "Trafikolycka, smitning
+  från" är trafik och "Olaga intrång" stöld och skadegörelse, inte våld
+  och hot (8 av 500 notiser i dagens lista hade fel färg). "Mordbrand"
+  och "Sjukdom/olycksfall" räknas till bränder och olyckor; "Farligt
+  föremål, misstänkt", "Detonation" och "Bombhot" till våld och hot.
+- Proxyn lämnar Polisen i fred i 1 minut efter en misslyckad hämtning
+  och svarar under tiden med den senaste listan, märkt `X-Data-Stale`
+  (eller 502 om ingen finns). Loggraden och cachen skrivs en gång per
+  hämtning, inte en gång per väntande fråga.
+- En ritning som misslyckades loggas som ritfel, inte hämtfel. Ett
+  avstängt lager bär inte kvar sitt senaste fel. Tidsfönstret och de
+  ljusa prickarna för färska notiser följer lagrets egen klocka.
+- En tid utan tidszon läses som svensk tid, sommar eller vinter, i
+  stället för alltid vintertid. En koordinat med en tom halva släpps i
+  stället för att bli 0. Kortets rubrik slutar inte på " · " när
+  notisen saknar ort.
+- Dev-servern bevakar inte längre halvfärdiga nedladdningar
+  (`*.crdownload`, `*.part`, `*.tmp`). En nedladdning som webbläsaren
+  höll låst i projektmappen fick bevakningen att krascha med EBUSY och
+  stängde servern; provat med en låst fil efter rättningen.
+
 ### 2026-11-10 (blixtnedslag: rättningar efter kodgranskning)
 - Prickarna ändras på plats varje minut i stället för att alla tas bort
   och ritas om: nya nedslag läggs till, de som passerat en timme tas

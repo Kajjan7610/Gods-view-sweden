@@ -43,7 +43,7 @@ export function buildPoliceCard(row, { linkable = false } = {}) {
   );
   const link = linkable && row.link;
   if (link) details.push(t('polisen.se ↗ · click card to open'));
-  const title = `${row.type} · ${row.place || ''}`.toUpperCase();
+  const title = [row.type, row.place].filter(Boolean).join(' · ').toUpperCase();
   return {
     ...CARD_BASE,
     id: `polisen-card:${row.id}`,

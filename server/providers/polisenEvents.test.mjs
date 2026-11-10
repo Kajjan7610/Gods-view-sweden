@@ -101,3 +101,85 @@ test('a failed refresh serves the last snapshot marked stale, then gives up', as
   assert.equal(gone.status, 502);
   assert.equal(gone.json().error, 'polisen_events_unavailable');
 });
+
+test('after a failed refresh Polisen is left alone for a minute', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  t.mock.method(console, 'log', () => {});
+  let clock = Date.parse('2026-11-04T17:00:00Z');
+  let fail = false;
+  let calls = 0;
+  const request = harness({
+    now: () => clock,
+    fetchImpl: async () => {
+      calls += 1;
+      return fail
+        ? new Response('down', { status: 503 })
+        : Response.json(PAYLOAD);
+    },
+  });
+  await request();
+  fail = true;
+  clock += 6 * 60_000;
+  const first = await request();
+  assert.equal(first.json().stale, true);
+  assert.equal(first.headers['X-Data-Stale'], 'true');
+  assert.equal(calls, 2);
+  // Within the minute: the last snapshot again, Polisen not asked.
+  clock += 30_000;
+  for (let i = 0; i < 3; i += 1) {
+    const again = await request();
+    assert.equal(again.status, 200);
+    assert.equal(again.headers['X-Data-Stale'], 'true');
+  }
+  assert.equal(calls, 2);
+  // After it, asked once more; and once it answers, fresh again.
+  clock += 31_000;
+  fail = false;
+  const back = await request();
+  assert.equal(calls, 3);
+  assert.equal(back.json().stale, undefined);
+  assert.equal(back.headers['X-Data-Stale'], undefined);
+});
+
+test('without any snapshot a failed refresh is a 502, also during the pause', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  let calls = 0;
+  const request = harness({
+    now: () => Date.parse('2026-11-04T17:00:00Z'),
+    fetchImpl: async () => {
+      calls += 1;
+      return new Response('down', { status: 503 });
+    },
+  });
+  assert.equal((await request()).status, 502);
+  const paused = await request();
+  assert.equal(paused.status, 502);
+  assert.equal(paused.json().error, 'polisen_events_unavailable');
+  assert.equal(calls, 1);
+});
+
+test('requests waiting on one fetch share it, logged and saved once', async (t) => {
+  const log = t.mock.method(console, 'log', () => {});
+  let release;
+  let calls = 0;
+  const request = harness({
+    fetchImpl: async () => {
+      calls += 1;
+      await new Promise((resolve) => (release = resolve));
+      return Response.json(PAYLOAD);
+    },
+  });
+  const waiting = [request(), request(), request()];
+  await new Promise((resolve) => setImmediate(resolve));
+  release();
+  const answers = await Promise.all(waiting);
+  assert.deepEqual(
+    answers.map((answer) => answer.status),
+    [200, 200, 200],
+  );
+  assert.equal(calls, 1);
+  assert.deepEqual(
+    log.mock.calls.map((call) => call.arguments[0]),
+    ['[polisen-events] 1 notices'],
+  );
+});

@@ -52,6 +52,7 @@ export function createPolisenEventsLayer({
   pointer = null,
   openExternal = null,
   terrain = null,
+  now = () => Date.now(),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Polisen events require a snapshot source');
@@ -81,7 +82,7 @@ export function createPolisenEventsLayer({
   const canSelect = () =>
     overlayHost && screenSpaceEventHandlerFactory && picking;
   const visibleEvents = () => {
-    const since = Date.now() - WINDOWS[_window];
+    const since = now() - WINDOWS[_window];
     return _events.filter(
       (row) =>
         row.time >= since && (row.category !== 'summary' || _show.summaries),
@@ -191,11 +192,11 @@ export function createPolisenEventsLayer({
     const entities = _dataSource.entities;
     const shown = visibleEvents();
     _positions = spreadAroundPlaces(shown);
-    const now = Date.now();
+    const at = now();
     redrawEntities(entities, () => {
       // Oldest first, so the newest dot of a place is drawn on top.
       for (const row of [...shown].reverse()) {
-        const fresh = now - row.time < FRESH_MS;
+        const fresh = at - row.time < FRESH_MS;
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
           position: position(row, _positions.get(row.id) || row.point),
@@ -265,6 +266,7 @@ export function createPolisenEventsLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      _lastError = null;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
       clearSelection();
@@ -283,7 +285,7 @@ export function createPolisenEventsLayer({
         _lastUpdate =
           _stale && Number.isFinite(snapshot.fetchedAt)
             ? snapshot.fetchedAt
-            : Date.now();
+            : now();
         _lastError = null;
         const signature = JSON.stringify(
           snapshot.events.map((row) => [row.id, row.time, row.type]),
@@ -299,8 +301,14 @@ export function createPolisenEventsLayer({
         }
         // Heights first: the ones this browser kept are drawn at once.
         _ground.place(_events.filter((row) => Array.isArray(row.point)));
-        // Rendered on every refresh: the time window moves on.
-        render();
+        // Rendered on every refresh: the time window moves on, and a
+        // drawing that failed is made again.
+        try {
+          render();
+        } catch (e) {
+          console.warn('[Data:PolisenEvents] Draw error:', e?.message || e);
+          _lastError = e?.message || msg('Polisen events unavailable');
+        }
         _rowListener?.();
         return true;
       } catch (e) {
