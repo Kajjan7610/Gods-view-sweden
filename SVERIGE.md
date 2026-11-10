@@ -127,6 +127,19 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (SR trafik: rättningar efter kodgranskning)
+- Kortet läser alltid den senaste texten från SR. Förut bytte lagret ut
+  sina rader bara när ett meddelandes id, prioritet eller skapandetid
+  ändrades, så en omskriven rubrik, beskrivning eller plats visades
+  först när något annat i listan ändrades. Prickarna ritas om bara när
+  någon av dem skulle se annorlunda ut (plats, prioritet, kategori).
+- Proxyn lämnar SR i fred i 1 minut efter en misslyckad hämtning och
+  svarar under tiden med den senaste listan, märkt `X-Data-Stale` (eller
+  502 om ingen finns). Loggraden och cachen skrivs en gång per hämtning.
+- En ritning som misslyckades loggas som ritfel, inte hämtfel, och görs
+  om vid nästa uppdatering. Ett avstängt lager bär inte kvar sitt senaste
+  fel. Tiden för senaste uppdatering följer lagrets egen klocka.
+
 ### 2026-11-10 (väglag: rättningar efter kodgranskning)
 - Kartan ändras på plats i stället för att alla linjer och prickar tas
   bort och ritas om så fort något ändras: nya rader läggs till, de som

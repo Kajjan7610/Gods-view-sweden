@@ -34,6 +34,7 @@ export function createSrTrafficLayer({
   picking = null,
   pointer = null,
   terrain = null,
+  now = () => Date.now(),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('SR traffic requires a snapshot source');
@@ -213,6 +214,7 @@ export function createSrTrafficLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      _lastError = null;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
       clearSelection();
@@ -231,24 +233,37 @@ export function createSrTrafficLayer({
         _lastUpdate =
           _stale && Number.isFinite(snapshot.fetchedAt)
             ? snapshot.fetchedAt
-            : Date.now();
+            : now();
         _lastError = null;
+        // Always the newest rows, so a card reads the text SR has now; the
+        // dots are drawn again only when one of them would look different.
+        _messages = snapshot.messages;
+        _messageById.clear();
+        for (const row of _messages) _messageById.set(row.id, row);
+        // Heights first: the ones this browser kept are drawn at once.
+        _ground.place(_messages);
         const signature = JSON.stringify(
-          snapshot.messages.map((row) => [row.id, row.priority, row.created]),
+          _messages.map((row) => [
+            row.id,
+            row.priority,
+            row.category,
+            row.point,
+          ]),
         );
         if (signature !== _signature) {
+          // Not trusted until drawn: a drawing that fails is made again.
+          _signature = null;
+          try {
+            render();
+          } catch (e) {
+            console.warn('[Data:SrTraffic] Draw error:', e?.message || e);
+            _lastError = e?.message || msg('SR traffic messages unavailable');
+            _rowListener?.();
+            return true;
+          }
           _signature = signature;
-          _messages = snapshot.messages;
-          _messageById.clear();
-          for (const row of _messages) _messageById.set(row.id, row);
-          // Heights first: the ones this browser kept are drawn at once.
-          _ground.place(_messages);
-          render();
           console.log(`[Data:SrTraffic] Updated: ${_messages.length} messages`);
-        } else {
-          // Takes up again what a switched-off layer had left to ask.
-          _ground.place(_messages);
-        }
+        } else if (_selectedId) publishSelectedCard();
         _rowListener?.();
         return true;
       } catch (e) {
