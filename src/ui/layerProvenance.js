@@ -157,7 +157,7 @@ export const LAYER_PROVENANCE = Object.freeze({
     source: 'SMHI',
     sweden: msg('About 75 measuring stations on the European EAQI scale'),
     original: msg('Canadian stations (ECCC AQHI)'),
-    updates: msg('Every 20 minutes'),
+    updates: msg('Hourly'),
     licence: `${CC_BY} (SMHI)`,
   }),
   'weather-radar': added({

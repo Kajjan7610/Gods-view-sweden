@@ -10,7 +10,7 @@ import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 // pollutant's list is read (the whole list at once outlasts SMHI's gateway),
 // every series is asked for its last day of values, and the ones that
 // answered are kept on disk for a week. GET / then asks only those for their last hours, cached
-// a quarter of an hour, and answers one row per station.
+// half an hour (the values are hourly), and answers one row per station.
 export const API_BASE = 'https://datavardluft.smhi.se/52North/api';
 const POLLUTANT_LABEL = /^(NO2|PM10|PM2\.5|O3) /;
 /** EEA (Eionet) pollutant codes, which are SMHI's phenomenon ids. */
@@ -21,7 +21,9 @@ export const PHENOMENA = Object.freeze({
   O3: 7,
 });
 const DISCOVERY_TTL_MS = 7 * 24 * 60 * 60_000;
-const VALUES_TTL_MS = 15 * 60_000;
+const VALUES_TTL_MS = 30 * 60_000;
+/** How long SMHI is left alone after a failed refresh. */
+export const SMHI_AIR_QUALITY_RETRY_AFTER_FAILURE_MS = 60_000;
 /** Longest a failed refresh keeps serving the last stations, marked stale. */
 const STALE_MAX_MS = 3 * 60 * 60_000;
 const BATCH = 100;
@@ -126,8 +128,9 @@ export function smhiAirQualityProxy({
 } = {}) {
   /** @type {?{at: number, series: Array<object>}} */
   let discovered = null;
-  let diskChecked = false;
+  let diskRead = null;
   let snapshot = null;
+  let retryAfter = 0;
   let discoveryFailedAt = -Infinity;
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 300 });
@@ -184,16 +187,21 @@ export function smhiAirQualityProxy({
     return latest;
   }
 
-  async function readDiskOnce() {
-    if (diskChecked) return;
-    diskChecked = true;
-    try {
-      const parsed = JSON.parse(await fsp.readFile(cachePath, 'utf8'));
-      if (Number.isFinite(parsed?.at) && Array.isArray(parsed?.series))
-        discovered = parsed;
-    } catch {
-      /* no disk cache yet */
-    }
+  /**
+   * The series kept on disk, read once: requests arriving while it is read
+   * wait for it, so none of them starts a discovery the disk makes needless.
+   */
+  function readDiskOnce() {
+    diskRead ??= (async () => {
+      try {
+        const parsed = JSON.parse(await fsp.readFile(cachePath, 'utf8'));
+        if (Number.isFinite(parsed?.at) && Array.isArray(parsed?.series))
+          discovered = parsed;
+      } catch {
+        /* no disk cache yet */
+      }
+    })();
+    return diskRead;
   }
 
   async function discover() {
@@ -258,6 +266,32 @@ export function smhiAirQualityProxy({
     return { stations: groupStations(series, latest), fetchedAt: at };
   }
 
+  /** The last stations marked stale, or null once too old to show. */
+  const lastKnown = () =>
+    snapshot && now() - snapshot.savedAt <= STALE_MAX_MS
+      ? { ...snapshot.value, stale: true }
+      : null;
+
+  /**
+   * One read of SMHI, shared by everyone waiting on it: the new stations,
+   * or after a failure the last ones (null without any).
+   */
+  async function refresh() {
+    try {
+      const value = await loadStations();
+      snapshot = { value, savedAt: now() };
+      retryAfter = 0;
+      console.log(`[smhi-air-quality] ${value.stations.length} stations`);
+      return value;
+    } catch (error) {
+      console.warn(
+        `[smhi-air-quality] refresh failed: ${error?.message || error}`,
+      );
+      retryAfter = now() + SMHI_AIR_QUALITY_RETRY_AFTER_FAILURE_MS;
+      return lastKnown();
+    }
+  }
+
   async function handler(req, res) {
     const json = (status, value, headers = {}) => {
       if (res.destroyed) return;
@@ -284,28 +318,12 @@ export function smhiAirQualityProxy({
     if (now() - discovered.at > DISCOVERY_TTL_MS) discoverInBackground();
     if (!allow(clientKey(req)))
       return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
-    try {
-      const { promise } = coalesceProxyRequest(
-        inFlight,
-        'values',
-        loadStations,
-      );
-      const value = await promise;
-      snapshot = { value, savedAt: now() };
-      console.log(`[smhi-air-quality] ${value.stations.length} stations`);
-      return json(200, value);
-    } catch (error) {
-      console.warn(
-        `[smhi-air-quality] refresh failed: ${error?.message || error}`,
-      );
-      if (snapshot && now() - snapshot.savedAt <= STALE_MAX_MS)
-        return json(
-          200,
-          { ...snapshot.value, stale: true },
-          { 'X-Data-Stale': 'true' },
-        );
-      return json(502, { error: 'smhi_air_quality_unavailable' });
-    }
+    const value =
+      now() < retryAfter
+        ? lastKnown()
+        : await coalesceProxyRequest(inFlight, 'values', refresh).promise;
+    if (!value) return json(502, { error: 'smhi_air_quality_unavailable' });
+    return json(200, value, value.stale ? { 'X-Data-Stale': 'true' } : {});
   }
 
   return {

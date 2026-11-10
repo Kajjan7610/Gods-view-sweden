@@ -152,8 +152,9 @@ export function createSmhiAirQualitySource({
 
 /**
  * Several networks as one source: their readings side by side. A network
- * that fails is left out while another answers; only when every network
- * fails does the snapshot fail, with the first error.
+ * that fails is left out while another answers, and its error comes along as
+ * `failures` on the readings, so its stations are not simply missing; only
+ * when every network fails does the snapshot fail, with the first error.
  * @param {Array<{getSnapshot: Function}>} sources
  * @returns {{getSnapshot: Function}}
  */
@@ -166,7 +167,14 @@ export function createCombinedAirQualitySource(sources) {
       options.signal?.throwIfAborted();
       const ok = results.filter((result) => result.status === 'fulfilled');
       if (!ok.length) throw results[0].reason;
-      return ok.flatMap((result) => result.value);
+      const readings = ok.flatMap((result) => result.value);
+      const failures = results
+        .filter((result) => result.status === 'rejected')
+        .map((result) => result.reason);
+      // Beside the rows, not among them: the readings stay a plain list.
+      if (failures.length)
+        Object.defineProperty(readings, 'failures', { value: failures });
+      return readings;
     },
   };
 }

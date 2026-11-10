@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import { getLocale, msg, t, tn } from '../../i18n/index.js';
+import { formatNumber, getLocale, msg, t, tn } from '../../i18n/index.js';
 import { translateFeedError } from '../../ui/statusText.js';
 import { foldText } from '../../ui/cardText.js';
 import {
@@ -46,12 +46,28 @@ const clock = (ms) =>
   }).format(ms);
 
 /**
+ * What a station measured, in the app's number format; a network that only
+ * gives a note keeps it.
+ */
+function measuredNote(reading) {
+  if (!Array.isArray(reading.measurements) || !reading.measurements.length)
+    return reading.note;
+  const parts = reading.measurements.map(
+    ({ pollutant, value }) =>
+      `${pollutant} ${formatNumber(value, { maximumFractionDigits: 1 })}`,
+  );
+  // i18n-ignore: unit
+  return `${parts.join(' · ')} µg/m³`;
+}
+
+/**
  * Card for one station: its index and risk, what was measured, and when.
  * Card lines never wrap, so a network's note is folded into short lines.
  */
 export function buildStationCard(reading) {
   const details = [`${reading.scale} ${reading.label} · ${t(reading.risk)}`];
-  if (reading.note) details.push(...foldText(reading.note, NOTE_LINES));
+  const note = measuredNote(reading);
+  if (note) details.push(...foldText(note, NOTE_LINES));
   if (Number.isFinite(reading.observedMs))
     details.push(t('Measured {time}', { time: clock(reading.observedMs) }));
   details.push(String(reading.provider).toUpperCase());
@@ -291,7 +307,14 @@ export function createAirQualityLayer({
         if (_selectedId) publishSelectedCard();
         _count = _readings.length;
         _lastUpdate = Date.now();
-        _lastError = null;
+        // A network that failed while another answered: its stations are
+        // missing from the map, and the row says which one.
+        const [failed] = readings.failures || [];
+        _lastError = failed
+          ? failed?.message || msg('Air quality request failed')
+          : null;
+        if (failed)
+          console.warn('[Data:AirQuality] A network failed:', _lastError);
         notify();
         return true;
       } catch (error) {

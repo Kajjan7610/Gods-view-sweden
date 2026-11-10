@@ -76,7 +76,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Polishändelser (Sverige) | Polismyndigheten | De 500 senaste notiserna, cirka tio dagar, hela Sverige | Var 5:e minut | Öppna data, källan anges |
 | SE | Trafikmeddelanden (SR) | Sveriges Radio | Aktuella trafikmeddelanden i hela Sverige | Var 3:e minut | Sveriges Radios API-villkor: visas oförändrat, med källa och länk |
 | SE | Kollektivtrafikstörningar (Sverige) | Trafiklab (Samtrafiken) | Störningar vid hållplatserna hos 16 regionala trafikbolag | Varannan minut | CC0 1.0 |
-| +SE | Luftkvalitet | SMHI | Cirka 75 mätstationer på den europeiska EAQI-skalan. Originalet: Kanadensiska stationer (ECCC AQHI) | Var 20:e minut | CC BY 4.0 (SMHI) |
+| +SE | Luftkvalitet | SMHI | Cirka 75 mätstationer på den europeiska EAQI-skalan. Originalet: Kanadensiska stationer (ECCC AQHI) | Varje timme | CC BY 4.0 (SMHI) |
 | +SE | Regnradar | SMHI · EUMETNET OPERA | Nordisk radar från SMHI och europeisk radar från OPERA. Originalet: Radar över USA (NOAA) | Var 5:e minut | CC BY 4.0 (SMHI, OPERA) |
 | SE | Vädervarningar (Sverige) | SMHI · Krisinformation.se | Vädervarningar, VMA och krisnyheter i hela Sverige | Var 5:e minut | CC BY 4.0 (SMHI) |
 | SE | Väder nu (Sverige) | SMHI | Cirka 185 väderstationer, och en prognos där du klickar | Var 10:e minut | CC BY 4.0 |
@@ -213,6 +213,26 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-10 (luftkvalitet: rättningar efter kodgranskning)
+- EAQI räknas med de gränser EEA anger i dag (airindex.eea.europa.eu, läst
+  2026-11-10), i µg/m³: PM2.5 5/15/50/90/140, PM10 15/45/120/195/270, NO2
+  10/25/60/100/150 och O3 60/100/120/160/180. Koden hade de äldre gränserna,
+  som gav för låg nivå för kvävedioxid och för hög för partiklar. Det gäller
+  även stadsdossiern. Svaveldioxid, indexets femte ämne, läses inte.
+- När ett av näten (SMHI eller Kanada) inte svarar visas det andra nätets
+  stationer tillsammans med ett fel som namnger det som saknas. Förut
+  försvann de svenska stationerna utan att något syntes.
+- Källraden säger "Varje timme" i stället för "Var 20:e minut": värdena är
+  timvärden och var vid kontrollen en till tre timmar gamla. Proxyn hämtar
+  därför högst var 30:e minut.
+- Proxyn lämnar SMHI i fred i 1 minut efter en misslyckad hämtning och
+  svarar under tiden med de senaste stationerna, märkta X-Data-Stale (eller
+  502 om inga finns). Loggraden och cachen skrivs en gång per hämtning.
+- Förfrågningar som kommer samtidigt strax efter start väntar på att listan
+  över mätserier har lästs från disk, i stället för att starta en ny, tung
+  kartläggning hos SMHI.
+- Kortet skriver mätvärdena med appens talformat ("PM10 109,2 µg/m³").
 
 ### 2026-11-10 (sjöväder: rättningar efter kodgranskning; SMHI-hämtning)
 - Vattenstånd jämförs bara när nollpunkten är densamma. ViVa anger tre

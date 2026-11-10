@@ -145,14 +145,16 @@ export const AIR_QUALITY_PROVIDERS = Object.freeze({
 
 /**
  * The European Environment Agency's EAQI level limits in µg/m³, the upper
- * bound of levels 1–5 (above the last is level 6). Applied to hourly values;
- * the EEA scores PM on 24-hour means, so a single hour reads a little high.
+ * bound of levels 1–5 (above the last is level 6), as its index page lists
+ * them (airindex.eea.europa.eu, read 2026-11-10). The EEA scores hourly
+ * concentrations of every pollutant, as is done here. Sulphur dioxide, the
+ * index's fifth pollutant, is not read.
  */
 export const EAQI_LIMITS = Object.freeze({
-  NO2: Object.freeze([40, 90, 120, 230, 340]),
-  PM10: Object.freeze([20, 40, 50, 100, 150]),
-  'PM2.5': Object.freeze([10, 20, 25, 50, 75]),
-  O3: Object.freeze([50, 100, 130, 240, 380]),
+  NO2: Object.freeze([10, 25, 60, 100, 150]),
+  PM10: Object.freeze([15, 45, 120, 195, 270]),
+  'PM2.5': Object.freeze([5, 15, 50, 90, 140]),
+  O3: Object.freeze([60, 100, 120, 160, 180]),
 });
 
 /** EAQI level 1–6 for one pollutant concentration, or null. */
@@ -165,7 +167,8 @@ export function eaqiLevel(pollutant, value) {
 
 /**
  * SMHI stations from the proxy to provider-shaped rows: the station's EAQI
- * is its worst pollutant's level, and the note names each measurement.
+ * is its worst pollutant's level; the measurements come as numbers for the
+ * card and, as English text, in the note.
  * @param {object[]} stations [{id, name, lat, lon, pollutants: {NO2: {value, at}}}]
  * @param {number} [now=Date.now()]
  * @returns {Array<object>}
@@ -181,6 +184,7 @@ export function normalizeSmhiReadings(stations, now = Date.now()) {
     let value = null;
     let observedMs = null;
     const parts = [];
+    const measurements = [];
     for (const [pollutant, sample] of Object.entries(
       station.pollutants || {},
     )) {
@@ -192,6 +196,7 @@ export function normalizeSmhiReadings(stations, now = Date.now()) {
       value = Math.max(value ?? 0, level);
       observedMs = Math.max(observedMs ?? 0, at);
       parts.push(`${pollutant} ${Math.round(measured * 10) / 10}`);
+      measurements.push({ pollutant, value: measured });
     }
     if (value === null) continue;
     const band = bandForValue(provider.id, value);
@@ -212,6 +217,7 @@ export function normalizeSmhiReadings(stations, now = Date.now()) {
       label: valueLabel(provider.id, value),
       risk: bandRiskText(band),
       note: `${parts.join(' · ')} µg/m³`,
+      measurements,
     });
   }
   return rows.sort(

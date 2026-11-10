@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -156,4 +156,119 @@ test('a failed discovery is not retried at once', async (t) => {
   await new Promise((resolve) => setTimeout(resolve, 20));
   assert.equal((await request()).status, 503);
   assert.equal(calls.length, 1, 'one listing attempt only');
+});
+
+/** A proxy that already knows its series: no warm-up, a clock and a switch. */
+async function warm(t) {
+  const dir = await mkdtemp(path.join(tmpdir(), 'smhi-aq-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const log = t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  const cachePath = path.join(dir, 'series.json');
+  await writeFile(
+    cachePath,
+    JSON.stringify({
+      at: NOW,
+      series: [
+        {
+          id: '1',
+          pollutant: 'NO2',
+          name: 'Göteborg Gårda',
+          lat: 57.7009,
+          lon: 11.9946,
+        },
+      ],
+    }),
+  );
+  const state = { now: NOW, fail: false, calls: 0, gate: null };
+  let handler;
+  smhiAirQualityProxy({
+    now: () => state.now,
+    cachePath,
+    fetchImpl: async () => {
+      state.calls += 1;
+      await state.gate;
+      if (state.fail) return new Response('down', { status: 503 });
+      return Response.json({
+        1: { values: [{ timestamp: state.now - 3600e3, value: 11 }] },
+      });
+    },
+  }).configureServer({ middlewares: { use: (_path, fn) => (handler = fn) } });
+  const request = async () => {
+    const res = {
+      destroyed: false,
+      writeHead(status) {
+        this.status = status;
+      },
+      end(body) {
+        this.body = body;
+      },
+    };
+    await handler({ method: 'GET', url: '/', headers: {}, socket: {} }, res);
+    return { status: res.status, json: () => JSON.parse(res.body) };
+  };
+  return { request, state, log };
+}
+
+test('hourly values are read at most every half hour', async (t) => {
+  const { request, state } = await warm(t);
+  assert.equal((await request()).json().stations.length, 1);
+  assert.equal(state.calls, 1);
+  state.now += 29 * 60_000;
+  await request();
+  assert.equal(state.calls, 1, 'cached');
+  state.now += 2 * 60_000;
+  await request();
+  assert.equal(state.calls, 2);
+});
+
+test('after a failed refresh SMHI is left alone for a minute', async (t) => {
+  const { request, state } = await warm(t);
+  await request();
+  state.fail = true;
+  state.now += 31 * 60_000;
+  assert.equal((await request()).json().stale, true);
+  assert.equal(state.calls, 2);
+  // Within the minute: the last stations again, SMHI not asked.
+  state.now += 30_000;
+  for (let i = 0; i < 3; i += 1)
+    assert.equal((await request()).json().stale, true);
+  assert.equal(state.calls, 2);
+  // After it, asked once more; and once it answers, fresh again.
+  state.now += 31_000;
+  state.fail = false;
+  const back = (await request()).json();
+  assert.equal(state.calls, 3);
+  assert.equal(back.stale, undefined);
+});
+
+test('without any snapshot a failed refresh is a 502, also during the pause', async (t) => {
+  const { request, state } = await warm(t);
+  state.fail = true;
+  assert.equal((await request()).status, 502);
+  const paused = await request();
+  assert.equal(paused.status, 502);
+  assert.equal(paused.json().error, 'smhi_air_quality_unavailable');
+  assert.equal(state.calls, 1);
+});
+
+test('requests waiting on one refresh share it, logged and saved once', async (t) => {
+  const { request, state, log } = await warm(t);
+  let release;
+  state.gate = new Promise((resolve) => (release = resolve));
+  const waiting = [request(), request(), request()];
+  // The series list is read from disk first; then the one request waits.
+  for (let waited = 0; state.calls === 0 && waited < 5000; waited += 10)
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  release();
+  const answers = await Promise.all(waiting);
+  assert.deepEqual(
+    answers.map((answer) => answer.status),
+    [200, 200, 200],
+  );
+  assert.equal(state.calls, 1);
+  assert.deepEqual(
+    log.mock.calls.map((call) => call.arguments[0]),
+    ['[smhi-air-quality] 1 stations'],
+  );
 });
