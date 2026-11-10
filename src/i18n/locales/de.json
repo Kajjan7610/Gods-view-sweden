@@ -3313,6 +3313,8 @@
   "Sea Weather (Sweden)": "Seewetter (Schweden)",
   "Aurora forecast unavailable": "Polarlichtvorhersage nicht verfügbar",
   "Kp index {kp} (0 calm, 9 extreme storm)": "Kp-Index {kp} (0 ruhig, 9 extremer Sturm)",
+  "Forecast for {time}": "Vorhersage für {time}",
+  "Kp index {kp} from {time} (0 calm, 9 extreme storm)": "Kp-Index {kp} ab {time} (0 ruhig, 9 extremer Sturm)",
   "{town} {chance} %": "{town} {chance} %",
   "The glowing band is NOAA’s OVATION chance of aurora overhead in the next half hour, drawn at aurora height. You need a dark, clear sky; aurora is often seen low in the north from well south of the band.": "Das leuchtende Band ist die OVATION-Wahrscheinlichkeit der NOAA für Polarlicht im Zenit in der nächsten halben Stunde, in Polarlichthöhe gezeichnet. Nötig ist ein dunkler, klarer Himmel; Polarlicht ist oft tief im Norden auch deutlich südlich des Bandes zu sehen.",
   "Malformed aurora snapshot": "Fehlerhafter Polarlicht-Snapshot",

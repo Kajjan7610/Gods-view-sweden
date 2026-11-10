@@ -87,3 +87,16 @@ export function chanceAt(grid, [lon, lat]) {
   if (!row) return 0;
   return row[((Math.round(lon) % 360) + 360) % 360] ?? 0;
 }
+
+/** A forecast for a time this far behind the clock is no longer the sky. */
+export const AURORA_MAX_AGE_MS = 60 * 60_000;
+
+/**
+ * True when the grid is for a time over an hour past, as when NOAA keeps
+ * answering with a file it has stopped renewing. Without a forecast time
+ * the observation's stands in; without either there is nothing to judge.
+ */
+export function auroraOutdated(snapshot, nowMs) {
+  const at = snapshot?.forecast ?? snapshot?.observed;
+  return Number.isFinite(at) && nowMs - at > AURORA_MAX_AGE_MS;
+}

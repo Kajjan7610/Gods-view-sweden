@@ -3388,6 +3388,8 @@
   "Sea Weather (Sweden)": "Tempo no mar (Suécia)",
   "Aurora forecast unavailable": "Previsão de auroras indisponível",
   "Kp index {kp} (0 calm, 9 extreme storm)": "Índice Kp {kp} (0 calmo, 9 tempestade extrema)",
+  "Forecast for {time}": "Previsão para as {time}",
+  "Kp index {kp} from {time} (0 calm, 9 extreme storm)": "Índice Kp {kp} desde as {time} (0 calmo, 9 tempestade extrema)",
   "{town} {chance} %": "{town} {chance} %",
   "The glowing band is NOAA’s OVATION chance of aurora overhead in the next half hour, drawn at aurora height. You need a dark, clear sky; aurora is often seen low in the north from well south of the band.": "A faixa luminosa é a probabilidade OVATION da NOAA de aurora no zênite na próxima meia hora, desenhada na altura das auroras. É preciso céu escuro e limpo; a aurora costuma ser vista baixa ao norte bem ao sul da faixa.",
   "Malformed aurora snapshot": "Snapshot de auroras malformado",

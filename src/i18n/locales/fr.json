@@ -3388,6 +3388,8 @@
   "Sea Weather (Sweden)": "Météo marine (Suède)",
   "Aurora forecast unavailable": "Prévision d’aurores indisponible",
   "Kp index {kp} (0 calm, 9 extreme storm)": "Indice Kp {kp} (0 calme, 9 tempête extrême)",
+  "Forecast for {time}": "Prévision pour {time}",
+  "Kp index {kp} from {time} (0 calm, 9 extreme storm)": "Indice Kp {kp} depuis {time} (0 calme, 9 tempête extrême)",
   "{town} {chance} %": "{town} {chance} %",
   "The glowing band is NOAA’s OVATION chance of aurora overhead in the next half hour, drawn at aurora height. You need a dark, clear sky; aurora is often seen low in the north from well south of the band.": "La bande lumineuse est la probabilité OVATION de la NOAA d’une aurore au zénith dans la demi-heure, tracée à l’altitude des aurores. Il faut un ciel sombre et dégagé ; les aurores se voient souvent bas au nord bien au sud de la bande.",
   "Malformed aurora snapshot": "Instantané d’aurores mal formé",

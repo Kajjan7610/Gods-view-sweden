@@ -214,6 +214,21 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (norrsken: rättningar efter kodgranskning)
+- Lagerraden visar vilken tid prognosen gäller ("Prognos för 23:11", med
+  datum när den inte är från i dag), och lagret märks som inaktuellt när
+  prognostiden ligger mer än en timme bakåt. Förut kunde en gammal oval
+  visas som chansen den närmaste halvtimmen om NOAA slutade förnya filen.
+- Kp-raden säger vilka timmar värdet är från ("Kp-index 2,3 från 19:00"):
+  Kp är ett tretimmarsvärde och kan vara flera timmar äldre än prognosen.
+- En ritning som misslyckades loggas som ritfel och görs om vid nästa
+  uppdatering. Ett nytt Kp-värde når raden även när prognostiden är
+  densamma, och en fil utan tidsangivelse ritas om varje gång i stället för
+  att frysa. Ett avstängt lager bär inte kvar sitt senaste fel.
+- Proxyn lämnar NOAA i fred i 1 minut efter en misslyckad hämtning och
+  svarar under tiden med den senaste prognosen, märkt X-Data-Stale (eller
+  502 om ingen finns). Loggraden och cachen skrivs en gång per hämtning.
+
 ### 2026-11-10 (luftkvalitet: rättningar efter kodgranskning)
 - EAQI räknas med de gränser EEA anger i dag (airindex.eea.europa.eu, läst
   2026-11-10), i µg/m³: PM2.5 5/15/50/90/140, PM10 15/45/120/195/270, NO2

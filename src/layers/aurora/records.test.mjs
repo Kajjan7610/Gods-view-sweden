@@ -2,9 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  AURORA_MAX_AGE_MS,
   AURORA_SOUTH,
   AURORA_TOWNS,
   auroraColor,
+  auroraOutdated,
   chanceAt,
   latestKp,
   normalizeOvation,
@@ -61,4 +63,25 @@ test('the newest Kp is read from the K-index list', () => {
     { kp: 1.67, at: Date.parse('2026-11-04T18:00:00Z') },
   );
   assert.equal(latestKp({}), null);
+});
+
+test('a forecast for a time over an hour past is outdated', () => {
+  const at = Date.parse('2026-11-04T23:04:00Z');
+  assert.equal(auroraOutdated({ forecast: at }, at + AURORA_MAX_AGE_MS), false);
+  assert.equal(
+    auroraOutdated({ forecast: at }, at + AURORA_MAX_AGE_MS + 1),
+    true,
+  );
+  // Ahead of the clock, as a forecast should be: current.
+  assert.equal(auroraOutdated({ forecast: at }, at - 30 * 60_000), false);
+  // Without a forecast time the observation's stands in.
+  assert.equal(
+    auroraOutdated(
+      { forecast: null, observed: at },
+      at + AURORA_MAX_AGE_MS + 1,
+    ),
+    true,
+  );
+  // Without any time there is nothing to judge.
+  assert.equal(auroraOutdated({ forecast: null, observed: null }, at), false);
 });

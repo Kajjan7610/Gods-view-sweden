@@ -3463,6 +3463,8 @@
   "Sea Weather (Sweden)": "Морская погода (Швеция)",
   "Aurora forecast unavailable": "Прогноз полярных сияний недоступен",
   "Kp index {kp} (0 calm, 9 extreme storm)": "Индекс Kp {kp} (0 спокойно, 9 экстремальная буря)",
+  "Forecast for {time}": "Прогноз на {time}",
+  "Kp index {kp} from {time} (0 calm, 9 extreme storm)": "Индекс Kp {kp} с {time} (0 спокойно, 9 экстремальная буря)",
   "{town} {chance} %": "{town} {chance} %",
   "The glowing band is NOAA’s OVATION chance of aurora overhead in the next half hour, drawn at aurora height. You need a dark, clear sky; aurora is often seen low in the north from well south of the band.": "Светящаяся полоса — вероятность OVATION от NOAA увидеть сияние в зените в ближайшие полчаса, на высоте сияний. Нужно тёмное ясное небо; сияние часто видно низко на севере и заметно южнее полосы.",
   "Malformed aurora snapshot": "Некорректный снимок прогноза сияний",

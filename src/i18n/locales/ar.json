@@ -3613,6 +3613,8 @@
   "Sea Weather (Sweden)": "طقس البحر (السويد)",
   "Aurora forecast unavailable": "توقعات الشفق القطبي غير متاحة",
   "Kp index {kp} (0 calm, 9 extreme storm)": "مؤشر Kp {kp} (0 هادئ، 9 عاصفة شديدة جدًا)",
+  "Forecast for {time}": "توقعات الساعة {time}",
+  "Kp index {kp} from {time} (0 calm, 9 extreme storm)": "مؤشر Kp {kp} منذ {time} (0 هادئ، 9 عاصفة شديدة جدًا)",
   "{town} {chance} %": "{town} {chance} %",
   "The glowing band is NOAA’s OVATION chance of aurora overhead in the next half hour, drawn at aurora height. You need a dark, clear sky; aurora is often seen low in the north from well south of the band.": "الشريط المضيء هو احتمال OVATION من NOAA لظهور الشفق فوق الرأس خلال نصف الساعة القادمة، مرسومًا على ارتفاع الشفق. يلزم سماء مظلمة وصافية؛ وكثيرًا ما يُرى الشفق منخفضًا نحو الشمال جنوب الشريط بمسافة.",
   "Malformed aurora snapshot": "لقطة توقعات الشفق مشوّهة",

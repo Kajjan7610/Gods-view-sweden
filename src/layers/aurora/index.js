@@ -1,10 +1,12 @@
 import * as Cesium from 'cesium';
 import { formatNumber, msg, t } from '../../i18n/index.js';
+import { measuredWhen } from '../measuredWhen.js';
 import { redrawEntities } from '../redrawEntities.js';
 import {
   AURORA_SOUTH,
   AURORA_TOWNS,
   auroraColor,
+  auroraOutdated,
   chanceAt,
 } from './records.js';
 export * from './records.js';
@@ -63,7 +65,7 @@ function paint(rows) {
  * Kp index and the chance over Swedish towns in the layer row. Share links
  * carry it as token 0t.
  */
-export function createAuroraLayer({ source } = {}) {
+export function createAuroraLayer({ source, now = () => Date.now() } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Aurora requires a snapshot source');
   let _viewer = null;
@@ -75,6 +77,8 @@ export function createAuroraLayer({ source } = {}) {
   let _lastError = null;
   let _stale = false;
   let _snapshot = null;
+  /** The time of the grid last drawn; undefined before one is. */
+  let _drawn;
 
   function render() {
     if (!_dataSource) return;
@@ -126,6 +130,7 @@ export function createAuroraLayer({ source } = {}) {
       _request?.abort();
       _request = null;
       _enabled = false;
+      _lastError = null;
       if (_dataSource) _dataSource.show = false;
     },
 
@@ -138,17 +143,32 @@ export function createAuroraLayer({ source } = {}) {
         const snapshot = await source.getSnapshot({ signal: request.signal });
         if (request.signal.aborted || _request !== request || !_enabled)
           return false;
-        _stale = snapshot.stale;
+        // Stale by the proxy's word, or because the forecast is for a time
+        // long past: NOAA still answering with a file it stopped renewing.
+        _stale = snapshot.stale || auroraOutdated(snapshot, now());
         _lastUpdate =
-          _stale && Number.isFinite(snapshot.fetchedAt)
+          snapshot.stale && Number.isFinite(snapshot.fetchedAt)
             ? snapshot.fetchedAt
-            : Date.now();
+            : now();
         _lastError = null;
-        if (snapshot.forecast !== _snapshot?.forecast || !_snapshot) {
-          _snapshot = snapshot;
-          render();
+        // The time names the grid; a grid without any is drawn every time.
+        const signature = snapshot.forecast ?? snapshot.observed ?? null;
+        // The newest snapshot always: the row reads Kp and the towns from it.
+        _snapshot = snapshot;
+        if (signature === null || signature !== _drawn) {
+          // Not trusted until drawn: a drawing that fails is made again.
+          _drawn = undefined;
+          try {
+            render();
+          } catch (e) {
+            console.warn('[Data:Aurora] Draw error:', e?.message || e);
+            _lastError = e?.message || msg('Aurora forecast unavailable');
+            _rowListener?.();
+            return true;
+          }
+          _drawn = signature;
           console.log(
-            `[Data:Aurora] Updated: forecast ${new Date(snapshot.forecast ?? Date.now()).toISOString()}, Kp ${snapshot.kp?.kp ?? '?'}`,
+            `[Data:Aurora] Updated: forecast ${new Date(snapshot.forecast ?? now()).toISOString()}, Kp ${snapshot.kp?.kp ?? '?'}`,
           );
         }
         _rowListener?.();
@@ -169,6 +189,7 @@ export function createAuroraLayer({ source } = {}) {
     destroy(viewer = _viewer) {
       layer.disable();
       _snapshot = null;
+      _drawn = undefined;
       if (_dataSource) {
         viewer.dataSources.remove(_dataSource, true);
         _dataSource = null;
@@ -185,15 +206,32 @@ export function createAuroraLayer({ source } = {}) {
 
     getRowControls() {
       const legend = [];
-      const kp = _snapshot?.kp?.kp;
-      if (Number.isFinite(kp))
+      // When the forecast is for: the date too once it is not today's.
+      const forecast = _snapshot?.forecast ?? _snapshot?.observed;
+      if (Number.isFinite(forecast))
         legend.push({
-          label: t('Kp index {kp} (0 calm, 9 extreme storm)', {
-            kp: formatNumber(kp, { maximumFractionDigits: 1 }),
+          label: t('Forecast for {time}', {
+            time: measuredWhen(forecast, now()),
           }),
+          color: _stale ? '#546e7a' : '#00e676',
+          count: null,
+        });
+      const kp = _snapshot?.kp?.kp;
+      if (Number.isFinite(kp)) {
+        const value = formatNumber(kp, { maximumFractionDigits: 1 });
+        const at = _snapshot.kp.at;
+        legend.push({
+          // Kp is a three-hour value: the row says which hours it is from.
+          label: Number.isFinite(at)
+            ? t('Kp index {kp} from {time} (0 calm, 9 extreme storm)', {
+                kp: value,
+                time: measuredWhen(at, now()),
+              })
+            : t('Kp index {kp} (0 calm, 9 extreme storm)', { kp: value }),
           color: kp >= 5 ? '#ff1744' : kp >= 4 ? '#ffd600' : '#00e676',
           count: null,
         });
+      }
       for (const town of AURORA_TOWNS) {
         const chance = _snapshot ? chanceAt(_snapshot, town.point) : null;
         if (chance == null) continue;

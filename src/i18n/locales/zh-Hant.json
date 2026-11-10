@@ -3238,6 +3238,8 @@
   "Sea Weather (Sweden)": "海上天氣（瑞典）",
   "Aurora forecast unavailable": "極光預報無法使用",
   "Kp index {kp} (0 calm, 9 extreme storm)": "Kp 指數 {kp}（0 平靜，9 極端風暴）",
+  "Forecast for {time}": "{time} 的預報",
+  "Kp index {kp} from {time} (0 calm, 9 extreme storm)": "Kp 指數 {kp}（自 {time} 起；0 平靜，9 極端風暴）",
   "{town} {chance} %": "{town} {chance}%",
   "The glowing band is NOAA’s OVATION chance of aurora overhead in the next half hour, drawn at aurora height. You need a dark, clear sky; aurora is often seen low in the north from well south of the band.": "發光帶是 NOAA OVATION 提供的未來半小時頭頂出現極光的機率，繪製於極光高度。需要黑暗晴朗的天空；在發光帶以南較遠處也常能在北方低空看到極光。",
   "Malformed aurora snapshot": "極光預報快照格式錯誤",

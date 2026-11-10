@@ -3238,6 +3238,8 @@
   "Sea Weather (Sweden)": "海上気象（スウェーデン）",
   "Aurora forecast unavailable": "オーロラ予報を利用できません",
   "Kp index {kp} (0 calm, 9 extreme storm)": "Kp 指数 {kp}（0 静穏、9 極端な嵐）",
+  "Forecast for {time}": "{time} の予報",
+  "Kp index {kp} from {time} (0 calm, 9 extreme storm)": "Kp 指数 {kp}（{time} から。0 静穏、9 極端な嵐）",
   "{town} {chance} %": "{town} {chance} %",
   "The glowing band is NOAA’s OVATION chance of aurora overhead in the next half hour, drawn at aurora height. You need a dark, clear sky; aurora is often seen low in the north from well south of the band.": "光る帯は NOAA OVATION による今後 30 分の天頂オーロラ確率で、オーロラの高さに描いています。暗く晴れた空が必要です。帯より南でも北の低い空に見えることがよくあります。",
   "Malformed aurora snapshot": "オーロラ予報スナップショットが不正です",
