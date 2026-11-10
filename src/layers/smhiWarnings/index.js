@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { redrawEntities } from '../redrawEntities.js';
 import { WARNING_LEVELS, levelColor, warningLevel } from './records.js';
 import { CRISIS_KINDS } from './crisis.js';
 import { spreadAroundPlaces } from '../policeEvents/records.js';
@@ -220,9 +221,7 @@ export function createSmhiWarningsLayer({
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       // Least severe first, so red is drawn over orange over yellow.
       for (const row of visibleAreas()) {
         const rank = warningLevel(row.level)?.rank ?? 0;
@@ -283,9 +282,7 @@ export function createSmhiWarningsLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     if (_selectedId) publishSelectedCard();
     _viewer?.scene?.requestRender?.();
   }

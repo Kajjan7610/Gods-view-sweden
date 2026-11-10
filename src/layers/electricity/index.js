@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { redrawEntities } from '../redrawEntities.js';
 import {
   PRICE_CLASSES,
   priceAt,
@@ -197,9 +198,7 @@ export function createElectricityPricesLayer({
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       for (const zone of _zones) {
         entities.add({
           id: `${PICK_PREFIX}${zone.id}`,
@@ -218,9 +217,7 @@ export function createElectricityPricesLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     publishLabels();
     if (_selectedId) publishSelectedCard();
     _viewer?.scene?.requestRender?.();

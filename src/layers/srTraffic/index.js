@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { redrawEntities } from '../redrawEntities.js';
 import { SR_PRIORITIES, priorityColor } from './records.js';
 import {
   PRIORITY_LABELS,
@@ -142,9 +143,7 @@ export function createSrTrafficLayer({
     if (!_dataSource) return;
     const entities = _dataSource.entities;
     const shown = visibleMessages();
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       // Least serious first, so the serious ones are drawn on top.
       for (const row of [...shown].reverse()) {
         entities.add({
@@ -165,9 +164,7 @@ export function createSrTrafficLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     if (_selectedId && !shown.some((row) => row.id === _selectedId))
       _selectedId = null;
     publishSelectedCard();

@@ -42,6 +42,30 @@ test('a zone card lists its own flows, then Sweden, then the time', () => {
   assert.equal(card.details.length, 5);
 });
 
+test('flows and production from different quarters each get their time', () => {
+  const production = {
+    at: UPDATED + 45 * 60_000,
+    total: 17468,
+    consumption: 17888,
+  };
+  const card = buildAreaCard(SE3, snapshot({ production }));
+  assert.equal(
+    card.details.at(-1),
+    'Svenska kraftnät · flows 11:15 · production 12:00',
+  );
+  // Within the same minute there is one time to tell.
+  const same = { ...production, at: UPDATED + 20_000 };
+  assert.equal(
+    buildAreaCard(SE3, snapshot({ production: same })).details.at(-1),
+    'Svenska kraftnät · 11:15',
+  );
+  // Production alone dates the card when the flows have no time.
+  assert.equal(
+    buildAreaCard(SE3, snapshot({ production, updated: null })).details.at(-1),
+    'Svenska kraftnät · 12:00',
+  );
+});
+
 test('an answer without production says so with a dash', () => {
   for (const production of [{}, { at: null }, undefined, { total: NaN }]) {
     const card = buildAreaCard(SE3, snapshot({ production }));

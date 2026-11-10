@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { formatNumber, msg, t } from '../../i18n/index.js';
+import { redrawEntities } from '../redrawEntities.js';
 import {
   AURORA_SOUTH,
   AURORA_TOWNS,
@@ -78,9 +79,7 @@ export function createAuroraLayer({ source } = {}) {
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       if (_snapshot?.rows?.length) {
         entities.add({
           id: 'aurora-oval',
@@ -99,9 +98,7 @@ export function createAuroraLayer({ source } = {}) {
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     _viewer?.scene?.requestRender?.();
   }
 

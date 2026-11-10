@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { redrawEntities } from '../redrawEntities.js';
 import { DESK_CLASSES, deskClass, deskColor } from './records.js';
 import {
   POLICE_STATIONS_OVERLAY_SOURCE_ID,
@@ -154,9 +155,7 @@ export function createPoliceStationsLayer({
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       // Desks without services first, so passport desks draw on top.
       for (const row of [..._stations].reverse()) {
         entities.add({
@@ -175,9 +174,7 @@ export function createPoliceStationsLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     if (_selectedId) publishSelectedCard();
     _viewer?.scene?.requestRender?.();
   }

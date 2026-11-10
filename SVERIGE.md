@@ -127,6 +127,23 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (omritning under samma id når kartan)
+- När ett lager ritade om sina punkter under oförändrade id (nya
+  markhöjder, ny färg) fick Cesium aldrig veta det: en borttagning och ett
+  tillägg under samma id inom en och samma paus av händelserna tar ut
+  varandra, så kartan fortsatte rita de gamla punkterna. Markhöjderna
+  hämtades alltså men syntes inte. Den gemensamma hjälpen
+  `src/layers/redrawEntities.js` tar bort det gamla innan händelserna
+  pausas och används nu på alla 20 ställen där de svenska lagren ritar om
+  (19 lager och stadsdossiern). Kraftsystemet har redan egna id per
+  omritning och är orört.
+- Kostnad: omritningen når nu kartan på riktigt. På det största lagret
+  (2 825 fartkameror) tar den en engångspaus på ungefär 0,2 sekunder när
+  höjderna kommer; att slå av och på ett lager ritar inte om något.
+- Kraftsystemets kort: flödena och produktionsraden kan vara från olika
+  kvartar. Då står båda tiderna ("flöden 10:45 · produktion 10:30") i
+  stället för en tid som daterar den ena fel.
+
 ### 2026-11-10 (kraftsystemet: rättningar efter kodgranskning)
 - Ett klick på ett kort (lagrets eget eller ett annat lagers) räknas inte
   som ett klick på marken; elområdets kort är alltid träffbart.

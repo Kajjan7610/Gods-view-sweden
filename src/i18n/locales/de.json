@@ -3339,6 +3339,7 @@
   "thermal": "Wärmekraft",
   "other": "Sonstige",
   "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
+  "Svenska kraftnät · flows {flows} · production {production}": "Svenska kraftnät · Flüsse {flows} · Erzeugung {production}",
   "POWER GRID · {zone} {name}": "STROMNETZ · {zone} {name}",
   "Between Swedish zones": "Zwischen schwedischen Gebotszonen",
   "Power grid unavailable": "Stromnetz nicht verfügbar",

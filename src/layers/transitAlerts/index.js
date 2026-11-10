@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { redrawEntities } from '../redrawEntities.js';
 import { ALERT_KINDS, alertColor } from './records.js';
 import { TRANSIT_ALERTS_OVERLAY_SOURCE_ID, buildStopCard } from './cards.js';
 export * from './records.js';
@@ -137,9 +138,7 @@ export function createTransitAlertsLayer({
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       for (const row of _stops)
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
@@ -156,9 +155,7 @@ export function createTransitAlertsLayer({
             scaleByDistance: new Cesium.NearFarScalar(2e4, 1.4, 2e6, 0.6),
           },
         });
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     if (_selectedId) publishSelectedCard();
     _viewer?.scene?.requestRender?.();
   }

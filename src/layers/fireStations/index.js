@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { redrawEntities } from '../redrawEntities.js';
 import { READINESS_CLASSES, UNKNOWN_COLOR, readinessColor } from './records.js';
 import {
   FIRE_STATIONS_OVERLAY_SOURCE_ID,
@@ -142,9 +143,7 @@ export function createFireStationsLayer({
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       // Weakest first, so full-time stations draw on top where dots meet.
       for (const row of [..._stations].reverse()) {
         entities.add({
@@ -165,9 +164,7 @@ export function createFireStationsLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     if (_selectedId) publishSelectedCard();
     _viewer?.scene?.requestRender?.();
   }

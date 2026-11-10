@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { redrawEntities } from '../redrawEntities.js';
 import {
   DOSE_CLASSES,
   SERVICE_COLOR,
@@ -189,9 +190,7 @@ export function createGammaRadiationLayer({
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       for (const row of _stations) {
         const has = row.value != null;
         entities.add({
@@ -211,9 +210,7 @@ export function createGammaRadiationLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     publishLabels();
     if (_selectedId) publishSelectedCard();
     _viewer?.scene?.requestRender?.();

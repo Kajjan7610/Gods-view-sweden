@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { formatNumber, msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { redrawEntities } from '../redrawEntities.js';
 import {
   LEVEL_CLASSES,
   NO_VALUE_COLOR,
@@ -202,9 +203,7 @@ export function createSeaWeatherLayer({
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       for (const row of _stations) {
         const has = Number.isFinite(shownValue(row));
         entities.add({
@@ -224,9 +223,7 @@ export function createSeaWeatherLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     publishLabels();
     if (_selectedId) publishSelectedCard();
     _viewer?.scene?.requestRender?.();

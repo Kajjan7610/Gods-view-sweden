@@ -3414,6 +3414,7 @@
   "thermal": "térmica",
   "other": "otra",
   "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
+  "Svenska kraftnät · flows {flows} · production {production}": "Svenska kraftnät · flujos {flows} · producción {production}",
   "POWER GRID · {zone} {name}": "RED ELÉCTRICA · {zone} {name}",
   "Between Swedish zones": "Entre zonas suecas",
   "Power grid unavailable": "Red eléctrica no disponible",

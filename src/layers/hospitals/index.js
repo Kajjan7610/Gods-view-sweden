@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { redrawEntities } from '../redrawEntities.js';
 import {
   ED_BANDS,
   ED_METRICS,
@@ -150,9 +151,7 @@ export function createHospitalsLayer({
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       // Departments last, so they draw on top of the hospitals around them.
       const ordered = [..._hospitals].sort(
         (a, b) => Number(Boolean(a.ed)) - Number(Boolean(b.ed)),
@@ -175,9 +174,7 @@ export function createHospitalsLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     publishSelectedCard();
     _viewer?.scene?.requestRender?.();
   }

@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { redrawEntities } from '../redrawEntities.js';
 import {
   EVENT_CATEGORIES,
   categoryColor,
@@ -170,9 +171,7 @@ export function createPolisenEventsLayer({
     const shown = visibleEvents();
     _positions = spreadAroundPlaces(shown);
     const now = Date.now();
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       // Oldest first, so the newest dot of a place is drawn on top.
       for (const row of [...shown].reverse()) {
         const fresh = now - row.time < FRESH_MS;
@@ -196,9 +195,7 @@ export function createPolisenEventsLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     if (_selectedId && !_eventById.has(_selectedId)) _selectedId = null;
     if (_selectedId && !shown.some((row) => row.id === _selectedId))
       _selectedId = null;

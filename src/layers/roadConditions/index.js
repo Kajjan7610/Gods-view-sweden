@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { redrawEntities } from '../redrawEntities.js';
 import {
   INCIDENT_KINDS,
   OTHER_INCIDENT,
@@ -203,9 +204,7 @@ export function createTrafikverketRoadsLayer({
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       if (_show.conditions) {
         for (const row of _conditions) {
           if (row.code === 1 && !_show.normal) continue;
@@ -270,9 +269,7 @@ export function createTrafikverketRoadsLayer({
           });
         }
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     if (_selected) publishSelectedCard();
     _viewer?.scene?.requestRender?.();
   }

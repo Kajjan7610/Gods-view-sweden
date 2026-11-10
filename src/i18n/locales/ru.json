@@ -3489,6 +3489,7 @@
   "thermal": "ТЭС",
   "other": "прочее",
   "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
+  "Svenska kraftnät · flows {flows} · production {production}": "Svenska kraftnät · перетоки {flows} · производство {production}",
   "POWER GRID · {zone} {name}": "ЭНЕРГОСИСТЕМА · {zone} {name}",
   "Between Swedish zones": "Между шведскими зонами",
   "Power grid unavailable": "Энергосистема недоступна",

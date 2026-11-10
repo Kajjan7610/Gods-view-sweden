@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { redrawEntities } from '../redrawEntities.js';
 import { FLOW_CLASSES, flowClass } from './records.js';
 import {
   RIVER_FLOW_OVERLAY_SOURCE_ID,
@@ -180,9 +181,7 @@ export function createRiverFlowLayer({
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       for (const row of _stations) {
         const entry = flowClass(row.flow);
         entities.add({
@@ -200,9 +199,7 @@ export function createRiverFlowLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     publishLabels();
     if (_selectedId) publishSelectedCard();
     _viewer?.scene?.requestRender?.();

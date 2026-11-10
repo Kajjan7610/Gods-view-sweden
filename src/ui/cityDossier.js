@@ -39,6 +39,7 @@ import { OrbitController } from '../orbit.js';
 import { messagesFor } from './krisinformationModel.js';
 import { SIGHT_COLORS, createSightsLayer } from './citySights.js';
 import { facingText } from '../layers/speedCameras/cards.js';
+import { redrawEntities } from '../layers/redrawEntities.js';
 
 const PANEL_ID = 'city-panel';
 /** Higher than this the view is looking at a region, not visiting a town. */
@@ -407,9 +408,7 @@ export function createCityDossier({
       viewer.dataSources.add(journey);
     }
     const entities = journey.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       const stamps = stampsInOrder(passport).filter((stamp) =>
         Array.isArray(stamp.point),
       );
@@ -443,9 +442,7 @@ export function createCityDossier({
             }),
           },
         });
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     viewer.scene.requestRender?.();
   }
 

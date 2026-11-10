@@ -3264,6 +3264,7 @@
   "thermal": "火力",
   "other": "其他",
   "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
+  "Svenska kraftnät · flows {flows} · production {production}": "Svenska kraftnät · 潮流 {flows} · 發電 {production}",
   "POWER GRID · {zone} {name}": "電網 · {zone} {name}",
   "Between Swedish zones": "瑞典電價區之間",
   "Power grid unavailable": "電網無法使用",

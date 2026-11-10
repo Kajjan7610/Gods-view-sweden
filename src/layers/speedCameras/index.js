@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { redrawEntities } from '../redrawEntities.js';
 import {
   CAMERA_COLOR,
   SPEED_CAMERAS_OVERLAY_SOURCE_ID,
@@ -166,9 +167,7 @@ export function createSpeedCamerasLayer({
     const image = arrow();
     const show = new Cesium.DistanceDisplayCondition(0, SHOW_WITHIN_M);
     const scale = new Cesium.NearFarScalar(2_000, 1, SHOW_WITHIN_M, 0.45);
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       for (const row of _cameras) {
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
@@ -191,9 +190,7 @@ export function createSpeedCamerasLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     if (_selectedId) publishSelectedCard();
     _viewer?.scene?.requestRender?.();
   }

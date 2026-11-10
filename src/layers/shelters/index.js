@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { formatNumber, msg, t, tn } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { redrawEntities } from '../redrawEntities.js';
 import { SHELTER_STATES, clipViewBox, shelterColor } from './records.js';
 import {
   SHELTERS_OVERLAY_SOURCE_ID,
@@ -145,9 +146,7 @@ export function createSheltersLayer({
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       // Farthest first, so the nearest draw on top where dots meet.
       for (const row of [..._shown].reverse()) {
         entities.add({
@@ -166,9 +165,7 @@ export function createSheltersLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     if (_selectedId) publishSelectedCard();
     _viewer?.scene?.requestRender?.();
   }

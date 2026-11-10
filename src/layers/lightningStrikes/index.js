@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { redrawEntities } from '../redrawEntities.js';
 import { AGE_CLASSES, ageClass } from './records.js';
 import {
   LIGHTNING_STRIKES_OVERLAY_SOURCE_ID,
@@ -150,9 +151,7 @@ export function createLightningStrikesLayer({
     if (!_dataSource) return;
     const nowMs = now();
     const entities = _dataSource.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       // Oldest first, so the newest strokes draw on top.
       for (const row of [..._strikes].reverse()) {
         const age = ageClass(nowMs - row.at);
@@ -178,9 +177,7 @@ export function createLightningStrikesLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     if (_selectedId) publishSelectedCard();
     _viewer?.scene?.requestRender?.();
   }

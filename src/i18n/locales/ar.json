@@ -3639,6 +3639,7 @@
   "thermal": "حراري",
   "other": "أخرى",
   "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
+  "Svenska kraftnät · flows {flows} · production {production}": "Svenska kraftnät · التدفقات {flows} · الإنتاج {production}",
   "POWER GRID · {zone} {name}": "شبكة الكهرباء · {zone} {name}",
   "Between Swedish zones": "بين المناطق السويدية",
   "Power grid unavailable": "شبكة الكهرباء غير متاحة",

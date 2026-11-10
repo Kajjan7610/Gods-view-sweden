@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { redrawEntities } from '../redrawEntities.js';
 import { COMPANIES, storeColor, tidyStores } from './records.js';
 import { COMPANY_STORES_OVERLAY_SOURCE_ID, buildStoreCard } from './cards.js';
 export * from './records.js';
@@ -146,9 +147,7 @@ export function createCompanyStoresLayer({
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       for (const row of visible()) {
         entities.add({
           id: `${PICK_PREFIX}${row.id}`,
@@ -167,9 +166,7 @@ export function createCompanyStoresLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     publishSelectedCard();
     _viewer?.scene?.requestRender?.();
   }

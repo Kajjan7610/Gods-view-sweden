@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { redrawEntities } from '../redrawEntities.js';
 import {
   ICE_RISK_COLOR,
   NO_READING_COLOR,
@@ -197,9 +198,7 @@ export function createTrafikverketWeatherLayer({
     if (!_dataSource) return;
     const entities = _dataSource.entities;
     const now = Date.now();
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
+    redrawEntities(entities, () => {
       for (const row of visibleStations()) {
         const faded = now - row.sampled > FADE_AFTER_MS;
         const color = Cesium.Color.fromCssColorString(
@@ -222,9 +221,7 @@ export function createTrafikverketWeatherLayer({
           },
         });
       }
-    } finally {
-      entities.resumeEvents();
-    }
+    });
     publishLabels();
     if (_selectedId) publishSelectedCard();
     _viewer?.scene?.requestRender?.();
