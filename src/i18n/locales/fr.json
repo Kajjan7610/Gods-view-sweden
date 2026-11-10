@@ -3506,6 +3506,9 @@
   "Turnout, municipal election": "Participation, élections municipales",
   "Municipal election {year}": "Élections municipales {year}",
   "Fetching the live picture…": "Chargement de la situation actuelle…",
+  "No answer from: {sources}": "Pas de réponse de : {sources}",
+  "Speed cameras": "Radars de vitesse",
+  "Fly in and read more": "S’y rendre en vol et en savoir plus",
   "wind {value} m/s": "vent {value} m/s",
   "Measured at {station}": "Mesuré à {station}",
   "{count} notices in the last 24 hours": {

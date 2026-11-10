@@ -3431,6 +3431,9 @@
   "Turnout, municipal election": "Valdeltagande, kommunvalet",
   "Municipal election {year}": "Kommunvalet {year}",
   "Fetching the live picture…": "Hämtar läget just nu…",
+  "No answer from: {sources}": "Inget svar från: {sources}",
+  "Speed cameras": "Fartkameror",
+  "Fly in and read more": "Flyg in och läs mer",
   "wind {value} m/s": "vind {value} m/s",
   "Measured at {station}": "Mätt vid {station}",
   "{count} notices in the last 24 hours": {

@@ -153,6 +153,7 @@ watch(
             </div>
             <small v-if="d.now.air" class="city-dossier-note">{{ d.now.air.station }}</small>
             <small v-if="d.now.pending" class="city-dossier-note">{{ d.now.pending }}</small>
+            <small v-if="d.now.failed" class="city-dossier-note">{{ d.now.failed }}</small>
             <button type="button" class="city-dossier-radio" :disabled="d.now.radioBusy" @click="store.act('playRadio')">
               <span class="material-symbols-outlined" aria-hidden="true">radio</span>{{ d.now.radioLabel }}
             </button>
@@ -198,12 +199,13 @@ watch(
       </template>
     </div>
   </RailPanel>
-  <!-- A first visit's title card, over the map while the camera circles. -->
+  <!-- A first visit's title card over the map, offering the flight in. -->
   <Teleport to="body">
     <Transition name="city-arrival">
       <div v-if="d?.arrival" :key="d.arrival.key" class="city-arrival" aria-live="polite">
         <strong>{{ d.arrival.name }}</strong>
         <span>{{ d.arrival.line }}</span>
+        <button v-if="d.arrival.offer" type="button" class="city-arrival-offer" @click="store.act('flyIn')">{{ t('Fly in and read more') }}</button>
       </div>
     </Transition>
   </Teleport>

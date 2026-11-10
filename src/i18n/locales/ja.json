@@ -3356,6 +3356,9 @@
   "Turnout, municipal election": "地方選挙の投票率",
   "Municipal election {year}": "地方選挙 {year}",
   "Fetching the live picture…": "現在の状況を取得中…",
+  "No answer from: {sources}": "応答なし：{sources}",
+  "Speed cameras": "速度取締カメラ",
+  "Fly in and read more": "近づいて詳しく見る",
   "wind {value} m/s": "風 {value} m/s",
   "Measured at {station}": "測定地点: {station}",
   "{count} notices in the last 24 hours": {

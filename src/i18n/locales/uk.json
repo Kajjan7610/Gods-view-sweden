@@ -3581,6 +3581,9 @@
   "Turnout, municipal election": "Явка на муніципальних виборах",
   "Municipal election {year}": "Муніципальні вибори {year}",
   "Fetching the live picture…": "Завантаження поточної ситуації…",
+  "No answer from: {sources}": "Немає відповіді від: {sources}",
+  "Speed cameras": "Камери контролю швидкості",
+  "Fly in and read more": "Підлетіти й дізнатися більше",
   "wind {value} m/s": "вітер {value} м/с",
   "Measured at {station}": "Виміряно: {station}",
   "{count} notices in the last 24 hours": {

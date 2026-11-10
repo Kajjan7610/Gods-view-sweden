@@ -47,6 +47,18 @@ const PANEL_ID = 'city-panel';
 const MAX_VISIT_HEIGHT_M = 80_000;
 const SETTLE_DELAY_MS = 500;
 const LIVE_TTL_MS = 10 * 60_000;
+/** After a part gave no answer the live picture may be asked for again. */
+const LIVE_RETRY_MS = 60_000;
+/** The live picture's parts, as the "no answer" note names them. */
+const LIVE_PARTS = Object.freeze([
+  ['brief', msg('Weather now')],
+  ['air', msg('Air quality')],
+  ['police', null, 'Polisen'], // i18n-ignore: provider name
+  ['transit', msg('Traffic')],
+  ['aurora', msg('Aurora Forecast')],
+  ['cameras', msg('Speed cameras')],
+  ['kris', msg('Crisis information')],
+]);
 const SWEDEN = Object.freeze({
   west: 10.5,
   south: 55,
@@ -69,7 +81,11 @@ const CHALLENGE_LABELS = Object.freeze({
 });
 /** A first visit circles the town once, unless something interrupts. */
 const ARRIVAL_ORBIT_S = 30;
-const ARRIVAL_TITLE_MS = 7000;
+/** The glide to the circle's first position, and the circle's tilt. */
+const ARRIVAL_FLY_S = 1.5;
+const ARRIVAL_PITCH_DEG = -32;
+/** How long the title card and its offer stay. */
+const ARRIVAL_TITLE_MS = 12_000;
 /** The start view (or a shared link) is a visit too, but not an arrival. */
 const STARTUP_QUIET_MS = 20_000;
 const STAMP_COLOR = '#ffc94d';
@@ -155,11 +171,21 @@ export function createCityDossier({
   isCameraBusy = () => false,
   // The world-overlay host, for the sights' names on the map (optional).
   overlayHost = null,
+  // Whether the CITY panel shows its contents: the live picture is fetched
+  // only while it does. `watchPanel` tells when that changes, and gives a
+  // function that stops telling (null while there is no panel to watch).
+  isPanelOpen = () => panelIsOpen(documentRef),
+  watchPanel = (onChange) => watchPanelClass(documentRef, onChange),
+  // Seams for tests: the sight markers and the fly-in's circle.
+  createSights = createSightsLayer,
+  createOrbit = (forViewer) => new OrbitController(forViewer),
 }) {
   let destroyed = false;
   const createdAt = now();
   const passport = loadPassport(storage);
   let arrival = null;
+  /** The town the title card offers the flight in to. */
+  let arrivalTown = null;
   let arrivalTimer = null;
   let orbit = null;
   let orbitWatch = null;
@@ -179,7 +205,7 @@ export function createCityDossier({
   let sights = null;
   let chosenSight = null;
   let sightsRequest = null;
-  const sightsLayer = createSightsLayer({
+  const sightsLayer = createSights({
     viewer,
     overlayHost,
     onPick: (id) => chooseSight(id),
@@ -212,8 +238,21 @@ export function createCityDossier({
     return response.json();
   }
 
+  /** The live picture is fetched only for someone looking at it. */
+  const wantsLive = () => tab === 'now' && isPanelOpen();
+  const liveIsDue = () => wantsLive() && now() - liveAt > LIVE_TTL_MS;
+
+  /** The panel opening on the NOW tab is someone starting to look. */
+  let stopWatchingPanel = null;
+  function watchPanelOnce() {
+    stopWatchingPanel ??= watchPanel(() => {
+      if (!destroyed && city && liveIsDue()) void loadLive();
+    });
+  }
+
   async function visit() {
     timer = null;
+    watchPanelOnce();
     if (destroyed || documentRef?.body?.classList?.contains('cockpit-mode'))
       return;
     // A chosen sight may lie over the border: the town stays while it shows.
@@ -249,7 +288,7 @@ export function createCityDossier({
         drawSights();
         if (tab === 'sights') void loadSights();
       }
-      if (now() - liveAt > LIVE_TTL_MS) void loadLive();
+      if (liveIsDue()) void loadLive();
     } catch (error) {
       if (error?.name !== 'AbortError')
         console.warn('[CityDossier] lookup failed:', error?.message || error);
@@ -277,6 +316,7 @@ export function createCityDossier({
       aurora: null,
       cameras: null,
       pending: 7,
+      failed: [],
     };
     render();
     const current = () =>
@@ -286,7 +326,12 @@ export function createCityDossier({
         .then((value) => {
           if (current()) live[field] = shape(value);
         })
-        .catch(() => {})
+        .catch((error) => {
+          // Named below what did arrive; a part cut short by a newer load
+          // is not one.
+          if (current() && error?.name !== 'AbortError')
+            live.failed.push(field);
+        })
         .finally(() => {
           if (!current()) return;
           live.pending -= 1;
@@ -319,52 +364,28 @@ export function createCityDossier({
         }),
       ),
     ]);
-    if (current()) liveRequest = null;
+    if (current()) {
+      liveRequest = null;
+      // A part without an answer is worth asking for again soon.
+      if (live.failed.length) liveAt = now() - LIVE_TTL_MS + LIVE_RETRY_MS;
+    }
   }
 
   // ---- arrival and passport ------------------------------------------------
-  /** The first visit's slow circle and title card. */
+  /**
+   * A first visit's title card. Nothing moves by itself: the card offers the
+   * flight in, and flyIn() makes it when the offer is taken.
+   */
   function arrive(town, townFacts) {
     if (
       isCameraBusy() ||
       documentRef?.body?.classList?.contains('cockpit-mode')
     )
       return;
-    const [lon, lat] = town.point;
-    const target = Cesium.Cartesian3.fromDegrees(lon, lat, 0);
-    const distance = Cesium.Cartesian3.distance(
-      viewer.camera.positionWC,
-      target,
-    );
-    stopOrbit();
-    orbit = new OrbitController(viewer);
-    orbit.start(target, {
-      radius: Math.min(12_000, Math.max(2_500, distance)),
-      pitch: -32,
-      speed: 360 / ARRIVAL_ORBIT_S,
-    });
-    const started = now();
-    // Any input, a camera owner taking over or one full turn ends it.
-    const interrupt = () => stopOrbit();
-    for (const type of ['pointerdown', 'wheel', 'keydown', 'touchstart'])
-      documentRef?.addEventListener?.(type, interrupt, {
-        capture: true,
-        once: true,
-      });
-    orbitWatch = setInterval(() => {
-      if (
-        now() - started > ARRIVAL_ORBIT_S * 1000 ||
-        isCameraBusy() ||
-        documentRef?.body?.classList?.contains('cockpit-mode') ||
-        // A flight someone else started (search, voice, a link) wins.
-        viewer.camera._currentFlight
-      )
-        stopOrbit();
-    }, 100);
-    orbit.interrupt = interrupt;
     const town$ = townFacts?.town;
+    arrivalTown = town;
     arrival = {
-      key: `${town.code}:${started}`,
+      key: `${town.code}:${now()}`,
       name: town.name,
       line: [
         Number.isFinite(town$?.population)
@@ -377,24 +398,113 @@ export function createCityDossier({
       ]
         .filter(Boolean)
         .join(' · '),
+      // The button under the name, until it is pressed.
+      offer: true,
     };
     clearTimeout(arrivalTimer);
     arrivalTimer = setTimeout(() => {
       arrival = null;
+      arrivalTown = null;
       render();
     }, ARRIVAL_TITLE_MS);
+  }
+
+  /** Unfold the CITY panel if it is folded. */
+  function openPanel() {
+    const panel = documentRef?.getElementById?.(PANEL_ID);
+    if (panel?.classList?.contains('collapsed'))
+      panel.querySelector?.(`[data-collapse-target="${PANEL_ID}"]`)?.click();
+  }
+
+  /**
+   * The offer taken: one glide to where the slow circle round the town
+   * begins, then the circle, with the town's panel open beside it.
+   */
+  function flyIn() {
+    const town = arrivalTown;
+    if (
+      !town ||
+      isCameraBusy() ||
+      documentRef?.body?.classList?.contains('cockpit-mode')
+    )
+      return;
+    const [lon, lat] = town.point;
+    const target = Cesium.Cartesian3.fromDegrees(lon, lat, 0);
+    const distance = Cesium.Cartesian3.distance(
+      viewer.camera.positionWC,
+      target,
+    );
+    stopOrbit();
+    const controller = createOrbit(viewer);
+    orbit = controller;
+    const radius = Math.min(12_000, Math.max(2_500, distance));
+    // Any input, a camera owner taking over or one full turn ends it.
+    const interrupt = () => stopOrbit();
+    for (const type of ['pointerdown', 'wheel', 'keydown', 'touchstart'])
+      documentRef?.addEventListener?.(type, interrupt, {
+        capture: true,
+        once: true,
+      });
+    controller.interrupt = interrupt;
+    const circle = () => {
+      // Interrupted while gliding in: no circle.
+      if (orbit !== controller) return;
+      controller.gliding = false;
+      controller.start(target, {
+        radius,
+        pitch: ARRIVAL_PITCH_DEG,
+        speed: 360 / ARRIVAL_ORBIT_S,
+      });
+      const started = now();
+      orbitWatch = setInterval(() => {
+        if (
+          now() - started > ARRIVAL_ORBIT_S * 1000 ||
+          isCameraBusy() ||
+          documentRef?.body?.classList?.contains('cockpit-mode') ||
+          // A flight someone else started (search, voice, a link) wins.
+          viewer.camera._currentFlight
+        )
+          stopOrbit();
+      }, 100);
+    };
+    // To the circle's first position in one glide, from where the camera is
+    // and on its own heading; the circle takes over where the glide ends.
+    controller.gliding = true;
+    viewer.camera.flyToBoundingSphere(new Cesium.BoundingSphere(target, 0), {
+      offset: new Cesium.HeadingPitchRange(
+        viewer.camera.heading,
+        Cesium.Math.toRadians(ARRIVAL_PITCH_DEG),
+        radius,
+      ),
+      duration: ARRIVAL_FLY_S,
+      complete: circle,
+      // Another flight took the camera: it is theirs, and left alone.
+      cancel: () => {
+        controller.gliding = false;
+        if (orbit === controller) stopOrbit();
+      },
+    });
+    if (arrival) arrival = { ...arrival, offer: false };
+    openPanel();
+    render();
   }
 
   function stopOrbit() {
     if (orbitWatch) clearInterval(orbitWatch);
     orbitWatch = null;
     if (!orbit) return;
+    const stopping = orbit;
+    orbit = null;
     for (const type of ['pointerdown', 'wheel', 'keydown', 'touchstart'])
-      documentRef?.removeEventListener?.(type, orbit.interrupt, {
+      documentRef?.removeEventListener?.(type, stopping.interrupt, {
         capture: true,
       });
-    if (orbit.active) orbit.stop();
-    orbit = null;
+    // Still gliding in: the glide is ours to end.
+    if (stopping.gliding) {
+      stopping.gliding = false;
+      viewer.camera.cancelFlight?.();
+    }
+    if (stopping.active) stopping.stop();
   }
 
   /** The stamped towns on the globe, joined in the order they were visited. */
@@ -796,6 +906,15 @@ export function createCityDossier({
     };
   }
 
+  /** "No answer from: Polisen, Traffic", or '' when every part answered. */
+  function failedLine() {
+    if (!live?.failed?.length) return '';
+    const sources = LIVE_PARTS.filter(([field]) =>
+      live.failed.includes(field),
+    ).map(([, label, plain]) => (label ? t(label) : plain));
+    return t('No answer from: {sources}', { sources: sources.join(', ') });
+  }
+
   function nowView() {
     if (!live)
       return { loading: true, status: t('Fetching the live picture…') };
@@ -808,6 +927,7 @@ export function createCityDossier({
       loading: false,
       // Parts still on their way, said once below what has arrived.
       pending: live.pending > 0 ? t('Fetching the live picture…') : '',
+      failed: failedLine(),
       weather: weather
         ? {
             value: Number.isFinite(weather.temperatureC)
@@ -1224,7 +1344,7 @@ export function createCityDossier({
     setTab(id) {
       if (!TABS.some(([tabId]) => tabId === id)) return;
       tab = id;
-      if (id === 'now' && now() - liveAt > LIVE_TTL_MS) void loadLive();
+      if (liveIsDue()) void loadLive();
       if (id !== 'sights') chosenSight = null;
       if (id === 'sights') void loadSights();
       drawSights();
@@ -1237,6 +1357,7 @@ export function createCityDossier({
       render();
     },
     playRadio,
+    flyIn,
     showCamera: (id) => showCamera(id),
     // The original's aurora oval (NOAA OVATION) on the map.
     async showAurora() {
@@ -1259,6 +1380,7 @@ export function createCityDossier({
 
   renderJourney();
   const removeLocaleListener = onLocaleChange(render);
+  watchPanelOnce();
   const removeMoveEnd = viewer.camera.moveEnd.addEventListener(() => {
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => void visit(), SETTLE_DELAY_MS);
@@ -1279,6 +1401,7 @@ export function createCityDossier({
       liveRequest?.abort();
       removeMoveEnd();
       removeLocaleListener();
+      stopWatchingPanel?.();
       stopOrbit();
       clearTimeout(arrivalTimer);
       if (journey) viewer.dataSources.remove(journey, true);
@@ -1289,4 +1412,24 @@ export function createCityDossier({
       publish(null);
     },
   };
+}
+
+/** Whether the CITY panel shows its contents: there, and not folded. */
+function panelIsOpen(documentRef) {
+  const panel = documentRef?.getElementById?.(PANEL_ID);
+  return Boolean(panel) && !panel.classList?.contains('collapsed');
+}
+
+/**
+ * Tell when the CITY panel folds or unfolds. Gives a function that stops
+ * telling, or null while there is no panel (or nothing to watch it with).
+ */
+function watchPanelClass(documentRef, onChange) {
+  const panel = documentRef?.getElementById?.(PANEL_ID);
+  const Observer =
+    documentRef?.defaultView?.MutationObserver ?? globalThis.MutationObserver;
+  if (!panel || !Observer) return null;
+  const observer = new Observer(() => onChange());
+  observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
+  return () => observer.disconnect();
 }

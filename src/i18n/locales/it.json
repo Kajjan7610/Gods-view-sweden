@@ -3506,6 +3506,9 @@
   "Turnout, municipal election": "Affluenza, elezioni comunali",
   "Municipal election {year}": "Elezioni comunali {year}",
   "Fetching the live picture…": "Caricamento della situazione attuale…",
+  "No answer from: {sources}": "Nessuna risposta da: {sources}",
+  "Speed cameras": "Autovelox",
+  "Fly in and read more": "Vola lì e leggi di più",
   "wind {value} m/s": "vento {value} m/s",
   "Measured at {station}": "Misurato a {station}",
   "{count} notices in the last 24 hours": {

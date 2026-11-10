@@ -703,6 +703,26 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
+/* The offer under the name: the only part of the card that takes a click. */
+.city-arrival-offer {
+  margin-top: 10px;
+  padding: 9px 18px;
+  border: 1px solid rgba(255, 201, 77, 0.7);
+  border-radius: 999px;
+  background: rgba(8, 14, 22, 0.72);
+  color: #ffc94d;
+  font: 600 12px / 1 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-shadow: none;
+  text-transform: uppercase;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.city-arrival-offer:hover,
+.city-arrival-offer:focus-visible {
+  background: rgba(255, 201, 77, 0.2);
+  color: #fff;
+}
 .city-arrival-enter-active,
 .city-arrival-leave-active {
   transition:

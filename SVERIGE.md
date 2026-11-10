@@ -214,6 +214,22 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (stadsdossiern: ingen automatisk inflygning, nuläget bara när det visas)
+- Första besöket i en ort flyger inte längre in av sig självt. Namnskylten
+  visas med knappen "Flyg in och läs mer"; först när den trycks glider
+  kameran in till en långsam cirkel runt orten (i stället för det tidigare
+  hårda klippet) och STAD-panelen öppnas. Skylten ligger kvar i 12 sekunder.
+  Inställningen "Filmisk ankomst" styr nu om skylten visas. Det här är en
+  första version; utseendet är inte bestämt.
+- Nuläget (väder, luft, polis, trafik, norrsken, fartkameror och
+  krisinformation) hämtas bara när STAD-panelen är öppen på fliken NU.
+  Förut hämtades alla sju flödena för varje ort kameran stannade över, även
+  med panelen stängd, vilket också gav anrop mot TomTom, Swedavia och
+  Trafikverket.
+- En del av nuläget som inte svarar nämns ("Inget svar från: Polisen,
+  Krisinformation") i stället för att bara saknas, och ett nytt försök görs
+  efter en minut.
+
 ### 2026-11-10 (norrsken: rättningar efter kodgranskning)
 - Lagerraden visar vilken tid prognosen gäller ("Prognos för 23:11", med
   datum när den inte är från i dag), och lagret märks som inaktuellt när

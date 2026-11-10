@@ -3356,6 +3356,9 @@
   "Turnout, municipal election": "市鎮選舉投票率",
   "Municipal election {year}": "{year} 年市鎮選舉",
   "Fetching the live picture…": "正在取得目前情況…",
+  "No answer from: {sources}": "未回應：{sources}",
+  "Speed cameras": "測速照相機",
+  "Fly in and read more": "飛近並了解更多",
   "wind {value} m/s": "風速 {value} 公尺/秒",
   "Measured at {station}": "測量站：{station}",
   "{count} notices in the last 24 hours": {
