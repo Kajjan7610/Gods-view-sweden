@@ -54,7 +54,7 @@ const conditionWidth = (code) => ({ 3: 6, 2: 4, 4: 4, 1: 2 })[code] || 3;
 /**
  * Own one Swedish road display: winter road condition per stretch and live
  * incidents from Trafikverket, with click-to-card selection. Share links
- * carry it as token 9.
+ * carry it as token 0j.
  */
 export function createTrafikverketRoadsLayer({
   source,
@@ -64,6 +64,7 @@ export function createTrafikverketRoadsLayer({
   pointer = null,
   openExternal = null,
   terrain = null,
+  now = () => Date.now(),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Trafikverket roads require a snapshot source');
@@ -76,7 +77,10 @@ export function createTrafikverketRoadsLayer({
   let _enabled = false;
   let _clickHandler = null;
   let _rowListener = null;
-  let _signature = null;
+  /** What is on the map: "c:<id>" or "i:<id>" → {print, ids of its entities}. */
+  const _drawn = new Map();
+  /** The next drawing starts over: the first one, and after one that failed. */
+  let _redrawAll = true;
   let _lastUpdate = null;
   let _lastError = null;
   let _stale = false;
@@ -229,73 +233,168 @@ export function createTrafikverketRoadsLayer({
     _viewer?.scene?.requestRender?.();
   }
 
+  /** A cheap fingerprint of every vertex a row draws. */
+  const geometryPrint = (lines) => {
+    let hash = lines.length;
+    for (const line of lines) {
+      hash = (hash * 31 + line.length) | 0;
+      for (const [lon, lat] of line) {
+        hash = (hash * 31 + Math.round(lon * 1e5)) | 0;
+        hash = (hash * 31 + Math.round(lat * 1e5)) | 0;
+      }
+    }
+    return hash;
+  };
+
+  /** Draw one road-condition stretch; the ids of the entities added. */
+  function drawCondition(entities, row) {
+    const color = Cesium.Color.fromCssColorString(
+      conditionColor(row.code),
+    ).withAlpha(row.code === 1 ? 0.55 : 0.9);
+    return row.lines.map(
+      (line, index) =>
+        entities.add({
+          id: `${PICK_PREFIX}c:${row.id}:${index}`,
+          polyline: {
+            positions: positions(line),
+            clampToGround: true,
+            width: conditionWidth(row.code),
+            material: new Cesium.ColorMaterialProperty(color),
+          },
+        }).id,
+    );
+  }
+
+  /** Draw one incident, its stretch and its dot; the ids of the entities added. */
+  function drawIncident(entities, row) {
+    const closure = row.kind === 'closure';
+    const color = Cesium.Color.fromCssColorString(incidentColor(row.kind));
+    // Dashed, so an incident's stretch never reads as a road condition.
+    const ids = row.lines.map(
+      (line, index) =>
+        entities.add({
+          id: `${PICK_PREFIX}i:${row.id}:line${index}`,
+          polyline: {
+            positions: positions(line),
+            clampToGround: true,
+            width: closure ? 4 : 3,
+            material: new Cesium.PolylineDashMaterialProperty({
+              color: (closure ? CLOSURE_RING : color).withAlpha(0.8),
+              dashLength: 14,
+            }),
+          },
+        }).id,
+    );
+    ids.push(
+      entities.add({
+        id: `${PICK_PREFIX}i:${row.id}:point`,
+        position: incidentPosition(row),
+        point: {
+          pixelSize: row.kind === 'minor' ? 6 : severityPixels(row.severity),
+          color,
+          outlineColor: closure
+            ? CLOSURE_RING
+            : Cesium.Color.BLACK.withAlpha(0.8),
+          outlineWidth: closure ? 3 : 1.5,
+          heightReference: _ground.enabled
+            ? Cesium.HeightReference.CLAMP_TO_TERRAIN
+            : Cesium.HeightReference.CLAMP_TO_GROUND,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
+      }).id,
+    );
+    return ids;
+  }
+
+  /**
+   * What the toggles leave on the map: key → the row, how to draw it and a
+   * fingerprint of everything its drawing depends on.
+   */
+  function wantedRows() {
+    const wanted = new Map();
+    if (_show.conditions)
+      for (const row of _conditions) {
+        if (row.code === 1 && !_show.normal) continue;
+        wanted.set(`c:${row.id}`, {
+          row,
+          draw: drawCondition,
+          print: `${row.code}|${geometryPrint(row.lines)}`,
+        });
+      }
+    if (_show.incidents)
+      for (const row of _incidents) {
+        if (row.kind === 'minor' && !_show.minor) continue;
+        wanted.set(`i:${row.id}`, {
+          row,
+          draw: drawIncident,
+          print: `${row.kind}|${row.severity}|${row.point}|${geometryPrint(row.lines)}`,
+        });
+      }
+    return wanted;
+  }
+
+  /**
+   * Bring the map in line with the rows and the toggles. In place: a row that
+   * is drawn as it should be is left alone, so one new incident among
+   * thousands adds one dot instead of drawing the whole country again.
+   * @returns {number} How many rows were added, removed or drawn anew.
+   */
   function render() {
-    if (!_dataSource) return;
+    if (!_dataSource) return 0;
     const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      if (_show.conditions) {
-        for (const row of _conditions) {
-          if (row.code === 1 && !_show.normal) continue;
-          const color = Cesium.Color.fromCssColorString(
-            conditionColor(row.code),
-          ).withAlpha(row.code === 1 ? 0.55 : 0.9);
-          row.lines.forEach((line, index) =>
-            entities.add({
-              id: `${PICK_PREFIX}c:${row.id}:${index}`,
-              polyline: {
-                positions: positions(line),
-                clampToGround: true,
-                width: conditionWidth(row.code),
-                material: new Cesium.ColorMaterialProperty(color),
-              },
-            }),
-          );
+    const wanted = wantedRows();
+    const add = (key, item) =>
+      _drawn.set(key, {
+        print: item.print,
+        ids: item.draw(entities, item.row),
+      });
+    let touched = 0;
+    const full = _redrawAll;
+    // Until this drawing is done: one that fails is made again from scratch.
+    _redrawAll = true;
+    if (full) {
+      _drawn.clear();
+      redrawEntities(entities, () => {
+        for (const [key, item] of wanted) add(key, item);
+      });
+      touched = wanted.size;
+    } else {
+      // Gone and changed rows leave in a suspension of their own: inside one
+      // suspension Cesium cancels a removal against an addition under the
+      // same id (see redrawEntities.js).
+      const gone = [];
+      for (const [key, drawn] of _drawn)
+        if (wanted.get(key)?.print !== drawn.print) gone.push(key);
+      if (gone.length) {
+        entities.suspendEvents();
+        try {
+          for (const key of gone) {
+            for (const id of _drawn.get(key).ids) entities.removeById(id);
+            _drawn.delete(key);
+          }
+        } finally {
+          entities.resumeEvents();
         }
       }
-      if (_show.incidents) {
-        for (const row of _incidents) {
-          if (row.kind === 'minor' && !_show.minor) continue;
-          const closure = row.kind === 'closure';
-          const color = Cesium.Color.fromCssColorString(
-            incidentColor(row.kind),
-          );
-          // Dashed, so an incident's stretch never reads as a road condition.
-          row.lines.forEach((line, index) =>
-            entities.add({
-              id: `${PICK_PREFIX}i:${row.id}:line${index}`,
-              polyline: {
-                positions: positions(line),
-                clampToGround: true,
-                width: closure ? 4 : 3,
-                material: new Cesium.PolylineDashMaterialProperty({
-                  color: (closure ? CLOSURE_RING : color).withAlpha(0.8),
-                  dashLength: 14,
-                }),
-              },
-            }),
-          );
-          entities.add({
-            id: `${PICK_PREFIX}i:${row.id}:point`,
-            position: incidentPosition(row),
-            point: {
-              pixelSize:
-                row.kind === 'minor' ? 6 : severityPixels(row.severity),
-              color,
-              outlineColor: closure
-                ? CLOSURE_RING
-                : Cesium.Color.BLACK.withAlpha(0.8),
-              outlineWidth: closure ? 3 : 1.5,
-              heightReference: _ground.enabled
-                ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-                : Cesium.HeightReference.CLAMP_TO_GROUND,
-              disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            },
-          });
-        }
+      touched = gone.length;
+      entities.suspendEvents();
+      try {
+        for (const [key, item] of wanted)
+          if (!_drawn.has(key)) {
+            add(key, item);
+            touched += 1;
+          }
+      } finally {
+        entities.resumeEvents();
       }
-    });
-    if (_selected) publishSelectedCard();
+    }
+    _redrawAll = false;
+    // A row the toggles or Trafikverket took off the map keeps no card.
+    if (_selected && !_drawn.has(`${_selected.kind}:${_selected.id}`))
+      _selected = null;
+    if (_selected || _selectedCardId) publishSelectedCard();
     _viewer?.scene?.requestRender?.();
+    return touched;
   }
 
   function toggle(key) {
@@ -332,6 +431,7 @@ export function createTrafikverketRoadsLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      _lastError = null;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
       clearSelection();
@@ -350,31 +450,31 @@ export function createTrafikverketRoadsLayer({
         _lastUpdate =
           _stale && Number.isFinite(snapshot.fetchedAt)
             ? snapshot.fetchedAt
-            : Date.now();
+            : now();
         _lastError = null;
-        const signature = JSON.stringify([
-          snapshot.conditions.map((row) => [row.id, row.code]),
-          snapshot.incidents.map((row) => [row.id, row.kind, row.severity]),
-        ]);
-        if (signature !== _signature) {
-          _signature = signature;
-          _conditions = snapshot.conditions;
-          _incidents = snapshot.incidents;
-          _conditionById.clear();
-          _incidentById.clear();
-          for (const row of _conditions) _conditionById.set(row.id, row);
-          for (const row of _incidents) _incidentById.set(row.id, row);
-          // Heights first: the ones this browser kept are drawn at once.
-          _ground.place(_incidents);
-          render();
-          console.log(
-            `[Data:TrafikverketRoads] Updated: ${_conditions.length} stretches, ${_incidents.length} incidents`,
-          );
-        } else {
-          if (_selected) publishSelectedCard();
-          // Takes up again what a switched-off layer had left to ask.
-          _ground.place(_incidents);
+        // Always the newest rows, so a card reads the text Trafikverket has
+        // now; the map itself changes only where a row did.
+        _conditions = snapshot.conditions;
+        _incidents = snapshot.incidents;
+        _conditionById.clear();
+        _incidentById.clear();
+        for (const row of _conditions) _conditionById.set(row.id, row);
+        for (const row of _incidents) _incidentById.set(row.id, row);
+        // Heights first: the ones this browser kept are drawn at once.
+        _ground.place(_incidents);
+        let touched;
+        try {
+          touched = render();
+        } catch (e) {
+          console.warn('[Data:TrafikverketRoads] Draw error:', e?.message || e);
+          _lastError = e?.message || msg('Trafikverket feed unavailable');
+          _rowListener?.();
+          return true;
         }
+        if (touched)
+          console.log(
+            `[Data:TrafikverketRoads] Updated: ${_conditions.length} stretches, ${_incidents.length} incidents (${touched} drawn or removed)`,
+          );
         _rowListener?.();
         return true;
       } catch (e) {
@@ -399,7 +499,8 @@ export function createTrafikverketRoadsLayer({
       _incidentById.clear();
       _conditions = [];
       _incidents = [];
-      _signature = null;
+      _drawn.clear();
+      _redrawAll = true;
       if (_dataSource) {
         viewer.dataSources.remove(_dataSource, true);
         _dataSource = null;

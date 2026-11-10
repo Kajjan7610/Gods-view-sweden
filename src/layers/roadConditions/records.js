@@ -26,7 +26,12 @@ export const INCIDENT_KINDS = Object.freeze([
   Object.freeze({ id: 'accident', match: /olycka/i, color: '#ff1744' }),
   // Drawn white with a heavy red ring, like a no-entry sign.
   Object.freeze({ id: 'closure', match: null, color: '#ffffff' }),
-  Object.freeze({ id: 'obstacle', match: /hinder/i, color: '#ff9100' }),
+  // "Väglag" deviations are sudden hazards such as flash ice (blixthalka).
+  Object.freeze({
+    id: 'obstacle',
+    match: /hinder|väglag/i,
+    color: '#ff9100',
+  }),
   Object.freeze({ id: 'roadwork', match: /vägarbete/i, color: '#ffd600' }),
   Object.freeze({
     id: 'important',
@@ -50,7 +55,8 @@ const CLOSURE_CODE = /vägen avstängd|avstängd väg/i;
 const MINOR_CODE =
   /hastighetsbegränsning|körfältsavstängning|omkörning förbjuden|viktbegränsning|bärighetsbegränsning/i;
 /** Traffic-message codes that are hazards on the road. */
-const HAZARD_CODE = /fordonshaveri|djur på vägen|vägskada|hinder/i;
+const HAZARD_CODE =
+  /fordonshaveri|brand i fordon|djur på vägen|vägskada|hinder/i;
 export const OTHER_INCIDENT = Object.freeze({ id: 'other', color: '#9e9e9e' });
 
 export const MAX_CONDITIONS = 20000;

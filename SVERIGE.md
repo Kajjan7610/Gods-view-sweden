@@ -127,6 +127,29 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (väglag: rättningar efter kodgranskning)
+- Kartan ändras på plats i stället för att alla linjer och prickar tas
+  bort och ritas om så fort något ändras: nya rader läggs till, de som
+  försvunnit tas bort, och en rad ritas om bara om dess typ, allvarlighet
+  eller geometri ändrats. Mätt i förhandsvisningen med dagens data (818
+  sträckor, 2 905 händelser, cirka 2 800 ritade): en uppdatering med 2
+  nya händelser låste sidan i cirka 0,2–0,3 s och gör det nu i cirka
+  0,03–0,07 s, vilket är tiden för att tolka svaret. Knapparna rör bara
+  sina egna rader: normalt väglag på från cirka 0,29 till 0,09 s, av
+  från 0,18 till 0,04 s; mindre händelser på från 0,18 till 0,07 s, av
+  från 0,28 till 0,12 s. Första ritningen tar lika lång tid som förut.
+- Kortet läser alltid den senaste texten från Trafikverket. Förut
+  behöll lagret en händelses gamla text, tid och plats tills något annat
+  i listan ändrades.
+- Händelser av typen "Väglag" (t.ex. blixthalka) och trafikmeddelandet
+  "Brand i fordon" räknas som hinder (orange) i stället för grått.
+- En vald rad som lämnar kartan, för att den är över eller för att en
+  knapp dolt den, tappar sitt kort.
+- En ritning som misslyckades loggas som ritfel, inte hämtfel, och görs
+  om från början vid nästa uppdatering. Ett avstängt lager bär inte kvar
+  sitt senaste fel. Tiden för senaste uppdatering följer lagrets egen
+  klocka. Kommentaren om lagrets delningskod är rättad (0j, inte 9).
+
 ### 2026-11-10 (vägväder och Trafikverkets proxy: rättningar efter kodgranskning)
 - Den gemensamma proxyn för Trafikverket (vägväder och väglag) lämnar
   Trafikverket i fred i 1 minut efter en misslyckad hämtning och svarar

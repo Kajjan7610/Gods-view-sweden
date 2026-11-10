@@ -244,3 +244,22 @@ test('the two-query answer normalizes; an ERROR result throws', () => {
       error.status === 401 && /Invalid authentication/.test(error.message),
   );
 });
+
+test('flash ice and a vehicle on fire are hazards, not grey leftovers', () => {
+  // A "Väglag" deviation is a sudden hazard such as blixthalka.
+  assert.equal(incidentKind('Väglag', 'Blixthalka').id, 'obstacle');
+  assert.equal(incidentKind('Väglag', 'Snödrev').id, 'obstacle');
+  assert.equal(
+    incidentKind('Trafikmeddelande', 'Brand i fordon').id,
+    'obstacle',
+  );
+  // What was sorted before stays where it was.
+  assert.equal(
+    incidentKind('Trafikmeddelande', 'Fordonshaveri').id,
+    'obstacle',
+  );
+  assert.equal(incidentKind('Trafikmeddelande', 'Kö').id, 'message');
+  assert.equal(incidentKind('Olycka', 'Brand i fordon').id, 'accident');
+  assert.equal(incidentKind('Väglag', 'Vägen avstängd').id, 'closure');
+  assert.equal(incidentKind('Något nytt', '').id, 'other');
+});
