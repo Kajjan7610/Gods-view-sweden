@@ -59,7 +59,7 @@ export const LAYER_PROVENANCE = Object.freeze({
     coverage: msg(
       "Sweden's links between bidding areas and to neighbouring countries",
     ),
-    updates: msg('Every 2 minutes'),
+    updates: msg('Every 5 minutes'),
     licence: NO_LICENCE,
   }),
   'gamma-radiation': own({

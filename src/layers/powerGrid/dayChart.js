@@ -3,8 +3,9 @@
  * with the consumption on top of it, and below it the exchange with the
  * neighbours, export up and import down, per quarter-hour on the Swedish
  * clock. A stretch without quarter-hours (a day the server did not keep)
- * stays a gap. Pure — SVG path strings and numbers for the panel to draw, no
- * Cesium, no DOM.
+ * stays a gap, and a day runs between two Swedish midnights: 23 or 25 hours
+ * when the clocks change. Pure — SVG path strings and numbers for the panel
+ * to draw, no Cesium, no DOM.
  */
 
 /** Production types bottom to top, with their colours. */
@@ -19,30 +20,57 @@ export const CONSUMPTION_COLOR = '#ffffff';
 export const EXPORT_COLOR = '#ffab40';
 export const IMPORT_COLOR = '#69f0ae';
 
-const DAY_MS = 24 * 60 * 60_000;
+const HOUR_MS = 60 * 60_000;
+const DAY_MS = 24 * HOUR_MS;
 const QUARTER_HOURS = 0.25;
 /** Two quarter-hours apart or more is a gap in the curve. */
 const GAP_MS = 30 * 60_000;
 const PAD = Object.freeze({ left: 34, right: 6, top: 6, bottom: 4 });
 
-const CLOCK_PARTS = new Intl.DateTimeFormat('en-GB', {
+const WALL_PARTS = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Europe/Stockholm',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
   hour: '2-digit',
   minute: '2-digit',
+  second: '2-digit',
   hourCycle: 'h23',
 });
 
-/** Minutes after Stockholm midnight at `ms`. */
-function localMinutes(ms) {
-  const parts = Object.fromEntries(
-    CLOCK_PARTS.formatToParts(ms).map((part) => [part.type, part.value]),
+/** The Stockholm wall clock at `ms`, as the UTC time that reads the same. */
+function wallClock(ms) {
+  const part = {};
+  for (const { type, value } of WALL_PARTS.formatToParts(ms))
+    part[type] = Number(value);
+  return Date.UTC(
+    part.year,
+    part.month - 1,
+    part.day,
+    part.hour,
+    part.minute,
+    part.second,
   );
-  return Number(parts.hour) * 60 + Number(parts.minute);
 }
 
-/** Stockholm midnight before `ms`. */
+/** The instant the Stockholm wall clock reads `wall` (see wallClock). */
+function instantOf(wall) {
+  // The offset around `wall`, then the one at the instant that gives: they
+  // differ only when a clock change lies between the two.
+  const near = wall - (wallClock(wall) - wall);
+  return wall - (wallClock(near) - near);
+}
+
+/** Stockholm midnight before `ms`, also on a day the clocks change. */
 export function midnightBefore(ms) {
-  return ms - localMinutes(ms) * 60_000 - (ms % 60_000);
+  const wall = wallClock(ms);
+  return instantOf(wall - (((wall % DAY_MS) + DAY_MS) % DAY_MS));
+}
+
+/** The Stockholm midnight that starts a date ("2026-10-25"), or null. */
+export function midnightOf(date) {
+  const wall = Date.parse(`${date}T00:00:00Z`);
+  return Number.isFinite(wall) ? instantOf(wall) : null;
 }
 
 /** Stockholm midnight before the first quarter-hour. */
@@ -101,8 +129,9 @@ export function dayTotals(points) {
  * The chart for quarter-hours over whole Stockholm days.
  * @param {Array<{at: number} & Record<string, number>>} points Oldest first.
  * @param {{start?: number, days?: number, width?: number, height?: number,
- *   netHeight?: number}} [options] `start` is the first midnight (by default
- *   the one before the first point); `days` how many days the axis spans.
+ *   netHeight?: number}} [options] `start` is the first Stockholm midnight
+ *   (by default the one before the first point); `days` how many days the
+ *   axis spans.
  */
 export function buildDayChart(
   points,
@@ -110,7 +139,12 @@ export function buildDayChart(
 ) {
   const from = start ?? dayStartOf(points);
   if (from === null || !points.length) return null;
-  const span = days * DAY_MS;
+  // Each midnight of the span, read off the Swedish clock once a build.
+  const wallStart = wallClock(from);
+  const midnights = [from];
+  for (let day = 1; day <= days; day += 1)
+    midnights.push(instantOf(wallStart + day * DAY_MS));
+  const span = midnights[days] - from;
   const plotWidth = width - PAD.left - PAD.right;
   const x = (at) => PAD.left + ((at - from) / span) * plotWidth;
   const stretches = runs(points);
@@ -175,15 +209,16 @@ export function buildDayChart(
       })
       .join('');
 
-  // One tick a quarter of a day, or one a day over several.
-  const every = days === 1 ? DAY_MS / 4 : DAY_MS;
-  const xTicks = [];
-  for (let at = from; at <= from + span + 1; at += every)
-    xTicks.push({
-      at,
-      x: round(x(at)),
-      hour: Math.round((at - from) / 3_600_000) % 24,
-    });
+  // One tick every sixth hour of the Swedish clock, or one a midnight over
+  // several days.
+  const xTicks =
+    days === 1
+      ? [0, 6, 12, 18, 24].map((hour) => {
+          const at =
+            hour === 24 ? midnights[1] : instantOf(wallStart + hour * HOUR_MS);
+          return { at, x: round(x(at)), hour: hour % 24 };
+        })
+      : midnights.map((at) => ({ at, x: round(x(at)), hour: 0 }));
 
   return {
     width,
@@ -191,6 +226,7 @@ export function buildDayChart(
     netHeight,
     days,
     start: from,
+    end: midnights[days],
     plotLeft: PAD.left,
     plotRight: width - PAD.right,
     areas,

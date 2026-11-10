@@ -81,20 +81,29 @@ export function flowColor(kind) {
   return KIND_COLOR.get(kind) || '#9e9e9e';
 }
 
+/** A reported flow in MW; NaN when the link has none (null, '', text). */
+function flowValue(raw) {
+  if (typeof raw === 'number') return raw;
+  return typeof raw === 'string' && raw.trim() ? Number(raw) : NaN;
+}
+
 /**
  * The map/flow answer to the Swedish links, each drawn from the area that
  * sends to the one that receives, and the Swedish zones' import and export.
+ * A link without a value is left out; one named twice counts once.
  * @param {object} payload
  */
 export function normalizeFlows(payload) {
   const groups = Array.isArray(payload?.Data) ? payload.Data : [];
   const links = [];
   const areas = [];
+  const seen = new Set();
   for (const group of groups) {
     for (const row of Array.isArray(group?.data) ? group.data : []) {
-      const value = Number(row?.value);
+      const value = flowValue(row?.value);
       const link = LINK_BY_ID.get(String(row?.id ?? ''));
-      if (link && Number.isFinite(value)) {
+      if (link && Number.isFinite(value) && !seen.has(link.id)) {
+        seen.add(link.id);
         const forward = value >= 0;
         const from = forward ? link.a : link.b;
         const to = forward ? link.b : link.a;
@@ -137,26 +146,25 @@ export function normalizeFlows(payload) {
 }
 
 /**
- * The production answer to the latest value of each type, in MW, and when.
+ * The latest values among a day's quarter-hours (oldest first): every type
+ * reported at the newest quarter that has a total, in MW, and when. A type
+ * missing at that quarter is absent, never taken from an older one.
+ * @param {ReadonlyArray<{at: number} & Record<string, number>>} points
+ * @returns {{at: number|null} & Record<string, number>}
+ */
+export function latestProduction(points) {
+  for (let i = points.length - 1; i >= 0; i -= 1)
+    if (Number.isFinite(points[i]?.total) && Number.isFinite(points[i].at))
+      return { ...points[i] };
+  return { at: null };
+}
+
+/**
+ * The production answer to its latest values per type, in MW, and when.
  * @param {object} payload
  */
 export function normalizeProduction(payload) {
-  const out = { at: null };
-  for (const series of Array.isArray(payload?.Data) ? payload.Data : []) {
-    const type = PRODUCTION_TYPES[series?.id];
-    if (!type) continue;
-    let latest = null;
-    for (const point of Array.isArray(series.data) ? series.data : []) {
-      const x = Number(point?.x);
-      if (point?.y == null || !Number.isFinite(x)) continue;
-      const y = Number(point.y);
-      if (Number.isFinite(y) && (!latest || x > latest.x)) latest = { x, y };
-    }
-    if (!latest) continue;
-    out[type] = Math.round(latest.y);
-    out.at = Math.max(out.at ?? 0, latest.x);
-  }
-  return out;
+  return latestProduction(normalizeProductionDay(payload));
 }
 
 /**

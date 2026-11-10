@@ -92,15 +92,14 @@ export function buildAreaCard(area, snapshot) {
     );
   if (flows.length) details.push(t('{mw} MW', { mw: flows.join(' · ') }));
   const production = snapshot.production || {};
-  if (Number.isFinite(production.total))
-    details.push(
-      t('Sweden: production {production} MW, consumption {consumption} MW', {
-        production: formatMw(production.total),
-        consumption: Number.isFinite(production.consumption)
-          ? formatMw(production.consumption)
-          : '–',
-      }),
-    );
+  // An answer without production says so with a dash, never "0" or "NaN".
+  const mwOrDash = (value) => (Number.isFinite(value) ? formatMw(value) : '–');
+  details.push(
+    t('Sweden: production {production} MW, consumption {consumption} MW', {
+      production: mwOrDash(production.total),
+      consumption: mwOrDash(production.consumption),
+    }),
+  );
   const types = [
     ['nuclear', t('nuclear')],
     ['hydro', t('hydro')],
@@ -121,7 +120,8 @@ export function buildAreaCard(area, snapshot) {
   return {
     ...CARD_BASE,
     id: `power-grid-card:${area.id}`,
-    interactive: false,
+    // Hit by clicks so the map behind it is not; it has no page to open.
+    interactive: true,
     title: t('POWER GRID · {zone} {name}', {
       zone: area.id,
       name: area.name.toUpperCase(),

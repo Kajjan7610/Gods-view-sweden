@@ -14,7 +14,7 @@ import {
   EXPORT_COLOR,
   IMPORT_COLOR,
   buildDayChart,
-  midnightBefore,
+  midnightOf,
 } from './dayChart.js';
 
 const WEEK_DAYS = 7;
@@ -33,13 +33,37 @@ const gwh = (mwh) =>
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   });
-const gw = (mw) =>
-  mw === 0
-    ? '0'
-    : t('{gw} GW', {
-        gw: formatNumber(mw / 1000, { maximumFractionDigits: 1 }),
-      });
 const mwText = (mw) => t('{mw} MW', { mw: formatMw(mw) });
+
+/**
+ * "250 MW" below a gigawatt, from there "1,25 GW": as many decimals as the
+ * value needs (two at most), so a label never rounds its value away.
+ */
+export function powerText(mw) {
+  if (Math.abs(mw) < 1000) return mwText(mw);
+  return t('{gw} GW', {
+    gw: formatNumber(mw / 1000, { maximumFractionDigits: 2 }),
+  });
+}
+
+/**
+ * The y axis in one unit, named once beside the chart: "12,5" under "GW"
+ * fits left of the plot in every language, "12,5 GW" does not.
+ */
+function yAxis(chart) {
+  const inGw = chart.yTicks.at(-1).mw >= 1000;
+  // The unit alone, from the message that carries it in each language.
+  const unit = inGw ? t('{gw} GW', { gw: '' }) : t('{mw} MW', { mw: '' });
+  return {
+    unit: unit.trim(),
+    labels: chart.yTicks.map((tick) => ({
+      y: tick.y,
+      text: formatNumber(inGw ? tick.mw / 1000 : tick.mw, {
+        maximumFractionDigits: inGw ? 2 : 1,
+      }),
+    })),
+  };
+}
 
 /** "mån" or "Mon": a weekday in the reader's language, Swedish clock. */
 function weekday(ms) {
@@ -62,10 +86,15 @@ export function createPowerDay({ source }) {
   let active = false;
   /** 'today' or 'week'. */
   let span = 'today';
-  /** The fetched quarter-hours: {points, start, days, missing}. */
+  /** The fetched quarter-hours: {points, start, days, missing, stale}. */
   let data = null;
+  /** The last load failed; what `data` holds is from the one before. */
   let failed = false;
   let request = null;
+
+  /** "11:15", with its weekday over a week. */
+  const clock = (at) =>
+    span === 'week' ? `${weekday(at)} ${formatClock(at)}` : formatClock(at);
 
   /** One quarter-hour as the panel's readout lines. */
   function readout(point) {
@@ -92,11 +121,7 @@ export function createPowerDay({ source }) {
         value: netText(point.net),
         color: point.net >= 0 ? EXPORT_COLOR : IMPORT_COLOR,
       });
-    const time = formatClock(point.at);
-    return {
-      time: span === 'week' ? `${weekday(point.at)} ${time}` : time,
-      lines,
-    };
+    return { time: clock(point.at), lines };
   }
 
   /** Hours under a day, weekdays under a week (between their midnights). */
@@ -118,6 +143,7 @@ export function createPowerDay({ source }) {
       ? buildDayChart(data.points, { start: data.start, days: data.days })
       : null;
     const totals = chart?.totals;
+    const axis = chart ? yAxis(chart) : null;
     const shown = new Set(chart?.areas.map((area) => area.id));
     const values = totals && {
       production: gwh(totals.production),
@@ -125,8 +151,27 @@ export function createPowerDay({ source }) {
     };
     return {
       span,
+      // In flight; "Loading…" is for when there is nothing else to show.
       loading: request !== null,
       failed,
+      stale: Boolean(data?.stale),
+      // A load that finished without quarter-hours: just after midnight.
+      empty:
+        !data || chart
+          ? ''
+          : span === 'week'
+            ? t('No quarter-hours kept yet')
+            : t('No quarter-hours yet today'),
+      // What the reader should know about a chart that is not the latest.
+      status: !chart
+        ? ''
+        : failed
+          ? t('Update failed')
+          : data.stale
+            ? t('Older data from {time}', {
+                time: clock(data.points.at(-1).at),
+              })
+            : '',
       spans: [
         { id: 'today', label: t('Today') },
         { id: 'week', label: t('Week') },
@@ -139,10 +184,9 @@ export function createPowerDay({ source }) {
         export: EXPORT_COLOR,
         import: IMPORT_COLOR,
       },
-      yLabels: chart
-        ? chart.yTicks.map((tick) => ({ y: tick.y, text: gw(tick.mw) }))
-        : [],
-      netLabel: chart ? `±${gw(chart.net.max)}` : '',
+      yLabels: axis?.labels ?? [],
+      yUnit: axis?.unit ?? '',
+      netLabel: chart ? `±${powerText(chart.net.max)}` : '',
       // Two literal keys, so the catalog check finds both.
       summary: !values
         ? ''
@@ -155,8 +199,9 @@ export function createPowerDay({ source }) {
               'So far today: produced {production} GWh, used {consumption} GWh',
               values,
             ),
+      // Net per quarter-hour, unlike the layer row's sum over the links.
       exchange: totals
-        ? t('Out {exported} GWh · in {imported} GWh', {
+        ? t('Net export {exported} GWh · net import {imported} GWh', {
             exported: gwh(totals.exported),
             imported: gwh(totals.imported),
           })
@@ -195,17 +240,24 @@ export function createPowerDay({ source }) {
   async function fetchSpan(signal) {
     if (span === 'today') {
       const day = await source.getDay(null, { signal });
-      return { points: day.points, start: null, days: 1, missing: false };
+      return {
+        points: day.points,
+        // Midnight of the answer's date; of the first point without one.
+        start: midnightOf(day.date),
+        days: 1,
+        missing: false,
+        stale: day.stale === true,
+      };
     }
     const week = await source.getWeek({ signal });
     const days = week.days.slice(-WEEK_DAYS);
     const first = days[0]?.date;
     return {
       points: days.flatMap((day) => day.points).sort((a, b) => a.at - b.at),
-      // Noon UTC is the same Stockholm date; its midnight starts the axis.
-      start: first ? midnightBefore(Date.parse(`${first}T12:00:00Z`)) : null,
+      start: first ? midnightOf(first) : null,
       days: days.length || WEEK_DAYS,
       missing: days.slice(0, -1).some((day) => day.points.length < WHOLE_DAY),
+      stale: week.stale === true,
     };
   }
 
@@ -246,6 +298,7 @@ export function createPowerDay({ source }) {
             if ((id !== 'today' && id !== 'week') || id === span) return;
             span = id;
             data = null;
+            failed = false;
             load();
           },
         }) ?? null;
@@ -267,6 +320,8 @@ export function createPowerDay({ source }) {
     refresh() {
       if (active && panel) load();
     },
+    /** The last load failed or came back old: the next poll asks again. */
+    wantsRetry: () => failed || data?.stale === true,
     /** Re-word the view in the reader's language. */
     publish,
     destroy() {

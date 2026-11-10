@@ -86,7 +86,8 @@ export function createPowerGridSource({
 
     /**
      * The last seven Stockholm days: the ones the server kept, and today.
-     * @returns {Promise<{days: Array<{date: string, points: object[]}>}>}
+     * @returns {Promise<{days: Array<{date: string, points: object[]}>,
+     *   stale: boolean}>}
      */
     async getWeek({ signal } = {}) {
       signal?.throwIfAborted();
@@ -117,6 +118,7 @@ export function createPowerGridSource({
             (point) => Number.isFinite(point?.at),
           ),
         })),
+        stale: payload.stale === true,
       };
     },
   };

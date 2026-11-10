@@ -19,12 +19,7 @@ import {
   netText,
   zoneName,
 } from './cards.js';
-import {
-  FlowMaterialProperty,
-  flowRepeat,
-  flowSpeed,
-  reducedMotion,
-} from './flowMaterial.js';
+import { FlowMaterialProperty, flowRepeat, flowSpeed } from './flowMaterial.js';
 export * from './records.js';
 export * from './cards.js';
 export { createPowerGridSource } from './source.js';
@@ -58,6 +53,9 @@ const AREA_BY_ID = new Map(SWEDISH_AREAS.map((area) => [area.id, area]));
  */
 const ANIMATION_FRAME_MS = 66;
 const SETTLE_MS = 2000;
+/** A resized window shows more or less; Cesium sizes itself a frame later. */
+const RESIZE_SETTLE_MS = 250;
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 /** How faint a link outside the highlighted country draws. */
 const DIMMED_ALPHA = 0.18;
 
@@ -70,6 +68,16 @@ function midpoint([lon1, lat1], [lon2, lat2]) {
 const foreignZone = (link) => (link.kind === 'import' ? link.from : link.to);
 const foreignPoint = (link) =>
   link.kind === 'import' ? link.fromPoint : link.toPoint;
+
+/** What tells one snapshot's drawing from another's; not when it was read. */
+const signatureOf = (snapshot) =>
+  JSON.stringify([
+    snapshot.updated,
+    snapshot.stale,
+    snapshot.links,
+    snapshot.areas,
+    snapshot.production,
+  ]);
 
 /** Kilometres between two [lon, lat] points. */
 function kilometres([lon1, lat1], [lon2, lat2]) {
@@ -120,7 +128,6 @@ export function createPowerGridLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
-  let _selectedCardId = null;
   let _snapshot = { links: [], areas: [], production: {}, updated: null };
   /** 'all', 'import', 'export' or 'internal'. */
   let _show = 'all';
@@ -128,12 +135,29 @@ export function createPowerGridLayer({
   let _focus = null;
   let _offLocale = null;
   let _ticker = null;
+  /** The drawn snapshot's signature: an identical answer draws nothing. */
+  let _signature = null;
+  /** The snapshot time the day panel last followed. */
+  let _dayKey = null;
+  /** The drawn lines' ends and bounds, for the camera test. */
+  let _lineBounds = [];
+  /** Whether a drawn line may be on screen; decided on camera events. */
+  let _inView = false;
+  /** Whether some drawn line moves: 1 MW or more and not dimmed. */
+  let _flowing = false;
+  /** Whether the reader asked the system for reduced motion. */
+  let _still = false;
+  let _motionQuery = null;
+  let _offCameraChanged = null;
+  let _offCameraMoveEnd = null;
+  let _resizeTimer = null;
+  const _occluder = new Cesium.EllipsoidalOccluder(Cesium.Ellipsoid.WGS84);
   /** The day's production, consumption and exchange on the right rail. */
   const _day = createPowerDay({ source });
   /**
-   * Each drawing gives its lines new ids: Cesium takes an entity removed and
-   * added again under the same id as "changed", and its polyline visualizer
-   * ignores changed entities, so the old line would stay.
+   * Each drawing gives its lines and dots new ids: an entity removed and
+   * added again under the same id inside one suspension is reported as
+   * neither, so Cesium would keep drawing the old line or dot.
    */
   let _drawing = 0;
   let _settleUntil = 0;
@@ -142,26 +166,94 @@ export function createPowerGridLayer({
     requestRender
       ? requestRender('power-grid-flow')
       : _viewer?.scene?.requestRender?.();
-  const moving = () =>
-    !reducedMotion() &&
-    shownLinks().some((link) => link.mw >= 1 && !dimmed(link));
+  /** Frames are wanted while lines in view move or finish building. */
+  const framesWanted = () =>
+    _enabled && _inView && ((_flowing && !_still) || Date.now() < _settleUntil);
 
-  /** Ask for frames while chevrons move or new lines settle; stop after. */
+  function tick() {
+    if (!framesWanted()) {
+      clearInterval(_ticker);
+      _ticker = null;
+    } else if (!globalThis.document?.hidden) frame();
+  }
+
+  /** Start or stop asking for frames; the tick itself only reads flags. */
   function syncTicker() {
-    const wanted = _enabled && (moving() || Date.now() < _settleUntil);
-    if (wanted && !_ticker)
-      _ticker = setInterval(() => {
-        if (!_enabled || (!moving() && Date.now() >= _settleUntil)) {
-          clearInterval(_ticker);
-          _ticker = null;
-          return;
-        }
-        if (!globalThis.document?.hidden) frame();
-      }, ANIMATION_FRAME_MS);
-    else if (!wanted && _ticker) {
+    if (framesWanted()) _ticker ??= setInterval(tick, ANIMATION_FRAME_MS);
+    else if (_ticker) {
       clearInterval(_ticker);
       _ticker = null;
     }
+  }
+
+  /**
+   * Whether a drawn line may be on screen: on this side of the globe and
+   * inside the camera's frustum. Where that cannot be told (no camera, 2D,
+   * Columbus view) the lines count as in view.
+   */
+  function linesInView() {
+    if (!_lineBounds.length) return false;
+    const camera = _viewer?.camera;
+    if (!camera?.positionWC || _viewer.scene?.mode !== Cesium.SceneMode.SCENE3D)
+      return true;
+    _occluder.cameraPosition = camera.positionWC;
+    const volume = camera.frustum?.computeCullingVolume?.(
+      camera.positionWC,
+      camera.directionWC,
+      camera.upWC,
+    );
+    for (let i = 0; i < _lineBounds.length; i++) {
+      const line = _lineBounds[i];
+      if (
+        (_occluder.isPointVisible(line.from) ||
+          _occluder.isPointVisible(line.to) ||
+          _occluder.isPointVisible(line.sphere.center)) &&
+        (!volume ||
+          volume.computeVisibility(line.sphere) !== Cesium.Intersect.OUTSIDE)
+      )
+        return true;
+    }
+    return false;
+  }
+
+  /** The camera or the lines changed: decide again, here and not per tick. */
+  function updateInView() {
+    const inView = linesInView();
+    if (inView === _inView) return;
+    _inView = inView;
+    // Lines drawn while out of view finish building now.
+    if (inView) _settleUntil = Date.now() + SETTLE_MS;
+    syncTicker();
+  }
+
+  function onResize() {
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(updateInView, RESIZE_SETTLE_MS);
+  }
+
+  function onMotionChange() {
+    _still = _motionQuery?.matches === true;
+    // Each line's material took its speed when it was made.
+    if (_enabled) render();
+  }
+
+  /** Follow, or stop following, the camera, the window and the motion wish. */
+  function watchView(on) {
+    _offCameraChanged?.();
+    _offCameraMoveEnd?.();
+    _offCameraChanged = _offCameraMoveEnd = null;
+    clearTimeout(_resizeTimer);
+    _resizeTimer = null;
+    globalThis.removeEventListener?.('resize', onResize);
+    _motionQuery?.removeEventListener?.('change', onMotionChange);
+    if (!on) return;
+    const camera = _viewer?.camera;
+    _offCameraChanged = camera?.changed?.addEventListener(updateInView) ?? null;
+    _offCameraMoveEnd = camera?.moveEnd?.addEventListener(updateInView) ?? null;
+    globalThis.addEventListener?.('resize', onResize);
+    _motionQuery ??= globalThis.matchMedia?.(REDUCED_MOTION_QUERY) ?? null;
+    _motionQuery?.addEventListener?.('change', onMotionChange);
+    _still = _motionQuery?.matches === true;
   }
 
   const canSelect = () =>
@@ -175,7 +267,6 @@ export function createPowerGridLayer({
     const area = _selectedId ? AREA_BY_ID.get(_selectedId) : null;
     if (!area || !_snapshot.links.length) {
       _selectedId = null;
-      _selectedCardId = null;
       overlayHost.setEntries(
         POWER_GRID_OVERLAY_SOURCE_ID,
         [],
@@ -185,7 +276,6 @@ export function createPowerGridLayer({
     }
     const card = buildAreaCard(area, _snapshot);
     card.position = onGround(area.id, area.point);
-    _selectedCardId = card.id;
     overlayHost.setEntries(
       POWER_GRID_OVERLAY_SOURCE_ID,
       [card],
@@ -197,7 +287,8 @@ export function createPowerGridLayer({
     const pickId = picking.resolvePickId(picked);
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
-    const id = pickId.slice(PICK_PREFIX.length);
+    // "SE3:7": the zone, then the drawing its dot belongs to.
+    const id = pickId.slice(PICK_PREFIX.length).split(':')[0];
     return AREA_BY_ID.has(id) ? id : null;
   }
 
@@ -209,9 +300,9 @@ export function createPowerGridLayer({
       const cardHit = overlayHost.hitTest?.(
         click.position?.x,
         click.position?.y,
-        { sourceId: POWER_GRID_OVERLAY_SOURCE_ID },
       );
-      if (cardHit && cardHit.entryId === _selectedCardId) return;
+      // A card under the click, this layer's or another's, is not the ground.
+      if (cardHit) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedArea(picked) : null;
       if (hit) {
@@ -237,7 +328,6 @@ export function createPowerGridLayer({
 
   function clearOverlays() {
     _selectedId = null;
-    _selectedCardId = null;
     if (!overlayHost) return;
     for (const id of [POWER_GRID_OVERLAY_SOURCE_ID, LABEL_SOURCE_ID]) {
       overlayHost.clearSource(id);
@@ -310,18 +400,27 @@ export function createPowerGridLayer({
     try {
       entities.removeAll();
       _drawing++;
+      _lineBounds = [];
+      _flowing = false;
       for (const link of shownLinks()) {
         if (link.mw < 1) continue;
         const faint = dimmed(link);
+        const positions = Cesium.Cartesian3.fromDegreesArrayHeights([
+          ...link.fromPoint,
+          LINE_HEIGHT_M,
+          ...link.toPoint,
+          LINE_HEIGHT_M,
+        ]);
+        _lineBounds.push({
+          from: positions[0],
+          to: positions[1],
+          sphere: Cesium.BoundingSphere.fromPoints(positions),
+        });
+        if (!faint) _flowing = true;
         entities.add({
           id: `power-grid-line:${link.id}:${_drawing}`,
           polyline: {
-            positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-              ...link.fromPoint,
-              LINE_HEIGHT_M,
-              ...link.toPoint,
-              LINE_HEIGHT_M,
-            ]),
+            positions,
             width: flowWidth(link.mw) * 2,
             arcType: Cesium.ArcType.GEODESIC,
             // Chevrons running the way the power flows, faster as it grows.
@@ -336,7 +435,7 @@ export function createPowerGridLayer({
         });
         if (link.kind !== 'internal' && !faint)
           entities.add({
-            id: `power-grid-end:${link.id}`,
+            id: `power-grid-end:${link.id}:${_drawing}`,
             position: onGround(`end:${link.id}`, foreignPoint(link)),
             point: {
               pixelSize: 8,
@@ -352,7 +451,7 @@ export function createPowerGridLayer({
       }
       for (const area of SWEDISH_AREAS)
         entities.add({
-          id: `${PICK_PREFIX}${area.id}`,
+          id: `${PICK_PREFIX}${area.id}:${_drawing}`,
           position: onGround(area.id, area.point),
           point: {
             pixelSize: 18,
@@ -371,6 +470,7 @@ export function createPowerGridLayer({
     publishLabels();
     if (_selectedId) publishSelectedCard();
     frame();
+    _inView = linesInView();
     _settleUntil = Date.now() + SETTLE_MS;
     syncTicker();
   }
@@ -380,8 +480,8 @@ export function createPowerGridLayer({
     name: 'Power Grid (Sweden)',
     icon: '🔌',
     source: 'Svenska kraftnät',
-    // SvK publishes quarter-hours; the proxy caches five minutes.
-    updateInterval: 120000,
+    // SvK publishes quarter-hours; the proxy keeps an answer five minutes.
+    updateInterval: 300000,
 
     init(viewer) {
       if (_viewer) throw new Error('Power grid layer is already initialized');
@@ -392,6 +492,7 @@ export function createPowerGridLayer({
       // Country names on the map follow the reader's language.
       _offLocale = onLocaleChange(() => {
         publishLabels();
+        if (_selectedId) publishSelectedCard();
         _day.publish();
       });
     },
@@ -403,6 +504,8 @@ export function createPowerGridLayer({
       overlayHost?.setVisible?.(LABEL_SOURCE_ID, true);
       installClickHandler();
       publishLabels();
+      watchView(true);
+      _inView = linesInView();
       _settleUntil = Date.now() + SETTLE_MS;
       syncTicker();
       _day.setActive(true);
@@ -413,6 +516,9 @@ export function createPowerGridLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      // The next answer after a pause draws, and asks for heights, again.
+      _signature = null;
+      watchView(false);
       syncTicker();
       _day.setActive(false);
       if (_dataSource) _dataSource.show = false;
@@ -435,10 +541,27 @@ export function createPowerGridLayer({
             ? snapshot.fetchedAt
             : Date.now();
         _lastError = null;
-        _snapshot = snapshot;
-        render();
-        _ground.place(groundRows());
-        _day.refresh();
+        const signature = signatureOf(snapshot);
+        if (signature !== _signature) {
+          _signature = signature;
+          _snapshot = snapshot;
+          if (
+            _focus !== null &&
+            !exchangeByCountry(snapshot.links).some(
+              (entry) => entry.country === _focus,
+            )
+          )
+            _focus = null;
+          render();
+          _ground.place(groundRows());
+        }
+        // The day grows only when Svenska kraftnät's clock has moved on; a
+        // load that failed or came back old is asked for again all the same.
+        const dayKey = `${snapshot.updated}/${snapshot.production?.at}`;
+        if (dayKey !== _dayKey || _day.wantsRetry()) {
+          _dayKey = dayKey;
+          _day.refresh();
+        }
         _rowListener?.();
         return true;
       } catch (e) {
@@ -461,6 +584,10 @@ export function createPowerGridLayer({
       _day.destroy();
       _ground.clear();
       _snapshot = { links: [], areas: [], production: {}, updated: null };
+      _dayKey = null;
+      _focus = null;
+      _lineBounds = [];
+      _motionQuery = null;
       if (_dataSource) {
         viewer.dataSources.remove(_dataSource, true);
         _dataSource = null;

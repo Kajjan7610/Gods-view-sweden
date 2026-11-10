@@ -7,6 +7,7 @@ import {
   exchangeByCountry,
   exchangeTotals,
   flowWidth,
+  latestProduction,
   linkTouches,
   normalizeFlows,
   normalizeProduction,
@@ -88,29 +89,105 @@ test('flows run from sender to receiver and say how they meet Sweden', () => {
   });
 });
 
-test('production keeps the latest quarter-hour of each type', () => {
+test('a link without a value is no flow, and a link named twice counts once', () => {
+  const flows = (...groups) =>
+    normalizeFlows({ Data: groups.map((data, i) => ({ id: String(i), data })) })
+      .links;
+  // Number(null) and Number('') are 0: neither is a link standing still.
+  assert.deepEqual(
+    flows([
+      { id: 'SE1_SE2', value: null },
+      { id: 'SE2_SE3' },
+      { id: 'SE3_SE4', value: '' },
+      { id: 'FI_SE1', value: '  ' },
+      { id: 'FI_SE3', value: NaN },
+      { id: 'NO4_SE1', value: Infinity },
+      { id: 'NO4_SE2', value: 'n/a' },
+      { id: 'NO3_SE2', value: false },
+      { id: 'NO1_SE3', value: [] },
+    ]),
+    [],
+  );
+  assert.deepEqual(
+    flows([
+      { id: 'SE1_SE2', value: 0 },
+      { id: 'SE2_SE3', value: '412.6' },
+      { id: 'SE3_SE4', value: -0.2 },
+    ]).map((link) => [link.id, link.from, link.to, link.mw]),
+    [
+      ['SE1_SE2', 'SE1', 'SE2', 0],
+      ['SE2_SE3', 'SE2', 'SE3', 413],
+      ['SE3_SE4', 'SE4', 'SE3', 0],
+    ],
+    'a real 0 MW stays',
+  );
+  assert.deepEqual(
+    flows(
+      [
+        { id: 'SE2_SE3', value: 5000 },
+        { id: 'SE3_SE4', value: null },
+      ],
+      [
+        { id: 'SE2_SE3', value: -70 },
+        { id: 'SE3_SE4', value: 900 },
+      ],
+    ).map((link) => [link.id, link.from, link.mw]),
+    [
+      ['SE2_SE3', 'SE2', 5000],
+      ['SE3_SE4', 'SE3', 900],
+    ],
+    'the first value wins; a missing one does not claim the link',
+  );
+});
+
+test('production is every type at the newest quarter-hour with a total', () => {
   const series = (id, ...ys) => ({
     id,
     data: ys.map((y, i) => ({ x: 1000 + i * 900, y })),
   });
+  // Wind and consumption run a quarter ahead of the total; hydro lags.
   assert.deepEqual(
     normalizeProduction({
       Data: [
-        series('1', 17000, 17468.4),
-        series('2', 3646, 3646),
-        series('5', 9000, 9637, null),
-        series('7', 17888),
-        series('99', 5),
+        series('1', 17000, 17468.4, null),
+        series('2', 3646, 3650),
+        series('3', 2956),
+        series('5', 9000, 9637, 9800),
+        series('7', 17888, 17900, 18000),
+        series('99', 5, 5, 5),
       ],
     }),
     {
       at: 1900,
       total: 17468,
-      nuclear: 3646,
+      nuclear: 3650,
       wind: 9637,
-      consumption: 17888,
+      consumption: 17900,
     },
+    'no hydro from the older quarter, nothing from the newer one',
   );
+  assert.deepEqual(
+    normalizeProduction({ Data: [series('7', 17888), series('5', 9000)] }),
+    { at: null },
+    'no total, no values',
+  );
+  assert.deepEqual(normalizeProduction(null), { at: null });
+  assert.deepEqual(normalizeProduction({ Data: [] }), { at: null });
+});
+
+test('the latest values of a kept day are its last quarter-hour with a total', () => {
+  const points = [
+    { at: 1000, total: 15000, nuclear: 3000 },
+    { at: 1900, total: 15100, wind: 9000 },
+    { at: 2800, consumption: 16000 },
+  ];
+  const latest = latestProduction(points);
+  assert.deepEqual(latest, { at: 1900, total: 15100, wind: 9000 });
+  assert.notEqual(latest, points[1], 'a copy, not the point itself');
+  assert.deepEqual(latestProduction([]), { at: null });
+  assert.deepEqual(latestProduction([null, { total: 5 }, { at: 1 }]), {
+    at: null,
+  });
 });
 
 test('lines widen with the flow, within bounds', () => {

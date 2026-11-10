@@ -63,7 +63,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | +SE | Kameror | Trafikverket | Cirka 1 550 vägkameror med livebilder. Originalet: Offentliga trafikkameror i många länder | Bilderna uppdateras medan de visas | CC0 1.0 (Trafikverket) |
 | SE | Fartkameror (Sverige) | Trafikverket | Cirka 2 800 fasta fartkameror i hela Sverige | Varje timme | CC0 1.0 |
 | SE | Elpris (Sverige) | elprisetjustnu.se · Nord Pool | Spotpris per kvart i elområdena SE1–SE4 | Varje minut | Öppna data, källan anges |
-| SE | Kraftsystemet (Sverige) | Svenska kraftnät | Sveriges förbindelser mellan elområdena och till grannländerna | Varannan minut | Ingen angiven licens; källan anges |
+| SE | Kraftsystemet (Sverige) | Svenska kraftnät | Sveriges förbindelser mellan elområdena och till grannländerna | Var 5:e minut | Ingen angiven licens; källan anges |
 | SE | Strålning (Sverige) | Strålsäkerhetsmyndigheten (SSM) | Cirka 25 gammastationer | Var 10:e minut | Ingen angiven licens; källan anges |
 | SE | Brandstationer (Sverige) | Myndigheten för civilt försvar (MCF) | Räddningstjänsternas alla brandstationer | En gång per dygn | EU-värdefullt dataset, källan anges |
 | SE | Polisstationer (Sverige) | Polismyndigheten | Alla polisstationer, cirka 260 | En gång per dygn | Öppna data, källan anges |
@@ -126,6 +126,38 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-10 (kraftsystemet: rättningar efter kodgranskning)
+- Ett klick på ett kort (lagrets eget eller ett annat lagers) räknas inte
+  som ett klick på marken; elområdets kort är alltid träffbart.
+- Efter midnatt visas gårdagen inte längre som "hittills i dag": dygnet är
+  tomt tills första kvarten kommer ("Inga kvartsvärden ännu i dag"), och
+  veckan räknar inte gårdagen två gånger. Servern frågar aldrig
+  Svenska kraftnät om ett annat datum än dagens.
+- Kartan får flödena även när produktionen inte gick att hämta (tidigare
+  502); produktionen visar då senast kända värde, högst två timmar
+  gammalt, annars streck.
+- Sommar- och vintertid: dygnsdiagrammet går från svensk midnatt till nästa
+  (23, 24 eller 25 timmar) och veckans datum stegas per kalenderdag.
+- Ett saknat värde visas som streck, inte som 0 MW; en förbindelse som
+  förekommer två gånger räknas en gång. Produktionsraden tar alla
+  kraftslag ur samma kvart.
+- Panelen säger när den visar äldre data ("Äldre data från ...") och när en
+  uppdatering misslyckades; ett misslyckat eller gammalt dygn hämtas om
+  vid nästa läsning. "Laddar" visas bara medan något faktiskt hämtas.
+- Efter en misslyckad hämtning väntar servern en minut innan nästa försök;
+  samtidiga förfrågningar delar på en hämtning.
+- Lagret läser var femte minut (servern höll redan svaret i fem minuter),
+  ritar inte om något när svaret är oförändrat och begär bildrutor för
+  de rörliga linjerna bara när någon förbindelse är i bild.
+- Effekt skrivs så att värdet inte avrundas bort (250 MW i stället för
+  0,3 GW); y-axeln har enheten i bildtexten. Panelens rad heter
+  nettoexport och nettoimport, eftersom den summerar nettot per kvart.
+- Smått: ett framlyft land som försvinner ur svaret släpper nedtoningen,
+  ett öppet kort byter språk direkt och punkterna flyttas när markhöjder
+  kommer in.
+- Tester för servern, posterna, källan, kartlagret, korten, diagrammet och
+  panelen.
 
 ### 2026-11-10 (butikskedjor: rättningar efter kodgranskning)
 - Ett klick på ett kort (lagrets eget eller ett annat lagers) räknas inte

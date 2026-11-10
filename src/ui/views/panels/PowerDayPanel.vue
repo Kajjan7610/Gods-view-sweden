@@ -9,6 +9,8 @@ import { usePowerDayStore } from '../../stores/powerDay.js';
 // is on: the production stacked by type with the consumption over it, and the
 // exchange below, per quarter-hour. The layer presents it (src/layers/
 // powerGrid/dayPanel.js); pointing at the chart reads one quarter-hour.
+// Without a chart the panel says why: the load failed, it finished without
+// quarter-hours, or it is still on its way.
 const store = usePowerDayStore();
 const { view: d } = storeToRefs(store);
 const hover = ref(null);
@@ -36,7 +38,7 @@ const readout = computed(() =>
 
 <template>
   <RailPanel id="power-panel" :hidden="!d" start-collapsed :title="t('POWER')" sideways rail-scroller>
-    <div id="power-panel-body" class="power-day ui-scroll" data-rail-scroller>
+    <div id="power-panel-body" class="power-day ui-scroll" data-rail-scroller :aria-busy="d?.loading ? 'true' : undefined">
       <template v-if="d">
         <div class="power-day-choices" role="group" :aria-label="t('Time span')">
           <button
@@ -48,9 +50,9 @@ const readout = computed(() =>
             @click="store.act('show', choice.id)"
           >{{ choice.label }}</button>
         </div>
-        <p v-if="!d.chart" class="power-day-note">{{ d.failed ? t('Power day unavailable') : t('Loading…') }}</p>
+        <p v-if="!d.chart" class="power-day-note" role="status">{{ d.failed ? t('Power day unavailable') : d.empty || (d.loading ? t('Loading…') : '') }}</p>
         <template v-else>
-          <small class="power-day-caption">{{ t('Production by type and consumption') }}</small>
+          <small class="power-day-caption">{{ t('Production by type and consumption') }} · {{ d.yUnit }}</small>
           <svg
             class="power-day-chart"
             :viewBox="`0 0 ${d.chart.width} ${d.chart.height}`"
@@ -67,7 +69,7 @@ const readout = computed(() =>
             <path :d="d.chart.consumption" fill="none" :stroke="d.colors.consumption" stroke-width="1.5" />
             <line v-if="hover" class="power-day-cursor" :x1="hover.x" :x2="hover.x" y1="0" :y2="d.chart.height" />
           </svg>
-          <small class="power-day-caption">{{ t('Exchange: export up, import down') }} · {{ d.netLabel }}</small>
+          <small class="power-day-caption">{{ t('Net exchange: export up, import down') }} · {{ d.netLabel }}</small>
           <svg
             class="power-day-chart"
             :viewBox="`0 0 ${d.chart.width} ${d.chart.netHeight + 12}`"
@@ -91,6 +93,7 @@ const readout = computed(() =>
             >
           </div>
           <p class="power-day-summary">{{ d.summary }}<br />{{ d.exchange }}</p>
+          <p v-if="d.status" class="power-day-note power-day-caption" role="status">{{ d.status }}</p>
           <p v-if="d.note" class="power-day-note power-day-caption">{{ d.note }}</p>
           <ul class="power-day-legend">
             <li v-for="item in d.legend" :key="item.id"><i :style="{ background: item.color }"></i>{{ item.label }}</li>
