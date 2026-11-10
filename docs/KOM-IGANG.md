@@ -63,9 +63,20 @@ sparas bara på din dator och skickas bara till respektive källa.
 | **TRAFIKLAB** (två nycklar) | Bussar, tunnelbana och spårvagnar live i 16 regioner, linjenummer och störningar | Skapa ett projekt på [developer.trafiklab.se](https://developer.trafiklab.se) och lägg till *GTFS Regional Realtime* och *GTFS Regional Static* |
 | **SWEDAVIA** (två nycklar) | Flygtavlan för Swedavias tio flygplatser och köerna i säkerhetskontrollen | Registrera dig på [apideveloper.swedavia.se](https://apideveloper.swedavia.se) och prenumerera på *FlightInfo* och *WaitTime* (gratisnivåerna) |
 
-Valfritt, också gratis: **AISSTREAM** (fartyg), **NASA FIRMS** (bränder),
-**TOMTOM** (riktig trafik i stället för simulerad) och **CESIUM ION**
-(fler kartor och terräng).
+Valfritt, också gratis: **OPENSKY** (flyg med större kvot än utan konto),
+**AISSTREAM** (fartyg), **NASA FIRMS** (bränder), **TOMTOM** (riktig trafik
+i stället för simulerad) och **CESIUM ION** (fler kartor och terräng).
+
+> **Egna nycklar, källornas villkor.** Varje användare skaffar sina egna
+> nycklar; dela inte dina med andra. Appens kod är fri (MIT-licens), men
+> datan kommer från källorna och deras villkor gäller dig som använder
+> nyckeln. Några källor får bara användas **icke-kommersiellt**, bland
+> annat OpenSky (flyg): deras licens gäller ideell forskning, utbildning och
+> myndigheter, och kommersiell användning kräver OpenSkys skriftliga
+> tillstånd. Visar du data offentligt, i filmer, presentationer eller på
+> webben, ange källan (för flyg: "The OpenSky Network,
+> https://opensky-network.org"). Källa och licens för varje lager står under
+> **ⓘ** i Datalager och i [SVERIGE.md](../SVERIGE.md).
 
 ## 3. Utforska
 

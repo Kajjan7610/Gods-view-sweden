@@ -115,6 +115,16 @@ de här gränserna, även för nya lager:
 - **Nycklar bara i `.env`**, som aldrig checkas in. Hela historiken är
   genomsökt efter nycklar utan träff, och varje commit söks igenom innan den
   görs.
+- **Egna nycklar, källornas villkor.** Varje användare skaffar sina egna
+  nycklar, och varje källas villkor gäller den som använder nyckeln; koden
+  är fri (MIT), datan är det inte alltid. Några källor får bara användas
+  icke-kommersiellt, bland annat OpenSky (flyg), vars licens gäller ideell
+  forskning, utbildning och myndigheter; kommersiell användning kräver
+  OpenSkys skriftliga tillstånd. Offentlig användning av datan ska ange
+  källan (för flyg: "The OpenSky Network, https://opensky-network.org").
+- **Varje ny källa prövas** innan den byggs in: dokumenterat gränssnitt och
+  licens, om dataägarens godkännande krävs, om villkoren tillåter
+  användningen, och vad källan tillför helheten. Utfallet skrivs in här.
 
 ### Källor utan publicerad licens
 
@@ -142,6 +152,7 @@ en dokumenterad källa eller godkännas av myndigheten:
 | `TRAFIKLAB_GTFS_STATIC_KEY` | linjenummer och fordonstyp | trafiklab.se → GTFS Regional Static |
 | `SWEDAVIA_FLIGHTINFO_KEY` | avgångar och ankomster i dossiern, tavlan och cockpit | apideveloper.swedavia.se → FlightInfo Free |
 | `SWEDAVIA_WAITTIME_KEY` | köerna i säkerhetskontrollen | apideveloper.swedavia.se → WaitTime Free |
+| `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` | flyg med större kvot än utan konto (originalets lager; bara icke-kommersiellt, ange OpenSky som källa) | opensky-network.org → konto → API client (under KOPPLA PÅ) |
 | `ENTSOE_SECURITY_TOKEN` | kraftsystemet från ENTSO-E i stället för Svenska kraftnäts kontrollrum; används bara med `POWER_GRID_SOURCE=entsoe` | transparency.entsoe.eu → registrera, mejla transparency@entsoe.eu "RESTful API access", sedan My Account → Generate token |
 | `CESIUM_ION_TOKEN` | fotorealistiska 3D-städer | ion.cesium.com |
 
@@ -172,6 +183,17 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-10 (egna nycklar och källornas villkor)
+- README, Kom igång och avsnittet **Avgränsningar och säkerhet** säger nu
+  rakt ut att varje användare skaffar egna nycklar och att källornas
+  villkor gäller; koden är fri (MIT), datan inte alltid. OpenSky (flyg) får
+  bara användas icke-kommersiellt och ska anges som källa vid offentlig
+  användning.
+- OpenSky står i nyckeltabellen och bland de valfria nycklarna i Kom igång.
+- Ny punkt i Avgränsningar: varje ny källa prövas (gränssnitt, licens,
+  dataägarens godkännande, villkor och vad den tillför helheten) innan den
+  byggs in, och utfallet skrivs in där.
 
 ### 2026-11-10 (kraftsystemet: reserv från ENTSO-E)
 - Kraftsystemets adresser (`/api/power-grid`, `/day`, `/week`) kan läsas
