@@ -70,7 +70,11 @@ export function normalizeGammaStation(feature, nowMs) {
     nowMs - updated > MAX_AGE_MS
   )
     return null;
-  const value = props.value == null ? NaN : Number(props.value);
+  // No value at all (null, '', blank) is no reading, never a measured 0.
+  const value =
+    props.value == null || String(props.value).trim() === ''
+      ? NaN
+      : Number(props.value);
   return {
     id: String(props.id).slice(0, 12),
     name: String(props.name ?? props.id)

@@ -54,6 +54,7 @@ export function createGammaRadiationLayer({
   picking = null,
   pointer = null,
   terrain = null,
+  now = () => Date.now(),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Gamma radiation requires a snapshot source');
@@ -95,7 +96,7 @@ export function createGammaRadiationLayer({
       );
       return;
     }
-    const card = buildGammaCard(row);
+    const card = buildGammaCard(row, now());
     card.position = position(row);
     overlayHost.setEntries(
       GAMMA_RADIATION_OVERLAY_SOURCE_ID,
@@ -256,6 +257,7 @@ export function createGammaRadiationLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      _lastError = null;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
       clearOverlays();
@@ -274,19 +276,28 @@ export function createGammaRadiationLayer({
         _lastUpdate =
           _stale && Number.isFinite(snapshot.fetchedAt)
             ? snapshot.fetchedAt
-            : Date.now();
+            : now();
         _lastError = null;
         const signature = JSON.stringify(
           snapshot.stations.map((row) => [row.id, row.updated, row.value]),
         );
         if (signature !== _signature) {
-          _signature = signature;
+          // Not trusted until drawn: a drawing that fails is made again.
+          _signature = null;
           _stations = snapshot.stations;
           _stationById.clear();
           for (const row of _stations) _stationById.set(row.id, row);
           // Heights first: the ones this browser kept are drawn at once.
           _ground.place(_stations);
-          render();
+          try {
+            render();
+          } catch (e) {
+            console.warn('[Data:GammaRadiation] Draw error:', e?.message || e);
+            _lastError = e?.message || msg('Radiation data unavailable');
+            _rowListener?.();
+            return true;
+          }
+          _signature = signature;
           console.log(
             `[Data:GammaRadiation] Updated: ${_stations.length} stations`,
           );

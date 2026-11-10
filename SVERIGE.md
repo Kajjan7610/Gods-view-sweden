@@ -207,6 +207,21 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (strålning: rättningar efter kodgranskning)
+- Kortet visar datum och klockslag när en station inte har mätt i dag, i
+  stället för bara klockslag. En station i service som senast mätte för
+  68 timmar sedan såg förut ut att ha mätt i dag.
+- Proxyn lämnar Strålsäkerhetsmyndigheten i fred i 1 minut efter en
+  misslyckad hämtning och svarar under tiden med de senaste stationerna,
+  märkta `X-Data-Stale` (eller 502 om inga finns). Loggraden och cachen
+  skrivs en gång per hämtning.
+- En ritning som misslyckades loggas som ritfel, inte hämtfel, och görs om
+  vid nästa uppdatering i stället för att vänta på nästa timvärde. Ett
+  avstängt lager bär inte kvar sitt senaste fel. Kortet och tiden för
+  senaste uppdatering följer lagrets egen klocka.
+- En station helt utan mätvärde räknas som i service, i stället för att
+  visas med 0,00 µSv/h.
+
 ### 2026-11-10 (elpris: rättningar efter kodgranskning)
 - Ett elområde vars dagsfil inte går att hämta behåller de priser det hade,
   medan de andra uppdateras. Förut fällde en enda misslyckad fil av åtta

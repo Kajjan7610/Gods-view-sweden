@@ -62,3 +62,79 @@ test('the route serves normalized stations and caches them', async () => {
   assert.equal(stale.body.stale, true);
   assert.equal((await get('/other')).status, 404);
 });
+
+test('after a failed refresh SSM is left alone for a minute', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  let clock = NOW;
+  let fail = false;
+  let calls = 0;
+  const request = route({
+    now: () => clock,
+    fetchImpl: async () => {
+      calls += 1;
+      return fail ? new Response('down', { status: 503 }) : Response.json(body);
+    },
+  });
+  await request();
+  fail = true;
+  clock += 11 * 60_000;
+  assert.equal((await request()).body.stale, true);
+  assert.equal(calls, 2);
+  // Within the minute: the last stations again, SSM not asked.
+  clock += 30_000;
+  for (let i = 0; i < 3; i += 1)
+    assert.equal((await request()).body.stale, true);
+  assert.equal(calls, 2);
+  // After it, asked once more; and once it answers, fresh again.
+  clock += 31_000;
+  fail = false;
+  const back = await request();
+  assert.equal(calls, 3);
+  assert.equal(back.body.stale, undefined);
+});
+
+test('without any snapshot a failed refresh is a 502, also during the pause', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  let calls = 0;
+  const request = route({
+    now: () => NOW,
+    fetchImpl: async () => {
+      calls += 1;
+      return new Response('down', { status: 503 });
+    },
+  });
+  assert.equal((await request()).status, 502);
+  const paused = await request();
+  assert.equal(paused.status, 502);
+  assert.equal(paused.body.error, 'gamma_radiation_unavailable');
+  assert.equal(calls, 1);
+});
+
+test('requests waiting on one refresh share it, logged and saved once', async (t) => {
+  const log = t.mock.method(console, 'log', () => {});
+  let release;
+  const gate = new Promise((resolve) => (release = resolve));
+  let calls = 0;
+  const request = route({
+    now: () => NOW,
+    fetchImpl: async () => {
+      calls += 1;
+      await gate;
+      return Response.json(body);
+    },
+  });
+  const waiting = [request(), request(), request()];
+  await new Promise((resolve) => setImmediate(resolve));
+  release();
+  const answers = await Promise.all(waiting);
+  assert.deepEqual(
+    answers.map((answer) => answer.status),
+    [200, 200, 200],
+  );
+  assert.equal(calls, 1);
+  assert.deepEqual(
+    log.mock.calls.map((call) => call.arguments[0]),
+    ['[gamma-radiation] 1 stations'],
+  );
+});

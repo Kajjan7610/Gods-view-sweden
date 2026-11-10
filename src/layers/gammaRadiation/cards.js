@@ -10,6 +10,22 @@ const CLOCK = new Intl.DateTimeFormat('sv-SE', {
   hour: '2-digit',
   minute: '2-digit',
 });
+const DAY = new Intl.DateTimeFormat('sv-SE', {
+  timeZone: 'Europe/Stockholm',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+/**
+ * When a station last reported: the time today, the date and time before
+ * that, so a station silent for days never reads as measured just now.
+ */
+export function measuredWhen(updated, nowMs) {
+  const day = DAY.format(updated);
+  const time = CLOCK.format(updated);
+  return day === DAY.format(nowMs) ? time : `${day} ${time}`;
+}
 
 const CARD_BASE = Object.freeze({
   selected: true,
@@ -27,8 +43,12 @@ export function formatDose(value) {
   });
 }
 
-/** Card for one station. */
-export function buildGammaCard(row) {
+/**
+ * Card for one station.
+ * @param {object} row A normalized station.
+ * @param {number} [nowMs] The clock the reading's age is judged by.
+ */
+export function buildGammaCard(row, nowMs = Date.now()) {
   const details = [
     row.value == null
       ? t('Station in service or maintenance')
@@ -38,7 +58,7 @@ export function buildGammaCard(row) {
       max: formatDose(NORMAL_BACKGROUND.max),
     }),
     // i18n-ignore: agency name
-    `${t('Measured {time}', { time: CLOCK.format(row.updated) })} · Strålsäkerhetsmyndigheten`,
+    `${t('Measured {time}', { time: measuredWhen(row.updated, nowMs) })} · Strålsäkerhetsmyndigheten`,
   ];
   return {
     ...CARD_BASE,
