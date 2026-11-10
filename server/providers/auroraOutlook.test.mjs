@@ -118,3 +118,65 @@ test('a Kp or a cloud cover that is missing is unknown, never 0', () => {
     [0, 6],
   );
 });
+
+import {
+  KP_FORECAST_URL as KP_URL_MORE,
+  auroraOutlookProxy as outlookProxy,
+} from './auroraOutlook.js';
+
+test('after a failure NOAA is left alone for a minute; the last forecast stands in', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  let clock = Date.parse('2026-11-05T18:00:00Z');
+  let kpDown = false;
+  let kpCalls = 0;
+  let handler;
+  outlookProxy({
+    now: () => clock,
+    fetchImpl: async (url) => {
+      if (String(url) === KP_URL_MORE) {
+        kpCalls += 1;
+        return kpDown
+          ? new Response('', { status: 503 })
+          : Response.json([
+              { time_tag: '2026-11-05T18:00:00', kp: 3, observed: 'observed' },
+            ]);
+      }
+      return Response.json({ timeSeries: [] });
+    },
+  }).configureServer({ middlewares: { use: (path, fn) => (handler = fn) } });
+  const get = async () => {
+    const res = {
+      destroyed: false,
+      writeHead(status) {
+        this.status = status;
+      },
+      end(body) {
+        this.body = JSON.parse(body);
+      },
+    };
+    await handler(
+      { method: 'GET', url: '/?lat=65.58&lon=22.15', headers: {}, socket: {} },
+      res,
+    );
+    return res;
+  };
+  // Three at once: one read of NOAA.
+  const first = await Promise.all([get(), get(), get()]);
+  assert.deepEqual(
+    first.map((res) => res.status),
+    [200, 200, 200],
+  );
+  assert.equal(kpCalls, 1);
+  // Half an hour on NOAA is down: the last forecast stands in.
+  kpDown = true;
+  clock += 31 * 60_000;
+  assert.equal((await get()).status, 200);
+  assert.equal(kpCalls, 2);
+  clock += 30_000;
+  assert.equal((await get()).status, 200);
+  assert.equal(kpCalls, 2, 'not asked within the minute');
+  clock += 31_000;
+  kpDown = false;
+  assert.equal((await get()).status, 200);
+  assert.equal(kpCalls, 3);
+});

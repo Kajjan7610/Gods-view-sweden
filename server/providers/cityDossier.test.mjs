@@ -271,3 +271,63 @@ test('a Wikipedia failure is asked for again soon, not after a day', async () =>
   assert.equal(later.wikipedia.extract, 'Gävle är en stad.');
   assert.equal(later.partial, false);
 });
+
+test('the Kolada election is one election: no party keeps an older share', () => {
+  const share = (kpi, period, value) => ({
+    kpi,
+    period,
+    values: [{ gender: 'T', value }],
+  });
+  const figures = normalizeKolada({
+    values: [
+      share('N05801', 2025, 30),
+      share('N05804', 2025, 20),
+      // The Greens stood four years earlier and not since.
+      share('N05803', 2021, 12),
+    ],
+  });
+  assert.deepEqual(figures.election, {
+    dataYear: 2025,
+    parties: [
+      { party: 'S', share: 30 },
+      { party: 'SD', share: 20 },
+    ],
+  });
+});
+
+test('after a failure the sources are left alone for a minute', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  let clock = Date.parse('2026-11-05T18:00:00Z');
+  let calls = 0;
+  const get = route({
+    now: () => clock,
+    scb: {
+      townPopulation: async () => {
+        throw new Error('down');
+      },
+      municipalityPopulation: async () => {
+        throw new Error('down');
+      },
+    },
+    election: {
+      forMunicipality: async () => {
+        throw new Error('down');
+      },
+    },
+    fetchImpl: async () => {
+      calls += 1;
+      return new Response('', { status: 503 });
+    },
+  });
+  assert.equal((await get('/?lat=60.67&lon=17.14')).status, 502);
+  const asked = calls;
+  assert.ok(asked > 0);
+  // Within the minute nothing is asked again.
+  clock += 30_000;
+  assert.equal((await get('/?lat=60.67&lon=17.14')).status, 502);
+  assert.equal(calls, asked);
+  // After it, everything is.
+  clock += 31_000;
+  await get('/?lat=60.67&lon=17.14');
+  assert.ok(calls > asked);
+});

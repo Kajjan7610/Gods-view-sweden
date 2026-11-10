@@ -23,6 +23,8 @@ const USER_AGENT =
 export const VISIT_RADIUS_KM = 20;
 const FACTS_TTL_MS = 24 * 60 * 60_000;
 const PARTIAL_FACTS_TTL_MS = 10 * 60_000;
+/** How long the sources are left alone after a failed read. */
+const RETRY_AFTER_FAILURE_MS = 60_000;
 const FACTS_CACHE_MAX = 120;
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
@@ -88,10 +90,20 @@ export function normalizeKolada(payload) {
   };
   const population = byKpi.get(KOLADA_KPIS.population) ?? [];
   const lastPopulation = population.at(-1) ?? null;
-  const parties = PARTY_KPIS.map(([party, kpi]) => ({
-    party,
-    share: latest(kpi)?.value ?? null,
-  })).filter((row) => row.share != null);
+  // One election: the newest year any party has a share for. A party without
+  // a share that year did not stand; an older share of its own is another
+  // election's and is not mixed in.
+  const electionDataYear = Math.max(
+    -Infinity,
+    ...PARTY_KPIS.map(([, kpi]) => latest(kpi)?.year ?? -Infinity),
+  );
+  const parties = PARTY_KPIS.map(([party, kpi]) => {
+    const entry = latest(kpi);
+    return {
+      party,
+      share: entry?.year === electionDataYear ? entry.value : null,
+    };
+  }).filter((row) => row.share != null);
   return {
     population: lastPopulation
       ? {
@@ -110,7 +122,7 @@ export function normalizeKolada(payload) {
     election: parties.length
       ? {
           // Kolada repeats the latest result every year until the next one.
-          dataYear: latest(PARTY_KPIS[0][1])?.year ?? null,
+          dataYear: electionDataYear,
           parties,
         }
       : null,
@@ -272,6 +284,7 @@ export function cityDossierProxy({
   election = null,
 } = {}) {
   const facts = new Map();
+  const retryAt = new Map();
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 300 });
 
@@ -423,6 +436,12 @@ export function cityDossierProxy({
         (hit.value.partial ? PARTIAL_FACTS_TTL_MS : FACTS_TTL_MS)
     )
       return json(200, { city, ...hit.value });
+    // After a failure the sources are left alone for a minute for this
+    // municipality; what is known stands in, marked stale.
+    if (now() < (retryAt.get(seat.code) ?? 0))
+      return hit
+        ? json(200, { city, ...hit.value, stale: true })
+        : json(502, { city, error: 'city_dossier_unavailable' });
     if (!allow(clientKey(req)))
       return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
     try {
@@ -430,6 +449,7 @@ export function cityDossierProxy({
         loadFacts(seat),
       );
       const value = await promise;
+      retryAt.delete(seat.code);
       facts.delete(seat.code);
       facts.set(seat.code, { value, savedAt: now() });
       if (facts.size > FACTS_CACHE_MAX) facts.delete(facts.keys().next().value);
@@ -438,6 +458,8 @@ export function cityDossierProxy({
       console.warn(
         `[city-dossier] ${seat.locality}: ${error?.message || error}`,
       );
+      retryAt.set(seat.code, now() + RETRY_AFTER_FAILURE_MS);
+      if (retryAt.size > 400) retryAt.delete(retryAt.keys().next().value);
       if (hit) return json(200, { city, ...hit.value, stale: true });
       return json(502, { city, error: 'city_dossier_unavailable' });
     }

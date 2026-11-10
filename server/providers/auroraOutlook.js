@@ -13,6 +13,8 @@ export const KP_FORECAST_URL =
 export const SMHI_POINT_URL = (lon, lat) =>
   `https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/${lon}/lat/${lat}/data.json`;
 const TTL_MS = 30 * 60_000;
+/** How long a source is left alone after a failed read. */
+const RETRY_AFTER_FAILURE_MS = 60_000;
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
 const CLOUD_CACHE_MAX = 300;
@@ -69,7 +71,10 @@ export function auroraOutlookProxy({
   now = () => Date.now(),
 } = {}) {
   let kp = null;
+  let kpRetryAt = 0;
+  let kpInFlight = null;
   const clouds = new Map();
+  const cloudRetryAt = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 60, globalMax: 600 });
 
   async function getJson(url) {
@@ -88,21 +93,37 @@ export function auroraOutlookProxy({
     }
   }
 
-  async function readKp() {
-    if (kp && now() - kp.at < TTL_MS) return kp.value;
-    try {
-      kp = { value: normalizeKp(await getJson(KP_FORECAST_URL)), at: now() };
-    } catch (error) {
-      if (!kp) throw error;
-      console.warn(`[aurora] kp: ${error?.message}`);
-    }
-    return kp.value;
+  /** The Kp forecast, read by one request at a time for everyone waiting. */
+  function readKp() {
+    if (kp && now() - kp.at < TTL_MS) return Promise.resolve(kp.value);
+    // After a failure NOAA is left alone for a minute; the last forecast
+    // stands in while there is one.
+    if (now() < kpRetryAt)
+      return kp
+        ? Promise.resolve(kp.value)
+        : Promise.reject(new Error('NOAA did not answer a moment ago'));
+    kpInFlight ??= (async () => {
+      try {
+        kp = { value: normalizeKp(await getJson(KP_FORECAST_URL)), at: now() };
+        kpRetryAt = 0;
+      } catch (error) {
+        kpRetryAt = now() + RETRY_AFTER_FAILURE_MS;
+        if (!kp) throw error;
+        console.warn(`[aurora] kp: ${error?.message}`);
+      } finally {
+        kpInFlight = null;
+      }
+      return kp.value;
+    })();
+    return kpInFlight;
   }
 
   async function readClouds(lat, lon) {
     const key = `${lat.toFixed(1)},${lon.toFixed(1)}`;
     const hit = clouds.get(key);
     if (hit && now() - hit.at < TTL_MS) return hit.value;
+    // After a failure SMHI is left alone for a minute for this place.
+    if (now() < (cloudRetryAt.get(key) ?? 0)) return hit?.value ?? [];
     try {
       const value = normalizeClouds(
         await getJson(SMHI_POINT_URL(lon.toFixed(2), lat.toFixed(2))),
@@ -114,6 +135,9 @@ export function auroraOutlookProxy({
     } catch (error) {
       // Without clouds the outlook still says what the sky could show.
       console.warn(`[aurora] clouds: ${error?.message}`);
+      cloudRetryAt.set(key, now() + RETRY_AFTER_FAILURE_MS);
+      if (cloudRetryAt.size > CLOUD_CACHE_MAX)
+        cloudRetryAt.delete(cloudRetryAt.keys().next().value);
       return hit?.value ?? [];
     }
   }

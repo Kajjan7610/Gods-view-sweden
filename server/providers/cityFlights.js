@@ -73,6 +73,12 @@ export function nextDate(date) {
   return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
 }
 
+/** The date before a "YYYY-MM-DD" date. */
+export function previousDate(date) {
+  const [y, m, d] = String(date).split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d - 1)).toISOString().slice(0, 10);
+}
+
 /**
  * One flight as the board shows it, or null for a removed or unreadable
  * row. Times are epoch milliseconds (null when Swedavia has none).
@@ -279,6 +285,9 @@ export function createSwedaviaFlights({
   const budgets = new Map();
   /** A fallback older than this is no longer the airport's present. */
   const STALE_SHOW_MS = 15 * 60_000;
+  /** After midnight yesterday's list is read this long, and this seldom. */
+  const LOOK_BACK_MS = 3 * 3600_000;
+  const YESTERDAY_TTL_MS = 30 * 60_000;
   /** An answer fit to show: fresh, or a fallback from the last minutes. */
   const current = (entry) => {
     if (entry.stale && now() - entry.at > STALE_SHOW_MS)
@@ -305,9 +314,9 @@ export function createSwedaviaFlights({
    * An answer kept ANSWER_TTL_MS as `{ value, at, stale }`; out of budget or
    * on a failed call the last one read, marked stale, if any.
    */
-  function kept(id, load) {
+  function kept(id, load, ttl = ANSWER_TTL_MS) {
     const hit = answers.get(id);
-    if (hit && now() - hit.at < ANSWER_TTL_MS)
+    if (hit && now() - hit.at < ttl)
       return Promise.resolve({ ...hit, stale: false });
     if (!inFlight.has(id))
       inFlight.set(
@@ -330,12 +339,15 @@ export function createSwedaviaFlights({
   }
 
   /** One airport's day in one direction. */
-  const day = (key, iata, kind, date) =>
-    kept(`${iata}:${kind}:${date}`, async () =>
-      normalizeDay(
-        await call(key, `${SWEDAVIA_FLIGHTINFO_URL}/${iata}/${kind}/${date}`),
-        kind,
-      ),
+  const day = (key, iata, kind, date, ttl) =>
+    kept(
+      `${iata}:${kind}:${date}`,
+      async () =>
+        normalizeDay(
+          await call(key, `${SWEDAVIA_FLIGHTINFO_URL}/${iata}/${kind}/${date}`),
+          kind,
+        ),
+      ttl,
     );
 
   /** The dossier's next flights: today's, and towards midnight tomorrow's. */
@@ -343,6 +355,18 @@ export function createSwedaviaFlights({
     const at = now();
     const today = stockholmDate(at);
     const lists = [current(await day(key, iata, kind, today)).value];
+    // Just after midnight yesterday's late flights are still to come. That
+    // list hardly changes any more, so it is read far more seldom.
+    if (stockholmDate(at - LOOK_BACK_MS) !== today)
+      try {
+        lists.unshift(
+          current(
+            await day(key, iata, kind, previousDate(today), YESTERDAY_TTL_MS),
+          ).value,
+        );
+      } catch {
+        // Yesterday's list is an extra: today's flights show without it.
+      }
     let flights = upcoming(lists.flat(), kind, at);
     if (
       flights.length < MAX_FLIGHTS &&

@@ -416,6 +416,8 @@ export function createCityDossier({
       county: arrival.town.county || '',
       coatOfArms: town$?.coatOfArms || null,
       image: arrival.facts?.wikipedia?.image || null,
+      imageCredit: commonsPage(arrival.facts?.wikipedia?.image),
+      coatOfArmsCredit: commonsPage(town$?.coatOfArms),
       stats,
     };
   }
@@ -785,6 +787,7 @@ export function createCityDossier({
       });
     return {
       image: wiki?.image || null,
+      imageCredit: commonsPage(wiki?.image),
       extract: wiki?.extract || '',
       rows,
       credit: wiki?.url
@@ -1320,6 +1323,7 @@ export function createCityDossier({
         .join(' · '),
       visits: visitLine(),
       coatOfArms: facts?.town?.coatOfArms || null,
+      coatOfArmsCredit: commonsPage(facts?.town?.coatOfArms),
       status,
       error: status === 'error' ? t('Facts unavailable right now') : '',
       tab,
@@ -1447,4 +1451,34 @@ function watchPanelClass(documentRef, onChange) {
   const observer = new Observer(() => onChange());
   observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
   return () => observer.disconnect();
+}
+
+/**
+ * The Wikimedia Commons page of an image address, where its author and its
+ * licence stand; null for an address that is not a Commons file.
+ */
+export function commonsPage(address) {
+  let url;
+  try {
+    url = new URL(String(address ?? ''));
+  } catch {
+    return null;
+  }
+  let name = null;
+  if (url.hostname === 'commons.wikimedia.org')
+    name = /\/wiki\/Special:FilePath\/([^?#]+)/.exec(url.pathname)?.[1];
+  else if (
+    // Wikipedia's thumbnails come from either host.
+    ['upload.wikimedia.org', 'thumb.wikimedia.org'].includes(url.hostname) &&
+    url.pathname.startsWith('/wikipedia/commons/')
+  )
+    // A thumbnail's own name follows the file's: ".../Name.jpg/320px-Name.jpg".
+    name = url.pathname
+      .split('/')
+      .filter(
+        (part) =>
+          part && !/^(?:lossy-|lossless-)?(?:page\d+-)?\d+px-/.test(part),
+      )
+      .at(-1);
+  return name ? `https://commons.wikimedia.org/wiki/File:${name}` : null;
 }

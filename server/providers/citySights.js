@@ -11,6 +11,8 @@ export const WIKIDATA_SPARQL_URL = 'https://query.wikidata.org/sparql';
 const USER_AGENT =
   'GodsEyeView-Sweden/0.1 (https://github.com/Kajjan7610/Gods-view-sweden)';
 const TTL_MS = 24 * 60 * 60_000;
+/** How long Wikidata is left alone after a failed read. */
+const RETRY_AFTER_FAILURE_MS = 60_000;
 const RADIUS_KM = 12;
 const MAX_SIGHTS = 40;
 const PER_KIND = 8;
@@ -59,6 +61,7 @@ export function sightsQuery(lat, lon, km = RADIUS_KM) {
     ?item wdt:P625 ?coord .
     bd:serviceParam wikibase:center "Point(${Number(lon).toFixed(5)} ${Number(lat).toFixed(5)})"^^geo:wktLiteral .
     bd:serviceParam wikibase:radius "${km}" .
+    bd:serviceParam wikibase:distance ?dist .
   }
   VALUES (?class ?kind) { ${values} }
   ?item wdt:P31/wdt:P279? ?class .
@@ -66,6 +69,7 @@ export function sightsQuery(lat, lon, km = RADIUS_KM) {
   OPTIONAL { ?article schema:about ?item ; schema:isPartOf <https://sv.wikipedia.org/> }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "sv,en". }
 }
+ORDER BY ?dist
 LIMIT 1500`;
 }
 
@@ -140,6 +144,7 @@ export function citySightsProxy({
   now = () => Date.now(),
 } = {}) {
   const kept = new Map();
+  const retryAt = new Map();
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 300 });
 
@@ -173,6 +178,11 @@ export function citySightsProxy({
     const key = `${lat.toFixed(2)},${lon.toFixed(2)}`;
     const hit = kept.get(key);
     if (hit && now() - hit.at < TTL_MS) return hit.value;
+    // After a failure Wikidata is left alone for a minute for this place.
+    if (now() < (retryAt.get(key) ?? 0)) {
+      if (hit) return hit.value;
+      throw new Error('Wikidata did not answer a moment ago');
+    }
     if (!inFlight.has(key))
       inFlight.set(
         key,
@@ -180,9 +190,13 @@ export function citySightsProxy({
           .then((value) => {
             kept.set(key, { value, at: now() });
             if (kept.size > CACHE_MAX) kept.delete(kept.keys().next().value);
+            retryAt.delete(key);
             return value;
           })
           .catch((error) => {
+            retryAt.set(key, now() + RETRY_AFTER_FAILURE_MS);
+            if (retryAt.size > CACHE_MAX)
+              retryAt.delete(retryAt.keys().next().value);
             if (hit) return hit.value;
             throw error;
           })

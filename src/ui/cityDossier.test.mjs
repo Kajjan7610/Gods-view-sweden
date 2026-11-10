@@ -340,3 +340,46 @@ test('the card goes when the view leaves its town', async (t) => {
   await visit(TOWNS.orebro);
   assert.equal(state.view.arrival, null);
 });
+
+test('an image names its Wikimedia Commons page, where author and licence stand', async () => {
+  const { commonsPage } = await import('./cityDossier.js');
+  const page = 'https://commons.wikimedia.org/wiki/File:';
+  assert.equal(
+    commonsPage(
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Arboga_town.jpg/320px-Arboga_town.jpg',
+    ),
+    `${page}Arboga_town.jpg`,
+  );
+  assert.equal(
+    commonsPage(
+      'https://upload.wikimedia.org/wikipedia/commons/a/ab/Arboga_town.jpg',
+    ),
+    `${page}Arboga_town.jpg`,
+  );
+  assert.equal(
+    commonsPage(
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Arboga_vapen.svg/120px-Arboga_vapen.svg.png',
+    ),
+    `${page}Arboga_vapen.svg`,
+  );
+  assert.equal(
+    commonsPage(
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Arboga%20vapen.svg',
+    ),
+    `${page}Arboga%20vapen.svg`,
+  );
+  // The thumbnail host Wikipedia's summaries name, with its tracking query.
+  assert.equal(
+    commonsPage(
+      'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Arboga_1.jpg/330px-Arboga_1.jpg?utm_source=sv.wikipedia.org',
+    ),
+    `${page}Arboga_1.jpg`,
+  );
+  // A file kept by one Wikipedia only, or no address at all: no Commons page.
+  assert.equal(
+    commonsPage('https://upload.wikimedia.org/wikipedia/sv/a/ab/Lokal.jpg'),
+    null,
+  );
+  assert.equal(commonsPage('https://example.com/a.jpg'), null);
+  assert.equal(commonsPage(null), null);
+});

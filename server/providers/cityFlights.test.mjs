@@ -548,3 +548,53 @@ test('a fallback over a quarter of an hour old is not shown as the board', async
   advance(10 * 60_000);
   await assert.rejects(flights(STOCKHOLM), /too old/);
 });
+
+import {
+  createSwedaviaFlights as flightsFrom,
+  previousDate,
+} from './cityFlights.js';
+
+test("just after midnight yesterday's late flight is still to come", async () => {
+  // 00:30 in Stockholm on 6 November. A flight due 23:50 the evening before
+  // is now expected 00:45.
+  let clock = Date.parse('2026-11-05T23:30:00Z');
+  const urls = [];
+  const service = flightsFrom({
+    now: () => clock,
+    env: { SWEDAVIA_FLIGHTINFO_KEY: 'k' },
+    fetchJson: async (url) => {
+      urls.push(url);
+      return url.endsWith('/2026-11-05')
+        ? {
+            flights: [
+              departure(
+                'AY999',
+                '22:50',
+                {},
+                { estimatedUtc: '2026-11-05T23:45:00Z' },
+              ),
+            ],
+          }
+        : { flights: [] };
+    },
+  });
+  const yesterdays = () =>
+    urls.filter((url) => url.endsWith('/departures/2026-11-05')).length;
+  const [airport] = await service.nearby(STOCKHOLM);
+  assert.equal(airport.departures[0].flight, 'AY999');
+  const first = yesterdays();
+  assert.ok(first >= 1);
+  // Yesterday's list hardly changes: ten minutes on it is not read again,
+  // though today's is.
+  clock += 10 * 60_000;
+  const before = urls.length;
+  await service.nearby(STOCKHOLM);
+  assert.ok(urls.length > before, "today's lists are read again");
+  assert.equal(yesterdays(), first);
+  // After half an hour it is.
+  clock += 25 * 60_000;
+  await service.nearby(STOCKHOLM);
+  assert.ok(yesterdays() > first);
+  assert.equal(previousDate('2026-01-01'), '2025-12-31');
+  assert.equal(previousDate('2026-03-01'), '2026-02-28');
+});

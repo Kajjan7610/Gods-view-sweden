@@ -171,6 +171,18 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   data helst inte ska lämnas ut. Vattenföringen läses från det dokumenterade
   API:et för kvartsvärden (opendata.smhi.se/hydroobs). Realtidsfilerna med
   tim- och dygnsvärden är en avgiftsbelagd tjänst och används inte.
+- **TomTom (köer i stadsdossiern):** egen nyckel. Gratisnivån ger 2 500
+  anrop per dygn för trafikhändelser, och anrop därutöver blockeras.
+  Villkoren förbjuder att svar lagras, utom tillfällig cache under vissa
+  villkor (punkt 11.4), och har regler om upphovsrättsnotiser (punkt 17).
+  De exakta villkoren är inte genomlästa. Appen cachar köerna i fem minuter
+  och anger TomTom som källa.
+- **Valmyndigheten (valresultat i dossiern):** inga villkor hittade för
+  rådatafilerna på val.se. Valmyndigheten anges som källa.
+- **Wikipedia och Wikimedia Commons (text, foto och vapen i dossiern):**
+  texten är CC BY-SA 4.0 och länkas. Bilderna har egna licenser; panelen
+  och ortskortet länkar till bildens sida på Commons, där upphovsperson och
+  licens står.
 - **OpenSky (flyg, originalets lager):** bara icke-kommersiellt, se ovan.
 
 ## Nycklar (`.env`, checkas aldrig in)
@@ -213,6 +225,22 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-10 (stadsdossierns serverdelar, andra rundan; bildkällor och villkor)
+- Paus efter fel: ortsfakta, norrskensutsikten (NOAA och SMHI) och
+  sevärdheterna (Wikidata) lämnar källan i fred i 1 minut efter en
+  misslyckad hämtning. Kp-prognosen hämtas en gång för alla som väntar.
+- Kolada-reserven för valresultat visar ett val: ett parti som inte ställde
+  upp senaste valåret får inte med sin äldre andel.
+- Sevärdheterna hämtas närmast först, så en tät ort inte får ett
+  godtyckligt urval.
+- Strax efter midnatt läses även gårdagens flyglista (högst var 30:e minut),
+  så ett flyg som försenats över midnatt inte försvinner 00:00. Går listan
+  inte att läsa visas dagens flyg ändå.
+- Foto och vapen länkar till sin sida på Wikimedia Commons, i panelen och på
+  ortskortet, där upphovsperson och licens står.
+- Villkoren för TomTom, Valmyndigheten och Wikimedia Commons står under
+  "Källor med oklara eller särskilda villkor".
 
 ### 2026-11-10 (stadsdossierns serverdelar: rättningar efter kodgranskning)
 - Försenade tåg försvinner inte längre tio minuter efter sin annonserade

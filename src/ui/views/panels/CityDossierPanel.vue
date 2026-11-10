@@ -46,6 +46,7 @@ watch(
 
         <section v-if="d.tab === 'about' && d.about" class="city-dossier-section" role="tabpanel">
           <img v-if="d.about.image" class="city-dossier-photo" :src="d.about.image" alt="" loading="lazy" referrerpolicy="no-referrer" />
+          <small v-if="d.about.imageCredit || d.coatOfArmsCredit" class="city-dossier-note city-dossier-credits"><a v-if="d.about.imageCredit" :href="d.about.imageCredit" target="_blank" rel="noopener noreferrer">{{ t('Photo: Wikimedia Commons') }}</a><a v-if="d.coatOfArmsCredit" :href="d.coatOfArmsCredit" target="_blank" rel="noopener noreferrer">{{ t('Coat of arms: Wikimedia Commons') }}</a></small>
           <p class="city-dossier-text">{{ d.about.extract }}</p>
           <dl v-if="d.about.rows.length" class="city-dossier-rows">
             <div v-for="row in d.about.rows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
@@ -217,6 +218,7 @@ watch(
             <div v-for="stat in d.arrival.stats" :key="stat.label"><dd>{{ stat.value }}</dd><dt>{{ stat.label }}</dt></div>
           </dl>
           <button type="button" class="city-arrival-offer" @click="store.act('flyIn')">{{ t('Fly in and read more') }}<i aria-hidden="true">→</i></button>
+          <small v-if="d.arrival.imageCredit || d.arrival.coatOfArmsCredit" class="city-arrival-credit"><a v-if="d.arrival.imageCredit" :href="d.arrival.imageCredit" target="_blank" rel="noopener noreferrer">{{ t('Photo: Wikimedia Commons') }}</a><a v-if="d.arrival.coatOfArmsCredit" :href="d.arrival.coatOfArmsCredit" target="_blank" rel="noopener noreferrer">{{ t('Coat of arms: Wikimedia Commons') }}</a></small>
         </div>
       </aside>
     </Transition>

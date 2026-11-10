@@ -85,3 +85,47 @@ test('the query: within reach of the point, every kind asked for', () => {
   assert.match(query, /wd:Q170980 "runestone"/);
   assert.match(query, /wdt:P31\/wdt:P279\?/);
 });
+
+import { citySightsProxy as sightsProxy } from './citySights.js';
+
+test('the nearest sights are the ones asked for', () => {
+  const query = sightsQuery(59.33, 18.07);
+  assert.ok(query.includes('bd:serviceParam wikibase:distance ?dist .'));
+  assert.match(query, /ORDER BY \?dist\s+LIMIT 1500/);
+});
+
+test('after a failure Wikidata is left alone for a minute for that place', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  let clock = Date.parse('2026-11-05T18:00:00Z');
+  let calls = 0;
+  let handler;
+  sightsProxy({
+    now: () => clock,
+    fetchImpl: async () => {
+      calls += 1;
+      return new Response('', { status: 503 });
+    },
+  }).configureServer({ middlewares: { use: (path, fn) => (handler = fn) } });
+  const get = async () => {
+    const res = {
+      destroyed: false,
+      writeHead(status) {
+        this.status = status;
+      },
+      end() {},
+    };
+    await handler(
+      { method: 'GET', url: '/?lat=59.33&lon=18.07', headers: {}, socket: {} },
+      res,
+    );
+    return res.status;
+  };
+  assert.equal(await get(), 502);
+  assert.equal(calls, 1);
+  clock += 30_000;
+  assert.equal(await get(), 502);
+  assert.equal(calls, 1);
+  clock += 31_000;
+  await get();
+  assert.equal(calls, 2);
+});
