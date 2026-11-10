@@ -48,7 +48,8 @@ export function buildStopCard(row) {
   return {
     ...CARD_BASE,
     id: `transit-alerts-card:${row.id}`,
-    interactive: false,
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     title: t('DISRUPTION · {stop}', { stop: row.name.toUpperCase() }),
     details,
     accent: alertColor(row.kind),

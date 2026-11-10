@@ -83,7 +83,6 @@ export function createSmhiWeatherLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
-  let _selectedCardId = null;
   let _stations = [];
   /** 'temperature' or 'wind'. */
   let _mode = 'temperature';
@@ -105,7 +104,6 @@ export function createSmhiWeatherLayer({
     const row = _selectedId ? _stationById.get(_selectedId) : null;
     if (!row) {
       _selectedId = null;
-      _selectedCardId = null;
       overlayHost.setEntries(
         SMHI_WEATHER_OVERLAY_SOURCE_ID,
         [],
@@ -119,7 +117,6 @@ export function createSmhiWeatherLayer({
       forecastState: entry?.state ?? 'loading',
     });
     card.position = position(row);
-    _selectedCardId = card.id;
     overlayHost.setEntries(
       SMHI_WEATHER_OVERLAY_SOURCE_ID,
       [card],
@@ -140,12 +137,8 @@ export function createSmhiWeatherLayer({
     _clickHandler = screenSpaceEventHandlerFactory(_viewer);
     _clickHandler.setInputAction((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-        { sourceId: SMHI_WEATHER_OVERLAY_SOURCE_ID },
-      );
-      if (cardHit && cardHit.entryId === _selectedCardId) return;
+      // A card under the click, this layer's or another's, is not the ground.
+      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedStation(picked) : null;
       if (hit) {
@@ -197,7 +190,6 @@ export function createSmhiWeatherLayer({
 
   function clearOverlays() {
     _selectedId = null;
-    _selectedCardId = null;
     if (!overlayHost) return;
     for (const id of [SMHI_WEATHER_OVERLAY_SOURCE_ID, LABEL_SOURCE_ID]) {
       overlayHost.clearSource(id);

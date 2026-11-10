@@ -61,7 +61,6 @@ export function createFireStationsLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
-  let _selectedCardId = null;
   let _stations = [];
   const _stationById = new Map();
 
@@ -73,7 +72,6 @@ export function createFireStationsLayer({
     const row = _selectedId ? _stationById.get(_selectedId) : null;
     if (!row) {
       _selectedId = null;
-      _selectedCardId = null;
       overlayHost.setEntries(
         FIRE_STATIONS_OVERLAY_SOURCE_ID,
         [],
@@ -83,7 +81,6 @@ export function createFireStationsLayer({
     }
     const card = buildFireStationCard(row);
     card.position = position(row);
-    _selectedCardId = card.id;
     overlayHost.setEntries(
       FIRE_STATIONS_OVERLAY_SOURCE_ID,
       [card],
@@ -104,12 +101,8 @@ export function createFireStationsLayer({
     _clickHandler = screenSpaceEventHandlerFactory(_viewer);
     _clickHandler.setInputAction((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-        { sourceId: FIRE_STATIONS_OVERLAY_SOURCE_ID },
-      );
-      if (cardHit && cardHit.entryId === _selectedCardId) return;
+      // A card under the click, this layer's or another's, is not the ground.
+      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedStation(picked) : null;
       if (hit) {
@@ -135,7 +128,6 @@ export function createFireStationsLayer({
 
   function clearOverlays() {
     _selectedId = null;
-    _selectedCardId = null;
     if (!overlayHost) return;
     overlayHost.clearSource(FIRE_STATIONS_OVERLAY_SOURCE_ID);
     overlayHost.setVisible?.(FIRE_STATIONS_OVERLAY_SOURCE_ID, false);

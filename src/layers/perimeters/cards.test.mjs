@@ -253,7 +253,7 @@ test('a complex member names its complex on the card', () => {
   assert.ok(card.details.includes('part of Rowe Creek Complex'));
 });
 
-test('a card without a link is not interactive', () => {
+test('a card without a link is still hit-testable, and offers no page', () => {
   const card = buildIncidentCard(
     {
       stableId: 'x',
@@ -273,7 +273,8 @@ test('a card without a link is not interactive', () => {
     },
     1758000000000,
   );
-  assert.equal(card.interactive, false);
+  assert.equal(card.interactive, true);
+  assert.equal(card.accessibilityLabel, undefined);
 });
 
 test('partial incident details render only the facts that exist', () => {

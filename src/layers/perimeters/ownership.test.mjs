@@ -232,7 +232,8 @@ test('a matched incident card carries the InciWeb line and click-through', async
   assert.equal(entries[0].details.at(-1), 'InciWeb ↗ · click card to open');
 
   // Clicking the card itself opens the InciWeb page.
-  cardHitResult = { entryId: entries[0].id };
+  assert.equal(entries[0].interactive, true);
+  cardHitResult = { sourceId: 'fire-perimeters', entryId: entries[0].id };
   h.viewer.scene.pick = () => null;
   h.clicks.handler({ position: { x: 12, y: 12 } });
   assert.deepEqual(h.opened, ['https://inciweb.wildfire.gov/node/329300']);
@@ -260,7 +261,8 @@ test('an unmatched incident renders no InciWeb line and card clicks stay inert',
     entries[0].details.some((line) => line.includes('InciWeb')),
     false,
   );
-  cardHitResult = { entryId: entries[0].id };
+  assert.equal(entries[0].interactive, true);
+  cardHitResult = { sourceId: 'fire-perimeters', entryId: entries[0].id };
   h.viewer.scene.pick = () => null;
   h.clicks.handler({ position: { x: 12, y: 12 } });
   assert.deepEqual(h.opened, []);
@@ -326,7 +328,9 @@ test('a stale or unverifiable publication yields no link', async () => {
       entries[0].details.some((line) => line.includes('InciWeb')),
       false,
     );
-    assert.equal(entries[0].interactive, false);
+    // Hit-testable all the same, with no page to open.
+    assert.equal(entries[0].interactive, true);
+    assert.equal(entries[0].activate, undefined);
     h.layer.destroy(h.viewer);
   }
 });
@@ -584,4 +588,37 @@ test('a failed refresh after a stale snapshot reads as the failure, not stale', 
   await h.layer.update(h.viewer);
   assert.equal(h.layer.getStats().stale, false);
   assert.equal(h.layer.getStats().error, 'WFIGS HTTP 502');
+});
+
+test("a click on another layer's card is not a click on the ground", async () => {
+  let cardHitResult = null;
+  const h = harness(
+    { getSnapshot: async () => [{ ...row, name: 'Fixture' }] },
+    {
+      pick: () => ({ id: 'fire-perimeter:2026-NMGNF-000123:0' }),
+      inciwebIndex: [
+        {
+          incident_id: '329300',
+          tau: 'NMGNF Fixture Fire',
+          incident_title: 'Fixture Fire',
+        },
+      ],
+      cardHit: () => cardHitResult,
+    },
+  );
+  await h.layer.update(h.viewer);
+  h.clicks.handler({ position: { x: 10, y: 10 } });
+  await new Promise((done) => setTimeout(done, 0));
+  assert.equal(h.overlay.entries.get('fire-perimeters').length, 1);
+
+  // The ground lies behind the other card: nothing is deselected or opened.
+  cardHitResult = { sourceId: 'hospitals', entryId: 'hospitals-card:x' };
+  h.viewer.scene.pick = () => null;
+  h.clicks.handler({ position: { x: 12, y: 12 } });
+  assert.equal(h.overlay.entries.get('fire-perimeters').length, 1);
+  assert.deepEqual(h.opened, []);
+
+  cardHitResult = null;
+  h.clicks.handler({ position: { x: 12, y: 12 } });
+  assert.equal(h.overlay.entries.get('fire-perimeters')?.length ?? 0, 0);
 });

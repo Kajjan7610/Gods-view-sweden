@@ -55,7 +55,8 @@ export function buildStrikeCard(row, nowMs = Date.now()) {
   return {
     ...CARD_BASE,
     id: `lightning-strikes-card:${row.id}`,
-    interactive: false,
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     title:
       row.kind === 'cloud' ? t('LIGHTNING · IN CLOUD') : t('LIGHTNING STRIKE'),
     details,

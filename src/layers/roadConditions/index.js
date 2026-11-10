@@ -128,7 +128,7 @@ export function createTrafikverketRoadsLayer({
       anchor[1],
       _selected.kind === 'i' ? _ground.heightOf(row.id) : 0,
     );
-    if (card.interactive && row.link) {
+    if (card.accessibilityLabel && row.link) {
       card.activate = () => {
         openExternal(row.link);
         return true;
@@ -160,13 +160,16 @@ export function createTrafikverketRoadsLayer({
       const cardHit = overlayHost.hitTest?.(
         click.position?.x,
         click.position?.y,
-        { sourceId: ROAD_OVERLAY_SOURCE_ID },
       );
-      if (cardHit && cardHit.entryId === _selectedCardId) {
+      if (
+        cardHit?.sourceId === ROAD_OVERLAY_SOURCE_ID &&
+        cardHit.entryId === _selectedCardId
+      ) {
         const row = selectedRow();
         if (row?.link && openExternal) openExternal(row.link);
-        return;
       }
+      // A card under the click, this layer's or another's, is not the ground.
+      if (cardHit) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedRow(picked) : null;
       if (hit) {

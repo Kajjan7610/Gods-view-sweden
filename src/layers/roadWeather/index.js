@@ -77,7 +77,6 @@ export function createTrafikverketWeatherLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
-  let _selectedCardId = null;
   let _stations = [];
   /** 'surface' or 'air': which temperature colours the dots. */
   let _mode = 'surface';
@@ -95,7 +94,6 @@ export function createTrafikverketWeatherLayer({
     const row = _selectedId ? _stationById.get(_selectedId) : null;
     if (!row) {
       _selectedId = null;
-      _selectedCardId = null;
       overlayHost.setEntries(
         ROAD_WEATHER_OVERLAY_SOURCE_ID,
         [],
@@ -105,7 +103,6 @@ export function createTrafikverketWeatherLayer({
     }
     const card = buildStationCard(row, { mode: _mode });
     card.position = position(row);
-    _selectedCardId = card.id;
     overlayHost.setEntries(
       ROAD_WEATHER_OVERLAY_SOURCE_ID,
       [card],
@@ -127,12 +124,8 @@ export function createTrafikverketWeatherLayer({
     _clickHandler = screenSpaceEventHandlerFactory(_viewer);
     _clickHandler.setInputAction((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-        { sourceId: ROAD_WEATHER_OVERLAY_SOURCE_ID },
-      );
-      if (cardHit && cardHit.entryId === _selectedCardId) return;
+      // A card under the click, this layer's or another's, is not the ground.
+      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedStation(picked) : null;
       if (hit) {
@@ -158,7 +151,6 @@ export function createTrafikverketWeatherLayer({
 
   function clearSelection() {
     _selectedId = null;
-    _selectedCardId = null;
     if (overlayHost) {
       overlayHost.clearSource(ROAD_WEATHER_OVERLAY_SOURCE_ID);
       overlayHost.setVisible?.(ROAD_WEATHER_OVERLAY_SOURCE_ID, false);

@@ -48,7 +48,8 @@ export function buildConditionCard(row) {
   return {
     ...CARD_BASE,
     id: `trafikverket-road-card:c:${row.id}`,
-    interactive: false,
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     title: t('ROAD CONDITION · {condition}', {
       condition: (row.text || t('Unknown')).toUpperCase(),
     }),
@@ -86,7 +87,8 @@ export function buildIncidentCard(row, { linkable = false } = {}) {
   return {
     ...CARD_BASE,
     id: `trafikverket-road-card:i:${row.id}`,
-    interactive: Boolean(link),
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     ...(link
       ? { accessibilityLabel: t('Open {title} at Trafikverket', { title }) }
       : undefined),

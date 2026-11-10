@@ -219,9 +219,9 @@ export function buildIncidentCard(row, nowMs, { link = null } = {}) {
     // `selected` picks the paint lane and collision protection; an explicit
     // paintLane would override it in the host's lane resolver.
     selected: true,
-    // Only a linked card is clickable — the overlay host registers hit
-    // rectangles solely for interactive entries.
-    interactive: Boolean(link),
+    // Always hit-testable, so a click on the card is never the ground; only
+    // a linked card opens a page.
+    interactive: true,
     ...(link
       ? { accessibilityLabel: t('Open {title} on InciWeb', { title }) }
       : undefined),

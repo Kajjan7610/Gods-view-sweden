@@ -216,3 +216,38 @@ test('a boundary change alone redraws the zone; identical geometry does not', as
   );
   assert.ok(h.layer.getAnalystRecords()[0].lon > -76.6);
 });
+
+test("a click on a card, its own or another layer's, is not a click on the ground", async () => {
+  let pickResult = { id: 'drone-airspace:310:0' };
+  let cardHitResult = null;
+  const h = harness(
+    { getSnapshot: async () => [row] },
+    { pick: () => pickResult, cardHit: () => cardHitResult },
+  );
+  await h.layer.update(h.viewer);
+  h.clicks.handler({ position: { x: 10, y: 10 } });
+  const [card] = h.overlay.entries.get('drone-airspace');
+  assert.equal(card.interactive, true, 'the card must get a hit rectangle');
+
+  pickResult = null;
+  cardHitResult = { sourceId: 'drone-airspace', entryId: card.id };
+  h.clicks.handler({ position: { x: 12, y: 12 } });
+  assert.equal(h.overlay.entries.get('drone-airspace')?.length, 1);
+
+  cardHitResult = { sourceId: 'hospitals', entryId: 'hospitals-card:x' };
+  h.clicks.handler({ position: { x: 12, y: 12 } });
+  assert.equal(h.overlay.entries.get('drone-airspace')?.length, 1);
+
+  // Another zone behind the other card is not selected through it.
+  pickResult = { id: 'drone-airspace:400:0' };
+  h.clicks.handler({ position: { x: 12, y: 12 } });
+  assert.equal(
+    h.overlay.entries.get('drone-airspace')[0].id,
+    'drone-airspace-card:310',
+  );
+
+  pickResult = null;
+  cardHitResult = null;
+  h.clicks.handler({ position: { x: 12, y: 12 } });
+  assert.equal(h.overlay.entries.get('drone-airspace')?.length ?? 0, 0);
+});

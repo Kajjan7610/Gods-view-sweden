@@ -87,7 +87,8 @@ export function buildWarningCard(
   return {
     ...CARD_BASE,
     id: `smhi-warning-card:${row.id}`,
-    interactive: Boolean(linkable),
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     ...(linkable
       ? { accessibilityLabel: t('Open {title} at SMHI', { title }) }
       : undefined),
@@ -125,7 +126,8 @@ export function buildCrisisCard(row, { linkable = false } = {}) {
   return {
     ...CARD_BASE,
     id: `krisinformation-card:${row.id}`,
-    interactive: Boolean(link),
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     ...(link
       ? {
           accessibilityLabel: t('Open {title} at krisinformation.se', {

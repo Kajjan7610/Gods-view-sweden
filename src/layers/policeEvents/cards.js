@@ -47,7 +47,8 @@ export function buildPoliceCard(row, { linkable = false } = {}) {
   return {
     ...CARD_BASE,
     id: `polisen-card:${row.id}`,
-    interactive: Boolean(link),
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     ...(link
       ? { accessibilityLabel: t('Open {title} at polisen.se', { title }) }
       : undefined),

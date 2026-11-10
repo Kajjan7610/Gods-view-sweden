@@ -84,7 +84,8 @@ export function buildDroneAirspaceCard(row) {
   return {
     id: `drone-airspace-card:${row.stableId}`,
     selected: true,
-    interactive: false,
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     title,
     details,
     accent: droneAirspaceAccent(row.typeCode),

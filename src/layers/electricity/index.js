@@ -73,7 +73,6 @@ export function createElectricityPricesLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
-  let _selectedCardId = null;
   let _zones = [];
   /** 'now', 'today' (mean) or 'tomorrow' (mean). */
   let _mode = 'now';
@@ -94,7 +93,6 @@ export function createElectricityPricesLayer({
     const zone = _selectedId ? _zoneById.get(_selectedId) : null;
     if (!zone) {
       _selectedId = null;
-      _selectedCardId = null;
       overlayHost.setEntries(
         ELECTRICITY_OVERLAY_SOURCE_ID,
         [],
@@ -104,7 +102,6 @@ export function createElectricityPricesLayer({
     }
     const card = buildZoneCard(zone, Date.now());
     card.position = position(zone);
-    _selectedCardId = card.id;
     overlayHost.setEntries(
       ELECTRICITY_OVERLAY_SOURCE_ID,
       [card],
@@ -125,12 +122,8 @@ export function createElectricityPricesLayer({
     _clickHandler = screenSpaceEventHandlerFactory(_viewer);
     _clickHandler.setInputAction((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-        { sourceId: ELECTRICITY_OVERLAY_SOURCE_ID },
-      );
-      if (cardHit && cardHit.entryId === _selectedCardId) return;
+      // A card under the click, this layer's or another's, is not the ground.
+      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedZone(picked) : null;
       if (hit) {
@@ -156,7 +149,6 @@ export function createElectricityPricesLayer({
 
   function clearOverlays() {
     _selectedId = null;
-    _selectedCardId = null;
     if (!overlayHost) return;
     for (const id of [ELECTRICITY_OVERLAY_SOURCE_ID, LABEL_SOURCE_ID]) {
       overlayHost.clearSource(id);

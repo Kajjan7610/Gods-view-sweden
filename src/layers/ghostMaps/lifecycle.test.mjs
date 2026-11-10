@@ -609,3 +609,53 @@ test('narrowing to a window the loaded data covers clears a failed wider reload'
   assert.equal(layer.getStats().error, null);
   assert.equal(layer.getStats().count, 1);
 });
+
+test("a click on a card, its own or another layer's, is not a click on the ground", async (t) => {
+  let click;
+  let cardHit = null;
+  const cards = [];
+  const opened = [];
+  const { layer, viewer } = fixture(t, {
+    now: () => Date.UTC(2026, 10, 3, 12),
+    reports: [dated('Recent', '11/2/2026')],
+    controls: {
+      overlayHost: {
+        setEntries: (_id, entries) => cards.push(entries),
+        hitTest: () => cardHit,
+      },
+      screenSpaceEventHandlerFactory: () => ({
+        setInputAction: (fn) => {
+          click = fn;
+        },
+        destroy() {},
+      }),
+      picking: { resolvePickId: (picked) => picked },
+      openExternal: (url) => opened.push(url),
+    },
+  });
+  await layer.update(viewer);
+  viewer.scene.pick = () => 'ghostmaps:cip:0:0';
+  click({ position: { x: 0, y: 0 } });
+  const [card] = cards.at(-1);
+  assert.equal(card.interactive, true, 'the card must get a hit rectangle');
+  // This report links nowhere: the card is hit, and offers no page.
+  assert.equal(card.activate, undefined);
+
+  viewer.scene.pick = () => undefined;
+  cardHit = { sourceId: 's2-ghostmaps', entryId: card.id };
+  click({ position: { x: 1, y: 1 } });
+  assert.equal(cards.at(-1).length, 1, 'its own card keeps the selection');
+
+  cardHit = { sourceId: 'hospitals', entryId: 'hospitals-card:x' };
+  click({ position: { x: 1, y: 1 } });
+  assert.equal(
+    cards.at(-1).length,
+    1,
+    "another layer's card is not the ground",
+  );
+  assert.deepEqual(opened, []);
+
+  cardHit = null;
+  click({ position: { x: 1, y: 1 } });
+  assert.equal(cards.at(-1).length, 0, 'the ground still deselects');
+});

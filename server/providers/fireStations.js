@@ -7,11 +7,13 @@ import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 // key). The dataset is an EU high-value dataset, so it must be reusable under
 // CC BY 4.0 or freer; the metadata itself names no licence. Stations move
 // rarely, so a day of cache is plenty.
-export const MCF_FIRE_STATIONS_URL =
-  'https://inspire.mcf.se/brandstationer/ogc/features/v1/collections/US_fireStation/items?f=application%2Fgeo%2Bjson&limit=1000';
+const PAGE_LIMIT = 1000;
+export const MCF_FIRE_STATIONS_URL = `https://inspire.mcf.se/brandstationer/ogc/features/v1/collections/US_fireStation/items?f=application%2Fgeo%2Bjson&limit=${PAGE_LIMIT}`;
 const TTL_MS = 24 * 60 * 60_000;
 /** Longest a failed refresh keeps serving the last snapshot, marked stale. */
 const STALE_MAX_MS = 7 * 24 * 60 * 60_000;
+/** After a failed refresh MCF is left alone this long. */
+export const FIRE_STATIONS_RETRY_AFTER_FAILURE_MS = 5 * 60_000;
 const MAX_BODY_BYTES = 3 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 30_000;
 
@@ -21,6 +23,7 @@ export function fireStationsProxy({
   now = () => Date.now(),
 } = {}) {
   let cached = null;
+  let retryAfter = 0;
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 600 });
 
@@ -42,10 +45,16 @@ export function fireStationsProxy({
         throw new Error(`upstream HTTP ${response.status}`);
       }
       const payload = await readResponseJsonCapped(response, MAX_BODY_BYTES);
-      // One page holds them all; a fuller collection would be cut short.
+      // One page holds them all; a fuller collection would be cut short. The
+      // count is optional in the answer, so a full page and a link to a next
+      // one are read as cut short too.
+      const count = payload?.features?.length ?? 0;
       if (
-        Number.isFinite(payload?.numberMatched) &&
-        payload.numberMatched > (payload.features?.length ?? 0)
+        count >= PAGE_LIMIT ||
+        (Number.isFinite(payload?.numberMatched) &&
+          payload.numberMatched > count) ||
+        (Array.isArray(payload?.links) &&
+          payload.links.some((link) => link?.rel === 'next'))
       )
         throw new Error('fire station collection larger than one page');
       return {
@@ -74,25 +83,30 @@ export function fireStationsProxy({
       return json(404, { error: 'unknown_route' });
     if (cached && now() - cached.savedAt < TTL_MS)
       return json(200, cached.value);
+    const unavailable = () =>
+      cached && now() - cached.savedAt <= STALE_MAX_MS
+        ? json(
+            200,
+            { ...cached.value, stale: true },
+            { 'X-Data-Stale': 'true' },
+          )
+        : json(502, { error: 'fire_stations_unavailable' });
+    if (now() < retryAfter) return unavailable();
     if (!allow(clientKey(req)))
       return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
     try {
       const { promise } = coalesceProxyRequest(inFlight, 'stations', load);
       const value = await promise;
       cached = { value, savedAt: now() };
+      retryAfter = 0;
       console.log(`[fire-stations] ${value.stations.length} stations`);
       return json(200, value);
     } catch (error) {
       console.warn(
         `[fire-stations] refresh failed: ${error?.message || error}`,
       );
-      if (cached && now() - cached.savedAt <= STALE_MAX_MS)
-        return json(
-          200,
-          { ...cached.value, stale: true },
-          { 'X-Data-Stale': 'true' },
-        );
-      return json(502, { error: 'fire_stations_unavailable' });
+      retryAfter = now() + FIRE_STATIONS_RETRY_AFTER_FAILURE_MS;
+      return unavailable();
     }
   }
 

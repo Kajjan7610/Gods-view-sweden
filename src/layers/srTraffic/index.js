@@ -56,7 +56,6 @@ export function createSrTrafficLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
-  let _selectedCardId = null;
   let _messages = [];
   const _show = { road: true, transit: true, planned: false, other: true };
   const _messageById = new Map();
@@ -71,7 +70,6 @@ export function createSrTrafficLayer({
     const row = _selectedId ? _messageById.get(_selectedId) : null;
     if (!row) {
       _selectedId = null;
-      _selectedCardId = null;
       overlayHost.setEntries(
         SR_TRAFFIC_OVERLAY_SOURCE_ID,
         [],
@@ -81,7 +79,6 @@ export function createSrTrafficLayer({
     }
     const card = buildSrCard(row);
     card.position = position(row);
-    _selectedCardId = card.id;
     overlayHost.setEntries(
       SR_TRAFFIC_OVERLAY_SOURCE_ID,
       [card],
@@ -102,12 +99,8 @@ export function createSrTrafficLayer({
     _clickHandler = screenSpaceEventHandlerFactory(_viewer);
     _clickHandler.setInputAction((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-        { sourceId: SR_TRAFFIC_OVERLAY_SOURCE_ID },
-      );
-      if (cardHit && cardHit.entryId === _selectedCardId) return;
+      // A card under the click, this layer's or another's, is not the ground.
+      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedMessage(picked) : null;
       if (hit) {
@@ -133,7 +126,6 @@ export function createSrTrafficLayer({
 
   function clearSelection() {
     _selectedId = null;
-    _selectedCardId = null;
     if (overlayHost) {
       overlayHost.clearSource(SR_TRAFFIC_OVERLAY_SOURCE_ID);
       overlayHost.setVisible?.(SR_TRAFFIC_OVERLAY_SOURCE_ID, false);

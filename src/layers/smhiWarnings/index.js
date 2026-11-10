@@ -106,7 +106,7 @@ export function createSmhiWarningsLayer({
     if (crisis) {
       const card = buildCrisisCard(crisis, { linkable: Boolean(openExternal) });
       card.position = crisisPosition(crisis);
-      if (card.interactive) {
+      if (card.accessibilityLabel) {
         card.activate = () => {
           openExternal(crisis.link);
           return true;
@@ -134,7 +134,7 @@ export function createSmhiWarningsLayer({
     }
     const card = buildWarningCard(row, { linkable: Boolean(openExternal) });
     card.position = Cesium.Cartesian3.fromDegrees(anchor[0], anchor[1]);
-    if (card.interactive) {
+    if (card.accessibilityLabel) {
       card.activate = () => {
         openExternal(SMHI_WARNINGS_PAGE);
         return true;
@@ -176,14 +176,17 @@ export function createSmhiWarningsLayer({
       const cardHit = overlayHost.hitTest?.(
         click.position?.x,
         click.position?.y,
-        { sourceId: SMHI_WARNINGS_OVERLAY_SOURCE_ID },
       );
-      if (cardHit && cardHit.entryId === _selectedCardId) {
+      if (
+        cardHit?.sourceId === SMHI_WARNINGS_OVERLAY_SOURCE_ID &&
+        cardHit.entryId === _selectedCardId
+      ) {
         const crisis = _crisisById.get(_selectedId);
         const link = crisis ? crisis.link : SMHI_WARNINGS_PAGE;
         if (openExternal && link) openExternal(link);
-        return;
       }
+      // A card under the click, this layer's or another's, is not the ground.
+      if (cardHit) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedArea(picked) : null;
       if (hit) {

@@ -155,5 +155,7 @@ test('the card reads the notice, its time and how exact its place is', () => {
     'Drawn near the centre of Göteborg; Polisen gives no exact place',
     'polisen.se ↗ · click card to open',
   ]);
-  assert.equal(buildPoliceCard(row).interactive, false);
+  // Without a link the card is hit-testable all the same, and offers no page.
+  assert.equal(buildPoliceCard(row).interactive, true);
+  assert.equal(buildPoliceCard(row).accessibilityLabel, undefined);
 });

@@ -48,7 +48,8 @@ test('a prohibited zone card names the type, altitudes and the disclaimer', () =
     'Informational only · not for flight planning',
   ]);
   assert.equal(card.accent, droneAirspaceAccent('P'));
-  assert.equal(card.interactive, false);
+  // Hit-testable, so a click on the card is never the ground.
+  assert.equal(card.interactive, true);
   assert.equal(card.selected, true);
 });
 

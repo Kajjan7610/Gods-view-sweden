@@ -222,7 +222,9 @@ test('the card reads the level, headline, place, window and advice', () => {
   ]);
   const swedish = buildWarningCard(row, { language: 'sv' });
   assert.equal(swedish.details[0], 'Norra Lapplandsfjällen · Norrbottens län');
-  assert.equal(swedish.interactive, false);
+  // Without a link the card is hit-testable all the same, and offers no page.
+  assert.equal(swedish.interactive, true);
+  assert.equal(swedish.accessibilityLabel, undefined);
   assert.equal(warningLanguage('sv'), 'sv');
   assert.equal(warningLanguage('de'), 'en');
 });

@@ -55,7 +55,6 @@ export function createTransitAlertsLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
-  let _selectedCardId = null;
   let _stops = [];
   let _pending = [];
   const _stopById = new Map();
@@ -68,7 +67,6 @@ export function createTransitAlertsLayer({
     const row = _selectedId ? _stopById.get(_selectedId) : null;
     if (!row) {
       _selectedId = null;
-      _selectedCardId = null;
       overlayHost.setEntries(
         TRANSIT_ALERTS_OVERLAY_SOURCE_ID,
         [],
@@ -78,7 +76,6 @@ export function createTransitAlertsLayer({
     }
     const card = buildStopCard(row);
     card.position = position(row);
-    _selectedCardId = card.id;
     overlayHost.setEntries(
       TRANSIT_ALERTS_OVERLAY_SOURCE_ID,
       [card],
@@ -99,12 +96,8 @@ export function createTransitAlertsLayer({
     _clickHandler = screenSpaceEventHandlerFactory(_viewer);
     _clickHandler.setInputAction((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-        { sourceId: TRANSIT_ALERTS_OVERLAY_SOURCE_ID },
-      );
-      if (cardHit && cardHit.entryId === _selectedCardId) return;
+      // A card under the click, this layer's or another's, is not the ground.
+      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedStop(picked) : null;
       if (hit) {
@@ -130,7 +123,6 @@ export function createTransitAlertsLayer({
 
   function clearOverlays() {
     _selectedId = null;
-    _selectedCardId = null;
     if (!overlayHost) return;
     overlayHost.clearSource(TRANSIT_ALERTS_OVERLAY_SOURCE_ID);
     overlayHost.setVisible?.(TRANSIT_ALERTS_OVERLAY_SOURCE_ID, false);

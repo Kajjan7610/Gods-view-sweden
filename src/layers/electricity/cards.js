@@ -74,7 +74,8 @@ export function buildZoneCard(zone, nowMs) {
   return {
     ...CARD_BASE,
     id: `electricity-card:${zone.id}`,
-    interactive: false,
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     title: t('ELECTRICITY PRICE · {zone} {name}', {
       zone: zone.id,
       name: zone.name.toUpperCase(),

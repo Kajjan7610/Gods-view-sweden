@@ -82,7 +82,6 @@ export function createSpeedCamerasLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
-  let _selectedCardId = null;
   let _cameras = [];
   const _cameraById = new Map();
 
@@ -94,7 +93,6 @@ export function createSpeedCamerasLayer({
     const row = _selectedId ? _cameraById.get(_selectedId) : null;
     if (!row) {
       _selectedId = null;
-      _selectedCardId = null;
       overlayHost.setEntries(
         SPEED_CAMERAS_OVERLAY_SOURCE_ID,
         [],
@@ -104,7 +102,6 @@ export function createSpeedCamerasLayer({
     }
     const card = buildSpeedCameraCard(row);
     card.position = position(row);
-    _selectedCardId = card.id;
     overlayHost.setEntries(
       SPEED_CAMERAS_OVERLAY_SOURCE_ID,
       [card],
@@ -125,12 +122,8 @@ export function createSpeedCamerasLayer({
     _clickHandler = screenSpaceEventHandlerFactory(_viewer);
     _clickHandler.setInputAction((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-        { sourceId: SPEED_CAMERAS_OVERLAY_SOURCE_ID },
-      );
-      if (cardHit && cardHit.entryId === _selectedCardId) return;
+      // A card under the click, this layer's or another's, is not the ground.
+      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedCamera(picked) : null;
       if (hit) {
@@ -156,7 +149,6 @@ export function createSpeedCamerasLayer({
 
   function clearOverlays() {
     _selectedId = null;
-    _selectedCardId = null;
     if (!overlayHost) return;
     overlayHost.clearSource(SPEED_CAMERAS_OVERLAY_SOURCE_ID);
     overlayHost.setVisible?.(SPEED_CAMERAS_OVERLAY_SOURCE_ID, false);

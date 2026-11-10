@@ -59,7 +59,8 @@ export function buildFlowCard(row) {
   return {
     ...CARD_BASE,
     id: `river-flow-card:${row.id}`,
-    interactive: false,
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     title: t('RIVER FLOW · {station}', { station: row.name.toUpperCase() }),
     details,
     accent: flowColor(row.flow),

@@ -97,7 +97,8 @@ export function buildWeatherCard(
   return {
     ...CARD_BASE,
     id: `smhi-weather-card:${row.id}`,
-    interactive: false,
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     title: t('WEATHER · {station}', { station: row.name.toUpperCase() }),
     details,
     accent: temperatureColor(row.airTemp),

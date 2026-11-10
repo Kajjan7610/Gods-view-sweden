@@ -78,7 +78,8 @@ export function buildSeaCard(row, { mode = 'wind' } = {}) {
   return {
     ...CARD_BASE,
     id: `sea-weather-card:${row.id}`,
-    interactive: false,
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     title: t('SEA WEATHER · {station}', { station: row.name.toUpperCase() }),
     details,
     accent: seaColor(row, mode),

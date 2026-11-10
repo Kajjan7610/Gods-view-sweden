@@ -100,7 +100,7 @@ export function createPolisenEventsLayer({
     }
     const card = buildPoliceCard(row, { linkable: Boolean(openExternal) });
     card.position = position(row, point);
-    if (card.interactive && row.link) {
+    if (card.accessibilityLabel && row.link) {
       card.activate = () => {
         openExternal(row.link);
         return true;
@@ -127,13 +127,16 @@ export function createPolisenEventsLayer({
       const cardHit = overlayHost.hitTest?.(
         click.position?.x,
         click.position?.y,
-        { sourceId: POLICE_OVERLAY_SOURCE_ID },
       );
-      if (cardHit && cardHit.entryId === _selectedCardId) {
+      if (
+        cardHit?.sourceId === POLICE_OVERLAY_SOURCE_ID &&
+        cardHit.entryId === _selectedCardId
+      ) {
         const row = _eventById.get(_selectedId);
         if (row?.link && openExternal) openExternal(row.link);
-        return;
       }
+      // A card under the click, this layer's or another's, is not the ground.
+      if (cardHit) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedEvent(picked) : null;
       if (hit) {

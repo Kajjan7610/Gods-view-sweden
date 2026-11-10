@@ -552,7 +552,8 @@ export function createGhostMapsLayer({
     const card = {
       id: `ghostmaps-card:${_selectedKey}`,
       selected: true,
-      interactive: Boolean(_selectedLink && openExternal),
+      // Always hit-testable, so a click on the card is never the ground.
+      interactive: true,
       title,
       details,
       accent: PRODUCT_COLORS[product?.id] || ACCENT,
@@ -567,7 +568,7 @@ export function createGhostMapsLayer({
       horizonCull: true,
       position: Cesium.Cartesian3.fromDegrees(...feature.anchor),
     };
-    if (card.interactive) {
+    if (_selectedLink && openExternal) {
       const link = _selectedLink;
       card.accessibilityLabel = t('Open the source for {title}', { title });
       card.activate = () => {
@@ -616,12 +617,16 @@ export function createGhostMapsLayer({
       const cardHit = overlayHost.hitTest?.(
         click.position?.x,
         click.position?.y,
-        { sourceId: GHOSTMAPS_OVERLAY_SOURCE_ID },
       );
-      if (cardHit && cardHit.entryId === _selectedCardId) {
-        if (_selectedLink && openExternal) openExternal(_selectedLink);
-        return;
-      }
+      if (
+        cardHit?.sourceId === GHOSTMAPS_OVERLAY_SOURCE_ID &&
+        cardHit.entryId === _selectedCardId &&
+        _selectedLink &&
+        openExternal
+      )
+        openExternal(_selectedLink);
+      // A card under the click, this layer's or another's, is not the ground.
+      if (cardHit) return;
       const picked = _viewer.scene.pick(click.position);
       const key = picked ? pickedKey(picked) : null;
       if (key) {

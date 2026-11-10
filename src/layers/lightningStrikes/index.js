@@ -64,7 +64,6 @@ export function createLightningStrikesLayer({
   let _stale = false;
   let _truncated = false;
   let _selectedId = null;
-  let _selectedCardId = null;
   let _strikes = [];
   const _strikeById = new Map();
 
@@ -79,7 +78,6 @@ export function createLightningStrikesLayer({
     const row = _selectedId ? _strikeById.get(_selectedId) : null;
     if (!row) {
       _selectedId = null;
-      _selectedCardId = null;
       overlayHost.setEntries(
         LIGHTNING_STRIKES_OVERLAY_SOURCE_ID,
         [],
@@ -89,7 +87,6 @@ export function createLightningStrikesLayer({
     }
     const card = buildStrikeCard(row, now());
     card.position = position(row.point);
-    _selectedCardId = card.id;
     overlayHost.setEntries(
       LIGHTNING_STRIKES_OVERLAY_SOURCE_ID,
       [card],
@@ -110,12 +107,8 @@ export function createLightningStrikesLayer({
     _clickHandler = screenSpaceEventHandlerFactory(_viewer);
     _clickHandler.setInputAction((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-        { sourceId: LIGHTNING_STRIKES_OVERLAY_SOURCE_ID },
-      );
-      if (cardHit && cardHit.entryId === _selectedCardId) return;
+      // A card under the click, this layer's or another's, is not the ground.
+      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedStrike(picked) : null;
       if (hit) {
@@ -141,7 +134,6 @@ export function createLightningStrikesLayer({
 
   function clearOverlays() {
     _selectedId = null;
-    _selectedCardId = null;
     if (!overlayHost) return;
     overlayHost.clearSource(LIGHTNING_STRIKES_OVERLAY_SOURCE_ID);
     overlayHost.setVisible?.(LIGHTNING_STRIKES_OVERLAY_SOURCE_ID, false);

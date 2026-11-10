@@ -158,7 +158,6 @@ export function createFirePerimetersLayer({
       ...buildIncidentCard(row, Date.now(), { link: _selectedLink }),
       position: Cesium.Cartesian3.fromDegrees(row.anchor.lon, row.anchor.lat),
     };
-    if (!openExternal) card.interactive = false;
     if (_selectedLink && openExternal) {
       const link = _selectedLink;
       // Keyboard/assistive activation mirrors the pointer click-through.
@@ -199,12 +198,16 @@ export function createFirePerimetersLayer({
       const cardHit = overlayHost.hitTest?.(
         click.position?.x,
         click.position?.y,
-        { sourceId: PERIMETER_OVERLAY_SOURCE_ID },
       );
-      if (cardHit && cardHit.entryId === _selectedCardId) {
-        if (_selectedLink && openExternal) openExternal(_selectedLink);
-        return;
-      }
+      if (
+        cardHit?.sourceId === PERIMETER_OVERLAY_SOURCE_ID &&
+        cardHit.entryId === _selectedCardId &&
+        _selectedLink &&
+        openExternal
+      )
+        openExternal(_selectedLink);
+      // A card under the click, this layer's or another's, is not the ground.
+      if (cardHit) return;
       const picked = _viewer.scene.pick(click.position);
       const incidentId = picked ? pickedIncidentId(picked) : null;
       if (incidentId) {

@@ -143,7 +143,8 @@ export function buildStationCard(row, { mode = 'surface' } = {}) {
   return {
     ...CARD_BASE,
     id: `trafikverket-weather-card:${row.id}`,
-    interactive: false,
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     title: t('ROAD WEATHER · {station}', {
       station: row.name.toUpperCase(),
     }),

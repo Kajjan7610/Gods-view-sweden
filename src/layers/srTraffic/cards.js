@@ -44,7 +44,8 @@ export function buildSrCard(row) {
   return {
     ...CARD_BASE,
     id: `sr-traffic-card:${row.id}`,
-    interactive: false,
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     title: [row.kind, row.title].filter(Boolean).join(' · ').toUpperCase(),
     details,
     accent: priorityColor(row.priority),

@@ -127,6 +127,28 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (brandstationer: rättningar efter kodgranskning)
+- Ett klick på ett kort är aldrig ett klick på marken. Förut räknades
+  bara kort som ledde till en sida som klickbara, och bara lagrets egna:
+  ett klick på brandstationens kort avmarkerade stationen, och ett klick
+  på ett annat lagers kort avmarkerade eller valde det som låg bakom.
+  Rättat i de 17 lager som bara kände sina egna kort: brandstationer,
+  fartkameror, blixtnedslag, elpris, strålning, vattenföring, vägväder,
+  sjöväder, SMHI-väder, SR trafik, kollektivtrafikstörningar,
+  polishändelser, vägläge, SMHI-varningar och krisinformation, samt
+  originalets drönarzoner, brandområden och GhostMaps. Kort med länk
+  öppnar sidan som förut; kort utan länk gör ingenting.
+- Brandstationernas proxy lämnar MCF i fred i 5 minuter efter en
+  misslyckad hämtning och svarar under tiden med den senaste listan (eller
+  502 om ingen finns), som polisstationerna och skyddsrummen.
+- En avklippt lista släpps inte igenom: en full sida (1 000 rader) eller
+  en länk till nästa sida räknas som avklippt även när svaret saknar
+  antal.
+- Kortets rubrik bär ortsnamnet bara när stationen ligger inom 5 km från
+  centralorten, annars står det bara BRANDSTATION. Raden "X km från Y"
+  finns kvar. Förut kunde en station sex mil från Kiruna heta
+  BRANDSTATION · KIRUNA.
+
 ### 2026-11-10 (markhöjder: rättningar efter kodgranskning)
 - Höjderna syns efter varje svar, inte först när hela omgången är klar.
   De punkter som fått höjd (64 platser per fråga) flyttas på plats med den

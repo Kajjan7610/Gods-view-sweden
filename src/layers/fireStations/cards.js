@@ -12,6 +12,9 @@ const CARD_BASE = Object.freeze({
   placement: 'above',
 });
 
+/** Farthest from a municipal seat that a station still carries its name. */
+const TITLE_PLACE_WITHIN_KM = 5;
+
 /** The readiness form in the language. */
 export function readinessLabel(id) {
   switch (id) {
@@ -48,10 +51,11 @@ export function buildFireStationCard(row) {
   return {
     ...CARD_BASE,
     id: `fire-stations-card:${row.id}`,
-    interactive: false,
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     title: row.name
       ? t('FIRE STATION · {station}', { station: row.name.toUpperCase() })
-      : row.near
+      : row.near && row.near.km <= TITLE_PLACE_WITHIN_KM
         ? t('FIRE STATION · {station}', {
             station: row.near.name.toUpperCase(),
           })

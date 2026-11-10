@@ -60,7 +60,6 @@ export function createDroneAirspaceLayer({
   let _enabled = false;
   let _clickHandler = null;
   let _selectedId = null;
-  let _selectedCardId = null;
   /** @type {Map<string, {stableId: string, anchor: {lon: number, lat: number}}>} */
   const _rowById = new Map();
 
@@ -72,7 +71,6 @@ export function createDroneAirspaceLayer({
     const row = _selectedId ? _rowById.get(_selectedId) : null;
     if (!row) {
       _selectedId = null;
-      _selectedCardId = null;
       overlayHost.setEntries(
         DRONE_AIRSPACE_OVERLAY_SOURCE_ID,
         [],
@@ -84,7 +82,6 @@ export function createDroneAirspaceLayer({
       ...buildDroneAirspaceCard(row),
       position: Cesium.Cartesian3.fromDegrees(row.anchor.lon, row.anchor.lat),
     };
-    _selectedCardId = card.id;
     overlayHost.setEntries(
       DRONE_AIRSPACE_OVERLAY_SOURCE_ID,
       [card],
@@ -111,12 +108,8 @@ export function createDroneAirspaceLayer({
     _clickHandler = screenSpaceEventHandlerFactory(_viewer);
     _clickHandler.setInputAction((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-        { sourceId: DRONE_AIRSPACE_OVERLAY_SOURCE_ID },
-      );
-      if (cardHit && cardHit.entryId === _selectedCardId) return;
+      // A card under the click, this layer's or another's, is not the ground.
+      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
       const picked = _viewer.scene.pick(click.position);
       const zoneId = picked ? pickedZoneId(picked) : null;
       if (zoneId) {
@@ -144,7 +137,6 @@ export function createDroneAirspaceLayer({
 
   function clearSelection() {
     _selectedId = null;
-    _selectedCardId = null;
     if (overlayHost) {
       overlayHost.clearSource(DRONE_AIRSPACE_OVERLAY_SOURCE_ID);
       overlayHost.setVisible?.(DRONE_AIRSPACE_OVERLAY_SOURCE_ID, false);

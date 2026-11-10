@@ -39,7 +39,8 @@ export function buildSpeedCameraCard(row) {
   return {
     ...CARD_BASE,
     id: `speed-camera-card:${row.id}`,
-    interactive: false,
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     title: row.road
       ? t('SPEED CAMERA · {road}', { road: row.road })
       : t('SPEED CAMERA'),
