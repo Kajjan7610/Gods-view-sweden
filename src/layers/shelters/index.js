@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { formatNumber, msg, t, tn } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { liftEntities } from '../liftEntities.js';
 import { redrawEntities } from '../redrawEntities.js';
 import { SHELTER_STATES, clipViewBox, shelterColor } from './records.js';
 import {
@@ -55,7 +56,11 @@ export function createSheltersLayer({
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Shelters require a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
-  const _ground = createGroundHeights(terrain, () => render());
+  // The rows follow the view, so their heights are kept apart from the fixed
+  // layers' and cannot push those out of this browser's store.
+  const _ground = createGroundHeights(terrain, (ids) => lift(ids), {
+    passing: true,
+  });
   const position = (row) =>
     Cesium.Cartesian3.fromDegrees(
       row.point[0],
@@ -141,6 +146,22 @@ export function createSheltersLayer({
     if (!overlayHost) return;
     overlayHost.clearSource(SHELTERS_OVERLAY_SOURCE_ID);
     overlayHost.setVisible?.(SHELTERS_OVERLAY_SOURCE_ID, false);
+  }
+
+  /** New ground heights: the dots already drawn move where they are. */
+  function lift(ids) {
+    if (!_dataSource) return;
+    liftEntities(
+      _dataSource.entities,
+      ids,
+      (id) => `${PICK_PREFIX}${id}`,
+      (id) => {
+        const row = _shelterById.get(id);
+        return row && position(row);
+      },
+    );
+    if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
+    _viewer?.scene?.requestRender?.();
   }
 
   function render() {
@@ -247,8 +268,9 @@ export function createSheltersLayer({
         _selectedId = null;
         publishSelectedCard();
       }
-      render();
+      // Heights first: the ones this browser kept are drawn at once.
       _ground.place(_shown);
+      render();
       _rowListener?.();
       return true;
     } catch (e) {

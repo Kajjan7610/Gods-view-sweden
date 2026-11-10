@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { liftEntities } from '../liftEntities.js';
 import { redrawEntities } from '../redrawEntities.js';
 import { SR_PRIORITIES, priorityColor } from './records.js';
 import {
@@ -37,7 +38,7 @@ export function createSrTrafficLayer({
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('SR traffic requires a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
-  const _ground = createGroundHeights(terrain, () => render());
+  const _ground = createGroundHeights(terrain, (ids) => lift(ids));
   const position = (row) =>
     Cesium.Cartesian3.fromDegrees(
       row.point[0],
@@ -139,6 +140,22 @@ export function createSrTrafficLayer({
     }
   }
 
+  /** New ground heights: the dots already drawn move where they are. */
+  function lift(ids) {
+    if (!_dataSource) return;
+    liftEntities(
+      _dataSource.entities,
+      ids,
+      (id) => `${PICK_PREFIX}${id}`,
+      (id) => {
+        const row = _messageById.get(id);
+        return row && position(row);
+      },
+    );
+    if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
+    _viewer?.scene?.requestRender?.();
+  }
+
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
@@ -232,10 +249,14 @@ export function createSrTrafficLayer({
           _messages = snapshot.messages;
           _messageById.clear();
           for (const row of _messages) _messageById.set(row.id, row);
+          // Heights first: the ones this browser kept are drawn at once.
+          _ground.place(_messages);
           render();
           console.log(`[Data:SrTraffic] Updated: ${_messages.length} messages`);
+        } else {
+          // Takes up again what a switched-off layer had left to ask.
+          _ground.place(_messages);
         }
-        _ground.place(_messages);
         _rowListener?.();
         return true;
       } catch (e) {

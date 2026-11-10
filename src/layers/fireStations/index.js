@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { liftEntities } from '../liftEntities.js';
 import { redrawEntities } from '../redrawEntities.js';
 import { READINESS_CLASSES, UNKNOWN_COLOR, readinessColor } from './records.js';
 import {
@@ -42,7 +43,7 @@ export function createFireStationsLayer({
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Fire stations require a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
-  const _ground = createGroundHeights(terrain, () => render());
+  const _ground = createGroundHeights(terrain, (ids) => lift(ids));
   const position = (row) =>
     Cesium.Cartesian3.fromDegrees(
       row.point[0],
@@ -140,6 +141,22 @@ export function createFireStationsLayer({
     overlayHost.setVisible?.(FIRE_STATIONS_OVERLAY_SOURCE_ID, false);
   }
 
+  /** New ground heights: the dots already drawn move where they are. */
+  function lift(ids) {
+    if (!_dataSource) return;
+    liftEntities(
+      _dataSource.entities,
+      ids,
+      (id) => `${PICK_PREFIX}${id}`,
+      (id) => {
+        const row = _stationById.get(id);
+        return row && position(row);
+      },
+    );
+    if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
+    _viewer?.scene?.requestRender?.();
+  }
+
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
@@ -225,12 +242,16 @@ export function createFireStationsLayer({
           _stations = snapshot.stations;
           _stationById.clear();
           for (const row of _stations) _stationById.set(row.id, row);
+          // Heights first: the ones this browser kept are drawn at once.
+          _ground.place(_stations);
           render();
           console.log(
             `[Data:FireStations] Updated: ${_stations.length} stations`,
           );
+        } else {
+          // Takes up again what a switched-off layer had left to ask.
+          _ground.place(_stations);
         }
-        _ground.place(_stations);
         _rowListener?.();
         return true;
       } catch (e) {

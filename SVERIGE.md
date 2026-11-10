@@ -127,6 +127,37 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-10 (markhöjder: rättningar efter kodgranskning)
+- Höjderna syns efter varje svar, inte först när hela omgången är klar.
+  De punkter som fått höjd (64 platser per fråga) flyttas på plats med den
+  gemensamma hjälpen `src/layers/liftEntities.js`; lagret ritas inte om.
+  Uppmätt på fartkamerorna (2 825 punkter, första besöket): första
+  höjderna efter 0,6 s i stället för 44 s, 45 frågor som förut, och ingen
+  paus över 50 ms vid något lyft (förut en omritning på cirka 0,2 s).
+  Gäller 15 lager; kraftsystemet har ett par dussin platser i ett enda
+  svar och ritar om som förut.
+- Höjder som webbläsaren redan sparat ligger på plats före första
+  ritningen. Ett påslag ritar en gång i stället för två och frågar
+  ingenting; av och på under samma besök ritar inte om något.
+- Skyddsrum: raderna i en ny vy frågas före det som var kvar av den gamla,
+  och rader som lämnat vyn frågas inte alls.
+- Ett fel mitt i en omgång behåller det som redan hämtats. Efter ett fel
+  frågas ingenting, inte heller nya rader, förrän väntetiden gått ut (2
+  minuter, fördubblas upp till 30).
+- Webbläsarens lager kastar den plats som använts minst nyligen, inte den
+  äldst skrivna. Skyddsrummen, vars rader kommer och går, har ett eget
+  lager (10 000 platser) och kan inte tränga ut de fasta lagrens höjder
+  (20 000 platser).
+- Rader som försvunnit glöms i minnet (platsens höjd finns kvar till de
+  kommer tillbaka), och en rad som flyttas under samma id frågas om.
+- Smått: `place()` är klar när dess rader är inne, även med en fråga
+  redan ute; ett fel i lagrets egen ritning loggas inte som ett
+  misslyckat uppslag; en avbruten fråga lämnar sin tur vidare; höjder som
+  en annan flik sparat tas över i stället för att skrivas över.
+- Inte kontrollerat: terrängvägens gräns på 90 frågor per minut delas med
+  CCTV och markplan. Markhöjderna tar högst 60 per minut, men summan är
+  inte uppmätt.
+
 ### 2026-11-10 (omritning under samma id når kartan)
 - När ett lager ritade om sina punkter under oförändrade id (nya
   markhöjder, ny färg) fick Cesium aldrig veta det: en borttagning och ett

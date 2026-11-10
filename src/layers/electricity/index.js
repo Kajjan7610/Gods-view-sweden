@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { liftEntities } from '../liftEntities.js';
 import { redrawEntities } from '../redrawEntities.js';
 import {
   PRICE_CLASSES,
@@ -55,7 +56,7 @@ export function createElectricityPricesLayer({
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Electricity prices require a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
-  const _ground = createGroundHeights(terrain, () => render());
+  const _ground = createGroundHeights(terrain, (ids) => lift(ids));
   const position = (row) =>
     Cesium.Cartesian3.fromDegrees(
       row.point[0],
@@ -195,6 +196,23 @@ export function createElectricityPricesLayer({
     overlayHost.setEntries(LABEL_SOURCE_ID, entries, LABEL_HOST_OPTIONS);
   }
 
+  /** New ground heights: the dots already drawn move where they are. */
+  function lift(ids) {
+    if (!_dataSource) return;
+    liftEntities(
+      _dataSource.entities,
+      ids,
+      (id) => `${PICK_PREFIX}${id}`,
+      (id) => {
+        const row = _zoneById.get(id);
+        return row && position(row);
+      },
+    );
+    publishLabels();
+    if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
+    _viewer?.scene?.requestRender?.();
+  }
+
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
@@ -285,8 +303,9 @@ export function createElectricityPricesLayer({
         _zoneById.clear();
         for (const zone of _zones) _zoneById.set(zone.id, zone);
         // Rendered on every update: the current quarter-hour moves on.
-        render();
+        // Heights first: the ones this browser kept are drawn at once.
         _ground.place(_zones);
+        render();
         _rowListener?.();
         return true;
       } catch (e) {

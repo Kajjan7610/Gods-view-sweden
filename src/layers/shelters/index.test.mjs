@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as Cesium from 'cesium';
+import {
+  clearGroundHeightStore,
+  createGroundHeights,
+} from '../groundHeights.js';
 import { SHELTERS_OVERLAY_SOURCE_ID, createSheltersLayer } from './index.js';
 
 const shelter = (id, lon, lat, distance) => ({
@@ -59,7 +63,7 @@ function fakeViewer({ view = [17.9, 59.2, 18.3, 59.5] } = {}) {
 }
 
 /** The layer with a card host and a click handler a test can drive. */
-function harness(source, viewerOptions) {
+function harness(source, viewerOptions, options = {}) {
   const viewer = fakeViewer(viewerOptions);
   viewer.scene.viewer = viewer;
   const state = { cards: [], cardHit: null, click: null, notices: 0 };
@@ -82,6 +86,7 @@ function harness(source, viewerOptions) {
       resolvePickId: (picked) => picked?.id ?? null,
       isOwnedByOtherLayer: () => false,
     },
+    ...options,
   });
   layer.init(viewer);
   layer.setRowControlsListener(() => state.notices++);
@@ -188,5 +193,50 @@ test('switched off, the layer keeps no dots or list and takes no selection', asy
   assert.equal(state.cards.length, 0);
   assert.equal(layer.getRowControls().list, undefined);
   assert.equal(layer.getStats().count, 63364, 'the register is still known');
+  layer.destroy();
+});
+
+test("the dots are lifted where they are; their heights stay apart from the fixed layers'", async (t) => {
+  clearGroundHeightStore();
+  t.after(clearGroundHeightStore);
+  const asked = [];
+  const terrain = {
+    resolveEllipsoidalGround: async (points) => {
+      asked.push(points.length);
+      return points.map(() => ({ ellipsoid: 25, source: 'reearth' }));
+    },
+  };
+  const heightOf = (entity) =>
+    Cesium.Cartographic.fromCartesian(
+      entity.position.getValue(Cesium.JulianDate.now()),
+    ).height;
+  const { layer, viewer } = harness(
+    {
+      getSnapshot: async () =>
+        snapshot([shelter('1', 18.1, 59.4, 0), shelter('2', 18.12, 59.41, 900)]),
+    },
+    undefined,
+    { terrain },
+  );
+  layer.enable();
+  await layer.update();
+  const entities = viewer.sources[0].entities;
+  const drawn = [...entities.values];
+  assert.equal(drawn.length, 2);
+  for (let i = 0; i < 5; i += 1)
+    await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(asked, [2]);
+  assert.deepEqual([...entities.values], drawn, 'the same dots are still there');
+  assert.ok(drawn.every((entity) => Math.abs(heightOf(entity) - 25) < 0.01));
+
+  // Another view of shelters finds the place kept; a fixed layer does not,
+  // so a tour of the country cannot push the fixed layers' heights out.
+  const passing = createGroundHeights(terrain, () => {}, { passing: true });
+  await passing.place([{ id: 'again', point: [18.1, 59.4] }]);
+  assert.equal(passing.isReal('again'), true);
+  assert.deepEqual(asked, [2], 'nothing asked for a kept place');
+  const fixed = createGroundHeights(terrain, () => {}, { gapMs: 0 });
+  await fixed.place([{ id: 'station', point: [18.1, 59.4] }]);
+  assert.deepEqual(asked, [2, 1]);
   layer.destroy();
 });

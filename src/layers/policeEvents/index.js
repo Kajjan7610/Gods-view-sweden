@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { liftEntities } from '../liftEntities.js';
 import { redrawEntities } from '../redrawEntities.js';
 import {
   EVENT_CATEGORIES,
@@ -56,7 +57,7 @@ export function createPolisenEventsLayer({
     throw new TypeError('Polisen events require a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
   // A notice is spread a little around its place, at the place's height.
-  const _ground = createGroundHeights(terrain, () => render());
+  const _ground = createGroundHeights(terrain, (ids) => lift(ids));
   const position = (row, [lon, lat]) =>
     Cesium.Cartesian3.fromDegrees(lon, lat, _ground.heightOf(row.id));
   let _viewer = null;
@@ -163,6 +164,23 @@ export function createPolisenEventsLayer({
       overlayHost.clearSource(POLICE_OVERLAY_SOURCE_ID);
       overlayHost.setVisible?.(POLICE_OVERLAY_SOURCE_ID, false);
     }
+  }
+
+  /** New ground heights: the dots already drawn move where they are. */
+  function lift(ids) {
+    if (!_dataSource) return;
+    liftEntities(
+      _dataSource.entities,
+      ids,
+      (id) => `${PICK_PREFIX}${id}`,
+      (id) => {
+        const row = _eventById.get(id);
+        const point = row && (_positions.get(id) || row.point);
+        return point && position(row, point);
+      },
+    );
+    if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
+    _viewer?.scene?.requestRender?.();
   }
 
   function render() {
@@ -276,9 +294,10 @@ export function createPolisenEventsLayer({
             `[Data:PolisenEvents] Updated: ${_events.length} notices`,
           );
         }
+        // Heights first: the ones this browser kept are drawn at once.
+        _ground.place(_events.filter((row) => Array.isArray(row.point)));
         // Rendered on every refresh: the time window moves on.
         render();
-        _ground.place(_events.filter((row) => Array.isArray(row.point)));
         _rowListener?.();
         return true;
       } catch (e) {

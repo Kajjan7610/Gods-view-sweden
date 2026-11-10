@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { liftEntities } from '../liftEntities.js';
 import { redrawEntities } from '../redrawEntities.js';
 import {
   INCIDENT_KINDS,
@@ -68,7 +69,7 @@ export function createTrafikverketRoadsLayer({
     throw new TypeError('Trafikverket roads require a snapshot source');
   // With ground heights the incident dots clamp to terrain only (see
   // groundHeights.js); road lines stay ground-clamped, which is cheap.
-  const _ground = createGroundHeights(terrain, () => render());
+  const _ground = createGroundHeights(terrain, (ids) => lift(ids));
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -201,6 +202,30 @@ export function createTrafikverketRoadsLayer({
   const positions = (line) =>
     line.map(([lon, lat]) => Cesium.Cartesian3.fromDegrees(lon, lat));
 
+  const incidentPosition = (row) =>
+    Cesium.Cartesian3.fromDegrees(
+      row.point[0],
+      row.point[1],
+      _ground.heightOf(row.id),
+    );
+
+  /** New ground heights: the incident dots already drawn move where they are. */
+  function lift(ids) {
+    if (!_dataSource) return;
+    liftEntities(
+      _dataSource.entities,
+      ids,
+      (id) => `${PICK_PREFIX}i:${id}:point`,
+      (id) => {
+        const row = _incidentById.get(id);
+        return row && incidentPosition(row);
+      },
+    );
+    if (_selected?.kind === 'i' && ids.includes(_selected.id))
+      publishSelectedCard();
+    _viewer?.scene?.requestRender?.();
+  }
+
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
@@ -248,11 +273,7 @@ export function createTrafikverketRoadsLayer({
           );
           entities.add({
             id: `${PICK_PREFIX}i:${row.id}:point`,
-            position: Cesium.Cartesian3.fromDegrees(
-              row.point[0],
-              row.point[1],
-              _ground.heightOf(row.id),
-            ),
+            position: incidentPosition(row),
             point: {
               pixelSize:
                 row.kind === 'minor' ? 6 : severityPixels(row.severity),
@@ -340,12 +361,17 @@ export function createTrafikverketRoadsLayer({
           _incidentById.clear();
           for (const row of _conditions) _conditionById.set(row.id, row);
           for (const row of _incidents) _incidentById.set(row.id, row);
+          // Heights first: the ones this browser kept are drawn at once.
+          _ground.place(_incidents);
           render();
           console.log(
             `[Data:TrafikverketRoads] Updated: ${_conditions.length} stretches, ${_incidents.length} incidents`,
           );
-        } else if (_selected) publishSelectedCard();
-        _ground.place(_incidents);
+        } else {
+          if (_selected) publishSelectedCard();
+          // Takes up again what a switched-off layer had left to ask.
+          _ground.place(_incidents);
+        }
         _rowListener?.();
         return true;
       } catch (e) {

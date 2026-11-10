@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { liftEntities } from '../liftEntities.js';
 import { redrawEntities } from '../redrawEntities.js';
 import {
   ICE_RISK_COLOR,
@@ -58,7 +59,7 @@ export function createTrafikverketWeatherLayer({
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Trafikverket road weather requires a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
-  const _ground = createGroundHeights(terrain, () => render());
+  const _ground = createGroundHeights(terrain, (ids) => lift(ids));
   const position = (row) =>
     Cesium.Cartesian3.fromDegrees(
       row.point[0],
@@ -194,6 +195,23 @@ export function createTrafikverketWeatherLayer({
     overlayHost.setEntries(LABEL_SOURCE_ID, entries, LABEL_HOST_OPTIONS);
   }
 
+  /** New ground heights: the dots already drawn move where they are. */
+  function lift(ids) {
+    if (!_dataSource) return;
+    liftEntities(
+      _dataSource.entities,
+      ids,
+      (id) => `${PICK_PREFIX}${id}`,
+      (id) => {
+        const row = _stationById.get(id);
+        return row && position(row);
+      },
+    );
+    publishLabels();
+    if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
+    _viewer?.scene?.requestRender?.();
+  }
+
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
@@ -311,14 +329,19 @@ export function createTrafikverketWeatherLayer({
           _stations = snapshot.stations;
           _stationById.clear();
           for (const row of _stations) _stationById.set(row.id, row);
+          // Heights first: the ones this browser kept are drawn at once.
+          _ground.place(_stations);
           render();
           console.log(
             `[Data:TrafikverketWeather] Updated: ${_stations.length} stations, ${
               _stations.filter((row) => row.risk).length
             } with risk of ice`,
           );
-        } else if (_selectedId) publishSelectedCard();
-        _ground.place(_stations);
+        } else {
+          if (_selectedId) publishSelectedCard();
+          // Takes up again what a switched-off layer had left to ask.
+          _ground.place(_stations);
+        }
         _rowListener?.();
         return true;
       } catch (e) {

@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { liftEntities } from '../liftEntities.js';
 import { redrawEntities } from '../redrawEntities.js';
 import { WARNING_LEVELS, levelColor, warningLevel } from './records.js';
 import { CRISIS_KINDS } from './crisis.js';
@@ -63,7 +64,7 @@ export function createSmhiWarningsLayer({
   // With ground heights the crisis dots clamp to terrain only (see
   // groundHeights.js); the warning areas stay ground-clamped, which is cheap.
   // A dot spread around its place keeps the place's height.
-  const _ground = createGroundHeights(terrain, () => render());
+  const _ground = createGroundHeights(terrain, (ids) => lift(ids));
   let _viewer = null;
   let _dataSource = null;
   let _request = null;
@@ -218,6 +219,22 @@ export function createSmhiWarningsLayer({
   const positions = (ring) =>
     ring.map(([lon, lat]) => Cesium.Cartesian3.fromDegrees(lon, lat));
 
+  /** New ground heights: the crisis dots already drawn move where they are. */
+  function lift(ids) {
+    if (!_dataSource) return;
+    liftEntities(
+      _dataSource.entities,
+      ids,
+      (id) => `${CRISIS_PICK_PREFIX}${id}`,
+      (id) => {
+        const row = _crisisById.get(id);
+        return row && crisisPosition(row);
+      },
+    );
+    if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
+    _viewer?.scene?.requestRender?.();
+  }
+
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
@@ -370,12 +387,17 @@ export function createSmhiWarningsLayer({
           _crisis = snapshot.crisis || [];
           _crisisById.clear();
           for (const row of _crisis) _crisisById.set(row.id, row);
+          // Heights first: the ones this browser kept are drawn at once.
+          _ground.place(_crisis);
           render();
           console.log(
             `[Data:SmhiWarnings] Updated: ${_areas.length} warning areas, ${_crisis.length} crisis messages`,
           );
-        } else if (_selectedId) publishSelectedCard();
-        _ground.place(_crisis);
+        } else {
+          if (_selectedId) publishSelectedCard();
+          // Takes up again what a switched-off layer had left to ask.
+          _ground.place(_crisis);
+        }
         _rowListener?.();
         return true;
       } catch (e) {

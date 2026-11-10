@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import * as Cesium from 'cesium';
+import { clearGroundHeightStore } from '../groundHeights.js';
 import {
   POLICE_STATIONS_OVERLAY_SOURCE_ID,
   createPoliceStationsLayer,
@@ -166,4 +168,82 @@ test('a station that changes name, address or page is drawn again', async () => 
   await layer.update();
   assert.equal(state.cards[0].activate, undefined, 'no page left to open');
   layer.destroy();
+});
+
+const heightOf = (entity) =>
+  Cesium.Cartographic.fromCartesian(
+    entity.position.getValue(Cesium.JulianDate.now()),
+  ).height;
+
+/** Terrain that answers 40 m everywhere, and counts what it was asked. */
+function fakeTerrain() {
+  const asked = [];
+  return {
+    asked,
+    resolveEllipsoidalGround: async (points) => {
+      asked.push(points.length);
+      return points.map(() => ({ ellipsoid: 40, source: 'reearth' }));
+    },
+  };
+}
+
+const settled = async () => {
+  for (let i = 0; i < 5; i += 1)
+    await new Promise((resolve) => setImmediate(resolve));
+};
+
+test('ground heights lift the dots where they are; a browser that kept them asks nothing', async (t) => {
+  clearGroundHeightStore();
+  t.after(clearGroundHeightStore);
+  const rows = [
+    station('1'),
+    station('2', { point: [11.97, 57.71] }),
+    station('3', { point: [13.0, 55.6] }),
+  ];
+  const source = { getSnapshot: async () => snapshot(rows) };
+
+  const terrain = fakeTerrain();
+  const first = harness(source, { terrain });
+  first.layer.enable();
+  const entities = first.viewer.sources[0].entities;
+  const changes = [];
+  entities.collectionChanged.addEventListener((_, added, removed, changed) =>
+    changes.push([added.length, removed.length, changed.length]),
+  );
+  await first.layer.update();
+  const drawn = [...entities.values];
+  assert.deepEqual(changes, [[3, 0, 0]], 'drawn once, before any answer');
+  assert.ok(drawn.every((entity) => Math.abs(heightOf(entity)) < 0.01));
+
+  await settled();
+  assert.deepEqual(terrain.asked, [3], 'one request for the three places');
+  assert.deepEqual(
+    [...entities.values],
+    drawn,
+    'the same dots are still there',
+  );
+  assert.ok(drawn.every((entity) => Math.abs(heightOf(entity) - 40) < 0.01));
+  assert.deepEqual(changes.at(-1), [0, 0, 3], 'moved, not drawn again');
+  assert.equal(changes.length, 2);
+  first.layer.destroy();
+
+  // The next visit: the heights are in the first drawing, nothing is asked.
+  const again = fakeTerrain();
+  const second = harness(source, { terrain: again });
+  second.layer.enable();
+  const redrawn = [];
+  second.viewer.sources[0].entities.collectionChanged.addEventListener(
+    (_, added, removed, changed) =>
+      redrawn.push([added.length, removed.length, changed.length]),
+  );
+  await second.layer.update();
+  await settled();
+  assert.deepEqual(redrawn, [[3, 0, 0]], 'one drawing, no lift after it');
+  assert.ok(
+    second.viewer.sources[0].entities.values.every(
+      (entity) => Math.abs(heightOf(entity) - 40) < 0.01,
+    ),
+  );
+  assert.deepEqual(again.asked, []);
+  second.layer.destroy();
 });

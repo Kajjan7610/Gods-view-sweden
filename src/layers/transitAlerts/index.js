@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { liftEntities } from '../liftEntities.js';
 import { redrawEntities } from '../redrawEntities.js';
 import { ALERT_KINDS, alertColor } from './records.js';
 import { TRANSIT_ALERTS_OVERLAY_SOURCE_ID, buildStopCard } from './cards.js';
@@ -37,7 +38,7 @@ export function createTransitAlertsLayer({
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Transit disruptions require a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
-  const _ground = createGroundHeights(terrain, () => render());
+  const _ground = createGroundHeights(terrain, (ids) => lift(ids));
   const position = (row) =>
     Cesium.Cartesian3.fromDegrees(
       row.point[0],
@@ -135,6 +136,22 @@ export function createTransitAlertsLayer({
     overlayHost.setVisible?.(TRANSIT_ALERTS_OVERLAY_SOURCE_ID, false);
   }
 
+  /** New ground heights: the dots already drawn move where they are. */
+  function lift(ids) {
+    if (!_dataSource) return;
+    liftEntities(
+      _dataSource.entities,
+      ids,
+      (id) => `${PICK_PREFIX}${id}`,
+      (id) => {
+        const row = _stopById.get(id);
+        return row && position(row);
+      },
+    );
+    if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
+    _viewer?.scene?.requestRender?.();
+  }
+
   function render() {
     if (!_dataSource) return;
     const entities = _dataSource.entities;
@@ -213,8 +230,9 @@ export function createTransitAlertsLayer({
         _pending = snapshot.pending;
         _stopById.clear();
         for (const row of _stops) _stopById.set(row.id, row);
-        render();
+        // Heights first: the ones this browser kept are drawn at once.
         _ground.place(_stops);
+        render();
         _rowListener?.();
         return true;
       } catch (e) {

@@ -108,7 +108,7 @@ export function createPowerGridLayer({
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Power grid requires a snapshot source');
   // With ground heights the zone and neighbour dots clamp to terrain only
-  // (see groundHeights.js).
+  // (see groundHeights.js). A couple of dozen places: one answer, one redraw.
   const _ground = createGroundHeights(terrain, () => render());
   const onGround = (id, [lon, lat]) =>
     Cesium.Cartesian3.fromDegrees(lon, lat, _ground.heightOf(id));
@@ -552,7 +552,11 @@ export function createPowerGridLayer({
             )
           )
             _focus = null;
+          // Heights first: the ones this browser kept are drawn at once.
+          _ground.place(groundRows());
           render();
+        } else {
+          // Takes up again what a switched-off layer had left to ask.
           _ground.place(groundRows());
         }
         // The day grows only when Svenska kraftnät's clock has moved on; a
