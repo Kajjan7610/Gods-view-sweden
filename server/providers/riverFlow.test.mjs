@@ -65,3 +65,78 @@ test('the route serves normalized stations and caches them', async () => {
   assert.equal(stale.status, 200);
   assert.equal(stale.body.stale, true);
 });
+
+test('after a failed refresh SMHI is left alone for a minute', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  let clock = NOW;
+  let fail = false;
+  let calls = 0;
+  const get = route({
+    now: () => clock,
+    fetchImpl: async () => {
+      calls += 1;
+      return fail ? new Response('down', { status: 503 }) : Response.json(body);
+    },
+  });
+  await get();
+  fail = true;
+  clock += 16 * 60_000;
+  assert.equal((await get()).body.stale, true);
+  assert.equal(calls, 2);
+  // Within the minute: the last stations again, SMHI not asked.
+  clock += 30_000;
+  for (let i = 0; i < 3; i += 1) assert.equal((await get()).body.stale, true);
+  assert.equal(calls, 2);
+  // After it, asked once more; and once it answers, fresh again.
+  clock += 31_000;
+  fail = false;
+  const back = await get();
+  assert.equal(calls, 3);
+  assert.equal(back.body.stale, undefined);
+});
+
+test('without any snapshot a failed refresh is a 502, also during the pause', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  let calls = 0;
+  const get = route({
+    now: () => NOW,
+    fetchImpl: async () => {
+      calls += 1;
+      return new Response('down', { status: 503 });
+    },
+  });
+  assert.equal((await get()).status, 502);
+  const paused = await get();
+  assert.equal(paused.status, 502);
+  assert.equal(paused.body.error, 'river_flow_unavailable');
+  assert.equal(calls, 1);
+});
+
+test('requests waiting on one refresh share it, logged and saved once', async (t) => {
+  const log = t.mock.method(console, 'log', () => {});
+  let release;
+  const gate = new Promise((resolve) => (release = resolve));
+  let calls = 0;
+  const get = route({
+    now: () => NOW,
+    fetchImpl: async () => {
+      calls += 1;
+      await gate;
+      return Response.json(body);
+    },
+  });
+  const waiting = [get(), get(), get()];
+  await new Promise((resolve) => setImmediate(resolve));
+  release();
+  const answers = await Promise.all(waiting);
+  assert.deepEqual(
+    answers.map((answer) => answer.status),
+    [200, 200, 200],
+  );
+  assert.equal(calls, 1);
+  assert.deepEqual(
+    log.mock.calls.map((call) => call.arguments[0]),
+    ['[river-flow] 1 stations'],
+  );
+});

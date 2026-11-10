@@ -26,7 +26,7 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 | Luftkvalitet: ca 75 SMHI-mätstationer (NO2, PM10, PM2.5, O3) på europeiska EAQI-skalan, tillsammans med Kanadas stationer | SMHI Datavärdskap luft (CC BY 4.0, ingen nyckel) | Air quality / Luftkvalitet, under Weather |
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (rörliga vinklar i flödesriktningen, MW), Sveriges import, export och netto totalt och per grannland, val av import/export/inrikes och en knapp per land som lyfter fram dess förbindelser, en KRAFT-panel i högerkanten med dygnet hittills eller senaste veckan per kvart (produktion per kraftslag, förbrukning och utbyte), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | Svenska kraftnät, Kontrollrummet (ingen nyckel) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
-| Vattenföring: ca 150 SMHI-stationer i vattendragen, flöde i m³/s var 15:e minut och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
+| Vattenföring: ca 150 SMHI-stationer i vattendragen, senast publicerade flöde i m³/s (kvartsvärden, publiceras med fördröjning) och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
 | Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp, City Gross), Lidls och Systembolagets butiker samt apoteken hos Apotek Hjärtat (ICA Gruppen), Apoteket, Kronans Apotek (med Apoteksgruppen) och DOZ Apotek, färgade efter företag och koncept, med en knapp per företag; klick ger adress, om butiken är öppen nu, kartlagd storlek, webbsida, telefon, rullstol och paketombud, hur många som bor inom 2 km, närmaste hållplats, närmaste andra kedjor och företaget (org.nr och huvudkontor); klick på kortet öppnar butikens webbsida. Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0), befolkning från SCB:s 1 km-rutor (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
 | Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
 | Polisstationer: Polisens 261 stationer, färgade efter vad receptionen erbjuder (pass och id-kort, andra ärenden, inga angivna); klick ger adress, tjänster och närmaste station som tar emot passansökan, klick på kortet öppnar stationens sida med öppettider | Polismyndighetens öppna data (ingen nyckel; Polisen anges som källa) | Police Stations (Sweden) / Polisstationer, under Infrastructure |
@@ -81,7 +81,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Vädervarningar (Sverige) | SMHI · Krisinformation.se | Vädervarningar, VMA och krisnyheter i hela Sverige | Var 5:e minut | CC BY 4.0 (SMHI) |
 | SE | Väder nu (Sverige) | SMHI | Cirka 185 väderstationer, och en prognos där du klickar | Var 10:e minut | CC BY 4.0 |
 | SE | Sjöväder (Sverige) | Sjöfartsverket ViVa | Cirka 160 stationer längs kusten, i de stora sjöarna och kanalerna | Var 10:e minut | Ingen angiven licens; källan anges |
-| SE | Vattenföring (Sverige) | SMHI | Cirka 150 stationer i vattendragen | Var 15:e minut | CC BY 4.0 |
+| SE | Vattenföring (Sverige) | SMHI | Cirka 150 stationer i vattendragen | Kvartsvärden, publiceras med fördröjning | CC BY 4.0 |
 | SE | Norrskensprognos | NOAA SWPC | Norra halvklotet, med chansen över nio svenska orter | Var 10:e minut | Allmän egendom (USA:s statsförvaltning) |
 | +SE | Blixttäthet | EUMETSAT (MTG) | Blixtar över Europa och Afrika från satelliten MTG. Originalet: Blixttäthet över Nord- och Sydamerika (NOAA) | Var 5:e minut | Fri att använda, källan anges |
 | SE | Blixtnedslag (Sverige) | DMI | Varje urladdning över Norden den senaste timmen | Varje minut | CC BY 4.0 |
@@ -164,6 +164,13 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 - **Kolada (dossiern):** fritt, även kommersiellt, men källan ska anges som
   "Kolada", värden vi själva räknar fram får inte anges med Kolada som källa,
   och appen får inte framstå som ett officiellt samarbete.
+- **SMHI (väder, varningar, radar, luftkvalitet, vattenföring):** CC BY 4.0:
+  SMHI ska anges som källa, och det ska framgå om materialet har ändrats.
+  SMHI:s riktlinjer säger dessutom att bara dokumenterade API:er får
+  användas, att samma data inte ska hämtas flera gånger och att inaktuella
+  data helst inte ska lämnas ut. Vattenföringen läses från det dokumenterade
+  API:et för kvartsvärden (opendata.smhi.se/hydroobs). Realtidsfilerna med
+  tim- och dygnsvärden är en avgiftsbelagd tjänst och används inte.
 - **OpenSky (flyg, originalets lager):** bara icke-kommersiellt, se ovan.
 
 ## Nycklar (`.env`, checkas aldrig in)
@@ -206,6 +213,35 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-10 (vattenföring: rättningar efter kodgranskning)
+- Ett prov utan värde eller tid räknas inte längre som 0 m³/s. Förut gav
+  ett saknat sista värde "0 m³/s, sjunker 12,5 m³/s". SMHI skriver null när
+  en station saknar data.
+- Kortet skiljer på huvudavrinningsområdets namn och stationens egen yta:
+  "Helge Å · 1,8 km² uppströms stationen" i stället för "Helge Å ·
+  avrinningsområde 2 km²". Ytor under 10 km² visas med en decimal, och
+  stationer utan områdesnamn visar ytan ensam.
+- Texterna säger vad som visas: senast publicerade flöde, inte "senaste
+  kvartens". Vid kontrollen 2026-11-10 kom timmens fyra kvartsvärden mellan
+  21:30 och 21:37, så värdena var mellan en halv och en och en halv timme
+  gamla. Trenden skrivs "sedan 20:15" i stället för "senaste timmen", och
+  källraden säger "Kvartsvärden, publiceras med fördröjning".
+- Kortet visar datum när värdet inte är från i dag, SMHI:s kvalitetskod
+  ("Okontrollerat värde", "Grovt kontrollerat värde") och stationens ägare
+  när det inte är SMHI. Lagret märks som inaktuellt när även det nyaste
+  värdet är äldre än 3 timmar.
+- Proxyn lämnar SMHI i fred i 1 minut efter en misslyckad hämtning och
+  svarar under tiden med de senaste stationerna, märkta X-Data-Stale (eller
+  502 om inga finns). Loggraden och cachen skrivs en gång per hämtning.
+- En ritning som misslyckades loggas som ritfel och görs om vid nästa
+  uppdatering. Ett avstängt lager bär inte kvar sitt senaste fel.
+- Texten för när en station mätte delas nu av strålning och vattenföring
+  (`src/layers/measuredWhen.js`).
+- SMHI:s villkor och riktlinjer står under "Källor med oklara eller
+  särskilda villkor". Vattenföringen kommer från SMHI:s dokumenterade API
+  för kvartsvärden; realtidsfilerna med tim- och dygnsvärden är en
+  avgiftsbelagd tjänst och används inte.
 
 ### 2026-11-10 (strålning: rättningar efter kodgranskning)
 - Kortet visar datum och klockslag när en station inte har mätt i dag, i

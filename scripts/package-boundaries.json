@@ -2444,6 +2444,7 @@
     "modules": [
       "src/layers/groundHeights.js",
       "src/layers/liftEntities.js",
+      "src/layers/measuredWhen.js",
       "src/layers/redrawEntities.js",
       "src/layers/companyStores/openingHours.js",
       "src/ui/citySights.js",
@@ -3228,6 +3229,7 @@
       "src/layers/fireStations/index.js",
       "src/layers/groundHeights.js",
       "src/layers/liftEntities.js",
+      "src/layers/measuredWhen.js",
       "src/layers/redrawEntities.js",
       "src/layers/fireStations/records.js",
       "src/layers/fireStations/cards.js",
@@ -4136,6 +4138,7 @@
       "src/layers/fireStations/index.js",
       "src/layers/groundHeights.js",
       "src/layers/liftEntities.js",
+      "src/layers/measuredWhen.js",
       "src/layers/redrawEntities.js",
       "src/layers/fireStations/records.js",
       "src/layers/fireStations/cards.js",

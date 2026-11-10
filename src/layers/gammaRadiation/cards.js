@@ -1,31 +1,10 @@
 /** Card model for a selected gamma station. Pure — no Cesium types. */
 import { formatNumber, t } from '../../i18n/index.js';
+import { measuredWhen } from '../measuredWhen.js';
 import { NORMAL_BACKGROUND, doseColor } from './records.js';
 
 export const GAMMA_RADIATION_OVERLAY_SOURCE_ID = 'gamma-radiation';
 export const SSM_GAMMA_PAGE = 'https://karttjanst.ssm.se/gammastationer';
-
-const CLOCK = new Intl.DateTimeFormat('sv-SE', {
-  timeZone: 'Europe/Stockholm',
-  hour: '2-digit',
-  minute: '2-digit',
-});
-const DAY = new Intl.DateTimeFormat('sv-SE', {
-  timeZone: 'Europe/Stockholm',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-});
-
-/**
- * When a station last reported: the time today, the date and time before
- * that, so a station silent for days never reads as measured just now.
- */
-export function measuredWhen(updated, nowMs) {
-  const day = DAY.format(updated);
-  const time = CLOCK.format(updated);
-  return day === DAY.format(nowMs) ? time : `${day} ${time}`;
-}
 
 const CARD_BASE = Object.freeze({
   selected: true,

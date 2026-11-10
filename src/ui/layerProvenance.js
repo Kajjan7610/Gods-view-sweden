@@ -193,7 +193,7 @@ export const LAYER_PROVENANCE = Object.freeze({
   'river-flow': own({
     source: 'SMHI',
     coverage: msg('About 150 river stations'),
-    updates: msg('Every 15 minutes'),
+    updates: msg('Quarter-hourly readings, published with a delay'),
     licence: CC_BY,
   }),
   aurora: own({

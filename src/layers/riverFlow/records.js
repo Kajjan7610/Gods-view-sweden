@@ -3,9 +3,10 @@
  * No Cesium, no Node built-ins.
  *
  * SMHI's hydrological observations (opendata-download-hydroobs.smhi.se,
- * CC BY 4.0, no key) publish discharge every 15 minutes; one station-set
- * request returns the last hour of every reporting station — some 150 — with
- * its river (catchment) and catchment area.
+ * CC BY 4.0, no key) carry discharge as 15-minute values, published with a
+ * delay; one station-set request returns the latest hour of every reporting
+ * station — some 150 — with the main river basin it lies in and the area
+ * upstream of the station.
  */
 
 /** Discharge classes in m³/s, smallest first; `max` is exclusive. */
@@ -18,6 +19,13 @@ export const FLOW_CLASSES = Object.freeze([
 ]);
 /** Below this change over the hour the flow reads as steady (share of flow). */
 export const STEADY_SHARE = 0.02;
+/** Once even the newest reading is older, the flows are no longer current. */
+export const FLOW_MAX_AGE_MS = 3 * 60 * 60_000;
+const QUALITY_CODES = new Set(['G', 'Y', 'O']);
+
+/** A number, or NaN for no value at all (null, '', blank): never a 0. */
+const reading = (value) =>
+  value == null || String(value).trim() === '' ? NaN : Number(value);
 
 export function flowClass(value) {
   if (!Number.isFinite(value) || value < 0) return null;
@@ -57,8 +65,9 @@ export function normalizeFlowStation(station) {
     return null;
   const samples = (Array.isArray(station.value) ? station.value : [])
     .map((sample) => ({
-      at: Number(sample?.date),
-      value: Number(sample?.value),
+      at: reading(sample?.date),
+      value: reading(sample?.value),
+      quality: sample?.quality,
     }))
     .filter(
       (sample) =>
@@ -83,7 +92,16 @@ export function normalizeFlowStation(station) {
       samples.length > 1
         ? Math.round((last.value - first.value) * 1000) / 1000
         : null,
+    // When the hour's first sample was taken; null with a single sample.
+    since: samples.length > 1 ? first.at : null,
     updated: last.at,
+    // SMHI's quality code of the latest value: G, Y or O.
+    quality: QUALITY_CODES.has(last.quality) ? last.quality : null,
+    // Who runs the station; not every one is SMHI's own.
+    owner:
+      String(station.owner ?? '')
+        .trim()
+        .slice(0, 60) || null,
   };
 }
 
@@ -94,6 +112,16 @@ export function flowTrend(row) {
   if (row.change > threshold) return 'rising';
   if (row.change < -threshold) return 'falling';
   return 'steady';
+}
+
+/**
+ * True when even the newest reading is too old to pass for the current
+ * flow, as when SMHI keeps serving a file it has stopped renewing.
+ */
+export function flowsOutdated(stations, nowMs) {
+  let newest = -Infinity;
+  for (const row of stations) if (row.updated > newest) newest = row.updated;
+  return Number.isFinite(newest) && nowMs - newest > FLOW_MAX_AGE_MS;
 }
 
 /**

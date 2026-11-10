@@ -3,7 +3,7 @@ import { msg, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
 import { liftEntities } from '../liftEntities.js';
 import { redrawEntities } from '../redrawEntities.js';
-import { FLOW_CLASSES, flowClass } from './records.js';
+import { FLOW_CLASSES, flowClass, flowsOutdated } from './records.js';
 import {
   RIVER_FLOW_OVERLAY_SOURCE_ID,
   buildFlowCard,
@@ -36,7 +36,7 @@ const CLASS_LABELS = Object.freeze({
 
 /**
  * Own one Swedish river flow display: SMHI's discharge stations sized and
- * coloured by the latest 15-minute flow, the largest flows written beside
+ * coloured by the latest published flow, the largest flows written beside
  * them, and click-to-card selection. Share links carry it as token 0o.
  */
 export function createRiverFlowLayer({
@@ -46,6 +46,7 @@ export function createRiverFlowLayer({
   picking = null,
   pointer = null,
   terrain = null,
+  now = () => Date.now(),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('River flow requires a snapshot source');
@@ -87,7 +88,7 @@ export function createRiverFlowLayer({
       );
       return;
     }
-    const card = buildFlowCard(row);
+    const card = buildFlowCard(row, now());
     card.position = position(row);
     overlayHost.setEntries(
       RIVER_FLOW_OVERLAY_SOURCE_ID,
@@ -244,6 +245,7 @@ export function createRiverFlowLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      _lastError = null;
       if (_dataSource) _dataSource.show = false;
       removeClickHandler();
       clearOverlays();
@@ -258,23 +260,34 @@ export function createRiverFlowLayer({
         const snapshot = await source.getSnapshot({ signal: request.signal });
         if (request.signal.aborted || _request !== request || !_enabled)
           return false;
-        _stale = snapshot.stale;
+        // Stale by the proxy's word, or because even the newest reading is
+        // too old to pass for the current flow.
+        _stale = snapshot.stale || flowsOutdated(snapshot.stations, now());
         _lastUpdate =
-          _stale && Number.isFinite(snapshot.fetchedAt)
+          snapshot.stale && Number.isFinite(snapshot.fetchedAt)
             ? snapshot.fetchedAt
-            : Date.now();
+            : now();
         _lastError = null;
         const signature = JSON.stringify(
           snapshot.stations.map((row) => [row.id, row.updated, row.flow]),
         );
         if (signature !== _signature) {
-          _signature = signature;
+          // Not trusted until drawn: a drawing that fails is made again.
+          _signature = null;
           _stations = snapshot.stations;
           _stationById.clear();
           for (const row of _stations) _stationById.set(row.id, row);
           // Heights first: the ones this browser kept are drawn at once.
           _ground.place(_stations);
-          render();
+          try {
+            render();
+          } catch (e) {
+            console.warn('[Data:RiverFlow] Draw error:', e?.message || e);
+            _lastError = e?.message || msg('River flow unavailable');
+            _rowListener?.();
+            return true;
+          }
+          _signature = signature;
           console.log(`[Data:RiverFlow] Updated: ${_stations.length} stations`);
         } else {
           // Takes up again what a switched-off layer had left to ask.
@@ -340,7 +353,7 @@ export function createRiverFlowLayer({
             ? {
                 ...item,
                 blurb: t(
-                  'Dots are SMHI’s discharge stations, sized and coloured by the latest 15-minute flow in cubic metres per second. Click a station for its river, catchment and whether the flow is rising or falling.',
+                  'Dots are SMHI’s discharge stations, sized and coloured by the latest published flow in cubic metres per second. Click a station for its river basin, the area upstream of it and whether the flow is rising or falling.',
                 ),
               }
             : item,
