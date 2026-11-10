@@ -1,7 +1,11 @@
 // The Polisen police station route: one upstream read per day, stale on failure.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { POLISEN_STATIONS_URL, policeStationsProxy } from './policeStations.js';
+import {
+  POLICE_STATIONS_RETRY_AFTER_FAILURE_MS,
+  POLISEN_STATIONS_URL,
+  policeStationsProxy,
+} from './policeStations.js';
 
 function route(options) {
   let handler = null;
@@ -58,6 +62,53 @@ test('the route serves normalized stations and caches them for a day', async () 
   assert.equal(stale.status, 200);
   assert.equal(stale.body.stale, true);
   assert.equal((await get('/other')).status, 404);
+});
+
+test('after a failed refresh Polisen is left alone for five minutes', async () => {
+  let now = NOW;
+  let calls = 0;
+  let down = false;
+  const get = route({
+    now: () => now,
+    fetchImpl: async () => {
+      calls += 1;
+      if (down) throw new Error('down');
+      return new Response(JSON.stringify(list));
+    },
+  });
+  await get();
+  down = true;
+  now += 25 * 60 * 60_000;
+  assert.equal((await get()).body.stale, true);
+  assert.equal(calls, 2);
+  now += POLICE_STATIONS_RETRY_AFTER_FAILURE_MS - 1;
+  const paused = await get();
+  assert.equal(paused.status, 200);
+  assert.equal(paused.body.stale, true);
+  assert.equal(calls, 2, 'no new read during the pause');
+  down = false;
+  now += 1;
+  const fresh = await get();
+  assert.equal(fresh.body.stale, undefined);
+  assert.equal(calls, 3, 'the pause is over');
+});
+
+test('a failure without a cache pauses too, and answers 502 meanwhile', async () => {
+  let now = NOW;
+  let calls = 0;
+  const get = route({
+    now: () => now,
+    fetchImpl: async () => {
+      calls += 1;
+      throw new Error('down');
+    },
+  });
+  assert.equal((await get()).status, 502);
+  assert.equal((await get()).status, 502);
+  assert.equal(calls, 1);
+  now += POLICE_STATIONS_RETRY_AFTER_FAILURE_MS;
+  assert.equal((await get()).status, 502);
+  assert.equal(calls, 2);
 });
 
 test('an empty or failed list without a cache answers 502', async () => {

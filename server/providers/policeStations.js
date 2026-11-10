@@ -9,6 +9,8 @@ export const POLISEN_STATIONS_URL = 'https://polisen.se/api/policestations';
 const TTL_MS = 24 * 60 * 60_000;
 /** Longest a failed refresh keeps serving the last snapshot, marked stale. */
 const STALE_MAX_MS = 7 * 24 * 60 * 60_000;
+/** After a failed refresh Polisen is left alone this long. */
+export const POLICE_STATIONS_RETRY_AFTER_FAILURE_MS = 5 * 60_000;
 const MAX_BODY_BYTES = 1024 * 1024;
 const FETCH_TIMEOUT_MS = 30_000;
 
@@ -18,6 +20,7 @@ export function policeStationsProxy({
   now = () => Date.now(),
 } = {}) {
   let cached = null;
+  let retryAfter = 0;
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 600 });
 
@@ -64,25 +67,30 @@ export function policeStationsProxy({
       return json(404, { error: 'unknown_route' });
     if (cached && now() - cached.savedAt < TTL_MS)
       return json(200, cached.value);
+    const unavailable = () =>
+      cached && now() - cached.savedAt <= STALE_MAX_MS
+        ? json(
+            200,
+            { ...cached.value, stale: true },
+            { 'X-Data-Stale': 'true' },
+          )
+        : json(502, { error: 'police_stations_unavailable' });
+    if (now() < retryAfter) return unavailable();
     if (!allow(clientKey(req)))
       return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
     try {
       const { promise } = coalesceProxyRequest(inFlight, 'stations', load);
       const value = await promise;
       cached = { value, savedAt: now() };
+      retryAfter = 0;
       console.log(`[police-stations] ${value.stations.length} stations`);
       return json(200, value);
     } catch (error) {
       console.warn(
         `[police-stations] refresh failed: ${error?.message || error}`,
       );
-      if (cached && now() - cached.savedAt <= STALE_MAX_MS)
-        return json(
-          200,
-          { ...cached.value, stale: true },
-          { 'X-Data-Stale': 'true' },
-        );
-      return json(502, { error: 'police_stations_unavailable' });
+      retryAfter = now() + POLICE_STATIONS_RETRY_AFTER_FAILURE_MS;
+      return unavailable();
     }
   }
 

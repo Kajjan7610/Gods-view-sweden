@@ -44,18 +44,28 @@ export function deskLabel(id) {
     case 'passport':
       return t('Passports and ID cards');
     case 'desk':
-      return t('Public desk, no passports');
+      return t('Public desk, no passport applications');
     default:
       return t('No desk services listed');
   }
+}
+
+/** A distance for a card: metres below a kilometre, whole kilometres above. */
+export function formatStationDistance(km) {
+  if (!Number.isFinite(km)) return '';
+  // Rounded first, so 996 m reads "1 km" and not "1,000 m".
+  const tens = Math.round(km * 100) * 10;
+  return tens < 1000
+    ? `${formatNumber(tens)} m`
+    : `${formatNumber(Math.round(km))} km`;
 }
 
 /**
  * Card for one station.
  * @param {object} row A normalized station.
  * @param {object} [options]
- * @param {object[]} [options.stations] Every station, for the nearest
- *   passport desk.
+ * @param {object[]} [options.stations] Every station, for the nearest one
+ *   taking passport applications.
  * @param {boolean} [options.linkable] Whether a click can open its page.
  */
 export function buildPoliceStationCard(
@@ -72,9 +82,9 @@ export function buildPoliceStationCard(
       : [t('No desk services listed')]),
     ...(passportDesk?.row.name
       ? [
-          t('Nearest passport desk: {name}, {km} km', {
+          t('Nearest passport application: {name}, {distance}', {
             name: passportDesk.row.name,
-            km: formatNumber(Math.round(passportDesk.km)),
+            distance: formatStationDistance(passportDesk.km),
           }),
         ]
       : []),
@@ -88,7 +98,8 @@ export function buildPoliceStationCard(
   return {
     ...CARD_BASE,
     id: `police-stations-card:${row.id}`,
-    interactive: Boolean(link),
+    // Always hit-testable, so a click on the card is never the ground.
+    interactive: true,
     ...(link
       ? { accessibilityLabel: t('Open the web page of {title}', { title }) }
       : undefined),

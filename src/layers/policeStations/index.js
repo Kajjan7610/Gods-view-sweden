@@ -86,7 +86,7 @@ export function createPoliceStationsLayer({
       stations: _stations,
       linkable: Boolean(openExternal),
     });
-    if (card.interactive) card.activate = () => openPage(row);
+    if (card.accessibilityLabel) card.activate = () => openPage(row);
     card.position = position(row);
     _selectedCardId = card.id;
     overlayHost.setEntries(
@@ -112,12 +112,14 @@ export function createPoliceStationsLayer({
       const cardHit = overlayHost.hitTest?.(
         click.position?.x,
         click.position?.y,
-        { sourceId: POLICE_STATIONS_OVERLAY_SOURCE_ID },
       );
-      if (cardHit && cardHit.entryId === _selectedCardId) {
+      if (
+        cardHit?.sourceId === POLICE_STATIONS_OVERLAY_SOURCE_ID &&
+        cardHit.entryId === _selectedCardId
+      )
         openPage(_stationById.get(_selectedId));
-        return;
-      }
+      // A card under the click, this layer's or another's, is not the ground.
+      if (cardHit) return;
       const picked = _viewer.scene.pick(click.position);
       const hit = picked ? pickedStation(picked) : null;
       if (hit) {
@@ -229,7 +231,14 @@ export function createPoliceStationsLayer({
             : Date.now();
         _lastError = null;
         const signature = JSON.stringify(
-          snapshot.stations.map((row) => [row.id, row.point, row.services]),
+          snapshot.stations.map((row) => [
+            row.id,
+            row.point,
+            row.services,
+            row.name,
+            row.address,
+            row.url,
+          ]),
         );
         if (signature !== _signature) {
           _signature = signature;
