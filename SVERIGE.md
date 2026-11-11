@@ -332,6 +332,12 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-11 (ENTSO-E i nyckelpanelen)
+- ENTSO-E:s nyckel (`ENTSOE_SECURITY_TOKEN`) kan sparas i panelen KOPPLA PÅ
+  (Markstation · leverantörsinställningar) som de andra nycklarna, med
+  länk till var den skaffas. Den används bara med
+  `POWER_GRID_SOURCE=entsoe`. Pinokio-startaren skickar också med den.
+
 ### 2026-11-11 (flygtavlan över källangivelsen; Swedavias villkor)
 - Flygtavlan slutar nu ovanför kartans källangivelse. Tidigare räckte den
   så långt ner att den täckte Google Maps- och Cesium-loggan, som enligt

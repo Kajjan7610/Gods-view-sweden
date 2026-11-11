@@ -95,6 +95,16 @@ export const KEY_SETUP_KEYS = Object.freeze([
     tier: 'free',
   }),
   Object.freeze({
+    id: 'entsoe',
+    title: 'ENTSO-E', // i18n-ignore: provider product name
+    unlocks: msg(
+      'Power grid flows and production from ENTSO-E, a reserve for Svenska kraftnät: used with POWER_GRID_SOURCE=entsoe',
+    ),
+    getUrl: 'https://transparency.entsoe.eu/myAccount/webApiAccess',
+    envVars: Object.freeze(['ENTSOE_SECURITY_TOKEN']),
+    tier: 'free',
+  }),
+  Object.freeze({
     id: 'openai',
     title: 'OPENAI', // i18n-ignore: provider product name
     unlocks: msg('Voice control — API key or ChatGPT OAuth'),

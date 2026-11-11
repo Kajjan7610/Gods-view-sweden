@@ -23,6 +23,7 @@ module.exports = {
           TRAFIKLAB_GTFS_STATIC_KEY: '{{env.TRAFIKLAB_GTFS_STATIC_KEY || ""}}',
           SWEDAVIA_FLIGHTINFO_KEY: '{{env.SWEDAVIA_FLIGHTINFO_KEY || ""}}',
           SWEDAVIA_WAITTIME_KEY: '{{env.SWEDAVIA_WAITTIME_KEY || ""}}',
+          ENTSOE_SECURITY_TOKEN: '{{env.ENTSOE_SECURITY_TOKEN || ""}}',
           PINOKIO_SHARE_CLOUDFLARE: '{{env.PINOKIO_SHARE_CLOUDFLARE || "false"}}',
           PINOKIO_SHARE_LOCAL: '{{env.PINOKIO_SHARE_LOCAL || "false"}}',
           PINOKIO_SHARE_VAR: '{{env.PINOKIO_SHARE_VAR || "__gev_sharing_disabled__"}}',

@@ -3947,6 +3947,7 @@
   "Swedish road cameras, trains, road conditions, road weather and speed cameras": "瑞典道路摄像头、火车、路况、道路气象和测速摄像头",
   "Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys": "瑞典公交、地铁和有轨电车实时位置（含线路号）及运营中断：GTFS Regional Realtime 和 Static 密钥",
   "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Swedavia 十座机场的出发、到达和安检排队：FlightInfo 和 WaitTime 密钥",
+  "Power grid flows and production from ENTSO-E, a reserve for Svenska kraftnät: used with POWER_GRID_SOURCE=entsoe": "来自 ENTSO-E 的电网潮流和发电量，作为 Svenska kraftnät 的备用：与 POWER_GRID_SOURCE=entsoe 一起使用",
   "{count} places": {
     "other": "{count} 个位置"
   },

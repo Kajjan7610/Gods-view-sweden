@@ -393,3 +393,16 @@ test('key guidance can offer another source that works with a key already set', 
   );
   assert.equal(keySetupWithAlternatives('Needs X', []), 'Needs X');
 });
+
+test('ENTSO-E is set up in the key panel like the other Swedish keys', () => {
+  const entry = KEY_SETUP_KEYS.find((key) => key.id === 'entsoe');
+  assert.ok(entry, 'ENTSO-E is listed');
+  assert.deepEqual(entry.envVars, ['ENTSOE_SECURITY_TOKEN']);
+  assert.equal(entry.tier, 'free');
+  assert.equal(
+    entry.getUrl,
+    'https://transparency.entsoe.eu/myAccount/webApiAccess',
+  );
+  // The panel may write the token to .env.
+  assert.ok(knownKeySetupEnvVars().has('ENTSOE_SECURITY_TOKEN'));
+});

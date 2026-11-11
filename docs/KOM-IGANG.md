@@ -63,10 +63,11 @@ sparas bara på din dator och skickas bara till respektive källa.
 | **TRAFIKLAB** (två nycklar) | Bussar, tunnelbana och spårvagnar live i 16 regioner, linjenummer och störningar | Skapa ett projekt på [developer.trafiklab.se](https://developer.trafiklab.se) och lägg till *GTFS Regional Realtime* och *GTFS Regional Static* |
 | **SWEDAVIA** (två nycklar) | Flygtavlan för Swedavias tio flygplatser och köerna i säkerhetskontrollen | Registrera dig på [apideveloper.swedavia.se](https://apideveloper.swedavia.se) och prenumerera på *FlightInfo* och *WaitTime* (gratisnivåerna) |
 
-Valfritt, också gratis: **NASA FIRMS** (bränder, öppna data), **CESIUM
-ION** (fler kartor, terräng och Googles 3D-städer; gratis för
-icke-kommersiella personliga projekt) och **AISSTREAM** (fartyg; inga
-publicerade villkor). **OPENSKY** och **TOMTOM** finns kvar i panelen från
+Valfritt, också gratis: **ENTSO-E** (kraftsystemet från den europeiska
+transparensplattformen, en reserv för Svenska kraftnät), **NASA FIRMS**
+(bränder, öppna data), **CESIUM ION** (fler kartor, terräng och Googles
+3D-städer; gratis för icke-kommersiella personliga projekt) och
+**AISSTREAM** (fartyg; inga publicerade villkor). **OPENSKY** och **TOMTOM** finns kvar i panelen från
 originalet, men deras villkor kräver tillstånd för en app som den här, så
 den svenska versionen använder dem inte. Flyg kommer i stället från
 adsb.lol (öppna data, ODbL), utan nyckel.

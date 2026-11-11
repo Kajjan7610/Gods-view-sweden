@@ -4107,6 +4107,7 @@
   "Swedish road cameras, trains, road conditions, road weather and speed cameras": "Telecamere stradali, treni, condizioni stradali, meteo stradale e autovelox svedesi",
   "Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys": "Autobus, metropolitana e tram svedesi dal vivo con numeri di linea, e disservizi: chiavi GTFS Regional Realtime e Static",
   "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Partenze, arrivi e code ai controlli di sicurezza nei dieci aeroporti Swedavia: chiavi FlightInfo e WaitTime",
+  "Power grid flows and production from ENTSO-E, a reserve for Svenska kraftnät: used with POWER_GRID_SOURCE=entsoe": "Flussi della rete elettrica e produzione da ENTSO-E, una riserva per Svenska kraftnät: usato con POWER_GRID_SOURCE=entsoe",
   "{count} places": {
     "one": "{count} posto",
     "many": "{count} di posti",
