@@ -184,7 +184,7 @@ watch(
           </div>
           <div class="city-dossier-pass-toggles">
             <button type="button" :aria-pressed="String(d.pass.showMap)" @click="store.act('togglePassMap')">{{ t('Show my journey on the map') }}</button>
-            <button type="button" :aria-pressed="String(d.pass.cinematic)" @click="store.act('toggleCinematic')">{{ t('Cinematic arrival') }}</button>
+            <button type="button" :aria-pressed="String(d.pass.cinematic)" @click="store.act('toggleCinematic')">{{ t('Town card on a first visit') }}</button>
           </div>
           <template v-if="d.pass.most.length">
             <strong class="city-dossier-kris-title">{{ t('Most visited') }}</strong>

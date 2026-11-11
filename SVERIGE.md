@@ -173,10 +173,18 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   tim- och dygnsvärden är en avgiftsbelagd tjänst och används inte.
 - **TomTom (köer i stadsdossiern):** egen nyckel. Gratisnivån ger 2 500
   anrop per dygn för trafikhändelser, och anrop därutöver blockeras.
-  Villkoren förbjuder att svar lagras, utom tillfällig cache under vissa
-  villkor (punkt 11.4), och har regler om upphovsrättsnotiser (punkt 17).
-  De exakta villkoren är inte genomlästa. Appen cachar köerna i fem minuter
-  och anger TomTom som källa.
+  Villkoren (lästa 2026-11-11, punkterna 2, 11, 12, 14 och 17) säger:
+  licensen gäller en "Permitted Solution" enligt ett abonnemang, annars
+  bara egen utvärdering och test (2.1–2.2). Svar får inte lagras; de får
+  bara cachas i klienten, enligt svarets egna cachehuvuden, och aldrig för
+  att betjäna flera användare (11.4). Innehållet får inte bli en egen
+  tjänst eller databas (11.6.1) och inte användas för trafikövervakning
+  eller för att välja platser för fartkameror (11.6.8). Slutanvändare ska
+  godkänna ett licensavtal minst lika strängt som TomToms (12). TomToms
+  upphovsrättsnotis ska hämtas från deras Copyright API (17.3). Appen
+  uppfyller inte allt detta: proxyn cachar köerna i fem minuter på
+  servern, anger bara "TomTom" som källa och har inget licensavtal. Vad
+  som ska göras åt det är inte bestämt.
 - **Valmyndigheten (valresultat i dossiern):** inga villkor hittade för
   rådatafilerna på val.se. Valmyndigheten anges som källa.
 - **Wikipedia och Wikimedia Commons (text, foto och vapen i dossiern):**
@@ -225,6 +233,13 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-11 (passets inställning heter vad den gör; TomToms villkor lästa)
+- Inställningen "Filmisk ankomst" i besökspasset heter nu "Ortskort vid
+  första besöket": den styr bara om ortskortet visas, sedan den
+  automatiska inflygningen togs bort.
+- TomToms villkor är lästa och sammanfattade under "Källor med oklara eller
+  särskilda villkor", med det appen inte uppfyller.
 
 ### 2026-11-11 (kraftsystemet: rättningar efter andra kodgranskningen)
 - Servern slutar fråga Svenska kraftnäts kontrollrum när ingen har frågat på
