@@ -172,9 +172,19 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   för vad som helst. Priserna är Nord Pools och hämtas från ENTSO-E, där
   dagens priser inte står på listan över data som är fri att återanvända.
   Källan anges som "Elpriset just nu.se (Nord Pool via ENTSO-E)".
-- **Swedavia (flygtavlan, dossiern):** inga villkor publicerade; Swedavias
-  öppna API:er "kan delas" enligt deras frågor och svar. Swedavia anges som
-  källa.
+- **Swedavia (flygtavlan, dossiern, cockpit):** villkoren lästa 2026-11-11
+  (apideveloper.swedavia.se, "Terms of Use" vid registreringen). Swedavia
+  ger en licens att använda och visa datan offentligt i en egen app eller
+  webbtjänst (3.3), och det ska tydligt framgå att datan kommer från
+  Swedavia, helst med en länk till swedavia.se (3.4, 5.1). Oförändrad data
+  får visas i egna appar men inte skickas vidare till andra system eller
+  säljas (3.7), och nyckeln får inte lämnas till någon annan (5.2).
+  Tavlan och dossiern anger "Källa: Swedavia".
+- **Open-Meteo (vädret i cockpit, originalets lager):** villkoren lästa
+  2026-11-11 (open-meteo.com/en/terms). Den fria nivån gäller bara
+  icke-kommersiellt bruk, under 10 000 anrop per dygn, och datan är CC BY
+  4.0. Marknadsföring räknas som kommersiellt, så cockpitens väderpanel
+  visas inte i filmer.
 - **Kolada (dossiern):** fritt, även kommersiellt, men källan ska anges som
   "Kolada", värden vi själva räknar fram får inte anges med Kolada som källa,
   och appen får inte framstå som ett officiellt samarbete.
@@ -321,6 +331,15 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-11 (flygtavlan över källangivelsen; Swedavias villkor)
+- Flygtavlan slutar nu ovanför kartans källangivelse. Tidigare räckte den
+  så långt ner att den täckte Google Maps- och Cesium-loggan, som enligt
+  villkoren alltid ska synas.
+- README:s bild av flygtavlan är tagen om, med loggorna synliga.
+- Swedavias villkor är hittade och lästa; de står under "Källor med oklara
+  eller särskilda villkor" i stället för att Swedavia saknar villkor.
+  Open-Meteos villkor (vädret i cockpit) står där också.
 
 ### 2026-11-11 (tre README-bilder tagna om)
 - Titelfilmen, cockpitbilden och bilden på kraftsystemet är tagna om i

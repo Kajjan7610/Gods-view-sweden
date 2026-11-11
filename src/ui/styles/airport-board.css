@@ -11,7 +11,9 @@
   display: flex;
   flex-direction: column;
   width: min(820px, calc(100vw - 32px));
-  max-height: calc(100svh - 150px);
+  /* Ends above the map credits (about 125px from the bottom): Google's and
+     Cesium's logos must never be covered. */
+  max-height: calc(100svh - 210px);
   box-sizing: border-box;
   border: 1px solid var(--glass-border);
   border-radius: var(--panel-radius);
