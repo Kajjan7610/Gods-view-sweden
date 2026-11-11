@@ -226,6 +226,18 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-11 (flygplatsköer och VMA-banner: rättningar efter kodgranskning)
+- Kötiderna i säkerhetskontrollen hämtas bara när flygplatsens terminaler
+  ryms i bild. Förut räckte det att vyn låg inom 20 km från en flygplats,
+  så varje vy över centrala Stockholm drog ett Swedavia-anrop var tredje
+  minut mot dagskvoten.
+- Kötider som är äldre än en kvart visas inte: varken ett reservsvar från
+  Swedavia-proxyn eller etiketter som inte gått att förnya.
+- Köerna och VMA-bannern läser om direkt när fliken visas igen, i stället
+  för att vänta på nästa kamerarörelse eller nästa tvåminuterstakt.
+- Ett VMA som inte längre kan bekräftas hos Krisinformation ligger kvar men
+  säger när det senast bekräftades ("Uppdaterad 15:00").
+
 ### 2026-11-10 (stadsdossierns serverdelar, andra rundan; bildkällor och villkor)
 - Paus efter fel: ortsfakta, norrskensutsikten (NOAA och SMHI) och
   sevärdheterna (Wikidata) lämnar källan i fred i 1 minut efter en

@@ -195,3 +195,15 @@ export function aircraftMatch(flight, index) {
   const byTail = index.byRegistration.get(identity(flight.registration));
   return byTail ? { id: byTail, by: 'registration' } : null;
 }
+
+/**
+ * How far from the view's centre an airport may lie and still have its
+ * terminals in the picture: about the view's own reach on the ground, at
+ * least two kilometres and never more than `maxKm`.
+ * @param {number} heightM The camera's height.
+ * @param {number} [maxKm]
+ */
+export function queueReachKm(heightM, maxKm = 20) {
+  if (!Number.isFinite(heightM)) return 0;
+  return Math.min(maxKm, Math.max(2, (heightM / 1000) * 0.8));
+}

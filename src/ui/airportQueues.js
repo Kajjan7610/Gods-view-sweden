@@ -8,12 +8,19 @@
 import * as Cesium from 'cesium';
 import { onLocaleChange, t } from '../i18n/index.js';
 import { SWEDAVIA_AIRPORTS } from '../data/swedaviaAirports.js';
-import { airportUnder, queueMarkers } from './airportBoardModel.js';
+import {
+  airportUnder,
+  queueMarkers,
+  queueReachKm,
+} from './airportBoardModel.js';
 
-/** The labels show while the view is this near an airport, this low. */
+/** The labels show while the view is this low and, at the very most, this
+    near an airport; how near also follows the view (queueReachKm). */
 const NEAR_KM = 20;
 const NEAR_HEIGHT_M = 40_000;
 const REFRESH_MS = 3 * 60_000;
+/** Queue minutes older than this are no longer the queue. */
+const STALE_SHOW_MS = 15 * 60_000;
 const SETTLE_DELAY_MS = 600;
 /** Above the terminal roofs; the marker also draws through the 3D tiles. */
 const MARKER_HEIGHT_M = 35;
@@ -43,11 +50,17 @@ export function createAirportQueues({
   openBoard,
   fetchImpl = (...args) => globalThis.fetch(...args),
   documentRef = globalThis.document,
+  now = () => Date.now(),
+  // A seam for tests: the click handler needs a real canvas.
+  screenSpaceEventHandlerFactory = (forViewer) =>
+    new Cesium.ScreenSpaceEventHandler(forViewer.scene.canvas),
 }) {
   let destroyed = false;
   let airport = null;
   let markers = [];
   let request = null;
+  /** When the markers shown were read. */
+  let loadedAt = 0;
   let refreshTimer = null;
   let settleTimer = null;
   const source = new Cesium.CustomDataSource('airport-queues');
@@ -145,11 +158,28 @@ export function createAirportQueues({
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const body = await response.json();
       if (destroyed || airport !== forAirport) return;
-      markers = queueMarkers(body?.security);
+      // A fallback from over a quarter of an hour ago is not the queue.
+      const old =
+        body?.stale === true &&
+        Number.isFinite(body.updatedAt) &&
+        now() - body.updatedAt > STALE_SHOW_MS;
+      markers = old ? [] : queueMarkers(body?.security);
+      loadedAt = now();
       draw();
     } catch (error) {
       if (error?.name !== 'AbortError')
         console.warn('[AirportQueues] load failed:', error?.message || error);
+      // Without a fresh answer the minutes on the map grow old: after a
+      // quarter of an hour they go.
+      if (
+        error?.name !== 'AbortError' &&
+        airport === forAirport &&
+        markers.length &&
+        now() - loadedAt > STALE_SHOW_MS
+      ) {
+        markers = [];
+        draw();
+      }
     } finally {
       if (request === controller) request = null;
     }
@@ -165,10 +195,13 @@ export function createAirportQueues({
   function settle() {
     settleTimer = null;
     if (destroyed) return;
+    const center = viewCenter();
+    // Only an airport whose terminals are in view: the queues cost a call
+    // against Swedavia's daily allowance.
     const next = cockpit()
       ? null
-      : airportUnder(viewCenter(), QUEUE_AIRPORTS, {
-          km: NEAR_KM,
+      : airportUnder(center, QUEUE_AIRPORTS, {
+          km: queueReachKm(center?.height, NEAR_KM),
           height: NEAR_HEIGHT_M,
         });
     if (next?.iata === airport?.iata) {
@@ -179,6 +212,7 @@ export function createAirportQueues({
     }
     airport = next;
     markers = [];
+    loadedAt = 0;
     request?.abort();
     clearTimeout(refreshTimer);
     refreshTimer = null;
@@ -190,7 +224,7 @@ export function createAirportQueues({
     settleTimer = setTimeout(settle, SETTLE_DELAY_MS);
   });
 
-  const clicks = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+  const clicks = screenSpaceEventHandlerFactory(viewer);
   clicks.setInputAction((click) => {
     if (!airport || !source.show) return;
     // The label first (it is the bigger target), then the marker under it.
@@ -203,6 +237,12 @@ export function createAirportQueues({
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
   const removeLocale = onLocaleChange(draw);
+  // Looked at again after being hidden: the refresh that was skipped.
+  const onVisible = () => {
+    if (documentRef?.visibilityState === 'hidden') return;
+    if (airport && !refreshTimer && !request) void load();
+  };
+  documentRef?.addEventListener?.('visibilitychange', onVisible);
 
   return {
     destroy() {
@@ -212,6 +252,7 @@ export function createAirportQueues({
       clearTimeout(settleTimer);
       removeMoveEnd?.();
       removeLocale?.();
+      documentRef?.removeEventListener?.('visibilitychange', onVisible);
       clicks.destroy();
       overlayHost.clearSource?.(LABEL_SOURCE_ID);
       viewer.dataSources.remove(source, true);
