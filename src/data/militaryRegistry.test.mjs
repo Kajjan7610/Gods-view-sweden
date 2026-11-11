@@ -12,8 +12,19 @@ import assert from 'node:assert/strict';
 import {
   setMilitaryLayerActive,
   isMilitaryLayerActive,
+  isMilitaryIcao,
   onMilitaryLayerActiveChange,
+  refreshMilitaryRegistryIfStale,
 } from './militaryRegistry.js';
+
+test('the Swedish registry asks nobody and marks no flight military', async (t) => {
+  const fetchMock = t.mock.method(globalThis, 'fetch', async () => {
+    throw new Error('no request expected');
+  });
+  await refreshMilitaryRegistryIfStale();
+  assert.equal(isMilitaryIcao('ae1234'), false);
+  assert.equal(fetchMock.mock.callCount(), 0);
+});
 
 test('active-change listener fires on transitions only, with committed state', () => {
   const seen = [];

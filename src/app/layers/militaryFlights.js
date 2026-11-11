@@ -21,7 +21,7 @@ export function createApplicationMilitary({
     `${import.meta.env?.BASE_URL || '/'}${url.replace(/^\//, '')}`,
 }) {
   const { groundFloor, meshFloor, groundSnap } = surface;
-  return createMilitaryFlightLayer({
+  const layer = createMilitaryFlightLayer({
     source,
     resolveAsset,
     services: {
@@ -43,4 +43,7 @@ export function createApplicationMilitary({
       recession,
     },
   });
+  // Swedish fork: kept for the layers that read it, never listed.
+  layer.showInTogglePanel = false;
+  return layer;
 }

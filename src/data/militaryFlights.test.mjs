@@ -17,6 +17,28 @@ import {
   destroyTrackedReadout,
   initTrackedReadout,
 } from './trackedReadout.js';
+import {
+  createEmptyMilitarySource,
+  createMilitarySource,
+} from '../sources/live/standalone.js';
+
+test('the Swedish layer asks nobody and finds no military aircraft', async (t) => {
+  const fetchMock = t.mock.method(globalThis, 'fetch', async () => {
+    throw new Error('no request expected');
+  });
+  assert.equal(militaryFlightsLayer.showInTogglePanel, false);
+  const source = createEmptyMilitarySource({ now: () => 1_000 });
+  const snapshot = await source.getSnapshot();
+  assert.deepEqual(snapshot.records, []);
+  assert.equal(snapshot.complete, true);
+  assert.equal(snapshot.freshness, 'current');
+  assert.deepEqual(await source.getIdentities(), []);
+  assert.equal(fetchMock.mock.callCount(), 0);
+});
+
+// The tests below exercise the original layer against the original feed,
+// which the Swedish fork keeps in the code but does not offer.
+militaryFlightsLayer.setSource(createMilitarySource());
 
 test('share-Follow absence requires an accepted adsb.lol snapshot', async () => {
   _setMilitaryTrackingRefreshOutcomeForTest({ status: 'source-unavailable' });

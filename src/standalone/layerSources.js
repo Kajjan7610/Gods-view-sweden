@@ -3,7 +3,7 @@ import { createRecentImagerySource } from '../layers/recentImagery/source.js';
 import { createOpenFreeMapSource } from '../sources/openFreeMap.js';
 import {
   createFlightSource,
-  createMilitarySource,
+  createEmptyMilitarySource,
   createVesselSource,
 } from '../sources/live/standalone.js';
 import { createCctvSource } from '../layers/cctv/source.js';
@@ -39,7 +39,8 @@ export function createStandaloneLayerSources(
     directions: createDirectionsSource(),
     'recent-imagery': createRecentImagerySource(),
     flights: createFlightSource(),
-    military: createMilitarySource(),
+    // Swedish fork: military aircraft are not offered.
+    military: createEmptyMilitarySource(),
     vessels: createVesselSource({
       apiUrl: import.meta.env?.VITE_AIS_LIVE_API_URL || '/api/vessels',
       // Resolved against the document's address, which a panel host may

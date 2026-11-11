@@ -192,9 +192,13 @@ export function createPanel({ state: layerState, parts }) {
       subject: `${subject.label} · ${t('{distance} FLIGHT / VESSEL WINDOW', { distance: presentAwarenessDistance(AWARENESS_RADIUS_M) })}`,
       subjectNames: presentNames(subject.memberNames),
       navigation: presentNavigation(),
-      // Swedish fork: mapped installations are not offered.
+      // Swedish fork: military aircraft and mapped installations are not
+      // offered.
       rows: cohorts
-        .filter((cohort) => cohort.id !== 'military-installations')
+        .filter(
+          (cohort) =>
+            cohort.id !== 'military' && cohort.id !== 'military-installations',
+        )
         .map(presentRow),
       note: t(
         'Open-source mapped/observed context. Missing broadcasts, unloaded map areas, or unmapped sites are not evidence of absence.',

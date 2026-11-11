@@ -421,7 +421,8 @@ async function fetchAdsbLolPointFallback(req) {
           body: JSON.stringify(normalized),
           cachedAt: Date.now(),
           count: normalized.states.length,
-          // Left out by the normalizer: owners who asked not to be shown.
+          // Left out by the normalizer: owners who asked not to be shown,
+          // and military aircraft.
           privacyHidden:
             (Array.isArray(payload?.ac) ? payload.ac.length : 0) -
             visibleAdsbLolAircraft(payload?.ac).length,

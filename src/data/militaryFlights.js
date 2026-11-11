@@ -1,12 +1,13 @@
 import { defaultSurface } from './surfaceServices.js';
 import { createApplicationMilitary } from '../app/layers/militaryFlights.js';
 
-import { createMilitarySource } from '../sources/live/standalone.js';
+import { createEmptyMilitarySource } from '../sources/live/standalone.js';
 import * as militaryRegistry from './militaryRegistry.js';
 
 const militaryFlightsLayer = createApplicationMilitary({
   surface: defaultSurface,
-  source: createMilitarySource(),
+  // Swedish fork: military aircraft are not offered.
+  source: createEmptyMilitarySource(),
   militaryRegistry,
 });
 export { TRACKED_MODEL_MAX_PX } from '../layers/military/policy.js';

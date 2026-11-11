@@ -32,7 +32,8 @@ test('a Contacts row names its provider as the Layers panel does, with its feed 
   createPanel({ state, parts }).renderResults();
   assert.deepEqual(
     state.panelView.rows.map((row) => row.detail),
-    ['adsb.lol · FALLBACK · observed', 'adsb.lol · observed', 'Datalastic · STALE · observed'],
+    // Swedish fork: military aircraft are not offered, so they get no row.
+    ['adsb.lol · FALLBACK · observed', 'Datalastic · STALE · observed'],
   );
   state.offPanelLocale?.();
 });

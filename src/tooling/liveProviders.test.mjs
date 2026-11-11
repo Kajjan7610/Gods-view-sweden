@@ -820,7 +820,7 @@ test('flights come from adsb.lol by default, and OpenSky only when chosen', asyn
   );
 });
 
-test('military aircraft whose owners asked not to be shown are left out', async (t) => {
+test('the military proxy passes on no military aircraft', async (t) => {
   t.mock.method(globalThis, 'fetch', async () =>
     Response.json({
       ac: [
@@ -832,9 +832,11 @@ test('military aircraft whose owners asked not to be shown are left out', async 
     }),
   );
   const answer = await install(providers.adsbLolProxy())('/api/military');
+  // Swedish fork: military aircraft are not shown, nor are those whose
+  // owners asked not to be.
   assert.deepEqual(
     JSON.parse(answer.body).ac.map((row) => row.hex),
-    ['aaa111', 'ddd444'],
+    ['ddd444'],
   );
 });
 
@@ -862,13 +864,13 @@ test('FLIGHTS_SOURCE=adsblol reads adsb.lol around the view and never asks OpenS
   assert.equal(answer.statusCode, 200);
   assert.equal(answer.headers['x-flight-source'], 'adsb.lol');
   assert.equal(answer.headers['x-feed-source'], 'adsb.lol');
-  // The one whose owner asked not to be shown (LADD) is left out; being
-  // military is no such wish.
+  // The one whose owner asked not to be shown (LADD) is left out, and in
+  // the Swedish fork so is the military one.
   assert.deepEqual(
     JSON.parse(answer.body).states.map((state) => state[0]),
-    ['abc123', 'aaa111'],
+    ['abc123'],
   );
-  assert.equal(answer.headers['x-flight-privacy-hidden'], '1');
+  assert.equal(answer.headers['x-flight-privacy-hidden'], '2');
   // Without a place there is nothing to read around, and nothing is asked.
   const asked = calls.length;
   const placeless = await flights('/api/flights');

@@ -31,7 +31,7 @@ import { createApplicationRequestServices } from '../services/requests.js';
 import { createEventPackSource } from '../sources/eventPacks.js';
 import { createInfrastructureSource } from '../sources/infrastructureData.js';
 import {
-  createMilitarySource,
+  createEmptyMilitarySource,
   createVesselSource,
   createFlightSource,
 } from '../sources/live/standalone.js';
@@ -52,7 +52,8 @@ export function createToolServices({ fetchImpl, appUrl, panelKey }) {
     fires: createFirmsSource({ fetchImpl }),
     launches: createLaunchSource({ fetchImpl }),
     aircraft: createFlightSource({ fetchImpl }),
-    military: createMilitarySource({ fetchImpl }),
+    // Swedish fork: military aircraft are not offered.
+    military: createEmptyMilitarySource(),
     vessels: createVesselSource({
       fetchImpl,
       origin: () => new URL(appUrl).origin,

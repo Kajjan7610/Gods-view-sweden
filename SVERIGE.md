@@ -273,9 +273,9 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   2026-11-11 i nivå med OpenSkys (137 mot 139 flygplan runt Malmö, 60 mot
   64 runt Stockholm, 12 mot 12 runt Kiruna). adsb.lol:s data är
   ofiltrerad, men appen tar bort flygplan vars ägare bett om att inte visas
-  (märkta PIA eller LADD), även bland militärflygen; vid kontrollen var det
-  ett eller två per område. Källan anges som "adsb.lol (ODbL 1.0)" under
-  "Datakällor" och ska anges likadant i bilder och filmer.
+  (märkta PIA eller LADD); vid kontrollen var det ett eller två per område.
+  Källan anges som "adsb.lol (ODbL 1.0)" under "Datakällor" och ska anges
+  likadant i bilder och filmer.
 - **AISStream (fartyg, originalets lager):** inga villkor eller licens
   publicerade på aisstream.io (sökt 2026-11-11); tjänsten beskriver sig
   som gratis. Hör till gruppen utan publicerad licens.
@@ -437,8 +437,7 @@ git merge origin/main
   bakåt. `FLIGHTS_SOURCE=opensky` tar tillbaka originalets OpenSky.
   Täckningen över Sverige är kontrollerad genom appens egen proxy.
 - Flygplan vars ägare bett om att inte visas (readsb-märkningen PIA eller
-  LADD) tas bort ur adsb.lol:s svar, både bland flygen runt kartan och
-  bland militärflygen. Svaret anger hur många som togs bort.
+  LADD) tas bort ur adsb.lol:s svar. Svaret anger hur många som togs bort.
 - Datakällor anger adsb.lol för flygen och OpenSky bara när det väljs.
 - AISStreams, NASA FIRMS och Cesium ions villkor är lästa och står under
   "Källor med oklara eller särskilda villkor", liksom att skärmbilder med

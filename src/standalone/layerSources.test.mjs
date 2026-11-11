@@ -49,6 +49,16 @@ test('traffic owns its local OpenFreeMap tiles; installations take none', () => 
   );
 });
 
+test('the military source finds no aircraft and asks nobody', async (t) => {
+  const fetchMock = t.mock.method(globalThis, 'fetch', async () => {
+    throw new Error('no request expected');
+  });
+  const { military } = createStandaloneLayerSources({}, recordingMapTiles());
+  assert.deepEqual((await military.getSnapshot({})).records, []);
+  assert.deepEqual(await military.getIdentities({}), []);
+  assert.equal(fetchMock.mock.callCount(), 0);
+});
+
 test('the installation source finds no sites and asks nobody', async (t) => {
   const fetchMock = t.mock.method(globalThis, 'fetch', async () => {
     throw new Error('no request expected');

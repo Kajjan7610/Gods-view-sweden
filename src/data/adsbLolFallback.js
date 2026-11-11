@@ -93,16 +93,23 @@ export function normalizeAdsbLolAircraftState(aircraft, nowSeconds) {
 /** readsb dbFlags of owners who asked not to be shown: PIA = 4, LADD = 8. */
 export const ADSBLOL_PRIVACY_FLAGS = 4 | 8;
 
-/** adsb.lol aircraft rows without those whose owners asked not to be shown. */
+/** readsb dbFlags of aircraft known to be military. */
+export const ADSBLOL_MILITARY_FLAG = 1;
+
+/**
+ * adsb.lol aircraft rows without those whose owners asked not to be shown
+ * and, in the Swedish fork, without military aircraft.
+ */
 export function visibleAdsbLolAircraft(rows) {
+  const hidden = ADSBLOL_PRIVACY_FLAGS | ADSBLOL_MILITARY_FLAG;
   return (Array.isArray(rows) ? rows : []).filter(
-    (row) => (Number(row?.dbFlags) & ADSBLOL_PRIVACY_FLAGS) === 0,
+    (row) => (Number(row?.dbFlags) & hidden) === 0,
   );
 }
 /**
  * Normalize an adsb.lol point response to an OpenSky-compatible response.
- * Invalid rows, positionless contacts and aircraft whose owners asked not
- * to be shown (PIA, LADD) are intentionally excluded.
+ * Invalid rows, positionless contacts, aircraft whose owners asked not to
+ * be shown (PIA, LADD) and military aircraft are intentionally excluded.
  * @param {object} payload adsb.lol v2 response.
  * @returns {{time:number,states:Array[]}}
  */

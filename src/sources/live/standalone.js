@@ -120,6 +120,30 @@ export function createFlightSource({
   };
 }
 
+/**
+ * The Swedish fork does not offer military aircraft: this source answers
+ * with none and never asks the server. The military layer, the
+ * classification that tints flights, Contacts, Cockpit and the AI tools keep
+ * working and simply find nothing.
+ * @param {{now?: () => number}} [options]
+ */
+export function createEmptyMilitarySource({ now = () => Date.now() } = {}) {
+  return {
+    // i18n-ignore: feed source name, reported to AI tools
+    label: 'Military aircraft',
+    async getIdentities() {
+      return [];
+    },
+    async getSnapshot() {
+      const at = now();
+      return {
+        ...readsbSnapshot({ ac: [] }, { observedAtMs: at, now: at }),
+        status: 200,
+      };
+    },
+  };
+}
+
 export function createMilitarySource({
   fetchImpl = defaultFetch,
   now = () => Date.now(),

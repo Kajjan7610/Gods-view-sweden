@@ -1,7 +1,10 @@
 import { createMilitaryRegistry } from '../layers/aircraft/classification.js';
-import { createMilitarySource } from '../sources/live/standalone.js';
+import { createEmptyMilitarySource } from '../sources/live/standalone.js';
 
-const registry = createMilitaryRegistry({ source: createMilitarySource() });
+// Swedish fork: military aircraft are not offered, so no flight is tinted.
+const registry = createMilitaryRegistry({
+  source: createEmptyMilitarySource(),
+});
 export const isMilitaryLayerActive = registry.isMilitaryLayerActive;
 export const setMilitaryLayerActive = registry.setMilitaryLayerActive;
 export const onMilitaryLayerActiveChange = registry.onMilitaryLayerActiveChange;
