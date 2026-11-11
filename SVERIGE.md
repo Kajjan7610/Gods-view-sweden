@@ -260,10 +260,18 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   skapa eget innehåll och inte tas med i elektroniska eller tryckta
   dokument (3a(vi)). Bilaga B-2 förbjuder också att Googles innehåll
   används tillsammans med eller nära en karta från någon annan än Google
-  (3e). Skärmbilder och filmer med Googles 3D-städer tas därför inte med i
-  dokumentationen; bilderna i README som visade dem är borttagna
-  (2026-11-11). Nya bilder tas i sparläget (`?globe=lite`) på
-  OpenStreetMap-kartan.
+  (3e). Cesiums egen guide för innehåll och källangivelse
+  (cesium.com/learn/ion/content-usage-and-attribution-guide) säger
+  samtidigt att renderingar av ett projekt, till exempel filmer, får
+  publiceras om källangivelserna syns i bilden; länken "Datakällor"
+  räcker inte. Cesiums personal har i forumet (tråd 43302, 2025) svarat
+  att film med Googles 3D-städer går bra om alla källangivelser syns, och
+  Cesiums guide om restider med Googles 3D-städer och Esri uppmanar
+  läsarna att dela resultatet. README visar därför åter bilder med Googles
+  3D-städer, med Cesium-loggan, Google Maps-loggan och källangivelsen
+  synliga. Frågan är också ställd i Cesiums forum (2026-11-11), liksom
+  frågan om kartöverlägg (sjömärken, pister, NASA-bilder, radar) ovanpå
+  Googles 3D-städer; bilderna tas bort igen om svaret blir nej.
 - **OpenStreetMap (kartan OSM):** data under ODbL. Kartbilderna kommer från
   OpenStreetMaps egna servrar, vars regler
   (operations.osmfoundation.org/policies/tiles, lästa 2026-11-11) kräver
@@ -313,6 +321,17 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-11 (README-bilderna tillbaka)
+- Sex av README:s bilder med Googles 3D-städer är tillbaka: Cesiums guide
+  tillåter publicerade renderingar när källangivelserna syns, och det gör
+  de i bilderna. Skälen står under Cesium ion i "Källor med oklara eller
+  särskilda villkor".
+- Tre bilder kommer inte tillbaka: filmen överst visar flygplanens
+  anropssignaler från tiden då flyget kom från OpenSky, vars villkor kräver
+  att de döljs vid publicering; cockpitbilden visar en flygrutt från
+  adsbdb, som inte får publiceras utan tillstånd; bilden på kraftsystemet
+  visar Esris satellitbild, vars villkor inte är lästa.
 
 ### 2026-11-11 (bilder utan Googles 3D-städer; rutter och OSM)
 - README:s kartbilder och film är borttagna: sju visade Googles 3D-städer,

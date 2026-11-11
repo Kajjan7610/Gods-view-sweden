@@ -22,14 +22,24 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 
 ### Det här är tillagt
 
-- **Flygtavlan:** Swedavias tio flygplatser, hela dagens avgångar och ankomster och köerna i säkerhetskontrollen.
-- **Cockpit:** i ett plan över Sverige, med Swedavias rader, flygväder och vädret på marken från SMHI.
-- **Vägkameror i 3D:** drygt 1 500 av Trafikverkets kameror med livebilden placerad i scenen.
-- **Stadsdossier:** en panel för varje ort, med fliken Sevärt från Wikidata, folkmängd från SCB och Kolada, och skatt, inkomst, arbetslöshet och kommunvalet.
-- **Fartkameror:** Trafikverkets cirka 2 800 platser, vridna åt det håll kameran pekar.
-- **Kraftsystemet:** flödena mellan elområdena live från Svenska kraftnät.
-
-> Bilderna som stod här är borttagna: de visade Googles 3D-städer, som enligt villkoren inte får tas med i dokument. Nya bilder tas på OpenStreetMap-kartan.
+<table>
+<tr>
+<td width="50%"><img src="docs/media/sverige/flygtavlan.webp" alt="Arlandas flygtavla med avgångar och köer"><br><b>Flygtavlan</b>: Swedavias tio flygplatser, hela dagens avgångar och ankomster och köerna i säkerhetskontrollen</td>
+<td width="50%"><b>Cockpit</b>: i ett plan över Sverige, med Swedavias rader, flygväder och vädret på marken från SMHI</td>
+</tr>
+<tr>
+<td><img src="docs/media/sverige/vagkameror-3d.webp" alt="Trafikverkets vägkamera med livebilden lagd i 3D-scenen"><br><b>Vägkameror i 3D</b>: drygt 1 500 av Trafikverkets kameror med livebilden placerad i scenen</td>
+<td><img src="docs/media/sverige/stadsdossier-sevart.webp" alt="Stadsdossiern för Uppsala med Uppsala slott utpekat"><br><b>Stadsdossier</b>: en panel för varje ort, här Uppsala med fliken Sevärt från Wikidata</td>
+</tr>
+<tr>
+<td><img src="docs/media/sverige/stadsdossier-befolkning.webp" alt="Göteborgs befolkning med kurva i stadsdossiern"><br><b>Varje stad</b>: folkmängd från SCB och Kolada, här Göteborg</td>
+<td><img src="docs/media/sverige/stadsdossier-val.webp" alt="Malmös skattesats, inkomst och kommunval"><br><b>Varje stad</b>: skatt, inkomst, arbetslöshet och kommunvalet, här Malmö</td>
+</tr>
+<tr>
+<td><img src="docs/media/sverige/fartkameror.webp" alt="Fartkameror som pilar över Stockholm och listan i dossiern"><br><b>Fartkameror</b>: Trafikverkets cirka 2 800 platser, vridna åt det håll kameran pekar</td>
+<td><b>Kraftsystemet</b>: flödena mellan elområdena live från Svenska kraftnät</td>
+</tr>
+</table>
 
 - **Flyg:** följ ett plan i luften från tavlan, dagens rutter på globen, METAR och TAF, och en svensk lägesbild i cockpit.
 - **Varje stad:** panelen STAD för svenska orter med folkmängd, skatt, inkomst, val, läget just nu, tåg från stationen, Sevärt och ett besökspass.

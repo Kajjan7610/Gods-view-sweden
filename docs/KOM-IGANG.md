@@ -75,10 +75,10 @@ adsb.lol (öppna data, ODbL), utan nyckel.
 > nycklar; dela inte dina med andra. Appens kod är fri (MIT-licens), men
 > datan kommer från källorna och deras villkor gäller dig som använder
 > nyckeln. Cesium ions fria konto gäller bara icke-kommersiella
-> personliga projekt. Visar du bilder eller filmer offentligt, ta dem i
-> sparläget (`?globe=lite`): Cesium ions villkor för Googles 3D-städer
-> tillåter inte att de tas med i dokument. Ange källorna som syns, till
-> exempel "adsb.lol (ODbL 1.0)" för flyg. Källa och licens för varje lager
+> personliga projekt. Visar du bilder eller filmer offentligt, låt
+> Cesium-loggan, Google Maps-loggan och källangivelserna synas i bild, och
+> ange källorna, till exempel "adsb.lol (ODbL 1.0)" för flyg. Visa inte
+> flygrutter i bilder och filmer. Källa och licens för varje lager
 > står under **ⓘ** i Datalager och i [SVERIGE.md](../SVERIGE.md).
 
 ## 3. Utforska
