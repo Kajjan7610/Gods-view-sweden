@@ -267,7 +267,9 @@ test('Esri construction fallback reports and attributes the source actually rend
     'Esri Satellite is unavailable; using OSM',
   );
   assert.equal(env.imagery[0].provider, env.providers.get('osm'));
-  assert.equal(env.credits.size, 0);
+  // The OpenStreetMap that took over names its contributors on the map.
+  assert.equal(env.credits.size, 1);
+  assert.match([...env.credits][0].html, /OpenStreetMap contributors/);
   env.controller.destroy();
 });
 
@@ -282,7 +284,9 @@ test('one Esri tile failure stays put, two fall back, and stale errors cannot re
   errorEvent.raise();
   await settle();
   assert.equal(env.controller.getActiveId(), 'osm');
-  assert.equal(env.credits.size, 0);
+  // The OpenStreetMap that took over names its contributors on the map.
+  assert.equal(env.credits.size, 1);
+  assert.match([...env.credits][0].html, /OpenStreetMap contributors/);
   assert.equal(
     env.controller.getState().lastError,
     'Esri Satellite tile requests failed; using OSM',

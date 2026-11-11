@@ -7,6 +7,7 @@ import {
   createEsriImagery,
   createIonImagery,
   ESRI_ATTRIBUTION_HTML,
+  OSM_ATTRIBUTION_HTML,
 } from './imagery.js';
 import { createWorldTerrain, createKeylessTerrain } from './terrain.js';
 
@@ -73,7 +74,9 @@ export function createDefaultMapSources({
                 message: 'Esri Satellite tile requests failed; using OSM',
               },
             }
-          : {}),
+          : descriptor.id === 'osm'
+            ? { credit: OSM_ATTRIBUTION_HTML }
+            : {}),
       };
     }),
   };

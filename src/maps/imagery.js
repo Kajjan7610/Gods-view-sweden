@@ -4,6 +4,13 @@ import * as Cesium from 'cesium';
 export const ESRI_ATTRIBUTION_HTML =
   '<a href="https://www.esri.com" target="_blank" rel="noopener">Powered by Esri</a>';
 
+/**
+ * OpenStreetMap's tile policy wants the licence attribution visible on the
+ * map itself, not behind a toggle (operations.osmfoundation.org/policies/tiles).
+ */
+export const OSM_ATTRIBUTION_HTML =
+  '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>';
+
 export function createOsmImagery() {
   return new Cesium.OpenStreetMapImageryProvider({
     url: 'https://tile.openstreetmap.org/',

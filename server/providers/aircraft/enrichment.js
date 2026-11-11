@@ -2,6 +2,20 @@ import path from 'node:path';
 import { promises as fsp } from 'node:fs';
 import { readResponseJsonCapped } from '../common/http.js';
 
+/**
+ * Whether adsbdb's flight routes may be read. Its route data "may not be
+ * copied, published, or incorporated into other databases without the
+ * explicit permission of David J Taylor, Edinburgh" (adsbdb.com), so the
+ * Swedish version leaves routes out unless ADSBDB_ROUTES=on.
+ */
+export function adsbdbRoutesAllowed(env = process.env) {
+  return (
+    String(env.ADSBDB_ROUTES ?? '')
+      .trim()
+      .toLowerCase() === 'on'
+  );
+}
+
 /** Route and aircraft lookups are a few hundred bytes; 1 MiB is a hard bound. */
 const ADSBDB_MAX_RESPONSE_BYTES = 1024 * 1024;
 /**
@@ -28,6 +42,15 @@ export function adsbdbProxy() {
       cache = { routes: parsed.routes ?? {}, aircraft: parsed.aircraft ?? {} };
     } catch {
       /* first run */
+    }
+    // Routes kept from before are deleted from disk, not just hidden.
+    if (!adsbdbRoutesAllowed() && Object.keys(cache.routes).length) {
+      cache.routes = {};
+      try {
+        await fsp.writeFile(CACHE_PATH, JSON.stringify(cache), 'utf8');
+      } catch {
+        dirty = true;
+      }
     }
     setInterval(async () => {
       if (!dirty) return;
@@ -131,6 +154,7 @@ export function adsbdbProxy() {
           const cs = String(rawKey || '').toUpperCase();
           if (!/^[A-Z0-9]{2,8}$/.test(cs))
             return send(400, { error: 'invalid callsign' });
+          if (!adsbdbRoutesAllowed()) return send(200, { found: false });
           const data = await lookup('route', cs);
           return send(200, data ? { found: true, ...data } : { found: false });
         }

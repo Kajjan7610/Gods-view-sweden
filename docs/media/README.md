@@ -43,15 +43,6 @@ The authorization covers the PNGs as project promotional material. It does not c
 
 Kaj Obst captured the following files from God's Eye View Sverige (this fork) in November 2026 for its README:
 
-- `sverige/sverige-hero.gif`
 - `sverige/kallor.webp`
-- `sverige/flygtavlan.webp`
-- `sverige/cockpit.webp`
-- `sverige/vagkameror-3d.webp`
-- `sverige/stadsdossier-sevart.webp`
-- `sverige/stadsdossier-befolkning.webp`
-- `sverige/stadsdossier-val.webp`
-- `sverige/fartkameror.webp`
-- `sverige/kraftsystemet.webp`
 
-They are included as project documentation for this repository and are not covered by the project's MIT License. They show Google Photorealistic 3D Tiles and live public data layers (Trafikverket, Swedavia, SMHI, SCB, Kolada, Valmyndigheten, Wikidata, Svenska kraftnät and others) with the in-app attribution visible in frame; those elements remain subject to Google Maps Platform's and each data provider's terms. Keep the visible attribution intact. `kallor.webp` is a title card from the fork's promotional film.
+It is included as project documentation for this repository and is not covered by the project's MIT License. `kallor.webp` is a title card from the fork's promotional film. The fork's earlier map captures were removed on 2026-11-11: they showed Google Photorealistic 3D Tiles, which the Cesium ion terms for Google content (Appendix B-2, 3a(vi)) do not allow in documents.

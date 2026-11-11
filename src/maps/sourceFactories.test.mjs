@@ -327,3 +327,13 @@ test('unreachable keyless terrain falls back to flat terrain marked as a fallbac
   assert.ok(result.provider instanceof Cesium.EllipsoidTerrainProvider);
   assert.equal(result.fallback, true);
 });
+
+test('the OpenStreetMap map names its contributors on the map itself', () => {
+  const osm = createDefaultMapSources().sources.find(
+    ({ descriptor }) => descriptor.id === 'osm',
+  );
+  // The controller shows a source's credit on screen (credits.js), so the
+  // licence is never only behind Datakällor.
+  assert.match(osm.credit, /© OpenStreetMap contributors/);
+  assert.ok(osm.credit.includes('https://www.openstreetmap.org/copyright'));
+});

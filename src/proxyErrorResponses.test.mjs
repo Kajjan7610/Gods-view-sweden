@@ -31,6 +31,8 @@ function fixture(name, overrides = {}, preview = false) {
     // terrain.js gates cross-site requests first; fixture requests carry no
     // browser headers, so admit them like a loopback tool.
     admitSameSiteKeyless: () => false,
+    // enrichment.js reads its route switch from a helper beside the plugin.
+    adsbdbRoutesAllowed: () => false,
     path, process: { cwd: () => '/fixture', env: {} },
     fsp: {
       readFile: async () => { throw new Error('cache absent'); },

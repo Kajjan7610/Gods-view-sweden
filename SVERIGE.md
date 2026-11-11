@@ -260,9 +260,16 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   skapa eget innehåll och inte tas med i elektroniska eller tryckta
   dokument (3a(vi)). Bilaga B-2 förbjuder också att Googles innehåll
   används tillsammans med eller nära en karta från någon annan än Google
-  (3e). Skärmbilder och filmer med Googles 3D-städer, även bilderna i
-  README, är därför tveksamma; säkrast är att ta dem i sparläget
-  (`?globe=lite`), utan Googles 3D-städer.
+  (3e). Skärmbilder och filmer med Googles 3D-städer tas därför inte med i
+  dokumentationen; bilderna i README som visade dem är borttagna
+  (2026-11-11). Nya bilder tas i sparläget (`?globe=lite`) på
+  OpenStreetMap-kartan.
+- **OpenStreetMap (kartan OSM):** data under ODbL. Kartbilderna kommer från
+  OpenStreetMaps egna servrar, vars regler
+  (operations.osmfoundation.org/policies/tiles, lästa 2026-11-11) kräver
+  att källangivelsen syns på kartan, inte bakom en knapp, och förbjuder
+  att kartbilder laddas ner i förväg eller i mängd. Appen visar "©
+  OpenStreetMap contributors" på kartan när OSM är valt.
 
 ## Nycklar (`.env`, checkas aldrig in)
 
@@ -273,6 +280,7 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 | `TRAFIKLAB_GTFS_STATIC_KEY` | linjenummer och fordonstyp | trafiklab.se → GTFS Regional Static |
 | `SWEDAVIA_FLIGHTINFO_KEY` | avgångar och ankomster i dossiern, tavlan och cockpit | apideveloper.swedavia.se → FlightInfo Free |
 | `SWEDAVIA_WAITTIME_KEY` | köerna i säkerhetskontrollen | apideveloper.swedavia.se → WaitTime Free |
+| `ADSBDB_ROUTES` | `on`: flygrutter från adsbdb, vars ruttdata inte får publiceras utan David J Taylors tillstånd; tom (standard): inga rutter | ingen nyckel |
 | `FLIGHTS_SOURCE` | tom (standard): flyg från adsb.lol (ODbL) runt kartans mitt, OpenSky frågas aldrig; `opensky`: originalets OpenSky, som kräver deras skriftliga tillstånd | ingen nyckel |
 | `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` | flyg med större kvot än utan konto (originalets lager; OpenSkys villkor kräver skriftligt tillstånd för användning i en app som denna, se "Källor med oklara eller särskilda villkor") | opensky-network.org → konto → API client (under KOPPLA PÅ) |
 | `ENTSOE_SECURITY_TOKEN` | kraftsystemet från ENTSO-E i stället för Svenska kraftnäts kontrollrum; används bara med `POWER_GRID_SOURCE=entsoe` | transparency.entsoe.eu → registrera, mejla transparency@entsoe.eu "RESTful API access", sedan My Account → Generate token |
@@ -305,6 +313,20 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-11 (bilder utan Googles 3D-städer; rutter och OSM)
+- README:s kartbilder och film är borttagna: sju visade Googles 3D-städer,
+  som Cesium ions villkor för Googles innehåll inte tillåter i dokument,
+  och en Esris satellitbild, vars villkor inte är lästa. Bilden med
+  källorna är kvar. Nya bilder tas på OpenStreetMap-kartan.
+- adsbdb:s flygrutter läses inte längre: ruttdatan får enligt adsbdb.com
+  inte kopieras, publiceras eller läggas i andra databaser utan David J
+  Taylors tillstånd. Rutter som sparats på disk tidigare raderas.
+  `ADSBDB_ROUTES=on` tar tillbaka dem. Flygplanstyp och registrering
+  läses som förut.
+- OpenStreetMap-kartan visar "© OpenStreetMap contributors" på själva
+  kartan, som OpenStreetMaps regler kräver; tidigare stod det bara under
+  Datakällor.
 
 ### 2026-11-11 (öppna data först; flyg från adsb.lol)
 - Ny inledande princip: källorna delas in i öppna data, offentliga utan

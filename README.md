@@ -6,8 +6,6 @@
 
 📣 [Läs om bygget på LinkedIn](https://www.linkedin.com/posts/kaj-obst_aemppnadata-opendata-gis-ugcPost-7524923240801181696-Kv62/)
 
-![God's Eye View Sverige: titeln över Bottenviken med flyget live](docs/media/sverige/sverige-hero.gif)
-
 </div>
 
 Ett digitalt jordklot med hela världen live: flyg, satelliter, fartyg, jordbävningar och bränder från över 110 datakällor. Ovanpå det ligger Sveriges öppna data: **21 svenska API:er och 30 datatyper från 14 myndigheter och tjänster**, med hela gränssnittet på svenska.
@@ -24,24 +22,14 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 
 ### Det här är tillagt
 
-<table>
-<tr>
-<td width="50%"><img src="docs/media/sverige/flygtavlan.webp" alt="Arlandas flygtavla med avgångar och köer"><br><b>Flygtavlan</b>: Swedavias tio flygplatser, hela dagens avgångar och ankomster och köerna i säkerhetskontrollen</td>
-<td width="50%"><img src="docs/media/sverige/cockpit.webp" alt="Cockpit i ett plan på 36 000 fot över Värmland"><br><b>Cockpit</b>: i ett plan över Sverige, med Swedavias rader, flygväder och vädret på marken från SMHI</td>
-</tr>
-<tr>
-<td><img src="docs/media/sverige/vagkameror-3d.webp" alt="Trafikverkets vägkamera med livebilden lagd i 3D-scenen"><br><b>Vägkameror i 3D</b>: drygt 1 500 av Trafikverkets kameror med livebilden placerad i scenen</td>
-<td><img src="docs/media/sverige/stadsdossier-sevart.webp" alt="Stadsdossiern för Uppsala med Uppsala slott utpekat"><br><b>Stadsdossier</b>: en panel för varje ort, här Uppsala med fliken Sevärt från Wikidata</td>
-</tr>
-<tr>
-<td><img src="docs/media/sverige/stadsdossier-befolkning.webp" alt="Göteborgs befolkning med kurva i stadsdossiern"><br><b>Varje stad</b>: folkmängd från SCB och Kolada, här Göteborg</td>
-<td><img src="docs/media/sverige/stadsdossier-val.webp" alt="Malmös skattesats, inkomst och kommunval"><br><b>Varje stad</b>: skatt, inkomst, arbetslöshet och kommunvalet, här Malmö</td>
-</tr>
-<tr>
-<td><img src="docs/media/sverige/fartkameror.webp" alt="Fartkameror som pilar över Stockholm och listan i dossiern"><br><b>Fartkameror</b>: Trafikverkets cirka 2 800 platser, vridna åt det håll kameran pekar</td>
-<td><img src="docs/media/sverige/kraftsystemet.webp" alt="Pilar för elflödet mellan elområdena SE1–SE4 och grannländerna"><br><b>Kraftsystemet</b>: flödena mellan elområdena live från Svenska kraftnät</td>
-</tr>
-</table>
+- **Flygtavlan:** Swedavias tio flygplatser, hela dagens avgångar och ankomster och köerna i säkerhetskontrollen.
+- **Cockpit:** i ett plan över Sverige, med Swedavias rader, flygväder och vädret på marken från SMHI.
+- **Vägkameror i 3D:** drygt 1 500 av Trafikverkets kameror med livebilden placerad i scenen.
+- **Stadsdossier:** en panel för varje ort, med fliken Sevärt från Wikidata, folkmängd från SCB och Kolada, och skatt, inkomst, arbetslöshet och kommunvalet.
+- **Fartkameror:** Trafikverkets cirka 2 800 platser, vridna åt det håll kameran pekar.
+- **Kraftsystemet:** flödena mellan elområdena live från Svenska kraftnät.
+
+> Bilderna som stod här är borttagna: de visade Googles 3D-städer, som enligt villkoren inte får tas med i dokument. Nya bilder tas på OpenStreetMap-kartan.
 
 - **Flyg:** följ ett plan i luften från tavlan, dagens rutter på globen, METAR och TAF, och en svensk lägesbild i cockpit.
 - **Varje stad:** panelen STAD för svenska orter med folkmängd, skatt, inkomst, val, läget just nu, tåg från stationen, Sevärt och ett besökspass.
