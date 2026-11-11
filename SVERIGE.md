@@ -322,6 +322,13 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-11 (tre README-bilder tagna om)
+- Titelfilmen, cockpitbilden och bilden på kraftsystemet är tagna om i
+  3D-läget med Googles 3D-städer, med Cesium-loggan, Google Maps-loggan
+  och källangivelsen synliga. Flyget kommer från adsb.lol (ODbL), flygplan
+  vars ägare bett om att inte visas är bortfiltrerade, och ingen flygrutt
+  från adsb.lol eller adsbdb syns.
+
 ### 2026-11-11 (README-bilderna tillbaka)
 - Sex av README:s bilder med Googles 3D-städer är tillbaka: Cesiums guide
   tillåter publicerade renderingar när källangivelserna syns, och det gör

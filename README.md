@@ -6,6 +6,8 @@
 
 📣 [Läs om bygget på LinkedIn](https://www.linkedin.com/posts/kaj-obst_aemppnadata-opendata-gis-ugcPost-7524923240801181696-Kv62/)
 
+![God's Eye View Sverige: titeln över Sverige med flyget live](docs/media/sverige/sverige-hero.gif)
+
 </div>
 
 Ett digitalt jordklot med hela världen live: flyg, satelliter, fartyg, jordbävningar och bränder från över 110 datakällor. Ovanpå det ligger Sveriges öppna data: **21 svenska API:er och 30 datatyper från 14 myndigheter och tjänster**, med hela gränssnittet på svenska.
@@ -25,7 +27,7 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 <table>
 <tr>
 <td width="50%"><img src="docs/media/sverige/flygtavlan.webp" alt="Arlandas flygtavla med avgångar och köer"><br><b>Flygtavlan</b>: Swedavias tio flygplatser, hela dagens avgångar och ankomster och köerna i säkerhetskontrollen</td>
-<td width="50%"><b>Cockpit</b>: i ett plan över Sverige, med Swedavias rader, flygväder och vädret på marken från SMHI</td>
+<td width="50%"><img src="docs/media/sverige/cockpit.webp" alt="Cockpit i ett plan på 39 000 fot över Härjedalen"><br><b>Cockpit</b>: i ett plan över Sverige, med Swedavias rader, flygväder och vädret på marken från SMHI</td>
 </tr>
 <tr>
 <td><img src="docs/media/sverige/vagkameror-3d.webp" alt="Trafikverkets vägkamera med livebilden lagd i 3D-scenen"><br><b>Vägkameror i 3D</b>: drygt 1 500 av Trafikverkets kameror med livebilden placerad i scenen</td>
@@ -37,7 +39,7 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 </tr>
 <tr>
 <td><img src="docs/media/sverige/fartkameror.webp" alt="Fartkameror som pilar över Stockholm och listan i dossiern"><br><b>Fartkameror</b>: Trafikverkets cirka 2 800 platser, vridna åt det håll kameran pekar</td>
-<td><b>Kraftsystemet</b>: flödena mellan elområdena live från Svenska kraftnät</td>
+<td><img src="docs/media/sverige/kraftsystemet.webp" alt="Pilar för elflödet mellan elområdena SE1–SE4 och grannländerna"><br><b>Kraftsystemet</b>: flödena mellan elområdena live från Svenska kraftnät</td>
 </tr>
 </table>
 
