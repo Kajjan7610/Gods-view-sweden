@@ -170,6 +170,7 @@ watch(
               </button>
               <div v-if="item.chosen && (item.image || item.article)" class="city-dossier-sight-more">
                 <img v-if="item.image" :src="item.image" alt="" loading="lazy" referrerpolicy="no-referrer" />
+                <a v-if="item.imageCredit" class="city-dossier-note" :href="item.imageCredit" target="_blank" rel="noopener noreferrer">{{ t('Photo: Wikimedia Commons') }}</a>
                 <a v-if="item.article" :href="item.article" target="_blank" rel="noopener noreferrer">{{ t('Read on Wikipedia') }}</a>
               </div>
             </li>

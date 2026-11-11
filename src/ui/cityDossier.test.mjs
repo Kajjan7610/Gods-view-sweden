@@ -65,6 +65,7 @@ function harness(t, { stamps = {} } = {}) {
     orbits: [],
     stops: 0,
     listeners: new Map(),
+    bodies: {},
   };
   const viewer = {
     scene: {
@@ -108,13 +109,15 @@ function harness(t, { stamps = {} } = {}) {
       const path = route(url);
       if (state.down.has(path)) return { ok: false, status: 503 };
       const body =
-        path === '/api/city-dossier'
-          ? { city: state.town, town: { population: 10807 } }
-          : path === '/api/air-quality-se'
-            ? { stations: [] }
-            : path === '/api/polisen-events'
-              ? { events: [] }
-              : {};
+        path in state.bodies
+          ? state.bodies[path]
+          : path === '/api/city-dossier'
+            ? { city: state.town, town: { population: 10807 } }
+            : path === '/api/air-quality-se'
+              ? { stations: [] }
+              : path === '/api/polisen-events'
+                ? { events: [] }
+                : {};
       return { ok: true, status: 200, json: async () => body };
     },
     now: () => state.now,
@@ -382,4 +385,42 @@ test('an image names its Wikimedia Commons page, where author and licence stand'
   );
   assert.equal(commonsPage('https://example.com/a.jpg'), null);
   assert.equal(commonsPage(null), null);
+});
+
+test('a transport source that failed is not shown as an empty one', async (t) => {
+  const { state, visit } = harness(t);
+  state.panelOpen = true;
+  // The route answered, but TomTom, Trafikverket and Swedavia behind it did
+  // not.
+  state.bodies['/api/city-transit'] = {
+    trains: { station: null, departures: [], error: true },
+    jams: { items: [], error: true },
+    flights: { airports: [], error: true },
+  };
+  await visit(TOWNS.arboga);
+  state.actions.setTab('now');
+  await settle();
+  assert.equal(state.view.now.jams, null, 'not "no queues right now"');
+  assert.equal(state.view.now.failed, 'No answer from: Traffic');
+  // Asked again after a minute; answered and empty is said as such.
+  state.bodies['/api/city-transit'] = {
+    trains: null,
+    jams: { items: [] },
+    flights: null,
+  };
+  state.now += 61_000;
+  await visit(TOWNS.arboga);
+  assert.equal(state.view.now.jams.empty, 'No queues right now');
+  assert.equal(state.view.now.failed, '');
+});
+
+test("a sight's picture names its Wikimedia Commons page too", async () => {
+  const { commonsPage } = await import('./cityDossier.js');
+  // Wikidata names a picture by its file path, over plain http.
+  assert.equal(
+    commonsPage(
+      'http://commons.wikimedia.org/wiki/Special:FilePath/Arboga%20kyrka.jpg',
+    ),
+    'https://commons.wikimedia.org/wiki/File:Arboga%20kyrka.jpg',
+  );
 });

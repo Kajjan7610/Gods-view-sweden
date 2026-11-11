@@ -226,6 +226,13 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-11 (stadsdossierns panel: rättningar efter kodgranskning)
+- En transportkälla som inte svarade visas inte som tom: när TomTom inte
+  svarar står det inte längre "Inga köer just nu", utan trafiken nämns bland
+  det som saknar svar, och ett nytt försök görs efter en minut.
+- En vald sevärdhets bild länkar till sin sida på Wikimedia Commons, där
+  upphovsperson och licens står.
+
 ### 2026-11-11 (flygplatsköer och VMA-banner: rättningar efter kodgranskning)
 - Kötiderna i säkerhetskontrollen hämtas bara när flygplatsens terminaler
   ryms i bild. Förut räckte det att vyn låg inom 20 km från en flygplats,

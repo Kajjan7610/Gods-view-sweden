@@ -372,7 +372,8 @@ export function createCityDossier({
     if (current()) {
       liveRequest = null;
       // A part without an answer is worth asking for again soon.
-      if (live.failed.length) liveAt = now() - LIVE_TTL_MS + LIVE_RETRY_MS;
+      if (LIVE_PARTS.some(([field]) => partFailed(field)))
+        liveAt = now() - LIVE_TTL_MS + LIVE_RETRY_MS;
     }
   }
 
@@ -670,6 +671,7 @@ export function createCityDossier({
           distance: t('{km} km', { km: oneDecimal(sight.km) }),
           chosen,
           article: chosen ? sight.article : null,
+          imageCredit: chosen ? commonsPage(sight.image) : null,
           // Commons' own thumbnail of the chosen sight's picture.
           image: chosen && sight.image ? `${sight.image}?width=320` : null,
         };
@@ -921,13 +923,26 @@ export function createCityDossier({
     };
   }
 
+  /**
+   * Whether a part of the live picture gave no answer: its request failed,
+   * or (transport) one of the sources behind it did.
+   */
+  const partFailed = (field) =>
+    Boolean(live?.failed?.includes(field)) ||
+    (field === 'transit' &&
+      [live?.transit?.trains, live?.transit?.jams, live?.transit?.flights].some(
+        (part) => part?.error === true,
+      ));
+
   /** "No answer from: Polisen, Traffic", or '' when every part answered. */
   function failedLine() {
-    if (!live?.failed?.length) return '';
-    const sources = LIVE_PARTS.filter(([field]) =>
-      live.failed.includes(field),
-    ).map(([, label, plain]) => (label ? t(label) : plain));
-    return t('No answer from: {sources}', { sources: sources.join(', ') });
+    if (!live) return '';
+    const sources = LIVE_PARTS.filter(([field]) => partFailed(field)).map(
+      ([, label, plain]) => (label ? t(label) : plain),
+    );
+    return sources.length
+      ? t('No answer from: {sources}', { sources: sources.join(', ') })
+      : '';
   }
 
   function nowView() {
@@ -1281,7 +1296,8 @@ export function createCityDossier({
 
   /** TomTom's jams around the town; null without the TomTom key. */
   function jamsView(jams) {
-    if (!jams) return null;
+    // A read that failed is no answer, not a road without queues.
+    if (!jams || jams.error) return null;
     return {
       empty: jams.items.length ? '' : t('No queues right now'),
       items: jams.items.map((row, index) => ({
