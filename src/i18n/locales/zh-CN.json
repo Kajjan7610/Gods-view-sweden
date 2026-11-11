@@ -3234,6 +3234,8 @@
   "Colour stations by water level against mean water": "按相对平均水位的水位为站点着色",
   "Write the value beside the stations that stand out most": "在最突出的站点旁显示数值",
   "Dots are Sjöfartsverket’s ViVa stations along the coast, lakes and canals. Grey dots do not measure what is shown. Click a station for wind, water level, temperatures and waves.": "圆点是 Sjöfartsverket 位于海岸、湖泊和运河的 ViVa 站点。灰色圆点不测量所显示的项目。点击站点查看风、水位、温度和波浪。",
+  "Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.": "圆点为 SMHI 沿岸的海洋观测站。灰色圆点不测量所显示的项目。点击站点可查看水位、水温和波浪。",
+  "Sjöfartsverket ViVa: no published licence; SMHI (SEA_WEATHER_SOURCE=smhi): CC BY 4.0": "Sjöfartsverket ViVa：未公布许可；SMHI（SEA_WEATHER_SOURCE=smhi）：CC BY 4.0",
   "Malformed sea weather snapshot": "海上天气快照格式错误",
   "Sea Weather (Sweden)": "海上天气（瑞典）",
   "Aurora forecast unavailable": "极光预报不可用",

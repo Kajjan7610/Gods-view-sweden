@@ -1,5 +1,7 @@
 import {
   SEA_SAMPLE_MAX_AGE_MS,
+  SMHI_SEA_PARAMETERS,
+  mergeSmhiSea,
   normalizeSeaStation,
 } from '../../src/layers/seaWeather/records.js';
 import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
@@ -10,6 +12,17 @@ import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 // and only while the layer asks. The station list itself changes rarely.
 export const VIVA_URL =
   'https://services.viva.sjofartsverket.se:8080/output/vivaoutputservice.svc/vivastation/';
+// SMHI's ocean observations (CC BY 4.0, no key) instead, with
+// SEA_WEATHER_SOURCE=smhi: one file per parameter holds every station's
+// last day, so a refresh is three requests.
+export const SMHI_SEA_URL = (parameter) =>
+  `https://opendata-download-ocobs.smhi.se/api/version/1.0/parameter/${parameter}/station-set/all/period/latest-day/data.json`;
+
+/** True when the sea weather comes from SMHI rather than ViVa. */
+export const seaWeatherFromSmhi = (env = process.env) =>
+  String(env.SEA_WEATHER_SOURCE ?? '')
+    .trim()
+    .toLowerCase() === 'smhi';
 const TTL_MS = 10 * 60_000;
 /**
  * How long ViVa is left alone after a refresh failed. Longer than elsewhere:
@@ -28,7 +41,9 @@ const MAX_STATIONS = 400;
 export function seaWeatherProxy({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
+  env = process.env,
 } = {}) {
+  const fromSmhi = seaWeatherFromSmhi(env);
   let cached = null;
   let stationList = null;
   let retryAfter = 0;
@@ -54,10 +69,32 @@ export function seaWeatherProxy({
     return readResponseJsonCapped(response, MAX_BODY_BYTES);
   }
 
+  /** SMHI's three files; the level's is the one that must answer. */
+  async function loadSmhi(signal) {
+    const entries = Object.entries(SMHI_SEA_PARAMETERS);
+    const answers = await Promise.allSettled(
+      entries.map(([, parameter]) => getJson(SMHI_SEA_URL(parameter), signal)),
+    );
+    if (answers[0].status === 'rejected') throw answers[0].reason;
+    const byField = {};
+    entries.forEach(([field], index) => {
+      if (answers[index].status === 'fulfilled')
+        byField[field] = answers[index].value;
+      else
+        console.warn(
+          `[sea-weather] SMHI ${field} failed: ${answers[index].reason?.message}`,
+        );
+    });
+    const stations = mergeSmhiSea(byField, now());
+    if (!stations.length) throw new Error('no SMHI ocean station answered');
+    return { stations, failed: 0, source: 'smhi', fetchedAt: now() };
+  }
+
   async function load() {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
+      if (fromSmhi) return await loadSmhi(controller.signal);
       if (!stationList || now() - stationList.at > STATIONS_TTL_MS) {
         const body = await getJson(VIVA_URL, controller.signal);
         const list = body?.GetStationsResult?.Stations;
@@ -119,7 +156,7 @@ export function seaWeatherProxy({
       cached = { value, savedAt: now() };
       retryAfter = 0;
       console.log(
-        `[sea-weather] ${value.stations.length} stations${value.failed ? `, ${value.failed} did not answer` : ''}`,
+        `[sea-weather] ${value.stations.length} ${fromSmhi ? 'SMHI ' : ''}stations${value.failed ? `, ${value.failed} did not answer` : ''}`,
       );
       return value;
     } catch (error) {

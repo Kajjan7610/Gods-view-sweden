@@ -480,7 +480,8 @@ export const DATA_CREDITS = [
     key: 'sea-weather',
     html:
       'Sea weather (Sweden): ' +
-      '<a href="https://viva.sjofartsverket.se/" target="_blank" rel="noopener">Sjöfartsverket ViVa</a>',
+      '<a href="https://viva.sjofartsverket.se/" target="_blank" rel="noopener">Sjöfartsverket ViVa</a>; with SEA_WEATHER_SOURCE=smhi ' +
+      '<a href="https://www.smhi.se/data/hav-och-havsmiljo" target="_blank" rel="noopener">SMHI</a> ocean observations (CC BY 4.0)',
   },
   {
     key: 'company-stores',

@@ -3384,6 +3384,8 @@
   "Colour stations by water level against mean water": "Colorer les stations selon le niveau d’eau par rapport au niveau moyen",
   "Write the value beside the stations that stand out most": "Écrire la valeur à côté des stations qui se distinguent le plus",
   "Dots are Sjöfartsverket’s ViVa stations along the coast, lakes and canals. Grey dots do not measure what is shown. Click a station for wind, water level, temperatures and waves.": "Les points sont les stations ViVa de Sjöfartsverket le long des côtes, des lacs et des canaux. Les points gris ne mesurent pas ce qui est affiché. Cliquez sur une station pour le vent, le niveau d’eau, les températures et les vagues.",
+  "Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.": "Les points sont les stations océanographiques du SMHI le long de la côte. Les points gris ne mesurent pas ce qui est affiché. Cliquez sur une station pour le niveau de l’eau, la température de l’eau et les vagues.",
+  "Sjöfartsverket ViVa: no published licence; SMHI (SEA_WEATHER_SOURCE=smhi): CC BY 4.0": "Sjöfartsverket ViVa : aucune licence publiée ; SMHI (SEA_WEATHER_SOURCE=smhi) : CC BY 4.0",
   "Malformed sea weather snapshot": "Instantané météo marine mal formé",
   "Sea Weather (Sweden)": "Météo marine (Suède)",
   "Aurora forecast unavailable": "Prévision d’aurores indisponible",

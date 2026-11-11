@@ -7,6 +7,10 @@
  * SMHI's and ports' — and answers one station at a time with its latest
  * samples: mean wind and gusts, water level against mean water, water and
  * air temperature, waves, visibility and more, stamped in Swedish local time.
+ *
+ * SMHI's ocean observations (open data, CC BY 4.0, no key) are the open
+ * alternative: three files, each with every station's last day, give the
+ * water level, the water temperature and the waves. They measure no wind.
  */
 
 /** Mean-wind classes in m/s, calmest first (Swedish sea-forecast steps). */
@@ -28,6 +32,17 @@ export const LEVEL_CLASSES = Object.freeze([
 export const NO_VALUE_COLOR = '#9e9e9e';
 /** A sample older than this is no longer the weather at the station. */
 export const SEA_SAMPLE_MAX_AGE_MS = 3 * 60 * 60_000;
+
+/**
+ * SMHI ocean observation parameters per row field. The level is against the
+ * year's mean water (parameter 12), the zero ViVa calls MVY; parameter 6 is
+ * in RH 2000 and is not read.
+ */
+export const SMHI_SEA_PARAMETERS = Object.freeze({
+  level: 12,
+  waterTemp: 5,
+  waveHeight: 1,
+});
 
 /** ViVa's name for mean water (medelvattenyta), the zero the classes assume. */
 export const isMeanWater = (reference) =>
@@ -91,6 +106,63 @@ export function stockholmTime(value) {
     get('second'),
   );
   return asUtc - (shown - asUtc);
+}
+
+/**
+ * Merge SMHI's per-parameter answers into one row per station, shaped like
+ * a ViVa row. Old, empty or out-of-area readings drop.
+ * @param {{[field: string]: object}} answers row field → ocobs JSON
+ * @param {number} nowMs
+ * @returns {object[]}
+ */
+export function mergeSmhiSea(answers, nowMs) {
+  const byKey = new Map();
+  for (const [field, answer] of Object.entries(answers || {})) {
+    for (const station of Array.isArray(answer?.station)
+      ? answer.station
+      : []) {
+      const lat = Number(station?.latitude);
+      const lon = Number(station?.longitude);
+      if (
+        station?.key == null ||
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lon)
+      )
+        continue;
+      if (lat < 54 || lat > 70 || lon < 9 || lon > 25) continue;
+      // The newest sample with a value: the day's file can end in an empty one.
+      const reading = (s) =>
+        s?.value == null || s.value === '' ? NaN : Number(s.value);
+      const samples = Array.isArray(station.value) ? station.value : [];
+      const sample = samples.findLast((s) => Number.isFinite(reading(s)));
+      const value = reading(sample);
+      const at = Number(sample?.date);
+      if (!Number.isFinite(value) || !Number.isFinite(at)) continue;
+      if (nowMs - at > SEA_SAMPLE_MAX_AGE_MS) continue;
+      const key = String(station.key).slice(0, 12);
+      const row = byKey.get(key) || {
+        id: `smhi:${key}`,
+        source: 'smhi',
+        name: text(station.name, 80) || key,
+        point: [Math.round(lon * 1e5) / 1e5, Math.round(lat * 1e5) / 1e5],
+        meanWind: null,
+        gust: null,
+        windHeading: null,
+        level: null,
+        levelReference: null,
+        waterTemp: null,
+        airTemp: null,
+        waveHeight: null,
+        visibility: null,
+        updated: null,
+      };
+      row[field] = value;
+      if (field === 'level') row.levelReference = 'MVY';
+      if (!row.updated || at > row.updated) row.updated = at;
+      byKey.set(key, row);
+    }
+  }
+  return [...byKey.values()].sort((a, b) => a.name.localeCompare(b.name, 'sv'));
 }
 
 const text = (value, max) => {

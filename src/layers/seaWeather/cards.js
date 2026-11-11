@@ -1,4 +1,4 @@
-/** Card model for a selected ViVa station. Pure — no Cesium types. */
+/** Card model for a selected ViVa or SMHI station. Pure — no Cesium types. */
 import { formatNumber, t } from '../../i18n/index.js';
 import { measuredWhen } from '../measuredWhen.js';
 import { formatCelsius } from '../roadWeather/cards.js';
@@ -91,12 +91,19 @@ export function buildSeaCard(row, { mode = 'wind', nowMs = Date.now() } = {}) {
     details.push(
       t('Wave height {height} m', { height: oneDecimal(row.waveHeight) }),
     );
+  const smhi = row.source === 'smhi';
   details.push(
     Number.isFinite(row.updated)
-      ? t('Measured {time} · Sjöfartsverket ViVa', {
-          time: measuredWhen(row.updated, nowMs),
-        })
-      : 'Sjöfartsverket ViVa',
+      ? smhi
+        ? t('Measured {time} · SMHI', {
+            time: measuredWhen(row.updated, nowMs),
+          })
+        : t('Measured {time} · Sjöfartsverket ViVa', {
+            time: measuredWhen(row.updated, nowMs),
+          })
+      : smhi
+        ? 'SMHI'
+        : 'Sjöfartsverket ViVa',
   );
   return {
     ...CARD_BASE,

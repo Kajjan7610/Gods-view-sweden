@@ -4,7 +4,7 @@ import { readResponseJsonCapped } from '../../sources/httpBody.js';
 // the Layers panel shows them translated.
 const msg = (text) => text;
 
-/** Request ViVa sea weather stations through the same-origin proxy. */
+/** Request sea weather stations (ViVa, or SMHI) through the same-origin proxy. */
 export function createSeaWeatherSource({
   fetchImpl = (...args) => globalThis.fetch(...args),
 } = {}) {
@@ -37,6 +37,8 @@ export function createSeaWeatherSource({
         throw new Error(msg('Malformed sea weather snapshot'));
       return {
         stations: payload.stations,
+        // Only an answer from SMHI says so; ViVa's carry no source.
+        ...(payload.source === 'smhi' ? { source: 'smhi' } : {}),
         stale: payload.stale === true,
         fetchedAt: Number.isFinite(payload.fetchedAt)
           ? payload.fetchedAt

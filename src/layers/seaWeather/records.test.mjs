@@ -7,6 +7,7 @@ import {
   WIND_CLASSES,
   classOf,
   meanWaterLevel,
+  mergeSmhiSea,
   normalizeSeaStation,
   sampleNumber,
   stockholmTime,
@@ -205,5 +206,84 @@ test('the card dates a reading that is not from today', () => {
   assert.equal(
     buildSeaCard(row, { nowMs: NOW + 2 * 3_600_000 }).details.at(-1),
     'Measured 2026-11-04 22:46 · Sjöfartsverket ViVa',
+  );
+});
+
+test("SMHI's ocean files merge into ViVa-shaped rows against mean water", () => {
+  const at = NOW - 70 * 60_000;
+  const smhiStation = (key, name, values, lat = 57.43, lon = 11.94) => ({
+    key,
+    name,
+    latitude: lat,
+    longitude: lon,
+    value: values,
+  });
+  const rows = mergeSmhiSea(
+    {
+      level: {
+        station: [
+          // The day's file can end in an empty sample: the newest value counts.
+          smhiStation('2111', 'Onsala', [
+            { date: at - 3_600_000, value: '7.5', quality: 'O' },
+            { date: at, value: '9.6', quality: 'O' },
+            { date: at + 60_000, value: '', quality: 'O' },
+          ]),
+          smhiStation('9', 'Gammal', [
+            { date: NOW - 4 * 3_600_000, value: '30', quality: 'G' },
+          ]),
+          smhiStation('8', 'Utanför', [{ date: at, value: '5' }], 40, 11),
+        ],
+      },
+      waterTemp: {
+        station: [smhiStation('2111', 'Onsala', [{ date: at, value: '9.12' }])],
+      },
+      waveHeight: {
+        station: [
+          smhiStation('33', 'Väderöarna Vågboj', [{ date: at, value: '0.97' }]),
+        ],
+      },
+    },
+    NOW,
+  );
+  assert.deepEqual(
+    rows.map((row) => [
+      row.id,
+      row.source,
+      row.level,
+      row.levelReference,
+      row.waterTemp,
+      row.waveHeight,
+      row.meanWind,
+    ]),
+    [
+      ['smhi:2111', 'smhi', 9.6, 'MVY', 9.12, null, null],
+      ['smhi:33', 'smhi', null, null, null, 0.97, null],
+    ],
+  );
+  assert.equal(meanWaterLevel(rows[0]), 9.6);
+  assert.equal(rows[0].updated, at);
+});
+
+test("an SMHI station's card names SMHI", () => {
+  const card = buildSeaCard(
+    {
+      id: 'smhi:2111',
+      source: 'smhi',
+      name: 'Onsala',
+      meanWind: null,
+      level: 9.6,
+      levelReference: 'MVY',
+      waterTemp: 9.1,
+      airTemp: null,
+      waveHeight: null,
+      updated: NOW - 70 * 60_000,
+    },
+    { mode: 'level', nowMs: NOW },
+  );
+  assert.match(card.details.at(-1), /· SMHI$/);
+  assert.equal(
+    buildSeaCard({ id: 'x', source: 'smhi', name: 'X', updated: null })
+      .details.at(-1),
+    'SMHI',
   );
 });

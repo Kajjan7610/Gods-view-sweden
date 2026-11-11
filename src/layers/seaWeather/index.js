@@ -85,6 +85,8 @@ export function createSeaWeatherLayer({
   let _stale = false;
   let _selectedId = null;
   let _stations = [];
+  /** True while the stations come from SMHI, which measures no wind. */
+  let _fromSmhi = false;
   /** 'wind' or 'level'. */
   let _mode = 'wind';
   let _values = true;
@@ -95,6 +97,7 @@ export function createSeaWeatherLayer({
   // A level counts only against mean water: other zeros share no scale.
   const shownValue = (row) =>
     _mode === 'level' ? meanWaterLevel(row) : row.meanWind;
+  const hasWind = () => _stations.some((row) => row.meanWind != null);
 
   function publishSelectedCard() {
     if (!canSelect()) return;
@@ -254,7 +257,9 @@ export function createSeaWeatherLayer({
     id: 'sea-weather',
     name: 'Sea Weather (Sweden)',
     icon: '🌊',
-    source: 'Sjöfartsverket',
+    get source() {
+      return _fromSmhi ? 'SMHI' : 'Sjöfartsverket';
+    },
     updateInterval: 600000,
 
     init(viewer) {
@@ -311,6 +316,9 @@ export function createSeaWeatherLayer({
         );
         // The newest rows always: the card reads them, drawn again or not.
         _stations = snapshot.stations;
+        _fromSmhi = snapshot.source === 'smhi';
+        // Without any wind the stations are coloured by their water level.
+        if (_mode === 'wind' && !hasWind()) _mode = 'level';
         _stationById.clear();
         for (const row of _stations) _stationById.set(row.id, row);
         // Heights first: the ones this browser kept are drawn at once.
@@ -380,13 +388,17 @@ export function createSeaWeatherLayer({
         .filter((item) => item.count > 0);
       return {
         chips: [
-          {
-            id: 'wind',
-            label: t('WIND'),
-            active: _mode === 'wind',
-            title: t('Colour stations by mean wind'),
-            onClick: () => setMode('wind'),
-          },
+          ...(hasWind() || !_stations.length
+            ? [
+                {
+                  id: 'wind',
+                  label: t('WIND'),
+                  active: _mode === 'wind',
+                  title: t('Colour stations by mean wind'),
+                  onClick: () => setMode('wind'),
+                },
+              ]
+            : []),
           {
             id: 'level',
             label: t('WATER LEVEL'),
@@ -410,9 +422,13 @@ export function createSeaWeatherLayer({
           index === 0
             ? {
                 ...item,
-                blurb: t(
-                  'Dots are Sjöfartsverket’s ViVa stations along the coast, lakes and canals. Grey dots do not measure what is shown. Click a station for wind, water level, temperatures and waves.',
-                ),
+                blurb: _fromSmhi
+                  ? t(
+                      'Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.',
+                    )
+                  : t(
+                      'Dots are Sjöfartsverket’s ViVa stations along the coast, lakes and canals. Grey dots do not measure what is shown. Click a station for wind, water level, temperatures and waves.',
+                    ),
               }
             : item,
         ),

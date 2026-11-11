@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { VIVA_URL, seaWeatherProxy } from './seaWeather.js';
+import {
+  SMHI_SEA_URL,
+  VIVA_URL,
+  seaWeatherFromSmhi,
+  seaWeatherProxy,
+} from './seaWeather.js';
 
 const LIST = {
   GetStationsResult: {
@@ -238,4 +243,56 @@ test('requests waiting on one walk share it, logged and saved once', async (t) =
     log.mock.calls.map((call) => call.arguments[0]),
     ['[sea-weather] 3 stations'],
   );
+});
+
+test('SEA_WEATHER_SOURCE=smhi reads three SMHI files and never ViVa', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  assert.equal(seaWeatherFromSmhi({ SEA_WEATHER_SOURCE: ' SMHI ' }), true);
+  assert.equal(seaWeatherFromSmhi({}), false);
+  const NOW = Date.parse('2026-11-11T12:00:00Z');
+  const urls = [];
+  let wavesDown = true;
+  const request = harness({
+    now: () => NOW,
+    env: { SEA_WEATHER_SOURCE: 'smhi' },
+    fetchImpl: async (url) => {
+      urls.push(String(url));
+      if (wavesDown && String(url) === SMHI_SEA_URL(1))
+        return new Response('down', { status: 503 });
+      return Response.json({
+        station: [
+          {
+            key: '2111',
+            name: 'Onsala',
+            latitude: 57.39,
+            longitude: 11.92,
+            value: [{ date: NOW - 3_600_000, value: '9.6', quality: 'O' }],
+          },
+        ],
+      });
+    },
+  });
+  const body = (await request()).json();
+  assert.deepEqual(urls.sort(), [12, 5, 1].map(SMHI_SEA_URL).sort());
+  assert.equal(
+    urls.some((url) => url.startsWith(VIVA_URL)),
+    false,
+  );
+  assert.equal(body.source, 'smhi');
+  assert.deepEqual(
+    body.stations.map((row) => [row.name, row.level, row.waterTemp]),
+    [['Onsala', 9.6, 9.6]],
+  );
+});
+
+test('without the level file an SMHI refresh fails like a silent ViVa', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  const request = harness({
+    env: { SEA_WEATHER_SOURCE: 'smhi' },
+    fetchImpl: async () => new Response('down', { status: 503 }),
+  });
+  const answer = await request();
+  assert.equal(answer.status, 502);
+  assert.equal(answer.json().error, 'sea_weather_unavailable');
 });

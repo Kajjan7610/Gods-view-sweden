@@ -110,7 +110,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | +SE | Regnradar | SMHI · EUMETNET OPERA | Nordisk radar från SMHI och europeisk radar från OPERA. Originalet: Radar över USA (NOAA) | Var 5:e minut | CC BY 4.0 (SMHI, OPERA) |
 | SE | Vädervarningar (Sverige) | SMHI · Krisinformation.se | Vädervarningar, VMA och krisnyheter i hela Sverige | Var 5:e minut | CC BY 4.0 (SMHI) |
 | SE | Väder nu (Sverige) | SMHI | Cirka 185 väderstationer, och en prognos där du klickar | Var 10:e minut | CC BY 4.0 |
-| SE | Sjöväder (Sverige) | Sjöfartsverket ViVa | Cirka 160 stationer längs kusten, i de stora sjöarna och kanalerna | Var 10:e minut | Ingen angiven licens; källan anges |
+| SE | Sjöväder (Sverige) | Sjöfartsverket ViVa · SMHI | Cirka 160 stationer längs kusten, i de stora sjöarna och kanalerna | Var 10:e minut | Sjöfartsverket ViVa: ingen publicerad licens; SMHI (SEA_WEATHER_SOURCE=smhi): CC BY 4.0 |
 | SE | Vattenföring (Sverige) | SMHI | Cirka 150 stationer i vattendragen | Kvartsvärden, publiceras med fördröjning | CC BY 4.0 |
 | SE | Norrskensprognos | NOAA SWPC | Norra halvklotet, med chansen över nio svenska orter | Var 10:e minut | Allmän egendom (USA:s statsförvaltning) |
 | +SE | Blixttäthet | EUMETSAT (MTG) | Blixtar över Europa och Afrika från satelliten MTG. Originalet: Blixttäthet över Nord- och Sydamerika (NOAA) | Var 5:e minut | Fri att använda, källan anges |
@@ -185,7 +185,13 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   angiven.
 - **Sjöväder:** Sjöfartsverkets ViVa. Inga villkor publicerade. Sjöfartsverket
   kräver tillstånd för att visa "sjögeografisk information" på webben; om
-  ViVa:s mätvärden räknas dit är oklart.
+  ViVa:s mätvärden räknas dit är oklart. Som öppet alternativ kan lagret
+  läsa SMHI:s havsobservationer i stället (`SEA_WEATHER_SOURCE=smhi`,
+  CC BY 4.0): vattenstånd mot årets medelvattenstånd, vattentemperatur och
+  vågor vid ett 70-tal stationer längs kusten, men ingen vind och inga sjöar
+  eller kanaler. Det är tre anrop per uppdatering i stället för ett per
+  station. Provat 2026-11-11: 68 stationer, 59 med vattenstånd, 42 med
+  vattentemperatur och 4 vågbojar.
 - **Trafikmeddelanden (SR):** Sveriges Radios API-villkor: materialet får
   användas där det länkas till SR, ska tydligt anges som Sveriges Radios och
   får inte ändras, och det får inte användas i marknadsföring utan SR:s
@@ -323,6 +329,7 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 | `SWEDAVIA_FLIGHTINFO_KEY` | avgångar och ankomster i dossiern, tavlan och cockpit | apideveloper.swedavia.se → FlightInfo Free |
 | `SWEDAVIA_WAITTIME_KEY` | köerna i säkerhetskontrollen | apideveloper.swedavia.se → WaitTime Free |
 | `ADSBDB_ROUTES` | `on`: flygrutter från adsbdb, vars ruttdata inte får publiceras utan David J Taylors tillstånd; tom (standard): inga rutter | ingen nyckel |
+| `SEA_WEATHER_SOURCE` | tom (standard): sjöväder från Sjöfartsverkets ViVa (ingen publicerad licens); `smhi`: SMHI:s havsobservationer (CC BY 4.0), vattenstånd, vattentemperatur och vågor längs kusten men ingen vind | ingen nyckel |
 | `FLIGHTS_SOURCE` | tom (standard): flyg från adsb.lol (ODbL) runt kartans mitt, OpenSky frågas aldrig; `opensky`: originalets OpenSky, som kräver deras skriftliga tillstånd | ingen nyckel |
 | `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` | flyg med större kvot än utan konto (originalets lager; OpenSkys villkor kräver skriftligt tillstånd för användning i en app som denna, se "Källor med oklara eller särskilda villkor") | opensky-network.org → konto → API client (under KOPPLA PÅ) |
 | `ENTSOE_PRODUCTION` | `on`: produktion, förbrukning och dygnskurva från ENTSO-E också; bara när Svenska kraftnät har godkänt det | ingen nyckel |
@@ -356,6 +363,19 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-11 (sjöväder från SMHI som tillval)
+- Med `SEA_WEATHER_SOURCE=smhi` läser Sjöväder SMHI:s öppna
+  havsobservationer (CC BY 4.0) i stället för Sjöfartsverkets ViVa: tre
+  filer med alla stationers senaste dygn ger vattenståndet mot årets
+  medelvattenstånd, vattentemperaturen och vågorna. Det är tre anrop per
+  uppdatering i stället för ett per station.
+- SMHI mäter ingen vind, så lagret färgar då stationerna efter vattenstånd
+  och visar inte knappen VIND. Kortet, lagrets rad och Datakällor anger
+  SMHI.
+- Standard är fortfarande ViVa.
+- `.env.example` beskriver nu kraftsystemets, flygets och sjövädrets
+  källval som de är.
 
 ### 2026-11-11 (regeln för det som publiceras)
 - Principen har fått två nivåer: appen får visa källor utan publicerad

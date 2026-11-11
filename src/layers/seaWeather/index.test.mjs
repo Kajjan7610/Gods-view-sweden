@@ -41,14 +41,19 @@ function harness(t, stations = []) {
     },
     scene: { pick: () => viewer.picked, requestRender() {} },
   };
-  const feed = { stations, error: null };
+  const feed = { stations, error: null, source: null };
   const clock = { now: NOW };
   const state = { shown: new Map(), click: null };
   const layer = createSeaWeatherLayer({
     source: {
       getSnapshot: async () => {
         if (feed.error) throw feed.error;
-        return { stations: feed.stations, stale: false, fetchedAt: clock.now };
+        return {
+          stations: feed.stations,
+          stale: false,
+          fetchedAt: clock.now,
+          ...(feed.source ? { source: feed.source } : {}),
+        };
       },
     },
     overlayHost: {
@@ -178,5 +183,27 @@ test('in water level mode only levels against mean water are shown as such', asy
     .filter((entity) => entity.point.pixelSize.getValue() === 6)
     .map((entity) => entity.id);
   assert.deepEqual(grey, ['se-viva:8', 'se-viva:9']);
+  layer.destroy();
+});
+
+test('stations from SMHI, without wind, are coloured by water level and credit SMHI', async (t) => {
+  const { layer, feed, chip } = harness(t, [station('1'), station('2')]);
+  layer.enable();
+  await layer.update();
+  assert.equal(layer.source, 'Sjöfartsverket');
+  assert.equal(chip('wind')?.active, true);
+  feed.source = 'smhi';
+  feed.stations = [
+    station('3', { meanWind: null, gust: null, windHeading: null }),
+    station('4', { meanWind: null, gust: null, windHeading: null }),
+  ];
+  await layer.update();
+  assert.equal(layer.source, 'SMHI');
+  assert.equal(chip('wind'), undefined);
+  assert.equal(chip('level').active, true);
+  assert.match(
+    layer.getRowControls().legend[0].blurb,
+    /SMHI’s ocean stations/,
+  );
   layer.destroy();
 });
