@@ -60,12 +60,14 @@ export const LAYER_PROVENANCE = Object.freeze({
     ),
   }),
   'power-grid': own({
-    source: 'Svenska kraftnät',
+    source: 'ENTSO-E · Svenska kraftnät',
     coverage: msg(
       "Sweden's links between bidding areas and to neighbouring countries",
     ),
     updates: msg('Every 5 minutes'),
-    licence: NO_LICENCE,
+    licence: msg(
+      'Flows from ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): no published licence',
+    ),
   }),
   'gamma-radiation': own({
     source: 'Strålsäkerhetsmyndigheten (SSM)',

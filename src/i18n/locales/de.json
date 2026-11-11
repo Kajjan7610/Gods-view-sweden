@@ -3710,6 +3710,11 @@
   "import {mw} MW": "Import {mw} MW",
   "balanced": "ausgeglichen",
   "Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).": "Schwedens Austausch mit den Nachbarländern, summiert über die Verbindungen der letzten Viertelstunde (Svenska kraftnät).",
+  "Sweden’s exchange with its neighbours, summed over the links for the latest published quarter-hour (ENTSO-E, CC BY 4.0).": "Schwedens Austausch mit den Nachbarländern, summiert über die Verbindungen für die zuletzt veröffentlichte Viertelstunde (ENTSO-E, CC BY 4.0).",
+  "Flows from ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): no published licence": "Flüsse von ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): keine veröffentlichte Lizenz",
+  "Power flows between Sweden’s bidding zones and its neighbours (CC BY 4.0): needed for the power grid layer": "Stromflüsse zwischen Schwedens Gebotszonen und den Nachbarländern (CC BY 4.0): nötig für die Stromnetz-Ebene",
+  "ENTSO-E key not configured (set ENTSOE_SECURITY_TOKEN)": "ENTSO-E-Schlüssel nicht konfiguriert (ENTSOE_SECURITY_TOKEN setzen)",
+  "ENTSO-E refused the key (check ENTSOE_SECURITY_TOKEN)": "ENTSO-E hat den Schlüssel abgelehnt (ENTSOE_SECURITY_TOKEN prüfen)",
   "Which flows to show": "Welche Flüsse angezeigt werden",
   "{country}: in {import} MW · out {export} MW": "{country}: rein {import} MW · raus {export} MW",
   "Moving chevrons show the power flowing now on each link to and between the four bidding zones, as thick and as fast as the flow. Pick a direction, or a neighbouring country to see its links alone. Click a zone for its import, export and Sweden’s production by type.": "Bewegte Winkel zeigen den Strom, der gerade auf jeder Verbindung zu und zwischen den vier Gebotszonen fließt, so dick und so schnell wie der Fluss. Wählen Sie eine Richtung oder ein Nachbarland, um nur dessen Verbindungen zu sehen. Klicken Sie auf eine Zone für ihren Import, Export und Schwedens Erzeugung nach Art.",
@@ -4027,7 +4032,6 @@
   "Swedish road cameras, trains, road conditions, road weather and speed cameras": "Schwedische Straßenkameras, Züge, Straßenzustand, Straßenwetter und Blitzer",
   "Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys": "Schwedische Busse, U-Bahn und Straßenbahnen live mit Liniennummern sowie Störungen: Schlüssel GTFS Regional Realtime und Static",
   "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Abflüge, Ankünfte und Warteschlangen an der Sicherheitskontrolle der zehn Swedavia-Flughäfen: Schlüssel FlightInfo und WaitTime",
-  "Power grid flows and production from ENTSO-E, a reserve for Svenska kraftnät: used with POWER_GRID_SOURCE=entsoe": "Stromflüsse und Erzeugung von ENTSO-E, eine Reserve für Svenska kraftnät: genutzt mit POWER_GRID_SOURCE=entsoe",
   "{count} places": {
     "one": "{count} Platz",
     "other": "{count} Plätze"

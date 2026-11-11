@@ -3631,6 +3631,11 @@
   "import {mw} MW": "进口 {mw} MW",
   "balanced": "持平",
   "Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).": "瑞典与邻国的电力交换，按最近一刻钟各联络线汇总（Svenska kraftnät）。",
+  "Sweden’s exchange with its neighbours, summed over the links for the latest published quarter-hour (ENTSO-E, CC BY 4.0).": "瑞典与邻国的电力交换，按各联络线汇总，取最新发布的一刻钟（ENTSO-E，CC BY 4.0）。",
+  "Flows from ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): no published licence": "来自 ENTSO-E 的潮流：CC BY 4.0；Svenska kraftnät（POWER_GRID_SOURCE=svk）：无公开许可",
+  "Power flows between Sweden’s bidding zones and its neighbours (CC BY 4.0): needed for the power grid layer": "瑞典各竞价区之间及与邻国之间的电力潮流（CC BY 4.0）：电网图层需要",
+  "ENTSO-E key not configured (set ENTSOE_SECURITY_TOKEN)": "未配置 ENTSO-E 密钥（设置 ENTSOE_SECURITY_TOKEN）",
+  "ENTSO-E refused the key (check ENTSOE_SECURITY_TOKEN)": "ENTSO-E 拒绝了该密钥（检查 ENTSOE_SECURITY_TOKEN）",
   "Which flows to show": "显示哪些潮流",
   "{country}: in {import} MW · out {export} MW": "{country}：流入 {import} MW · 流出 {export} MW",
   "Moving chevrons show the power flowing now on each link to and between the four bidding zones, as thick and as fast as the flow. Pick a direction, or a neighbouring country to see its links alone. Click a zone for its import, export and Sweden’s production by type.": "移动的箭头显示当前在通往四个竞价区及其之间的每条联络线上流动的电力，粗细和速度随潮流大小变化。选择方向或邻国，只看其联络线。点击竞价区查看其进口、出口以及瑞典分类型发电量。",
@@ -3947,7 +3952,6 @@
   "Swedish road cameras, trains, road conditions, road weather and speed cameras": "瑞典道路摄像头、火车、路况、道路气象和测速摄像头",
   "Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys": "瑞典公交、地铁和有轨电车实时位置（含线路号）及运营中断：GTFS Regional Realtime 和 Static 密钥",
   "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Swedavia 十座机场的出发、到达和安检排队：FlightInfo 和 WaitTime 密钥",
-  "Power grid flows and production from ENTSO-E, a reserve for Svenska kraftnät: used with POWER_GRID_SOURCE=entsoe": "来自 ENTSO-E 的电网潮流和发电量，作为 Svenska kraftnät 的备用：与 POWER_GRID_SOURCE=entsoe 一起使用",
   "{count} places": {
     "other": "{count} 个位置"
   },

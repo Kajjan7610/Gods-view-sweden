@@ -16,10 +16,12 @@ import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 import { WEEK_DAYS, powerGridProxy, stepDate } from './powerGrid.js';
 
 // The power-grid routes (/api/power-grid, /day, /week) from the ENTSO-E
-// Transparency Platform instead of Svenska kraftnät's control room. Off unless
-// POWER_GRID_SOURCE=entsoe, and then it needs a free security token in
+// Transparency Platform, the Swedish version's source; Svenska kraftnät's
+// control room only with POWER_GRID_SOURCE=svk. It needs a free security token in
 // ENTSOE_SECURITY_TOKEN (server-side only; it travels in the query string to
-// ENTSO-E and is never logged or answered).
+// ENTSO-E and is never logged or answered). Only the flows are free to re-use
+// (CC BY 4.0); generation and load are read only with ENTSOE_PRODUCTION=on,
+// once Svenska kraftnät has consented.
 //
 // ENTSO-E publishes an hour after the operating period at the latest, so the
 // answers are the newest quarter-hour published, not this one. A refresh asks
@@ -46,13 +48,15 @@ const STOCKHOLM_DATE = new Intl.DateTimeFormat('sv-SE', {
 });
 const stockholmDate = (ms) => STOCKHOLM_DATE.format(ms);
 
-/** The proxy the server mounts: ENTSO-E when asked for, else the control room. */
+/** The proxy the server mounts: ENTSO-E unless the control room is chosen. */
 export function powerGridProxyFor(env = process.env, options = {}) {
+  // Svenska kraftnät's control-room service has no documentation and no
+  // licence, so it is used only when chosen (POWER_GRID_SOURCE=svk).
   return String(env.POWER_GRID_SOURCE ?? '')
     .trim()
-    .toLowerCase() === 'entsoe'
-    ? powerGridEntsoeProxy({ env, ...options })
-    : powerGridProxy(options);
+    .toLowerCase() === 'svk'
+    ? powerGridProxy(options)
+    : powerGridEntsoeProxy({ env, ...options });
 }
 
 /** Bounded power-grid routes over ENTSO-E, for dev and preview. */
@@ -67,6 +71,13 @@ export function powerGridEntsoeProxy({
   /** Whether the last failed refresh was ENTSO-E refusing the token. */
   let tokenRefused = false;
   let keylessLogged = false;
+  // ENTSO-E's generation and load are not on its list of data free for
+  // re-use: they are read only when Svenska kraftnät has consented
+  // (ENTSOE_PRODUCTION=on). Without them the answer is the flows alone.
+  const withProduction =
+    String(env.ENTSOE_PRODUCTION ?? '')
+      .trim()
+      .toLowerCase() === 'on';
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 600 });
 
@@ -142,30 +153,32 @@ export function powerGridEntsoeProxy({
         periodEnd: entsoeTime(end),
       }),
     ]);
-    const zoneTasks = SWEDISH_ZONES.flatMap((zone) => [
-      async () => [
-        zone,
-        'generation',
-        await attempt({
-          documentType: 'A75',
-          processType: 'A16',
-          in_Domain: ENTSOE_AREAS[zone],
-          periodStart: entsoeTime(weekStart),
-          periodEnd: entsoeTime(end),
-        }),
-      ],
-      async () => [
-        zone,
-        'load',
-        await attempt({
-          documentType: 'A65',
-          processType: 'A16',
-          outBiddingZone_Domain: ENTSOE_AREAS[zone],
-          periodStart: entsoeTime(weekStart),
-          periodEnd: entsoeTime(end),
-        }),
-      ],
-    ]);
+    const zoneTasks = !withProduction
+      ? []
+      : SWEDISH_ZONES.flatMap((zone) => [
+          async () => [
+            zone,
+            'generation',
+            await attempt({
+              documentType: 'A75',
+              processType: 'A16',
+              in_Domain: ENTSOE_AREAS[zone],
+              periodStart: entsoeTime(weekStart),
+              periodEnd: entsoeTime(end),
+            }),
+          ],
+          async () => [
+            zone,
+            'load',
+            await attempt({
+              documentType: 'A65',
+              processType: 'A16',
+              outBiddingZone_Domain: ENTSOE_AREAS[zone],
+              periodStart: entsoeTime(weekStart),
+              periodEnd: entsoeTime(end),
+            }),
+          ],
+        ]);
     const answers = await pooled([...flowTasks, ...zoneTasks]);
     const byLink = new Map();
     const generation = new Map();
@@ -194,9 +207,11 @@ export function powerGridEntsoeProxy({
     return {
       flows,
       // Production unread this time: the last read stands until it is old.
-      points: productionUnread
-        ? (cached?.points ?? [])
-        : productionFromEntsoe(generation, loads),
+      points: !withProduction
+        ? []
+        : productionUnread
+          ? (cached?.points ?? [])
+          : productionFromEntsoe(generation, loads),
       at,
     };
   }
@@ -209,7 +224,7 @@ export function powerGridEntsoeProxy({
         retryAfter = 0;
         tokenRefused = false;
         console.log(
-          `[power-grid] ENTSO-E: ${cached.flows.links.length} links, ${cached.points.length} quarter-hours of production`,
+          `[power-grid] ENTSO-E: ${cached.flows.links.length} links, ${withProduction ? `${cached.points.length} quarter-hours of production` : 'flows only'}`,
         );
       } catch (error) {
         retryAfter = now() + ENTSOE_RETRY_AFTER_FAILURE_MS;
@@ -255,7 +270,7 @@ export function powerGridEntsoeProxy({
       if (!keylessLogged) {
         keylessLogged = true;
         console.warn(
-          '[power-grid] POWER_GRID_SOURCE=entsoe needs ENTSOE_SECURITY_TOKEN',
+          '[power-grid] the power grid needs ENTSOE_SECURITY_TOKEN (or POWER_GRID_SOURCE=svk)',
         );
       }
       return json(
@@ -292,6 +307,7 @@ export function powerGridEntsoeProxy({
         points: pointsOn(today),
         fetchedAt: cached.at,
         source: 'entsoe',
+        productionOffered: withProduction,
       });
     }
     if (url.pathname === '/week') {
@@ -300,13 +316,19 @@ export function powerGridEntsoeProxy({
         const date = stepDate(today, -back);
         days.push({ date, points: pointsOn(date) });
       }
-      return mark({ days, fetchedAt: cached.at, source: 'entsoe' });
+      return mark({
+        days,
+        fetchedAt: cached.at,
+        source: 'entsoe',
+        productionOffered: withProduction,
+      });
     }
     return mark({
       ...cached.flows,
-      production: productionNow(),
+      production: withProduction ? productionNow() : null,
       fetchedAt: cached.at,
       source: 'entsoe',
+      productionOffered: withProduction,
     });
   }
 

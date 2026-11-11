@@ -114,3 +114,15 @@ test('the accent follows the zone’s net', () => {
     flowColor('export'),
   );
 });
+
+test('a zone card from ENTSO-E credits it and shows no production', () => {
+  const card = buildAreaCard(
+    SE3,
+    snapshot({ source: 'entsoe', productionOffered: false, production: {} }),
+  );
+  assert.deepEqual(card.details, [
+    'Import 5,699 MW · export 387 MW',
+    'from SE2 5,699 · to FI 387 MW',
+    'ENTSO-E (CC BY 4.0) · 11:15',
+  ]);
+});

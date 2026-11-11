@@ -79,7 +79,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | +SE | Kameror | Trafikverket | Cirka 1 550 vägkameror med livebilder. Originalet: Offentliga trafikkameror i många länder | Bilderna uppdateras medan de visas | CC0 1.0 (Trafikverket) |
 | SE | Fartkameror (Sverige) | Trafikverket | Cirka 2 800 fasta fartkameror i hela Sverige | Varje timme | CC0 1.0 |
 | SE | Elpris (Sverige) | elprisetjustnu.se · Nord Pool via ENTSO-E | Spotpris per kvart i elområdena SE1–SE4 | Varje minut | Fri att använda enligt Elpriset just nu; priserna kommer från Nord Pool via ENTSO-E |
-| SE | Kraftsystemet (Sverige) | Svenska kraftnät | Sveriges förbindelser mellan elområdena och till grannländerna | Var 5:e minut | Ingen angiven licens; källan anges |
+| SE | Kraftsystemet (Sverige) | ENTSO-E · Svenska kraftnät | Sveriges förbindelser mellan elområdena och till grannländerna | Var 5:e minut | Flöden från ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): ingen publicerad licens |
 | SE | Strålning (Sverige) | Strålsäkerhetsmyndigheten (SSM) | Cirka 25 gammastationer | Var 10:e minut | Ingen angiven licens; källan anges |
 | SE | Brandstationer (Sverige) | Myndigheten för civilt försvar (MCF) | Räddningstjänsternas alla brandstationer | En gång per dygn | EU-värdefullt dataset, källan anges |
 | SE | Polisstationer (Sverige) | Polismyndigheten | Alla polisstationer, cirka 260 | En gång per dygn | Öppna data, källan anges |
@@ -149,14 +149,24 @@ Krisinformation, NOAA, EUMETSAT och OpenStreetMap (ODbL). Följande har
 oklara eller särskilda villkor. De visas med källan angiven, och de utan
 licens ska helst ersättas med en dokumenterad källa eller godkännas:
 
-- **Kraftsystemet:** Svenska kraftnäts kontrollrumstjänst, samma som sidan
-  svk.se/om-kraftsystemet/kontrollrummet använder. Odokumenterad, ingen
-  licens. Svenska kraftnät är tillfrågat (2026-11-10). Som reserv kan lagret
-  läsa ENTSO-E:s transparensplattform i stället (`POWER_GRID_SOURCE=entsoe`
-  och en gratis nyckel, se Nycklar): flödena är där fria att återanvända
-  (CC BY 4.0), medan produktion per kraftslag och förbrukning kräver Svenska
-  kraftnäts godkännande även där. ENTSO-E publicerar senast en timme efter
-  driftperioden, så reserven visar senaste publicerade kvarten, inte nuet.
+- **Kraftsystemet:** läser ENTSO-E:s transparensplattform, ett dokumenterat
+  gränssnitt, med en gratis nyckel (se Nycklar). Flödena mellan elområdena
+  och grannländerna är där fria att återanvända (CC BY 4.0), medan
+  produktion per kraftslag och förbrukning inte står på ENTSO-E:s lista
+  över fri data och kräver Svenska kraftnäts godkännande. Lagret visar
+  därför bara flödena, med "ENTSO-E (CC BY 4.0)" som källa, och panelen
+  KRAFT med dygnskurvan visas inte; produktion och förbrukning läses bara
+  med `ENTSOE_PRODUCTION=on`, när Svenska kraftnät har godkänt det. Utan
+  nyckel ber lagret om den och visar inget. ENTSO-E publicerar senast en
+  timme efter driftperioden, så lagret visar senaste publicerade kvarten,
+  inte nuet. Svenska kraftnäts egen kontrollrumstjänst, samma som sidan
+  svk.se/om-kraftsystemet/kontrollrummet använder, är odokumenterad och
+  har ingen licens; den används bara med `POWER_GRID_SOURCE=svk`. Svenska
+  kraftnät är tillfrågat (2026-11-10). Provat mot riktig data 2026-11-11: alla 14
+  förbindelser svarade, produktionen stämde med Svenska kraftnäts på
+  megawatten, och inga överlappande serier eller luckor fanns. En riktning
+  som ändå kommer två gånger för samma kvart lämnas bort i stället för att
+  räknas dubbelt.
 - **Strålning:** Strålsäkerhetsmyndighetens gammastationskarta. Ingen licens
   angiven.
 - **Sjöväder:** Sjöfartsverkets ViVa. Inga villkor publicerade. Sjöfartsverket
@@ -301,7 +311,8 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 | `ADSBDB_ROUTES` | `on`: flygrutter från adsbdb, vars ruttdata inte får publiceras utan David J Taylors tillstånd; tom (standard): inga rutter | ingen nyckel |
 | `FLIGHTS_SOURCE` | tom (standard): flyg från adsb.lol (ODbL) runt kartans mitt, OpenSky frågas aldrig; `opensky`: originalets OpenSky, som kräver deras skriftliga tillstånd | ingen nyckel |
 | `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` | flyg med större kvot än utan konto (originalets lager; OpenSkys villkor kräver skriftligt tillstånd för användning i en app som denna, se "Källor med oklara eller särskilda villkor") | opensky-network.org → konto → API client (under KOPPLA PÅ) |
-| `ENTSOE_SECURITY_TOKEN` | kraftsystemet från ENTSO-E i stället för Svenska kraftnäts kontrollrum; används bara med `POWER_GRID_SOURCE=entsoe` | transparency.entsoe.eu → registrera, mejla transparency@entsoe.eu "RESTful API access", sedan My Account → Generate token |
+| `ENTSOE_PRODUCTION` | `on`: produktion, förbrukning och dygnskurva från ENTSO-E också; bara när Svenska kraftnät har godkänt det | ingen nyckel |
+| `ENTSOE_SECURITY_TOKEN` | kraftsystemets flöden från ENTSO-E (CC BY 4.0); behövs för lagret | transparency.entsoe.eu → registrera, mejla transparency@entsoe.eu "RESTful API access", sedan My Account → Generate token |
 | `CESIUM_ION_TOKEN` | fotorealistiska 3D-städer | ion.cesium.com |
 
 Nycklarna kan klistras in i appen under **KOPPLA PÅ** (nere till höger); appen skriver då `.env` själv.
@@ -332,11 +343,29 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-11 (kraftsystemet från ENTSO-E: bara flödena)
+- Kraftsystemet läser nu ENTSO-E som standard, ett dokumenterat gränssnitt
+  med öppen licens för flödena. Svenska kraftnäts odokumenterade
+  kontrollrumstjänst används bara med `POWER_GRID_SOURCE=svk`.
+- Lagret visar bara flödena mellan elområdena och grannländerna, som
+  ENTSO-E släpper fritt (CC BY 4.0). Produktion och förbrukning hämtas inte
+  alls; de kräver Svenska kraftnäts godkännande och slås på med
+  `ENTSOE_PRODUCTION=on`. Det sparar också åtta av de 36 anropen per
+  uppdatering. Panelen KRAFT med dygnskurvan visas bara när produktionen
+  får visas.
+- Utan ENTSO-E-nyckel, eller om ENTSO-E avvisar den, säger lagret det och
+  visar inget; det tar inte Svenska kraftnäts tjänst i stället.
+- Kortet, lagrets rad, Datakällor och källtabellen anger ENTSO-E som källa;
+  tidigare stod Svenska kraftnät överallt.
+- En riktning som ENTSO-E skickar två gånger för samma kvart gör att
+  förbindelsen lämnas bort i stället för att räknas dubbelt.
+- Provat mot riktig data genom proxyn: alla 14 förbindelser, produktionen
+  lika med Svenska kraftnäts, inga överlapp och inga luckor.
+
 ### 2026-11-11 (ENTSO-E i nyckelpanelen)
 - ENTSO-E:s nyckel (`ENTSOE_SECURITY_TOKEN`) kan sparas i panelen KOPPLA PÅ
   (Markstation · leverantörsinställningar) som de andra nycklarna, med
-  länk till var den skaffas. Den används bara med
-  `POWER_GRID_SOURCE=entsoe`. Pinokio-startaren skickar också med den.
+  länk till var den skaffas. Pinokio-startaren skickar också med den.
 
 ### 2026-11-11 (flygtavlan över källangivelsen; Swedavias villkor)
 - Flygtavlan slutar nu ovanför kartans källangivelse. Tidigare räckte den

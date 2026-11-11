@@ -191,9 +191,14 @@ export const ENTSOE_LINKS = Object.freeze(
 /** The flow from one area to another at each quarter, summed over series. */
 function directed(series) {
   const sum = new Map();
+  // Two series telling the same quarter would be counted twice.
+  let overlapped = false;
   for (const one of series)
-    for (const [at, value] of one.points)
+    for (const [at, value] of one.points) {
+      if (sum.has(at)) overlapped = true;
       sum.set(at, (sum.get(at) ?? 0) + value);
+    }
+  sum.overlapped = overlapped;
   return sum;
 }
 
@@ -213,6 +218,9 @@ export function flowsFromEntsoe(byLink) {
     if (!pair) continue;
     const ab = directed(pair.aToB);
     const ba = directed(pair.bToA);
+    // A direction told twice for one quarter is left out, not doubled: a
+    // missing link is better than a wrong size.
+    if (ab.overlapped || ba.overlapped) continue;
     const sides = [ab, ba].filter((side) => side.size);
     if (!sides.length) continue;
     const times = [...sides[0].keys()]

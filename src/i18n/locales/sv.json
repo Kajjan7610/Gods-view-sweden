@@ -3710,6 +3710,11 @@
   "import {mw} MW": "import {mw} MW",
   "balanced": "i balans",
   "Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).": "Sveriges utbyte med grannländerna, summerat över förbindelserna för senaste kvarten (Svenska kraftnät).",
+  "Sweden’s exchange with its neighbours, summed over the links for the latest published quarter-hour (ENTSO-E, CC BY 4.0).": "Sveriges utbyte med grannländerna, summerat över förbindelserna för den senast publicerade kvarten (ENTSO-E, CC BY 4.0).",
+  "Flows from ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): no published licence": "Flöden från ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): ingen publicerad licens",
+  "Power flows between Sweden’s bidding zones and its neighbours (CC BY 4.0): needed for the power grid layer": "Elflöden mellan Sveriges elområden och grannländerna (CC BY 4.0): behövs för lagret Kraftsystemet",
+  "ENTSO-E key not configured (set ENTSOE_SECURITY_TOKEN)": "ENTSO-E-nyckeln är inte konfigurerad (ange ENTSOE_SECURITY_TOKEN)",
+  "ENTSO-E refused the key (check ENTSOE_SECURITY_TOKEN)": "ENTSO-E avvisade nyckeln (kontrollera ENTSOE_SECURITY_TOKEN)",
   "Which flows to show": "Vilka flöden som visas",
   "{country}: in {import} MW · out {export} MW": "{country}: in {import} MW · ut {export} MW",
   "Moving chevrons show the power flowing now on each link to and between the four bidding zones, as thick and as fast as the flow. Pick a direction, or a neighbouring country to see its links alone. Click a zone for its import, export and Sweden’s production by type.": "Rörliga vinklar visar effekten som flödar just nu på varje förbindelse till och mellan de fyra elområdena, lika tjocka och snabba som flödet. Välj en riktning, eller ett grannland för att se bara dess förbindelser. Klicka på ett elområde för dess import, export och Sveriges produktion per kraftslag.",
@@ -4027,7 +4032,6 @@
   "Swedish road cameras, trains, road conditions, road weather and speed cameras": "Svenska vägkameror, tåg, väglag, vägväder och fartkameror",
   "Swedish buses, metro and trams live with line numbers, and disruptions: GTFS Regional Realtime and Static keys": "Svenska bussar, tunnelbana och spårvagnar live med linjenummer, och störningar: nycklarna GTFS Regional Realtime och Static",
   "Departures, arrivals and security queues at Swedavia's ten airports: FlightInfo and WaitTime keys": "Avgångar, ankomster och köer i säkerhetskontrollen på Swedavias tio flygplatser: nycklarna FlightInfo och WaitTime",
-  "Power grid flows and production from ENTSO-E, a reserve for Svenska kraftnät: used with POWER_GRID_SOURCE=entsoe": "Kraftsystemets flöden och produktion från ENTSO-E, reserv för Svenska kraftnät: används med POWER_GRID_SOURCE=entsoe",
   "{count} places": {
     "one": "{count} plats",
     "other": "{count} platser"

@@ -307,11 +307,7 @@ test('the span switch loads the week and drops the day meanwhile', async (t) => 
   assert.equal(h.view().span, 'week');
   assert.equal(h.view().loading, true);
   assert.equal(h.view().chart, null, 'the day is not drawn as a week');
-  assert.equal(
-    h.view().failed,
-    false,
-    'the day’s failure is not the week’s',
-  );
+  assert.equal(h.view().failed, false, 'the day’s failure is not the week’s');
   h.show('week');
   assert.equal(
     h.calls.week.length,
@@ -323,9 +319,7 @@ test('the span switch loads the week and drops the day meanwhile', async (t) => 
 
   week.resolve({
     // A day the server did not keep, and today so far.
-    days: dates.map((date, i) =>
-      day(date, i === 2 ? 0 : i === 6 ? 40 : 96),
-    ),
+    days: dates.map((date, i) => day(date, i === 2 ? 0 : i === 6 ? 40 : 96)),
   });
   await settle();
   const view = h.view();
@@ -356,9 +350,7 @@ test('a week across the clock change starts on its own midnight', async () => {
     day: [day('2026-10-26', 4)],
     week: [
       {
-        days: dates.map((date) =>
-          day(date, date === '2026-10-25' ? 100 : 96),
-        ),
+        days: dates.map((date) => day(date, date === '2026-10-25' ? 100 : 96)),
       },
     ],
   });
@@ -431,4 +423,27 @@ test('turning the layer off lets the request go and clears the panel', async () 
   assert.equal(h.disconnected(), 1);
   h.power.refresh();
   assert.equal(h.calls.day.length, 3, 'nothing is fetched after destroy');
+});
+
+test('without production on offer the panel hides and asks nothing', async () => {
+  const h = await loaded({
+    day: [
+      {
+        date: '2026-11-11',
+        points: [],
+        stale: false,
+        productionOffered: false,
+      },
+    ],
+  });
+  assert.equal(h.view(), null);
+  const asked = h.calls.day.length;
+  h.power.refresh();
+  await settle();
+  assert.equal(h.calls.day.length, asked);
+  // The layer says production is offered again: the panel loads and shows.
+  h.power.setOffered(true);
+  await settle();
+  assert.equal(h.calls.day.length, asked + 1);
+  assert.notEqual(h.view(), null);
 });

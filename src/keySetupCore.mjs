@@ -98,7 +98,7 @@ export const KEY_SETUP_KEYS = Object.freeze([
     id: 'entsoe',
     title: 'ENTSO-E', // i18n-ignore: provider product name
     unlocks: msg(
-      'Power grid flows and production from ENTSO-E, a reserve for Svenska kraftnät: used with POWER_GRID_SOURCE=entsoe',
+      'Power flows between Sweden’s bidding zones and its neighbours (CC BY 4.0): needed for the power grid layer',
     ),
     getUrl: 'https://transparency.entsoe.eu/myAccount/webApiAccess',
     envVars: Object.freeze(['ENTSOE_SECURITY_TOKEN']),

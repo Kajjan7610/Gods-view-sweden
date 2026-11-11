@@ -562,7 +562,10 @@ export const DATA_CREDITS = [
   {
     key: 'power-grid',
     html:
-      'Power flows and production (Sweden): ' +
+      'Power flows (Sweden): ' +
+      '<a href="https://transparency.entsoe.eu/" target="_blank" rel="noopener">ENTSO-E Transparency Platform</a> ' +
+      '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>); ' +
+      'with POWER_GRID_SOURCE=svk flows and production from ' +
       '<a href="https://www.svk.se/om-kraftsystemet/kontrollrummet/" target="_blank" rel="noopener">Svenska kraftnät, Kontrollrummet</a>',
   },
   {

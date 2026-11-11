@@ -249,3 +249,31 @@ test('a refusal under code 999 is a failure, and an empty quantity is no 0 MW', 
   assert.equal(series.points.has(at('10:15')), false);
   assert.equal(series.points.get(at('10:30')), 300);
 });
+
+test('a direction told twice for one quarter is left out, not doubled', () => {
+  const at = Date.parse('2026-11-11T10:00:00Z');
+  const before = at - 15 * 60_000;
+  const series = (value, times = [at]) => ({
+    points: new Map(times.map((time) => [time, value])),
+  });
+  const link = ENTSOE_LINKS[0];
+  const twice = flowsFromEntsoe(
+    new Map([
+      [link.id, { aToB: [series(100), series(100)], bToA: [series(0)] }],
+    ]),
+  );
+  assert.deepEqual(twice.links, []);
+  // Two series for different quarters are one direction told in parts.
+  const parts = flowsFromEntsoe(
+    new Map([
+      [
+        link.id,
+        {
+          aToB: [series(100, [before]), series(120)],
+          bToA: [series(0, [before, at])],
+        },
+      ],
+    ]),
+  );
+  assert.equal(parts.links[0].mw, 120);
+});

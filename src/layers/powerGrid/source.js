@@ -17,14 +17,18 @@ export function createPowerGridSource({
       signal?.throwIfAborted();
       const response = await fetchImpl('/api/power-grid', { signal });
       if (!response.ok) {
-        try {
-          await response.body?.cancel();
-        } catch {
-          /* no-op */
-        }
+        const detail = await response.json().catch(() => null);
+        // ENTSO-E without its token, or refusing it, says so in the panel.
+        const notConfigured = detail?.error === 'not_configured';
         throw Object.assign(
-          new Error(`Power grid unavailable (HTTP ${response.status})`),
-          { status: response.status },
+          new Error(
+            notConfigured
+              ? msg('ENTSO-E key not configured (set ENTSOE_SECURITY_TOKEN)')
+              : detail?.keyRefused
+                ? msg('ENTSO-E refused the key (check ENTSOE_SECURITY_TOKEN)')
+                : `Power grid unavailable (HTTP ${response.status})`,
+          ),
+          { status: response.status, notConfigured },
         );
       }
       const payload = await readResponseJsonCapped(
@@ -44,6 +48,12 @@ export function createPowerGridSource({
         fetchedAt: Number.isFinite(payload.fetchedAt)
           ? payload.fetchedAt
           : null,
+        // ENTSO-E without its production says so; the control room's
+        // answers stay as they were.
+        ...(payload.source === 'entsoe' ? { source: 'entsoe' } : {}),
+        ...(payload.productionOffered === false
+          ? { productionOffered: false }
+          : {}),
       };
     },
 
@@ -81,6 +91,12 @@ export function createPowerGridSource({
         date: String(payload.date ?? date ?? ''),
         points: payload.points.filter((point) => Number.isFinite(point?.at)),
         stale: payload.stale === true,
+        // ENTSO-E without its production says so; the control room's
+        // answers stay as they were.
+        ...(payload.source === 'entsoe' ? { source: 'entsoe' } : {}),
+        ...(payload.productionOffered === false
+          ? { productionOffered: false }
+          : {}),
       };
     },
 
@@ -119,6 +135,12 @@ export function createPowerGridSource({
           ),
         })),
         stale: payload.stale === true,
+        // ENTSO-E without its production says so; the control room's
+        // answers stay as they were.
+        ...(payload.source === 'entsoe' ? { source: 'entsoe' } : {}),
+        ...(payload.productionOffered === false
+          ? { productionOffered: false }
+          : {}),
       };
     },
   };

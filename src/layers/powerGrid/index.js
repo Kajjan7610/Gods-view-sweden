@@ -11,6 +11,7 @@ import {
   linkTouches,
 } from './records.js';
 import {
+  ENTSOE_CREDIT,
   POWER_GRID_OVERLAY_SOURCE_ID,
   buildAreaCard,
   countryName,
@@ -480,7 +481,10 @@ export function createPowerGridLayer({
     id: 'power-grid',
     name: 'Power Grid (Sweden)',
     icon: '🔌',
-    source: 'Svenska kraftnät',
+    // The source the answers say they come from.
+    get source() {
+      return _snapshot.source === 'entsoe' ? ENTSOE_CREDIT : 'Svenska kraftnät';
+    },
     // SvK publishes quarter-hours; the proxy keeps an answer five minutes.
     updateInterval: 300000,
 
@@ -572,6 +576,8 @@ export function createPowerGridLayer({
         }
         // The day grows only when Svenska kraftnät's clock has moved on; a
         // load that failed or came back old is asked for again all the same.
+        // ENTSO-E without production: no POWER panel to fill.
+        _day.setOffered(snapshot.productionOffered !== false);
         const dayKey = `${snapshot.updated}/${snapshot.production?.at}`;
         if (dayKey !== _dayKey || _day.wantsRetry()) {
           _dayKey = dayKey;
@@ -655,9 +661,14 @@ export function createPowerGridLayer({
               net: netText(totals.net),
             })
           : '',
-        infoTitle: t(
-          'Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).',
-        ),
+        infoTitle:
+          _snapshot.source === 'entsoe'
+            ? t(
+                'Sweden’s exchange with its neighbours, summed over the links for the latest published quarter-hour (ENTSO-E, CC BY 4.0).',
+              )
+            : t(
+                'Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).',
+              ),
         segmented: {
           id: 'power-grid-show',
           ariaLabel: t('Which flows to show'),

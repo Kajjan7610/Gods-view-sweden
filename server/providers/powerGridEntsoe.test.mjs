@@ -110,24 +110,37 @@ function quietLogs(t) {
   return lines;
 }
 
-test('the control room stays the source unless ENTSO-E is asked for', async (t) => {
+test('ENTSO-E is the source unless the control room is chosen', async (t) => {
   quietLogs(t);
   const urls = [];
   const fetchImpl = async (url) => {
     urls.push(String(url));
     return new Response('down', { status: 503 });
   };
-  await harness(powerGridProxyFor({}, { fetchImpl, now: () => NOW }))();
-  assert.ok(urls.length && urls.every((url) => url.includes('svk.se')));
-  urls.length = 0;
-  const entsoe = harness(
+  await harness(
     powerGridProxyFor(
-      { POWER_GRID_SOURCE: 'EntsoE', ENTSOE_SECURITY_TOKEN: TOKEN },
+      { ENTSOE_SECURITY_TOKEN: TOKEN },
       { fetchImpl, now: () => NOW },
     ),
-  );
-  await entsoe();
+  )();
   assert.ok(urls.length && urls.every((url) => url.includes('entsoe.eu')));
+  urls.length = 0;
+  // Svenska kraftnät's undocumented service only when asked for.
+  await harness(
+    powerGridProxyFor(
+      { POWER_GRID_SOURCE: ' SVK ', ENTSOE_SECURITY_TOKEN: TOKEN },
+      { fetchImpl, now: () => NOW },
+    ),
+  )();
+  assert.ok(urls.length && urls.every((url) => url.includes('svk.se')));
+  // Without a token ENTSO-E is not asked and the control room is not
+  // taken instead.
+  urls.length = 0;
+  const keyless = await harness(
+    powerGridProxyFor({}, { fetchImpl, now: () => NOW }),
+  )();
+  assert.equal(keyless.status, 503);
+  assert.deepEqual(urls, []);
 });
 
 test('without a token ENTSO-E is never asked', async (t) => {
@@ -149,7 +162,7 @@ test('one refresh answers the flows, production, the day and the week', async (t
   let clock = NOW;
   const request = harness(
     powerGridEntsoeProxy({
-      env: { ENTSOE_SECURITY_TOKEN: TOKEN },
+      env: { ENTSOE_SECURITY_TOKEN: TOKEN, ENTSOE_PRODUCTION: 'on' },
       fetchImpl,
       now: () => clock,
     }),
@@ -289,7 +302,7 @@ test('production that can no longer be read grows old and goes; the flows stay',
   let clock = NOW;
   const request = harness(
     powerGridEntsoeProxy({
-      env: { ENTSOE_SECURITY_TOKEN: TOKEN },
+      env: { ENTSOE_SECURITY_TOKEN: TOKEN, ENTSOE_PRODUCTION: 'on' },
       fetchImpl: async (url) => {
         const type = new URL(url).searchParams.get('documentType');
         return productionDown && type !== 'A11'
@@ -314,4 +327,31 @@ test('production that can no longer be read grows old and goes; the flows stay',
   const later = (await request()).json();
   assert.ok(later.links.length > 0);
   assert.equal(later.production.at, null);
+});
+
+test('ENTSO-E answers the flows alone unless production is allowed', async (t) => {
+  quietLogs(t);
+  const { calls, fetchImpl } = fakeEntsoe();
+  const request = harness(
+    powerGridEntsoeProxy({
+      env: { ENTSOE_SECURITY_TOKEN: TOKEN },
+      fetchImpl,
+      now: () => NOW,
+    }),
+  );
+  const body = (await request()).json();
+  // Generation (A75) and load (A65) are not on ENTSO-E's free-reuse list:
+  // never asked for, only the two directions of the fourteen links.
+  assert.equal(calls.length, 28);
+  assert.ok(calls.every((query) => query.get('documentType') === 'A11'));
+  assert.ok(body.links.length > 0);
+  assert.equal(body.production, null);
+  assert.equal(body.productionOffered, false);
+  assert.equal(body.source, 'entsoe');
+  const day = (await request('/day')).json();
+  assert.deepEqual(day.points, []);
+  assert.equal(day.productionOffered, false);
+  const week = (await request('/week')).json();
+  assert.ok(week.days.every((one) => one.points.length === 0));
+  assert.equal(week.productionOffered, false);
 });

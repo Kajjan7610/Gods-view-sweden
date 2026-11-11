@@ -7,7 +7,7 @@
  * the panel answers with `show`. No Cesium.
  */
 import { formatNumber, getLocale, t } from '../../i18n/index.js';
-import { formatClock, formatMw, netText } from './cards.js';
+import { ENTSOE_CREDIT, formatClock, formatMw, netText } from './cards.js';
 import {
   CONSUMPTION_COLOR,
   DAY_TYPES,
@@ -91,6 +91,9 @@ export function createPowerDay({ source }) {
   /** The last load failed; what `data` holds is from the one before. */
   let failed = false;
   let request = null;
+  /** Whether production may be shown at all (not from ENTSO-E without
+   * Svenska kraftnät's consent); the panel hides when not. */
+  let offered = true;
 
   /** "11:15", with its weekday over a week. */
   const clock = (at) =>
@@ -138,7 +141,7 @@ export function createPowerDay({ source }) {
   }
 
   function view() {
-    if (!active) return null;
+    if (!active || !offered) return null;
     const chart = data?.points.length
       ? buildDayChart(data.points, { start: data.start, days: data.days })
       : null;
@@ -227,7 +230,7 @@ export function createPowerDay({ source }) {
         { id: 'import', color: IMPORT_COLOR, label: t('import') },
       ],
       // i18n-ignore: the source's name
-      source: 'Svenska kraftnät',
+      source: data?.fromEntsoe ? ENTSOE_CREDIT : 'Svenska kraftnät',
       latest: readout(chart?.points.at(-1)),
       readout,
     };
@@ -247,6 +250,8 @@ export function createPowerDay({ source }) {
         days: 1,
         missing: false,
         stale: day.stale === true,
+        fromEntsoe: day.source === 'entsoe',
+        productionOffered: day.productionOffered !== false,
       };
     }
     const week = await source.getWeek({ signal });
@@ -258,11 +263,13 @@ export function createPowerDay({ source }) {
       days: days.length || WEEK_DAYS,
       missing: days.slice(0, -1).some((day) => day.points.length < WHOLE_DAY),
       stale: week.stale === true,
+      fromEntsoe: week.source === 'entsoe',
+      productionOffered: week.productionOffered !== false,
     };
   }
 
   async function load() {
-    if (!active) return;
+    if (!active || !offered) return;
     request?.abort();
     const controller = new AbortController();
     request = controller;
@@ -272,6 +279,7 @@ export function createPowerDay({ source }) {
       if (controller.signal.aborted) return;
       data = next;
       failed = false;
+      if (next.productionOffered === false) offered = false;
     } catch (error) {
       if (controller.signal.aborted) return;
       console.warn(
@@ -319,6 +327,14 @@ export function createPowerDay({ source }) {
     /** A layer refresh: today's quarter-hours grow. */
     refresh() {
       if (active && panel) load();
+    },
+    /** Whether the answers offer production; the panel hides when not. */
+    setOffered(on) {
+      const next = on !== false;
+      if (next === offered) return;
+      offered = next;
+      if (offered && active && panel) load();
+      else publish();
     },
     /** The last load failed or came back old: the next poll asks again. */
     wantsRetry: () => failed || data?.stale === true,

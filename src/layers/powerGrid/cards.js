@@ -66,6 +66,9 @@ const CARD_BASE = Object.freeze({
   placement: 'above',
 });
 
+/** How the flows are credited when they come from ENTSO-E. */
+// i18n-ignore: the source's name and licence
+export const ENTSOE_CREDIT = 'ENTSO-E (CC BY 4.0)';
 /**
  * Card for one Swedish zone: its flows in and out, then Sweden's production
  * and consumption.
@@ -92,24 +95,31 @@ export function buildAreaCard(area, snapshot) {
     );
   if (flows.length) details.push(t('{mw} MW', { mw: flows.join(' · ') }));
   const production = snapshot.production || {};
-  // An answer without production says so with a dash, never "0" or "NaN".
-  const mwOrDash = (value) => (Number.isFinite(value) ? formatMw(value) : '–');
-  details.push(
-    t('Sweden: production {production} MW, consumption {consumption} MW', {
-      production: mwOrDash(production.total),
-      consumption: mwOrDash(production.consumption),
-    }),
-  );
-  const types = [
-    ['nuclear', t('nuclear')],
-    ['hydro', t('hydro')],
-    ['wind', t('wind')],
-    ['thermal', t('thermal')],
-    ['unspecified', t('other')],
-  ]
-    .filter(([key]) => Number.isFinite(production[key]) && production[key] > 0)
-    .map(([key, label]) => `${label} ${formatMw(production[key])}`);
-  if (types.length) details.push(t('{mw} MW', { mw: types.join(' · ') }));
+  // ENTSO-E's production is not free to re-use: with only its flows there is
+  // no production row at all, not one of dashes.
+  if (snapshot.productionOffered !== false) {
+    // An answer without production says so with a dash, never "0" or "NaN".
+    const mwOrDash = (value) =>
+      Number.isFinite(value) ? formatMw(value) : '–';
+    details.push(
+      t('Sweden: production {production} MW, consumption {consumption} MW', {
+        production: mwOrDash(production.total),
+        consumption: mwOrDash(production.consumption),
+      }),
+    );
+    const types = [
+      ['nuclear', t('nuclear')],
+      ['hydro', t('hydro')],
+      ['wind', t('wind')],
+      ['thermal', t('thermal')],
+      ['unspecified', t('other')],
+    ]
+      .filter(
+        ([key]) => Number.isFinite(production[key]) && production[key] > 0,
+      )
+      .map(([key, label]) => `${label} ${formatMw(production[key])}`);
+    if (types.length) details.push(t('{mw} MW', { mw: types.join(' · ') }));
+  }
   const at = snapshot.updated ?? production.at;
   const flowsAt = Number.isFinite(at) ? CLOCK.format(at) : '';
   const productionAt = Number.isFinite(production.at)
@@ -117,7 +127,10 @@ export function buildAreaCard(area, snapshot) {
     : flowsAt;
   // The flows and the production row can be from different quarters; one
   // time under both would date one of them wrongly.
-  if (!flowsAt) details.push('Svenska kraftnät');
+  if (snapshot.source === 'entsoe')
+    // i18n-ignore: the source's name and licence
+    details.push(flowsAt ? `${ENTSOE_CREDIT} · ${flowsAt}` : ENTSOE_CREDIT);
+  else if (!flowsAt) details.push('Svenska kraftnät');
   else if (productionAt === flowsAt)
     details.push(t('Svenska kraftnät · {time}', { time: flowsAt }));
   else
