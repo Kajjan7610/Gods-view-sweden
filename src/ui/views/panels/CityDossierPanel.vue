@@ -122,11 +122,6 @@ watch(
                 <span class="city-dossier-delay">{{ row.status }}</span>
               </div>
             </div>
-            <div v-if="d.now.jams" class="city-dossier-jams">
-              <strong>{{ t('Queues around the town') }}</strong>
-              <p v-if="d.now.jams.empty" class="city-dossier-note">{{ d.now.jams.empty }}</p>
-              <div v-for="row in d.now.jams.items" :key="row.key" class="city-dossier-jam"><span>{{ row.title }}</span><small>{{ row.detail }}</small></div>
-            </div>
             <div v-for="airport in d.now.flights || []" :key="airport.key" class="city-dossier-trains city-dossier-flights">
               <div class="city-dossier-flights-head">
                 <strong>{{ airport.title }}</strong>

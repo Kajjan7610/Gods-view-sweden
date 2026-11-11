@@ -37,7 +37,7 @@ originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 | Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
 | Stadsdossier: när vyn stannar lågt över en svensk ort visar panelen STAD i högerkanten stadsvapen, foto och inledning, tätortens och kommunens folkmängd med kurva, skattesats, inkomst, arbetslöshet och kommunvalet, samt läget just nu (väder, luft, varningar, Polisen, sol) och en knapp för lokalradio | Kolada (RKA), Wikidata (CC0), Wikipedia (CC BY-SA 4.0), SMHI, Polisen; ingen nyckel | Panelen STAD i högerkanten (dyker upp vid första besöket) |
-| Stadsdossierns flikar Sevärt (slott, kyrkor, museer m.m. utpekade på kartan), besökspass, tåg från stadens station, köer runt staden, VMA-banner och norrsken i natt | Wikidata (CC0), Trafikverket, TomTom, Krisinformation.se, NOAA SWPC | Panelen STAD |
+| Stadsdossierns flikar Sevärt (slott, kyrkor, museer m.m. utpekade på kartan), besökspass, tåg från stadens station, VMA-banner och norrsken i natt | Wikidata (CC0), Trafikverket, Krisinformation.se, NOAA SWPC | Panelen STAD |
 | Flygtavla: Swedavias tio flygplatser, hela dagens avgångar och ankomster, köerna i säkerhetskontrollen över terminalerna, följ planet i luften och dagens rutter på globen | Swedavia FlightInfo och WaitTime (gratisnycklar) | Kortet över en Swedavia-flygplats och tavlans egen panel |
 | Flygväder: METAR och TAF för flygplatserna | NOAA Aviation Weather Center (ingen nyckel) | Flygtavlan och cockpit |
 | Cockpit: knapp vid kartan och C-tangenten när ett plan, fartyg eller en satellit är valt, Swedavias rader för planet, svensk lägesbild i genomgången (ort och län, SMHI:s väder, varningar och VMA) | Swedavia, SMHI, Krisinformation.se, NOAA (METAR/TAF) | Cockpit |
@@ -171,20 +171,25 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   data helst inte ska lämnas ut. Vattenföringen läses från det dokumenterade
   API:et för kvartsvärden (opendata.smhi.se/hydroobs). Realtidsfilerna med
   tim- och dygnsvärden är en avgiftsbelagd tjänst och används inte.
-- **TomTom (köer i stadsdossiern):** egen nyckel. Gratisnivån ger 2 500
-  anrop per dygn för trafikhändelser, och anrop därutöver blockeras.
-  Villkoren (lästa 2026-11-11, punkterna 2, 11, 12, 14 och 17) säger:
-  licensen gäller en "Permitted Solution" enligt ett abonnemang, annars
-  bara egen utvärdering och test (2.1–2.2). Svar får inte lagras; de får
-  bara cachas i klienten, enligt svarets egna cachehuvuden, och aldrig för
-  att betjäna flera användare (11.4). Innehållet får inte bli en egen
-  tjänst eller databas (11.6.1) och inte användas för trafikövervakning
-  eller för att välja platser för fartkameror (11.6.8). Slutanvändare ska
-  godkänna ett licensavtal minst lika strängt som TomToms (12). TomToms
-  upphovsrättsnotis ska hämtas från deras Copyright API (17.3). Appen
-  uppfyller inte allt detta: proxyn cachar köerna i fem minuter på
-  servern, anger bara "TomTom" som källa och har inget licensavtal. Vad
-  som ska göras åt det är inte bestämt.
+- **TomTom (originalets trafiklager, valfri nyckel):** de svenska
+  tilläggen använder inte TomTom. Stadsdossierns köer runt orten hämtades
+  därifrån men togs bort 2026-11-11, eftersom appen inte uppfyller
+  villkoren (lästa 2026-11-11, punkterna 2, 11, 12, 14 och 17): licensen
+  gäller en "Permitted Solution" enligt ett abonnemang, annars bara egen
+  utvärdering och test (2.1–2.2). Svar får inte lagras; de får bara cachas
+  i klienten, enligt svarets egna cachehuvuden, och aldrig för att betjäna
+  flera användare (11.4). Innehållet får inte bli en egen tjänst eller
+  databas (11.6.1) och inte användas för trafikövervakning eller för att
+  välja platser för fartkameror (11.6.8). Slutanvändare ska godkänna ett
+  licensavtal minst lika strängt som TomToms (12). TomToms
+  upphovsrättsnotis ska hämtas från deras Copyright API (17.3).
+  Originalets trafiklager läser, enligt originalets dokumentation,
+  fortfarande TomToms flödesdata genom en serverproxy med 120 sekunders
+  cache när `TOMTOM_API_KEY` är satt; samma villkor gäller där, och utan
+  nyckeln kör lagret sin simulering. Köerna i dossiern ska ersättas med
+  Trafikverkets TrafficFlow (CC0), tidigast när schemaversion 1.6 med
+  normalflöde (BaselineTraffic) är i drift, planerad till 2026-11-18, och
+  täckningen är kontrollerad mot verkliga data.
 - **Valmyndigheten (valresultat i dossiern):** inga villkor hittade för
   rådatafilerna på val.se. Valmyndigheten anges som källa.
 - **Wikipedia och Wikimedia Commons (text, foto och vapen i dossiern):**
@@ -234,6 +239,19 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-11 (stadsdossiern: TomTom-köerna borttagna)
+- Avsnittet "Köer runt staden" i dossierns flik Nu är borttaget, och
+  `/api/city-transit` frågar inte längre TomTom, med eller utan nyckel.
+  Skälet är TomToms villkor, som appen inte uppfyller (se "Källor med
+  oklara eller särskilda villkor").
+- Ersättaren är Trafikverkets TrafficFlow (CC0, samma nyckel som tåg och
+  vägkameror). Den byggs tidigast när schemaversion 1.6 med normalflöde är
+  i drift (planerad 2026-11-18) och täckningen är kontrollerad.
+- Originalets trafiklager är orört: det använder TomTom bara när
+  `TOMTOM_API_KEY` är satt.
+- Testet för att kraftsystemets sparande stannar väntade en fast tid på
+  att dagen skrevs till disk och föll när hela testsviten kördes under
+  belastning. Det väntar nu tills läsningen är klar.
 ### 2026-11-11 (passets inställning heter vad den gör; TomToms villkor lästa)
 - Inställningen "Filmisk ankomst" i besökspasset heter nu "Ortskort vid
   första besöket": den styr bara om ortskortet visas, sedan den

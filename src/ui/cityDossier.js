@@ -930,7 +930,7 @@ export function createCityDossier({
   const partFailed = (field) =>
     Boolean(live?.failed?.includes(field)) ||
     (field === 'transit' &&
-      [live?.transit?.trains, live?.transit?.jams, live?.transit?.flights].some(
+      [live?.transit?.trains, live?.transit?.flights].some(
         (part) => part?.error === true,
       ));
 
@@ -1029,7 +1029,6 @@ export function createCityDossier({
                 set: clock(sun.set),
               }),
       trains: trainsView(live.transit?.trains),
-      jams: jamsView(live.transit?.jams),
       flights: flightsView(live.transit?.flights),
       kris: krisView(live.kris),
       aurora: auroraView(live.aurora),
@@ -1294,34 +1293,6 @@ export function createCityDossier({
     };
   }
 
-  /** TomTom's jams around the town; null without the TomTom key. */
-  function jamsView(jams) {
-    // A read that failed is no answer, not a road without queues.
-    if (!jams || jams.error) return null;
-    return {
-      empty: jams.items.length ? '' : t('No queues right now'),
-      items: jams.items.map((row, index) => ({
-        key: `${index}:${row.from}`,
-        title: [row.roads.join('/'), row.description]
-          .filter(Boolean)
-          .join(' · '),
-        detail: [
-          Number.isFinite(row.lengthM)
-            ? t('{km} km', { km: oneDecimal(row.lengthM / 1000) })
-            : null,
-          row.delaySeconds > 0
-            ? t('+{minutes} min', {
-                minutes: Math.max(1, Math.round(row.delaySeconds / 60)),
-              })
-            : null,
-          [row.from, row.to].filter(Boolean).join(' → ') || null,
-        ]
-          .filter(Boolean)
-          .join(' · '),
-      })),
-    };
-  }
-
   function render() {
     if (destroyed) return;
     if (!city) {
@@ -1359,7 +1330,6 @@ export function createCityDossier({
       source: [
         'SCB · Kolada · Valmyndigheten · Wikidata · Wikipedia · SMHI · Polisen', // i18n-ignore: provider names
         live?.transit?.trains?.station ? 'Trafikverket' : null, // i18n-ignore: provider name
-        live?.transit?.jams ? 'TomTom' : null, // i18n-ignore: provider name
         live?.transit?.flights?.airports?.length ? 'Swedavia' : null, // i18n-ignore: provider name
         live?.kris ? 'Krisinformation.se' : null, // i18n-ignore: provider name
         live?.aurora?.level ? 'NOAA SWPC' : null, // i18n-ignore: provider name

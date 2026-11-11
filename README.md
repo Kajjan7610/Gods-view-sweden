@@ -44,7 +44,7 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 </table>
 
 - **Flyg:** följ ett plan i luften från tavlan, dagens rutter på globen, METAR och TAF, och en svensk lägesbild i cockpit.
-- **Varje stad:** panelen STAD för svenska orter med folkmängd, skatt, inkomst, val, läget just nu, tåg från stationen, köer runt staden, Sevärt och ett besökspass.
+- **Varje stad:** panelen STAD för svenska orter med folkmängd, skatt, inkomst, val, läget just nu, tåg från stationen, Sevärt och ett besökspass.
 - **Väg och trafik:** tåg i realtid färgade efter försening, bussar och spårvagnar från 16 regionala trafikbolag, väglag, vägväder, Sveriges Radios trafikmeddelanden och kollektivtrafikstörningar.
 - **Väder, kris och infrastruktur:** SMHI:s väder, varningar, radar, luftkvalitet och vattenföring, VMA och krisnyheter från Krisinformation.se, Polisens händelser, norrskensprognos, elpris per elområde, sjöväder och strålning.
 - **Sparläge:** knappen 3D/2D, eller `?globe=lite`, startar utan Google 3D Tiles så att hemmabruk inte drar av Googles kvot.

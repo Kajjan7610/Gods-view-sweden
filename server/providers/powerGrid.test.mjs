@@ -644,17 +644,22 @@ test('the save stops once nobody has asked for half an hour', async () => {
     },
     unschedule: (timer) => stopped.push(timer),
   });
-  const tick = async () => {
+  // A quarter passes and the timer fires. The read before may still be
+  // writing its day to disk, and a tick then joins it: the timer firing again
+  // at the same moment asks only once that read is over.
+  const tick = async (expected) => {
     now += 15 * 60_000;
-    ticks.at(-1).fn();
-    // The read the tick began ends with the day written to disk.
-    await new Promise((resolve) => setTimeout(resolve, 60));
+    for (let tries = 0; tries < 100; tries += 1) {
+      ticks.at(-1).fn();
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      if (expected === undefined || room.productions >= expected) break;
+    }
   };
   await request('/day');
   assert.equal(room.productions, 1);
   // The layer is switched off. Two quarters on the save still runs…
-  await tick();
-  await tick();
+  await tick(2);
+  await tick(3);
   assert.equal(room.productions, 3);
   assert.deepEqual(stopped, []);
   // …and at the third, over half an hour after the last request, it stops

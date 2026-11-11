@@ -1,14 +1,11 @@
-// The city dossier's live transport: the town's station, its departures
-// and the jams around it, with either part absent without its key.
+// The city dossier's live transport: the town's station and its
+// departures, absent without the key.
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  TOMTOM_INCIDENTS_URL,
-  boxAround,
   cityTransitProxy,
   departuresQuery,
   normalizeDepartures,
-  normalizeJams,
   normalizeStations,
   townStation,
 } from './cityTransit.js';
@@ -137,56 +134,6 @@ test('departures: still to leave, with destination names, delay and reason', () 
   assert.match(query, /orderby="AdvertisedTimeAtLocation"/);
 });
 
-test('jams: the longest delays first, roads and stretch named', () => {
-  const jams = normalizeJams({
-    incidents: [
-      {
-        properties: {
-          iconCategory: 6,
-          delay: 98,
-          length: 2171.7,
-          roadNumbers: ['E20', 'E4'],
-          from: 'Gröndal',
-          to: 'Nyboda',
-          events: [{ description: 'Långsam trafik' }],
-          magnitudeOfDelay: 1,
-        },
-      },
-      {
-        properties: {
-          iconCategory: 6,
-          delay: 400,
-          length: 900,
-          roadNumbers: [],
-          from: 'A',
-          to: 'B',
-          events: [{ description: 'Kö' }],
-        },
-      },
-      { properties: { iconCategory: 8, delay: 999 } },
-    ],
-  });
-  assert.deepEqual(
-    jams.map(({ roads, delaySeconds, lengthM }) => [
-      roads,
-      delaySeconds,
-      lengthM,
-    ]),
-    [
-      [[], 400, 900],
-      [['E20', 'E4'], 98, 2172],
-    ],
-  );
-  const box = boxAround({ latitude: 60, longitude: 17 }, 12)
-    .split(',')
-    .map(Number);
-  assert.ok(Math.abs(box[3] - box[1] - 0.2156) < 0.001);
-  assert.ok(
-    box[2] - box[0] > box[3] - box[1],
-    'longitude span is wider in the north',
-  );
-});
-
 function route(options, path = '/api/city-transit') {
   const handlers = new Map();
   cityTransitProxy(options).configureServer({
@@ -208,7 +155,7 @@ function route(options, path = '/api/city-transit') {
   };
 }
 
-test('the route answers trains and jams, each only with its key', async () => {
+test('the route answers trains only with the key, and never asks TomTom', async () => {
   const calls = [];
   const fetchImpl = async (url, init) => {
     calls.push(url);
@@ -218,31 +165,33 @@ test('the route answers trains and jams, each only with its key', async () => {
       return new Response(
         JSON.stringify({ RESPONSE: { RESULT: [{ TrainAnnouncement: [] }] } }),
       );
-    if (url.startsWith(TOMTOM_INCIDENTS_URL))
-      return new Response(JSON.stringify({ incidents: [] }));
     return new Response('', { status: 404 });
   };
+  // A TomTom key in the environment changes nothing: the dossier lists no
+  // queues from TomTom, whose terms the app does not meet.
   const keyed = route({
     fetchImpl,
     env: { TRAFIKVERKET_API_KEY: 'a', TOMTOM_API_KEY: 'b' },
   });
   const body = (await keyed('/?lat=60.67&lon=17.14&town=G%C3%A4vle')).body;
   assert.equal(body.trains.station, 'Gävle C');
-  assert.deepEqual(body.jams, { items: [] });
+  assert.equal('jams' in body, false);
   await keyed('/?lat=60.67&lon=17.14&town=G%C3%A4vle');
   assert.equal(
     calls.filter((url) => url === TRAFIKVERKET_API_URL).length,
     2,
     'stations and departures cached',
   );
+  assert.equal(
+    calls.some((url) => /tomtom/i.test(url)),
+    false,
+  );
   const keyless = route({ fetchImpl, env: {} });
   const none = (await keyless('/?lat=60.67&lon=17.14')).body;
   assert.equal(none.trains, null);
-  assert.equal(none.jams, null);
   assert.equal(none.flights, null);
   assert.equal((await keyless('/?lat=x')).status, 400);
 });
-
 test('the airport board route: one Swedavia airport, today or tomorrow', async () => {
   const calls = [];
   const fetchImpl = async (url) => {
@@ -289,20 +238,25 @@ test('a late train is still asked for; one that has left is not', () => {
 test('the keys are not spent outside Sweden', async () => {
   const calls = [];
   const keyed = route({
-    fetchImpl: async (url) => {
+    fetchImpl: async (url, init) => {
       calls.push(url);
-      return new Response(JSON.stringify({ incidents: [] }));
+      return new Response(
+        JSON.stringify(
+          /TrainStation/.test(init?.body ?? '')
+            ? stationPayload
+            : { RESPONSE: { RESULT: [{ TrainAnnouncement: [] }] } },
+        ),
+      );
     },
-    env: { TOMTOM_API_KEY: 'b' },
+    env: { TRAFIKVERKET_API_KEY: 'a' },
   });
   // New York, and a request without a place (read as 0, 0).
   assert.equal((await keyed('/?lat=40.71&lon=-74.01')).status, 400);
   assert.equal((await keyed('/')).status, 400);
   assert.equal(calls.length, 0);
-  assert.equal((await keyed('/?lat=59.33&lon=18.07')).status, 200);
-  assert.equal(calls.length, 1);
+  assert.equal((await keyed('/?lat=60.67&lon=17.14')).status, 200);
+  assert.ok(calls.length > 0);
 });
-
 test('an answer without stations is not kept for a day', async (t) => {
   t.mock.method(console, 'warn', () => {});
   let empty = true;

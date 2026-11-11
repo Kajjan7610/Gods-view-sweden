@@ -7,28 +7,18 @@ import { createSwedaviaFlights } from './cityFlights.js';
 import { createAirportIndex } from './ourAirports.js';
 
 // The city dossier's live transport: the next departures from the town's
-// railway station (Trafikverket, CC0, the existing TRAFIKVERKET_API_KEY) and
-// the traffic jams around it (TomTom Traffic Incidents, the existing
-// TOMTOM_API_KEY), plus the nearby Swedavia airports' flights (cityFlights.js).
-// Keys stay server-side; each part is simply absent without its key. Stations are read once a day, departures every minute,
-// jams every five minutes per town.
-
-export const TOMTOM_INCIDENTS_URL =
-  'https://api.tomtom.com/traffic/services/5/incidentDetails';
+// railway station (Trafikverket, CC0, the existing TRAFIKVERKET_API_KEY),
+// plus the nearby Swedavia airports' flights (cityFlights.js). Keys stay
+// server-side; each part is simply absent without its key. Stations are read
+// once a day, departures every minute.
 const STATIONS_TTL_MS = 24 * 60 * 60_000;
 const DEPARTURES_TTL_MS = 60_000;
-const JAMS_TTL_MS = 5 * 60_000;
 const CACHE_MAX = 200;
 /** The town's station lies within this distance of its seat. */
 const STATION_RADIUS_KM = 8;
-/** Jams are looked for within this distance of the seat. */
-const JAM_RADIUS_KM = 12;
 const MAX_DEPARTURES = 6;
-const MAX_JAMS = 3;
 const FETCH_TIMEOUT_MS = 20_000;
 const MAX_BODY_BYTES = 8 * 1024 * 1024;
-const JAM_FIELDS =
-  '{incidents{type,geometry{type,coordinates},properties{iconCategory,magnitudeOfDelay,events{description,code},startTime,from,to,length,delay,roadNumbers}}}';
 
 const text = (value, max = 80) => {
   const s = String(value ?? '').trim();
@@ -162,48 +152,6 @@ export function normalizeDepartures(payload, names, nowMs) {
   return out;
 }
 
-/** A box of `km` around a point, as TomTom's minLon,minLat,maxLon,maxLat. */
-export function boxAround(point, km) {
-  const dLat = km / 111.32;
-  const dLon = km / (111.32 * Math.cos((point.latitude * Math.PI) / 180));
-  return [
-    point.longitude - dLon,
-    point.latitude - dLat,
-    point.longitude + dLon,
-    point.latitude + dLat,
-  ]
-    .map((value) => value.toFixed(4))
-    .join(',');
-}
-
-/** TomTom's jams as the dossier lists them, longest delay first. */
-export function normalizeJams(payload) {
-  const rows = Array.isArray(payload?.incidents) ? payload.incidents : [];
-  return rows
-    .map((row) => row?.properties)
-    .filter((props) => props && Number(props.iconCategory) === 6)
-    .map((props) => ({
-      roads: (Array.isArray(props.roadNumbers) ? props.roadNumbers : [])
-        .map((road) => text(road, 12))
-        .filter(Boolean)
-        .slice(0, 3),
-      description: text(props.events?.[0]?.description, 60),
-      from: text(props.from, 80),
-      to: text(props.to, 80),
-      lengthM: Number.isFinite(Number(props.length))
-        ? Math.round(Number(props.length))
-        : null,
-      delaySeconds: Number.isFinite(Number(props.delay))
-        ? Math.round(Number(props.delay))
-        : 0,
-      magnitude: Number(props.magnitudeOfDelay) || 0,
-    }))
-    .sort(
-      (a, b) => b.delaySeconds - a.delaySeconds || b.magnitude - a.magnitude,
-    )
-    .slice(0, MAX_JAMS);
-}
-
 /** A JSON writer for one response, never cached by the browser. */
 const respond = (res) => (status, value) => {
   if (res.destroyed) return;
@@ -223,7 +171,6 @@ export function cityTransitProxy({
 } = {}) {
   let stations = null;
   const departures = new Map();
-  const jams = new Map();
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 60, globalMax: 600 });
 
@@ -329,22 +276,6 @@ export function cityTransitProxy({
   // same day lists, so the board costs no extra calls while the dossier shows.
   const swedavia = createSwedaviaFlights({ fetchJson, now, env });
 
-  async function trafficJams(point, cacheKey) {
-    const key = String(env.TOMTOM_API_KEY ?? '').trim();
-    if (!key) return null;
-    return cached(jams, cacheKey, JAMS_TTL_MS, async () =>
-      normalizeJams(
-        await fetchJson(
-          `${TOMTOM_INCIDENTS_URL}?bbox=${boxAround(point, JAM_RADIUS_KM)}` +
-            `&fields=${encodeURIComponent(JAM_FIELDS)}` +
-            '&language=sv-SE&categoryFilter=6&timeValidityFilter=present' +
-            `&key=${encodeURIComponent(key)}`,
-          { headers: { Accept: 'application/json' } },
-        ),
-      ),
-    );
-  }
-
   async function handler(req, res) {
     const json = respond(res);
     if (req.method !== 'GET') return json(405, { error: 'method_not_allowed' });
@@ -367,15 +298,12 @@ export function cityTransitProxy({
       return json(400, { error: 'lat_lon_required' });
     if (!allow(clientKey(req))) return json(429, { error: 'rate_limited' });
     const point = { latitude, longitude };
-    const cell = `${latitude.toFixed(2)},${longitude.toFixed(2)}`;
-    const [rail, road, air] = await Promise.allSettled([
+    const [rail, air] = await Promise.allSettled([
       trains(point, town),
-      trafficJams(point, cell),
       swedavia.nearby(point),
     ]);
     for (const [label, result] of [
       ['trains', rail],
-      ['jams', road],
       ['flights', air],
     ])
       if (result.status === 'rejected')
@@ -385,12 +313,6 @@ export function cityTransitProxy({
         rail.status === 'fulfilled'
           ? rail.value
           : { station: null, departures: [], error: true },
-      jams:
-        road.status === 'fulfilled'
-          ? road.value === null
-            ? null
-            : { items: road.value }
-          : { items: [], error: true },
       flights:
         air.status === 'fulfilled'
           ? air.value === null

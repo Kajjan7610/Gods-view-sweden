@@ -46,7 +46,6 @@ test('a key-spending Swedish route refuses another site before anything is asked
   };
   const env = {
     TRAFIKVERKET_API_KEY: 'a',
-    TOMTOM_API_KEY: 'b',
     SWEDAVIA_FLIGHTINFO_KEY: 'c',
     SWEDAVIA_WAITTIME_KEY: 'd',
     TRAFIKLAB_REALTIME_KEY: 'e',

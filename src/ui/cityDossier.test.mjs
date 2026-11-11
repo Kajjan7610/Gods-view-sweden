@@ -390,30 +390,38 @@ test('an image names its Wikimedia Commons page, where author and licence stand'
 test('a transport source that failed is not shown as an empty one', async (t) => {
   const { state, visit } = harness(t);
   state.panelOpen = true;
-  // The route answered, but TomTom, Trafikverket and Swedavia behind it did
-  // not.
+  // The route answered, but Trafikverket and Swedavia behind it did not.
   state.bodies['/api/city-transit'] = {
     trains: { station: null, departures: [], error: true },
-    jams: { items: [], error: true },
     flights: { airports: [], error: true },
   };
   await visit(TOWNS.arboga);
   state.actions.setTab('now');
   await settle();
-  assert.equal(state.view.now.jams, null, 'not "no queues right now"');
   assert.equal(state.view.now.failed, 'No answer from: Traffic');
-  // Asked again after a minute; answered and empty is said as such.
-  state.bodies['/api/city-transit'] = {
-    trains: null,
-    jams: { items: [] },
-    flights: null,
-  };
+  // Asked again after a minute; an answer without its keys is no failure.
+  state.bodies['/api/city-transit'] = { trains: null, flights: null };
   state.now += 61_000;
   await visit(TOWNS.arboga);
-  assert.equal(state.view.now.jams.empty, 'No queues right now');
   assert.equal(state.view.now.failed, '');
 });
 
+test('the dossier lists no queues and names no TomTom, whatever the route answers', async (t) => {
+  const { state, visit } = harness(t);
+  state.panelOpen = true;
+  // An answer that still carries jams is neither shown nor credited.
+  state.bodies['/api/city-transit'] = {
+    trains: null,
+    jams: { items: [{ roads: ['E20'], delaySeconds: 400 }] },
+    flights: null,
+  };
+  await visit(TOWNS.arboga);
+  state.actions.setTab('now');
+  await settle();
+  assert.equal('jams' in state.view.now, false);
+  assert.doesNotMatch(state.view.source, /TomTom/);
+  assert.equal(state.view.now.failed, '');
+});
 test("a sight's picture names its Wikimedia Commons page too", async () => {
   const { commonsPage } = await import('./cityDossier.js');
   // Wikidata names a picture by its file path, over plain http.
