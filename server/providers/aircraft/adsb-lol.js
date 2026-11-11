@@ -2,6 +2,21 @@ import {
   coalesceProxyRequest,
   readResponseTextCapped,
 } from '../common/http.js';
+import { visibleAdsbLolAircraft } from '../../../src/data/adsbLolFallback.js';
+
+/** The /v2/mil answer without aircraft whose owners asked not to be shown. */
+function withoutHiddenAircraft(body) {
+  try {
+    const payload = JSON.parse(body);
+    if (!Array.isArray(payload?.ac)) return body;
+    return JSON.stringify({
+      ...payload,
+      ac: visibleAdsbLolAircraft(payload.ac),
+    });
+  } catch {
+    return body;
+  }
+}
 
 /**
  * Vite plugin: adsb.lol military aircraft proxy with 12 s response cache.
@@ -126,11 +141,12 @@ export function adsbLolProxy() {
               ADSBLOL_MIL_MAX_RESPONSE_BYTES,
               signal,
             );
-            _cache = body;
+            const visible = withoutHiddenAircraft(body);
+            _cache = visible;
             _cacheAt = Date.now();
             _cooldownUntil = 0;
             _cooldownStatus = 0;
-            return result(200, body, 'MISS');
+            return result(200, visible, 'MISS');
           }
           if (upstream.status === 429 || upstream.status >= 500) {
             const failedAt = Date.now();

@@ -5,6 +5,22 @@ med svenska öppna data, av Kaj Obst. `README.md` har ett svenskt block med bild
 överst; resten av originalets README lämnas orört så att uppdateringar från
 originalet går att slå ihop. Allt svenskt beskrivs i detalj här.
 
+## Princip: öppna data först
+
+Projektet visar vad som går att bygga på dagens öppna data. Varje källa hör
+till en av tre grupper:
+
+- **Öppna data:** fri licens eller uttryckligen fritt att använda med
+  källan angiven (CC0, CC BY, ODbL och liknande). Projektet bygger på dem.
+- **Offentliga men utan publicerad licens:** visas med källan angiven och
+  står under "Källor med oklara eller särskilda villkor" tills dataägaren
+  har svarat eller en öppen källa finns.
+- **Kräver tillstånd:** används inte, även om en gratis nyckel fungerar. En
+  nyckel ger åtkomst, inte tillstånd. Hit hör OpenSky och TomTom, som
+  originalets flyg- och trafiklager använder. I den svenska versionen
+  kommer flyg som standard från adsb.lol (öppna data, ODbL), och
+  `TOMTOM_API_KEY` lämnas tom så att trafiklagret kör sin simulering.
+
 ## Vad som är tillagt
 
 | Del | Källa | Var i appen |
@@ -118,10 +134,8 @@ de här gränserna, även för nya lager:
 - **Egna nycklar, källornas villkor.** Varje användare skaffar sina egna
   nycklar, och varje källas villkor gäller den som använder nyckeln; koden
   är fri (MIT), datan är det inte alltid. Några källor får bara användas
-  icke-kommersiellt, bland annat OpenSky (flyg), vars licens gäller ideell
-  forskning, utbildning och myndigheter; kommersiell användning kräver
-  OpenSkys skriftliga tillstånd. Offentlig användning av datan ska ange
-  källan (för flyg: "The OpenSky Network, https://opensky-network.org").
+  icke-kommersiellt, bland annat OpenSky (flyg); se OpenSky under "Källor
+  med oklara eller särskilda villkor".
 - **Varje ny källa prövas** innan den byggs in: dokumenterat gränssnitt och
   licens, om dataägarens godkännande krävs, om villkoren tillåter
   användningen, och vad källan tillför helheten. Utfallet skrivs in här.
@@ -196,7 +210,59 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   texten är CC BY-SA 4.0 och länkas. Bilderna har egna licenser; panelen
   och ortskortet länkar till bildens sida på Commons, där upphovsperson och
   licens står.
-- **OpenSky (flyg, originalets lager):** bara icke-kommersiellt, se ovan.
+- **OpenSky (flyg, originalets lager):** villkoren lästa 2026-11-11
+  (opensky-network.org/about/terms-of-use). Licensen gäller bara ideell
+  forskning och ideell utbildning; myndigheter kan få undantag efter
+  OpenSkys beslut (punkt 1). Kommersiell användning kräver skriftligt
+  tillstånd, och det gör också all användning av API:et i en levande
+  produkt, tjänst eller ett automatiserat system, även internt och även
+  utan vinstsyfte (punkt 1 och 3(vi)). Flyglagret frågar API:et var 30:e
+  sekund medan appen är öppen och omfattas därför av det kravet, med eller
+  utan konto. Datan får inte lämnas vidare till andra (3(iii)); var och en
+  som kör appen har sitt eget avtal med OpenSky. Visas data offentligt,
+  även på webben, i filmer eller presentationer, ska anropssignaler,
+  registreringar och ICAO-adresser anonymiseras (3(i)), artikeln citeras
+  (Schäfer m.fl., "Bringing up OpenSky", IPSN 2014; webbadressen
+  opensky-network.org får läggas till) och OpenSky få en kopia eller en
+  länk (4(i)). OpenSky hör därför till gruppen "kräver tillstånd" och
+  används inte i den svenska versionen: flyg kommer som standard från
+  adsb.lol, och OpenSky frågas aldrig, inte heller efter spåret bakåt, som
+  då inte visas. `FLIGHTS_SOURCE=opensky` tar tillbaka OpenSky och kräver
+  då deras skriftliga tillstånd.
+- **adsb.lol (flyg):** villkoren lästa 2026-11-11 (api.adsb.lol/docs).
+  API:et är gratis och all data adsb.lol publicerar har licensen ODbL 1.0,
+  samma som OpenStreetMap: källan ska anges, och en sammanställd databas
+  som görs offentlig ska delas under samma licens. Den som använder API:et
+  i produktion ombeds kontakta adsb.lol först, och en nyckel (som fås genom
+  att skicka in egen mottagardata) är planerad. Appen läser flygplanen
+  inom 250 sjömil från kartans mitt. Täckningen över Sverige var
+  2026-11-11 i nivå med OpenSkys (137 mot 139 flygplan runt Malmö, 60 mot
+  64 runt Stockholm, 12 mot 12 runt Kiruna). adsb.lol:s data är
+  ofiltrerad, men appen tar bort flygplan vars ägare bett om att inte visas
+  (märkta PIA eller LADD), även bland militärflygen; vid kontrollen var det
+  ett eller två per område. Källan anges som "adsb.lol (ODbL 1.0)" under
+  "Datakällor" och ska anges likadant i bilder och filmer.
+- **AISStream (fartyg, originalets lager):** inga villkor eller licens
+  publicerade på aisstream.io (sökt 2026-11-11); tjänsten beskriver sig
+  som gratis. Hör till gruppen utan publicerad licens.
+- **NASA FIRMS (bränder, originalets lager):** öppna data. NASA uppmuntrar
+  fri användning och publicering; källan anges som "NASA FIRMS"
+  (earthdata.nasa.gov/data/tools/firms/faq, läst 2026-11-11).
+- **Cesium ion (kartor, terräng och Googles 3D-städer):** villkoren lästa
+  2026-11-11 (cesium.com/legal/terms-of-service och bilaga B-2). Det fria
+  kontot gäller icke-kommersiella personliga projekt. Licensen är personlig:
+  tjänsten får inte göras tillgänglig för andra eller köras som en tjänst
+  åt andra (2.2.1), data får inte sparas för användning utan
+  internetanslutning (2.2.2) och Cesium ion-loggan ska synas i appens
+  huvudfönster (2.2.3), vilket den gör. Googles 3D-städer hämtas genom
+  Cesium ion, och då gäller också bilaga B-2: Googles källangivelse ska
+  synas, innehållet får inte sparas eller cachas, inte användas för att
+  skapa eget innehåll och inte tas med i elektroniska eller tryckta
+  dokument (3a(vi)). Bilaga B-2 förbjuder också att Googles innehåll
+  används tillsammans med eller nära en karta från någon annan än Google
+  (3e). Skärmbilder och filmer med Googles 3D-städer, även bilderna i
+  README, är därför tveksamma; säkrast är att ta dem i sparläget
+  (`?globe=lite`), utan Googles 3D-städer.
 
 ## Nycklar (`.env`, checkas aldrig in)
 
@@ -207,7 +273,8 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 | `TRAFIKLAB_GTFS_STATIC_KEY` | linjenummer och fordonstyp | trafiklab.se → GTFS Regional Static |
 | `SWEDAVIA_FLIGHTINFO_KEY` | avgångar och ankomster i dossiern, tavlan och cockpit | apideveloper.swedavia.se → FlightInfo Free |
 | `SWEDAVIA_WAITTIME_KEY` | köerna i säkerhetskontrollen | apideveloper.swedavia.se → WaitTime Free |
-| `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` | flyg med större kvot än utan konto (originalets lager; bara icke-kommersiellt, ange OpenSky som källa) | opensky-network.org → konto → API client (under KOPPLA PÅ) |
+| `FLIGHTS_SOURCE` | tom (standard): flyg från adsb.lol (ODbL) runt kartans mitt, OpenSky frågas aldrig; `opensky`: originalets OpenSky, som kräver deras skriftliga tillstånd | ingen nyckel |
+| `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` | flyg med större kvot än utan konto (originalets lager; OpenSkys villkor kräver skriftligt tillstånd för användning i en app som denna, se "Källor med oklara eller särskilda villkor") | opensky-network.org → konto → API client (under KOPPLA PÅ) |
 | `ENTSOE_SECURITY_TOKEN` | kraftsystemet från ENTSO-E i stället för Svenska kraftnäts kontrollrum; används bara med `POWER_GRID_SOURCE=entsoe` | transparency.entsoe.eu → registrera, mejla transparency@entsoe.eu "RESTful API access", sedan My Account → Generate token |
 | `CESIUM_ION_TOKEN` | fotorealistiska 3D-städer | ion.cesium.com |
 
@@ -238,6 +305,31 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-11 (öppna data först; flyg från adsb.lol)
+- Ny inledande princip: källorna delas in i öppna data, offentliga utan
+  publicerad licens och sådana som kräver tillstånd. Den sista gruppen
+  används inte. OpenSky och TomTom hör dit.
+- Flyglagret hämtar som standard flygplanen runt kartans mitt från
+  adsb.lol (ODbL) och frågar aldrig OpenSky, inte heller efter spåret
+  bakåt. `FLIGHTS_SOURCE=opensky` tar tillbaka originalets OpenSky.
+  Täckningen över Sverige är kontrollerad genom appens egen proxy.
+- Flygplan vars ägare bett om att inte visas (readsb-märkningen PIA eller
+  LADD) tas bort ur adsb.lol:s svar, både bland flygen runt kartan och
+  bland militärflygen. Svaret anger hur många som togs bort.
+- Datakällor anger adsb.lol för flygen och OpenSky bara när det väljs.
+- AISStreams, NASA FIRMS och Cesium ions villkor är lästa och står under
+  "Källor med oklara eller särskilda villkor", liksom att skärmbilder med
+  Googles 3D-städer är tveksamma enligt Cesium ions villkor.
+
+### 2026-11-11 (OpenSkys villkor lästa)
+- OpenSkys villkor är lästa i sin helhet och sammanfattade under "Källor
+  med oklara eller särskilda villkor". Det som stod tidigare var för
+  svagt: myndigheter omfattas bara efter undantag, användning av API:et i
+  en levande app kräver skriftligt tillstånd även utan vinstsyfte, och
+  offentlig visning kräver anonymiserade flygplan och citat av artikeln.
+  Samma rättelse är gjord i Kom igång och README.
+- Ingen kod är ändrad.
 
 ### 2026-11-11 (stadsdossiern: TomTom-köerna borttagna)
 - Avsnittet "Köer runt staden" i dossierns flik Nu är borttaget, och

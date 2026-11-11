@@ -111,7 +111,7 @@ export const DATA_CREDITS = [
   {
     key: 'opensky',
     html:
-      'Flights: OpenSky Network — Schäfer et al., ' +
+      'Flights with FLIGHTS_SOURCE=opensky: OpenSky Network — Schäfer et al., ' +
       '“Bringing Up OpenSky”, IPSN 2014 · ' +
       '<a href="https://opensky-network.org" target="_blank" rel="noopener">opensky-network.org</a> ' +
       '(non-commercial)',
@@ -119,7 +119,7 @@ export const DATA_CREDITS = [
   {
     key: 'adsblol',
     html:
-      'Military flights, aircraft traces, bounded regional flight fallback &amp; GNSS navigation integrity: ' +
+      'Flights around the view (the default), military flights, aircraft traces, bounded regional flight fallback &amp; GNSS navigation integrity: ' +
       '<a href="https://adsb.lol" target="_blank" rel="noopener">adsb.lol</a> ' +
       '(ODbL 1.0)',
   },

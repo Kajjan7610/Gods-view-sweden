@@ -90,9 +90,19 @@ export function normalizeAdsbLolAircraftState(aircraft, nowSeconds) {
   ];
 }
 
+/** readsb dbFlags of owners who asked not to be shown: PIA = 4, LADD = 8. */
+export const ADSBLOL_PRIVACY_FLAGS = 4 | 8;
+
+/** adsb.lol aircraft rows without those whose owners asked not to be shown. */
+export function visibleAdsbLolAircraft(rows) {
+  return (Array.isArray(rows) ? rows : []).filter(
+    (row) => (Number(row?.dbFlags) & ADSBLOL_PRIVACY_FLAGS) === 0,
+  );
+}
 /**
  * Normalize an adsb.lol point response to an OpenSky-compatible response.
- * Invalid rows and positionless contacts are intentionally excluded.
+ * Invalid rows, positionless contacts and aircraft whose owners asked not
+ * to be shown (PIA, LADD) are intentionally excluded.
  * @param {object} payload adsb.lol v2 response.
  * @returns {{time:number,states:Array[]}}
  */
@@ -104,7 +114,7 @@ export function normalizeAdsbLolPointResponse(payload) {
       : Math.floor(
           responseNow > 10_000_000_000 ? responseNow / 1000 : responseNow,
         );
-  const aircraft = Array.isArray(payload?.ac) ? payload.ac : [];
+  const aircraft = visibleAdsbLolAircraft(payload?.ac);
   const states = [];
   // Keep the OpenSky vectors unchanged. The regional fallback's extra readsb
   // status travels alongside them, keyed only to admitted aircraft.

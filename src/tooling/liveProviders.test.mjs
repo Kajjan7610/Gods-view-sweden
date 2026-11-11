@@ -6,6 +6,10 @@ import { setTimeout as delay } from 'node:timers/promises';
 import * as providers from '../../server/providers/live.js';
 import * as portable from '../../src/data/adsbLolFallback.js';
 
+// The OpenSky route as upstream built it; the Swedish default, adsb.lol,
+// has its own tests below.
+process.env.FLIGHTS_SOURCE = 'opensky';
+
 function install(plugin, preview = false) {
   const routes = new Map();
   plugin[preview ? 'configurePreviewServer' : 'configureServer']({
@@ -784,4 +788,105 @@ test('OpenSky 5xx retains dated last-good data, cancels error bodies and cools d
     assert.match(JSON.parse(response.body).error, /OpenSky/);
   }
   assert.equal(calls, 1);
+});
+
+test('flights come from adsb.lol by default, and OpenSky only when chosen', async (t) => {
+  environment(t, { ...openSkyAnonEnv, FLIGHTS_SOURCE: undefined });
+  const calls = [];
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    calls.push(url);
+    if (url.includes('/lat/')) return regionalFallback();
+    if (url.includes('/states/'))
+      return Response.json({ time: Math.floor(Date.now() / 1000), states: [] });
+    throw Error(`Unexpected URL: ${url}`);
+  });
+  const fresh = await import(
+    `../../server/providers/aircraft/opensky.js?default=${Math.random()}`
+  );
+  const answer = await install(fresh.openSkyProxy())(
+    '/api/flights',
+    '?lat=59.33&lon=18.07',
+  );
+  assert.equal(answer.headers['x-flight-source'], 'adsb.lol');
+  assert.match(answer.headers['x-flight-coverage'], /regional/);
+  assert.equal(
+    calls.some((url) => /opensky-network/.test(url)),
+    false,
+  );
+  assert.equal(fresh.flightsFromAdsbLol({}), true);
+  assert.equal(
+    fresh.flightsFromAdsbLol({ FLIGHTS_SOURCE: ' OpenSky ' }),
+    false,
+  );
+});
+
+test('military aircraft whose owners asked not to be shown are left out', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () =>
+    Response.json({
+      ac: [
+        { hex: 'aaa111', dbFlags: 1 },
+        { hex: 'bbb222', dbFlags: 1 | 4 },
+        { hex: 'ccc333', dbFlags: 8 },
+        { hex: 'ddd444' },
+      ],
+    }),
+  );
+  const answer = await install(providers.adsbLolProxy())('/api/military');
+  assert.deepEqual(
+    JSON.parse(answer.body).ac.map((row) => row.hex),
+    ['aaa111', 'ddd444'],
+  );
+});
+
+test('FLIGHTS_SOURCE=adsblol reads adsb.lol around the view and never asks OpenSky', async (t) => {
+  environment(t, { ...openSkyAnonEnv, FLIGHTS_SOURCE: 'adsblol' });
+  const calls = [];
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    calls.push(url);
+    if (url.includes('/lat/'))
+      return Response.json({
+        now: Date.now() / 1000,
+        ac: [
+          { hex: 'abc123', lat: 59.3, lon: 18.1, alt_baro: 10000 },
+          { hex: 'def456', lat: 59.4, lon: 18.2, alt_baro: 9000, dbFlags: 8 },
+          { hex: 'aaa111', lat: 59.5, lon: 18.3, alt_baro: 8000, dbFlags: 1 },
+        ],
+      });
+    throw Error(`Unexpected URL: ${url}`);
+  });
+  const fresh = await import(
+    `../../server/providers/aircraft/opensky.js?adsblol=${Math.random()}`
+  );
+  const flights = install(fresh.openSkyProxy());
+  const answer = await flights('/api/flights', '?lat=59.33&lon=18.07');
+  assert.equal(answer.statusCode, 200);
+  assert.equal(answer.headers['x-flight-source'], 'adsb.lol');
+  assert.equal(answer.headers['x-feed-source'], 'adsb.lol');
+  // The one whose owner asked not to be shown (LADD) is left out; being
+  // military is no such wish.
+  assert.deepEqual(
+    JSON.parse(answer.body).states.map((state) => state[0]),
+    ['abc123', 'aaa111'],
+  );
+  assert.equal(answer.headers['x-flight-privacy-hidden'], '1');
+  // Without a place there is nothing to read around, and nothing is asked.
+  const asked = calls.length;
+  const placeless = await flights('/api/flights');
+  assert.equal(placeless.statusCode, 200);
+  assert.deepEqual(JSON.parse(placeless.body).states, []);
+  assert.equal(calls.length, asked);
+  assert.equal(
+    calls.some((url) => /opensky-network/.test(url)),
+    false,
+  );
+  // The track route does not ask OpenSky either.
+  const tracks = install(providers.trackBackfillProxies(), true);
+  assert.equal(
+    (await tracks('/api/flights/track', '?icao24=abc123')).statusCode,
+    404,
+  );
+  assert.equal(
+    calls.some((url) => /opensky-network/.test(url)),
+    false,
+  );
 });

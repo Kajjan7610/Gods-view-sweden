@@ -1,4 +1,4 @@
-import { getOpenSkyToken } from './opensky.js';
+import { flightsFromAdsbLol, getOpenSkyToken } from './opensky.js';
 import { readCappedResponseText } from '../common/http.js';
 /**
  * Vite plugin: aircraft track-history backfill proxies (PRD WS-F F1/F2).
@@ -76,6 +76,14 @@ export function trackBackfillProxies() {
           res.end(
             JSON.stringify({ error: 'icao24 must be a 6-char hex string' }),
           );
+          return;
+        }
+        // Flights from adsb.lol alone: no history, and OpenSky is not asked.
+        if (flightsFromAdsbLol()) {
+          res.statusCode = 404;
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Cache-Control', 'no-store');
+          res.end(JSON.stringify({ error: 'track history unavailable' }));
           return;
         }
         const token = await getOpenSkyToken();

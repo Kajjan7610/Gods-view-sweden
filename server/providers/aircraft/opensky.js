@@ -1,6 +1,9 @@
 import fs from 'node:fs';
 import os from 'node:os';
-import { normalizeAdsbLolPointResponse } from '../../../src/data/adsbLolFallback.js';
+import {
+  normalizeAdsbLolPointResponse,
+  visibleAdsbLolAircraft,
+} from '../../../src/data/adsbLolFallback.js';
 import {
   coalesceProxyRequest,
   readResponseJsonCapped,
@@ -149,6 +152,19 @@ let _openskyAuthModeWarned = false;
 const OPENSKY_AUTH_MODE_DEFAULT = 'oauth';
 /** Set of valid OPENSKY_AUTH_MODE values. */
 const OPENSKY_AUTH_MODE_SET = new Set(['basic', 'oauth', 'auto', 'anon']);
+/**
+ * Whether flights come from adsb.lol alone: open data under ODbL, read around
+ * the view, and OpenSky is never asked. The Swedish version's default;
+ * FLIGHTS_SOURCE=opensky brings OpenSky back, whose terms need a written
+ * licence for live use.
+ */
+export function flightsFromAdsbLol(env = process.env) {
+  return (
+    String(env.FLIGHTS_SOURCE ?? '')
+      .trim()
+      .toLowerCase() !== 'opensky'
+  );
+}
 /** Regional civilian fallback cache, keyed by a coarse 0.25° view anchor. */
 const _adsbLolPointCache = new Map();
 /** Per-anchor single-flight map for concurrent regional fallback requests. */
@@ -156,6 +172,8 @@ const _adsbLolPointInFlight = new Map();
 const ADSBLOL_POINT_CACHE_MS = 12000;
 const ADSBLOL_POINT_CACHE_MAX = 80;
 const ADSBLOL_POINT_RADIUS_NM = 250;
+/** What the flights cover when adsb.lol is the source ("regional" tells tools). */
+const ADSBLOL_VIEW_COVERAGE = `${ADSBLOL_POINT_RADIUS_NM}nm regional feed around the view`;
 const ADSBLOL_POINT_MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
 // A 200 response can still contain an old OpenSky snapshot. Past this point
 // the viewport-scoped adsb.lol source is more honest and keeps local motion
@@ -403,6 +421,10 @@ async function fetchAdsbLolPointFallback(req) {
           body: JSON.stringify(normalized),
           cachedAt: Date.now(),
           count: normalized.states.length,
+          // Left out by the normalizer: owners who asked not to be shown.
+          privacyHidden:
+            (Array.isArray(payload?.ac) ? payload.ac.length : 0) -
+            visibleAdsbLolAircraft(payload?.ac).length,
         };
         _adsbLolPointCache.delete(cacheKey);
         _adsbLolPointCache.set(cacheKey, record);
@@ -426,7 +448,13 @@ async function fetchAdsbLolPointFallback(req) {
   }
 }
 
-async function serveAdsbLolPointFallback(req, res, requestedMode, reason) {
+async function serveAdsbLolPointFallback(
+  req,
+  res,
+  requestedMode,
+  reason,
+  coverage = `${ADSBLOL_POINT_RADIUS_NM}nm regional fallback`,
+) {
   const fallback = await fetchAdsbLolPointFallback(req);
   if (!fallback) return false;
   res.writeHead(200, {
@@ -437,8 +465,9 @@ async function serveAdsbLolPointFallback(req, res, requestedMode, reason) {
       reason,
     }),
     'X-Flight-Source': 'adsb.lol',
-    'X-Flight-Coverage': `${ADSBLOL_POINT_RADIUS_NM}nm regional fallback`,
+    'X-Flight-Coverage': coverage,
     'X-Flight-Count': String(fallback.count),
+    'X-Flight-Privacy-Hidden': String(fallback.privacyHidden ?? 0),
   });
   res.end(fallback.body);
   return true;
@@ -484,6 +513,42 @@ export function openSkyProxy() {
         // This mount also matches its /track route, served by its own handler.
         if (new URL(req.url || '/', 'http://localhost').pathname !== '/')
           return next();
+        if (flightsFromAdsbLol()) {
+          res.setHeader('X-Feed-Source', 'adsb.lol');
+          if (
+            await serveAdsbLolPointFallback(
+              req,
+              res,
+              'off',
+              'flights_source_adsblol',
+              ADSBLOL_VIEW_COVERAGE,
+            )
+          )
+            return;
+          // No place yet (the first poll before the camera settles): nothing
+          // to read around, and no other source is asked.
+          if (adsbLolFallbackAnchor(req) === null) {
+            res.writeHead(200, {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-store',
+              'X-Flight-Source': 'adsb.lol',
+              'X-Flight-Coverage': ADSBLOL_VIEW_COVERAGE,
+            });
+            res.end(
+              JSON.stringify({
+                time: Math.floor(Date.now() / 1000),
+                states: [],
+              }),
+            );
+            return;
+          }
+          res.writeHead(502, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store',
+          });
+          res.end(JSON.stringify({ error: 'adsb.lol unavailable' }));
+          return;
+        }
         res.setHeader('X-Feed-Source', 'OpenSky Network');
         const requestedMode = normalizeOpenSkyAuthMode(
           process.env.OPENSKY_AUTH_MODE,
