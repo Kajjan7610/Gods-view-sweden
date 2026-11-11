@@ -226,6 +226,24 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-11 (kraftsystemet: rättningar efter andra kodgranskningen)
+- Servern slutar fråga Svenska kraftnäts kontrollrum när ingen har frågat på
+  en halvtimme. Förut fortsatte den spara dygnet var 15:e minut tills
+  dev-servern stängdes, även med lagret avstängt. Veckodiagrammet får då
+  luckor för tiden lagret varit av.
+- Ett elområde utan import- eller exportvärde visas inte, i stället för att
+  stå med 0 MW, och en saknad tidsstämpel visas inte som 01:00.
+- En ritning som misslyckades loggas som ritfel och görs om vid nästa
+  uppdatering. Ett avstängt lager bär inte kvar sitt senaste fel.
+- ENTSO-E-reserven (avstängd tills nyckeln finns): en gräns eller zon som
+  inte svarar blir en lucka i stället för att fälla hela uppdateringen, och
+  en länk med en oläst riktning visas inte alls. Ett avvisat anrop läses
+  inte längre som "inga data", ett tomt mätvärde är inte 0 MW, och
+  produktion äldre än två timmar visas inte bredvid färska flöden.
+- Kvar i reserven tills den kan provas mot riktiga data: luckor i ett
+  enskilt kraftslag, överlappande serier och att källan ska anges som
+  ENTSO-E i reservläget.
+
 ### 2026-11-11 (stadsdossierns panel: rättningar efter kodgranskning)
 - En transportkälla som inte svarade visas inte som tom: när TomTom inte
   svarar står det inte längre "Inga köer just nu", utan trafiken nämns bland

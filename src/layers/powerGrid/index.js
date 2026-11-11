@@ -104,6 +104,7 @@ export function createPowerGridLayer({
   pointer = null,
   terrain = null,
   requestRender = null,
+  now = () => Date.now(),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Power grid requires a snapshot source');
@@ -516,6 +517,7 @@ export function createPowerGridLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      _lastError = null;
       // The next answer after a pause draws, and asks for heights, again.
       _signature = null;
       watchView(false);
@@ -539,11 +541,12 @@ export function createPowerGridLayer({
         _lastUpdate =
           _stale && Number.isFinite(snapshot.fetchedAt)
             ? snapshot.fetchedAt
-            : Date.now();
+            : now();
         _lastError = null;
         const signature = signatureOf(snapshot);
         if (signature !== _signature) {
-          _signature = signature;
+          // Not trusted until drawn: a drawing that fails is made again.
+          _signature = null;
           _snapshot = snapshot;
           if (
             _focus !== null &&
@@ -554,7 +557,15 @@ export function createPowerGridLayer({
             _focus = null;
           // Heights first: the ones this browser kept are drawn at once.
           _ground.place(groundRows());
-          render();
+          try {
+            render();
+          } catch (e) {
+            console.warn('[Data:PowerGrid] Draw error:', e?.message || e);
+            _lastError = e?.message || msg('Power grid unavailable');
+            _rowListener?.();
+            return true;
+          }
+          _signature = signature;
         } else {
           // Takes up again what a switched-off layer had left to ask.
           _ground.place(groundRows());

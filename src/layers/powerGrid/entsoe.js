@@ -109,10 +109,15 @@ export function isNoDataAnswer(xml) {
   const text = String(xml ?? '');
   if (!/Acknowledgement_MarketDocument/.test(text)) return false;
   const code = first('code', text);
-  if (code === '999') return true;
   const reason = first('text', text) || 'refused';
+  // 999 is also the code of refusals (a bad token, too many requests): only
+  // the "no matching data" text makes it an empty answer.
+  if (code === '999' && /no matching data/i.test(reason)) return true;
   throw new Error(`ENTSO-E refused the query: ${reason.slice(0, 200)}`);
 }
+
+/** A point's quantity; NaN when it is missing or empty, never 0 MW. */
+const quantityOf = (raw) => (raw == null || raw === '' ? NaN : Number(raw));
 
 /**
  * The time series of an answer, each as quarter-hour points. A coarser
@@ -138,7 +143,7 @@ export function parseEntsoeSeries(xml) {
       const values = blocks('Point', period)
         .map((point) => [
           Number(first('position', point)),
-          Number(first('quantity', point)),
+          quantityOf(first('quantity', point)),
         ])
         .filter(
           ([position, value]) =>

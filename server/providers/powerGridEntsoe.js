@@ -27,6 +27,8 @@ import { WEEK_DAYS, powerGridProxy, stepDate } from './powerGrid.js';
 // Swedish zones over the last week: 36 requests every quarter-hour, well under
 // the 400 a minute ENTSO-E allows a token. A failed refresh leaves ENTSO-E
 // alone for a minute and serves the last answer, marked stale, for two hours.
+/** Production older than this does not stand beside the flows. */
+const PRODUCTION_MAX_AGE_MS = 2 * 60 * 60_000;
 const TTL_MS = 15 * 60_000;
 const STALE_MAX_MS = 2 * 60 * 60_000;
 export const ENTSOE_RETRY_AFTER_FAILURE_MS = 60_000;
@@ -115,13 +117,24 @@ export function powerGridEntsoeProxy({
     const weekStart =
       Date.parse(`${stepDate(stockholmDate(at), -(WEEK_DAYS - 1))}T00:00:00Z`) -
       2 * HOUR_MS;
+    // One border or zone that does not answer is a gap, not the end of the
+    // refresh: the others are asked for all the same.
+    const failures = [];
+    const attempt = async (query) => {
+      try {
+        return await read(token, query);
+      } catch (error) {
+        failures.push(error);
+        return null;
+      }
+    };
     const flowTasks = ENTSOE_LINKS.flatMap((link) => [
       [link.id, 'aToB', link.bCode, link.aCode],
       [link.id, 'bToA', link.aCode, link.bCode],
     ]).map(([id, side, inArea, outArea]) => async () => [
       id,
       side,
-      await read(token, {
+      await attempt({
         documentType: 'A11',
         in_Domain: inArea,
         out_Domain: outArea,
@@ -133,7 +146,7 @@ export function powerGridEntsoeProxy({
       async () => [
         zone,
         'generation',
-        await read(token, {
+        await attempt({
           documentType: 'A75',
           processType: 'A16',
           in_Domain: ENTSOE_AREAS[zone],
@@ -144,7 +157,7 @@ export function powerGridEntsoeProxy({
       async () => [
         zone,
         'load',
-        await read(token, {
+        await attempt({
           documentType: 'A65',
           processType: 'A16',
           outBiddingZone_Domain: ENTSOE_AREAS[zone],
@@ -157,18 +170,35 @@ export function powerGridEntsoeProxy({
     const byLink = new Map();
     const generation = new Map();
     const loads = new Map();
+    // A link with a direction unread is left out: netted from the other
+    // direction alone it would show a wrong size and way.
+    const broken = new Set();
+    let productionUnread = false;
     for (const [key, side, series] of answers) {
-      if (side === 'generation') generation.set(key, series);
-      else if (side === 'load') loads.set(key, series);
+      if (side === 'generation' || side === 'load') {
+        if (series === null) productionUnread = true;
+        else (side === 'generation' ? generation : loads).set(key, series);
+      } else if (series === null) broken.add(key);
       else {
         const pair = byLink.get(key) ?? { aToB: [], bToA: [] };
         pair[side] = series;
         byLink.set(key, pair);
       }
     }
+    for (const key of broken) byLink.delete(key);
     const flows = flowsFromEntsoe(byLink);
-    if (!flows.links.length) throw new Error('no flows in the answer');
-    return { flows, points: productionFromEntsoe(generation, loads), at };
+    // Nothing at all: the first failure says why (a refused token keeps its
+    // status).
+    if (!flows.links.length)
+      throw failures[0] ?? new Error('no flows in the answer');
+    return {
+      flows,
+      // Production unread this time: the last read stands until it is old.
+      points: productionUnread
+        ? (cached?.points ?? [])
+        : productionFromEntsoe(generation, loads),
+      at,
+    };
   }
 
   /** One shared refresh; a failure keeps the last answer and starts the pause. */
@@ -194,6 +224,16 @@ export function powerGridEntsoeProxy({
   /** Points of one Stockholm date, oldest first. */
   const pointsOn = (date) =>
     (cached?.points ?? []).filter((point) => stockholmDate(point.at) === date);
+
+  /** The newest production, unless it is too old to stand beside the flows. */
+  function productionNow() {
+    const latest = latestProduction(cached.points);
+    return latest &&
+      Number.isFinite(latest.at) &&
+      now() - latest.at <= PRODUCTION_MAX_AGE_MS
+      ? latest
+      : { at: null };
+  }
 
   async function handler(req, res) {
     const json = (status, value, headers = {}) => {
@@ -264,7 +304,7 @@ export function powerGridEntsoeProxy({
     }
     return mark({
       ...cached.flows,
-      production: latestProduction(cached.points),
+      production: productionNow(),
       fetchedAt: cached.at,
       source: 'entsoe',
     });

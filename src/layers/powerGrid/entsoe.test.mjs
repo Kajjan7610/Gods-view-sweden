@@ -216,3 +216,36 @@ test('production sums the four zones per type, only where all four report', () =
   ]);
   assert.deepEqual(productionFromEntsoe(new Map(), new Map()), []);
 });
+
+test('a refusal under code 999 is a failure, and an empty quantity is no 0 MW', () => {
+  // ENTSO-E answers a bad token and a spent allowance under 999 too.
+  for (const refusal of [
+    'Unauthorized. Missing or invalid security token',
+    'Max allowed requests per minute from User exceeded',
+  ])
+    assert.throws(
+      () => parseEntsoeSeries(entsoeAcknowledgement('999', refusal)),
+      /ENTSO-E refused the query/,
+    );
+  // A point without its quantity is a gap in the series.
+  const xml = entsoeDocument([
+    entsoeSeries({
+      start: '2026-11-10T10:00Z',
+      end: '2026-11-10T11:00Z',
+      resolution: 'PT15M',
+      inArea: 'A',
+      outArea: 'B',
+      points: [
+        [1, 100],
+        [2, 200],
+        [3, 300],
+        [4, 400],
+      ],
+    }),
+  ]).replace('<quantity>200</quantity>', '<quantity></quantity>');
+  const [series] = parseEntsoeSeries(xml);
+  const at = (hhmm) => Date.parse(`2026-11-10T${hhmm}:00Z`);
+  assert.equal(series.points.get(at('10:00')), 100);
+  assert.equal(series.points.has(at('10:15')), false);
+  assert.equal(series.points.get(at('10:30')), 300);
+});

@@ -248,3 +248,70 @@ test('a refused token is reported, not sent again within the minute', async (t) 
   assert.equal(calls.length, asked);
   assert.ok(lines.every((line) => !line.includes(TOKEN)));
 });
+
+test('one border that does not answer is a gap, not the end of the refresh', async (t) => {
+  quietLogs(t);
+  const ids = async (fetchImpl) => {
+    const answer = await harness(
+      powerGridEntsoeProxy({
+        env: { ENTSOE_SECURITY_TOKEN: TOKEN },
+        fetchImpl,
+        now: () => NOW,
+      }),
+    )();
+    assert.equal(answer.status, 200);
+    assert.equal(answer.json().stale, undefined);
+    return answer.json().links.map((link) => link.id);
+  };
+  const whole = await ids(fakeEntsoe().fetchImpl);
+  assert.ok(whole.includes('DE_SE4'));
+  // Germany's side of the cable to SE4 is down: that link is left out, not
+  // netted from the other direction alone; every other link stands.
+  const live = fakeEntsoe();
+  const partial = await ids(async (url) => {
+    const query = new URL(url).searchParams;
+    return query.get('documentType') === 'A11' &&
+      query.get('out_Domain') === ENTSOE_AREAS.DE &&
+      query.get('in_Domain') === ENTSOE_AREAS.SE4
+      ? new Response('down', { status: 503 })
+      : live.fetchImpl(url);
+  });
+  assert.deepEqual(
+    partial,
+    whole.filter((id) => id !== 'DE_SE4'),
+  );
+});
+
+test('production that can no longer be read grows old and goes; the flows stay', async (t) => {
+  quietLogs(t);
+  const live = fakeEntsoe();
+  let productionDown = false;
+  let clock = NOW;
+  const request = harness(
+    powerGridEntsoeProxy({
+      env: { ENTSOE_SECURITY_TOKEN: TOKEN },
+      fetchImpl: async (url) => {
+        const type = new URL(url).searchParams.get('documentType');
+        return productionDown && type !== 'A11'
+          ? new Response('down', { status: 503 })
+          : live.fetchImpl(url);
+      },
+      now: () => clock,
+    }),
+  );
+  const first = (await request()).json();
+  assert.ok(Number.isFinite(first.production.at));
+  // Generation and load stop answering. A quarter on, the last production
+  // still stands beside fresh flows…
+  productionDown = true;
+  clock += 16 * 60_000;
+  const soon = await request();
+  assert.equal(soon.status, 200);
+  assert.equal(soon.json().stale, undefined);
+  assert.equal(soon.json().production.at, first.production.at);
+  // …and three hours on it is no longer shown as the production now.
+  clock += 3 * 60 * 60_000;
+  const later = (await request()).json();
+  assert.ok(later.links.length > 0);
+  assert.equal(later.production.at, null);
+});

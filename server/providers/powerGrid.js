@@ -40,6 +40,8 @@ export const POWER_GRID_RETRY_AFTER_FAILURE_MS = 60_000;
 const MAX_BODY_BYTES = 1024 * 1024;
 const FETCH_TIMEOUT_MS = 20_000;
 const QUARTER_MS = 15 * 60_000;
+/** The quarter-hourly save stops once nobody has asked for this long. */
+const SAVER_IDLE_MS = 30 * 60_000;
 /** Days the week route shows, today included. */
 export const WEEK_DAYS = 7;
 /** Days kept on disk; older ones are removed. */
@@ -81,6 +83,7 @@ export function powerGridProxy({
     timer.unref?.();
     return timer;
   },
+  unschedule = (timer) => clearInterval(timer),
 } = {}) {
   /** The last good flows, as {value, at}; `at` is when that read began. */
   let flows = null;
@@ -96,6 +99,8 @@ export function powerGridProxy({
   /** Points on disk per date, so a shorter answer never overwrites a longer. */
   const stored = new Map();
   let saver = null;
+  /** When a request last came in: the save runs only while someone asks. */
+  let askedAt = -Infinity;
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 600 });
 
   const fresh = (held, at) => Boolean(held) && at - held.at < TTL_MS;
@@ -238,14 +243,23 @@ export function powerGridProxy({
       : { at: null };
   }
 
-  /** Keep today on disk every quarter-hour once the layer has asked. */
+  /**
+   * Keep today on disk every quarter-hour while someone is asking. Once
+   * nobody has asked for half an hour the save stops, so a switched-off layer
+   * does not keep reading the control room; the next request starts it again.
+   */
   function armSaver() {
-    if (saver) return;
+    askedAt = now();
+    if (saver !== null) return;
     saver = schedule(() => {
+      if (now() - askedAt > SAVER_IDLE_MS) {
+        unschedule(saver);
+        saver = null;
+        return;
+      }
       if (dayDue(now())) refreshDay();
     }, QUARTER_MS);
   }
-
   /** The flows now, with the latest production beside them. */
   async function gridHandler(json, req) {
     armSaver();

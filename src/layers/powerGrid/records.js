@@ -129,19 +129,25 @@ export function normalizeFlows(payload) {
           : []) {
           const id = String(area?.AreaName ?? '');
           if (!isSwedish(id)) continue;
+          const imported = flowValue(area.Import);
+          const exported = flowValue(area.Export);
+          // A zone without both figures is left out, never shown at 0 MW.
+          if (!Number.isFinite(imported) || !Number.isFinite(exported))
+            continue;
           areas.push({
             id,
-            import: Math.round(Number(area.Import) || 0),
-            export: Math.round(Number(area.Export) || 0),
+            import: Math.round(imported),
+            export: Math.round(exported),
           });
         }
     }
   }
-  const updated = Number(payload?.LastUpdated);
+  // A missing stamp is no time, never 1970.
+  const updated = flowValue(payload?.LastUpdated);
   return {
     links: links.sort((a, b) => a.id.localeCompare(b.id)),
     areas: areas.sort((a, b) => a.id.localeCompare(b.id)),
-    updated: Number.isFinite(updated) ? updated : null,
+    updated: Number.isFinite(updated) && updated > 0 ? updated : null,
   };
 }
 

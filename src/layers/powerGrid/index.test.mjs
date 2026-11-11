@@ -3,10 +3,7 @@ import test from 'node:test';
 import * as Cesium from 'cesium';
 import { setLocale } from '../../i18n/index.js';
 import { clearGroundHeightStore } from '../groundHeights.js';
-import {
-  POWER_GRID_OVERLAY_SOURCE_ID,
-  createPowerGridLayer,
-} from './index.js';
+import { POWER_GRID_OVERLAY_SOURCE_ID, createPowerGridLayer } from './index.js';
 
 const LABEL_SOURCE_ID = 'power-grid-labels';
 const UPDATED = Date.parse('2026-11-10T10:15:00Z');
@@ -632,4 +629,44 @@ test('the dots move when the ground heights arrive', async (t) => {
   viewer.picked = { id: after.id };
   state.click(CLICK);
   assert.equal(state.cards[0]?.id, 'power-grid-card:SE3');
+});
+
+test('a drawing that failed is reported as one, and drawn again next time', async (t) => {
+  const warn = t.mock.method(console, 'warn', () => {});
+  const { layer, viewer, state } = harness(t, {
+    getSnapshot: async () => snapshot(),
+  });
+  layer.enable();
+  t.mock.method(
+    viewer.sources[0].entities,
+    'add',
+    () => {
+      throw new Error('no room');
+    },
+    { times: 1 },
+  );
+  await layer.update();
+  assert.equal(layer.getStats().error, 'no room');
+  assert.equal(
+    warn.mock.calls.at(-1).arguments[0],
+    '[Data:PowerGrid] Draw error:',
+  );
+  // The same answer five minutes on: drawn all the same, error gone.
+  await layer.update();
+  assert.equal(layer.getStats().error, null);
+  assert.deepEqual(flowLabels(state), ['DE_SE4', 'FI_SE3', 'SE2_SE3']);
+});
+
+test('turning the layer off clears its error', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  const { layer } = harness(t, {
+    getSnapshot: async () => {
+      throw new Error('down');
+    },
+  });
+  layer.enable();
+  await layer.update();
+  assert.equal(layer.getStats().error, 'down');
+  layer.disable();
+  assert.equal(layer.getStats().error, null);
 });

@@ -438,3 +438,34 @@ test('a week chart spans seven midnights and leaves gaps open', () => {
   assert.equal(chart.consumption.split('M').length - 1, 2);
   assert.ok(chart.points[2].x > 250, 'the last day sits at the right');
 });
+
+test('a zone or a stamp that is missing is left out, never read as 0', () => {
+  const answer = (areas, LastUpdated) =>
+    normalizeFlows({
+      Data: [
+        {
+          id: '2',
+          data: [{ id: 'SE', value: 2404, ElectricalAreas: areas }],
+        },
+      ],
+      LastUpdated,
+    });
+  const { areas, updated } = answer(
+    [
+      { AreaName: 'SE1', Import: 150, Export: 3110 },
+      { AreaName: 'SE2', Import: null, Export: 2000 },
+      { AreaName: 'SE3', Import: 5699, Export: '' },
+      { AreaName: 'SE4', Import: 0, Export: 178.31 },
+    ],
+    1794372300000,
+  );
+  assert.deepEqual(areas, [
+    { id: 'SE1', import: 150, export: 3110 },
+    // A real zero is still a zero.
+    { id: 'SE4', import: 0, export: 178 },
+  ]);
+  assert.equal(updated, 1794372300000);
+  // No stamp is no time, not one o'clock on 1 January 1970.
+  for (const missing of [null, undefined, '', 0])
+    assert.equal(answer([], missing).updated, null);
+});

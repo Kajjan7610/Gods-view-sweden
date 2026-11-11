@@ -54,10 +54,21 @@ function keepDay(dir, date, points) {
 
 function harness(
   fetchImpl,
-  { cacheDir = tempDir(), now = () => NOW, schedule = () => null } = {},
+  {
+    cacheDir = tempDir(),
+    now = () => NOW,
+    schedule = () => null,
+    unschedule = () => {},
+  } = {},
 ) {
   let handler;
-  powerGridProxy({ now, fetchImpl, cacheDir, schedule }).configureServer({
+  powerGridProxy({
+    now,
+    fetchImpl,
+    cacheDir,
+    schedule,
+    unschedule,
+  }).configureServer({
     middlewares: { use: (_path, fn) => (handler = fn) },
   });
   return async (url = '/', method = 'GET') => {
@@ -618,4 +629,40 @@ test('only GET is answered, and a client is held to thirty reads a minute', asyn
   assert.equal(week.status, 200);
   assert.equal(week.json().stale, true);
   assert.equal(room.urls.length, asked, 'nothing asked beyond the limit');
+});
+
+test('the save stops once nobody has asked for half an hour', async () => {
+  let now = NOW - 60 * 60_000;
+  const ticks = [];
+  const stopped = [];
+  const room = controlRoom();
+  const request = harness(room.fetch, {
+    now: () => now,
+    schedule: (fn, ms) => {
+      ticks.push({ fn, ms });
+      return ticks.length;
+    },
+    unschedule: (timer) => stopped.push(timer),
+  });
+  const tick = async () => {
+    now += 15 * 60_000;
+    ticks.at(-1).fn();
+    // The read the tick began ends with the day written to disk.
+    await new Promise((resolve) => setTimeout(resolve, 60));
+  };
+  await request('/day');
+  assert.equal(room.productions, 1);
+  // The layer is switched off. Two quarters on the save still runs…
+  await tick();
+  await tick();
+  assert.equal(room.productions, 3);
+  assert.deepEqual(stopped, []);
+  // …and at the third, over half an hour after the last request, it stops
+  // without asking the control room.
+  await tick();
+  assert.deepEqual(stopped, [1]);
+  assert.equal(room.productions, 3);
+  // The next request starts it again.
+  await request('/day');
+  assert.equal(ticks.length, 2);
 });
