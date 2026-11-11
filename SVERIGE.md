@@ -21,6 +21,20 @@ till en av tre grupper:
   kommer flyg som standard från adsb.lol (öppna data, ODbL), och
   `TOMTOM_API_KEY` lämnas tom så att trafiklagret kör sin simulering.
 
+Två nivåer gäller:
+
+- **I appen** visas öppna data och källor utan publicerad licens, alltid
+  med källan angiven. Licensen står i appens källtabell, och avsnittet
+  "Källor med oklara eller särskilda villkor" nedan räknar upp de lager som
+  saknar publicerad licens.
+- **I det som publiceras** – README-bilder, filmer, inlägg och
+  presentationer – syns bara öppna data och källor vars villkor uttryckligen
+  tillåter att de visas offentligt, med källangivelsen synlig i bilden.
+  Lager utan publicerad licens stängs av innan något spelas in.
+- **Före varje ny källa** läses hela villkoren, även när en gratis nyckel
+  fungerar, och det prövas vad kartan visar när källan läggs ihop med de
+  andra lagren.
+
 ## Vad som är tillagt
 
 | Del | Källa | Var i appen |
@@ -342,6 +356,12 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-11 (regeln för det som publiceras)
+- Principen har fått två nivåer: appen får visa källor utan publicerad
+  licens med källan angiven, medan bilder, filmer, inlägg och presentationer
+  bara visar öppna data och källor vars villkor tillåter offentlig visning,
+  med källangivelsen synlig. Hela villkoren läses före varje ny källa.
 
 ### 2026-11-11 (kraftsystemet från ENTSO-E: bara flödena)
 - Kraftsystemet läser nu ENTSO-E som standard, ett dokumenterat gränssnitt
