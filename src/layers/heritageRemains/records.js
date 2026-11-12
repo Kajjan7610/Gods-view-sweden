@@ -30,7 +30,7 @@ export const ASSESSMENT = Object.freeze(
   Object.fromEntries(ASSESSMENTS.map((entry) => [entry.id, entry])),
 );
 
-/** A view wider than this (degrees) shows no remains: there are 530 000. */
+/** A view wider than this (degrees) shows no remains: there are some 840 000. */
 export const REMAINS_MAX_SPAN_DEG = 0.15;
 
 const UUID_RE =

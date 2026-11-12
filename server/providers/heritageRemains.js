@@ -8,7 +8,7 @@ import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 
 // Riksantikvarieämbetet's remains through its INSPIRE OGC API Features (no
-// key, public domain, "inga begränsningar"). There are some 530 000, so
+// key, public domain, "inga begränsningar"). There are some 840 000, so
 // nothing is downloaded whole: a view asks for its own box, widened to a
 // 0.02-degree grid so nearby views share one answer, kept half a day.
 export const RAA_REMAINS_URL =

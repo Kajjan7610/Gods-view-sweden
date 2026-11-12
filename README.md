@@ -14,9 +14,9 @@
 
 ### ▶ Se filmen
 
-https://github.com/user-attachments/assets/422a25d9-6d70-4cda-989c-02154115e456
+https://github.com/user-attachments/assets/cd5d1dcb-c7da-45ba-9095-7ff4776db768
 
-_28 sekunder. For promotional purposes only. Alla källor står i slutskylten._
+_28 sekunder med berättarröst: från 1 500 år gamla gravhögar till flygen i luften just nu. For promotional purposes only. Alla källor står i slutskylten._
 
 Ett digitalt jordklot med hela världen live: flyg, satelliter, fartyg, jordbävningar och bränder från över 110 datakällor. Ovanpå det ligger Sveriges öppna data: **21 svenska API:er och 30 datatyper från 14 myndigheter och tjänster**, med hela gränssnittet på svenska.
 
