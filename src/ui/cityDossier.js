@@ -69,9 +69,65 @@ const TABS = Object.freeze([
   ['about', msg('ABOUT')],
   ['people', msg('POPULATION')],
   ['society', msg('SOCIETY')],
+  ['stats', msg('STATISTICS')],
   ['now', msg('NOW')],
   ['sights', msg('SIGHTS')],
   ['pass', msg('PASSPORT')],
+]);
+/** Kolada figures on the STATISTICS tab: label and how a value reads. */
+const STAT_FIGURES = Object.freeze({
+  meritValue: [msg('Merit rating, year 9'), (v) => oneDecimal(v)],
+  pupilsPerTeacher: [
+    msg('Pupils per teacher, compulsory school'),
+    (v) => oneDecimal(v),
+  ],
+  reportedCrimes: [
+    msg('Reported crimes per 100,000 inhabitants'),
+    (v) => whole(v),
+  ],
+  violentCrimes: [
+    msg('Reported violent crimes per 100,000 inhabitants'),
+    (v) => whole(v),
+  ],
+  lifeWomen: [
+    msg('Life expectancy, women'),
+    (v) => t('{value} years', { value: oneDecimal(v) }),
+  ],
+  lifeMen: [
+    msg('Life expectancy, men'),
+    (v) => t('{value} years', { value: oneDecimal(v) }),
+  ],
+  sickDays: [
+    msg('Sickness benefit days per insured, ages 16–64'),
+    (v) => oneDecimal(v),
+  ],
+  debtors: [
+    msg('Adults in debt with the Enforcement Authority'),
+    (v) => `${oneDecimal(v)} %`,
+  ],
+  newFirms: [
+    msg('New companies per 1,000 inhabitants, ages 16–64'),
+    (v) => oneDecimal(v),
+  ],
+  emissions: [
+    msg('Greenhouse gas emissions per inhabitant'),
+    (v) => t('{value} t CO₂e', { value: oneDecimal(v) }),
+  ],
+  protectedNature: [
+    msg('Protected nature, share of the area'),
+    (v) => `${oneDecimal(v)} %`,
+  ],
+  guestNights: [msg('Guest nights per inhabitant'), (v) => oneDecimal(v)],
+});
+const STAT_GROUPS = Object.freeze([
+  [msg('School'), ['meritValue', 'pupilsPerTeacher']],
+  [msg('Safety'), ['reportedCrimes', 'violentCrimes']],
+  [msg('Health'), ['lifeWomen', 'lifeMen', 'sickDays']],
+  [msg('Economy'), ['debtors', 'newFirms']],
+  [
+    msg('Environment and visitors'),
+    ['emissions', 'protectedNature', 'guestNights'],
+  ],
 ]);
 const CHALLENGE_LABELS = Object.freeze({
   seats: msg('All 21 county seats'),
@@ -201,6 +257,9 @@ export function createCityDossier({
   let sights = null;
   let chosenSight = null;
   let sightsRequest = null;
+  /** The town's Kolada figures: `{ code, status, stats }`. */
+  let stats = null;
+  let statsRequest = null;
   const sightsLayer = createSights({
     viewer,
     overlayHost,
@@ -292,6 +351,7 @@ export function createCityDossier({
         // A new town on the SIGHTS tab: its own sights, the last town's gone.
         drawSights();
         if (tab === 'sights') void loadSights();
+        if (tab === 'stats') void loadStats();
       }
       if (liveIsDue()) void loadLive();
     } catch (error) {
@@ -588,6 +648,81 @@ export function createCityDossier({
         }).format(stamp.first),
       }),
     ].join(' · ');
+  }
+
+  // ---- statistics ----------------------------------------------------------
+  /** The town's Kolada figures, read once per town while the tab is open. */
+  async function loadStats() {
+    // A failed read is tried again the next time the tab opens.
+    if (!city || (stats?.code === city.code && stats.status !== 'error'))
+      return;
+    const forCity = city;
+    statsRequest?.abort();
+    const controller = new AbortController();
+    statsRequest = controller;
+    stats = { code: forCity.code, status: 'loading', stats: [] };
+    render();
+    try {
+      const body = await getJson(
+        `/api/city-dossier/stats?code=${encodeURIComponent(forCity.code)}`,
+        controller.signal,
+      );
+      if (destroyed || city !== forCity) return;
+      stats = {
+        code: forCity.code,
+        status: 'ready',
+        stats: Array.isArray(body?.stats) ? body.stats : [],
+      };
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+      stats = { code: forCity.code, status: 'error', stats: [] };
+    } finally {
+      if (statsRequest === controller) statsRequest = null;
+    }
+    render();
+  }
+
+  function statsView() {
+    if (stats?.code !== city?.code || stats.status === 'loading')
+      return { status: t('Fetching statistics…'), groups: [] };
+    if (stats.status === 'error')
+      return { status: t('Statistics unavailable right now'), groups: [] };
+    const byKey = new Map(stats.stats.map((row) => [row.key, row]));
+    const groups = STAT_GROUPS.map(([title, keys]) => ({
+      title: t(title),
+      rows: keys
+        .filter((key) => byKey.has(key))
+        .map((key) => {
+          const row = byKey.get(key);
+          const [label, read] = STAT_FIGURES[key];
+          return {
+            label: t(label),
+            value: read(row.value),
+            detail: [
+              String(row.year),
+              Number.isFinite(row.sweden)
+                ? t('Sweden {value}', { value: read(row.sweden) })
+                : null,
+              t('{rank} of {count}, highest first', {
+                rank: row.rank,
+                count: row.count,
+              }),
+            ]
+              .filter(Boolean)
+              .join(' · '),
+          };
+        }),
+    })).filter((group) => group.rows.length);
+    return {
+      status: groups.length ? '' : t('No statistics for this municipality'),
+      groups,
+      note: t(
+        'Crimes are counted where they are reported: places with many visitors, commuters or shoppers count higher.',
+      ),
+      credit: t(
+        'Source: Kolada. The place among the municipalities is computed by the app.',
+      ),
+    };
   }
 
   // ---- sights --------------------------------------------------------------
@@ -1322,6 +1457,7 @@ export function createCityDossier({
       about: facts ? aboutView() : null,
       people: facts ? peopleView() : null,
       society: facts ? societyView() : null,
+      stats: tab === 'stats' ? statsView() : null,
       now: nowView(),
       sights: tab === 'sights' ? sightsView() : null,
       pass: passView(),
@@ -1349,6 +1485,7 @@ export function createCityDossier({
       if (liveIsDue()) void loadLive();
       if (id !== 'sights') chosenSight = null;
       if (id === 'sights') void loadSights();
+      if (id === 'stats') void loadStats();
       drawSights();
       render();
     },

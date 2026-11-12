@@ -432,3 +432,37 @@ test("a sight's picture names its Wikimedia Commons page too", async () => {
     'https://commons.wikimedia.org/wiki/File:Arboga%20kyrka.jpg',
   );
 });
+
+test('the STATISTICS tab reads the town once, with year, Sweden and place', async (t) => {
+  const { state, asked, visit } = harness(t);
+  state.bodies['/api/city-dossier/stats'] = {
+    code: '1984',
+    stats: [
+      { key: 'meritValue', year: 2026, value: 224.5, sweden: 229.7, rank: 86, count: 290 },
+      { key: 'reportedCrimes', year: 2025, value: 13914.7, sweden: null, rank: 18, count: 290 },
+    ],
+  };
+  await visit(TOWNS.arboga);
+  asked();
+  state.actions.setTab('stats');
+  await settle();
+  assert.deepEqual(asked(), ['/api/city-dossier/stats']);
+  const view = state.view.stats;
+  assert.deepEqual(
+    view.groups.map((group) => [group.title, group.rows.map((row) => [row.value, row.detail])]),
+    [
+      ['School', [['224.5', '2026 · Sweden 229.7 · 86 of 290, highest first']]],
+      ['Safety', [['13,915', '2025 · 18 of 290, highest first']]],
+    ],
+  );
+  assert.match(view.credit, /^Source: Kolada\./);
+  // Back to the tab: no second read for the same town.
+  state.actions.setTab('about');
+  state.actions.setTab('stats');
+  await settle();
+  assert.deepEqual(asked(), []);
+  // A failed read says so, and is tried again for the next town.
+  state.down.add('/api/city-dossier/stats');
+  await visit(TOWNS.koping);
+  assert.equal(state.view.stats.status, 'Statistics unavailable right now');
+});

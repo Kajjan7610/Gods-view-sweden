@@ -270,7 +270,8 @@
     "{hours} h",
     "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
-    "{county}: {population}"
+    "{county}: {population}",
+    "{value} t CO₂e"
   ],
   "es": [
     "1090 MHz",
@@ -452,7 +453,8 @@
     "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
     "HOSPITAL · {name}",
-    "{county}: {population}"
+    "{county}: {population}",
+    "{value} t CO₂e"
   ],
   "fr": [
     "1090 MHz",
@@ -933,7 +935,8 @@
     "{hours} h",
     "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
-    "{county}: {population}"
+    "{county}: {population}",
+    "{value} t CO₂e"
   ],
   "ja": [
     "1090 MHz",
@@ -1010,7 +1013,8 @@
     "iNaturalist",
     "iNaturalist ↗",
     "{direction} {angle}°",
-    "{direction} · {elevation}"
+    "{direction} · {elevation}",
+    "{value} t CO₂e"
   ],
   "pt": [
     "1090 MHz",
@@ -1193,7 +1197,8 @@
     "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
     "HOSPITAL · {name}",
-    "{county}: {population}"
+    "{county}: {population}",
+    "{value} t CO₂e"
   ],
   "ru": [
     "AIS: --",

@@ -3,6 +3,7 @@ import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 import { nearestSeat } from './regional/sweden.js';
 import { createScbPopulation } from './cityDossierScb.js';
 import { createElectionResults } from './cityDossierElection.js';
+import { createKoladaStats } from './cityDossierStats.js';
 
 // The city dossier: facts about the Swedish town nearest a point, from three
 // open sources without keys. Kolada (RKA) has the municipality's key figures
@@ -282,7 +283,9 @@ export function cityDossierProxy({
   now = () => Date.now(),
   scb = null,
   election = null,
+  statistics = null,
 } = {}) {
+  const stats = statistics || createKoladaStats({ fetchImpl, now });
   const facts = new Map();
   const retryAt = new Map();
   const inFlight = new Map();
@@ -414,6 +417,18 @@ export function cityDossierProxy({
     if (req.method !== 'GET')
       return json(405, { error: 'method_not_allowed' }, { Allow: 'GET' });
     const url = new URL(req.url || '/', 'http://local');
+    if (url.pathname === '/stats') {
+      // The STATISTICS tab: one municipality from the shared daily table.
+      const code = url.searchParams.get('code') || '';
+      if (!/^\d{4}$/.test(code) || code === '0000')
+        return json(400, { error: 'municipality_code_required' });
+      if (!allow(clientKey(req)))
+        return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
+      const answer = await stats.forMunicipality(code);
+      return answer
+        ? json(200, { code, ...answer })
+        : json(502, { code, error: 'city_dossier_stats_unavailable' });
+    }
     if (url.pathname !== '/' && url.pathname !== '')
       return json(404, { error: 'unknown_route' });
     const latitude = Number(url.searchParams.get('lat'));

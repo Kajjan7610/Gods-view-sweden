@@ -66,7 +66,7 @@ Två nivåer gäller:
 | Blixtnedslag: varje urladdning den senaste timmen som punkt, färgad efter ålder (vit = senaste 5 min), stora för nedslag i marken och små för blixtar i molnet; klick ger tid, typ och toppström | DMI:s blixtdata (CC BY 4.0, ingen nyckel; DMI:s sensornät och grannländernas sensorer) | Lightning Strikes (Sweden) / Blixtnedslag, under Weather |
 | Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
-| Stadsdossier: när vyn stannar lågt över en svensk ort visar panelen STAD i högerkanten stadsvapen, foto och inledning, tätortens och kommunens folkmängd med kurva, skattesats, inkomst, arbetslöshet och kommunvalet, samt läget just nu (väder, luft, varningar, Polisen, sol) och en knapp för lokalradio | Kolada (RKA), Wikidata (CC0), Wikipedia (CC BY-SA 4.0), SMHI, Polisen; ingen nyckel | Panelen STAD i högerkanten (dyker upp vid första besöket) |
+| Stadsdossier: när vyn stannar lågt över en svensk ort visar panelen STAD i högerkanten stadsvapen, foto och inledning, tätortens och kommunens folkmängd med kurva, skattesats, inkomst, arbetslöshet och kommunvalet, tolv nyckeltal under STATISTIK (skola, trygghet, hälsa, ekonomi, miljö och besökare, med hela Sveriges värde och kommunens plats bland kommunerna), samt läget just nu (väder, luft, varningar, Polisen, sol) och en knapp för lokalradio | Kolada (RKA), Wikidata (CC0), Wikipedia (CC BY-SA 4.0), SMHI, Polisen; ingen nyckel | Panelen STAD i högerkanten (dyker upp vid första besöket) |
 | Stadsdossierns flikar Sevärt (slott, kyrkor, museer m.m. utpekade på kartan), besökspass, tåg från stadens station, VMA-banner och norrsken i natt | Wikidata (CC0), Trafikverket, Krisinformation.se, NOAA SWPC | Panelen STAD |
 | Flygtavla: Swedavias tio flygplatser, hela dagens avgångar och ankomster, köerna i säkerhetskontrollen över terminalerna, följ planet i luften och dagens rutter på globen | Swedavia FlightInfo och WaitTime (gratisnycklar) | Kortet över en Swedavia-flygplats och tavlans egen panel |
 | Flygväder: METAR och TAF för flygplatserna | NOAA Aviation Weather Center (ingen nyckel) | Flygtavlan och cockpit |
@@ -228,7 +228,9 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   visas inte i filmer.
 - **Kolada (dossiern):** fritt, även kommersiellt, men källan ska anges som
   "Kolada", värden vi själva räknar fram får inte anges med Kolada som källa,
-  och appen får inte framstå som ett officiellt samarbete.
+  och appen får inte framstå som ett officiellt samarbete. Koladas API har
+  inga angivna gränser för anrop; fliken STATISTIK läser ändå bara en gång
+  per dygn. Placeringen bland kommunerna anges som appens egen beräkning.
 - **SMHI (väder, varningar, radar, luftkvalitet, vattenföring):** CC BY 4.0:
   SMHI ska anges som källa, och det ska framgå om materialet har ändrats.
   SMHI:s riktlinjer säger dessutom att bara dokumenterade API:er får
@@ -374,6 +376,25 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-12 (stadsdossierns flik STATISTIK)
+- Ny flik STATISTIK i stadsdossiern med tolv nyckeltal från Kolada för
+  kommunen: meritvärde åk 9 och elever per lärare (Skolverket), anmälda
+  brott och våldsbrott per 100 000 invånare (BRÅ och SCB), medellivslängd
+  för kvinnor och män (SCB), sjukpenningtal (Försäkringskassan),
+  skuldsatta hos Kronofogden, nystartade företag (Tillväxtanalys),
+  växthusgaser per invånare (Nationella emissionsdatabasen), andel skyddad
+  natur (SCB) och gästnätter per invånare (Tillväxtverket).
+- Varje tal visar senaste år som de flesta kommuner har, hela Sveriges
+  värde och kommunens plats bland kommunerna räknat från högst. Placeringen
+  är appens egen beräkning och står inte med Kolada som källa, som Koladas
+  villkor kräver. Ett kort påpekande säger att brott räknas där de anmäls.
+- Servern läser alla kommuners värden i ett anrop per dygn (tre sidor och
+  ett för hela Sverige) och svarar varje ort ur samma tabell; fliken
+  hämtar bara när den öppnas.
+- Andel förnybar el valdes bort: bara ett 60-tal kommuner har värden, så
+  en placering skulle vilseleda. Underkategorier av brott och statistik om
+  flyktingar och utrikes födda är medvetet utelämnade.
 
 ### 2026-11-12 (fartygslagret: polisens och Kustbevakningens fartyg)
 - Fartygslagret visar inte längre fartyg som anger AIS-typ 55 (polis och

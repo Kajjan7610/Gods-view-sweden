@@ -78,6 +78,20 @@ watch(
           </div>
         </section>
 
+        <section v-else-if="d.tab === 'stats' && d.stats" class="city-dossier-section" role="tabpanel">
+          <p v-if="d.stats.status" class="city-dossier-note">{{ d.stats.status }}</p>
+          <template v-else>
+            <div v-for="group in d.stats.groups" :key="group.title" class="city-dossier-statgroup">
+              <strong>{{ group.title }}</strong>
+              <dl class="city-dossier-rows city-dossier-stats">
+                <div v-for="row in group.rows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd><small>{{ row.detail }}</small></div>
+              </dl>
+            </div>
+            <p class="city-dossier-note">{{ d.stats.note }}</p>
+            <p class="city-dossier-note">{{ d.stats.credit }}</p>
+          </template>
+        </section>
+
         <section v-else-if="d.tab === 'now'" class="city-dossier-section" role="tabpanel">
           <p v-if="d.now.loading" class="city-dossier-note">{{ d.now.status }}</p>
           <template v-else>
