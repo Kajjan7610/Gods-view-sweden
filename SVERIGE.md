@@ -325,6 +325,10 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   synliga. Frågan är också ställd i Cesiums forum (2026-11-11), liksom
   frågan om kartöverlägg (sjömärken, pister, NASA-bilder, radar) ovanpå
   Googles 3D-städer; bilderna tas bort igen om svaret blir nej.
+  Lantmäteriets enhet för kart- och bildsekretess svarade 2026-11-12 att
+  det är Google som sprider den geografiska informationen och som ska ha
+  spridningstillstånd enligt lagen om skydd för geografisk information;
+  den som använder Googles data behöver inget eget tillstånd.
 - **OpenStreetMap (kartan OSM):** data under ODbL. Kartbilderna kommer från
   OpenStreetMaps egna servrar, vars regler
   (operations.osmfoundation.org/policies/tiles, lästa 2026-11-11) kräver
@@ -376,6 +380,11 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-12 (Lantmäteriets svar om spridningstillstånd)
+- Lantmäteriet svarade att spridningstillstånd för Googles 3D-städer är
+  Googles sak, inte den som använder datan. Svaret står under Cesium ion i
+  "Källor med oklara eller särskilda villkor".
 
 ### 2026-11-12 (HUD:en säger vad den visar; statistikraderna kortare)
 - HUD:ens banner säger nu "ÖPPNA DATA // SVERIGE // PUBLICERAT" i stället
