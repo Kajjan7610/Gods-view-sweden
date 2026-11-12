@@ -681,6 +681,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
   }),
   Object.freeze({ id: 'earthquakes', token: 'e', disposition: 'enabled-only' }),
   Object.freeze({
+    id: 'election-districts',
+    token: '0e',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'electricity-prices',
     token: '0w',
     disposition: 'enabled-only',

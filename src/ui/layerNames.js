@@ -46,6 +46,7 @@ export const LAYER_NAME_KEYS = Object.freeze({
   'sr-traffic': msg('Traffic Reports (Sweden)'),
   'sea-weather': msg('Sea Weather (Sweden)'),
   municipalities: msg('Municipalities & Counties (Sweden)'),
+  'election-districts': msg('Election Districts 2026 (Sweden)'),
   hospitals: msg('Hospitals & Emergency (Sweden)'),
   shelters: msg('Shelters (Sweden)'),
   'police-stations': msg('Police Stations (Sweden)'),

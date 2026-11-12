@@ -516,6 +516,12 @@ export const DATA_CREDITS = [
       '<a href="https://www.geodata.se/geodataportalen/srv/swe/catalog.search#/metadata/6341813c-bfa3-45df-8234-13cf583bf533" target="_blank" rel="noopener">Myndigheten för civilt försvar (MCF)</a>, skyddsrum (INSPIRE)',
   },
   {
+    key: 'election-districts',
+    html:
+      'Election districts 2026 (Sweden): district maps and the final count of the Riksdag election from ' +
+      '<a href="https://www.val.se/valresultat-och-statistik/statistik-och-data/om-var-oppna-data" target="_blank" rel="noopener">Valmyndigheten</a> (open data, source credited)',
+  },
+  {
     key: 'municipalities',
     html:
       'Municipalities and counties (Sweden): borders from OpenStreetMap contributors, a snapshot ' +

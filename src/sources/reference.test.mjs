@@ -36,6 +36,7 @@ test('reference factories retain compatibility without starting acquisition or s
     'shelters',
     'hospitals',
     'municipalities',
+    'election-districts',
     'speed-cameras',
     'river-flow',
     'gamma-radiation',

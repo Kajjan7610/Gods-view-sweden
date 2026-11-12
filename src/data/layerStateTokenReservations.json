@@ -11,6 +11,7 @@
   ["directions", "n"],
   ["drone-airspace", "8"],
   ["earthquakes", "e"],
+  ["election-districts", "0e"],
   ["electricity-prices", "0w"],
   ["fire-perimeters", "2"],
   ["fire-stations", "0m"],

@@ -113,6 +113,14 @@ export const LAYER_PROVENANCE = Object.freeze({
     updates: msg('Snapshot in the app, rebuilt by hand'),
     licence: `ODbL (OpenStreetMap) · ${CC0} (SCB)`,
   }),
+  'election-districts': own({
+    source: 'Valmyndigheten',
+    coverage: msg(
+      'The 2026 Riksdag election in all 6,312 election districts, final count',
+    ),
+    updates: msg('Snapshot in the app, rebuilt by hand'),
+    licence: msg('Open data, free to use with Valmyndigheten credited'),
+  }),
   'company-stores': own({
     source: 'OpenStreetMap · Wikidata · SCB',
     coverage: msg(
