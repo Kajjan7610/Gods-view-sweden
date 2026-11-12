@@ -109,16 +109,24 @@ test('the first view renders the corners, edges and bottom bar', async (t) => {
   assert.equal(text('hud-ais-vessel'), 'AIS: --');
   assert.equal(
     root.querySelector('.hud-rec').textContent,
-    '● REC  2026-01-01 00:00:00Z',
+    '● LIVE  2026-01-01 00:00:00Z',
   );
   assert.equal(
     document.getElementById('hud-rec-dot').getAttribute('style'),
     null,
   );
-  assert.match(
-    root.querySelector('.hud-system').textContent,
-    /^KH11-\d+ {2}OPS-\d+$/,
+  // Swedish fork: the banner names open data, not a classified pass, and
+  // the orbit and GSD/NIIRS readouts are hidden.
+  assert.equal(
+    root.querySelector('.hud-classification').textContent,
+    'OPEN DATA // SWEDEN // PUBLISHED',
   );
+  assert.equal(
+    root.querySelector('.hud-system').textContent,
+    'GEV-SE · open source',
+  );
+  assert.equal(root.querySelector('.hud-orbital').parentElement.hidden, true);
+  assert.equal(document.getElementById('hud-gsd').parentElement.hidden, true);
   assert.deepEqual(
     [...root.querySelectorAll('.hud-right-edge .hud-readout')].map(
       (line) => line.textContent,

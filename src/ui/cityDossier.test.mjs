@@ -451,8 +451,8 @@ test('the STATISTICS tab reads the town once, with year, Sweden and place', asyn
   assert.deepEqual(
     view.groups.map((group) => [group.title, group.rows.map((row) => [row.value, row.detail])]),
     [
-      ['School', [['224.5', '2026 · Sweden 229.7 · 86 of 290, highest first']]],
-      ['Safety', [['13,915', '2025 · 18 of 290, highest first']]],
+      ['School', [['224.5', '2026 · Sweden 229.7 · Place 86 of 290']]],
+      ['Safety', [['13,915', '2025 · Place 18 of 290']]],
     ],
   );
   assert.match(view.credit, /^Source: Kolada\./);

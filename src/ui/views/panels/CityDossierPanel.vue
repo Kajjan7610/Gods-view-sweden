@@ -87,7 +87,7 @@ watch(
                 <div v-for="row in group.rows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd><small>{{ row.detail }}</small></div>
               </dl>
             </div>
-            <p class="city-dossier-note">{{ d.stats.note }}</p>
+            <p class="city-dossier-note">{{ d.stats.rank }} {{ d.stats.note }}</p>
             <p class="city-dossier-note">{{ d.stats.credit }}</p>
           </template>
         </section>

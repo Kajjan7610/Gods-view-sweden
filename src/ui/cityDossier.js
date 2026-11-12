@@ -703,7 +703,7 @@ export function createCityDossier({
               Number.isFinite(row.sweden)
                 ? t('Sweden {value}', { value: read(row.sweden) })
                 : null,
-              t('{rank} of {count}, highest first', {
+              t('Place {rank} of {count}', {
                 rank: row.rank,
                 count: row.count,
               }),
@@ -719,6 +719,7 @@ export function createCityDossier({
       note: t(
         'Crimes are counted where they are reported: places with many visitors, commuters or shoppers count higher.',
       ),
+      rank: t('The place counts from the highest value.'),
       credit: t(
         'Source: Kolada. The place among the municipalities is computed by the app.',
       ),

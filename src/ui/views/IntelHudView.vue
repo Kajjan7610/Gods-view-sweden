@@ -38,7 +38,8 @@ const entry = computed(() => cockpitEntryFace(cockpit.value?.entryKind));
     <div class="hud-corner hud-top-right">
       <div class="hud-content" style="text-align: right">
         <div class="hud-readout"><div class="hud-rec"><span id="hud-rec-dot" :style="view.recShown === null ? undefined : { visibility: view.recShown ? 'visible' : 'hidden' }">●</span>{{ view.rec ? ` ${view.rec}  ` : '' }}<span id="hud-timestamp">{{ view.timestamp }}</span></div></div>
-        <div class="hud-readout"><div class="hud-orbital">{{ view.orbital }}</div></div>
+        <!-- Swedish fork: no orbit or pass identifiers. -->
+        <div class="hud-readout" hidden><div class="hud-orbital">{{ view.orbital }}</div></div>
       </div>
       <div class="hud-bracket">┐</div>
     </div>
@@ -51,7 +52,8 @@ const entry = computed(() => cockpitEntryFace(cockpit.value?.entryKind));
     </div>
     <div class="hud-corner hud-bottom-right">
       <div class="hud-content" style="text-align: right">
-        <div class="hud-readout"><div id="hud-gsd">{{ view.gsd }}</div></div>
+        <!-- Swedish fork: no imagery-intelligence figures (GSD, NIIRS). -->
+        <div class="hud-readout" hidden><div id="hud-gsd">{{ view.gsd }}</div></div>
         <div class="hud-readout"><div id="hud-alt">{{ view.alt }}</div></div>
         <div class="hud-readout"><div id="hud-ais-vessel" :class="['hud-ais-vessel', { active: view.vessel.active }]">{{ view.vessel.text }}</div></div>
         <button id="cockpit-entry-readout" type="button" :hidden="!cockpit?.entryAvailable">

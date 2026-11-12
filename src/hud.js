@@ -203,6 +203,16 @@ const MILITARY_STYLES = new Set(['retro', 'surveillance', 'thermal']);
 const HUD_SUMMARY_INTERVAL_MS = 15000;
 
 /**
+ * Swedish fork: the banner says what the HUD shows, published open data,
+ * not a classified satellite pass. The original's mission and orbit
+ * identifiers and its GSD/NIIRS figures are hidden in IntelHudView.vue.
+ */
+const swedishBanner = () => ({
+  classification: t('OPEN DATA // SWEDEN // PUBLISHED'),
+  system: t('GEV-SE · open source'),
+});
+
+/**
  * Cell size (degrees) for the ALT readout's geoid-undulation cache. N changes
  * by well under a metre across 0.01° (~1.1 km), so one lookup per cell keeps
  * the 4 Hz telemetry tick off the EGM96 grid without a visible step.
@@ -365,7 +375,8 @@ export class IntelHUD {
         ? t(MODE_LABELS[this._currentStyle])
         : this._currentStyle.toUpperCase(),
       summaryLabel: t('SUMMARY'),
-      rec: t('REC'),
+      rec: t('LIVE'),
+      ...swedishBanner(),
       ...(this._view.vessel.active
         ? {}
         : { vessel: { active: false, text: t('AIS: --') } }),
@@ -380,17 +391,16 @@ export class IntelHUD {
    * the Intel HUD view renders in `#intel-hud`.
    */
   _initView() {
-    // i18n-ignore: sensor codes and a classification banner; the rest uses t()
+    // i18n-ignore: sensor codes; the rest uses t()
     this._view = {
       active: false,
       variant: this._variant,
       colors: null,
-      classification: 'TOP SECRET // SI-TK // NOFORN',
-      system: `${this._missionId}  ${this._sensorId}`,
+      ...swedishBanner(),
       mode: t(MODE_LABELS.normal),
       summaryLabel: t('SUMMARY'),
       summary: t('Awaiting telemetry...'),
-      rec: t('REC'),
+      rec: t('LIVE'),
       recShown: null,
       timestamp: '2026-01-01 00:00:00Z',
       orbital: `ORB: ${this._orbitNum}  PASS: DESC-${this._passNum}`,

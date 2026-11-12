@@ -377,6 +377,18 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-12 (HUD:en säger vad den visar; statistikraderna kortare)
+- HUD:ens banner säger nu "ÖPPNA DATA // SVERIGE // PUBLICERAT" i stället
+  för originalets amerikanska sekretessmärkning, raden under den
+  "GEV-SE · öppen källkod" i stället för påhittade satellitbeteckningar,
+  och den blinkande punkten "LIVE" i stället för "REC". Undertiteln under
+  loggan säger "ALLT HÄR ÄR OFFENTLIGT".
+- Originalets omlopps- och passbeteckningar och bildkvalitetsmåtten GSD
+  och NIIRS visas inte. Koordinaterna, MGRS, höjden och solhöjden står kvar.
+- I stadsdossierns flik STATISTIK står raden under varje värde nu på en
+  rad ("2026 · Sverige 229,7 · plats 86 av 290"); att platsen räknas från
+  det högsta värdet sägs en gång längst ner.
+
 ### 2026-11-12 (stadsdossierns flik STATISTIK)
 - Ny flik STATISTIK i stadsdossiern med tolv nyckeltal från Kolada för
   kommunen: meritvärde åk 9 och elever per lärare (Skolverket), anmälda
