@@ -12,6 +12,12 @@
 
 </div>
 
+### ▶ Se filmen
+
+https://github.com/user-attachments/assets/422a25d9-6d70-4cda-989c-02154115e456
+
+_28 sekunder. For promotional purposes only. Alla källor står i slutskylten._
+
 Ett digitalt jordklot med hela världen live: flyg, satelliter, fartyg, jordbävningar och bränder från över 110 datakällor. Ovanpå det ligger Sveriges öppna data: **21 svenska API:er och 30 datatyper från 14 myndigheter och tjänster**, med hela gränssnittet på svenska.
 
 Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av Bilawal Sidhu och Sameh Khamis ([Halfpixel](https://halfpixel.ai)), öppen källkod under [MIT-licensen](LICENSE). Den här forken är ett fristående hobbyprojekt utan koppling till eller stöd från originalets upphovsmän. Fel i de svenska delarna rapporteras här, inte i originalet.
