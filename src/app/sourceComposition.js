@@ -62,6 +62,7 @@ export const CATALOG_SOURCE_CONTRACTS = Object.freeze({
   hospitals: contract(['hospitals'], ['getSnapshot']),
   municipalities: contract(['municipalities'], ['getSnapshot']),
   'election-districts': contract(['election-districts'], ['getDistricts']),
+  'protected-nature': contract(['protected-nature'], ['getAreas']),
   'company-stores': contract(['company-stores'], ['getSnapshot']),
   'lightning-strikes': contract(['lightning-strikes'], ['getSnapshot']),
   'fire-stations': contract(['fire-stations'], ['getSnapshot']),

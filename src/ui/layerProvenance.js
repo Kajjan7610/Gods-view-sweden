@@ -121,6 +121,14 @@ export const LAYER_PROVENANCE = Object.freeze({
     updates: msg('Snapshot in the app, rebuilt by hand'),
     licence: msg('Open data, free to use with Valmyndigheten credited'),
   }),
+  'protected-nature': own({
+    source: 'Naturvårdsverket',
+    coverage: msg(
+      'All national parks, nature reserves in force and culture reserves',
+    ),
+    updates: msg('Snapshot in the app, rebuilt by hand'),
+    licence: CC0,
+  }),
   'company-stores': own({
     source: 'OpenStreetMap · Wikidata · SCB',
     coverage: msg(

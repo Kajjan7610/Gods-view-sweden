@@ -271,7 +271,9 @@
     "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
     "{county}: {population}",
-    "{value} t CO₂e"
+    "{value} t CO₂e",
+    "{area} km²",
+    "{area} ha"
   ],
   "es": [
     "1090 MHz",
@@ -454,7 +456,9 @@
     "{label}: {now}",
     "HOSPITAL · {name}",
     "{county}: {population}",
-    "{value} t CO₂e"
+    "{value} t CO₂e",
+    "{area} km²",
+    "{area} ha"
   ],
   "fr": [
     "1090 MHz",
@@ -706,7 +710,9 @@
     "Licence",
     "{count} places",
     "{hours} h {minutes} min",
-    "{hours} h"
+    "{hours} h",
+    "{area} km²",
+    "{area} ha"
   ],
   "it": [
     "1090 MHz",
@@ -936,7 +942,9 @@
     "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
     "{county}: {population}",
-    "{value} t CO₂e"
+    "{value} t CO₂e",
+    "{area} km²",
+    "{area} ha"
   ],
   "ja": [
     "1090 MHz",
@@ -1014,7 +1022,9 @@
     "iNaturalist ↗",
     "{direction} {angle}°",
     "{direction} · {elevation}",
-    "{value} t CO₂e"
+    "{value} t CO₂e",
+    "{area} km²",
+    "{area} ha"
   ],
   "pt": [
     "1090 MHz",
@@ -1198,7 +1208,9 @@
     "{label}: {now}",
     "HOSPITAL · {name}",
     "{county}: {population}",
-    "{value} t CO₂e"
+    "{value} t CO₂e",
+    "{area} km²",
+    "{area} ha"
   ],
   "ru": [
     "AIS: --",
@@ -1419,7 +1431,9 @@
     "{hours} h",
     "{label}: {now} ({previous}: {before})",
     "{label}: {now}",
-    "{county}: {population}"
+    "{county}: {population}",
+    "{area} km²",
+    "{area} ha"
   ],
   "uk": [
     "AIS: --",

@@ -36,6 +36,7 @@ import { srTrafficProxy } from './srTraffic.js';
 import { seaWeatherProxy } from './seaWeather.js';
 import { municipalitiesProxy } from './municipalities.js';
 import { electionDistrictsProxy } from './electionDistricts.js';
+import { protectedNatureProxy } from './protectedNature.js';
 import { hospitalsProxy } from './hospitals.js';
 import { policeStationsProxy } from './policeStations.js';
 import { sheltersProxy } from './shelters.js';
@@ -120,6 +121,7 @@ function localProviderPlugins({
     seaWeatherProxy(),
     municipalitiesProxy(),
     electionDistrictsProxy(),
+    protectedNatureProxy(),
     hospitalsProxy(),
     policeStationsProxy(),
     sheltersProxy(),

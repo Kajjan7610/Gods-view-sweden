@@ -522,6 +522,12 @@ export const DATA_CREDITS = [
       '<a href="https://www.val.se/valresultat-och-statistik/statistik-och-data/om-var-oppna-data" target="_blank" rel="noopener">Valmyndigheten</a> (open data, source credited)',
   },
   {
+    key: 'protected-nature',
+    html:
+      'Protected nature (Sweden): national parks, nature reserves and culture reserves from ' +
+      '<a href="https://skyddadnatur.naturvardsverket.se/" target="_blank" rel="noopener">Naturvårdsverket</a>, Naturvårdsregistret (CC0)',
+  },
+  {
     key: 'municipalities',
     html:
       'Municipalities and counties (Sweden): borders from OpenStreetMap contributors, a snapshot ' +

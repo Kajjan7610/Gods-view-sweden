@@ -775,6 +775,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     disposition: 'enabled-only',
   }),
   Object.freeze({
+    id: 'protected-nature',
+    token: '0d',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'radio',
     token: 'r',
     disposition: 'enabled+options',

@@ -64,6 +64,7 @@ Två nivåer gäller:
 | Sjukhus och akuter: cirka 120 sjukhus, där de 62 akutmottagningarna i Socialstyrelsens statistik för 2025 färgas efter mediantid till läkare eller total vistelsetid jämfört med rikets (61 min respektive 4 h 16 min); raden listar de fem närmaste akutmottagningarna eller de med kortast median i vyn, klickbart; kortet visar medianerna 2025 och 2024, besök och förändring, och "ring 112 / 1177". Årsmedianer för vuxna, inte aktuell väntetid (öppna livetider finns inte i Sverige). | Socialstyrelsen, Patientregistret (faktablad 2026-6-10339), och OpenStreetMap (ODbL) som ögonblicksbild i repot | Hospitals & Emergency (Sweden) / Sjukhus och akuter, under Infrastructure |
 | Kommuner och län: gränserna för alla 290 kommuner och 21 län som linjer på marken (länsgränser gula och tjockare, gränser till havs utelämnade), namnen följer vyn (län på hög höjd, kommuner närmare), kartans mitt i raden med kommun, län och folkmängd; klick på en kommun markerar den och visar län, folkmängd med förändring på ett år och kommunkod | OpenStreetMap (ODbL) som ögonblicksbild i repot; folkmängd per månad från SCB (TAB6473, CC0) | Municipalities & Counties (Sweden) / Kommuner och län, under Infrastructure |
 | Valdistrikt 2026: riksdagsvalet i alla 6 312 valdistrikt som ytor på marken, färgade efter största parti eller valdeltagande; klick på ett distrikt visar kommun, räknade röster, valdeltagande och alla partiers andelar | Valmyndigheten (öppna data, källan anges) som ögonblicksbild i repot | Election Districts 2026 (Sweden) / Valdistrikt 2026, under Infrastructure |
+| Skyddad natur: Sveriges 31 nationalparker, cirka 6 000 gällande naturreservat och 52 kulturreservat som ytor på marken, färgade efter skyddsform; på hög höjd bara nationalparkerna, närmare in reservaten i vyn (högst 1 500 närmast mitten); klick ger kommun, areal och år för beslutet, klick på kortet öppnar området i Naturvårdsverkets Skyddad natur | Naturvårdsverket, Naturvårdsregistret (CC0, "Källa: Naturvårdsverket") som ögonblicksbild i repot | Protected Nature (Sweden) / Skyddad natur, under Infrastructure |
 | Blixtnedslag: varje urladdning den senaste timmen som punkt, färgad efter ålder (vit = senaste 5 min), stora för nedslag i marken och små för blixtar i molnet; klick ger tid, typ och toppström | DMI:s blixtdata (CC BY 4.0, ingen nyckel; DMI:s sensornät och grannländernas sensorer) | Lightning Strikes (Sweden) / Blixtnedslag, under Weather |
 | Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
@@ -102,6 +103,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Sjukhus och akuter (Sverige) | Socialstyrelsen · OpenStreetMap | Cirka 120 sjukhus; väntetidsmedianer för de 62 akutmottagningarna i statistiken | Årlig statistik; ögonblicksbild i appen, byggs om för hand | Statistiken fri att använda med källa (Socialstyrelsen) · ODbL (OpenStreetMap) |
 | SE | Kommuner och län (Sverige) | OpenStreetMap · SCB | Alla 290 kommuner och 21 län, med folkmängd per månad | Ögonblicksbild i appen, byggs om för hand | ODbL (OpenStreetMap) · CC0 1.0 (SCB) |
 | SE | Valdistrikt 2026 (Sverige) | Valmyndigheten | Riksdagsvalet 2026 i alla 6 312 valdistrikt, slutlig rösträkning | Ögonblicksbild i appen, byggs om för hand | Öppna data, fria att använda med Valmyndigheten angiven som källa |
+| SE | Skyddad natur (Sverige) | Naturvårdsverket | Alla nationalparker, gällande naturreservat och kulturreservat | Ögonblicksbild i appen, byggs om för hand | CC0 1.0 |
 | SE | Butikskedjor (Sverige) | OpenStreetMap · Wikidata · SCB | Nio kedjors butiker och apotek i hela Sverige; kartlagda av frivilliga | Ögonblicksbild i appen, byggs om för hand | ODbL (OpenStreetMap) · CC0 1.0 (Wikidata, SCB) |
 | SE | Väglag (Sverige) | Trafikverket | Väglag och aktuella händelser i hela Sverige | Var 3:e minut | CC0 1.0 |
 | SE | Vägväder (Sverige) | Trafikverket | Cirka 830 vägväderstationer | Var 5:e minut | CC0 1.0 |
@@ -382,6 +384,29 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-12 (skyddad natur: nationalparker och reservat)
+- Nytt lager **Skyddad natur (Sverige)** (delningstoken `0d`) under
+  Infrastructure, efter Valdistrikt 2026: Sveriges 31 nationalparker,
+  6 019 gällande naturreservat och 52 kulturreservat som ytor på marken,
+  mörkgröna, gröna respektive bruna. På hög höjd (vyn bredare än 3 grader)
+  visas bara nationalparkerna; närmare in reservaten i vyn, högst 1 500
+  närmast mitten. Klick på ett område visar kommun, areal och året beslutet
+  vann laga kraft; klick på kortet öppnar området i Naturvårdsverkets
+  kartjänst Skyddad natur.
+- Källan är Naturvårdsverkets Naturvårdsregistret, nedladdat som öppna data
+  (CC0 enligt "Naturvårdsregistret – Beskrivning av öppna data", utgåva 1.2;
+  Naturvårdsverket ber om "Källa: Naturvårdsverket", som kortet och
+  källförteckningen anger). Bara beslut med status "Gällande" tas med:
+  överklagade eller ännu inte gällande beslut kan ändras.
+- Medvetet utelämnat: vattenskyddsområden, eftersom de tillsammans pekar ut
+  dricksvattentäkterna, samt tillträdesförbud, biotopskydd, naturminnen och
+  de andra små skyddsformerna.
+- `scripts/build-protected-nature.mjs` körs för hand: läser Naturvårdsverkets
+  shapefiler (ny läsare `scripts/lib/shapefile.mjs`), räknar om SWEREF 99 TM
+  till WGS 84, förenklar gränserna med en 150-del av områdets storlek (5 till
+  50 m) och stoppar om en kontur blir mindre än områdets registrerade areal.
+  Ögonblicksbilden är 2,7 MB (1,1 MB packad).
 
 ### 2026-11-12 (valdistrikt: riksdagsvalet 2026)
 - Nytt lager **Valdistrikt 2026 (Sverige)** (delningstoken `0e`) under

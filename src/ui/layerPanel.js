@@ -81,6 +81,7 @@ const PANEL_GROUPS = [
       'hospitals',
       'municipalities',
       'election-districts',
+      'protected-nature',
       'company-stores',
       'sea-marks',
       'ski-pistes',
