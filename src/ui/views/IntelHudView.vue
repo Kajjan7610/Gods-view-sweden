@@ -63,12 +63,13 @@ const entry = computed(() => cockpitEntryFace(cockpit.value?.entryKind));
       </div>
       <div class="hud-bracket">┘</div>
     </div>
+    <!-- Swedish fork: no satellite collection, off-nadir or sensor strips. -->
     <div class="hud-edge hud-left-edge">
-      <div class="hud-readout"><div id="hud-coll">{{ view.coll }}</div></div>
-      <div class="hud-readout"><div id="hud-ona">{{ view.ona }}</div></div>
+      <div class="hud-readout" hidden><div id="hud-coll">{{ view.coll }}</div></div>
+      <div class="hud-readout" hidden><div id="hud-ona">{{ view.ona }}</div></div>
     </div>
     <div class="hud-edge hud-right-edge">
-      <div v-for="line in view.sensor" :key="line" class="hud-readout"><div>{{ line }}</div></div>
+      <div v-for="line in view.sensor" :key="line" class="hud-readout" hidden><div>{{ line }}</div></div>
     </div>
     <div class="hud-bottom-bar">
       <span class="hud-readout"><span id="hud-bottom-line">{{ view.bottom }}</span></span>

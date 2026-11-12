@@ -127,11 +127,19 @@ test('the first view renders the corners, edges and bottom bar', async (t) => {
   );
   assert.equal(root.querySelector('.hud-orbital').parentElement.hidden, true);
   assert.equal(document.getElementById('hud-gsd').parentElement.hidden, true);
+  // Nor the satellite collection, off-nadir and sensor strips at the edges.
   assert.deepEqual(
-    [...root.querySelectorAll('.hud-right-edge .hud-readout')].map(
-      (line) => line.textContent,
-    ),
-    ['BAND: PAN', 'BITS: 11', 'LVL: 1A'],
+    [...root.querySelectorAll('.hud-edge .hud-readout')].map((line) => [
+      line.textContent,
+      line.hidden,
+    ]),
+    [
+      ['COLL: --:--:--Z', true],
+      ['ONA: --°', true],
+      ['BAND: PAN', true],
+      ['BITS: 11', true],
+      ['LVL: 1A', true],
+    ],
   );
 });
 

@@ -383,8 +383,9 @@ git merge origin/main
   "GEV-SE · öppen källkod" i stället för påhittade satellitbeteckningar,
   och den blinkande punkten "LIVE" i stället för "REC". Undertiteln under
   loggan säger "ALLT HÄR ÄR OFFENTLIGT".
-- Originalets omlopps- och passbeteckningar och bildkvalitetsmåtten GSD
-  och NIIRS visas inte. Koordinaterna, MGRS, höjden och solhöjden står kvar.
+- Originalets omlopps- och passbeteckningar, bildkvalitetsmåtten GSD
+  och NIIRS och satellitmåtten längs kanterna (COLL, ONA, BAND, BITS och
+  LVL) visas inte. Koordinaterna, MGRS, höjden och solhöjden står kvar.
 - I stadsdossierns flik STATISTIK står raden under varje värde nu på en
   rad ("2026 · Sverige 229,7 · plats 86 av 290"); att platsen räknas från
   det högsta värdet sägs en gång längst ner.
