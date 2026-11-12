@@ -1,16 +1,24 @@
 import { normalizePoliceStations } from '../../src/layers/policeStations/records.js';
+import {
+  POLISEN_RETRY_AFTER_FAILURE_MS,
+  fetchPolisen,
+  polisenGate,
+  polisenRetryAfterMs,
+} from './polisen/rules.js';
 import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 
 // Polismyndigheten's open station list (no key; free to use with the agency
 // credited, like its event notices). Stations change rarely, so a day of
-// cache is plenty.
+// cache is plenty. Asked for by Polisen's rules for its open data (see
+// polisen/rules.js).
 export const POLISEN_STATIONS_URL = 'https://polisen.se/api/policestations';
 const TTL_MS = 24 * 60 * 60_000;
 /** Longest a failed refresh keeps serving the last snapshot, marked stale. */
 const STALE_MAX_MS = 7 * 24 * 60 * 60_000;
 /** After a failed refresh Polisen is left alone this long. */
-export const POLICE_STATIONS_RETRY_AFTER_FAILURE_MS = 5 * 60_000;
+export const POLICE_STATIONS_RETRY_AFTER_FAILURE_MS =
+  POLISEN_RETRY_AFTER_FAILURE_MS;
 const MAX_BODY_BYTES = 1024 * 1024;
 const FETCH_TIMEOUT_MS = 30_000;
 
@@ -18,9 +26,12 @@ const FETCH_TIMEOUT_MS = 30_000;
 export function policeStationsProxy({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
+  gate = polisenGate,
 } = {}) {
   let cached = null;
   let retryAfter = 0;
+  /** Polisen answered 404: the stations are not asked for again. */
+  let gone = false;
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 600 });
 
@@ -28,19 +39,12 @@ export function policeStationsProxy({
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
-      const response = await fetchImpl(POLISEN_STATIONS_URL, {
-        signal: controller.signal,
-        redirect: 'manual',
-        headers: { Accept: 'application/json' },
-      });
-      if (!response.ok) {
-        try {
-          await response.body?.cancel();
-        } catch {
-          /* no-op */
-        }
-        throw new Error(`upstream HTTP ${response.status}`);
-      }
+      const response = await fetchPolisen(
+        fetchImpl,
+        gate,
+        POLISEN_STATIONS_URL,
+        { signal: controller.signal },
+      );
       const payload = await readResponseJsonCapped(response, MAX_BODY_BYTES);
       const stations = normalizePoliceStations(payload);
       if (!stations.length) throw new Error('empty police station list');
@@ -75,7 +79,7 @@ export function policeStationsProxy({
             { 'X-Data-Stale': 'true' },
           )
         : json(502, { error: 'police_stations_unavailable' });
-    if (now() < retryAfter) return unavailable();
+    if (gone || now() < retryAfter) return unavailable();
     if (!allow(clientKey(req)))
       return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
     try {
@@ -89,7 +93,8 @@ export function policeStationsProxy({
       console.warn(
         `[police-stations] refresh failed: ${error?.message || error}`,
       );
-      retryAfter = now() + POLICE_STATIONS_RETRY_AFTER_FAILURE_MS;
+      if (error?.gone) gone = true;
+      retryAfter = now() + polisenRetryAfterMs(error);
       return unavailable();
     }
   }

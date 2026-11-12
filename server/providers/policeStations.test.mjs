@@ -9,7 +9,7 @@ import {
 
 function route(options) {
   let handler = null;
-  policeStationsProxy(options).configureServer({
+  policeStationsProxy({ gate: async () => {}, ...options }).configureServer({
     middlewares: { use: (path, fn) => (handler = fn) },
   });
   return async (url = '/') => {

@@ -3,15 +3,21 @@ import {
   normalizePoliceEvents,
 } from '../../src/layers/policeEvents/records.js';
 import { SWEDISH_MUNICIPALITIES } from './polisen/municipalities.js';
+import {
+  POLISEN_RETRY_AFTER_FAILURE_MS,
+  fetchPolisen,
+  polisenGate,
+  polisenRetryAfterMs,
+} from './polisen/rules.js';
 import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 
 // Polismyndigheten's open event notices (free to use, crediting the Police;
-// no key): the 500 latest notices in one JSON document.
+// no key): the 500 latest notices in one JSON document, asked for by
+// Polisen's rules for its open data (see polisen/rules.js).
 export const POLISEN_EVENTS_URL = 'https://polisen.se/api/events';
 const TTL_MS = 5 * 60_000;
-/** How long Polisen is left alone after a failed refresh. */
-export const POLISEN_RETRY_AFTER_FAILURE_MS = 60_000;
+export { POLISEN_RETRY_AFTER_FAILURE_MS };
 /** Longest a failed refresh keeps serving the last snapshot, marked stale. */
 const STALE_MAX_MS = 60 * 60_000;
 const MAX_BODY_BYTES = 16 * 1024 * 1024;
@@ -22,9 +28,12 @@ const lookup = createPlaceLookup(SWEDISH_MUNICIPALITIES);
 export function polisenEventsProxy({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
+  gate = polisenGate,
 } = {}) {
   let cached = null;
   let retryAfter = 0;
+  /** Polisen answered 404: the notices are not asked for again. */
+  let gone = false;
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 600 });
 
@@ -32,19 +41,9 @@ export function polisenEventsProxy({
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
-      const response = await fetchImpl(POLISEN_EVENTS_URL, {
+      const response = await fetchPolisen(fetchImpl, gate, POLISEN_EVENTS_URL, {
         signal: controller.signal,
-        redirect: 'manual',
-        headers: { Accept: 'application/json' },
       });
-      if (!response.ok) {
-        try {
-          await response.body?.cancel();
-        } catch {
-          /* no-op */
-        }
-        throw new Error(`upstream HTTP ${response.status}`);
-      }
       const payload = await readResponseJsonCapped(response, MAX_BODY_BYTES);
       return { ...normalizePoliceEvents(payload, lookup), fetchedAt: now() };
     } finally {
@@ -73,7 +72,8 @@ export function polisenEventsProxy({
       console.warn(
         `[polisen-events] refresh failed: ${error?.message || error}`,
       );
-      retryAfter = now() + POLISEN_RETRY_AFTER_FAILURE_MS;
+      if (error?.gone) gone = true;
+      retryAfter = now() + polisenRetryAfterMs(error);
       return lastKnown();
     }
   }
@@ -98,7 +98,7 @@ export function polisenEventsProxy({
     if (!allow(clientKey(req)))
       return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
     const value =
-      now() < retryAfter
+      gone || now() < retryAfter
         ? lastKnown()
         : await coalesceProxyRequest(inFlight, 'events', refresh).promise;
     if (!value) return json(502, { error: 'polisen_events_unavailable' });

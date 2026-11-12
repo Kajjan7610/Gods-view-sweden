@@ -163,6 +163,15 @@ Krisinformation, NOAA, EUMETSAT och OpenStreetMap (ODbL). Följande har
 oklara eller särskilda villkor. De visas med källan angiven, och de utan
 licens ska helst ersättas med en dokumenterad källa eller godkännas:
 
+- **Polisen (händelser och polisstationer):** ingen licens angiven, men
+  Polisens "Regler för öppna data" (granskade av Polisen 2026-09-24) gäller:
+  varje anrop ska ha en User-Agent som namnger appen, det ska gå minst 10
+  sekunder mellan anropen, högst 60 i timmen och 1 440 per dygn, och ett
+  404-svar är permanent. Appen skickar `GodsEyeViewSverige/1.0` med en länk
+  till projektet, hämtar händelserna var 5:e minut och stationerna en gång
+  per dygn, väntar 5 minuter efter ett fel och 30 minuter efter svaret 429,
+  och frågar aldrig igen efter 404. Polisens bilder får inte användas utan
+  tillstånd; appen visar inga.
 - **Kraftsystemet:** läser ENTSO-E:s transparensplattform, ett dokumenterat
   gränssnitt, med en gratis nyckel (se Nycklar). Flödena mellan elområdena
   och grannländerna är där fria att återanvända (CC BY 4.0), medan
@@ -363,6 +372,14 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-12 (Polisens regler för öppna data)
+- Anropen till Polisen följer nu Polisens regler för öppna data: en
+  User-Agent som namnger appen (`GodsEyeViewSverige/1.0` med länk till
+  projektet), minst 10 sekunder mellan alla anrop till Polisen, 5 minuters
+  paus efter ett fel (tidigare 1 minut för händelserna) och 30 minuter efter
+  svaret 429. Efter ett 404-svar frågas den resursen aldrig igen.
+- Reglerna står under "Källor med oklara eller särskilda villkor".
 
 ### 2026-11-11 (sjöväder från SMHI som tillval)
 - Med `SEA_WEATHER_SOURCE=smhi` läser Sjöväder SMHI:s öppna

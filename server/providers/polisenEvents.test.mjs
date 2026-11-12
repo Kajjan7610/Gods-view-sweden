@@ -20,7 +20,7 @@ const PAYLOAD = [
 function harness(options) {
   let route;
   let handler;
-  const plugin = polisenEventsProxy(options);
+  const plugin = polisenEventsProxy({ gate: async () => {}, ...options });
   plugin.configureServer({
     middlewares: { use: (path, fn) => ((route = path), (handler = fn)) },
   });
@@ -102,7 +102,7 @@ test('a failed refresh serves the last snapshot marked stale, then gives up', as
   assert.equal(gone.json().error, 'polisen_events_unavailable');
 });
 
-test('after a failed refresh Polisen is left alone for a minute', async (t) => {
+test('after a failed refresh Polisen is left alone for five minutes', async (t) => {
   t.mock.method(console, 'warn', () => {});
   t.mock.method(console, 'log', () => {});
   let clock = Date.parse('2026-11-04T17:00:00Z');
@@ -124,8 +124,8 @@ test('after a failed refresh Polisen is left alone for a minute', async (t) => {
   assert.equal(first.json().stale, true);
   assert.equal(first.headers['X-Data-Stale'], 'true');
   assert.equal(calls, 2);
-  // Within the minute: the last snapshot again, Polisen not asked.
-  clock += 30_000;
+  // Within the five minutes: the last snapshot again, Polisen not asked.
+  clock += 4 * 60_000 + 30_000;
   for (let i = 0; i < 3; i += 1) {
     const again = await request();
     assert.equal(again.status, 200);
