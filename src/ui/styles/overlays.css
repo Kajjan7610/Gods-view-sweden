@@ -323,6 +323,11 @@
 .hud-readout {
   display: contents;
 }
+/* Swedish fork: a readout marked hidden (orbit, GSD/NIIRS) stays hidden
+   whatever display a theme gives the readouts. */
+#intel-hud .hud-readout[hidden] {
+  display: none !important;
+}
 
 :root[data-scope-mask='off']
   #intel-hud:is([data-variant='minimal'], [data-variant='tactical'])

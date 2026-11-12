@@ -169,3 +169,16 @@ test('the selected vessel readout shows while a vessel is selected', async (t) =
   assert.equal(vessel.className, 'hud-ais-vessel');
   assert.equal(vessel.textContent, 'AIS: --');
 });
+
+test('a readout marked hidden is not drawn, whatever display themes give readouts', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync(
+    new URL('../styles/overlays.css', import.meta.url),
+    'utf8',
+  );
+  // `.hud-readout { display: contents }` would otherwise override [hidden].
+  assert.match(
+    css,
+    /#intel-hud \.hud-readout\[hidden\] \{\s*display: none !important;\s*\}/,
+  );
+});
