@@ -164,9 +164,9 @@ watch(
             <small v-if="d.now.air" class="city-dossier-note">{{ d.now.air.station }}</small>
             <small v-if="d.now.pending" class="city-dossier-note">{{ d.now.pending }}</small>
             <small v-if="d.now.failed" class="city-dossier-note">{{ d.now.failed }}</small>
-            <button type="button" class="city-dossier-radio" :disabled="d.now.radioBusy" @click="store.act('playRadio')">
-              <span class="material-symbols-outlined" aria-hidden="true">radio</span>{{ d.now.radioLabel }}
-            </button>
+            <a v-if="d.now.radio" class="city-dossier-radio" :href="d.now.radio.url" target="_blank" rel="noopener noreferrer">
+              <span class="material-symbols-outlined" aria-hidden="true">radio</span>{{ d.now.radio.label }} ↗
+            </a>
           </template>
         </section>
         <section v-else-if="d.tab === 'sights' && d.sights" class="city-dossier-section" role="tabpanel">

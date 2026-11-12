@@ -3781,8 +3781,6 @@
   "Midnight sun": "شمس منتصف الليل",
   "Polar night": "الليل القطبي",
   "Sunrise {rise} · sunset {set}": "الشروق {rise} · الغروب {set}",
-  "Tuning in…": "جارٍ الضبط…",
-  "Play local radio": "تشغيل الإذاعة المحلية",
   "Weather now": "الطقس الآن",
   "Sun": "الشمس",
   "Trains from {station}": "القطارات من {station}",
@@ -4511,5 +4509,7 @@
   "The {count} areas nearest the centre are shown.": "تُعرض المناطق الـ {count} الأقرب إلى المركز.",
   "Malformed protected nature snapshot": "بيانات المناطق المحمية مشوهة",
   "Protected Nature (Sweden)": "الطبيعة المحمية (السويد)",
-  "All national parks, nature reserves in force and culture reserves": "جميع المنتزهات الوطنية والمحميات الطبيعية السارية والمحميات الثقافية"
+  "All national parks, nature reserves in force and culture reserves": "جميع المنتزهات الوطنية والمحميات الطبيعية السارية والمحميات الثقافية",
+  "{channel} at Sveriges Radio": "{channel} على Sveriges Radio",
+  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "كل مفتاح يخص حسابك الخاص لدى المزوّد. أنت مسؤول عن المفتاح وحصص الحساب وأي رسوم، وعن الالتزام بشروط المزوّد؛ بعض الاستخدامات، مثل نشر الصور أو الأفلام، تتطلب إذنًا منفصلًا. جميع المصادر وتراخيصها مدرجة تحت إسناد البيانات."
 }

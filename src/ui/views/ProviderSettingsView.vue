@@ -73,6 +73,7 @@ const removeTitle = (title) =>
     </header>
     <h2 id="key-setup-title">{{ t('Power up the globe') }}</h2>
     <p id="key-setup-description">{{ t('The globe already flies keyless. Every key below switches on another real feed — paste one and it\'s saved into this app\'s local configuration, then the server restarts itself. Server-side keys stay on this machine; Google Maps and Cesium ion run in the browser and must be provider-restricted. Keys you configured elsewhere are shown but never touched.') }}</p>
+    <p class="key-setup-terms">{{ t('Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.') }}</p>
     <div class="key-setup-rows ui-scroll" data-key-setup-rows>
       <section v-for="key in view?.rows ?? []" :key="`${key.id}:${view.generation}`" class="key-setup-row" :data-key-id="key.id" :data-set="String(key.set)" :data-managed="key.managed || undefined">
         <div class="key-setup-row-head">

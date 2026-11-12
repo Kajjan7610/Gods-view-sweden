@@ -3629,8 +3629,6 @@
   "Midnight sun": "Опівнічне сонце",
   "Polar night": "Полярна ніч",
   "Sunrise {rise} · sunset {set}": "Схід {rise} · захід {set}",
-  "Tuning in…": "Налаштування…",
-  "Play local radio": "Слухати місцеве радіо",
   "Weather now": "Погода зараз",
   "Sun": "Сонце",
   "Trains from {station}": "Потяги зі станції {station}",
@@ -4347,5 +4345,7 @@
   "The {count} areas nearest the centre are shown.": "Показано {count} територій, найближчих до центру.",
   "Malformed protected nature snapshot": "Некоректні дані про охоронювані території",
   "Protected Nature (Sweden)": "Охоронювана природа (Швеція)",
-  "All national parks, nature reserves in force and culture reserves": "Усі національні парки, чинні природні й культурні заповідники"
+  "All national parks, nature reserves in force and culture reserves": "Усі національні парки, чинні природні й культурні заповідники",
+  "{channel} at Sveriges Radio": "{channel} на Sveriges Radio",
+  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "Кожен ключ належить вашому власному обліковому запису в постачальника. Ви відповідаєте за ключ, квоти й можливі платежі облікового запису та за дотримання умов постачальника; для деяких видів використання, як-от публікації зображень чи відео, потрібен окремий дозвіл. Усі джерела та їхні ліцензії наведено в розділі «Джерела даних»."
 }

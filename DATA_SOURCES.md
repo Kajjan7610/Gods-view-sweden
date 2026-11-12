@@ -290,6 +290,8 @@ The [Bhote Koshi event pack](public/events/bhote-koshi-2026/README.md), under `p
 
 ### ⚠️ TeleGeography is bundled but NonCommercial
 
+> **God's Eye View Sverige does not ship these files.** TeleGeography now licenses the geocoded data behind its maps for an annual fee, and its Creative Commons licence (CC BY-SA 4.0) covers references to its maps, URLs and screen captures, not the GeoJSON files. The Swedish version removes `cable-geo.json` and `landing-point-geo.json`, hides the layer and gives it an empty source (see SVERIGE.md, 2026-11-12). The text below describes the original project.
+
 The submarine-cable GeoJSON is **CC BY-NC-SA 3.0** (Attribution-**NonCommercial**-**ShareAlike**). It is bundled so the cables layer works out of the box, but it is **not covered by this project's MIT license**. CC BY-NC-SA permits redistribution with attribution and share-alike — which is exactly how it ships here — but the **NonCommercial** clause means:
 
 > If you use God's Eye View commercially, delete `src/data/local_data/telegeography_submarine_cables/` (or obtain a commercial license from TeleGeography). It is one self-contained folder; the rest of the app runs without it.

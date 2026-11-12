@@ -142,22 +142,27 @@ test('a cable split into several features is listed once', async () => {
   assert.deepEqual(west.data.rows, [{ id: '2africa', name: '2Africa' }]);
 });
 
-test('the local fetch serves bundled data files and nothing outside them', async () => {
-  const fetchImpl = createApiFetch({
-    apiBase: 'http://127.0.0.1:1',
-    fetchImpl: async () => assert.fail('no network'),
-  });
-  const { cables: collection, landingPoints } = await createBundledCableSource({
-    fetchImpl,
-  }).fetch();
-  assert.ok(collection.features.length > 500);
-  assert.ok(landingPoints.features.length > 1000);
-  const outside = await fetchImpl(
-    new URL('../../../package.json', import.meta.url).href,
-  );
-  assert.equal(outside.status, 404);
-  const missing = await fetchImpl(
-    new URL('../../data/local_data/missing.json', import.meta.url).href,
-  );
-  assert.equal(missing.status, 404);
-});
+test(
+  'the local fetch serves bundled data files and nothing outside them',
+  { skip: 'Swedish fork: the TeleGeography cable files are not distributed' },
+  async () => {
+    const fetchImpl = createApiFetch({
+      apiBase: 'http://127.0.0.1:1',
+      fetchImpl: async () => assert.fail('no network'),
+    });
+    const { cables: collection, landingPoints } =
+      await createBundledCableSource({
+        fetchImpl,
+      }).fetch();
+    assert.ok(collection.features.length > 500);
+    assert.ok(landingPoints.features.length > 1000);
+    const outside = await fetchImpl(
+      new URL('../../../package.json', import.meta.url).href,
+    );
+    assert.equal(outside.status, 404);
+    const missing = await fetchImpl(
+      new URL('../../data/local_data/missing.json', import.meta.url).href,
+    );
+    assert.equal(missing.status, 404);
+  },
+);

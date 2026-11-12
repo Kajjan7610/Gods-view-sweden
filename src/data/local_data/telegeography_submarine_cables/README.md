@@ -1,31 +1,15 @@
-# TeleGeography Submarine Cable Map
+# TeleGeography Submarine Cable Map — not distributed in the Swedish fork
 
-Bundled GeoJSON for international submarine cable systems and landing points,
-from TeleGeography's [Submarine Cable Map](https://www.submarinecablemap.com/).
+The original project bundles `cable-geo.json` and `landing-point-geo.json`
+from TeleGeography's [Submarine Cable Map](https://www.submarinecablemap.com/)
+here, stating CC BY-NC-SA 3.0.
 
-## ⚠️ License — NOT covered by this project's MIT license
+God's Eye View Sverige does not ship them. TeleGeography now licenses the
+geocoded data behind its maps for an annual fee, and its Creative Commons
+licence (CC BY-SA 4.0) covers references to its maps, URLs and screen
+captures, not the GeoJSON files. No licence covering redistribution of these
+two files, downloaded on 2026-05-24, could be found.
 
-This dataset is licensed by TeleGeography under
-**Creative Commons Attribution-NonCommercial-ShareAlike 3.0 (CC BY-NC-SA 3.0)**.
-It is bundled here for an out-of-the-box experience and is **excluded from the
-MIT license that covers God's Eye View's source code.**
-
-- **Attribution required:** "© TeleGeography — submarinecablemap.com"
-- **NonCommercial:** the data may not be used commercially. If you use this
-  project commercially, **remove these files** (`cable-geo.json`,
-  `landing-point-geo.json`) or obtain a commercial license from TeleGeography.
-- **ShareAlike:** redistributed/adapted copies of the data must stay under
-  CC BY-NC-SA 3.0.
-
-The richer structured dataset is licensed separately/commercially by
-TeleGeography. See [`DATA_SOURCES.md`](../../../../DATA_SOURCES.md) for the
-project-wide data-licensing summary.
-
-## Files
-
-| File | Source URL | Features |
-|---|---|---|
-| `cable-geo.json` | `https://www.submarinecablemap.com/api/v3/cable/cable-geo.json` | 712 cables |
-| `landing-point-geo.json` | `https://www.submarinecablemap.com/api/v3/landing-point/landing-point-geo.json` | 1,917 landing points |
-
-Downloaded 2026-05-24. Re-fetch from the source URLs above to update.
+The layer stays in the code so that merges with the original keep working,
+but it is not listed and its source has no cables
+(`createEmptyCableSource` in `src/layers/submarineCables/bundledSource.js`).

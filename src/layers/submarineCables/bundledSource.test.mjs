@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createBundledCableSource } from './bundledSource.js';
+import {
+  createBundledCableSource,
+  createEmptyCableSource,
+} from './bundledSource.js';
 
 test('a failed bundled response releases its body', async () => {
   let released = 0;
@@ -31,4 +34,14 @@ test('cancellation during JSON parsing cannot return a late snapshot', async () 
     }),
   });
   await assert.rejects(source.fetch(controller.signal), { name: 'AbortError' });
+});
+
+test('the Swedish fork has no cables and asks nobody', async (t) => {
+  const fetchMock = t.mock.method(globalThis, 'fetch', async () => {
+    throw new Error('no request expected');
+  });
+  const { cables, landingPoints } = await createEmptyCableSource().fetch();
+  assert.deepEqual(cables, { type: 'FeatureCollection', features: [] });
+  assert.deepEqual(landingPoints, { type: 'FeatureCollection', features: [] });
+  assert.equal(fetchMock.mock.callCount(), 0);
 });

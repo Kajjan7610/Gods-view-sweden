@@ -3401,8 +3401,6 @@
   "Midnight sun": "午夜太阳",
   "Polar night": "极夜",
   "Sunrise {rise} · sunset {set}": "日出 {rise} · 日落 {set}",
-  "Tuning in…": "正在调台…",
-  "Play local radio": "播放本地电台",
   "Weather now": "当前天气",
   "Sun": "太阳",
   "Trains from {station}": "从 {station} 出发的列车",
@@ -4101,5 +4099,7 @@
   "The {count} areas nearest the centre are shown.": "显示最靠近中心的 {count} 个区域。",
   "Malformed protected nature snapshot": "保护区数据格式错误",
   "Protected Nature (Sweden)": "受保护自然 (瑞典)",
-  "All national parks, nature reserves in force and culture reserves": "所有国家公园、现行自然保护区和文化保护区"
+  "All national parks, nature reserves in force and culture reserves": "所有国家公园、现行自然保护区和文化保护区",
+  "{channel} at Sveriges Radio": "Sveriges Radio 的 {channel}",
+  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "每个密钥都属于你在提供方的个人账户。你需要对密钥、账户配额和可能的费用负责，并遵守提供方的条款；某些用途（例如发布图片或视频）需要另行获得许可。所有来源及其许可都列在“数据来源说明”中。"
 }

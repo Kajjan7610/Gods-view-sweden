@@ -93,9 +93,14 @@ test('catalogs construct distinct layers and classification from their supplied 
     true,
     'ordinary data layer entries remain visible',
   );
-  // Swedish fork: military aircraft and mapped installations stay
-  // registered for the layers that read them, but are never listed.
-  for (const id of ['military', 'military-installations'])
+  // Swedish fork: military aircraft, mapped installations and the
+  // submarine cables stay registered for the code that reads them, but are
+  // never listed.
+  for (const id of [
+    'military',
+    'military-installations',
+    'telegeography-submarine-cables',
+  ])
     assert.equal(rows.find((row) => row.id === id)?.showInTogglePanel, false);
   assert.deepEqual(
     first.layers.map(({ id }) => id),

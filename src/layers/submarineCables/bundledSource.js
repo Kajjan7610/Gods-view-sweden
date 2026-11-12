@@ -15,6 +15,23 @@ function landingPointUrl() {
   ).href;
 }
 
+/**
+ * The Swedish fork does not ship TeleGeography's files: their licence for
+ * redistribution cannot be shown (TeleGeography sells the geocoded data).
+ * This source answers with no cables and no landing points and asks nobody;
+ * the layer and the AI tools keep working and simply find nothing.
+ */
+export function createEmptyCableSource() {
+  const empty = () => ({ type: 'FeatureCollection', features: [] });
+  return {
+    label: 'TeleGeography', // i18n-ignore: data provider name
+    async fetch(signal) {
+      signal?.throwIfAborted();
+      return { cables: empty(), landingPoints: empty() };
+    },
+  };
+}
+
 /** Supply GeoJSON collections without coupling the renderer to asset URLs. */
 export function createBundledCableSource({
   fetchImpl = (...args) => fetch(...args),

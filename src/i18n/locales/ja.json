@@ -3401,8 +3401,6 @@
   "Midnight sun": "白夜",
   "Polar night": "極夜",
   "Sunrise {rise} · sunset {set}": "日の出 {rise} · 日の入り {set}",
-  "Tuning in…": "選局中…",
-  "Play local radio": "地元ラジオを再生",
   "Weather now": "現在の天気",
   "Sun": "太陽",
   "Trains from {station}": "{station} 発の列車",
@@ -4101,5 +4099,7 @@
   "The {count} areas nearest the centre are shown.": "中心に近い {count} 地域を表示しています。",
   "Malformed protected nature snapshot": "保護地域データの形式が不正です",
   "Protected Nature (Sweden)": "保護自然 (スウェーデン)",
-  "All national parks, nature reserves in force and culture reserves": "すべての国立公園、有効な自然保護区、文化保護区"
+  "All national parks, nature reserves in force and culture reserves": "すべての国立公園、有効な自然保護区、文化保護区",
+  "{channel} at Sveriges Radio": "Sveriges Radio の {channel}",
+  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "各キーはプロバイダーにあるあなた自身のアカウントのものです。キー、アカウントの割り当てと料金、プロバイダーの規約の遵守はあなたの責任です。画像や動画の公開など、一部の利用には別途許可が必要です。すべてのソースとライセンスはデータの出典に記載されています。"
 }

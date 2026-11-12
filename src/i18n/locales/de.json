@@ -3477,8 +3477,6 @@
   "Midnight sun": "Mitternachtssonne",
   "Polar night": "Polarnacht",
   "Sunrise {rise} · sunset {set}": "Sonnenaufgang {rise} · Sonnenuntergang {set}",
-  "Tuning in…": "Sender wird gesucht…",
-  "Play local radio": "Lokalradio abspielen",
   "Weather now": "Wetter jetzt",
   "Sun": "Sonne",
   "Trains from {station}": "Züge ab {station}",
@@ -4183,5 +4181,7 @@
   "The {count} areas nearest the centre are shown.": "Die {count} Gebiete nahe der Mitte werden angezeigt.",
   "Malformed protected nature snapshot": "Fehlerhafte Schutzgebietsdaten",
   "Protected Nature (Sweden)": "Schutzgebiete (Schweden)",
-  "All national parks, nature reserves in force and culture reserves": "Alle Nationalparks, geltenden Naturschutzgebiete und Kulturreservate"
+  "All national parks, nature reserves in force and culture reserves": "Alle Nationalparks, geltenden Naturschutzgebiete und Kulturreservate",
+  "{channel} at Sveriges Radio": "{channel} bei Sveriges Radio",
+  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "Jeder Schlüssel gehört zu deinem eigenen Konto beim Anbieter. Du bist für den Schlüssel, die Kontingente und eventuelle Gebühren des Kontos verantwortlich und dafür, die Bedingungen des Anbieters einzuhalten; manche Nutzungen, etwa das Veröffentlichen von Bildern oder Filmen, brauchen eine eigene Erlaubnis. Alle Quellen und ihre Lizenzen stehen unter Datenquellen."
 }

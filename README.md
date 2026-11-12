@@ -8,6 +8,8 @@
 
 ![God's Eye View Sverige: titeln över Sverige med flyget live](docs/media/sverige/sverige-hero.gif)
 
+<sub>For promotional purposes only. 3D: Google Maps via Cesium ion.</sub>
+
 </div>
 
 Ett digitalt jordklot med hela världen live: flyg, satelliter, fartyg, jordbävningar och bränder från över 110 datakällor. Ovanpå det ligger Sveriges öppna data: **21 svenska API:er och 30 datatyper från 14 myndigheter och tjänster**, med hela gränssnittet på svenska.
@@ -17,12 +19,6 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 > 🚧 **Under utveckling.** Det här är en grund som byggs vidare på. Nya svenska datalager och funktioner kommer löpande, och en del kan ändras på vägen. Ändringarna loggas i [SVERIGE.md](SVERIGE.md).
 >
 > _English: Work in progress. This is a foundation that will keep growing, with more Swedish data layers on the way._
-
-### ▶ Se filmen
-
-https://github.com/user-attachments/assets/5c6b06b2-43dc-40f8-ac90-678ecd3b644b
-
-_1:43 med berättarröst. Alla källor i filmen står i slutskylten; bara källor vars villkor tillåter det visas._
 
 **▶ Prova själv:** [Kom igång på 15 minuter](docs/KOM-IGANG.md). Gratis, körs på din egen dator, och de svenska nycklarna klistras in direkt i appen. Du skaffar egna nycklar, och varje källas villkor gäller dig; den svenska versionen bygger på öppna data och använder inte källor som kräver tillstånd, som OpenSky och TomTom; flyg kommer från adsb.lol (ODbL).
 
@@ -583,9 +579,7 @@ In the app, **Data Layers** groups them as Movement, Cameras, Infrastructure, Ev
 
 _The Space Missions layer replaying a Falcon 9 ascent — labeled `RECONSTRUCTED ESTIMATE`, scrubbable 0.25×–4×._
 
-**Also on the globe:** neighborhood overlays · an optional cockpit WX cloud effect. **Bundled static infrastructure:** Datacenters (4,352), Dams (704), and Submarine Cables (712).
-
-![Diving into the Bahamas and revealing labeled submarine cable routes beneath the globe](docs/media/09-undersea-cables.gif)
+**Also on the globe:** neighborhood overlays · an optional cockpit WX cloud effect. **Bundled static infrastructure:** Datacenters (4,352) and Dams (704). _The Swedish version does not ship the original's submarine cables (see SVERIGE.md)._
 
 **Missing a layer you want?** Open an issue — or add it and send the PR.
 

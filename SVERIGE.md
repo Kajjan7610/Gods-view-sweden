@@ -68,7 +68,7 @@ Två nivåer gäller:
 | Blixtnedslag: varje urladdning den senaste timmen som punkt, färgad efter ålder (vit = senaste 5 min), stora för nedslag i marken och små för blixtar i molnet; klick ger tid, typ och toppström | DMI:s blixtdata (CC BY 4.0, ingen nyckel; DMI:s sensornät och grannländernas sensorer) | Lightning Strikes (Sweden) / Blixtnedslag, under Weather |
 | Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
-| Stadsdossier: när vyn stannar lågt över en svensk ort visar panelen STAD i högerkanten stadsvapen, foto och inledning, tätortens och kommunens folkmängd med kurva, skattesats, inkomst, arbetslöshet och kommunvalet, tolv nyckeltal under STATISTIK (skola, trygghet, hälsa, ekonomi, miljö och besökare, med hela Sveriges värde och kommunens plats bland kommunerna), samt läget just nu (väder, luft, varningar, Polisen, sol) och en knapp för lokalradio | Kolada (RKA), Wikidata (CC0), Wikipedia (CC BY-SA 4.0), SMHI, Polisen; ingen nyckel | Panelen STAD i högerkanten (dyker upp vid första besöket) |
+| Stadsdossier: när vyn stannar lågt över en svensk ort visar panelen STAD i högerkanten stadsvapen, foto och inledning, tätortens och kommunens folkmängd med kurva, skattesats, inkomst, arbetslöshet och kommunvalet, tolv nyckeltal under STATISTIK (skola, trygghet, hälsa, ekonomi, miljö och besökare, med hela Sveriges värde och kommunens plats bland kommunerna), samt läget just nu (väder, luft, varningar, Polisen, sol) och en länk till ortens P4-kanal hos Sveriges Radio | Kolada (RKA), Wikidata (CC0), Wikipedia (CC BY-SA 4.0), SMHI, Polisen; ingen nyckel | Panelen STAD i högerkanten (dyker upp vid första besöket) |
 | Stadsdossierns flikar Sevärt (slott, kyrkor, museer m.m. utpekade på kartan), besökspass, tåg från stadens station, VMA-banner och norrsken i natt | Wikidata (CC0), Trafikverket, Krisinformation.se, NOAA SWPC | Panelen STAD |
 | Flygtavla: Swedavias tio flygplatser, hela dagens avgångar och ankomster, köerna i säkerhetskontrollen över terminalerna, följ planet i luften och dagens rutter på globen | Swedavia FlightInfo och WaitTime (gratisnycklar) | Kortet över en Swedavia-flygplats och tavlans egen panel |
 | Flygväder: METAR och TAF för flygplatserna | NOAA Aviation Weather Center (ingen nyckel) | Flygtavlan och cockpit |
@@ -333,6 +333,13 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   det är Google som sprider den geografiska informationen och som ska ha
   spridningstillstånd enligt lagen om skydd för geografisk information;
   den som använder Googles data behöver inget eget tillstånd.
+  Googles egna regler för Map Tiles API (developers.google.com/maps/
+  documentation/tile/policies, läst 2026-11-12), som bilaga B-2 hänvisar
+  till, tillåter reklamfilmer om appens funktioner bara om filmen är högst
+  30 sekunder, märkt "for promotional purposes only", utan Street View och
+  med Googles källangivelse. Den långa filmen (1:43) är därför borttagen ur
+  README; titelanimationen (7 sekunder) är märkt. Längre filmer görs på
+  OpenStreetMap-kartan.
 - **OpenStreetMap (kartan OSM):** data under ODbL. Kartbilderna kommer från
   OpenStreetMaps egna servrar, vars regler
   (operations.osmfoundation.org/policies/tiles, lästa 2026-11-11) kräver
@@ -384,6 +391,29 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-12 (film, sjökablar och lokalradio efter en granskning av villkoren)
+- Den långa filmen (1:43) är borttagen ur README: Googles regler för
+  Map Tiles API tillåter reklamfilmer med Googles 3D-städer på högst 30
+  sekunder, märkta "for promotional purposes only". Titelanimationen överst
+  är 7 sekunder och har fått märkningen. Skälen står under Cesium ion i
+  "Källor med oklara eller särskilda villkor".
+- Originalets sjökabellager (TeleGeography) finns inte längre i den svenska
+  versionen. Datafilerna är borttagna och lagret visas inte i Datalager;
+  koden finns kvar så att sammanslagningar med originalet fungerar.
+  TeleGeography säljer i dag den geokodade datan bakom sina kartor med
+  årlig licens, och deras Creative Commons-licens (CC BY-SA 4.0) gäller
+  kartbilder, länkar och skärmdumpar, inte GeoJSON-filerna. Ingen licens
+  som tillåter att just de här filerna sprids vidare har gått att hitta.
+- Stadsdossiern spelar inte längre P4 i appen. Knappen är nu en länk till
+  ortens P4-kanal hos Sveriges Radio (alla 25 kanalsidor kontrollerade):
+  enligt SR:s villkor punkt 2 får andra använda SR:s linjära kanaler bara
+  med SR:s skriftliga godkännande. I Skåne och Västra Götaland väljs
+  kanalen närmast orten.
+- KOPPLA PÅ säger nu att varje nyckel hör till användarens eget konto hos
+  leverantören, att användaren ansvarar för nyckeln, kvoter, avgifter och
+  villkoren, och att publicering av bilder eller filmer kan kräva separat
+  tillstånd.
 
 ### 2026-11-12 (skyddad natur: nationalparker och reservat)
 - Nytt lager **Skyddad natur (Sverige)** (delningstoken `0d`) under

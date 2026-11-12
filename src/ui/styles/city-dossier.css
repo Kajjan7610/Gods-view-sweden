@@ -593,6 +593,7 @@
   font: 700 9.5px/1 var(--font-mono);
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  text-decoration: none;
   cursor: pointer;
 }
 .city-dossier-radio:hover,
@@ -604,10 +605,6 @@
 .city-dossier-radio .material-symbols-outlined {
   color: #00dcff;
   font-size: 15px;
-}
-.city-dossier-radio[disabled] {
-  opacity: 0.6;
-  cursor: progress;
 }
 
 /* ── Visit passport ───────────────────────────────────────── */

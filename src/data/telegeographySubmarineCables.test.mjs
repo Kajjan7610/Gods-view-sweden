@@ -1965,41 +1965,45 @@ test('multipart landing geometry keeps every pick with one reference per feature
   }
 });
 
-test('every bundled cable segment is associated with its source feature', async () => {
-  const { features } = JSON.parse(
-    readFileSync(
-      new URL(
-        './local_data/telegeography_submarine_cables/cable-geo.json',
-        import.meta.url,
+test(
+  'every bundled cable segment is associated with its source feature',
+  { skip: 'Swedish fork: the TeleGeography cable files are not distributed' },
+  async () => {
+    const { features } = JSON.parse(
+      readFileSync(
+        new URL(
+          './local_data/telegeography_submarine_cables/cable-geo.json',
+          import.meta.url,
+        ),
+        'utf8',
       ),
-      'utf8',
-    ),
-  );
-  // Some bundled features share a cable ID but have different references.
-  const expandedFeatures = features.flatMap((feature) =>
-    feature.geometry.coordinates.map(() => feature),
-  );
-  assert.ok(expandedFeatures.length > features.length);
-  const env = await createRealCableLayerHarness({
-    source: geometrySource(features),
-  });
-  try {
-    const entities = env.dataSources[0].entities.values;
-    assert.equal(entities.length, expandedFeatures.length);
-    for (const [index, entity] of entities.entries()) {
-      const feature = expandedFeatures[index];
-      assert.equal(
-        entity.__gevTeleGeography?.label,
-        feature.properties.name,
-        entity.id,
-      );
-      assert.deepEqual(entity.__gevTeleGeography.reference, {
-        lon: feature.properties.coordinates[0],
-        lat: feature.properties.coordinates[1],
-      });
+    );
+    // Some bundled features share a cable ID but have different references.
+    const expandedFeatures = features.flatMap((feature) =>
+      feature.geometry.coordinates.map(() => feature),
+    );
+    assert.ok(expandedFeatures.length > features.length);
+    const env = await createRealCableLayerHarness({
+      source: geometrySource(features),
+    });
+    try {
+      const entities = env.dataSources[0].entities.values;
+      assert.equal(entities.length, expandedFeatures.length);
+      for (const [index, entity] of entities.entries()) {
+        const feature = expandedFeatures[index];
+        assert.equal(
+          entity.__gevTeleGeography?.label,
+          feature.properties.name,
+          entity.id,
+        );
+        assert.deepEqual(entity.__gevTeleGeography.reference, {
+          lon: feature.properties.coordinates[0],
+          lat: feature.properties.coordinates[1],
+        });
+      }
+      assert.equal(env.dataSources[2].entities.values.length, features.length);
+    } finally {
+      env.layer.destroy(env.viewer);
     }
-    assert.equal(env.dataSources[2].entities.values.length, features.length);
-  } finally {
-    env.layer.destroy(env.viewer);
-  }
-});
+  },
+);

@@ -2266,11 +2266,7 @@
   },
   "bundled-cables": {
     "exports": ["./sources/bundled-cables"],
-    "modules": [
-      "src/layers/submarineCables/bundledSource.js",
-      "src/data/local_data/telegeography_submarine_cables/cable-geo.json",
-      "src/data/local_data/telegeography_submarine_cables/landing-point-geo.json"
-    ],
+    "modules": ["src/layers/submarineCables/bundledSource.js"],
     "external": []
   },
   "geography": {
@@ -2464,6 +2460,7 @@
       "src/ui/stores/airportBoard.js",
       "src/ui/visitPassport.js",
       "src/ui/cityDossier.js",
+      "src/ui/cityDossierRadio.js",
       "src/ui/cityDossierModel.js",
       "src/ui/stores/cityDossier.js",
       "src/ui/stores/powerDay.js",

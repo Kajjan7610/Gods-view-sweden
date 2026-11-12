@@ -6,7 +6,7 @@ import {
 } from '../layers/airQuality/source.js';
 import { createWfigsPerimeterSource } from '../layers/perimeters/source.js';
 import { createDroneAirspaceSource } from '../layers/droneAirspace/source.js';
-import { createBundledCableSource } from '../layers/submarineCables/bundledSource.js';
+import { createEmptyCableSource } from '../layers/submarineCables/bundledSource.js';
 import { createAdsbGnssSource } from '../layers/gnss/source.js';
 import { createTrafikverketRoadsSource } from '../layers/roadConditions/source.js';
 import { createTrafikverketWeatherSource } from '../layers/roadWeather/source.js';
@@ -45,7 +45,8 @@ export function createReferenceSources() {
     'fire-perimeters': createWfigsPerimeterSource(),
     'drone-airspace': createDroneAirspaceSource(),
     'wildlife-sightings': createWildlifeSightingsSource(),
-    cables: createBundledCableSource(),
+    // Swedish fork: TeleGeography's cable files are not distributed.
+    cables: createEmptyCableSource(),
     'gnss-integrity': createAdsbGnssSource(),
     'trafikverket-roads': createTrafikverketRoadsSource(),
     'trafikverket-weather': createTrafikverketWeatherSource(),

@@ -41,6 +41,7 @@ import { messagesFor } from './krisinformationModel.js';
 import { SIGHT_COLORS, createSightsLayer } from './citySights.js';
 import { facingText } from '../layers/speedCameras/cards.js';
 import { redrawEntities } from '../layers/redrawEntities.js';
+import { localP4Channel } from './cityDossierRadio.js';
 
 const PANEL_ID = 'city-panel';
 /** Higher than this the view is looking at a region, not visiting a town. */
@@ -251,7 +252,6 @@ export function createCityDossier({
   let liveAt = 0;
   let tab = 'about';
   let status = 'idle';
-  let radioBusy = false;
   let appeared = false;
   /** The town's sights: `{ code, status, items }`, and the one chosen. */
   let sights = null;
@@ -879,38 +879,6 @@ export function createCityDossier({
       panel.querySelector?.(`[data-collapse-target="${PANEL_ID}"]`)?.click();
   }
 
-  async function playRadio() {
-    if (!city || radioBusy) return false;
-    radioBusy = true;
-    render();
-    try {
-      await dataManager.setEnabled('radio', true, { origin: 'user' });
-      const radio = dataManager.layers.get('radio')?.module;
-      for (let i = 0; i < 50 && !radio?.getUIState?.()?.stationCount; i += 1)
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      const [lon, lat] = city.point;
-      // Sveriges Radio's local channel by the town ("P4 Göteborg") or the
-      // county ("P4 Gävleborg"), else the nearest Swedish station.
-      const county = String(city.county || '').replace(/s? län$/, '');
-      for (const stationQuery of [`P4 ${city.name}`, `P4 ${county}`, '']) {
-        const station = radio?.selectRequestedStation?.(
-          {
-            categoryId: 'all',
-            anchor: { lat, lon },
-            country: 'SE',
-            stationQuery,
-          },
-          { autoplay: true, origin: 'user' },
-        );
-        if (station) return true;
-      }
-      return false;
-    } finally {
-      radioBusy = false;
-      render();
-    }
-  }
-
   // ---- presentation -------------------------------------------------------
   function aboutView() {
     const wiki = facts?.wikipedia;
@@ -1169,8 +1137,7 @@ export function createCityDossier({
       kris: krisView(live.kris),
       aurora: auroraView(live.aurora),
       cameras: camerasView(live.cameras),
-      radioLabel: radioBusy ? t('Tuning in…') : t('Play local radio'),
-      radioBusy,
+      radio: radioView(),
     };
   }
 
@@ -1323,6 +1290,17 @@ export function createCityDossier({
    * Trafikverket's speed camera sites within the route's radius of the town,
    * the nearest few listed; null without the Trafikverket key.
    */
+  /** The town's local P4 channel, as a link to its page at Sveriges Radio. */
+  function radioView() {
+    const channel = localP4Channel(city);
+    return channel
+      ? {
+          label: t('{channel} at Sveriges Radio', { channel: channel.name }),
+          url: channel.url,
+        }
+      : null;
+  }
+
   function camerasView(cameras) {
     if (!Number.isFinite(cameras?.count)) return null;
     return {
@@ -1496,7 +1474,6 @@ export function createCityDossier({
       drawSights();
       render();
     },
-    playRadio,
     flyIn,
     dismissArrival() {
       closeArrival();
