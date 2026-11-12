@@ -121,6 +121,14 @@ export const LAYER_PROVENANCE = Object.freeze({
     updates: msg('Snapshot in the app, rebuilt by hand'),
     licence: msg('Open data, free to use with Valmyndigheten credited'),
   }),
+  'heritage-remains': own({
+    source: 'Riksantikvarieämbetet',
+    coverage: msg(
+      'Every registered ancient monument and other cultural-historical remain, for the view',
+    ),
+    updates: msg('Daily at RAÄ; read for the view, kept half a day'),
+    licence: msg('Public domain; source and date credited'),
+  }),
   'protected-nature': own({
     source: 'Naturvårdsverket',
     coverage: msg(

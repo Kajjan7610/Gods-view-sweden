@@ -48,6 +48,7 @@ export const LAYER_NAME_KEYS = Object.freeze({
   municipalities: msg('Municipalities & Counties (Sweden)'),
   'election-districts': msg('Election Districts 2026 (Sweden)'),
   'protected-nature': msg('Protected Nature (Sweden)'),
+  'heritage-remains': msg('Ancient Monuments (Sweden)'),
   hospitals: msg('Hospitals & Emergency (Sweden)'),
   shelters: msg('Shelters (Sweden)'),
   'police-stations': msg('Police Stations (Sweden)'),

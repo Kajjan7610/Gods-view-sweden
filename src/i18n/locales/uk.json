@@ -4347,5 +4347,32 @@
   "Protected Nature (Sweden)": "Охоронювана природа (Швеція)",
   "All national parks, nature reserves in force and culture reserves": "Усі національні парки, чинні природні й культурні заповідники",
   "{channel} at Sveriges Radio": "{channel} на Sveriges Radio",
-  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "Кожен ключ належить вашому власному обліковому запису в постачальника. Ви відповідаєте за ключ, квоти й можливі платежі облікового запису та за дотримання умов постачальника; для деяких видів використання, як-от публікації зображень чи відео, потрібен окремий дозвіл. Усі джерела та їхні ліцензії наведено в розділі «Джерела даних»."
+  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "Кожен ключ належить вашому власному обліковому запису в постачальника. Ви відповідаєте за ключ, квоти й можливі платежі облікового запису та за дотримання умов постачальника; для деяких видів використання, як-от публікації зображень чи відео, потрібен окремий дозвіл. Усі джерела та їхні ліцензії наведено в розділі «Джерела даних».",
+  "Ancient monument (protected)": "Пам’ятка давнини (під охороною)",
+  "Possible ancient monument": "Можлива пам’ятка давнини",
+  "Other cultural-historical remain": "Інший історико-культурний об’єкт",
+  "No antiquarian assessment": "Без оцінки",
+  "Not a cultural-historical remain": "Не історико-культурний об’єкт",
+  "Remain": "Об’єкт",
+  "Not confirmed in the field": "Не підтверджено на місці",
+  "RAÄ ↗ · click card to open": "RAÄ ↗ · натисніть картку, щоб відкрити",
+  "Source: Riksantikvarieämbetet": "Джерело: Riksantikvarieämbetet",
+  "Open {name} at Riksantikvarieämbetet": "Відкрити {name} на сайті Riksantikvarieämbetet",
+  "REMAIN · {name}": "ОБ’ЄКТ · {name}",
+  "Heritage remains unavailable": "Пам’ятки давнини недоступні",
+  "Zoom in to see the remains: they show below {height} km": "Наблизьте, щоб побачити об’єкти: вони видні нижче {height} км",
+  "Dots are the remains Riksantikvarieämbetet registers in Fornsök, coloured by their legal assessment; the nearest to the map centre are drawn. Positions can be off by up to 20 m. Click one for its type and number, and click the card to open it at RAÄ.": "Точки — об’єкти, які Riksantikvarieämbetet реєструє у Fornsök, забарвлені за правовою оцінкою; показано найближчі до центру карти. Розташування може відрізнятися до 20 м. Натисніть точку, щоб дізнатися тип і номер, а картку — щоб відкрити об’єкт на RAÄ.",
+  "Zoom in to see every remain here.": "Наблизьте, щоб побачити всі об’єкти тут.",
+  "{count} remains in view": {
+    "one": "{count} об’єкт в огляді",
+    "few": "{count} об’єкти в огляді",
+    "many": "{count} об’єктів в огляді",
+    "other": "{count} об’єкта в огляді"
+  },
+  "Remains need a view to show": "Об’єктам потрібна ділянка карти",
+  "Malformed remains snapshot": "Некоректні дані про об’єкти",
+  "Ancient Monuments (Sweden)": "Пам’ятки давнини (Швеція)",
+  "Every registered ancient monument and other cultural-historical remain, for the view": "Усі зареєстровані пам’ятки давнини та інші історико-культурні об’єкти, для огляду",
+  "Daily at RAÄ; read for the view, kept half a day": "Щодня в RAÄ; читається для огляду, зберігається пів доби",
+  "Public domain; source and date credited": "Суспільне надбання; зазначаються джерело й дата"
 }

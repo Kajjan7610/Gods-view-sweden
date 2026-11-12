@@ -47,6 +47,7 @@ import { createApplicationHospitals } from './layers/hospitals.js';
 import { createApplicationMunicipalities } from './layers/municipalities.js';
 import { createApplicationElectionDistricts } from './layers/electionDistricts.js';
 import { createApplicationProtectedNature } from './layers/protectedNature.js';
+import { createApplicationHeritageRemains } from './layers/heritageRemains.js';
 import { createApplicationSpeedCameras } from './layers/speedCameras.js';
 import { createApplicationRiverFlow } from './layers/riverFlow.js';
 import { createApplicationGammaRadiation } from './layers/gammaRadiation.js';
@@ -213,6 +214,10 @@ export function createApplicationCatalog({
         }),
         createApplicationProtectedNature({
           source: sources['protected-nature'],
+        }),
+        createApplicationHeritageRemains({
+          source: sources['heritage-remains'],
+          terrain: surface.terrain,
         }),
         createApplicationCompanyStores({
           source: sources['company-stores'],

@@ -65,6 +65,7 @@ Två nivåer gäller:
 | Kommuner och län: gränserna för alla 290 kommuner och 21 län som linjer på marken (länsgränser gula och tjockare, gränser till havs utelämnade), namnen följer vyn (län på hög höjd, kommuner närmare), kartans mitt i raden med kommun, län och folkmängd; klick på en kommun markerar den och visar län, folkmängd med förändring på ett år och kommunkod | OpenStreetMap (ODbL) som ögonblicksbild i repot; folkmängd per månad från SCB (TAB6473, CC0) | Municipalities & Counties (Sweden) / Kommuner och län, under Infrastructure |
 | Valdistrikt 2026: riksdagsvalet i alla 6 312 valdistrikt som ytor på marken, färgade efter största parti eller valdeltagande; klick på ett distrikt visar kommun, räknade röster, valdeltagande och alla partiers andelar | Valmyndigheten (öppna data, källan anges) som ögonblicksbild i repot | Election Districts 2026 (Sweden) / Valdistrikt 2026, under Infrastructure |
 | Skyddad natur: Sveriges 31 nationalparker, cirka 6 000 gällande naturreservat och 52 kulturreservat som ytor på marken, färgade efter skyddsform; på hög höjd bara nationalparkerna, närmare in reservaten i vyn (högst 1 500 närmast mitten); klick ger kommun, areal och år för beslutet, klick på kortet öppnar området i Naturvårdsverkets Skyddad natur | Naturvårdsverket, Naturvårdsregistret (CC0, "Källa: Naturvårdsverket") som ögonblicksbild i repot | Protected Nature (Sweden) / Skyddad natur, under Infrastructure |
+| Fornlämningar: Riksantikvarieämbetets registrerade fornlämningar och övriga kulturhistoriska lämningar (cirka 530 000 i hela landet) som prickar på marken när man zoomat in under 12 km, de 1 500 närmast kartans mitt, färgade efter antikvarisk bedömning; klick ger typ, bedömning, lämnings- och RAÄ-nummer och kommun, klick på kortet öppnar lämningen hos RAÄ. Bara det som identifierar lämningen visas, inte beskrivning eller vägbeskrivning | Riksantikvarieämbetet, Kulturmiljöregistret via INSPIRE OGC API Features (public domain, ingen nyckel, inga åtkomstbegränsningar; källa och datum anges) | Ancient Monuments (Sweden) / Fornlämningar, under Infrastructure |
 | Blixtnedslag: varje urladdning den senaste timmen som punkt, färgad efter ålder (vit = senaste 5 min), stora för nedslag i marken och små för blixtar i molnet; klick ger tid, typ och toppström | DMI:s blixtdata (CC BY 4.0, ingen nyckel; DMI:s sensornät och grannländernas sensorer) | Lightning Strikes (Sweden) / Blixtnedslag, under Weather |
 | Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
@@ -103,6 +104,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Sjukhus och akuter (Sverige) | Socialstyrelsen · OpenStreetMap | Cirka 120 sjukhus; väntetidsmedianer för de 62 akutmottagningarna i statistiken | Årlig statistik; ögonblicksbild i appen, byggs om för hand | Statistiken fri att använda med källa (Socialstyrelsen) · ODbL (OpenStreetMap) |
 | SE | Kommuner och län (Sverige) | OpenStreetMap · SCB | Alla 290 kommuner och 21 län, med folkmängd per månad | Ögonblicksbild i appen, byggs om för hand | ODbL (OpenStreetMap) · CC0 1.0 (SCB) |
 | SE | Valdistrikt 2026 (Sverige) | Valmyndigheten | Riksdagsvalet 2026 i alla 6 312 valdistrikt, slutlig rösträkning | Ögonblicksbild i appen, byggs om för hand | Öppna data, fria att använda med Valmyndigheten angiven som källa |
+| SE | Fornlämningar (Sverige) | Riksantikvarieämbetet | Alla registrerade fornlämningar och övriga kulturhistoriska lämningar, för vyn | Dagligen hos RAÄ; läses för vyn och sparas ett halvt dygn | Allmän egendom (public domain); källa och datum anges |
 | SE | Skyddad natur (Sverige) | Naturvårdsverket | Alla nationalparker, gällande naturreservat och kulturreservat | Ögonblicksbild i appen, byggs om för hand | CC0 1.0 |
 | SE | Butikskedjor (Sverige) | OpenStreetMap · Wikidata · SCB | Nio kedjors butiker och apotek i hela Sverige; kartlagda av frivilliga | Ögonblicksbild i appen, byggs om för hand | ODbL (OpenStreetMap) · CC0 1.0 (Wikidata, SCB) |
 | SE | Väglag (Sverige) | Trafikverket | Väglag och aktuella händelser i hela Sverige | Var 3:e minut | CC0 1.0 |
@@ -391,6 +393,31 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-12 (fornlämningar från Riksantikvarieämbetet)
+- Nytt lager **Fornlämningar (Sverige)** (delningstoken `0c`) under
+  Infrastructure, efter Skyddad natur: Riksantikvarieämbetets registrerade
+  fornlämningar och övriga kulturhistoriska lämningar som prickar på marken,
+  färgade efter antikvarisk bedömning (fornlämning, möjlig fornlämning,
+  övrig kulturhistorisk lämning, ingen bedömning). Lagret visas under 12 km
+  höjd och ritar de 1 500 närmast kartans mitt. Klick på en prick visar typ,
+  bedömning, lämnings- och RAÄ-nummer, kommun och om den är bekräftad i
+  fält; klick på kortet öppnar lämningen hos RAÄ.
+- Källan är Kulturmiljöregistret (samma som Fornsök) via RAÄ:s
+  INSPIRE-tjänst (OGC API Features), ingen nyckel. Enligt RAÄ:s
+  produktbeskrivning (version 3, 2026-02-02) omfattas datan inte av
+  upphovsrätt (public domain) och har inga åtkomstbegränsningar; källa och
+  datum bör anges, vilket kortet och källförteckningen gör. Lägena kan
+  avvika upp till 20 m, och informationen får inte användas för att
+  planera markingrepp.
+- Ingenting laddas ned i förväg: det finns cirka 530 000 lämningar. Servern
+  frågar RAÄ bara om rutan i vyn, utvidgad till ett rutnät på 0,02 grader
+  så att närliggande vyer delar svar, och sparar svaret ett halvt dygn.
+  Högst 4 000 lämningar per fråga; en bredare vy än 0,15 grader frågar
+  ingen. Efter ett fel lämnas RAÄ i fred i två minuter.
+- Medvetet utelämnat: lämningarnas beskrivning och orientering
+  (vägbeskrivning till platsen). De finns hos RAÄ, ett klick bort. Lagret
+  visar samma lägen som RAÄ självt publicerar i Fornsök för alla.
 
 ### 2026-11-12 (Sveriges Radios kanaler ur radiolagret)
 - Radiolagret (originalets, med stationer från Radio Browser) visar inte

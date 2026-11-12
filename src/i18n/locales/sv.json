@@ -4183,5 +4183,30 @@
   "Protected Nature (Sweden)": "Skyddad natur (Sverige)",
   "All national parks, nature reserves in force and culture reserves": "Alla nationalparker, gällande naturreservat och kulturreservat",
   "{channel} at Sveriges Radio": "{channel} hos Sveriges Radio",
-  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "Varje nyckel hör till ditt eget konto hos leverantören. Du ansvarar för nyckeln, kontots kvoter och eventuella avgifter, och för att följa leverantörens villkor; vissa användningar, som att publicera bilder eller filmer, kräver separat tillstånd. Alla källor och deras licenser står under Datakällor."
+  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "Varje nyckel hör till ditt eget konto hos leverantören. Du ansvarar för nyckeln, kontots kvoter och eventuella avgifter, och för att följa leverantörens villkor; vissa användningar, som att publicera bilder eller filmer, kräver separat tillstånd. Alla källor och deras licenser står under Datakällor.",
+  "Ancient monument (protected)": "Fornlämning (skyddad)",
+  "Possible ancient monument": "Möjlig fornlämning",
+  "Other cultural-historical remain": "Övrig kulturhistorisk lämning",
+  "No antiquarian assessment": "Ingen antikvarisk bedömning",
+  "Not a cultural-historical remain": "Ej kulturhistorisk lämning",
+  "Remain": "Lämning",
+  "Not confirmed in the field": "Ej bekräftad i fält",
+  "RAÄ ↗ · click card to open": "RAÄ ↗ · klicka på kortet för att öppna",
+  "Source: Riksantikvarieämbetet": "Källa: Riksantikvarieämbetet",
+  "Open {name} at Riksantikvarieämbetet": "Öppna {name} hos Riksantikvarieämbetet",
+  "REMAIN · {name}": "LÄMNING · {name}",
+  "Heritage remains unavailable": "Fornlämningar går inte att nå",
+  "Zoom in to see the remains: they show below {height} km": "Zooma in för att se lämningarna: de visas under {height} km",
+  "Dots are the remains Riksantikvarieämbetet registers in Fornsök, coloured by their legal assessment; the nearest to the map centre are drawn. Positions can be off by up to 20 m. Click one for its type and number, and click the card to open it at RAÄ.": "Prickarna är de lämningar som Riksantikvarieämbetet registrerar i Fornsök, färgade efter antikvarisk bedömning; de närmast kartans mitt ritas. Lägena kan avvika upp till 20 m. Klicka på en för typ och nummer, och på kortet för att öppna den hos RAÄ.",
+  "Zoom in to see every remain here.": "Zooma in för att se alla lämningar här.",
+  "{count} remains in view": {
+    "one": "{count} lämning i vyn",
+    "other": "{count} lämningar i vyn"
+  },
+  "Remains need a view to show": "Lämningarna behöver en vy att visas i",
+  "Malformed remains snapshot": "Felaktig data om lämningar",
+  "Ancient Monuments (Sweden)": "Fornlämningar (Sverige)",
+  "Every registered ancient monument and other cultural-historical remain, for the view": "Alla registrerade fornlämningar och övriga kulturhistoriska lämningar, för vyn",
+  "Daily at RAÄ; read for the view, kept half a day": "Dagligen hos RAÄ; läses för vyn och sparas ett halvt dygn",
+  "Public domain; source and date credited": "Allmän egendom (public domain); källa och datum anges"
 }

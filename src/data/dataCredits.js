@@ -522,6 +522,12 @@ export const DATA_CREDITS = [
       '<a href="https://www.val.se/valresultat-och-statistik/statistik-och-data/om-var-oppna-data" target="_blank" rel="noopener">Valmyndigheten</a> (open data, source credited)',
   },
   {
+    key: 'heritage-remains',
+    html:
+      'Ancient monuments (Sweden): ' +
+      '<a href="https://app.raa.se/open/fornsok/" target="_blank" rel="noopener">Riksantikvarieämbetet</a>, Kulturmiljöregistret (public domain; read daily for the view)',
+  },
+  {
     key: 'protected-nature',
     html:
       'Protected nature (Sweden): national parks, nature reserves and culture reserves from ' +

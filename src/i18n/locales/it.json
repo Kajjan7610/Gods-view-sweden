@@ -4265,5 +4265,31 @@
   "Protected Nature (Sweden)": "Aree protette (Svezia)",
   "All national parks, nature reserves in force and culture reserves": "Tutti i parchi nazionali, le riserve naturali in vigore e le riserve culturali",
   "{channel} at Sveriges Radio": "{channel} su Sveriges Radio",
-  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "Ogni chiave appartiene al tuo account presso il fornitore. Sei responsabile della chiave, delle quote e degli eventuali costi dell’account e del rispetto delle condizioni del fornitore; alcuni usi, come pubblicare immagini o video, richiedono un permesso separato. Tutte le fonti e le loro licenze sono elencate in Attribuzione dei dati."
+  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "Ogni chiave appartiene al tuo account presso il fornitore. Sei responsabile della chiave, delle quote e degli eventuali costi dell’account e del rispetto delle condizioni del fornitore; alcuni usi, come pubblicare immagini o video, richiedono un permesso separato. Tutte le fonti e le loro licenze sono elencate in Attribuzione dei dati.",
+  "Ancient monument (protected)": "Monumento antico (tutelato)",
+  "Possible ancient monument": "Possibile monumento antico",
+  "Other cultural-historical remain": "Altro resto storico-culturale",
+  "No antiquarian assessment": "Nessuna valutazione antiquaria",
+  "Not a cultural-historical remain": "Non è un resto storico-culturale",
+  "Remain": "Resto",
+  "Not confirmed in the field": "Non confermato sul campo",
+  "RAÄ ↗ · click card to open": "RAÄ ↗ · clicca la scheda per aprire",
+  "Source: Riksantikvarieämbetet": "Fonte: Riksantikvarieämbetet",
+  "Open {name} at Riksantikvarieämbetet": "Apri {name} su Riksantikvarieämbetet",
+  "REMAIN · {name}": "RESTO · {name}",
+  "Heritage remains unavailable": "Resti archeologici non disponibili",
+  "Zoom in to see the remains: they show below {height} km": "Ingrandisci per vedere i resti: compaiono sotto {height} km",
+  "Dots are the remains Riksantikvarieämbetet registers in Fornsök, coloured by their legal assessment; the nearest to the map centre are drawn. Positions can be off by up to 20 m. Click one for its type and number, and click the card to open it at RAÄ.": "I punti sono i resti che Riksantikvarieämbetet registra in Fornsök, colorati secondo la valutazione legale; sono disegnati i più vicini al centro della mappa. Le posizioni possono scostarsi fino a 20 m. Clicca un punto per tipo e numero, e la scheda per aprirlo su RAÄ.",
+  "Zoom in to see every remain here.": "Ingrandisci per vedere tutti i resti qui.",
+  "{count} remains in view": {
+    "one": "{count} resto nella vista",
+    "many": "{count} di resti nella vista",
+    "other": "{count} resti nella vista"
+  },
+  "Remains need a view to show": "I resti hanno bisogno di una vista",
+  "Malformed remains snapshot": "Dati dei resti non validi",
+  "Ancient Monuments (Sweden)": "Monumenti antichi (Svezia)",
+  "Every registered ancient monument and other cultural-historical remain, for the view": "Tutti i monumenti antichi e gli altri resti storico-culturali registrati, per la vista",
+  "Daily at RAÄ; read for the view, kept half a day": "Ogni giorno presso RAÄ; letto per la vista, conservato mezza giornata",
+  "Public domain; source and date credited": "Pubblico dominio; fonte e data indicate"
 }

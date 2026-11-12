@@ -4183,5 +4183,30 @@
   "Protected Nature (Sweden)": "Schutzgebiete (Schweden)",
   "All national parks, nature reserves in force and culture reserves": "Alle Nationalparks, geltenden Naturschutzgebiete und Kulturreservate",
   "{channel} at Sveriges Radio": "{channel} bei Sveriges Radio",
-  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "Jeder Schlüssel gehört zu deinem eigenen Konto beim Anbieter. Du bist für den Schlüssel, die Kontingente und eventuelle Gebühren des Kontos verantwortlich und dafür, die Bedingungen des Anbieters einzuhalten; manche Nutzungen, etwa das Veröffentlichen von Bildern oder Filmen, brauchen eine eigene Erlaubnis. Alle Quellen und ihre Lizenzen stehen unter Datenquellen."
+  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "Jeder Schlüssel gehört zu deinem eigenen Konto beim Anbieter. Du bist für den Schlüssel, die Kontingente und eventuelle Gebühren des Kontos verantwortlich und dafür, die Bedingungen des Anbieters einzuhalten; manche Nutzungen, etwa das Veröffentlichen von Bildern oder Filmen, brauchen eine eigene Erlaubnis. Alle Quellen und ihre Lizenzen stehen unter Datenquellen.",
+  "Ancient monument (protected)": "Bodendenkmal (geschützt)",
+  "Possible ancient monument": "Mögliches Bodendenkmal",
+  "Other cultural-historical remain": "Sonstige kulturhistorische Fundstelle",
+  "No antiquarian assessment": "Keine denkmalfachliche Bewertung",
+  "Not a cultural-historical remain": "Keine kulturhistorische Fundstelle",
+  "Remain": "Fundstelle",
+  "Not confirmed in the field": "Nicht im Gelände bestätigt",
+  "RAÄ ↗ · click card to open": "RAÄ ↗ · Karte anklicken zum Öffnen",
+  "Source: Riksantikvarieämbetet": "Quelle: Riksantikvarieämbetet",
+  "Open {name} at Riksantikvarieämbetet": "{name} bei Riksantikvarieämbetet öffnen",
+  "REMAIN · {name}": "FUNDSTELLE · {name}",
+  "Heritage remains unavailable": "Bodendenkmäler nicht verfügbar",
+  "Zoom in to see the remains: they show below {height} km": "Hineinzoomen, um die Fundstellen zu sehen: Sie erscheinen unter {height} km",
+  "Dots are the remains Riksantikvarieämbetet registers in Fornsök, coloured by their legal assessment; the nearest to the map centre are drawn. Positions can be off by up to 20 m. Click one for its type and number, and click the card to open it at RAÄ.": "Die Punkte sind die Fundstellen, die Riksantikvarieämbetet in Fornsök verzeichnet, gefärbt nach ihrer denkmalrechtlichen Bewertung; die der Kartenmitte nächsten werden gezeichnet. Die Lage kann bis zu 20 m abweichen. Einen Punkt anklicken für Typ und Nummer, die Karte anklicken, um ihn bei RAÄ zu öffnen.",
+  "Zoom in to see every remain here.": "Hineinzoomen, um alle Fundstellen hier zu sehen.",
+  "{count} remains in view": {
+    "one": "{count} Fundstelle im Ausschnitt",
+    "other": "{count} Fundstellen im Ausschnitt"
+  },
+  "Remains need a view to show": "Fundstellen brauchen einen Kartenausschnitt",
+  "Malformed remains snapshot": "Fehlerhafte Fundstellendaten",
+  "Ancient Monuments (Sweden)": "Bodendenkmäler (Schweden)",
+  "Every registered ancient monument and other cultural-historical remain, for the view": "Alle verzeichneten Bodendenkmäler und sonstigen kulturhistorischen Fundstellen, für den Ausschnitt",
+  "Daily at RAÄ; read for the view, kept half a day": "Täglich bei RAÄ; für den Ausschnitt gelesen, einen halben Tag gespeichert",
+  "Public domain; source and date credited": "Gemeinfrei; Quelle und Datum angegeben"
 }

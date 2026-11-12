@@ -717,6 +717,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     disposition: 'enabled-only',
   }),
   Object.freeze({
+    id: 'heritage-remains',
+    token: '0c',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'hospitals',
     token: '0g',
     disposition: 'enabled-only',

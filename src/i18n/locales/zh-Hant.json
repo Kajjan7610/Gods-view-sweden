@@ -4101,5 +4101,29 @@
   "Protected Nature (Sweden)": "受保護自然 (瑞典)",
   "All national parks, nature reserves in force and culture reserves": "所有國家公園、現行自然保護區和文化保護區",
   "{channel} at Sveriges Radio": "Sveriges Radio 的 {channel}",
-  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "每個金鑰都屬於你在提供者的個人帳戶。你需要對金鑰、帳戶配額和可能的費用負責，並遵守提供者的條款；某些用途（例如發布圖片或影片）需要另外取得許可。所有來源及其授權都列在「數據來源說明」中。"
+  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "每個金鑰都屬於你在提供者的個人帳戶。你需要對金鑰、帳戶配額和可能的費用負責，並遵守提供者的條款；某些用途（例如發布圖片或影片）需要另外取得許可。所有來源及其授權都列在「數據來源說明」中。",
+  "Ancient monument (protected)": "古蹟 (受保護)",
+  "Possible ancient monument": "可能的古蹟",
+  "Other cultural-historical remain": "其他文化歷史遺存",
+  "No antiquarian assessment": "無文物評估",
+  "Not a cultural-historical remain": "非文化歷史遺存",
+  "Remain": "遺存",
+  "Not confirmed in the field": "未經實地確認",
+  "RAÄ ↗ · click card to open": "RAÄ ↗ · 點擊卡片開啟",
+  "Source: Riksantikvarieämbetet": "來源: Riksantikvarieämbetet",
+  "Open {name} at Riksantikvarieämbetet": "在 Riksantikvarieämbetet 開啟 {name}",
+  "REMAIN · {name}": "遺存 · {name}",
+  "Heritage remains unavailable": "古蹟資料無法使用",
+  "Zoom in to see the remains: they show below {height} km": "放大以查看遺存: 在 {height} 公里以下顯示",
+  "Dots are the remains Riksantikvarieämbetet registers in Fornsök, coloured by their legal assessment; the nearest to the map centre are drawn. Positions can be off by up to 20 m. Click one for its type and number, and click the card to open it at RAÄ.": "這些點是 Riksantikvarieämbetet 在 Fornsök 中登記的遺存，依法律評估著色；繪製離地圖中心最近的那些。位置可能偏差達 20 公尺。點擊一個點查看類型和編號，點擊卡片在 RAÄ 開啟。",
+  "Zoom in to see every remain here.": "放大以查看此處的所有遺存。",
+  "{count} remains in view": {
+    "other": "視圖中有 {count} 處遺存"
+  },
+  "Remains need a view to show": "遺存需要一個視圖才能顯示",
+  "Malformed remains snapshot": "遺存資料格式錯誤",
+  "Ancient Monuments (Sweden)": "古蹟 (瑞典)",
+  "Every registered ancient monument and other cultural-historical remain, for the view": "所有已登記的古蹟和其他文化歷史遺存 (依視圖)",
+  "Daily at RAÄ; read for the view, kept half a day": "在 RAÄ 每日更新；依視圖讀取，保留半天",
+  "Public domain; source and date credited": "公有領域；註明來源和日期"
 }

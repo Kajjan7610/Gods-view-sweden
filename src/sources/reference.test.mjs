@@ -38,6 +38,7 @@ test('reference factories retain compatibility without starting acquisition or s
     'municipalities',
     'election-districts',
     'protected-nature',
+    'heritage-remains',
     'speed-cameras',
     'river-flow',
     'gamma-radiation',

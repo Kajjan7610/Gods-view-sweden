@@ -20,6 +20,7 @@ import { createSeaWeatherSource } from '../layers/seaWeather/source.js';
 import { createMunicipalitiesSource } from '../layers/municipalities/source.js';
 import { createElectionDistrictsSource } from '../layers/electionDistricts/source.js';
 import { createProtectedNatureSource } from '../layers/protectedNature/source.js';
+import { createHeritageRemainsSource } from '../layers/heritageRemains/source.js';
 import { createHospitalsSource } from '../layers/hospitals/source.js';
 import { createSheltersSource } from '../layers/shelters/source.js';
 import { createPoliceStationsSource } from '../layers/policeStations/source.js';
@@ -66,6 +67,7 @@ export function createReferenceSources() {
     municipalities: createMunicipalitiesSource(),
     'election-districts': createElectionDistrictsSource(),
     'protected-nature': createProtectedNatureSource(),
+    'heritage-remains': createHeritageRemainsSource(),
     'speed-cameras': createSpeedCamerasSource(),
     'river-flow': createRiverFlowSource(),
     'gamma-radiation': createGammaRadiationSource(),

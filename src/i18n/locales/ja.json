@@ -4101,5 +4101,29 @@
   "Protected Nature (Sweden)": "保護自然 (スウェーデン)",
   "All national parks, nature reserves in force and culture reserves": "すべての国立公園、有効な自然保護区、文化保護区",
   "{channel} at Sveriges Radio": "Sveriges Radio の {channel}",
-  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "各キーはプロバイダーにあるあなた自身のアカウントのものです。キー、アカウントの割り当てと料金、プロバイダーの規約の遵守はあなたの責任です。画像や動画の公開など、一部の利用には別途許可が必要です。すべてのソースとライセンスはデータの出典に記載されています。"
+  "Each key belongs to your own account with the provider. You are responsible for the key, the account’s quotas and any fees, and for following the provider’s terms; some uses, such as publishing pictures or films, need separate permission. Every source and its licence are listed under Data attribution.": "各キーはプロバイダーにあるあなた自身のアカウントのものです。キー、アカウントの割り当てと料金、プロバイダーの規約の遵守はあなたの責任です。画像や動画の公開など、一部の利用には別途許可が必要です。すべてのソースとライセンスはデータの出典に記載されています。",
+  "Ancient monument (protected)": "古代遺跡 (保護対象)",
+  "Possible ancient monument": "古代遺跡の可能性",
+  "Other cultural-historical remain": "その他の文化史的遺構",
+  "No antiquarian assessment": "評価なし",
+  "Not a cultural-historical remain": "文化史的遺構ではない",
+  "Remain": "遺構",
+  "Not confirmed in the field": "現地で未確認",
+  "RAÄ ↗ · click card to open": "RAÄ ↗ · カードをクリックして開く",
+  "Source: Riksantikvarieämbetet": "出典: Riksantikvarieämbetet",
+  "Open {name} at Riksantikvarieämbetet": "{name} を Riksantikvarieämbetet で開く",
+  "REMAIN · {name}": "遺構 · {name}",
+  "Heritage remains unavailable": "遺跡データを利用できません",
+  "Zoom in to see the remains: they show below {height} km": "ズームインすると遺構が表示されます: {height} km 以下で表示",
+  "Dots are the remains Riksantikvarieämbetet registers in Fornsök, coloured by their legal assessment; the nearest to the map centre are drawn. Positions can be off by up to 20 m. Click one for its type and number, and click the card to open it at RAÄ.": "点は Riksantikvarieämbetet が Fornsök に登録している遺構で、法的評価ごとに色分けされています。地図の中心に近いものから描画されます。位置は最大 20 m ずれることがあります。点をクリックすると種類と番号が表示され、カードをクリックすると RAÄ で開きます。",
+  "Zoom in to see every remain here.": "ここにあるすべての遺構を見るにはズームインしてください。",
+  "{count} remains in view": {
+    "other": "表示範囲の遺構 {count} 件"
+  },
+  "Remains need a view to show": "遺構の表示には地図範囲が必要です",
+  "Malformed remains snapshot": "遺構データの形式が不正です",
+  "Ancient Monuments (Sweden)": "古代遺跡 (スウェーデン)",
+  "Every registered ancient monument and other cultural-historical remain, for the view": "登録されているすべての古代遺跡とその他の文化史的遺構 (表示範囲分)",
+  "Daily at RAÄ; read for the view, kept half a day": "RAÄ で毎日更新。表示範囲分を読み込み、半日保持",
+  "Public domain; source and date credited": "パブリックドメイン。出典と日付を表示"
 }

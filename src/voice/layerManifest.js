@@ -473,6 +473,8 @@ export const VOICE_OFF_LAYERS = Object.freeze({
     'Swedish 2026 Riksdag election per election district; no room in the prompt budget',
   'protected-nature':
     'Swedish national parks, nature reserves and culture reserves; no room in the prompt budget',
+  'heritage-remains':
+    'Swedish ancient monuments and other cultural-heritage remains; no room in the prompt budget',
   hospitals:
     'Swedish hospitals and emergency-department statistics; no room in the prompt budget',
   shelters: 'Swedish civil-defence shelters; no room in the prompt budget',
