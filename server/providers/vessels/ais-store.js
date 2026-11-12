@@ -205,6 +205,12 @@ function writeAisTrackSample(track, lat, lon, epochSec) {
  * @returns {Array<{lat:number,lon:number,t:number}>}
  */
 export function readAisTrack(mmsi) {
+  if (
+    isHiddenAisShipType(
+      _aisStreamVessels.get(mmsi)?.type ?? _aisStreamStatic.get(mmsi)?.type,
+    )
+  )
+    return [];
   const track = _aisStreamTracks.get(mmsi);
   if (!track || !track.len) return [];
   const samples = [];
@@ -257,11 +263,24 @@ function vesselTypeFromAis(message, staticData = {}) {
   );
 }
 
+/**
+ * AIS ship types the Swedish fork does not show: military operations (35)
+ * and law enforcement (55), the Coast Guard and police included. Search and
+ * rescue (51) stays. A vessel whose type has not arrived yet is shown until
+ * its static report says otherwise.
+ */
+const AIS_HIDDEN_SHIP_TYPES = new Set(['35', '55']);
+
+export function isHiddenAisShipType(type) {
+  return AIS_HIDDEN_SHIP_TYPES.has(String(type ?? '').trim());
+}
+
 export function aisStreamRows(maxRows) {
   const cutoff = Date.now() - AISSTREAM_STALE_MS;
   const rows = [];
   for (const row of _aisStreamVessels.values()) {
-    if (row._updatedAt >= cutoff) rows.push(row);
+    if (row._updatedAt >= cutoff && !isHiddenAisShipType(row.type))
+      rows.push(row);
   }
   rows.sort((a, b) => b._updatedAt - a._updatedAt);
   return rows.slice(0, maxRows).map(({ _updatedAt, ...row }) => row);

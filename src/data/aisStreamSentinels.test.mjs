@@ -258,3 +258,36 @@ test('partial static data keeps newer live metadata ahead of the old static cach
   assert.equal(rowFor(mmsi).type, '80');
   assert.equal(rowFor(mmsi).destination, 'HAMBURG');
 });
+
+test('military and law enforcement vessels are not shown; rescue vessels are', () => {
+  const staticReport = (mmsi, type) => ({
+    MessageType: 'ShipStaticData',
+    Message: {
+      ShipStaticData: {
+        UserID: Number(mmsi),
+        Name: `TYPE ${type}`,
+        Type: type,
+      },
+    },
+    MetaData: {
+      MMSI: mmsi,
+      latitude: 57.7,
+      longitude: 11.9,
+      time_utc: '2026-09-17 20:05:00.000000000 +0000 UTC',
+    },
+  });
+  for (const [mmsi, type] of [
+    ['265000035', 35],
+    ['265000055', 55],
+    ['265000051', 51],
+  ]) {
+    ingestAisStreamEnvelope(positionReport(mmsi, { Sog: 8, Cog: 90 }));
+    // Until its type arrives a vessel is shown like any other.
+    assert.ok(rowFor(mmsi));
+    ingestAisStreamEnvelope(staticReport(mmsi, type));
+  }
+  assert.equal(rowFor('265000035'), undefined);
+  assert.equal(rowFor('265000055'), undefined);
+  assert.deepEqual(readAisTrack('265000035'), []);
+  assert.equal(rowFor('265000051').type, '51');
+});

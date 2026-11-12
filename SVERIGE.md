@@ -133,7 +133,9 @@ de här gränserna, även för nya lager:
   receptionen erbjuder. Polishändelserna är Polisens egna notiser, placerade
   vid kommunens centralort och ofta publicerade timmar i efterhand.
   Brandstationerna visar den beredskapsform MCF själv publicerar, inga larm
-  eller fordon.
+  eller fordon. Fartygslagret visar inte polisens eller Kustbevakningens
+  fartyg (AIS-typ 55). Sjöräddningens fartyg (typ 51) syns: de sänder sin
+  position öppet för att andra fartyg ska se dem.
 - **Bara butiker och apotek.** Butikskedjorna visar inga lager,
   distributionscentraler, kontor eller bankomater.
 - **Platser, inte aktiv övervakning.** Fartkamerorna är Trafikverkets
@@ -372,6 +374,12 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-12 (fartygslagret: polisens och Kustbevakningens fartyg)
+- Fartygslagret visar inte längre fartyg som anger AIS-typ 55 (polis och
+  Kustbevakningen), varken som rad, i Kontakter eller med spår. Ett fartyg
+  vars typ ännu inte har kommit visas tills dess. Sjöräddningens fartyg
+  (typ 51) syns som förut.
 
 ### 2026-11-12 (Polisens regler för öppna data)
 - Anropen till Polisen följer nu Polisens regler för öppna data: en
