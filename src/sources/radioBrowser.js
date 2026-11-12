@@ -77,6 +77,24 @@ export function publicRadioHttpsUrl(value) {
  * @param {(value: unknown) => string|null} [options.normalizeUrl] URL admission
  *   policy, applied to both stream and homepage; returns a safe URL or null.
  */
+const SR_HOST_RE = /(?:^|\.)(?:sr\.se|sverigesradio\.se)$/i;
+
+/** Whether a directory entry is one of Sveriges Radio's channels. */
+export function isSverigesRadioStation({ name, streamUrl, homepage } = {}) {
+  const hostOf = (value) => {
+    try {
+      return new URL(String(value)).hostname;
+    } catch {
+      return '';
+    }
+  };
+  return (
+    SR_HOST_RE.test(hostOf(streamUrl)) ||
+    SR_HOST_RE.test(hostOf(homepage)) ||
+    /\bSveriges Radio\b/i.test(String(name ?? ''))
+  );
+}
+
 export function normalizeRadioBrowserStation(
   raw,
   { normalizeUrl = publicRadioHttpsUrl } = {},
@@ -107,6 +125,11 @@ export function normalizeRadioBrowserStation(
 
   const name = cleanRadioText(raw?.name, 140);
   if (!name) return null;
+  // Swedish fork: Sveriges Radio's channels are not played here. SR's terms
+  // let others use its linear channels only with SR's written approval; the
+  // city panel links to the local P4 channel at sverigesradio.se instead.
+  if (isSverigesRadioStation({ name, streamUrl, homepage: raw?.homepage }))
+    return null;
   const tags = String(raw?.tags ?? '')
     .split(',')
     .map(normalizeRadioTag)

@@ -392,6 +392,15 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-12 (Sveriges Radios kanaler ur radiolagret)
+- Radiolagret (originalets, med stationer från Radio Browser) visar inte
+  längre Sveriges Radios kanaler. De känns igen på att strömmen eller
+  hemsidan ligger hos sr.se eller sverigesradio.se, eller på namnet.
+  SR:s villkor (punkt 2) säger att andra får använda SR:s linjära kanaler
+  bara med SR:s skriftliga godkännande, och vår app samlar andras kanaler.
+  Alla andra stationer, även svenska kommersiella, visas som förut.
+  Stadsdossiern länkar till ortens P4-kanal hos Sveriges Radio.
+
 ### 2026-11-12 (film, sjökablar och lokalradio efter en granskning av villkoren)
 - Den långa filmen (1:43) är borttagen ur README: Googles regler för
   Map Tiles API tillåter reklamfilmer med Googles 3D-städer på högst 30
