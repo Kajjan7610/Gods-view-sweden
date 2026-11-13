@@ -3367,7 +3367,6 @@
   "Water level {level} cm": "Nível da água {level} cm",
   "Water {value}": "Água {value}",
   "Wave height {height} m": "Altura das ondas {height} m",
-  "Measured {time} · Sjöfartsverket ViVa": "Medido às {time} · Sjöfartsverket ViVa",
   "SEA WEATHER · {station}": "TEMPO NO MAR · {station}",
   "Up to 4 m/s": "Até 4 m/s",
   "4 to 8 m/s": "4 a 8 m/s",
@@ -3384,7 +3383,6 @@
   "WATER LEVEL": "NÍVEL DA ÁGUA",
   "Colour stations by water level against mean water": "Colorir as estações pelo nível da água em relação ao nível médio",
   "Write the value beside the stations that stand out most": "Escrever o valor ao lado das estações que mais se destacam",
-  "Dots are Sjöfartsverket’s ViVa stations along the coast, lakes and canals. Grey dots do not measure what is shown. Click a station for wind, water level, temperatures and waves.": "Os pontos são as estações ViVa da Sjöfartsverket na costa, nos lagos e canais. Pontos cinza não medem o que é mostrado. Clique em uma estação para ver vento, nível da água, temperaturas e ondas.",
   "Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.": "Os pontos são as estações marítimas do SMHI ao longo da costa. Os pontos cinzentos não medem o que é mostrado. Clique numa estação para ver o nível da água, a temperatura da água e as ondas.",
   "Malformed sea weather snapshot": "Snapshot de tempo no mar malformado",
   "Sea Weather (Sweden)": "Tempo no mar (Suécia)",
@@ -4289,8 +4287,6 @@
   "Public domain; source and date credited": "Domínio público; fonte e data indicadas",
   "Every 15 minutes": "A cada 15 minutos",
   "CC BY 4.0 (SMHI); the EAQI index is calculated by the app": "CC BY 4.0 (SMHI); o índice EAQI é calculado pela app",
-  "About 70 stations on the coast; with ViVa about 160, also the large lakes and canals": "Cerca de 70 estações na costa; com ViVa cerca de 160, também nos grandes lagos e canais",
-  "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): sem licença publicada",
   "Photo: {author} · {licence}": "Foto: {author} · {licence}",
   "Coat of arms: {author} · {licence}": "Brasão: {author} · {licence}",
   "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "Imagens de satélite da Esri em 2D e no modo de poupança. Chave de API gratuita da ArcGIS Location Platform só com Basemaps, limitada a http://localhost:4173; sem ela, o mapa 2D é OpenStreetMap",
@@ -4315,5 +4311,6 @@
   "Malformed ferry snapshot": "Instantâneo de ferries malformado",
   "Road ferries (Sweden)": "Ferries rodoviários (Suécia)",
   "About 40 road ferry routes, departures in the coming three hours": "Cerca de 40 ligações de ferry, partidas nas três horas seguintes",
-  "Every 2 minutes": "A cada 2 minutos"
+  "Every 2 minutes": "A cada 2 minutos",
+  "About 70 stations on the coast": "Cerca de 70 estações na costa"
 }

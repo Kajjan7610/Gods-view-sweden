@@ -219,15 +219,10 @@ export const LAYER_PROVENANCE = Object.freeze({
     licence: CC_BY,
   }),
   'sea-weather': own({
-    source: 'SMHI · Sjöfartsverket ViVa',
-    coverage: msg(
-      'About 70 stations on the coast; with ViVa about 160, also the large lakes and canals',
-    ),
+    source: 'SMHI',
+    coverage: msg('About 70 stations on the coast'),
     updates: msg('Every 10 minutes'),
-    // No terms are published for ViVa, read only with SEA_WEATHER_SOURCE=viva.
-    licence: msg(
-      'SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence',
-    ),
+    licence: CC_BY,
   }),
   'river-flow': own({
     source: 'SMHI',

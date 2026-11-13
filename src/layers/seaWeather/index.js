@@ -19,7 +19,7 @@ export * from './records.js';
 export * from './cards.js';
 export { createSeaWeatherSource } from './source.js';
 
-const PICK_PREFIX = 'se-viva:';
+const PICK_PREFIX = 'se-sea:';
 const LABEL_SOURCE_ID = 'sea-weather-labels';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -49,8 +49,9 @@ const oneDecimal = (value) =>
   formatNumber(value, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 /**
- * Own one Swedish sea weather display: Sjöfartsverket's ViVa stations
- * coloured by mean wind (or water level against mean water), with the value
+ * Own one Swedish sea weather display: SMHI's ocean stations coloured by
+ * water level against mean water (or mean wind, for rows that carry one),
+ * with the value
  * written beside the windiest (or furthest-off) stations and click-to-card
  * selection. Share links carry it as token 0u.
  */
@@ -85,8 +86,6 @@ export function createSeaWeatherLayer({
   let _stale = false;
   let _selectedId = null;
   let _stations = [];
-  /** True while the stations come from SMHI, which measures no wind. */
-  let _fromSmhi = false;
   /** 'wind' or 'level'. */
   let _mode = 'wind';
   let _values = true;
@@ -257,9 +256,7 @@ export function createSeaWeatherLayer({
     id: 'sea-weather',
     name: 'Sea Weather (Sweden)',
     icon: '🌊',
-    get source() {
-      return _fromSmhi ? 'SMHI' : 'Sjöfartsverket';
-    },
+    source: 'SMHI',
     updateInterval: 600000,
 
     init(viewer) {
@@ -316,7 +313,6 @@ export function createSeaWeatherLayer({
         );
         // The newest rows always: the card reads them, drawn again or not.
         _stations = snapshot.stations;
-        _fromSmhi = snapshot.source === 'smhi';
         // Without any wind the stations are coloured by their water level.
         if (_mode === 'wind' && !hasWind()) _mode = 'level';
         _stationById.clear();
@@ -422,13 +418,9 @@ export function createSeaWeatherLayer({
           index === 0
             ? {
                 ...item,
-                blurb: _fromSmhi
-                  ? t(
-                      'Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.',
-                    )
-                  : t(
-                      'Dots are Sjöfartsverket’s ViVa stations along the coast, lakes and canals. Grey dots do not measure what is shown. Click a station for wind, water level, temperatures and waves.',
-                    ),
+                blurb: t(
+                  'Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.',
+                ),
               }
             : item,
         ),

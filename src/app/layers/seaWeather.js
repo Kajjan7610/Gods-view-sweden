@@ -4,7 +4,7 @@ import * as picking from '../../data/pickRegistry.js';
 import * as overlays from '../../overlays/worldOverlay.js';
 import { isPointerFree } from '../../data/inputOwnership.js';
 
-/** Wire Sjöfartsverket's ViVa sea weather into the application catalog. */
+/** Wire SMHI's sea weather into the application catalog. */
 export function createApplicationSeaWeather(options) {
   return createSeaWeatherLayer({
     overlayHost: {

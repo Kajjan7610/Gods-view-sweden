@@ -3442,7 +3442,6 @@
   "Water level {level} cm": "Рівень води {level} см",
   "Water {value}": "Вода {value}",
   "Wave height {height} m": "Висота хвиль {height} м",
-  "Measured {time} · Sjöfartsverket ViVa": "Виміряно о {time} · Sjöfartsverket ViVa",
   "SEA WEATHER · {station}": "МОРСЬКА ПОГОДА · {station}",
   "Up to 4 m/s": "До 4 м/с",
   "4 to 8 m/s": "Від 4 до 8 м/с",
@@ -3459,7 +3458,6 @@
   "WATER LEVEL": "РІВЕНЬ ВОДИ",
   "Colour stations by water level against mean water": "Фарбувати станції за рівнем води відносно середнього",
   "Write the value beside the stations that stand out most": "Підписувати значення біля найпомітніших станцій",
-  "Dots are Sjöfartsverket’s ViVa stations along the coast, lakes and canals. Grey dots do not measure what is shown. Click a station for wind, water level, temperatures and waves.": "Точки — станції ViVa Sjöfartsverket на узбережжі, озерах і каналах. Сірі точки не вимірюють показану величину. Натисніть на станцію, щоб побачити вітер, рівень води, температуру й хвилі.",
   "Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.": "Точки — морські станції SMHI уздовж узбережжя. Сірі точки не вимірюють показане. Натисніть станцію, щоб побачити рівень води, температуру води та хвилі.",
   "Malformed sea weather snapshot": "Некоректний знімок морської погоди",
   "Sea Weather (Sweden)": "Морська погода (Швеція)",
@@ -4372,8 +4370,6 @@
   "Public domain; source and date credited": "Суспільне надбання; зазначаються джерело й дата",
   "Every 15 minutes": "Кожні 15 хвилин",
   "CC BY 4.0 (SMHI); the EAQI index is calculated by the app": "CC BY 4.0 (SMHI); індекс EAQI обчислює застосунок",
-  "About 70 stations on the coast; with ViVa about 160, also the large lakes and canals": "Близько 70 станцій на узбережжі; з ViVa близько 160, також на великих озерах і каналах",
-  "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): опублікованої ліцензії немає",
   "Photo: {author} · {licence}": "Фото: {author} · {licence}",
   "Coat of arms: {author} · {licence}": "Герб: {author} · {licence}",
   "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "Супутникові знімки Esri у 2D та в економному режимі. Безкоштовний API-ключ ArcGIS Location Platform лише з Basemaps, обмежений http://localhost:4173; без нього 2D-мапа — OpenStreetMap",
@@ -4398,5 +4394,6 @@
   "Malformed ferry snapshot": "Хибний знімок даних про пороми",
   "Road ferries (Sweden)": "Автопороми (Швеція)",
   "About 40 road ferry routes, departures in the coming three hours": "Близько 40 поромних ліній, відправлення на три години наперед",
-  "Every 2 minutes": "Кожні 2 хвилини"
+  "Every 2 minutes": "Кожні 2 хвилини",
+  "About 70 stations on the coast": "Близько 70 станцій на узбережжі"
 }

@@ -471,17 +471,10 @@ export const DATA_CREDITS = [
       '<a href="https://www.elprisetjustnu.se/elpris-api" target="_blank" rel="noopener">Elpriset just nu.se</a> (Nord Pool day-ahead prices)',
   },
   {
-    key: 'sr-traffic',
-    html:
-      'Traffic reports (Sweden): ' +
-      '<a href="https://www.sverigesradio.se/trafik" target="_blank" rel="noopener">Sveriges Radio</a> (open API)',
-  },
-  {
     key: 'sea-weather',
     html:
       'Sea weather (Sweden): ' +
-      '<a href="https://www.smhi.se/data/hav-och-havsmiljo" target="_blank" rel="noopener">SMHI</a> ocean observations (CC BY 4.0); with SEA_WEATHER_SOURCE=viva ' +
-      '<a href="https://viva.sjofartsverket.se/" target="_blank" rel="noopener">Sjöfartsverket ViVa</a>',
+      '<a href="https://www.smhi.se/data/hav-och-havsmiljo" target="_blank" rel="noopener">SMHI</a> ocean observations (CC BY 4.0)',
   },
   {
     key: 'company-stores',

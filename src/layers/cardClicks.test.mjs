@@ -174,7 +174,7 @@ const LAYERS = [
     create: createSeaWeatherLayer,
     sourceId: SEA_WEATHER_OVERLAY_SOURCE_ID,
     snapshot: { stations: pair({ meanWind: 5, updated: NOW }) },
-    rows: rows('se-viva:', 'sea-weather-card:'),
+    rows: rows('se-sea:', 'sea-weather-card:'),
   },
   {
     name: 'smhiWeather',

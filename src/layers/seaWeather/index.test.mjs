@@ -41,7 +41,7 @@ function harness(t, stations = []) {
     },
     scene: { pick: () => viewer.picked, requestRender() {} },
   };
-  const feed = { stations, error: null, source: null };
+  const feed = { stations, error: null };
   const clock = { now: NOW };
   const state = { shown: new Map(), click: null };
   const layer = createSeaWeatherLayer({
@@ -52,7 +52,6 @@ function harness(t, stations = []) {
           stations: feed.stations,
           stale: false,
           fetchedAt: clock.now,
-          ...(feed.source ? { source: feed.source } : {}),
         };
       },
     },
@@ -138,7 +137,7 @@ test('the open card follows the newest values without a new drawing', async (t) 
   state.click({ position: { x: 10, y: 20 } });
   assert.deepEqual(card().details.slice(-2), [
     'Water +10.1 °C',
-    'Measured 14:00 · Sjöfartsverket ViVa',
+    'Measured 14:00 · SMHI',
   ]);
   // Wind and level as before, a new water temperature and time: the dot is
   // left alone, the card reads the new row.
@@ -149,14 +148,14 @@ test('the open card follows the newest values without a new drawing', async (t) 
   assert.equal(add.mock.calls.length, 0);
   assert.deepEqual(card().details.slice(-2), [
     'Water +9.8 °C',
-    'Measured 15:10 · Sjöfartsverket ViVa',
+    'Measured 15:10 · SMHI',
   ]);
   // The station goes silent; the next day the reading carries its date.
   clock.now += 24 * HOUR;
   state.click({ position: { x: 10, y: 20 } });
   assert.equal(
     card().details.at(-1),
-    'Measured 2026-11-05 15:10 · Sjöfartsverket ViVa',
+    'Measured 2026-11-05 15:10 · SMHI',
   );
   layer.destroy();
 });
@@ -182,7 +181,7 @@ test('in water level mode only levels against mean water are shown as such', asy
   const grey = entities.values
     .filter((entity) => entity.point.pixelSize.getValue() === 6)
     .map((entity) => entity.id);
-  assert.deepEqual(grey, ['se-viva:8', 'se-viva:9']);
+  assert.deepEqual(grey, ['se-sea:8', 'se-sea:9']);
   layer.destroy();
 });
 
@@ -190,9 +189,9 @@ test('stations from SMHI, without wind, are coloured by water level and credit S
   const { layer, feed, chip } = harness(t, [station('1'), station('2')]);
   layer.enable();
   await layer.update();
-  assert.equal(layer.source, 'Sjöfartsverket');
+  assert.equal(layer.source, 'SMHI');
+  // A row with wind may be coloured by it; SMHI's carry none.
   assert.equal(chip('wind')?.active, true);
-  feed.source = 'smhi';
   feed.stations = [
     station('3', { meanWind: null, gust: null, windHeading: null }),
     station('4', { meanWind: null, gust: null, windHeading: null }),

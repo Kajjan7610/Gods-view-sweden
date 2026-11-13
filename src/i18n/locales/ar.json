@@ -3592,7 +3592,6 @@
   "Water level {level} cm": "منسوب المياه {level} سم",
   "Water {value}": "الماء {value}",
   "Wave height {height} m": "ارتفاع الموج {height} م",
-  "Measured {time} · Sjöfartsverket ViVa": "قيس في {time} · Sjöfartsverket ViVa",
   "SEA WEATHER · {station}": "طقس البحر · {station}",
   "Up to 4 m/s": "حتى 4 م/ث",
   "4 to 8 m/s": "من 4 إلى 8 م/ث",
@@ -3609,7 +3608,6 @@
   "WATER LEVEL": "منسوب المياه",
   "Colour stations by water level against mean water": "تلوين المحطات حسب منسوب المياه مقارنة بالمتوسط",
   "Write the value beside the stations that stand out most": "كتابة القيمة بجانب المحطات الأبرز",
-  "Dots are Sjöfartsverket’s ViVa stations along the coast, lakes and canals. Grey dots do not measure what is shown. Click a station for wind, water level, temperatures and waves.": "النقاط هي محطات ViVa التابعة لـ Sjöfartsverket على الساحل والبحيرات والقنوات. النقاط الرمادية لا تقيس ما يُعرض. انقر على محطة لعرض الرياح ومنسوب المياه ودرجات الحرارة والأمواج.",
   "Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.": "النقاط هي محطات SMHI البحرية على طول الساحل. النقاط الرمادية لا تقيس ما هو معروض. انقر على محطة لعرض منسوب المياه ودرجة حرارة المياه والأمواج.",
   "Malformed sea weather snapshot": "لقطة طقس البحر مشوّهة",
   "Sea Weather (Sweden)": "طقس البحر (السويد)",
@@ -4538,8 +4536,6 @@
   "Public domain; source and date credited": "ملك عام؛ يُذكر المصدر والتاريخ",
   "Every 15 minutes": "كل 15 دقيقة",
   "CC BY 4.0 (SMHI); the EAQI index is calculated by the app": "CC BY 4.0 (SMHI)؛ يحسب التطبيق مؤشر EAQI",
-  "About 70 stations on the coast; with ViVa about 160, also the large lakes and canals": "نحو 70 محطة على الساحل؛ ومع ViVa نحو 160، وفي البحيرات الكبرى والقنوات أيضًا",
-  "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0؛ Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): لا ترخيص منشورًا",
   "Photo: {author} · {licence}": "صورة: {author} · {licence}",
   "Coat of arms: {author} · {licence}": "شعار النبالة: {author} · {licence}",
   "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "صور الأقمار الصناعية من Esri في الوضع ثنائي الأبعاد ووضع التوفير. مفتاح API مجاني من ArcGIS Location Platform مع Basemaps فقط، ومقيد بـ http://localhost:4173؛ وبدونه تكون الخريطة ثنائية الأبعاد OpenStreetMap",
@@ -4564,5 +4560,6 @@
   "Malformed ferry snapshot": "لقطة عبّارات غير صالحة",
   "Road ferries (Sweden)": "عبّارات الطرق (السويد)",
   "About 40 road ferry routes, departures in the coming three hours": "نحو 40 خط عبّارة، والمغادرات خلال الساعات الثلاث القادمة",
-  "Every 2 minutes": "كل دقيقتين"
+  "Every 2 minutes": "كل دقيقتين",
+  "About 70 stations on the coast": "نحو 70 محطة على الساحل"
 }

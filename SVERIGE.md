@@ -50,7 +50,7 @@ Två nivåer gäller:
 | Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk), samt VMA och krisnyheter som punkter | SMHI, IBWW-varningar (CC BY 4.0) och Krisinformation.se (MSB); ingen nyckel | Weather Warnings (Sweden), under Weather |
 | Polisens händelser (de 500 senaste notiserna, ca 10 dagar), placerade vid kommunens centralort | Polismyndigheten, `polisen.se/api/events` (öppna data, ange källan) | Police Events (Sweden), under Events |
 | Kollektivtrafikstörningar: de regionala trafikbolagens aktuella störningar vid de hållplatser de gäller (stängd/trafikeras inte, flyttad, övrigt) | Trafiklab GTFS Regional ServiceAlerts (befintlig nyckel `TRAFIKLAB_GTFS_RT_KEY`) | Transit Disruptions (Sweden) / Kollektivtrafikstörningar, under Events |
-| Sjöväder: ca 160 stationer längs kusten, i Vänern, Vättern, Mälaren och kanalerna (vind, byvind, vattenstånd, vattentemperatur, vågor) | Sjöfartsverket ViVa, ingen nyckel | Sea Weather (Sweden) / Sjöväder, under Weather |
+| Sjöväder: ett 70-tal stationer längs kusten (vattenstånd mot medelvattenstånd, vattentemperatur, vågor) | SMHI:s havsobservationer (CC BY 4.0), ingen nyckel | Sea Weather (Sweden) / Sjöväder, under Weather |
 | Norrskensprognos: chans för norrsken rakt ovanför (NOAA OVATION) som lysande band på 110 km höjd, Kp-index och chansen över nio svenska orter | NOAA SWPC (fri data, ingen nyckel) | Aurora Forecast / Norrskensprognos, under Weather |
 | Väder nu: ca 185 SMHI-stationer (temperatur, vind, byar, nederbörd senaste timmen) och SMHI:s prognos för platsen vid klick | SMHI metobs och prognos snow1g (CC BY 4.0, ingen nyckel) | Weather Now (Sweden) / Väder nu, under Weather |
 | Luftkvalitet: ca 75 SMHI-mätstationer (NO2, PM10, PM2.5, O3) på europeiska EAQI-skalan, tillsammans med Kanadas stationer | SMHI Datavärdskap luft (CC BY 4.0, ingen nyckel) | Air quality / Luftkvalitet, under Weather |
@@ -116,7 +116,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | +SE | Regnradar | SMHI · EUMETNET OPERA | Nordisk radar från SMHI och europeisk radar från OPERA. Originalet: Radar över USA (NOAA) | Var 5:e minut | CC BY 4.0 (SMHI, OPERA) |
 | SE | Vädervarningar (Sverige) | SMHI · Krisinformation.se | Vädervarningar, VMA och krisnyheter i hela Sverige | Var 5:e minut | CC BY 4.0 (SMHI) |
 | SE | Väder nu (Sverige) | SMHI | Cirka 185 väderstationer, och en prognos där du klickar | Var 10:e minut | CC BY 4.0 |
-| SE | Sjöväder (Sverige) | SMHI · Sjöfartsverket ViVa | Cirka 70 stationer längs kusten; med ViVa cirka 160, även i de stora sjöarna och kanalerna | Var 10:e minut | SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): ingen publicerad licens |
+| SE | Sjöväder (Sverige) | SMHI | Cirka 70 stationer längs kusten | Var 10:e minut | CC BY 4.0 |
 | SE | Vattenföring (Sverige) | SMHI | Cirka 150 stationer i vattendragen | Kvartsvärden, publiceras med fördröjning | CC BY 4.0 |
 | SE | Norrskensprognos | NOAA SWPC | Norra halvklotet, med chansen över nio svenska orter | Var 10:e minut | Allmän egendom (USA:s statsförvaltning) |
 | +SE | Blixttäthet | EUMETSAT (MTG) | Blixtar över Europa och Afrika från satelliten MTG. Originalet: Blixttäthet över Nord- och Sydamerika (NOAA) | Var 5:e minut | CC BY 4.0 (© EUMETSAT 2026) |
@@ -200,15 +200,11 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   räknas dubbelt.
 - **Strålning:** Strålsäkerhetsmyndighetens gammastationskarta. Ingen licens
   angiven.
-- **Sjöväder:** läser som standard SMHI:s havsobservationer (CC BY 4.0):
-  vattenstånd mot årets medelvattenstånd, vattentemperatur och vågor vid ett
-  70-tal stationer längs kusten, men ingen vind och inga sjöar eller
-  kanaler; tre anrop per uppdatering. Sjöfartsverkets ViVa, med vind, sjöar
-  och kanaler, läses bara med `SEA_WEATHER_SOURCE=viva`: det är en
-  odokumenterad tjänst utan publicerade villkor, ett anrop per station, och
-  Sjöfartsverket kräver tillstånd för att visa "sjögeografisk information"
-  på webben; om ViVa:s mätvärden räknas dit är oklart. Provat 2026-11-11: 68 stationer, 59 med vattenstånd, 42 med
-  vattentemperatur och 4 vågbojar.
+- **Sjöväder:** SMHI:s havsobservationer (CC BY 4.0): vattenstånd mot årets
+  medelvattenstånd, vattentemperatur och vågor vid ett 70-tal stationer
+  längs kusten, men ingen vind och inga sjöar eller kanaler; tre anrop per
+  uppdatering. Sjöfartsverkets ViVa används inte: Sjöfartsverket svarade
+  2026-11-13 att det inte tillåter vidarepublicering av informationen.
 - **Trafikmeddelanden (SR):** används inte sedan 2026-11-13. Sveriges
   Radios API-villkor tillåter materialet "endast … genom länkning och/eller
   streaming" och att det inte lagras, medan lagret visade och sparade hela
@@ -365,7 +361,6 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 | `SWEDAVIA_FLIGHTINFO_KEY` | avgångar och ankomster i dossiern, tavlan och cockpit | apideveloper.swedavia.se → FlightInfo Free |
 | `SWEDAVIA_WAITTIME_KEY` | köerna i säkerhetskontrollen | apideveloper.swedavia.se → WaitTime Free |
 | `ADSBDB_ROUTES` | `on`: flygrutter från adsbdb, vars ruttdata inte får publiceras utan David J Taylors tillstånd; tom (standard): inga rutter | ingen nyckel |
-| `SEA_WEATHER_SOURCE` | tom (standard): SMHI:s havsobservationer (CC BY 4.0), vattenstånd, vattentemperatur och vågor längs kusten men ingen vind; `viva`: Sjöfartsverkets ViVa (ingen publicerad licens), med vind, sjöar och kanaler | ingen nyckel |
 | `REGIONAL_NEWS_GOOGLE` | `on`: rubrikerna i stadspanelen och cockpit från Google News, vars villkor bara tillåter personligt, icke-kommersiellt bruk; tom (standard): inga rubriker över Sverige, GDELT utanför | ingen nyckel |
 | `FLIGHTS_SOURCE` | tom (standard): flyg från adsb.lol (ODbL) runt kartans mitt, OpenSky frågas aldrig; `opensky`: originalets OpenSky, som kräver deras skriftliga tillstånd | ingen nyckel |
 | `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` | flyg med större kvot än utan konto (originalets lager; OpenSkys villkor kräver skriftligt tillstånd för användning i en app som denna, se "Källor med oklara eller särskilda villkor") | opensky-network.org → konto → API client (under KOPPLA PÅ) |
@@ -401,6 +396,17 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-13 (Sjöfartsverkets ViVa borttagen)
+- Sjöfartsverket svarade 2026-11-13 att det inte tillåter vidarepublicering
+  av ViVa-informationen. Sjöväder läser därför bara SMHI:s havsobservationer
+  (CC BY 4.0); valet `SEA_WEATHER_SOURCE=viva` och all kod som läste ViVa är
+  borta, liksom ViVa i källhänvisningar, ursprungsuppgifter och dokumentation.
+  Lagret har varit SMHI som standard sedan 2026-11-13, så det som syns i
+  appen ändras inte.
+- Rutan Data attribution nämnde fortfarande Sveriges Radios
+  trafikmeddelanden fast lagret är dolt sedan tidigare i dag; den raden är
+  borttagen.
 
 ### 2026-11-13 (vägfärjor)
 - Nytt lager **Vägfärjor (Sverige)** (delningstoken `10`) under Movement,

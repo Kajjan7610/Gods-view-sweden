@@ -1,4 +1,4 @@
-/** Card model for a selected ViVa or SMHI station. Pure — no Cesium types. */
+/** Card model for a selected sea weather station. Pure — no Cesium types. */
 import { formatNumber, t } from '../../i18n/index.js';
 import { measuredWhen } from '../measuredWhen.js';
 import { formatCelsius } from '../roadWeather/cards.js';
@@ -51,7 +51,7 @@ function windLine(row) {
   return t('Wind {speed} m/s', { speed });
 }
 
-/** ViVa's reference as it reads in a sentence: "sjökortsnivå", "RH 2000". */
+/** A level reference as it reads in a sentence: "sjökortsnivå", "RH 2000". */
 function referenceName(reference) {
   if (/^RH\s?\d+$/i.test(reference))
     return reference.toUpperCase().replace(/^RH\s?/, 'RH ');
@@ -91,19 +91,10 @@ export function buildSeaCard(row, { mode = 'wind', nowMs = Date.now() } = {}) {
     details.push(
       t('Wave height {height} m', { height: oneDecimal(row.waveHeight) }),
     );
-  const smhi = row.source === 'smhi';
   details.push(
     Number.isFinite(row.updated)
-      ? smhi
-        ? t('Measured {time} · SMHI', {
-            time: measuredWhen(row.updated, nowMs),
-          })
-        : t('Measured {time} · Sjöfartsverket ViVa', {
-            time: measuredWhen(row.updated, nowMs),
-          })
-      : smhi
-        ? 'SMHI'
-        : 'Sjöfartsverket ViVa',
+      ? t('Measured {time} · SMHI', { time: measuredWhen(row.updated, nowMs) })
+      : 'SMHI', // i18n-ignore: agency name
   );
   return {
     ...CARD_BASE,
