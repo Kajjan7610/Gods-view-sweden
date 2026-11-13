@@ -1,12 +1,22 @@
-// SCB's population figures for the city dossier (open PxWeb API, no key):
+// SCB's population figures for the city dossier (open PxWebApi 2.0, no key):
 // the town's population year by year inside its latest boundary, and the
-// municipality's population at the end of the latest month.
+// municipality's population at the end of the latest month. Version 1 of
+// the API stops at the turn of 2026/2027; version 2 answers in JSON-stat 2.0
+// and allows 30 requests per 10 seconds per address.
 
-export const SCB_API = 'https://api.scb.se/OV0104/v1/doris/sv/ssd';
-/** Town population per year within each delimitation's boundary. */
-export const SCB_TOWN_TABLE = `${SCB_API}/MI/MI0810/MI0810A/FortatUtglesRegion`;
-/** The folder whose newest "per month" table holds monthly population. */
-export const SCB_POPULATION_FOLDER = `${SCB_API}/BE/BE0101/BE0101A`;
+export const SCB_API = 'https://statistikdatabasen.scb.se/api/v2';
+/**
+ * Table titles; the newest matching table (by last period) is used. The
+ * search itself takes a few words: a whole title finds nothing.
+ */
+export const SCB_TOWN_TITLE =
+  'Förtätning och utglesning av tätorter, folkmängd efter tätortens basår och tätort';
+export const SCB_MONTHLY_TITLE =
+  'Folkmängden per månad efter region, ålder och kön';
+const SEARCH = Object.freeze({
+  [SCB_TOWN_TITLE]: 'förtätning utglesning tätorter',
+  [SCB_MONTHLY_TITLE]: 'folkmängden per månad',
+});
 
 const fold = (value) =>
   String(value ?? '')
@@ -34,52 +44,72 @@ export function townCode(variable, code, names) {
   return null;
 }
 
-/** The newest table in a PxWeb folder listing whose title starts so. */
+/**
+ * The newest table in a v2 table search whose title starts so: a series is
+ * split into tables by period ("År 2025M01-2026M09"), so the one with the
+ * latest last period wins.
+ * @param {{tables?: object[]}} listing GET /tables?query=… answer.
+ */
 export function newestTable(listing, titleStart) {
-  const tables = (Array.isArray(listing) ? listing : []).filter(
+  const tables = (Array.isArray(listing?.tables) ? listing.tables : []).filter(
     (row) =>
-      row?.type === 't' &&
-      String(row.text ?? '').startsWith(titleStart) &&
+      !row?.discontinued &&
+      String(row?.label ?? '').startsWith(titleStart) &&
       typeof row.id === 'string',
   );
   tables.sort((a, b) =>
-    String(b.updated ?? '').localeCompare(String(a.updated ?? '')),
+    String(b.lastPeriod ?? '').localeCompare(String(a.lastPeriod ?? '')),
   );
   return tables[0]?.id ?? null;
 }
 
+/** A JSON-stat dimension as v1-style parallel code and text lists. */
+export function dimensionValues(metadata, id) {
+  const category = metadata?.dimension?.[id]?.category;
+  const index = category?.index ?? {};
+  const codes = Array.isArray(index)
+    ? index
+    : Object.keys(index).sort((a, b) => index[a] - index[b]);
+  return {
+    values: codes,
+    valueTexts: codes.map((code) => category?.label?.[code] ?? code),
+  };
+}
+
+const cellValue = (cell) =>
+  cell == null || String(cell).trim() === '' ? NaN : Number(cell);
+
+/** The answer's single period, e.g. "2025" or "2026M09". */
+const periodOf = (payload) =>
+  dimensionValues(payload, 'Tid').values.at(-1) ?? '';
+
 /**
- * The town's latest population from a PxWeb answer queried for one town,
- * one boundary and the latest year.
+ * The town's latest population from a JSON-stat answer queried for one
+ * town, one boundary and the latest year.
  */
 export function normalizeTownAnswer(payload) {
-  const row = payload?.data?.[0];
-  const cell = row?.values?.[0];
   // An empty cell is no count, never a town of 0.
-  const value = cell == null || String(cell).trim() === '' ? NaN : Number(cell);
-  const year = Number(row?.key?.at(-1));
-  return Number.isFinite(value) && Number.isFinite(year)
+  const value = cellValue(payload?.value?.[0]);
+  const year = Number(periodOf(payload));
+  return Number.isFinite(value) && Number.isFinite(year) && year > 0
     ? { value, year }
     : null;
 }
 
 /**
  * The municipality's population, men and women at the end of the latest
- * month, from a PxWeb answer queried with Kon = TotSa, 1, 2.
+ * month, from a JSON-stat answer queried with Kon = TotSa, 1, 2.
  */
 export function normalizeMonthlyAnswer(payload) {
-  const rows = Array.isArray(payload?.data) ? payload.data : [];
+  const values = Array.isArray(payload?.value) ? payload.value : [];
+  // Every other dimension holds one value, so the cells follow Kon's order.
+  const sexes = dimensionValues(payload, 'Kon').values;
   const bySex = new Map();
-  let month = null;
-  for (const row of rows) {
-    const key = Array.isArray(row?.key) ? row.key : [];
-    const value = Number(row?.values?.[0]);
-    if (!Number.isFinite(value)) continue;
-    // key: [region, age, sex, "2026M08"]
-    bySex.set(String(key[2]), value);
-    month = String(key.at(-1) ?? '');
-  }
-  const match = /^(\d{4})M(\d{2})$/.exec(month ?? '');
+  sexes.forEach((sex, i) => {
+    const value = cellValue(values[i]);
+    if (Number.isFinite(value)) bySex.set(String(sex), value);
+  });
+  const match = /^(\d{4})M(\d{2})$/.exec(periodOf(payload));
   const total = bySex.get('TotSa');
   if (!match || !Number.isFinite(total)) return null;
   return {
@@ -91,79 +121,89 @@ export function normalizeMonthlyAnswer(payload) {
   };
 }
 
-const query = (selections) => ({
-  query: selections.map(([code, values, filter = 'item']) => ({
-    code,
-    selection: { filter, values },
-  })),
-  response: { format: 'json' },
-});
+/** A data address selecting one value list per variable. */
+export function dataUrl(table, selections) {
+  const params = new URLSearchParams({
+    lang: 'sv',
+    outputFormat: 'json-stat2',
+  });
+  for (const [code, values] of selections)
+    params.set(`valuecodes[${code}]`, values.join(','));
+  return `${SCB_API}/tables/${table}/data?${params}`;
+}
 
 /**
- * SCB lookups over one JSON fetcher. The town table's metadata (some 2,800
- * towns) and the monthly table's name are read once per process.
+ * SCB lookups over one JSON fetcher. Each table is found by title and its
+ * metadata (some 2,800 towns) read once per process.
  * @param {(url: string, init?: object) => Promise<any>} getJson
  */
 export function createScbPopulation(getJson) {
-  let townMeta = null;
+  let town = null;
   let monthly = null;
 
+  /** The newest table with this title and its metadata, read once. */
+  const tableOnce = (title) =>
+    (async () => {
+      const id = newestTable(
+        await getJson(
+          `${SCB_API}/tables?lang=sv&pageSize=50&query=${encodeURIComponent(SEARCH[title] ?? title)}`,
+        ),
+        title,
+      );
+      if (!id) throw new Error(`no SCB table "${title}"`);
+      return {
+        id,
+        meta: await getJson(`${SCB_API}/tables/${id}/metadata?lang=sv`),
+      };
+    })();
+
   async function townPopulation(code, names) {
-    townMeta ||= getJson(SCB_TOWN_TABLE).catch((error) => {
-      townMeta = null;
+    town ||= tableOnce(SCB_TOWN_TITLE).catch((error) => {
+      town = null;
       throw error;
     });
-    const meta = await townMeta;
-    const variable = (code) =>
-      meta?.variables?.find((entry) => entry.code === code);
-    const town = townCode(variable('Region'), code, names);
-    const boundaries = variable('BasarTatort')?.values ?? [];
-    const contents = variable('ContentsCode')?.values?.[0];
-    if (!town || !boundaries.length || !contents) return null;
+    const { id, meta } = await town;
+    const place = townCode(dimensionValues(meta, 'Region'), code, names);
+    const boundaries = dimensionValues(meta, 'BasarTatort').values;
+    const contents = dimensionValues(meta, 'ContentsCode');
+    // The table also holds land area; the population is "Folkmängd".
+    const population =
+      contents.values[
+        contents.valueTexts.findIndex((text) => fold(text) === 'folkmängd')
+      ] ?? contents.values[0];
+    if (!place || !boundaries.length || !population) return null;
     return normalizeTownAnswer(
-      await getJson(SCB_TOWN_TABLE, {
-        method: 'POST',
-        body: query([
-          ['Region', [town]],
+      await getJson(
+        dataUrl(id, [
+          ['Region', [place]],
           ['BasarTatort', [boundaries.at(-1)]],
-          ['ContentsCode', [contents]],
-          ['Tid', ['1'], 'top'],
+          ['ContentsCode', [population]],
+          ['Tid', ['top(1)']],
         ]),
-      }),
+      ),
     );
   }
 
   async function municipalityPopulation(code) {
-    monthly ||= (async () => {
-      const id = newestTable(
-        await getJson(SCB_POPULATION_FOLDER),
-        'Folkmängden per månad',
-      );
-      if (!id) throw new Error('no monthly population table');
-      const url = `${SCB_POPULATION_FOLDER}/${id}`;
-      const meta = await getJson(url);
-      const age = meta?.variables?.find((entry) => entry.code === 'Alder')
-        ?.values?.[0];
-      const contents = meta?.variables?.find(
-        (entry) => entry.code === 'ContentsCode',
-      )?.values?.[0];
-      return { url, age, contents };
-    })().catch((error) => {
+    monthly ||= tableOnce(SCB_MONTHLY_TITLE).catch((error) => {
       monthly = null;
       throw error;
     });
-    const table = await monthly;
+    const { id, meta } = await monthly;
+    const ages = dimensionValues(meta, 'Alder').values;
+    const age = ages.find((value) => /^tot/i.test(value)) ?? ages[0];
+    const contents = dimensionValues(meta, 'ContentsCode').values[0];
+    if (!age || !contents) return null;
     return normalizeMonthlyAnswer(
-      await getJson(table.url, {
-        method: 'POST',
-        body: query([
+      await getJson(
+        dataUrl(id, [
           ['Region', [code]],
-          ['Alder', [table.age]],
+          ['Alder', [age]],
           ['Kon', ['TotSa', '1', '2']],
-          ['ContentsCode', [table.contents]],
-          ['Tid', ['1'], 'top'],
+          ['ContentsCode', [contents]],
+          ['Tid', ['top(1)']],
         ]),
-      }),
+      ),
     );
   }
 

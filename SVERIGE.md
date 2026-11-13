@@ -370,6 +370,7 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 | `ENTSOE_PRODUCTION` | `on`: produktion, förbrukning och dygnskurva från ENTSO-E också; bara när Svenska kraftnät har godkänt det | ingen nyckel |
 | `ENTSOE_SECURITY_TOKEN` | kraftsystemets flöden från ENTSO-E (CC BY 4.0); behövs för lagret | transparency.entsoe.eu → registrera, mejla transparency@entsoe.eu "RESTful API access", sedan My Account → Generate token |
 | `CESIUM_ION_TOKEN` | fotorealistiska 3D-städer | ion.cesium.com |
+| `ARCGIS_API_KEY` | Esris satellitbild i 2D och sparläget; utan nyckel visas OpenStreetMap. Nyckeln syns i webbläsaren och ska begränsas hos Esri till appens adresser; den gäller högst ett år och behöver förnyas | location.arcgis.com → gratis Location Platform-konto (inte ett ArcGIS public account) → Developer credentials → API-nyckel, offentlig applikation, bara Baskartor, referenter `http://localhost:4173` och `http://127.0.0.1:4173` |
 
 Nycklarna kan klistras in i appen under **KOPPLA PÅ** (nere till höger); appen skriver då `.env` själv.
 
@@ -398,6 +399,29 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-13 (Esris satellitbild bara med egen nyckel)
+- Esris satellitbild, som visas i 2D och sparläget, hämtades utan nyckel
+  från den gamla tjänsten services.arcgisonline.com. Esri kräver numera en
+  nyckel för sina baskartor, och källraden syntes bara bakom en knapp.
+  Satellitbilden läses nu från Esris nyckeltjänst med `ARCGIS_API_KEY`
+  (gratis ArcGIS Location Platform-konto, 2 miljoner kartrutor i månaden,
+  bara behörigheten Baskartor, begränsad till appens adresser), och
+  "Powered by Esri" med datakällorna står på kartan. Utan nyckel är
+  OpenStreetMap kartan i 2D och sparläget. Nyckeln läggs in under KOPPLA PÅ.
+
+### 2026-11-13 (stadsdossiern: SCB:s API version 2)
+- Folkmängden i stadsdossiern läses nu från SCB:s PxWebApi 2.0
+  (statistikdatabasen.scb.se/api/v2). Version 1, som dossiern använde,
+  slutar fungera vid årsskiftet 2026/2027. Tabellerna hittas genom en
+  sökning på titeln, och den med senaste period vinner: tätorternas
+  folkmängd i TAB4060 (år, inom senaste tätortsgränsen) och kommunens per
+  månad i TAB6471 (i dag september 2026). Svaren kommer i JSON-stat 2.0,
+  och SCB tillåter högst 30 anrop per 10 sekunder.
+- Provat mot SCB med appens kod: Västerås tätort 133 067 (2025) och
+  kommunen 161 967 (september 2026), likaså Gävle, Stockholm och Kiruna.
+  Salem saknar tätort med kommunens namn och visar Wikidatas uppgift, som
+  förut.
 
 ### 2026-11-13 (upphovsperson och licens vid dossierns bilder)
 - Fotona och stadsvapnen i stadsdossiern, på ortskortet och under Sevärt
