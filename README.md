@@ -14,7 +14,7 @@
 
 ### ▶ Se filmen
 
-https://github.com/user-attachments/assets/43f580bc-75fd-4c19-b739-158fe468ee73
+https://github.com/user-attachments/assets/623694ab-79d8-40cf-9997-c6c95ce91400
 
 _28 sekunder med berättarröst: varje flyg över Sverige och Stockholm i rörelse just nu, och varje stad i siffror. For promotional purposes only. Alla källor står i slutskylten._
 
@@ -35,7 +35,7 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 <table>
 <tr>
 <td width="50%"><img src="docs/media/sverige/flygtavlan.webp" alt="Arlandas flygtavla med avgångar och köer"><br><b>Flygtavlan</b>: Swedavias tio flygplatser, hela dagens avgångar och ankomster och köerna i säkerhetskontrollen</td>
-<td width="50%"><img src="docs/media/sverige/cockpit.webp" alt="Cockpit i ett plan på 39 000 fot över Härjedalen"><br><b>Cockpit</b>: i ett plan över Sverige, med Swedavias rader, flygväder och vädret på marken från SMHI</td>
+<td width="50%"><img src="docs/media/sverige/cockpit.webp" alt="Cockpit i ett plan på 37 000 fot över Västergötland"><br><b>Cockpit</b>: i ett plan över Sverige, med Swedavias rader, flygväder och vädret på marken från SMHI</td>
 </tr>
 <tr>
 <td><img src="docs/media/sverige/vagkameror-3d.webp" alt="Trafikverkets vägkamera med livebilden lagd i 3D-scenen"><br><b>Vägkameror i 3D</b>: drygt 1 500 av Trafikverkets kameror med livebilden placerad i scenen</td>
@@ -47,7 +47,7 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 </tr>
 <tr>
 <td><img src="docs/media/sverige/fartkameror.webp" alt="Fartkameror som pilar över Stockholm och listan i dossiern"><br><b>Fartkameror</b>: Trafikverkets cirka 2 800 platser, vridna åt det håll kameran pekar</td>
-<td><img src="docs/media/sverige/kraftsystemet.webp" alt="Pilar för elflödet mellan elområdena SE1–SE4 och grannländerna"><br><b>Kraftsystemet</b>: flödena mellan elområdena live från Svenska kraftnät</td>
+<td><img src="docs/media/sverige/kraftsystemet.webp" alt="Pilar för elflödet mellan elområdena SE1–SE4 och grannländerna"><br><b>Kraftsystemet</b>: flödena mellan elområdena och grannländerna från ENTSO-E</td>
 </tr>
 </table>
 
@@ -551,7 +551,7 @@ Twenty-two layers and map sources. **Twenty have a keyless path.** Some offer ad
 | ⚠️ **Weather Warnings (Sweden)** | SMHI's impact-based weather warnings as areas coloured yellow, orange or red, paler until they start, with SMHI messages (water shortage, high flows, fire risk) behind a toggle; click an area for what happens and what to think about, in Swedish or English | SMHI | 🟢 |
 | 🚓 **Police Events (Sweden)** | Polisen's latest event notices (traffic, violence, fires and accidents, thefts …) as dots coloured by category, for the last 24 hours, three days or all ~10 days; Polisen names only the municipality, so dots sit around its seat; click a dot for the notice and a link to polisen.se | Polismyndigheten | 🟡 |
 | ⚡ **Electricity Prices (Sweden)** | Spot price per bidding zone SE1–SE4 as coloured, labelled points: this quarter-hour, today's mean or tomorrow's mean; click a zone for the day's low, high and mean | Elpriset just nu.se | 🟢 |
-| 🔌 **Power Grid (Sweden)** | Svenska kraftnät's control room: moving chevrons on every link to and between SE1–SE4, running the way the power flows, as thick and as fast as the flow, labelled 'Poland → SE4 · 459 MW'; the row sums Sweden's import, export and net, and per neighbouring country, with a switch for imports, exports or domestic flows and a chip per country that highlights its links; click a zone for its import, export and Sweden's production by type; a POWER panel on the right rail charts the day so far, or the last seven days the server kept, per quarter-hour (production stacked by type, consumption, and the exchange, export up and import down) with a readout under the pointer | Svenska kraftnät | 🟢 |
+| 🔌 **Power Grid (Sweden)** | ENTSO-E's physical flows (with a free key): moving chevrons on every link to and between SE1–SE4, running the way the power flows, as thick and as fast as the flow, labelled 'Poland → SE4 · 459 MW'; the row sums Sweden's import, export and net, and per neighbouring country, with a switch for imports, exports or domestic flows and a chip per country that highlights its links. Production by type, consumption and the POWER panel need Svenska kraftnät's consent and stay off until then (see SVERIGE.md) | ENTSO-E (CC BY 4.0) | 🟢 |
 | 📻 **Traffic Reports (Sweden)** | Sveriges Radio's traffic messages as dots coloured and sized by priority, filtered by road traffic, public transport, planned works and other | Sveriges Radio | 🟢 |
 | 🚏 **Transit Disruptions (Sweden)** | The regional operators' active disruption notices (GTFS-RT ServiceAlerts) at the stops they touch, coloured closed/not served, moved or other; click a stop for the operator's message | Trafiklab GTFS Regional (key) | 🟢 |
 | 🌊 **Sea Weather (Sweden)** | Sjöfartsverket ViVa stations along the coast, lakes and canals coloured by mean wind or water level, with the windiest values written out; click a station for wind, gusts, water level, temperatures and waves | Sjöfartsverket | 🟢 |

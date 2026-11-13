@@ -394,6 +394,19 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-13 (README-bilderna och filmen tagna om med dagens HUD)
+- En egen granskning visade att alla bilder i README, titelanimationen och
+  cockpitklippet i filmen var tagna före 2026-11-12, med originalets
+  sken av hemligstämplad satellitbild ("TOP SECRET // NOFORN", "KH11",
+  omlopps- och passnummer). Appen visar sedan dess vad den visar, öppna
+  data; nu gör bilderna det också. Alla är tagna om, och titelanimationen
+  är gjord av dagens flygtagning med "for promotional purposes only" i
+  bilden.
+- Cockpitbilden visas utan väderpanelen från Open-Meteo, vars fria nivå
+  bara gäller icke-kommersiellt bruk.
+- Kraftsystemet står nu med rätt källa i README: flödena kommer från
+  ENTSO-E, inte Svenska kraftnät, sedan 2026-11-11.
+
 ### 2026-11-12 (fornlämningar från Riksantikvarieämbetet)
 - Nytt lager **Fornlämningar (Sverige)** (delningstoken `0c`) under
   Infrastructure, efter Skyddad natur: Riksantikvarieämbetets registrerade
