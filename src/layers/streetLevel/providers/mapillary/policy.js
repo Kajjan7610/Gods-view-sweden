@@ -58,9 +58,15 @@ export const COVERAGE_TUNING = Object.freeze({
 /** Per-sequence image cones after a sequence is selected. */
 export const SEQUENCE_IMAGES_LIMIT = 2000;
 
+/**
+ * Mapillary's logo linking to mapillary.com, as the Mapillary Terms (§ 11)
+ * ask of apps showing its imagery (public/logos/README.md).
+ */
+export const MAPILLARY_LOGO_HTML =
+  '<a href="https://www.mapillary.com" target="_blank" rel="noopener"><img src="/logos/mapillary-logo.png" alt="Mapillary" height="16" style="height:16px;width:auto;vertical-align:middle;border-radius:2px"></a>';
+
 /** On-globe credit: Mapillary imagery is CC BY-SA 4.0 and needs attribution. */
-export const MAPILLARY_CREDIT_HTML =
-  'Street Level: imagery © <a href="https://www.mapillary.com" target="_blank" rel="noopener">Mapillary</a> contributors, CC BY-SA 4.0';
+export const MAPILLARY_CREDIT_HTML = `Street Level: ${MAPILLARY_LOGO_HTML} imagery © <a href="https://www.mapillary.com" target="_blank" rel="noopener">Mapillary</a> contributors, CC BY-SA 4.0`;
 
 /** Deep link to an image on mapillary.com, as the web app shares them. */
 export function mapillaryImageUrl(imageId) {

@@ -629,7 +629,7 @@ export const DATA_CREDITS = [
   },
   {
     key: 'mapillary',
-    html: 'Street Level: imagery © <a href="https://www.mapillary.com" target="_blank" rel="noopener">Mapillary</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>',
+    html: 'Street Level: <a href="https://www.mapillary.com" target="_blank" rel="noopener"><img src="/logos/mapillary-logo.png" alt="Mapillary" height="16" style="height:16px;width:auto;vertical-align:middle;border-radius:2px"></a> imagery © <a href="https://www.mapillary.com" target="_blank" rel="noopener">Mapillary</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>',
   },
   {
     key: 'google-street-view',

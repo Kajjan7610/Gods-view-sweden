@@ -399,6 +399,14 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-13 (Mapillarys logga i Street Levels källhänvisning)
+- Mapillarys villkor (§ 11) kräver att appar som visar Mapillarys bilder
+  visar Mapillarys logga och länkar till mapillary.com. Källhänvisningen för
+  Street Level har nu loggan, länkad till mapillary.com, både på jordklotet
+  och i rutan Data attribution. Loggan kommer oförändrad ur Mapillarys
+  officiella pressmaterial (`public/logos/`, ursprung och varumärke i
+  `public/logos/README.md`).
+
 ### 2026-11-13 (Nepal-scenen och resten av granskningen)
 - Originalets scen om översvämningen i Nepal erbjuds inte längre:
   händelsepaketet är bara icke-kommersiellt (CC BY-NC 4.0) och bevisraderna
