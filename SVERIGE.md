@@ -397,6 +397,12 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-13 (strängare innehållspolicy)
+- Webbläsarens innehållspolicy (CSP) tillåter inte längre skript och ramar
+  från YouTube, Facebook och X. De behövdes bara för Nepal-scenens inbäddade
+  media, och scenen erbjuds inte i forken. Det enda främmande skriptet som
+  tillåts är Googles Maps JavaScript API för Street View.
+
 ### 2026-11-13 (Sjöfartsverkets ViVa borttagen)
 - Sjöfartsverket svarade 2026-11-13 att det inte tillåter vidarepublicering
   av ViVa-informationen. Sjöväder läser därför bara SMHI:s havsobservationer
