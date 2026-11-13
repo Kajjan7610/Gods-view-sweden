@@ -29,6 +29,7 @@ import { firePerimetersProxy } from './firePerimeters.js';
 import { gnssIntegrityProxy } from './gnssIntegrity.js';
 import { trafikverketRoadsProxy } from './trafikverketRoads.js';
 import { trafikverketWeatherProxy } from './trafikverketWeather.js';
+import { trafikverketFerriesProxy } from './trafikverketFerries.js';
 import { smhiWarningsProxy } from './smhiWarnings.js';
 import { polisenEventsProxy } from './polisenEvents.js';
 import { electricityPricesProxy } from './electricityPrices.js';
@@ -115,6 +116,7 @@ function localProviderPlugins({
     gnssIntegrityProxy(),
     trafikverketRoadsProxy(),
     trafikverketWeatherProxy(),
+    trafikverketFerriesProxy(),
     smhiWarningsProxy(),
     polisenEventsProxy(),
     electricityPricesProxy(),

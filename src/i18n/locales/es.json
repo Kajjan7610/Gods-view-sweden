@@ -4301,5 +4301,19 @@
   "Boat {line}": "Barco {line}",
   "Local traffic from {stop}": "Transporte local desde {stop}",
   "No departures in the next hour": "No hay salidas en la próxima hora",
-  "stop {platform}": "andén {platform}"
+  "stop {platform}": "andén {platform}",
+  "Next departures:": "Próximas salidas:",
+  "Timetable and messages": "Horario y avisos",
+  "ROAD FERRY · {route}": "TRANSBORDADOR · {route}",
+  "With a message from Trafikverket": "Con un aviso de Trafikverket",
+  "Departures without a message": "Salidas sin aviso",
+  "Ferry data unavailable": "Datos de transbordadores no disponibles",
+  "NEXT DEPARTURE": "PRÓXIMA SALIDA",
+  "Write the next departure time beside each ferry route": "Escribir la hora de la próxima salida junto a cada línea de transbordador",
+  "Dots are Trafikverket’s road ferry routes with their next departures in the coming three hours and Trafikverket’s messages for the route (cancellations, reduced capacity, planned closures). Click a route for its departures.": "Los puntos son las líneas de transbordadores de carretera de Trafikverket con sus próximas salidas en las tres horas siguientes y los avisos de Trafikverket para la línea (cancelaciones, capacidad reducida, cierres previstos). Haz clic en una línea para ver sus salidas.",
+  "Road ferries need the Trafikverket key": "Los transbordadores necesitan la clave de Trafikverket",
+  "Malformed ferry snapshot": "Instantánea de transbordadores mal formada",
+  "Road ferries (Sweden)": "Transbordadores de carretera (Suecia)",
+  "About 40 road ferry routes, departures in the coming three hours": "Unas 40 líneas de transbordador, salidas en las tres horas siguientes",
+  "Every 2 minutes": "Cada 2 minutos"
 }

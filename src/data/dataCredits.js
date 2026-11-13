@@ -560,6 +560,12 @@ export const DATA_CREDITS = [
       '<a href="https://www.smhi.se/data/hydrologi/vattenforing" target="_blank" rel="noopener">SMHI</a> (CC BY 4.0)',
   },
   {
+    key: 'road-ferries',
+    html:
+      'Road ferries (Sweden): ' +
+      '<a href="https://www.trafikverket.se/farjerederiet/" target="_blank" rel="noopener">Trafikverket</a> (open API, CC0 1.0)',
+  },
+  {
     key: 'gamma-radiation',
     html:
       'Radiation (Sweden): ' +

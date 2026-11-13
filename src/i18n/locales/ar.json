@@ -4550,5 +4550,19 @@
   "Boat {line}": "قارب {line}",
   "Local traffic from {stop}": "النقل المحلي من {stop}",
   "No departures in the next hour": "لا مغادرات خلال الساعة القادمة",
-  "stop {platform}": "رصيف {platform}"
+  "stop {platform}": "رصيف {platform}",
+  "Next departures:": "المغادرات التالية:",
+  "Timetable and messages": "الجدول والرسائل",
+  "ROAD FERRY · {route}": "عبّارة طرق · {route}",
+  "With a message from Trafikverket": "مع رسالة من Trafikverket",
+  "Departures without a message": "مغادرات بلا رسالة",
+  "Ferry data unavailable": "بيانات العبّارات غير متاحة",
+  "NEXT DEPARTURE": "المغادرة التالية",
+  "Write the next departure time beside each ferry route": "اكتب موعد المغادرة التالية بجانب كل خط عبّارة",
+  "Dots are Trafikverket’s road ferry routes with their next departures in the coming three hours and Trafikverket’s messages for the route (cancellations, reduced capacity, planned closures). Click a route for its departures.": "النقاط هي خطوط عبّارات الطرق التابعة لـ Trafikverket مع مغادراتها التالية خلال الساعات الثلاث القادمة ورسائل Trafikverket الخاصة بالخط (إلغاءات، سعة منخفضة، إغلاقات مخططة). انقر على خط لعرض مغادراته.",
+  "Road ferries need the Trafikverket key": "تحتاج عبّارات الطرق إلى مفتاح Trafikverket",
+  "Malformed ferry snapshot": "لقطة عبّارات غير صالحة",
+  "Road ferries (Sweden)": "عبّارات الطرق (السويد)",
+  "About 40 road ferry routes, departures in the coming three hours": "نحو 40 خط عبّارة، والمغادرات خلال الساعات الثلاث القادمة",
+  "Every 2 minutes": "كل دقيقتين"
 }

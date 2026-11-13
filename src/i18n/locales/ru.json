@@ -4384,5 +4384,19 @@
   "Boat {line}": "Катер {line}",
   "Local traffic from {stop}": "Местный транспорт от {stop}",
   "No departures in the next hour": "В ближайший час отправлений нет",
-  "stop {platform}": "платформа {platform}"
+  "stop {platform}": "платформа {platform}",
+  "Next departures:": "Ближайшие отправления:",
+  "Timetable and messages": "Расписание и сообщения",
+  "ROAD FERRY · {route}": "АВТОПАРОМ · {route}",
+  "With a message from Trafikverket": "С сообщением Trafikverket",
+  "Departures without a message": "Отправления без сообщений",
+  "Ferry data unavailable": "Данные о паромах недоступны",
+  "NEXT DEPARTURE": "СЛЕДУЮЩЕЕ ОТПРАВЛЕНИЕ",
+  "Write the next departure time beside each ferry route": "Показывать время следующего отправления рядом с каждой паромной линией",
+  "Dots are Trafikverket’s road ferry routes with their next departures in the coming three hours and Trafikverket’s messages for the route (cancellations, reduced capacity, planned closures). Click a route for its departures.": "Точки — паромные линии Trafikverket с ближайшими отправлениями на три часа вперёд и сообщениями Trafikverket по линии (отмены, сниженная вместимость, плановые закрытия). Нажмите на линию, чтобы увидеть отправления.",
+  "Road ferries need the Trafikverket key": "Автопаромам нужен ключ Trafikverket",
+  "Malformed ferry snapshot": "Неверный снимок данных о паромах",
+  "Road ferries (Sweden)": "Автопаромы (Швеция)",
+  "About 40 road ferry routes, departures in the coming three hours": "Около 40 паромных линий, отправления на три часа вперёд",
+  "Every 2 minutes": "Каждые 2 минуты"
 }

@@ -4218,5 +4218,19 @@
   "Boat {line}": "Boot {line}",
   "Local traffic from {stop}": "Nahverkehr ab {stop}",
   "No departures in the next hour": "Keine Abfahrten in der nächsten Stunde",
-  "stop {platform}": "Steig {platform}"
+  "stop {platform}": "Steig {platform}",
+  "Next departures:": "Nächste Abfahrten:",
+  "Timetable and messages": "Fahrplan und Meldungen",
+  "ROAD FERRY · {route}": "STRASSENFÄHRE · {route}",
+  "With a message from Trafikverket": "Mit einer Meldung von Trafikverket",
+  "Departures without a message": "Abfahrten ohne Meldung",
+  "Ferry data unavailable": "Fährdaten nicht verfügbar",
+  "NEXT DEPARTURE": "NÄCHSTE ABFAHRT",
+  "Write the next departure time beside each ferry route": "Die nächste Abfahrtszeit neben jede Fährverbindung schreiben",
+  "Dots are Trafikverket’s road ferry routes with their next departures in the coming three hours and Trafikverket’s messages for the route (cancellations, reduced capacity, planned closures). Click a route for its departures.": "Die Punkte sind die Straßenfährverbindungen von Trafikverket mit ihren nächsten Abfahrten in den kommenden drei Stunden und den Meldungen von Trafikverket zur Verbindung (Ausfälle, verringerte Kapazität, geplante Sperrungen). Eine Verbindung anklicken, um ihre Abfahrten zu sehen.",
+  "Road ferries need the Trafikverket key": "Die Straßenfähren brauchen den Trafikverket-Schlüssel",
+  "Malformed ferry snapshot": "Fehlerhafter Fähren-Snapshot",
+  "Road ferries (Sweden)": "Straßenfähren (Schweden)",
+  "About 40 road ferry routes, departures in the coming three hours": "Etwa 40 Fährverbindungen, Abfahrten in den kommenden drei Stunden",
+  "Every 2 minutes": "Alle 2 Minuten"
 }

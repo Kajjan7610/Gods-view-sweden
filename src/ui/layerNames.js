@@ -58,6 +58,7 @@ export const LAYER_NAME_KEYS = Object.freeze({
   'speed-cameras': msg('Speed Cameras (Sweden)'),
   'river-flow': msg('River Flow (Sweden)'),
   'gamma-radiation': msg('Radiation (Sweden)'),
+  'road-ferries': msg('Road ferries (Sweden)'),
   aurora: msg('Aurora Forecast'),
   'smhi-weather': msg('Weather Now (Sweden)'),
   'wildlife-sightings': msg('Wildlife Sightings'),

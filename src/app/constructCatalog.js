@@ -51,6 +51,7 @@ import { createApplicationHeritageRemains } from './layers/heritageRemains.js';
 import { createApplicationSpeedCameras } from './layers/speedCameras.js';
 import { createApplicationRiverFlow } from './layers/riverFlow.js';
 import { createApplicationGammaRadiation } from './layers/gammaRadiation.js';
+import { createApplicationRoadFerries } from './layers/roadFerries.js';
 import { createApplicationAurora } from './layers/aurora.js';
 import { createApplicationSmhiWeather } from './layers/smhiWeather.js';
 import { createApplicationGhostMaps } from './layers/ghostMaps.js';
@@ -239,6 +240,10 @@ export function createApplicationCatalog({
         }),
         createApplicationGammaRadiation({
           source: sources['gamma-radiation'],
+          terrain: surface.terrain,
+        }),
+        createApplicationRoadFerries({
+          source: sources['road-ferries'],
           terrain: surface.terrain,
         }),
         createApplicationAurora({

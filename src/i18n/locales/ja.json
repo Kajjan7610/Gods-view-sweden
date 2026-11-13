@@ -4135,5 +4135,19 @@
   "Boat {line}": "船 {line}",
   "Local traffic from {stop}": "{stop} 発の地域交通",
   "No departures in the next hour": "今後1時間の出発はありません",
-  "stop {platform}": "乗り場 {platform}"
+  "stop {platform}": "乗り場 {platform}",
+  "Next departures:": "次の出発:",
+  "Timetable and messages": "時刻表とお知らせ",
+  "ROAD FERRY · {route}": "道路フェリー · {route}",
+  "With a message from Trafikverket": "Trafikverket からのお知らせあり",
+  "Departures without a message": "お知らせのない出発",
+  "Ferry data unavailable": "フェリーのデータを取得できません",
+  "NEXT DEPARTURE": "次の出発",
+  "Write the next departure time beside each ferry route": "各フェリー航路の横に次の出発時刻を表示",
+  "Dots are Trafikverket’s road ferry routes with their next departures in the coming three hours and Trafikverket’s messages for the route (cancellations, reduced capacity, planned closures). Click a route for its departures.": "点は Trafikverket の道路フェリー航路で、今後3時間の次の出発と、航路に関する Trafikverket のお知らせ（運休、輸送力の低下、予定された閉鎖）を示します。航路をクリックすると出発一覧を表示します。",
+  "Road ferries need the Trafikverket key": "道路フェリーには Trafikverket のキーが必要です",
+  "Malformed ferry snapshot": "フェリーのスナップショットが不正です",
+  "Road ferries (Sweden)": "道路フェリー（スウェーデン）",
+  "About 40 road ferry routes, departures in the coming three hours": "約40のフェリー航路、今後3時間の出発",
+  "Every 2 minutes": "2分ごと"
 }

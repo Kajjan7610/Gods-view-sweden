@@ -45,6 +45,7 @@ Två nivåer gäller:
 | Väglag och händelser (olyckor, avstängda vägar, vägarbeten, hinder, färjor) | Trafikverket, `RoadCondition` och `Situation` | Road Conditions (Sweden), under Events |
 | Nederbördsradar, Norden (var 5:e minut, senaste timmen) | SMHI, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Nordics) |
 | Nederbördsradar, Europa inkl. Norge, Finland, Danmark och Baltikum (var 5:e minut) | EUMETNET OPERA, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Europe) |
+| Vägfärjor: Trafikverkets ca 40 färjeleder med nästa avgångar de kommande tre timmarna och nästa avgångstid bredvid varje led; gula där Trafikverket har ett meddelande för leden (inställda turer, nedsatt kapacitet, planerade avstängningar) | Trafikverket, objekt `FerryRoute`, `FerryAnnouncement` och färjemeddelanden i `Situation` (befintlig nyckel) | Road ferries (Sweden) / Vägfärjor, under Movement |
 | Vägväder: ca 830 väderstationer längs vägarna (vägbanans och luftens temperatur, daggpunkt, vind, sikt, nederbörd; halkrisk markeras) | Trafikverket, objekt `WeatherMeasurepoint` | Road Weather (Sweden), under Events |
 | Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk), samt VMA och krisnyheter som punkter | SMHI, IBWW-varningar (CC BY 4.0) och Krisinformation.se (MSB); ingen nyckel | Weather Warnings (Sweden), under Weather |
 | Polisens händelser (de 500 senaste notiserna, ca 10 dagar), placerade vid kommunens centralort | Polismyndigheten, `polisen.se/api/events` (öppna data, ange källan) | Police Events (Sweden), under Events |
@@ -108,6 +109,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Butikskedjor (Sverige) | OpenStreetMap · Wikidata · SCB | Nio kedjors butiker och apotek i hela Sverige; kartlagda av frivilliga | Ögonblicksbild i appen, byggs om för hand | ODbL (OpenStreetMap) · CC0 1.0 (Wikidata, SCB) |
 | SE | Väglag (Sverige) | Trafikverket | Väglag och aktuella händelser i hela Sverige | Var 3:e minut | CC0 1.0 |
 | SE | Vägväder (Sverige) | Trafikverket | Cirka 830 vägväderstationer | Var 5:e minut | CC0 1.0 |
+| SE | Vägfärjor (Sverige) | Trafikverket | Omkring 40 färjeleder, avgångar de kommande tre timmarna | Varannan minut | CC0 1.0 |
 | SE | Polishändelser (Sverige) | Polismyndigheten | De 500 senaste notiserna, cirka tio dagar, hela Sverige | Var 5:e minut | Öppna data, källan anges |
 | SE | Kollektivtrafikstörningar (Sverige) | Trafiklab (Samtrafiken) | Störningar vid hållplatserna hos 16 regionala trafikbolag | Var 15:e minut | CC0 1.0 |
 | +SE | Luftkvalitet | SMHI | Cirka 75 mätstationer på den europeiska EAQI-skalan. Originalet: Kanadensiska stationer (ECCC AQHI) | Varje timme | CC BY 4.0 (SMHI); EAQI-indexet räknas fram av appen |
@@ -399,6 +401,23 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-13 (vägfärjor)
+- Nytt lager **Vägfärjor (Sverige)** (delningstoken `10`) under Movement,
+  bredvid kollektivtrafiken: Trafikverkets ca 40 färjeleder som prickar med
+  nästa avgångstid bredvid. Klick på en led visar hamnarna, Trafikverkets
+  meddelande för leden och de närmaste avgångarna de kommande tre timmarna
+  med Trafikverkets noter (t.ex. kallelseturer). Gul prick betyder att
+  Trafikverket har ett meddelande med text för leden, till exempel inställd
+  trafik på Holmöleden i hårt väder; varje led har också en stående
+  situation med bara ledens namn, och den räknas inte som meddelande.
+- Källa: Trafikverkets öppna API (CC0), objekten `FerryRoute`,
+  `FerryAnnouncement` och `Situation` med meddelandetypen Färjor, i ett
+  enda anrop med den befintliga nyckeln `TRAFIKVERKET_API_KEY`. Servern
+  frågar högst varannan minut medan lagret är på. Inga personuppgifter.
+- Forkens egna lager har fått delningstoken `0c`–`0z` i tur och ordning
+  medan `00`–`0b` lämnas åt originalets nya lager; nu när `0z` är använd
+  fortsätter forken på `10`.
 
 ### 2026-11-13 (lokaltrafikens avgångar i stadsdossiern)
 - Stadsdossiern visar nu, bredvid tågen och flygen, de närmaste bussarna,

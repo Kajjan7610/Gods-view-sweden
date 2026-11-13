@@ -4135,5 +4135,19 @@
   "Boat {line}": "渡輪 {line}",
   "Local traffic from {stop}": "從 {stop} 出發的在地交通",
   "No departures in the next hour": "未來一小時內沒有發車",
-  "stop {platform}": "月台 {platform}"
+  "stop {platform}": "月台 {platform}",
+  "Next departures:": "下一班出發：",
+  "Timetable and messages": "時刻表與通知",
+  "ROAD FERRY · {route}": "公路渡輪 · {route}",
+  "With a message from Trafikverket": "有 Trafikverket 的通知",
+  "Departures without a message": "無通知的班次",
+  "Ferry data unavailable": "渡輪資料無法取得",
+  "NEXT DEPARTURE": "下一班",
+  "Write the next departure time beside each ferry route": "在每條渡輪航線旁顯示下一班出發時間",
+  "Dots are Trafikverket’s road ferry routes with their next departures in the coming three hours and Trafikverket’s messages for the route (cancellations, reduced capacity, planned closures). Click a route for its departures.": "圓點是 Trafikverket 的公路渡輪航線，顯示未來三小時內的下一班出發以及 Trafikverket 對該航線的通知（停航、運能降低、計畫關閉）。點擊航線檢視其出發班次。",
+  "Road ferries need the Trafikverket key": "公路渡輪需要 Trafikverket 金鑰",
+  "Malformed ferry snapshot": "渡輪快照格式錯誤",
+  "Road ferries (Sweden)": "公路渡輪（瑞典）",
+  "About 40 road ferry routes, departures in the coming three hours": "約 40 條渡輪航線，未來三小時的出發",
+  "Every 2 minutes": "每 2 分鐘"
 }

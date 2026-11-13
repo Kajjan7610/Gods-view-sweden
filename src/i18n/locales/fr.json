@@ -4301,5 +4301,19 @@
   "Boat {line}": "Bateau {line}",
   "Local traffic from {stop}": "Transports locaux depuis {stop}",
   "No departures in the next hour": "Aucun départ dans l’heure qui vient",
-  "stop {platform}": "quai {platform}"
+  "stop {platform}": "quai {platform}",
+  "Next departures:": "Prochains départs :",
+  "Timetable and messages": "Horaires et messages",
+  "ROAD FERRY · {route}": "BAC ROUTIER · {route}",
+  "With a message from Trafikverket": "Avec un message de Trafikverket",
+  "Departures without a message": "Départs sans message",
+  "Ferry data unavailable": "Données des bacs indisponibles",
+  "NEXT DEPARTURE": "PROCHAIN DÉPART",
+  "Write the next departure time beside each ferry route": "Écrire l’heure du prochain départ à côté de chaque liaison",
+  "Dots are Trafikverket’s road ferry routes with their next departures in the coming three hours and Trafikverket’s messages for the route (cancellations, reduced capacity, planned closures). Click a route for its departures.": "Les points sont les liaisons de bacs routiers de Trafikverket avec leurs prochains départs dans les trois heures à venir et les messages de Trafikverket pour la liaison (annulations, capacité réduite, fermetures prévues). Cliquez sur une liaison pour voir ses départs.",
+  "Road ferries need the Trafikverket key": "Les bacs routiers ont besoin de la clé Trafikverket",
+  "Malformed ferry snapshot": "Instantané des bacs mal formé",
+  "Road ferries (Sweden)": "Bacs routiers (Suède)",
+  "About 40 road ferry routes, departures in the coming three hours": "Environ 40 liaisons de bacs, départs dans les trois heures à venir",
+  "Every 2 minutes": "Toutes les 2 minutes"
 }
