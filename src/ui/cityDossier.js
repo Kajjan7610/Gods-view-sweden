@@ -60,6 +60,13 @@ const LIVE_PARTS = Object.freeze([
   ['cameras', msg('Speed cameras')],
   ['kris', msg('Crisis information')],
 ]);
+/** Trafiklab's local transport modes, as a departure row names them. */
+const LOCAL_MODES = Object.freeze({
+  BUS: msg('Bus {line}'),
+  TRAM: msg('Tram {line}'),
+  METRO: msg('Metro {line}'),
+  BOAT: msg('Boat {line}'),
+});
 const SWEDEN = Object.freeze({
   west: 10.5,
   south: 55,
@@ -1040,9 +1047,11 @@ export function createCityDossier({
   const partFailed = (field) =>
     Boolean(live?.failed?.includes(field)) ||
     (field === 'transit' &&
-      [live?.transit?.trains, live?.transit?.flights].some(
-        (part) => part?.error === true,
-      ));
+      [
+        live?.transit?.trains,
+        live?.transit?.flights,
+        live?.transit?.local,
+      ].some((part) => part?.error === true));
 
   /** "No answer from: Polisen, Traffic", or '' when every part answered. */
   function failedLine() {
@@ -1139,6 +1148,7 @@ export function createCityDossier({
                 set: clock(sun.set),
               }),
       trains: trainsView(live.transit?.trains),
+      local: localView(live.transit?.local),
       flights: flightsView(live.transit?.flights),
       kris: krisView(live.kris),
       aurora: auroraView(live.aurora),
@@ -1171,6 +1181,45 @@ export function createCityDossier({
         detail: [
           row.product,
           row.track ? t('track {track}', { track: row.track }) : null,
+          row.note,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      })),
+    };
+  }
+
+  /**
+   * The next buses, trams, metro trains and boats from the town's busiest
+   * stop; null without the Trafiklab Realtime key or a stop.
+   */
+  function localView(local) {
+    if (!local?.stop) return null;
+    const vehicle = (row) =>
+      LOCAL_MODES[row.mode]
+        ? t(LOCAL_MODES[row.mode], { line: row.line ?? '' }).trim()
+        : null;
+    return {
+      title: t('Local traffic from {stop}', { stop: local.stop }),
+      empty: local.departures.length ? '' : t('No departures in the next hour'),
+      items: local.departures.map((row) => ({
+        key: `${row.mode}:${row.line}:${row.planned}:${row.destination}`,
+        time: clock(row.planned),
+        destination: row.destination || '—',
+        status: row.canceled
+          ? t('Cancelled')
+          : row.delayMinutes > 0
+            ? t('{time} (+{minutes} min)', {
+                time: clock(row.expected),
+                minutes: row.delayMinutes,
+              })
+            : '',
+        late: row.canceled || row.delayMinutes > 0,
+        detail: [
+          vehicle(row),
+          row.platform
+            ? t('stop {platform}', { platform: row.platform })
+            : null,
           row.note,
         ]
           .filter(Boolean)
@@ -1452,6 +1501,7 @@ export function createCityDossier({
         'SCB · Kolada · Valmyndigheten · Wikidata · Wikipedia · SMHI · Polisen', // i18n-ignore: provider names
         live?.transit?.trains?.station ? 'Trafikverket' : null, // i18n-ignore: provider name
         live?.transit?.flights?.airports?.length ? 'Swedavia' : null, // i18n-ignore: provider name
+        live?.transit?.local?.stop ? 'Trafiklab (CC BY 4.0)' : null, // i18n-ignore: provider name
         live?.kris ? 'Krisinformation.se' : null, // i18n-ignore: provider name
         live?.aurora?.level ? 'NOAA SWPC' : null, // i18n-ignore: provider name
         live?.cameras && !live?.transit?.trains?.station

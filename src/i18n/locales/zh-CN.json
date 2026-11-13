@@ -4127,5 +4127,13 @@
   "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI：CC BY 4.0；Sjöfartsverket ViVa（SEA_WEATHER_SOURCE=viva）：无公开许可",
   "Photo: {author} · {licence}": "照片：{author} · {licence}",
   "Coat of arms: {author} · {licence}": "徽章：{author} · {licence}",
-  "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "2D 和节省模式下的 Esri 卫星影像。仅含 Basemaps 的免费 ArcGIS Location Platform API 密钥，限于 http://localhost:4173；没有密钥时 2D 地图为 OpenStreetMap"
+  "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "2D 和节省模式下的 Esri 卫星影像。仅含 Basemaps 的免费 ArcGIS Location Platform API 密钥，限于 http://localhost:4173；没有密钥时 2D 地图为 OpenStreetMap",
+  "Next buses, trams, metro and boats from the town’s busiest stop in the city panel: Trafiklab Realtime APIs key": "在城市面板中显示从城镇最繁忙站点出发的下一班公交、有轨电车、地铁和渡船：Trafiklab Realtime APIs 密钥",
+  "Bus {line}": "公交 {line}",
+  "Tram {line}": "有轨电车 {line}",
+  "Metro {line}": "地铁 {line}",
+  "Boat {line}": "渡船 {line}",
+  "Local traffic from {stop}": "从 {stop} 出发的本地交通",
+  "No departures in the next hour": "未来一小时内没有发车",
+  "stop {platform}": "站台 {platform}"
 }

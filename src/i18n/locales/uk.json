@@ -4376,5 +4376,13 @@
   "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): опублікованої ліцензії немає",
   "Photo: {author} · {licence}": "Фото: {author} · {licence}",
   "Coat of arms: {author} · {licence}": "Герб: {author} · {licence}",
-  "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "Супутникові знімки Esri у 2D та в економному режимі. Безкоштовний API-ключ ArcGIS Location Platform лише з Basemaps, обмежений http://localhost:4173; без нього 2D-мапа — OpenStreetMap"
+  "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "Супутникові знімки Esri у 2D та в економному режимі. Безкоштовний API-ключ ArcGIS Location Platform лише з Basemaps, обмежений http://localhost:4173; без нього 2D-мапа — OpenStreetMap",
+  "Next buses, trams, metro and boats from the town’s busiest stop in the city panel: Trafiklab Realtime APIs key": "Найближчі автобуси, трамваї, метро й катери від найжвавішої зупинки міста на панелі міста: ключ Trafiklab Realtime APIs",
+  "Bus {line}": "Автобус {line}",
+  "Tram {line}": "Трамвай {line}",
+  "Metro {line}": "Метро {line}",
+  "Boat {line}": "Катер {line}",
+  "Local traffic from {stop}": "Місцевий транспорт від {stop}",
+  "No departures in the next hour": "Найближчу годину відправлень немає",
+  "stop {platform}": "платформа {platform}"
 }

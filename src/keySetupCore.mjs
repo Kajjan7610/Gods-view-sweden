@@ -82,6 +82,16 @@ export const KEY_SETUP_KEYS = Object.freeze([
     tier: 'free',
   }),
   Object.freeze({
+    id: 'trafiklab-realtime',
+    title: 'TRAFIKLAB REALTIME', // i18n-ignore: provider product name
+    unlocks: msg(
+      'Next buses, trams, metro and boats from the town’s busiest stop in the city panel: Trafiklab Realtime APIs key',
+    ),
+    getUrl: 'https://developer.trafiklab.se',
+    envVars: Object.freeze(['TRAFIKLAB_REALTIME_KEY']),
+    tier: 'free',
+  }),
+  Object.freeze({
     id: 'swedavia',
     title: 'SWEDAVIA', // i18n-ignore: provider product name
     unlocks: msg(

@@ -4,13 +4,16 @@ import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 import { TRAFIKVERKET_API_URL, xmlAttr } from './trafikverketProxy.js';
 import { greatCircleKm } from '../../src/geoDistance.js';
 import { createSwedaviaFlights } from './cityFlights.js';
+import { createLocalDepartures } from './cityLocalTransit.js';
 import { createAirportIndex } from './ourAirports.js';
 
 // The city dossier's live transport: the next departures from the town's
 // railway station (Trafikverket, CC0, the existing TRAFIKVERKET_API_KEY),
-// plus the nearby Swedavia airports' flights (cityFlights.js). Keys stay
-// server-side; each part is simply absent without its key. Stations are read
-// once a day, departures every minute.
+// the next buses, trams, metro trains and boats from the town's busiest stop
+// (Trafiklab Realtime, cityLocalTransit.js), plus the nearby Swedavia
+// airports' flights (cityFlights.js). Keys stay server-side; each part is
+// simply absent without its key. Stations are read once a day, departures
+// every minute.
 const STATIONS_TTL_MS = 24 * 60 * 60_000;
 const DEPARTURES_TTL_MS = 60_000;
 const CACHE_MAX = 200;
@@ -275,6 +278,7 @@ export function cityTransitProxy({
   // One Swedavia reader for the dossier and the airport board: both read the
   // same day lists, so the board costs no extra calls while the dossier shows.
   const swedavia = createSwedaviaFlights({ fetchJson, now, env });
+  const localTransit = createLocalDepartures({ fetchJson, now, env });
 
   async function handler(req, res) {
     const json = respond(res);
@@ -298,13 +302,15 @@ export function cityTransitProxy({
       return json(400, { error: 'lat_lon_required' });
     if (!allow(clientKey(req))) return json(429, { error: 'rate_limited' });
     const point = { latitude, longitude };
-    const [rail, air] = await Promise.allSettled([
+    const [rail, air, local] = await Promise.allSettled([
       trains(point, town),
       swedavia.nearby(point),
+      localTransit.nearby(point, town),
     ]);
     for (const [label, result] of [
       ['trains', rail],
       ['flights', air],
+      ['local', local],
     ])
       if (result.status === 'rejected')
         console.warn(`[city-transit] ${label}: ${result.reason?.message}`);
@@ -319,6 +325,10 @@ export function cityTransitProxy({
             ? null
             : { airports: air.value }
           : { airports: [], error: true },
+      local:
+        local.status === 'fulfilled'
+          ? local.value
+          : { stop: null, departures: [], error: true },
       fetchedAt: now(),
     });
   }

@@ -588,6 +588,13 @@ export const DATA_CREDITS = [
       '<a href="https://www.svk.se/om-kraftsystemet/kontrollrummet/" target="_blank" rel="noopener">Svenska kraftnät, Kontrollrummet</a>',
   },
   {
+    key: 'trafiklab-realtime',
+    html:
+      'City panel local traffic: data from ' +
+      '<a href="https://www.trafiklab.se" target="_blank" rel="noopener">Trafiklab.se</a> (Trafiklab Realtime APIs, ' +
+      '<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>)',
+  },
+  {
     key: 'transit-alerts',
     html:
       'Public-transport disruptions (Sweden): ' +

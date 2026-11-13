@@ -69,7 +69,7 @@ Två nivåer gäller:
 | Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
 | Stadsdossier: när vyn stannar lågt över en svensk ort visar panelen STAD i högerkanten stadsvapen, foto och inledning, tätortens och kommunens folkmängd med kurva, skattesats, inkomst, arbetslöshet och kommunvalet, tolv nyckeltal under STATISTIK (skola, trygghet, hälsa, ekonomi, miljö och besökare, med hela Sveriges värde och kommunens plats bland kommunerna), samt läget just nu (väder, luft, varningar, Polisen, sol) och en länk till ortens P4-kanal hos Sveriges Radio | Kolada (RKA), Wikidata (CC0), Wikipedia (CC BY-SA 4.0), SMHI, Polisen; ingen nyckel | Panelen STAD i högerkanten (dyker upp vid första besöket) |
-| Stadsdossierns flikar Sevärt (slott, kyrkor, museer m.m. utpekade på kartan), besökspass, tåg från stadens station, VMA-banner och norrsken i natt | Wikidata (CC0), Trafikverket, Krisinformation.se, NOAA SWPC | Panelen STAD |
+| Stadsdossierns flikar Sevärt (slott, kyrkor, museer m.m. utpekade på kartan), besökspass, tåg från stadens station, bussar, spårvagnar, tunnelbana och båtar från stadens mest trafikerade hållplats, VMA-banner och norrsken i natt | Wikidata (CC0), Trafikverket, Trafiklab Realtime (CC BY 4.0), Krisinformation.se, NOAA SWPC | Panelen STAD |
 | Flygtavla: Swedavias tio flygplatser, hela dagens avgångar och ankomster, köerna i säkerhetskontrollen över terminalerna, följ planet i luften och dagens rutter på globen | Swedavia FlightInfo och WaitTime (gratisnycklar) | Kortet över en Swedavia-flygplats och tavlans egen panel |
 | Flygväder: METAR och TAF för flygplatserna | NOAA Aviation Weather Center (ingen nyckel) | Flygtavlan och cockpit |
 | Cockpit: knapp vid kartan och C-tangenten när ett plan, fartyg eller en satellit är valt, Swedavias rader för planet, svensk lägesbild i genomgången (ort och län, SMHI:s väder, varningar och VMA) | Swedavia, SMHI, Krisinformation.se, NOAA (METAR/TAF) | Cockpit |
@@ -359,6 +359,7 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 | `TRAFIKVERKET_API_KEY` | kameror, tåg, väglag, händelser | data.trafikverket.se |
 | `TRAFIKLAB_GTFS_RT_KEY` | bussar m.m. live | trafiklab.se → GTFS Regional Realtime |
 | `TRAFIKLAB_GTFS_STATIC_KEY` | linjenummer och fordonstyp | trafiklab.se → GTFS Regional Static |
+| `TRAFIKLAB_REALTIME_KEY` | lokaltrafikens avgångar i stadsdossiern | trafiklab.se → Trafiklab Realtime APIs |
 | `SWEDAVIA_FLIGHTINFO_KEY` | avgångar och ankomster i dossiern, tavlan och cockpit | apideveloper.swedavia.se → FlightInfo Free |
 | `SWEDAVIA_WAITTIME_KEY` | köerna i säkerhetskontrollen | apideveloper.swedavia.se → WaitTime Free |
 | `ADSBDB_ROUTES` | `on`: flygrutter från adsbdb, vars ruttdata inte får publiceras utan David J Taylors tillstånd; tom (standard): inga rutter | ingen nyckel |
@@ -398,6 +399,21 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-13 (lokaltrafikens avgångar i stadsdossiern)
+- Stadsdossiern visar nu, bredvid tågen och flygen, de närmaste bussarna,
+  spårvagnarna, tunnelbanetågen och båtarna från stadens mest trafikerade
+  hållplats den närmaste timmen: linje, destination, tid, försening, läge och
+  Trafiklabs störningsrubrik. Hållplatsen är den med flest avgångar per dygn
+  bland hållplatserna inom 8 km som bär stadens namn. Tågen visas inte här
+  igen; de kommer från Trafikverket.
+- Källa: Trafiklab Realtime APIs (CC BY 4.0, "Trafiklab (CC BY 4.0)" i
+  dossierns källrad och i rutan Data attribution med länk till licensen).
+  Ny gratisnyckel `TRAFIKLAB_REALTIME_KEY` (Bronze: 100 000 anrop i månaden,
+  25 i minuten), som kan läggas in under KOPPLA PÅ. Appen stannar vid 3 000
+  anrop per dygn (93 000 en månad med 31 dagar) och 20 i minuten. Hållplatsen
+  slås upp en gång per stad och dygn, avgångarna högst en gång i minuten, och
+  dossiern frågar var tionde minut. Nyckeln stannar på servern.
 
 ### 2026-11-13 (Mapillarys logga i Street Levels källhänvisning)
 - Mapillarys villkor (§ 11) kräver att appar som visar Mapillarys bilder

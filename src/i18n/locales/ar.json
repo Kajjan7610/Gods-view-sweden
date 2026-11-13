@@ -4542,5 +4542,13 @@
   "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0؛ Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): لا ترخيص منشورًا",
   "Photo: {author} · {licence}": "صورة: {author} · {licence}",
   "Coat of arms: {author} · {licence}": "شعار النبالة: {author} · {licence}",
-  "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "صور الأقمار الصناعية من Esri في الوضع ثنائي الأبعاد ووضع التوفير. مفتاح API مجاني من ArcGIS Location Platform مع Basemaps فقط، ومقيد بـ http://localhost:4173؛ وبدونه تكون الخريطة ثنائية الأبعاد OpenStreetMap"
+  "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "صور الأقمار الصناعية من Esri في الوضع ثنائي الأبعاد ووضع التوفير. مفتاح API مجاني من ArcGIS Location Platform مع Basemaps فقط، ومقيد بـ http://localhost:4173؛ وبدونه تكون الخريطة ثنائية الأبعاد OpenStreetMap",
+  "Next buses, trams, metro and boats from the town’s busiest stop in the city panel: Trafiklab Realtime APIs key": "الحافلات والترام والمترو والقوارب التالية من أكثر محطات المدينة ازدحامًا في لوحة المدينة: مفتاح Trafiklab Realtime APIs",
+  "Bus {line}": "حافلة {line}",
+  "Tram {line}": "ترام {line}",
+  "Metro {line}": "مترو {line}",
+  "Boat {line}": "قارب {line}",
+  "Local traffic from {stop}": "النقل المحلي من {stop}",
+  "No departures in the next hour": "لا مغادرات خلال الساعة القادمة",
+  "stop {platform}": "رصيف {platform}"
 }

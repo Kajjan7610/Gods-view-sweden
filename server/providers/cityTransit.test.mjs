@@ -190,6 +190,7 @@ test('the route answers trains only with the key, and never asks TomTom', async 
   const none = (await keyless('/?lat=60.67&lon=17.14')).body;
   assert.equal(none.trains, null);
   assert.equal(none.flights, null);
+  assert.equal(none.local, null);
   assert.equal((await keyless('/?lat=x')).status, 400);
 });
 test('the airport board route: one Swedavia airport, today or tomorrow', async () => {

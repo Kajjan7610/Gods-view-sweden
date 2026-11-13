@@ -273,7 +273,8 @@
     "{county}: {population}",
     "{value} t CO₂e",
     "{area} km²",
-    "{area} ha"
+    "{area} ha",
+    "Bus {line}"
   ],
   "es": [
     "1090 MHz",
@@ -458,7 +459,8 @@
     "{county}: {population}",
     "{value} t CO₂e",
     "{area} km²",
-    "{area} ha"
+    "{area} ha",
+    "Metro {line}"
   ],
   "fr": [
     "1090 MHz",
@@ -712,7 +714,9 @@
     "{hours} h {minutes} min",
     "{hours} h",
     "{area} km²",
-    "{area} ha"
+    "{area} ha",
+    "Bus {line}",
+    "Tram {line}"
   ],
   "it": [
     "1090 MHz",
@@ -944,7 +948,9 @@
     "{county}: {population}",
     "{value} t CO₂e",
     "{area} km²",
-    "{area} ha"
+    "{area} ha",
+    "Tram {line}",
+    "Metro {line}"
   ],
   "ja": [
     "1090 MHz",
@@ -1210,7 +1216,8 @@
     "{county}: {population}",
     "{value} t CO₂e",
     "{area} km²",
-    "{area} ha"
+    "{area} ha",
+    "Metro {line}"
   ],
   "ru": [
     "AIS: --",

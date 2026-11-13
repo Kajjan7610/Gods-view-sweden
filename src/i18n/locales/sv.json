@@ -4210,5 +4210,13 @@
   "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): ingen publicerad licens",
   "Photo: {author} · {licence}": "Foto: {author} · {licence}",
   "Coat of arms: {author} · {licence}": "Vapen: {author} · {licence}",
-  "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "Esris satellitbild i 2D och sparläget. Gratis API-nyckel från ArcGIS Location Platform med bara Basemaps, begränsad till http://localhost:4173; utan den är 2D-kartan OpenStreetMap"
+  "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "Esris satellitbild i 2D och sparläget. Gratis API-nyckel från ArcGIS Location Platform med bara Basemaps, begränsad till http://localhost:4173; utan den är 2D-kartan OpenStreetMap",
+  "Next buses, trams, metro and boats from the town’s busiest stop in the city panel: Trafiklab Realtime APIs key": "Nästa bussar, spårvagnar, tunnelbanetåg och båtar från stadens mest trafikerade hållplats i stadspanelen: nyckel till Trafiklab Realtime APIs",
+  "Bus {line}": "Buss {line}",
+  "Tram {line}": "Spårvagn {line}",
+  "Metro {line}": "Tunnelbana {line}",
+  "Boat {line}": "Båt {line}",
+  "Local traffic from {stop}": "Lokaltrafik från {stop}",
+  "No departures in the next hour": "Inga avgångar den närmaste timmen",
+  "stop {platform}": "läge {platform}"
 }
