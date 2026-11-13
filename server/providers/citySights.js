@@ -1,5 +1,6 @@
 import { readResponseJsonCapped } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
+import { createImageCredits } from './imageCredits.js';
 
 // Sights around a town (Swedish fork): castles and palaces, churches,
 // museums, ancient monuments and runestones, fortresses, lighthouses,
@@ -147,6 +148,46 @@ export function citySightsProxy({
   const retryAt = new Map();
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 300 });
+  const imageCredits = createImageCredits({
+    now,
+    async getJson(url) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+      try {
+        const response = await fetchImpl(url, {
+          signal: controller.signal,
+          redirect: 'manual',
+          headers: { Accept: 'application/json', 'User-Agent': USER_AGENT },
+        });
+        if (!response.ok) throw new Error(`upstream HTTP ${response.status}`);
+        return await readResponseJsonCapped(response, MAX_BODY_BYTES);
+      } finally {
+        clearTimeout(timer);
+      }
+    },
+  });
+
+  /**
+   * Each sight's picture with its author and licence; a picture without a
+   * licence to name is left out. `failed` keeps the answer out of the cache.
+   */
+  async function withCredits(list) {
+    const { credits, failed } = await imageCredits.lookup(
+      list.map((sight) => sight.image),
+    );
+    return {
+      failed,
+      value: list.map((sight) => {
+        if (!sight.image) return sight;
+        const imageCredit = credits.get(sight.image) ?? null;
+        return {
+          ...sight,
+          image: imageCredit ? sight.image : null,
+          imageCredit,
+        };
+      }),
+    };
+  }
 
   async function read(lat, lon) {
     const controller = new AbortController();
@@ -187,7 +228,9 @@ export function citySightsProxy({
       inFlight.set(
         key,
         read(lat, lon)
-          .then((value) => {
+          .then(withCredits)
+          .then(({ value, failed }) => {
+            if (failed) return value;
             kept.set(key, { value, at: now() });
             if (kept.size > CACHE_MAX) kept.delete(kept.keys().next().value);
             retryAt.delete(key);

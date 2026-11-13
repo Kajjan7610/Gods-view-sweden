@@ -267,9 +267,12 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   som är fria att använda med Valmyndigheten angiven som källa (val.se, "Om
   våra öppna data"). Valmyndigheten anges som källa.
 - **Wikipedia och Wikimedia Commons (text, foto och vapen i dossiern):**
-  texten är CC BY-SA 4.0 och länkas. Bilderna har egna licenser; panelen
-  och ortskortet länkar till bildens sida på Commons, där upphovsperson och
-  licens står.
+  texten är CC BY-SA 4.0 och länkas. Bilderna har egna licenser, ofta CC BY
+  eller CC BY-SA, som kräver att upphovsperson och licens anges vid bilden.
+  Servern läser båda ur filens metadata hos Commons (eller svenska
+  Wikipedia, för en fil den har själv), och panelen, ortskortet och Sevärt
+  visar till exempel "Foto: Listz3 · CC BY-SA 4.0" med länk till filens
+  sida. En bild utan licens att ange visas inte.
 - **OpenSky (flyg, originalets lager):** villkoren lästa 2026-11-11
   (opensky-network.org/about/terms-of-use). Licensen gäller bara ideell
   forskning och ideell utbildning; myndigheter kan få undantag efter
@@ -395,6 +398,18 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-13 (upphovsperson och licens vid dossierns bilder)
+- Fotona och stadsvapnen i stadsdossiern, på ortskortet och under Sevärt
+  är ofta CC BY eller CC BY-SA, som kräver att upphovspersonen och licensen
+  anges vid bilden; det stod bara "Foto: Wikimedia Commons". Servern läser
+  nu båda ur filens metadata hos Commons, högst 50 filer per anrop och
+  sparade en vecka, och korten visar till exempel "Vapen: Marmelad · CC
+  BY-SA 2.5" med länk till filens sida. En bild utan licens att ange, eller
+  vars uppgifter inte gick att läsa, visas inte. Provat: Uppsala, Göteborg,
+  Malmö och Stockholm, och 34 av 34 bilder under Sevärt i Uppsala.
+- Stadsvapnen som syns i README-bilderna står med upphovsperson och licens
+  i docs/media/README.md.
 
 ### 2026-11-13 (egen granskning av villkor och integritet)
 - Markhöjderna under kamerorna (`cctv_ground_heights.json`, från

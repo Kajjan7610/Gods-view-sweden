@@ -55,3 +55,10 @@ Kaj Obst captured the following files from God's Eye View Sverige (this fork) in
 - `sverige/kraftsystemet.webp`
 
 They are included as project documentation for this repository and are not covered by the project's MIT License. They show Google Photorealistic 3D Tiles and live public data layers (Trafikverket, Swedavia, SMHI, SCB, Kolada, Valmyndigheten, Wikidata, ENTSO-E and others) with the in-app attribution visible in frame; those elements remain subject to Google Maps Platform's and each data provider's terms. Keep the visible attribution intact. `kallor.webp` is a title card from the fork's promotional film.
+
+Municipal coats of arms from Wikimedia Commons appear in the city panel's header in these captures:
+
+- Uppsala (`stadsdossier-sevart.webp`): [Uppsala vapen.svg](https://commons.wikimedia.org/wiki/File:Uppsala_vapen.svg), by Marmelad, CC BY-SA 2.5
+- Göteborg (`stadsdossier-befolkning.webp`): [Göteborg kommunvapen - Riksarkivet Sverige.svg](https://commons.wikimedia.org/wiki/File:G%C3%B6teborg_kommunvapen_-_Riksarkivet_Sverige.svg), by Erik G, CC0
+- Malmö (`stadsdossier-val.webp`): [Malmö kommunvapen - Riksarkivet Sverige.png](https://commons.wikimedia.org/wiki/File:Malm%C3%B6_kommunvapen_-_Riksarkivet_Sverige.png), by Vladimir A. Sagerlund, CC BY-SA 3.0
+- Stockholm (`fartkameror.webp`): [Stockholm vapen bra.svg](https://commons.wikimedia.org/wiki/File:Stockholm_vapen_bra.svg), by Koyos, CC BY-SA 2.5

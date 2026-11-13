@@ -475,10 +475,13 @@ export function createCityDossier({
       key: arrival.key,
       name: arrival.town.name,
       county: arrival.town.county || '',
-      coatOfArms: town$?.coatOfArms || null,
-      image: arrival.facts?.wikipedia?.image || null,
-      imageCredit: commonsPage(arrival.facts?.wikipedia?.image),
-      coatOfArmsCredit: commonsPage(town$?.coatOfArms),
+      // A picture shows only with its author and licence.
+      coatOfArms: town$?.coatOfArmsCredit ? town$.coatOfArms : null,
+      image: arrival.facts?.wikipedia?.imageCredit
+        ? arrival.facts.wikipedia.image
+        : null,
+      imageCredit: photoCredit(arrival.facts?.wikipedia?.imageCredit),
+      coatOfArmsCredit: armsCredit(town$?.coatOfArmsCredit),
       stats,
     };
   }
@@ -807,9 +810,12 @@ export function createCityDossier({
           distance: t('{km} km', { km: oneDecimal(sight.km) }),
           chosen,
           article: chosen ? sight.article : null,
-          imageCredit: chosen ? commonsPage(sight.image) : null,
+          imageCredit: chosen ? photoCredit(sight.imageCredit) : null,
           // Commons' own thumbnail of the chosen sight's picture.
-          image: chosen && sight.image ? `${sight.image}?width=320` : null,
+          image:
+            chosen && sight.image && sight.imageCredit
+              ? `${sight.image}?width=320`
+              : null,
         };
       }),
     };
@@ -892,8 +898,8 @@ export function createCityDossier({
         value: t('{value} m above sea level', { value: whole(town.elevation) }),
       });
     return {
-      image: wiki?.image || null,
-      imageCredit: commonsPage(wiki?.image),
+      image: wiki?.imageCredit ? wiki.image : null,
+      imageCredit: photoCredit(wiki?.imageCredit),
       extract: wiki?.extract || '',
       rows,
       credit: wiki?.url
@@ -1423,8 +1429,8 @@ export function createCityDossier({
         .filter(Boolean)
         .join(' · '),
       visits: visitLine(),
-      coatOfArms: facts?.town?.coatOfArms || null,
-      coatOfArmsCredit: commonsPage(facts?.town?.coatOfArms),
+      coatOfArms: facts?.town?.coatOfArmsCredit ? facts.town.coatOfArms : null,
+      coatOfArmsCredit: armsCredit(facts?.town?.coatOfArmsCredit),
       status,
       error: status === 'error' ? t('Facts unavailable right now') : '',
       tab,
@@ -1553,6 +1559,31 @@ function watchPanelClass(documentRef, onChange) {
   observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
   return () => observer.disconnect();
 }
+
+/**
+ * A picture's credit line and its file page: the author and the licence, as
+ * CC BY and CC BY-SA ask, from the server's reading of the file's metadata.
+ * @param {{author?: string, licence?: string, page?: string}|null} credit
+ * @param {'photo'|'arms'} kind
+ * @returns {{text: string, url: string}|null}
+ */
+function imageCreditView(credit, kind) {
+  if (!credit?.licence || !credit.page) return null;
+  const values = {
+    author: credit.author || 'Wikimedia Commons', // i18n-ignore: site name
+    licence: credit.licence,
+  };
+  return {
+    text:
+      kind === 'arms'
+        ? t('Coat of arms: {author} · {licence}', values)
+        : t('Photo: {author} · {licence}', values),
+    url: credit.page,
+  };
+}
+
+export const photoCredit = (credit) => imageCreditView(credit, 'photo');
+export const armsCredit = (credit) => imageCreditView(credit, 'arms');
 
 /**
  * The Wikimedia Commons page of an image address, where its author and its

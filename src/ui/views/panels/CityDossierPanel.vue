@@ -46,7 +46,7 @@ watch(
 
         <section v-if="d.tab === 'about' && d.about" class="city-dossier-section" role="tabpanel">
           <img v-if="d.about.image" class="city-dossier-photo" :src="d.about.image" alt="" loading="lazy" referrerpolicy="no-referrer" />
-          <small v-if="d.about.imageCredit || d.coatOfArmsCredit" class="city-dossier-note city-dossier-credits"><a v-if="d.about.imageCredit" :href="d.about.imageCredit" target="_blank" rel="noopener noreferrer">{{ t('Photo: Wikimedia Commons') }}</a><a v-if="d.coatOfArmsCredit" :href="d.coatOfArmsCredit" target="_blank" rel="noopener noreferrer">{{ t('Coat of arms: Wikimedia Commons') }}</a></small>
+          <small v-if="d.about.imageCredit || d.coatOfArmsCredit" class="city-dossier-note city-dossier-credits"><a v-if="d.about.imageCredit" :href="d.about.imageCredit.url" target="_blank" rel="noopener noreferrer">{{ d.about.imageCredit.text }}</a><a v-if="d.coatOfArmsCredit" :href="d.coatOfArmsCredit.url" target="_blank" rel="noopener noreferrer">{{ d.coatOfArmsCredit.text }}</a></small>
           <p class="city-dossier-text">{{ d.about.extract }}</p>
           <dl v-if="d.about.rows.length" class="city-dossier-rows">
             <div v-for="row in d.about.rows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
@@ -179,7 +179,7 @@ watch(
               </button>
               <div v-if="item.chosen && (item.image || item.article)" class="city-dossier-sight-more">
                 <img v-if="item.image" :src="item.image" alt="" loading="lazy" referrerpolicy="no-referrer" />
-                <a v-if="item.imageCredit" class="city-dossier-note" :href="item.imageCredit" target="_blank" rel="noopener noreferrer">{{ t('Photo: Wikimedia Commons') }}</a>
+                <a v-if="item.imageCredit" class="city-dossier-note" :href="item.imageCredit.url" target="_blank" rel="noopener noreferrer">{{ item.imageCredit.text }}</a>
                 <a v-if="item.article" :href="item.article" target="_blank" rel="noopener noreferrer">{{ t('Read on Wikipedia') }}</a>
               </div>
             </li>
@@ -228,7 +228,7 @@ watch(
             <div v-for="stat in d.arrival.stats" :key="stat.label"><dd>{{ stat.value }}</dd><dt>{{ stat.label }}</dt></div>
           </dl>
           <button type="button" class="city-arrival-offer" @click="store.act('flyIn')">{{ t('Fly in and read more') }}<i aria-hidden="true">→</i></button>
-          <small v-if="d.arrival.imageCredit || d.arrival.coatOfArmsCredit" class="city-arrival-credit"><a v-if="d.arrival.imageCredit" :href="d.arrival.imageCredit" target="_blank" rel="noopener noreferrer">{{ t('Photo: Wikimedia Commons') }}</a><a v-if="d.arrival.coatOfArmsCredit" :href="d.arrival.coatOfArmsCredit" target="_blank" rel="noopener noreferrer">{{ t('Coat of arms: Wikimedia Commons') }}</a></small>
+          <small v-if="d.arrival.imageCredit || d.arrival.coatOfArmsCredit" class="city-arrival-credit"><a v-if="d.arrival.imageCredit" :href="d.arrival.imageCredit.url" target="_blank" rel="noopener noreferrer">{{ d.arrival.imageCredit.text }}</a><a v-if="d.arrival.coatOfArmsCredit" :href="d.arrival.coatOfArmsCredit.url" target="_blank" rel="noopener noreferrer">{{ d.arrival.coatOfArmsCredit.text }}</a></small>
         </div>
       </aside>
     </Transition>

@@ -3388,8 +3388,6 @@
   "No answer from: {sources}": "未回應：{sources}",
   "Speed cameras": "測速照相機",
   "Fly in and read more": "飛近並了解更多",
-  "Photo: Wikimedia Commons": "照片：Wikimedia Commons",
-  "Coat of arms: Wikimedia Commons": "徽章：Wikimedia Commons",
   "New stamp in your passport": "護照新增戳章",
   "wind {value} m/s": "風速 {value} 公尺/秒",
   "Measured at {station}": "測量站：{station}",
@@ -4126,5 +4124,7 @@
   "Every 15 minutes": "每 15 分鐘",
   "CC BY 4.0 (SMHI); the EAQI index is calculated by the app": "CC BY 4.0（SMHI）；EAQI 指數由應用程式計算",
   "About 70 stations on the coast; with ViVa about 160, also the large lakes and canals": "沿海約 70 個測站；使用 ViVa 時約 160 個，也包括大型湖泊與運河",
-  "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI：CC BY 4.0；Sjöfartsverket ViVa（SEA_WEATHER_SOURCE=viva）：無公開授權"
+  "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI：CC BY 4.0；Sjöfartsverket ViVa（SEA_WEATHER_SOURCE=viva）：無公開授權",
+  "Photo: {author} · {licence}": "照片：{author} · {licence}",
+  "Coat of arms: {author} · {licence}": "徽章：{author} · {licence}"
 }

@@ -3763,8 +3763,6 @@
   "No answer from: {sources}": "لا رد من: {sources}",
   "Speed cameras": "كاميرات السرعة",
   "Fly in and read more": "حلّق إلى هناك واقرأ المزيد",
-  "Photo: Wikimedia Commons": "الصورة: Wikimedia Commons",
-  "Coat of arms: Wikimedia Commons": "الشعار: Wikimedia Commons",
   "New stamp in your passport": "ختم جديد في جواز سفرك",
   "wind {value} m/s": "الرياح {value} م/ث",
   "Measured at {station}": "مقيس في {station}",
@@ -4541,5 +4539,7 @@
   "Every 15 minutes": "كل 15 دقيقة",
   "CC BY 4.0 (SMHI); the EAQI index is calculated by the app": "CC BY 4.0 (SMHI)؛ يحسب التطبيق مؤشر EAQI",
   "About 70 stations on the coast; with ViVa about 160, also the large lakes and canals": "نحو 70 محطة على الساحل؛ ومع ViVa نحو 160، وفي البحيرات الكبرى والقنوات أيضًا",
-  "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0؛ Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): لا ترخيص منشورًا"
+  "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0؛ Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): لا ترخيص منشورًا",
+  "Photo: {author} · {licence}": "صورة: {author} · {licence}",
+  "Coat of arms: {author} · {licence}": "شعار النبالة: {author} · {licence}"
 }

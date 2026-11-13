@@ -3463,8 +3463,6 @@
   "No answer from: {sources}": "Inget svar från: {sources}",
   "Speed cameras": "Fartkameror",
   "Fly in and read more": "Flyg in och läs mer",
-  "Photo: Wikimedia Commons": "Foto: Wikimedia Commons",
-  "Coat of arms: Wikimedia Commons": "Vapen: Wikimedia Commons",
   "New stamp in your passport": "Ny stämpel i passet",
   "wind {value} m/s": "vind {value} m/s",
   "Measured at {station}": "Mätt vid {station}",
@@ -4209,5 +4207,7 @@
   "Every 15 minutes": "Var 15:e minut",
   "CC BY 4.0 (SMHI); the EAQI index is calculated by the app": "CC BY 4.0 (SMHI); EAQI-indexet räknas fram av appen",
   "About 70 stations on the coast; with ViVa about 160, also the large lakes and canals": "Cirka 70 stationer längs kusten; med ViVa cirka 160, även i de stora sjöarna och kanalerna",
-  "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): ingen publicerad licens"
+  "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): ingen publicerad licens",
+  "Photo: {author} · {licence}": "Foto: {author} · {licence}",
+  "Coat of arms: {author} · {licence}": "Vapen: {author} · {licence}"
 }

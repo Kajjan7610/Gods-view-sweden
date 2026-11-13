@@ -3613,8 +3613,6 @@
   "No answer from: {sources}": "Нет ответа от: {sources}",
   "Speed cameras": "Камеры контроля скорости",
   "Fly in and read more": "Подлететь и узнать больше",
-  "Photo: Wikimedia Commons": "Фото: Wikimedia Commons",
-  "Coat of arms: Wikimedia Commons": "Герб: Wikimedia Commons",
   "New stamp in your passport": "Новый штамп в паспорте",
   "wind {value} m/s": "ветер {value} м/с",
   "Measured at {station}": "Измерено: {station}",
@@ -4375,5 +4373,7 @@
   "Every 15 minutes": "Каждые 15 минут",
   "CC BY 4.0 (SMHI); the EAQI index is calculated by the app": "CC BY 4.0 (SMHI); индекс EAQI рассчитывает приложение",
   "About 70 stations on the coast; with ViVa about 160, also the large lakes and canals": "Около 70 станций на побережье; с ViVa около 160, также на крупных озёрах и каналах",
-  "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): опубликованной лицензии нет"
+  "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): опубликованной лицензии нет",
+  "Photo: {author} · {licence}": "Фото: {author} · {licence}",
+  "Coat of arms: {author} · {licence}": "Герб: {author} · {licence}"
 }

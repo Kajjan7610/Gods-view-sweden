@@ -4,6 +4,7 @@ import { nearestSeat } from './regional/sweden.js';
 import { createScbPopulation } from './cityDossierScb.js';
 import { createElectionResults } from './cityDossierElection.js';
 import { createKoladaStats } from './cityDossierStats.js';
+import { createImageCredits } from './imageCredits.js';
 
 // The city dossier: facts about the Swedish town nearest a point, from three
 // open sources without keys. Kolada (RKA) has the municipality's key figures
@@ -325,6 +326,7 @@ export function cityDossierProxy({
   }
 
   const population = scb || createScbPopulation(getJson);
+  const imageCredits = createImageCredits({ getJson, now });
   const results = election || createElectionResults({ fetchImpl });
 
   async function loadFacts(seat) {
@@ -380,6 +382,29 @@ export function cityDossierProxy({
       wikipedia = null;
       wikipediaFailed = true;
     }
+    // The photo and the coat of arms carry their author and licence; one
+    // without a licence to name is left out.
+    const { credits, failed: creditsFailed } = await imageCredits.lookup([
+      wikipedia?.image,
+      town?.coatOfArms,
+    ]);
+    if (wikipedia?.image) {
+      const imageCredit = credits.get(wikipedia.image) ?? null;
+      wikipedia = {
+        ...wikipedia,
+        image: imageCredit ? wikipedia.image : null,
+        imageCredit,
+      };
+    }
+    let townFacts = town;
+    if (town?.coatOfArms) {
+      const coatOfArmsCredit = credits.get(town.coatOfArms) ?? null;
+      townFacts = {
+        ...town,
+        coatOfArms: coatOfArmsCredit ? town.coatOfArms : null,
+        coatOfArmsCredit,
+      };
+    }
     const municipality = mergeMunicipality(
       value(kolada),
       value(scbMonthly),
@@ -397,9 +422,9 @@ export function cityDossierProxy({
     ].some((result) => result.status === 'rejected');
     return {
       municipality,
-      town,
+      town: townFacts,
       wikipedia,
-      partial: partial || wikipediaFailed,
+      partial: partial || wikipediaFailed || creditsFailed,
       fetchedAt: now(),
     };
   }
