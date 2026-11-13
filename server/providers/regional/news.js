@@ -58,9 +58,9 @@ function normalizeRssArticles(xml, limit = 5) {
 }
 
 // Swedish fork: Google News' terms allow its headlines only for personal,
-// non-commercial use and not for public display, so the panel reads GDELT
-// (free with the GDELT Project credited). REGIONAL_NEWS_GOOGLE=on brings
-// Google News back for one's own use.
+// non-commercial use and not for public display, so it is off; outside
+// Sweden the cockpit reads GDELT (free with the GDELT Project credited).
+// REGIONAL_NEWS_GOOGLE=on brings Google News back for one's own use.
 const useGoogleNews = () => process.env.REGIONAL_NEWS_GOOGLE === 'on';
 
 // Over Sweden the local press writes in Swedish, so the search does too and
@@ -82,6 +82,10 @@ async function fetchRegionalNews(place) {
     const found = await fetchGoogleNews(query, swedish);
     if (found) return found;
   }
+  // Over Sweden GDELT almost always answered 429 when tried (2026-11-13), so
+  // Swedish places ask no one: the panels' news there is Krisinformation's.
+  if (swedish)
+    return { status: 'unavailable', query, articles: [], source: null };
   return fetchGdeltNews(query, swedish);
 }
 
@@ -122,6 +126,24 @@ async function fetchGoogleNews(query, swedish) {
   return null;
 }
 
+// GDELT answers 429 to more than one request every five seconds per address:
+// requests wait their turn, and a 429 leaves GDELT alone for a minute.
+const GDELT_SPACING_MS = 5_500;
+const GDELT_BACKOFF_MS = 60_000;
+let gdeltQueue = Promise.resolve();
+let gdeltNextAt = 0;
+let gdeltBackoffUntil = 0;
+
+function gdeltTurn() {
+  const turn = gdeltQueue.then(async () => {
+    const wait = gdeltNextAt - Date.now();
+    if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+    gdeltNextAt = Date.now() + GDELT_SPACING_MS;
+  });
+  gdeltQueue = turn.catch(() => {});
+  return turn;
+}
+
 async function fetchGdeltNews(query, swedish) {
   const phrase = `"${String(query).replace(/["\\]/g, ' ').trim()}"`;
   const params = new URLSearchParams({
@@ -132,7 +154,10 @@ async function fetchGdeltNews(query, swedish) {
     sort: 'datedesc',
     timespan: swedish ? '7d' : '48h',
   });
+  if (Date.now() < gdeltBackoffUntil)
+    return { status: 'unavailable', query, articles: [], source: null };
   try {
+    await gdeltTurn();
     const payload = await fetchRegionalJson(
       `https://api.gdeltproject.org/api/v2/doc/doc?${params}`,
       {
@@ -147,7 +172,9 @@ async function fetchGdeltNews(query, swedish) {
       articles,
       source: 'GDELT Project',
     };
-  } catch {
+  } catch (error) {
+    if (/\b429\b/.test(String(error?.message)))
+      gdeltBackoffUntil = Date.now() + GDELT_BACKOFF_MS;
     return { status: 'unavailable', query, articles: [], source: null };
   }
 }

@@ -361,7 +361,7 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 | `SWEDAVIA_WAITTIME_KEY` | köerna i säkerhetskontrollen | apideveloper.swedavia.se → WaitTime Free |
 | `ADSBDB_ROUTES` | `on`: flygrutter från adsbdb, vars ruttdata inte får publiceras utan David J Taylors tillstånd; tom (standard): inga rutter | ingen nyckel |
 | `SEA_WEATHER_SOURCE` | tom (standard): SMHI:s havsobservationer (CC BY 4.0), vattenstånd, vattentemperatur och vågor längs kusten men ingen vind; `viva`: Sjöfartsverkets ViVa (ingen publicerad licens), med vind, sjöar och kanaler | ingen nyckel |
-| `REGIONAL_NEWS_GOOGLE` | `on`: rubrikerna i stadspanelen och cockpit från Google News, vars villkor bara tillåter personligt, icke-kommersiellt bruk; tom (standard): rubriker från GDELT | ingen nyckel |
+| `REGIONAL_NEWS_GOOGLE` | `on`: rubrikerna i stadspanelen och cockpit från Google News, vars villkor bara tillåter personligt, icke-kommersiellt bruk; tom (standard): inga rubriker över Sverige, GDELT utanför | ingen nyckel |
 | `FLIGHTS_SOURCE` | tom (standard): flyg från adsb.lol (ODbL) runt kartans mitt, OpenSky frågas aldrig; `opensky`: originalets OpenSky, som kräver deras skriftliga tillstånd | ingen nyckel |
 | `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` | flyg med större kvot än utan konto (originalets lager; OpenSkys villkor kräver skriftligt tillstånd för användning i en app som denna, se "Källor med oklara eller särskilda villkor") | opensky-network.org → konto → API client (under KOPPLA PÅ) |
 | `ENTSOE_PRODUCTION` | `on`: produktion, förbrukning och dygnskurva från ENTSO-E också; bara när Svenska kraftnät har godkänt det | ingen nyckel |
@@ -409,10 +409,14 @@ git merge origin/main
   Fonts, så att ingen besökares IP-adress går till Google vid varje
   sidladdning. `scripts/vendor-fonts.mjs` hämtar dem på nytt när listan i
   `public/fonts/sources.txt` ändras; licenserna ligger bredvid.
-- Rubrikerna i stadspanelen och cockpit kommer från GDELT i stället för
-  Google News, vars villkor bara tillåter personligt, icke-kommersiellt bruk
-  och inte offentlig visning. `REGIONAL_NEWS_GOOGLE=on` tar tillbaka Google
-  News för eget bruk.
+- Cockpitens nyhetsrubriker hämtas inte längre från Google News, vars
+  villkor bara tillåter personligt, icke-kommersiellt bruk och inte
+  offentlig visning. GDELT provades som ersättare men svarade nästan alltid
+  429 (för många anrop), även med minst fem sekunder mellan anropen. Över
+  svenska orter frågas därför ingen; nyheterna där kommer från
+  Krisinformation.se. Utanför Sverige läses GDELT, högst ett anrop per fem
+  sekunder och inget alls en minut efter ett 429-svar.
+  `REGIONAL_NEWS_GOOGLE=on` tar tillbaka Google News för eget bruk.
 - S2 GhostMaps (originalets lager) visas inte längre: licensen är bara
   icke-kommersiell och lagret är en militär lägesbild, som de militära lager
   forken redan tagit bort.
