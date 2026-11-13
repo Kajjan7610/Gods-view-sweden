@@ -15,7 +15,7 @@ import { createPolisenEventsSource } from '../layers/policeEvents/source.js';
 import { createElectricityPricesSource } from '../layers/electricity/source.js';
 import { createPowerGridSource } from '../layers/powerGrid/source.js';
 import { createTransitAlertsSource } from '../layers/transitAlerts/source.js';
-import { createSrTrafficSource } from '../layers/srTraffic/source.js';
+import { createEmptySrTrafficSource } from '../layers/srTraffic/source.js';
 import { createSeaWeatherSource } from '../layers/seaWeather/source.js';
 import { createMunicipalitiesSource } from '../layers/municipalities/source.js';
 import { createElectionDistrictsSource } from '../layers/electionDistricts/source.js';
@@ -56,7 +56,7 @@ export function createReferenceSources() {
     'electricity-prices': createElectricityPricesSource(),
     'power-grid': createPowerGridSource(),
     'transit-alerts': createTransitAlertsSource(),
-    'sr-traffic': createSrTrafficSource(),
+    'sr-traffic': createEmptySrTrafficSource(),
     'sea-weather': createSeaWeatherSource(),
     'company-stores': createCompanyStoresSource(),
     'lightning-strikes': createLightningStrikesSource(),

@@ -6,7 +6,7 @@ import { isPointerFree } from '../../data/inputOwnership.js';
 
 /** Wire Sveriges Radio's traffic reports into the application catalog. */
 export function createApplicationSrTraffic(options) {
-  return createSrTrafficLayer({
+  const layer = createSrTrafficLayer({
     overlayHost: {
       setEntries: overlays.setOverlayEntries,
       setVisible: overlays.setOverlaySourceVisible,
@@ -20,4 +20,9 @@ export function createApplicationSrTraffic(options) {
     pointer: { isPointerFree },
     ...options,
   });
+  // Swedish fork: SR's terms allow its material only through linking or
+  // streaming, so the layer is kept for merges, never listed, and its source
+  // asks nothing (src/layers/srTraffic/source.js).
+  layer.showInTogglePanel = false;
+  return layer;
 }

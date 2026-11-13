@@ -47,3 +47,18 @@ export function createSrTrafficSource({
     },
   };
 }
+
+/**
+ * Swedish fork: Sveriges Radio's API terms allow its material "only through
+ * linking and/or streaming", and the traffic API is no longer maintained, so
+ * the layer is hidden and asks nothing. The code stays for merges and for SR's
+ * consent; swap this source for createSrTrafficSource to bring it back.
+ */
+export function createEmptySrTrafficSource() {
+  return {
+    async getSnapshot({ signal } = {}) {
+      signal?.throwIfAborted();
+      return { messages: [], stale: false, fetchedAt: null };
+    },
+  };
+}

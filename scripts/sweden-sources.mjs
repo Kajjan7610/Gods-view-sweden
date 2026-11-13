@@ -26,7 +26,10 @@ const cell = (text) => String(text).replace(/\|/g, '\\|');
  */
 export function renderSwedenSources(provenance, names, sv) {
   const tr = (text) => sv[text] || text;
-  const rows = Object.entries(provenance).map(([id, entry]) => {
+  const rows = Object.entries(provenance)
+    // A hidden layer is not in the app's list, so not in the table either.
+    .filter(([, entry]) => !entry.hidden)
+    .map(([id, entry]) => {
     const name = tr(names[id] || id);
     const scope =
       entry.mark === 'se'

@@ -48,7 +48,6 @@ Två nivåer gäller:
 | Vägväder: ca 830 väderstationer längs vägarna (vägbanans och luftens temperatur, daggpunkt, vind, sikt, nederbörd; halkrisk markeras) | Trafikverket, objekt `WeatherMeasurepoint` | Road Weather (Sweden), under Events |
 | Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk), samt VMA och krisnyheter som punkter | SMHI, IBWW-varningar (CC BY 4.0) och Krisinformation.se (MSB); ingen nyckel | Weather Warnings (Sweden), under Weather |
 | Polisens händelser (de 500 senaste notiserna, ca 10 dagar), placerade vid kommunens centralort | Polismyndigheten, `polisen.se/api/events` (öppna data, ange källan) | Police Events (Sweden), under Events |
-| Trafikmeddelanden från Sveriges Radio (ca 150 st, färg och storlek efter prioritet) | Sveriges Radios öppna API, ingen nyckel | Traffic Reports (Sweden) / Trafikmeddelanden (SR), under Events |
 | Kollektivtrafikstörningar: de regionala trafikbolagens aktuella störningar vid de hållplatser de gäller (stängd/trafikeras inte, flyttad, övrigt) | Trafiklab GTFS Regional ServiceAlerts (befintlig nyckel `TRAFIKLAB_GTFS_RT_KEY`) | Transit Disruptions (Sweden) / Kollektivtrafikstörningar, under Events |
 | Sjöväder: ca 160 stationer längs kusten, i Vänern, Vättern, Mälaren och kanalerna (vind, byvind, vattenstånd, vattentemperatur, vågor) | Sjöfartsverket ViVa, ingen nyckel | Sea Weather (Sweden) / Sjöväder, under Weather |
 | Norrskensprognos: chans för norrsken rakt ovanför (NOAA OVATION) som lysande band på 110 km höjd, Kp-index och chansen över nio svenska orter | NOAA SWPC (fri data, ingen nyckel) | Aurora Forecast / Norrskensprognos, under Weather |
@@ -110,7 +109,6 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Väglag (Sverige) | Trafikverket | Väglag och aktuella händelser i hela Sverige | Var 3:e minut | CC0 1.0 |
 | SE | Vägväder (Sverige) | Trafikverket | Cirka 830 vägväderstationer | Var 5:e minut | CC0 1.0 |
 | SE | Polishändelser (Sverige) | Polismyndigheten | De 500 senaste notiserna, cirka tio dagar, hela Sverige | Var 5:e minut | Öppna data, källan anges |
-| SE | Trafikmeddelanden (SR) | Sveriges Radio | Aktuella trafikmeddelanden i hela Sverige | Var 3:e minut | Sveriges Radios API-villkor: visas oförändrat, med källa och länk |
 | SE | Kollektivtrafikstörningar (Sverige) | Trafiklab (Samtrafiken) | Störningar vid hållplatserna hos 16 regionala trafikbolag | Var 15:e minut | CC0 1.0 |
 | +SE | Luftkvalitet | SMHI | Cirka 75 mätstationer på den europeiska EAQI-skalan. Originalet: Kanadensiska stationer (ECCC AQHI) | Varje timme | CC BY 4.0 (SMHI); EAQI-indexet räknas fram av appen |
 | +SE | Regnradar | SMHI · EUMETNET OPERA | Nordisk radar från SMHI och europeisk radar från OPERA. Originalet: Radar över USA (NOAA) | Var 5:e minut | CC BY 4.0 (SMHI, OPERA) |
@@ -209,12 +207,13 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   Sjöfartsverket kräver tillstånd för att visa "sjögeografisk information"
   på webben; om ViVa:s mätvärden räknas dit är oklart. Provat 2026-11-11: 68 stationer, 59 med vattenstånd, 42 med
   vattentemperatur och 4 vågbojar.
-- **Trafikmeddelanden (SR):** Sveriges Radios API-villkor: materialet får
-  användas där det länkas till SR, ska tydligt anges som Sveriges Radios och
-  får inte ändras, och det får inte användas i marknadsföring utan SR:s
-  godkännande. Korten visar därför hela texten som SR publicerat den, med
-  "Sveriges Radio" och en länk till sverigesradio.se/trafik. SR:s API
-  underhålls inte längre.
+- **Trafikmeddelanden (SR):** används inte sedan 2026-11-13. Sveriges
+  Radios API-villkor tillåter materialet "endast … genom länkning och/eller
+  streaming" och att det inte lagras, medan lagret visade och sparade hela
+  texten; SR:s trafik-API underhålls inte heller längre. Lagret är dolt och
+  appen frågar inte SR; koden finns kvar om SR skulle ge sitt tillstånd.
+  Olyckor, vägarbeten och avstängningar visas i stället av Trafikverkets
+  Väglag (CC0) och kollektivtrafikens störningar av Trafiklab (CC0).
 - **Elpris:** Elpriset just nu säger att API:et är fritt för vem som helst,
   för vad som helst. Priserna är Nord Pools och hämtas från ENTSO-E, där
   dagens priser inte står på listan över data som är fri att återanvända.
@@ -399,6 +398,14 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-13 (Sveriges Radios trafikmeddelanden borttagna)
+- Lagret Trafikmeddelanden (SR) visas inte längre och appen frågar inte
+  SR. Villkoren tillåter SR:s material bara genom länkning eller strömning
+  och inte att det lagras, medan lagret visade och sparade hela texten, och
+  SR:s trafik-API underhålls inte längre. Trafikverkets Väglag och
+  Trafiklabs störningar täcker olyckor, vägarbeten, avstängningar och
+  kollektivtrafiken. Koden finns kvar om SR ger sitt tillstånd.
 
 ### 2026-11-13 (Esris satellitbild bara med egen nyckel)
 - Esris satellitbild, som visas i 2D och sparläget, hämtades utan nyckel

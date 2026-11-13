@@ -164,7 +164,9 @@ export const LAYER_PROVENANCE = Object.freeze({
     updates: msg('Every 5 minutes'),
     licence: CREDIT,
   }),
+  // Hidden since 2026-11-13 (SR's terms); kept for SR's consent, not listed.
   'sr-traffic': own({
+    hidden: true,
     source: 'Sveriges Radio',
     coverage: msg('Current traffic messages, all of Sweden'),
     updates: msg('Every 3 minutes'),

@@ -53,7 +53,7 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 
 - **Flyg:** följ ett plan i luften från tavlan, dagens rutter på globen, METAR och TAF, och en svensk lägesbild i cockpit.
 - **Varje stad:** panelen STAD för svenska orter med folkmängd, skatt, inkomst, val, läget just nu, tåg från stationen, Sevärt och ett besökspass.
-- **Väg och trafik:** tåg i realtid färgade efter försening, bussar och spårvagnar från 16 regionala trafikbolag, väglag, vägväder, Sveriges Radios trafikmeddelanden och kollektivtrafikstörningar.
+- **Väg och trafik:** tåg i realtid färgade efter försening, bussar och spårvagnar från 16 regionala trafikbolag, väglag, vägväder och kollektivtrafikstörningar.
 - **Väder, kris och infrastruktur:** SMHI:s väder, varningar, radar, luftkvalitet och vattenföring, VMA och krisnyheter från Krisinformation.se, Polisens händelser, norrskensprognos, elpris per elområde, sjöväder och strålning.
 - **Sparläge:** knappen 3D/2D, eller `?globe=lite`, startar utan Google 3D Tiles så att hemmabruk inte drar av Googles kvot.
 
@@ -552,7 +552,6 @@ Twenty-two layers and map sources. **Twenty have a keyless path.** Some offer ad
 | 🚓 **Police Events (Sweden)** | Polisen's latest event notices (traffic, violence, fires and accidents, thefts …) as dots coloured by category, for the last 24 hours, three days or all ~10 days; Polisen names only the municipality, so dots sit around its seat; click a dot for the notice and a link to polisen.se | Polismyndigheten | 🟡 |
 | ⚡ **Electricity Prices (Sweden)** | Spot price per bidding zone SE1–SE4 as coloured, labelled points: this quarter-hour, today's mean or tomorrow's mean; click a zone for the day's low, high and mean | Elpriset just nu.se | 🟢 |
 | 🔌 **Power Grid (Sweden)** | ENTSO-E's physical flows (with a free key): moving chevrons on every link to and between SE1–SE4, running the way the power flows, as thick and as fast as the flow, labelled 'Poland → SE4 · 459 MW'; the row sums Sweden's import, export and net, and per neighbouring country, with a switch for imports, exports or domestic flows and a chip per country that highlights its links. Production by type, consumption and the POWER panel need Svenska kraftnät's consent and stay off until then (see SVERIGE.md) | ENTSO-E (CC BY 4.0) | 🟢 |
-| 📻 **Traffic Reports (Sweden)** | Sveriges Radio's traffic messages as dots coloured and sized by priority, filtered by road traffic, public transport, planned works and other | Sveriges Radio | 🟢 |
 | 🚏 **Transit Disruptions (Sweden)** | The regional operators' active disruption notices (GTFS-RT ServiceAlerts) at the stops they touch, coloured closed/not served, moved or other; click a stop for the operator's message | Trafiklab GTFS Regional (key) | 🟢 |
 | 🌊 **Sea Weather (Sweden)** | SMHI's ocean stations along the coast coloured by water level, with water temperature and waves; with `SEA_WEATHER_SOURCE=viva`, Sjöfartsverket ViVa's stations along the coast, lakes and canals with wind and gusts | SMHI (CC BY 4.0) | 🟢 |
 | 🏞️ **River Flow (Sweden)** | SMHI's discharge stations (some 150) sized and coloured by the latest 15-minute flow, with the largest rivers' values written out; click a station for its river, catchment and whether the flow is rising or falling | SMHI | 🟢 |
