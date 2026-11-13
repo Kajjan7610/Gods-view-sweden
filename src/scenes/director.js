@@ -24,6 +24,7 @@ import * as Cesium from 'cesium';
 import {
   SCENE_APPEND_RECIPES,
   SCENE_RECIPES,
+  WITHDRAWN_BUILT_IN_SCENE_IDS,
   displaySceneTitle,
   displayShotTitle,
   getSceneAppendRecipeById,
@@ -59,6 +60,7 @@ import {
   normalizeShot,
   normalizeProject,
   refreshUneditedBuiltInScenes,
+  dropWithdrawnBuiltInScenes,
 } from './project.js';
 import {
   parseSceneDocument,
@@ -312,6 +314,11 @@ export class SceneDirector {
       }
       // Swedish fork: unedited saved tours gain the recipe's new shots.
       if (refreshUneditedBuiltInScenes(project, SCENE_RECIPES)) migrated = true;
+      if (
+        project.scenes.length > 1 &&
+        dropWithdrawnBuiltInScenes(project, WITHDRAWN_BUILT_IN_SCENE_IDS)
+      )
+        migrated = true;
       if (migrated) {
         project.installedBuiltInSceneIds = [...installed];
         try {

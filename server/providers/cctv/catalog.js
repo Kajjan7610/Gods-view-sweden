@@ -56,12 +56,19 @@ const envOptIn = (name) => String(process.env[name] || '').trim() === '1';
  * Each pack fails independently (allSettled) and is gated by its own env
  * kill switch, or by an opt-in flag where access needs an agreement or the
  * terms are unconfirmed.
+ * Swedish fork: the packs whose only stated terms are "courtesy" or "public"
+ * (Austin, Caltrans, TxDOT, DelDOT, Tallinn, Tarktee, Warendorf, A22) are
+ * opt-in as well; Tallinn's and Warendorf's town cameras can show people.
  */
 const LIVE_PACKS = [
-  { name: 'austin', enabled: () => true, load: loadAustinSourcesFromOpenData },
+  {
+    name: 'austin',
+    enabled: () => envOptIn('CCTV_AUSTIN_ENABLED'),
+    load: loadAustinSourcesFromOpenData,
+  },
   {
     name: 'caltrans',
-    enabled: () => true,
+    enabled: () => envOptIn('CCTV_CALTRANS_ENABLED'),
     load: loadCaltransSourcesFromOpenData,
   },
   {
@@ -91,22 +98,22 @@ const LIVE_PACKS = [
   },
   {
     name: 'txdot',
-    enabled: () => envEnabled('CCTV_TXDOT_ENABLED'),
+    enabled: () => envOptIn('CCTV_TXDOT_ENABLED'),
     load: loadTxdotSourcesFromOpenData,
   },
   {
     name: 'tallinn',
-    enabled: () => envEnabled('CCTV_TALLINN_ENABLED'),
+    enabled: () => envOptIn('CCTV_TALLINN_ENABLED'),
     load: loadTallinnSourcesFromCatalog,
   },
   {
     name: 'tarktee',
-    enabled: () => envEnabled('CCTV_TARKTEE_ENABLED'),
+    enabled: () => envOptIn('CCTV_TARKTEE_ENABLED'),
     load: loadTarkteeSourcesFromDatex,
   },
   {
     name: 'warendorf',
-    enabled: () => envEnabled('CCTV_WARENDORF_ENABLED'),
+    enabled: () => envOptIn('CCTV_WARENDORF_ENABLED'),
     load: loadWarendorfSourcesFromCatalog,
   },
   {
@@ -136,7 +143,7 @@ const LIVE_PACKS = [
   },
   {
     name: 'deldot',
-    enabled: () => envEnabled('CCTV_DELDOT_ENABLED'),
+    enabled: () => envOptIn('CCTV_DELDOT_ENABLED'),
     load: loadDelDOTSourcesFromOpenData,
   },
   {
@@ -212,7 +219,7 @@ const LIVE_PACKS = [
   },
   {
     name: 'a22',
-    enabled: () => envEnabled('CCTV_A22_ENABLED'),
+    enabled: () => envOptIn('CCTV_A22_ENABLED'),
     load: loadA22SourcesFromOpenDataHub,
   },
 ];

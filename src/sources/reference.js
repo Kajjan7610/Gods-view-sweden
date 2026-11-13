@@ -45,7 +45,10 @@ export function createReferenceSources() {
     ]),
     'fire-perimeters': createWfigsPerimeterSource(),
     'drone-airspace': createDroneAirspaceSource(),
-    'wildlife-sightings': createWildlifeSightingsSource(),
+    // Swedish fork: Acartia's API asks for an account and key, and live
+    // positions of endangered orcas beside AIS ship tracks are a risk to
+    // them, so its sightings are not read.
+    'wildlife-sightings': createWildlifeSightingsSource({ acartia: false }),
     // Swedish fork: TeleGeography's cable files are not distributed.
     cables: createEmptyCableSource(),
     'gnss-integrity': createAdsbGnssSource(),

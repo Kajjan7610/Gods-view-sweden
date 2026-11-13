@@ -57,6 +57,11 @@ export function transitAlertsProxy({
   let retryAfter = 0;
   /** Each operator's alerts from its last successful read: {alerts, at}. */
   const alertsByOperator = new Map();
+  /**
+   * Each operator's Last-Modified and ETag: Trafiklab recommends conditional
+   * requests for ServiceAlerts, answered 304 when nothing changed.
+   */
+  const validators = new Map();
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 300 });
 
@@ -66,11 +71,29 @@ export function transitAlertsProxy({
     try {
       const url = new URL(ALERTS_URL(operator));
       url.searchParams.set('key', key);
+      const known = validators.get(operator);
+      const held = alertsByOperator.get(operator);
       const response = await fetchImpl(url, {
         signal: controller.signal,
         redirect: 'manual',
-        headers: { Accept: 'application/x-protobuf' },
+        headers: {
+          Accept: 'application/x-protobuf',
+          // Only with alerts in hand to fall back on.
+          ...(held && known?.lastModified
+            ? { 'If-Modified-Since': known.lastModified }
+            : {}),
+          ...(held && known?.etag ? { 'If-None-Match': known.etag } : {}),
+        },
       });
+      // Nothing changed: the alerts already held stand.
+      if (response.status === 304 && held) {
+        try {
+          await response.body?.cancel();
+        } catch {
+          /* no-op */
+        }
+        return held.alerts;
+      }
       // An operator without an alert feed answers 404: no alerts.
       if (response.status === 404) {
         try {
@@ -89,9 +112,15 @@ export function transitAlertsProxy({
         // Never the URL: it carries the key.
         throw new Error(`HTTP ${response.status}`);
       }
-      return decodeServiceAlerts(
+      const alerts = decodeServiceAlerts(
         await readResponseBytesCapped(response, MAX_BODY_BYTES),
       );
+      const lastModified = response.headers?.get?.('last-modified') || null;
+      const etag = response.headers?.get?.('etag') || null;
+      if (lastModified || etag)
+        validators.set(operator, { lastModified, etag });
+      else validators.delete(operator);
+      return alerts;
     } finally {
       clearTimeout(timer);
     }

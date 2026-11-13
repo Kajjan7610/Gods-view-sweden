@@ -178,8 +178,9 @@ const withEnv = async (patch, fn) => {
   }
 };
 
-test('the A22 lane is wired into the catalog', async (t) => {
-  await withEnv({}, async () => {
+test('the A22 lane is wired into the catalog when opted in', async (t) => {
+  // Swedish fork: A22 is opt-in (its only stated terms are a courtesy note).
+  await withEnv({ CCTV_A22_ENABLED: '1' }, async () => {
     const { requested, sources } = await runCatalog(t);
     assert.ok(requested.includes(DEFAULT_A22_CCTV_URL));
     assert.deepEqual(
@@ -189,8 +190,8 @@ test('the A22 lane is wired into the catalog', async (t) => {
   });
 });
 
-test('CCTV_A22_ENABLED=0 keeps the lane from being loaded', async (t) => {
-  await withEnv({ CCTV_A22_ENABLED: '0' }, async () => {
+test('without CCTV_A22_ENABLED=1 the lane is not loaded', async (t) => {
+  await withEnv({}, async () => {
     const { requested, sources } = await runCatalog(t);
     assert.equal(requested.includes(DEFAULT_A22_CCTV_URL), false);
     assert.deepEqual(

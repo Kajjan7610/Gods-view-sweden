@@ -48,7 +48,7 @@ test('LL2 headers identify the app and preserve optional server-only authorizati
   assert.match(publicHeaders['User-Agent'], /^gods-eye-view.*\/1\.0 /);
   assert.ok(
     publicHeaders['User-Agent'].includes(
-      'https://github.com/bilawalsidhu/gods-eye-view',
+      'https://github.com/Kajjan7610/Gods-view-sweden',
     ),
   );
   assert.equal(publicHeaders.Accept, 'application/json');

@@ -99,7 +99,7 @@ for (const hook of ['configureServer', 'configurePreviewServer']) {
           assert.equal(options.headers.Accept, 'application/json');
           assert.equal(
             options.headers['User-Agent'],
-            'gods-eye-view-wildlife-sightings-proxy/1.0 (+https://github.com/bilawalsidhu/gods-eye-view)',
+            'gods-eye-view-wildlife-sightings-proxy/1.0 (+https://github.com/Kajjan7610/Gods-view-sweden)',
           );
           return Response.json([sighting()]);
         },

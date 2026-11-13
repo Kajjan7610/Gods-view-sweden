@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import { SCENE_RECIPES, displayShotTitle } from './recipes.js';
 import { setLocale } from '../i18n/index.js';
 
-test('an operator-typed title in the built-in Nepal scene stays as typed', () => {
+const NEPAL_SCENE_OFF =
+  'Swedish fork: the Nepal scene is not offered (SVERIGE.md, 2026-11-13)';
+
+test('an operator-typed title in the built-in Nepal scene stays as typed', { skip: NEPAL_SCENE_OFF }, () => {
   const scene = SCENE_RECIPES.find((r) => r.id === 'bhote-koshi-nepal-scene');
   assert.ok(scene, 'built-in bootstrap scene exists');
   for (const locale of ['ru', 'es', 'it', 'zh-CN', 'zh-Hant']) {

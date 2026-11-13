@@ -385,7 +385,7 @@ export async function fetchTrafikverketTrainSnapshot(
       'Content-Type': 'text/xml; charset=utf-8',
       Accept: 'application/json',
       'User-Agent':
-        'gods-eye-view-transit-proxy/1.0 (+https://github.com/bilawalsidhu/gods-eye-view)',
+        'gods-eye-view-transit-proxy/1.0 (+https://github.com/Kajjan7610/Gods-view-sweden)',
     },
     body: trafikverketTrainQuery(key, since),
   });

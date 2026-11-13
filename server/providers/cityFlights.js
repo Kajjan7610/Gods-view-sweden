@@ -26,8 +26,12 @@ const MAX_AIRPORTS = 2;
 const MAX_FLIGHTS = 4;
 /** How long one day's list (or one queue reading) is kept. */
 const ANSWER_TTL_MS = 3 * 60_000;
-/** A little under the free tier's 10 001 calls per 30 days. */
-const DAILY_CALL_BUDGET = 320;
+/**
+ * Under the free tier's 10 000 calls a month with a margin: 300 a day is
+ * 9 300 in a 31-day month. The count lives in memory, so restarting the
+ * server on the same day starts it again; the margin covers a few restarts.
+ */
+const DAILY_CALL_BUDGET = 300;
 /** Late in the day the dossier's board continues on tomorrow's list. */
 const LOOK_AHEAD_MS = 4 * 3600_000;
 

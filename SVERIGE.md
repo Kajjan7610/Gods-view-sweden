@@ -399,6 +399,27 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-13 (Nepal-scenen och resten av granskningen)
+- Originalets scen om översvämningen i Nepal erbjuds inte längre:
+  händelsepaketet är bara icke-kommersiellt (CC BY-NC 4.0) och bevisraderna
+  laddade Facebooks, X:s och YouTubes skript utan samtycke. En webbläsare som
+  redan har scenen i sitt sparade projekt blir av med den vid nästa
+  start. Scenen finns kvar i koden för sammanslagningar med originalet.
+- Anropen till Nominatim, routningen och de andra tjänsterna som vill att
+  appen presenterar sig anger nu forkens adress i User-Agent i stället för
+  originalets.
+- Swedavia: högst 300 anrop per nyckel och dygn (9 300 en månad med 31
+  dagar) mot den fria nivåns 10 000, med marginal för omstarter samma dag.
+- Trafiklabs störningar frågas villkorat (If-Modified-Since och ETag), som
+  Trafiklab rekommenderar; ett oförändrat flöde laddas inte ner igen.
+- Valobservationer från Acartia läses inte: API:et kräver konto och nyckel,
+  och späckhuggarnas positioner bredvid fartygens är en risk för dem.
+- Kamerapaket vars enda villkor är en artighetsnotis (Austin, Caltrans,
+  TxDOT, DelDOT, Tallinn, Tarktee, Warendorf, A22) laddas bara om man slår
+  på dem med `CCTV_…_ENABLED=1`; Tallinns och Warendorfs kameror kan visa
+  människor.
+- Upphovspersonens länk till 3D-modellen Cessna Citation pekar rätt.
+
 ### 2026-11-13 (Sveriges Radios trafikmeddelanden borttagna)
 - Lagret Trafikmeddelanden (SR) visas inte längre och appen frågar inte
   SR. Villkoren tillåter SR:s material bara genom länkning eller strömning

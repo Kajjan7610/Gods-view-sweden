@@ -617,7 +617,20 @@ const BHOTE_KOSHI_NEPAL_BOOTSTRAP_RECIPE = BHOTE_KOSHI_NEPAL_APPEND_RECIPE
     })
   : null;
 
-const EVENT_RECIPES = [BHOTE_KOSHI_NEPAL_BOOTSTRAP_RECIPE].filter(Boolean);
+// Swedish fork: the Nepal flood scene is not offered. Its event pack is
+// CC BY-NC 4.0 and its evidence cards load Facebook's SDK, X's widget script
+// and YouTube's player without the viewer's consent. The recipes stay for
+// merges; NEPAL_SCENE_OFFERED brings them back.
+const NEPAL_SCENE_OFFERED = false;
+
+/** Built-in scenes a saved project drops when it loads. */
+export const WITHDRAWN_BUILT_IN_SCENE_IDS = NEPAL_SCENE_OFFERED
+  ? []
+  : ['bhote-koshi-nepal-scene'];
+
+const EVENT_RECIPES = NEPAL_SCENE_OFFERED
+  ? [BHOTE_KOSHI_NEPAL_BOOTSTRAP_RECIPE].filter(Boolean)
+  : [];
 
 // The Swedish fork's tour: one Swedish layer per shot. A shot only touches
 // the layers it names, so each one names every tour layer and turns on its
@@ -1146,9 +1159,10 @@ function createSceneRecipes({ localDemoRecipes = EVENT_RECIPES } = {}) {
 
 export const SCENE_RECIPES = createSceneRecipes();
 
-export const SCENE_APPEND_RECIPES = BHOTE_KOSHI_NEPAL_APPEND_RECIPE
-  ? [BHOTE_KOSHI_NEPAL_APPEND_RECIPE]
-  : [];
+export const SCENE_APPEND_RECIPES =
+  NEPAL_SCENE_OFFERED && BHOTE_KOSHI_NEPAL_APPEND_RECIPE
+    ? [BHOTE_KOSHI_NEPAL_APPEND_RECIPE]
+    : [];
 
 function getSceneRecipeById(id) {
   return SCENE_RECIPES.find((recipe) => recipe.id === id) || null;

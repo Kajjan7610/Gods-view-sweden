@@ -224,6 +224,8 @@ export function combineWildlifeGridSnapshots(snapshots, error = null) {
 export function createWildlifeSightingsSource({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
+  // Acartia's whale sightings (Salish Sea); the Swedish fork turns them off.
+  acartia = true,
 } = {}) {
   const gridCache = new Map();
   const gridInFlight = new Map();
@@ -531,6 +533,7 @@ export function createWildlifeSightingsSource({
     if (!requestBoxes.length)
       throw new TypeError('Wildlife sightings require a view box');
     const useAcartia =
+      acartia &&
       scope !== 'global' &&
       ['all', 'Mammalia', 'whales'].includes(preset) &&
       requestBoxes.some((bounds) => boxIntersects(bounds, ACARTIA_GUARD_BOX));

@@ -205,3 +205,34 @@ test('an operator that fails alone keeps its last alerts', async (t) => {
     ['Hagaskolan'],
   );
 });
+
+test('alerts are asked for conditionally; 304 keeps the alerts held', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  let clock = NOW;
+  const seen = [];
+  const request = harness({
+    now: () => clock,
+    operators: [{ operator: 'otraf', name: 'Östgötatrafiken' }],
+    stopsFor: () => STOPS,
+    fetchImpl: async (_url, init) => {
+      seen.push(init.headers);
+      if (init.headers['If-Modified-Since'])
+        return new Response(null, { status: 304 });
+      return new Response(FEED, {
+        headers: {
+          'Last-Modified': 'Wed, 04 Nov 2026 22:55:00 GMT',
+          ETag: '"v1"',
+        },
+      });
+    },
+  });
+  assert.equal((await request()).json().stops.length, 1);
+  assert.equal(seen[0]['If-Modified-Since'], undefined);
+  clock += 16 * 60_000;
+  const again = (await request()).json();
+  assert.equal(seen[1]['If-Modified-Since'], 'Wed, 04 Nov 2026 22:55:00 GMT');
+  assert.equal(seen[1]['If-None-Match'], '"v1"');
+  assert.equal(again.stops.length, 1);
+  assert.equal(again.failed, 0);
+});

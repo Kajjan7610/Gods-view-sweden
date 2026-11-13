@@ -100,7 +100,10 @@ async function fetchGoogleNews(query, swedish) {
     const xml = await fetchRegionalText(
       `https://news.google.com/rss/search?${rssParams}`,
       {
-        headers: { 'User-Agent': 'GodsEyeView/0.1' },
+        headers: {
+          'User-Agent':
+            'GodsEyeView-Sweden/0.1 (+https://github.com/Kajjan7610/Gods-view-sweden)',
+        },
         timeoutMs: 12_000,
       },
     );
@@ -161,7 +164,10 @@ async function fetchGdeltNews(query, swedish) {
     const payload = await fetchRegionalJson(
       `https://api.gdeltproject.org/api/v2/doc/doc?${params}`,
       {
-        headers: { 'User-Agent': 'GodsEyeView/0.1' },
+        headers: {
+          'User-Agent':
+            'GodsEyeView-Sweden/0.1 (+https://github.com/Kajjan7610/Gods-view-sweden)',
+        },
         timeoutMs: 12_000,
       },
     );

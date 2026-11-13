@@ -117,6 +117,20 @@ export function refreshUneditedBuiltInScenes(project, recipes) {
 }
 
 /**
+ * Drop saved copies of built-in scenes the app no longer offers (Swedish
+ * fork: the Nepal flood scene), so a browser that installed one before does
+ * not keep it.
+ * @param {{scenes: Object[]}} project Changed in place.
+ * @param {string[]} ids
+ * @returns {boolean} Whether any scene was removed.
+ */
+export function dropWithdrawnBuiltInScenes(project, ids) {
+  const before = project.scenes.length;
+  project.scenes = project.scenes.filter((scene) => !ids.includes(scene.id));
+  return project.scenes.length !== before;
+}
+
+/**
  * Convert a static scene recipe (from recipes.js) into a mutable scene object
  * with fully normalized shots. Each keyframe in the recipe's cameraPath becomes
  * one shot, inheriting the recipe's style, post, and layer configuration.

@@ -57,3 +57,32 @@ test('a saved tour gains new shots only while nobody edited it', () => {
   const current = saved(scene.shots);
   assert.equal(refreshUneditedBuiltInScenes(current, SCENE_RECIPES), false);
 });
+
+test('the withdrawn Nepal scene is not offered and leaves saved projects', async () => {
+  const { SCENE_RECIPES, SCENE_APPEND_RECIPES, WITHDRAWN_BUILT_IN_SCENE_IDS } =
+    await import('./recipes.js');
+  const { dropWithdrawnBuiltInScenes } = await import('./project.js');
+  assert.ok(
+    !SCENE_RECIPES.some((recipe) => /nepal|bhote/i.test(recipe.id)),
+    'no Nepal recipe among the built-in scenes',
+  );
+  assert.deepEqual(SCENE_APPEND_RECIPES, []);
+  const project = {
+    scenes: [
+      { id: 'sweden-now', shots: [] },
+      { id: 'bhote-koshi-nepal-scene', shots: [] },
+    ],
+  };
+  assert.equal(
+    dropWithdrawnBuiltInScenes(project, WITHDRAWN_BUILT_IN_SCENE_IDS),
+    true,
+  );
+  assert.deepEqual(
+    project.scenes.map((scene) => scene.id),
+    ['sweden-now'],
+  );
+  assert.equal(
+    dropWithdrawnBuiltInScenes(project, WITHDRAWN_BUILT_IN_SCENE_IDS),
+    false,
+  );
+});
