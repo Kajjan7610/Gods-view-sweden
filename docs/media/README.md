@@ -2,7 +2,7 @@
 
 ## Capture GIFs
 
-Bilawal Sidhu created and owns the following 17 GIFs and has authorized their inclusion and redistribution as part of this public repository and its project documentation. Any appearance by Bilawal Sidhu in these captures is included with his permission.
+Bilawal Sidhu created and owns the following 14 GIFs and has authorized their inclusion and redistribution as part of this public repository and its project documentation. Any appearance by Bilawal Sidhu in these captures is included with his permission.
 
 - `hero-open-source-reveal.gif`
 - `06-cockpit-ar.gif`
@@ -11,13 +11,10 @@ Bilawal Sidhu created and owns the following 17 GIFs and has authorized their in
 - `14-iss-over-ukraine.gif`
 - `01-style-sweep.gif`
 - `12-switch-aircraft-cockpit.gif`
-- `start-here/military-cockpit-dense-google-3d.gif`
 - `01-voice-annotate-zilker.gif`
 - `04-airport-distance.gif`
 - `15-global-radio-layer.gif`
 - `08-falcon9-replay.gif`
-- `09-undersea-cables.gif`
-- `07-helicopter-loops.gif`
 - `10-walking-route-flythrough.gif`
 - `08-boneyard.gif`
 - `05-traffic-to-cctv.gif`
