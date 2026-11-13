@@ -1,5 +1,5 @@
 /**
- * Krisinformation.se (MSB) crisis messages: pure parsing shared by the server
+ * Krisinformation.se (MCF) crisis messages: pure parsing shared by the server
  * proxy and the warnings layer. No Cesium, no Node built-ins.
  *
  * Two lists of the open API (no key, Swedish text): /v3/vmas, the VMA

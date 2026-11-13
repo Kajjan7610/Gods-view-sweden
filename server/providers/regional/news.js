@@ -57,6 +57,12 @@ function normalizeRssArticles(xml, limit = 5) {
   return articles;
 }
 
+// Swedish fork: Google News' terms allow its headlines only for personal,
+// non-commercial use and not for public display, so the panel reads GDELT
+// (free with the GDELT Project credited). REGIONAL_NEWS_GOOGLE=on brings
+// Google News back for one's own use.
+const useGoogleNews = () => process.env.REGIONAL_NEWS_GOOGLE === 'on';
+
 // Over Sweden the local press writes in Swedish, so the search does too and
 // keeps to the last week, newest first.
 const SWEDISH_NEWS = Object.freeze({
@@ -72,6 +78,14 @@ async function fetchRegionalNews(place) {
   if (!query)
     return { status: 'unavailable', query: null, articles: [], source: null };
   const swedish = place?.countryCode === 'SE' ? SWEDISH_NEWS : null;
+  if (useGoogleNews()) {
+    const found = await fetchGoogleNews(query, swedish);
+    if (found) return found;
+  }
+  return fetchGdeltNews(query, swedish);
+}
+
+async function fetchGoogleNews(query, swedish) {
   const rssParams = new URLSearchParams({
     q: String(query).replace(/["\\]/g, ' ').trim() + (swedish?.window ?? ''),
     hl: swedish?.hl ?? 'en-US',
@@ -103,15 +117,20 @@ async function fetchRegionalNews(place) {
         source: swedish?.source ?? 'Google News RSS',
       };
   } catch {
-    /* fall through to the existing free index */
+    /* fall through to GDELT */
   }
+  return null;
+}
+
+async function fetchGdeltNews(query, swedish) {
+  const phrase = `"${String(query).replace(/["\\]/g, ' ').trim()}"`;
   const params = new URLSearchParams({
-    query: `"${String(query).replace(/["\\]/g, ' ').trim()}"`,
+    query: swedish ? `${phrase} sourcelang:swedish` : phrase,
     mode: 'artlist',
     format: 'json',
     maxrecords: '5',
     sort: 'datedesc',
-    timespan: '48h',
+    timespan: swedish ? '7d' : '48h',
   });
   try {
     const payload = await fetchRegionalJson(
@@ -126,7 +145,7 @@ async function fetchRegionalNews(place) {
       status: articles.length ? 'ready' : 'empty',
       query,
       articles,
-      source: 'GDELT fallback',
+      source: 'GDELT Project',
     };
   } catch {
     return { status: 'unavailable', query, articles: [], source: null };

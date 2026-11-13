@@ -5,13 +5,14 @@
   The fixture is trimmed to the fields the keyless geocoder consumes and is
   used only by offline search tests. Data from OpenStreetMap contributors,
   ODbL 1.0 (https://www.openstreetmap.org/copyright).
-- `tomtom-flow-austin-12-935-1686.pbf` — one real TomTom traffic-flow vector
-  tile (Mapbox Vector Tile protobuf, layer `"Traffic flow"`), downtown Austin
-  z12 x935 y1686, captured 2026-07-16 from
-  `api.tomtom.com/traffic/map/4/tile/flow/relative/12/935/1686.pbf`
-  (22,980 bytes). Used by offline decode/source tests and the explicit `qa-traffic --fixtures`
-  browser mode — it is a point-in-time congestion snapshot, not a bundled
-  data layer, and is never loaded by ordinary application startup. © TomTom.
+- `synthetic-flow-12-935-1686.pbf` — a hand-drawn traffic-flow vector tile
+  in TomTom's layout (Mapbox Vector Tile protobuf, layer `"Traffic flow"`,
+  extent 4096): five lines with `traffic_level`, `road_type`,
+  `road_category`, one `road_closure`, and lines that run past the tile edge
+  so clipping is exercised. No TomTom data; made for the Swedish fork,
+  which does not distribute the original's captured TomTom tile (TomTom's
+  terms do not allow publishing it). Used by the offline traffic
+  decode/source tests only.
 - `adsb-austin-frames.txt` — 112 raw Mode S frames (`*<hex>;`, one per line,
   in receive order) received over Austin, TX, and
   `adsb-austin-dump1090-aircraft.json` — dump1090-fa's `aircraft.json` decode

@@ -74,10 +74,15 @@ export function buildWarningCard(
   if (valid) details.push(valid);
   const textOf = (code) =>
     pick(row.texts.find((entry) => entry.code === code)?.text);
+  // SMHI's terms: warnings may be used freely but not altered, so the card
+  // carries the whole text (wrapped, never cut short in practice) rather
+  // than an excerpt.
   const happens = textOf('HAPPENS') || textOf('INCIDENT');
-  if (happens) details.push(...foldText(happens, 3));
+  if (happens) details.push(...foldText(happens, 12));
   const affect = textOf('AFFECT');
-  if (affect) details.push(...foldText(affect.split('\n')[0], 2));
+  if (affect)
+    for (const line of affect.split('\n').filter((part) => part.trim()))
+      details.push(...foldText(line, 6));
   if (Number.isFinite(row.published))
     details.push(t('Published {time} · SMHI', { time: when(row.published) }));
   if (linkable) details.push(t('SMHI ↗ · click card to open'));
@@ -100,7 +105,7 @@ export function buildWarningCard(
 
 /**
  * Card for one Krisinformation.se message; a linked card opens it there.
- * The texts are Swedish only, as MSB publishes them.
+ * The texts are Swedish only, as MCF publishes them.
  * @param {object} row A normalized crisis item.
  * @param {{linkable?: boolean}} [options]
  */

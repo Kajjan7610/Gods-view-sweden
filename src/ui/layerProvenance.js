@@ -51,7 +51,7 @@ export const LAYER_PROVENANCE = Object.freeze({
   'electricity-prices': own({
     source: 'elprisetjustnu.se · Nord Pool via ENTSO-E',
     coverage: msg('Spot price per quarter hour in bidding areas SE1–SE4'),
-    updates: msg('Every minute'),
+    updates: msg('Every 15 minutes'),
     // Elpriset just nu offers its API free for any use, but the prices are
     // Nord Pool's, read from ENTSO-E, where day-ahead prices are not on the
     // list of data free for re-use.
@@ -175,7 +175,7 @@ export const LAYER_PROVENANCE = Object.freeze({
   'transit-alerts': own({
     source: 'Trafiklab (Samtrafiken)',
     coverage: msg('Disruptions at the stops of 16 regional operators'),
-    updates: msg('Every 2 minutes'),
+    updates: msg('Every 15 minutes'),
     licence: CC0,
   }),
   // Weather
@@ -184,7 +184,8 @@ export const LAYER_PROVENANCE = Object.freeze({
     sweden: msg('About 75 measuring stations on the European EAQI scale'),
     original: msg('Canadian stations (ECCC AQHI)'),
     updates: msg('Hourly'),
-    licence: `${CC_BY} (SMHI)`,
+    // The EAQI index is the app's own calculation from SMHI's readings.
+    licence: msg('CC BY 4.0 (SMHI); the EAQI index is calculated by the app'),
   }),
   'weather-radar': added({
     source: 'SMHI · EUMETNET OPERA',
@@ -208,14 +209,14 @@ export const LAYER_PROVENANCE = Object.freeze({
     licence: CC_BY,
   }),
   'sea-weather': own({
-    source: 'Sjöfartsverket ViVa · SMHI',
+    source: 'SMHI · Sjöfartsverket ViVa',
     coverage: msg(
-      'About 160 stations on the coast, the large lakes and canals',
+      'About 70 stations on the coast; with ViVa about 160, also the large lakes and canals',
     ),
     updates: msg('Every 10 minutes'),
-    // No terms are published for ViVa.
+    // No terms are published for ViVa, read only with SEA_WEATHER_SOURCE=viva.
     licence: msg(
-      'Sjöfartsverket ViVa: no published licence; SMHI (SEA_WEATHER_SOURCE=smhi): CC BY 4.0',
+      'SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence',
     ),
   }),
   'river-flow': own({
@@ -237,7 +238,8 @@ export const LAYER_PROVENANCE = Object.freeze({
     sweden: msg('Lightning over Europe and Africa from the MTG satellite'),
     original: msg('Lightning density over the Americas (NOAA)'),
     updates: msg('Every 5 minutes'),
-    licence: msg('Free to use, source credited'),
+    // EUMETSAT's data policy: lightning products are open, CC BY 4.0.
+    licence: `${CC_BY} (© EUMETSAT 2026)`,
   }),
   'lightning-strikes': own({
     source: 'DMI',

@@ -3236,7 +3236,6 @@
   "Write the value beside the stations that stand out most": "在最突出的測站旁顯示數值",
   "Dots are Sjöfartsverket’s ViVa stations along the coast, lakes and canals. Grey dots do not measure what is shown. Click a station for wind, water level, temperatures and waves.": "圓點是 Sjöfartsverket 位於海岸、湖泊與運河的 ViVa 測站。灰色圓點不量測所顯示的項目。點擊測站查看風、水位、溫度與波浪。",
   "Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.": "圓點為 SMHI 沿岸的海洋測站。灰色圓點不量測所顯示的項目。點擊測站可查看水位、水溫和波浪。",
-  "Sjöfartsverket ViVa: no published licence; SMHI (SEA_WEATHER_SOURCE=smhi): CC BY 4.0": "Sjöfartsverket ViVa：未公布授權；SMHI（SEA_WEATHER_SOURCE=smhi）：CC BY 4.0",
   "Malformed sea weather snapshot": "海上天氣快照格式錯誤",
   "Sea Weather (Sweden)": "海上天氣（瑞典）",
   "Aurora forecast unavailable": "極光預報無法使用",
@@ -3934,7 +3933,6 @@
   "Spot price per quarter hour in bidding areas SE1–SE4": "SE1–SE4 電價區每刻鐘的現貨價格",
   "Every minute": "每分鐘",
   "Sweden's links between bidding areas and to neighbouring countries": "瑞典電價區之間及通往鄰國的聯絡線",
-  "Every 2 minutes": "每 2 分鐘",
   "About 25 gamma stations": "約 25 個伽馬監測站",
   "Every 10 minutes": "每 10 分鐘",
   "All fire stations of the municipal rescue services": "市政救援單位的全部消防站",
@@ -3956,7 +3954,6 @@
   "Radar over the USA (NOAA)": "美國上空雷達（NOAA）",
   "Weather warnings, VMA alerts and crisis news, all of Sweden": "瑞典全境的天氣特報、VMA 警報與危機新聞",
   "About 185 weather stations, and a forecast where you click": "約 185 個氣象站，以及點擊處的預報",
-  "About 160 stations on the coast, the large lakes and canals": "沿海、大湖與運河約 160 個站點",
   "About 150 river stations": "約 150 個河川站點",
   "Quarter-hourly readings, published with a delay": "15 分鐘數值，延遲發布",
   "Northern hemisphere, with the chance over nine Swedish places": "北半球，並提供瑞典九個地點的機率",
@@ -4125,5 +4122,9 @@
   "Ancient Monuments (Sweden)": "古蹟 (瑞典)",
   "Every registered ancient monument and other cultural-historical remain, for the view": "所有已登記的古蹟和其他文化歷史遺存 (依視圖)",
   "Daily at RAÄ; read for the view, kept half a day": "在 RAÄ 每日更新；依視圖讀取，保留半天",
-  "Public domain; source and date credited": "公有領域；註明來源和日期"
+  "Public domain; source and date credited": "公有領域；註明來源和日期",
+  "Every 15 minutes": "每 15 分鐘",
+  "CC BY 4.0 (SMHI); the EAQI index is calculated by the app": "CC BY 4.0（SMHI）；EAQI 指數由應用程式計算",
+  "About 70 stations on the coast; with ViVa about 160, also the large lakes and canals": "沿海約 70 個測站；使用 ViVa 時約 160 個，也包括大型湖泊與運河",
+  "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI：CC BY 4.0；Sjöfartsverket ViVa（SEA_WEATHER_SOURCE=viva）：無公開授權"
 }

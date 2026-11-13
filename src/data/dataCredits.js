@@ -435,7 +435,7 @@ export const DATA_CREDITS = [
     key: 'eumetsat-lightning',
     html:
       'Lightning (Europe): ' +
-      '<a href="https://view.eumetsat.int/" target="_blank" rel="noopener">EUMETSAT</a> MTG-I Lightning Imager, accumulated flash area via EUMETView',
+      '© <a href="https://view.eumetsat.int/" target="_blank" rel="noopener">EUMETSAT</a> 2026, Meteosat MTG-I Lightning Imager product, accumulated flash area via EUMETView (CC BY 4.0)',
   },
   {
     key: 'trafikverket-roads',
@@ -462,7 +462,7 @@ export const DATA_CREDITS = [
     key: 'krisinformation',
     html:
       'Crisis information (Sweden): ' +
-      '<a href="https://www.krisinformation.se/" target="_blank" rel="noopener">Krisinformation.se</a> (MSB)',
+      '<a href="https://www.krisinformation.se/" target="_blank" rel="noopener">Krisinformation.se</a> (MCF)',
   },
   {
     key: 'electricity-prices',
@@ -480,8 +480,8 @@ export const DATA_CREDITS = [
     key: 'sea-weather',
     html:
       'Sea weather (Sweden): ' +
-      '<a href="https://viva.sjofartsverket.se/" target="_blank" rel="noopener">Sjöfartsverket ViVa</a>; with SEA_WEATHER_SOURCE=smhi ' +
-      '<a href="https://www.smhi.se/data/hav-och-havsmiljo" target="_blank" rel="noopener">SMHI</a> ocean observations (CC BY 4.0)',
+      '<a href="https://www.smhi.se/data/hav-och-havsmiljo" target="_blank" rel="noopener">SMHI</a> ocean observations (CC BY 4.0); with SEA_WEATHER_SOURCE=viva ' +
+      '<a href="https://viva.sjofartsverket.se/" target="_blank" rel="noopener">Sjöfartsverket ViVa</a>',
   },
   {
     key: 'company-stores',

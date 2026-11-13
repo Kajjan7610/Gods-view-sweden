@@ -1,5 +1,14 @@
 # CCTV ground heights
 
+> **God's Eye View Sverige does not ship `cctv_ground_heights.json`.** The
+> heights were sampled from Google Photorealistic 3D Tiles, and Google's Map
+> Tiles policies do not allow storing, redistributing or deriving content
+> (such as terrain heights) from them. Without the file every camera is
+> placed at runtime from the terrain proxy, the fallback described below.
+> Do not regenerate the file against Google 3D Tiles; the name is in
+> `.gitignore` so a local copy is never committed. The text below describes
+> the original project.
+
 Precomputed ground height under every camera in the served CCTV catalog and
 under the nine support points of its monitor plane, aligned to work with
 Google Photorealistic 3D Tiles. Heights are WGS84 ellipsoidal metres. The

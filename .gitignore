@@ -28,3 +28,6 @@ pinokio/.installed
 
 # Transient: a release interrupted mid-assembly (npm run changelog recovers it)
 changelog.d/.assembling/
+
+# Swedish fork: heights derived from Google 3D Tiles are never distributed
+src/data/local_data/cctv_ground_heights/cctv_ground_heights.json

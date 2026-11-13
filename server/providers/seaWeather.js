@@ -7,22 +7,26 @@ import {
 import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 
-// Sjöfartsverket's ViVa (open, no key) answers one station per request, so a
-// refresh walks the ~160 stations a few at a time, at most every ten minutes
-// and only while the layer asks. The station list itself changes rarely.
+// Sjöfartsverket's ViVa (no key, SEA_WEATHER_SOURCE=viva) answers one station
+// per request, so a refresh walks the ~160 stations a few at a time, at most
+// every ten minutes and only while the layer asks. The station list itself
+// changes rarely.
 export const VIVA_URL =
   'https://services.viva.sjofartsverket.se:8080/output/vivaoutputservice.svc/vivastation/';
-// SMHI's ocean observations (CC BY 4.0, no key) instead, with
-// SEA_WEATHER_SOURCE=smhi: one file per parameter holds every station's
-// last day, so a refresh is three requests.
+// SMHI's ocean observations (CC BY 4.0, no key), the default: one file per
+// parameter holds every station's last day, so a refresh is three requests.
 export const SMHI_SEA_URL = (parameter) =>
   `https://opendata-download-ocobs.smhi.se/api/version/1.0/parameter/${parameter}/station-set/all/period/latest-day/data.json`;
 
-/** True when the sea weather comes from SMHI rather than ViVa. */
+/**
+ * True when the sea weather comes from SMHI rather than ViVa. SMHI is the
+ * default: ViVa is an undocumented service with no published licence, read
+ * only with SEA_WEATHER_SOURCE=viva until Sjöfartsverket has answered.
+ */
 export const seaWeatherFromSmhi = (env = process.env) =>
   String(env.SEA_WEATHER_SOURCE ?? '')
     .trim()
-    .toLowerCase() === 'smhi';
+    .toLowerCase() !== 'viva';
 const TTL_MS = 10 * 60_000;
 /**
  * How long ViVa is left alone after a refresh failed. Longer than elsewhere:

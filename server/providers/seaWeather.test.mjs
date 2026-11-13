@@ -27,7 +27,7 @@ const sample = (Name, Value) => ({
 function harness(options) {
   let route;
   let handler;
-  seaWeatherProxy(options).configureServer({
+  seaWeatherProxy({ env: { SEA_WEATHER_SOURCE: 'viva' }, ...options }).configureServer({
     middlewares: { use: (path, fn) => ((route = path), (handler = fn)) },
   });
   const request = async () => {
@@ -245,11 +245,12 @@ test('requests waiting on one walk share it, logged and saved once', async (t) =
   );
 });
 
-test('SEA_WEATHER_SOURCE=smhi reads three SMHI files and never ViVa', async (t) => {
+test('SMHI (the default) reads three SMHI files and never ViVa', async (t) => {
   t.mock.method(console, 'log', () => {});
   t.mock.method(console, 'warn', () => {});
   assert.equal(seaWeatherFromSmhi({ SEA_WEATHER_SOURCE: ' SMHI ' }), true);
-  assert.equal(seaWeatherFromSmhi({}), false);
+  assert.equal(seaWeatherFromSmhi({}), true);
+  assert.equal(seaWeatherFromSmhi({ SEA_WEATHER_SOURCE: 'viva' }), false);
   const NOW = Date.parse('2026-11-11T12:00:00Z');
   const urls = [];
   let wavesDown = true;

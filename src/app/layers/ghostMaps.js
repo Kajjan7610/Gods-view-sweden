@@ -6,7 +6,7 @@ import { isPointerFree } from '../../data/inputOwnership.js';
 
 /** Wire the S2 Underground GhostMaps layer into the application catalog. */
 export function createApplicationGhostMaps(options) {
-  return createGhostMapsLayer({
+  const layer = createGhostMapsLayer({
     overlayHost: {
       setEntries: overlays.setOverlayEntries,
       setVisible: overlays.setOverlaySourceVisible,
@@ -20,4 +20,9 @@ export function createApplicationGhostMaps(options) {
     pointer: { isPointerFree },
     ...options,
   });
+  // Swedish fork: S2 GhostMaps is CC BY-NC-SA and carries a military
+  // situation picture ("Kinetic Activity"), like the military layers the
+  // fork removed; kept for merges, never listed.
+  layer.showInTogglePanel = false;
+  return layer;
 }

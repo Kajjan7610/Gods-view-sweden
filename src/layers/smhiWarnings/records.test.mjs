@@ -217,6 +217,7 @@ test('the card reads the level, headline, place, window and advice', () => {
     '2026-11-04 12:00 → 2026-11-05 06:00',
     'Very strong westerly wind on the bare mountains, 18-24 m/s.',
     'No hiking is recommended in mountainous areas.',
+    'The risk of frostbite is high.',
     'Published 2026-11-03 11:43 · SMHI',
     'SMHI ↗ · click card to open',
   ]);

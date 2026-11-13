@@ -8,6 +8,8 @@ import { WILDLIFE_BADGE_GLYPHS } from './layers/wildlifeSightings/sprites.js';
 const SRC_ROOT = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = path.resolve(SRC_ROOT, '..');
 const INDEX_HTML = path.join(REPO_ROOT, 'index.html');
+/** The Google Fonts URLs scripts/vendor-fonts.mjs copies the fonts from. */
+const FONT_SOURCES = path.join(REPO_ROOT, 'public', 'fonts', 'sources.txt');
 
 /** The glyph written as element text: `<span class="material-symbols-outlined">radar</span>`. */
 const SPAN_TEXT =
@@ -98,13 +100,13 @@ function referencedGlyphs() {
   return found;
 }
 
-/** The `icon_names` list index.html asks Google for. */
-function subsettedGlyphs(html = readFileSync(INDEX_HTML, 'utf8')) {
+/** The `icon_names` list the vendored icon subset was made from. */
+function subsettedGlyphs(sources = readFileSync(FONT_SOURCES, 'utf8')) {
   const match =
-    /Material\+Symbols\+Outlined[^"]*[?&]icon_names=([a-z0-9_,]+)/.exec(html);
+    /Material\+Symbols\+Outlined\S*[?&]icon_names=([a-z0-9_,]+)/.exec(sources);
   assert.ok(
     match,
-    'index.html must request Material Symbols with an icon_names subset',
+    'public/fonts/sources.txt must list Material Symbols with an icon_names subset',
   );
   return new Set(match[1].split(','));
 }
@@ -118,8 +120,8 @@ test('every glyph the sources render is in the icon_names subset', () => {
   assert.deepEqual(
     missing,
     [],
-    'Glyphs named by the sources but absent from the index.html icon_names list. ' +
-      'Add them there — an unlisted glyph renders as its own name on screen: ' +
+    'Glyphs named by the sources but absent from the icon_names list in public/fonts/sources.txt. ' +
+      'Add them there and run scripts/vendor-fonts.mjs — an unlisted glyph renders as its own name on screen: ' +
       missing.join(', '),
   );
 });
