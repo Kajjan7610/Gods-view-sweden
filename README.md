@@ -28,7 +28,7 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 
 **▶ Prova själv:** [Kom igång på 15 minuter](docs/KOM-IGANG.md). Gratis, körs på din egen dator, och de svenska nycklarna klistras in direkt i appen. Du skaffar egna nycklar, och varje källas villkor gäller dig; den svenska versionen bygger på öppna data och använder inte källor som kräver tillstånd, som OpenSky och TomTom; flyg kommer från adsb.lol (ODbL).
 
-![110+ datakällor, 21 svenska API:er, 30 datatyper från Trafikverket, SMHI, Swedavia, Samtrafiken, Krisinformation.se, Polisen, Sveriges Radio, SCB, Kolada, Valmyndigheten, Strålsäkerhetsmyndigheten, Svenska kraftnät, Sjöfartsverket och Elpriset just nu](docs/media/sverige/kallor.webp)
+![110+ datakällor, 24 svenska API:er och dataset, 33 datatyper från Trafikverket, SMHI, Swedavia, Samtrafiken, Polisen, MCF, Krisinformation.se, SCB, Kolada, Valmyndigheten, Socialstyrelsen, Naturvårdsverket, Riksantikvarieämbetet och Elpriset just nu](docs/media/sverige/kallor.webp)
 
 ### Det här är tillagt
 

@@ -54,7 +54,7 @@ Kaj Obst captured the following files from God's Eye View Sverige (this fork) in
 - `sverige/fartkameror.webp`
 - `sverige/kraftsystemet.webp`
 
-They are included as project documentation for this repository and are not covered by the project's MIT License. They show Google Photorealistic 3D Tiles and live public data layers (Trafikverket, Swedavia, SMHI, SCB, Kolada, Valmyndigheten, Wikidata, ENTSO-E and others) with the in-app attribution visible in frame; those elements remain subject to Google Maps Platform's and each data provider's terms. Keep the visible attribution intact. `kallor.webp` is a title card from the fork's promotional film.
+They are included as project documentation for this repository and are not covered by the project's MIT License. They show Google Photorealistic 3D Tiles and live public data layers (Trafikverket, Swedavia, SMHI, SCB, Kolada, Valmyndigheten, Wikidata, ENTSO-E and others) with the in-app attribution visible in frame; those elements remain subject to Google Maps Platform's and each data provider's terms. Keep the visible attribution intact. `kallor.webp` is the fork's sources title card (first made for its promotional film, redrawn 2026-11-13 with today's sources).
 
 Municipal coats of arms from Wikimedia Commons appear in the city panel's header in these captures:
 
