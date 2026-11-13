@@ -86,6 +86,7 @@ const departure = (overrides = {}) => ({
     direction: 'Sätra',
     destination: { id: '9', name: 'Sätra centrum' },
   },
+  stop: { id: 's', name: 'Rådhuset', lat: 60.674, lon: 17.142 },
   scheduled_platform: { id: 'p', designation: 'B' },
   realtime_platform: null,
   alerts: [],
@@ -127,6 +128,7 @@ test('local departures: no trains, none gone, soonest first, with delay', () => 
   );
   assert.equal(rows[0].destination, 'Sätra centrum');
   assert.equal(rows[0].platform, 'B');
+  assert.equal(rows[0].from, 'Rådhuset');
   assert.equal(rows[2].platform, 'C');
   assert.equal(rows[2].note, 'Omledning');
   assert.deepEqual(normalizeLocalDepartures(null, nowMs), []);

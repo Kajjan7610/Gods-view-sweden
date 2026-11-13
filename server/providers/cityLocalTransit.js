@@ -95,7 +95,8 @@ export function townStopGroup(payload, point, townName) {
 
 /**
  * The next local departures still to leave, soonest first: line, mode,
- * destination, expected time, delay, platform and the first alert's title.
+ * destination, expected time, delay, the stop it leaves from (a town's
+ * central group holds several), platform and the first alert's title.
  */
 export function normalizeLocalDepartures(payload, nowMs) {
   const rows = Array.isArray(payload?.departures) ? payload.departures : [];
@@ -121,6 +122,7 @@ export function normalizeLocalDepartures(payload, nowMs) {
         row.route?.destination?.name ?? row.route?.direction,
         40,
       ),
+      from: text(row.stop?.name, 40),
       platform: text(platform, 8),
       note: text(row.alerts?.[0]?.title, 60),
     });

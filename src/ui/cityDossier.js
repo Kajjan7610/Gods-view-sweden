@@ -1217,6 +1217,8 @@ export function createCityDossier({
         late: row.canceled || row.delayMinutes > 0,
         detail: [
           vehicle(row),
+          // A town's central group holds several stops: say which one.
+          row.from && row.from !== local.stop ? row.from : null,
           row.platform
             ? t('stop {platform}', { platform: row.platform })
             : null,
