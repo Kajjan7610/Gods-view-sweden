@@ -3605,8 +3605,6 @@
   "40 cm or more above mean": "40 سم أو أكثر فوق المتوسط",
   "Sea weather unavailable": "طقس البحر غير متاح",
   "Colour stations by mean wind": "تلوين المحطات حسب متوسط الرياح",
-  "WATER LEVEL": "منسوب المياه",
-  "Colour stations by water level against mean water": "تلوين المحطات حسب منسوب المياه مقارنة بالمتوسط",
   "Write the value beside the stations that stand out most": "كتابة القيمة بجانب المحطات الأبرز",
   "Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.": "النقاط هي محطات SMHI البحرية على طول الساحل. النقاط الرمادية لا تقيس ما هو معروض. انقر على محطة لعرض منسوب المياه ودرجة حرارة المياه والأمواج.",
   "Malformed sea weather snapshot": "لقطة طقس البحر مشوّهة",

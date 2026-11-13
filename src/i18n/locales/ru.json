@@ -3455,8 +3455,6 @@
   "40 cm or more above mean": "На 40 см и более выше среднего",
   "Sea weather unavailable": "Морская погода недоступна",
   "Colour stations by mean wind": "Окрашивать станции по среднему ветру",
-  "WATER LEVEL": "УРОВЕНЬ ВОДЫ",
-  "Colour stations by water level against mean water": "Окрашивать станции по уровню воды относительно среднего",
   "Write the value beside the stations that stand out most": "Подписывать значение у самых заметных станций",
   "Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.": "Точки — морские станции SMHI вдоль побережья. Серые точки не измеряют показанное. Нажмите на станцию, чтобы увидеть уровень воды, температуру воды и волнение.",
   "Malformed sea weather snapshot": "Некорректный снимок морской погоды",

@@ -3230,8 +3230,6 @@
   "40 cm or more above mean": "平均より 40 cm 以上高い",
   "Sea weather unavailable": "海上気象を利用できません",
   "Colour stations by mean wind": "平均風速で観測所を色分け",
-  "WATER LEVEL": "水位",
-  "Colour stations by water level against mean water": "平均水位比の水位で観測所を色分け",
   "Write the value beside the stations that stand out most": "最も目立つ観測所の横に値を表示",
   "Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.": "点は沿岸にある SMHI の海洋観測所です。灰色の点は表示中の項目を測定していません。観測所をクリックすると水位、水温、波を表示します。",
   "Malformed sea weather snapshot": "海上気象スナップショットが不正です",

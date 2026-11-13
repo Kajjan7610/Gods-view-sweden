@@ -3380,8 +3380,6 @@
   "40 cm or more above mean": "40 cm o più sopra la media",
   "Sea weather unavailable": "Meteo marino non disponibile",
   "Colour stations by mean wind": "Colora le stazioni in base al vento medio",
-  "WATER LEVEL": "LIVELLO ACQUA",
-  "Colour stations by water level against mean water": "Colora le stazioni in base al livello dell’acqua rispetto al livello medio",
   "Write the value beside the stations that stand out most": "Scrivi il valore accanto alle stazioni che spiccano di più",
   "Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.": "I punti sono le stazioni marine dello SMHI lungo la costa. I punti grigi non misurano ciò che è mostrato. Fai clic su una stazione per livello dell’acqua, temperatura dell’acqua e onde.",
   "Malformed sea weather snapshot": "Snapshot meteo marino non valido",

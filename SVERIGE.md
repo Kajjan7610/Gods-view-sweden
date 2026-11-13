@@ -397,6 +397,13 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-13 (sjöväder utan vindläge)
+- Sjöväder har inte längre något vindläge. SMHI:s havsstationer mäter ingen
+  vind, så läget kunde aldrig visas sedan ViVa togs bort; knappen VATTENSTÅND
+  är också borta eftersom vattenstånd är det enda som visas. Knappen VÄRDEN
+  finns kvar. Vind vid kusten visar lagret Väder nu från SMHI:s
+  väderstationer, och vindklasserna det använder är kvar.
+
 ### 2026-11-13 (Krisinformation och SMHI:s varningar hämtas en gång)
 - Krisinformation.se och SMHI:s varningsfil läses nu av en gemensam läsare
   på servern (`server/providers/swedishAlertFeeds.js`) i stället för av tre

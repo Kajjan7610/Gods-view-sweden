@@ -4,12 +4,16 @@
  *
  * SMHI's ocean observations (open data, CC BY 4.0, no key): three files,
  * each with every station's last day, give the water level, the water
- * temperature and the waves along the coast. They measure no wind; the wind
- * classes serve rows that carry one. Sjöfartsverket's ViVa is not read: it
+ * temperature and the waves along the coast. They measure no wind: wind is
+ * the Weather Now layer's, from SMHI's weather stations. Sjöfartsverket's
+ * ViVa is not read: it
  * does not allow its data to be republished.
  */
 
-/** Mean-wind classes in m/s, calmest first (Swedish sea-forecast steps). */
+/**
+ * Mean-wind classes in m/s, calmest first (Swedish sea-forecast steps),
+ * shared with the Weather Now layer (smhiWeather).
+ */
 export const WIND_CLASSES = Object.freeze([
   Object.freeze({ id: 'calm', max: 4, color: '#80deea' }),
   Object.freeze({ id: 'moderate', max: 8, color: '#9ccc65' }),
@@ -103,15 +107,10 @@ export function mergeSmhiSea(answers, nowMs) {
         source: 'smhi',
         name: text(station.name, 80) || key,
         point: [Math.round(lon * 1e5) / 1e5, Math.round(lat * 1e5) / 1e5],
-        meanWind: null,
-        gust: null,
-        windHeading: null,
         level: null,
         levelReference: null,
         waterTemp: null,
-        airTemp: null,
         waveHeight: null,
-        visibility: null,
         updated: null,
       };
       row[field] = value;

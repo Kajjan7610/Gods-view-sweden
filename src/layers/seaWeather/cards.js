@@ -5,7 +5,6 @@ import { formatCelsius } from '../roadWeather/cards.js';
 import {
   LEVEL_CLASSES,
   NO_VALUE_COLOR,
-  WIND_CLASSES,
   classOf,
   isMeanWater,
   meanWaterLevel,
@@ -25,30 +24,11 @@ const CARD_BASE = Object.freeze({
 });
 
 /**
- * The colour a station takes for the shown quantity ('wind' or 'level'). A
- * level against another zero than mean water has no class, so no colour.
+ * The colour a station takes by its water level. A level against another
+ * zero than mean water has no class, so no colour.
  */
-export function seaColor(row, mode) {
-  const entry =
-    mode === 'level'
-      ? classOf(LEVEL_CLASSES, meanWaterLevel(row))
-      : classOf(WIND_CLASSES, row.meanWind);
-  return entry?.color || NO_VALUE_COLOR;
-}
-
-function windLine(row) {
-  const speed = oneDecimal(row.meanWind);
-  const direction =
-    row.windHeading != null ? `${Math.round(row.windHeading) % 360}°` : null;
-  if (row.gust != null && direction)
-    return t('Wind {speed} m/s, gusts {gust} m/s, from {direction}', {
-      speed,
-      gust: oneDecimal(row.gust),
-      direction,
-    });
-  if (direction)
-    return t('Wind {speed} m/s from {direction}', { speed, direction });
-  return t('Wind {speed} m/s', { speed });
+export function seaColor(row) {
+  return classOf(LEVEL_CLASSES, meanWaterLevel(row))?.color || NO_VALUE_COLOR;
 }
 
 /** A level reference as it reads in a sentence: "sjökortsnivå", "RH 2000". */
@@ -76,17 +56,14 @@ function levelLine(row) {
 /**
  * Card for one station.
  * @param {object} row A normalized station.
- * @param {{mode?: string, nowMs?: number}} [options] The shown quantity, and
- *   the clock the reading's age is judged by.
+ * @param {{nowMs?: number}} [options] The clock the reading's age is judged
+ *   by.
  */
-export function buildSeaCard(row, { mode = 'wind', nowMs = Date.now() } = {}) {
+export function buildSeaCard(row, { nowMs = Date.now() } = {}) {
   const details = [];
-  if (row.meanWind != null) details.push(windLine(row));
   if (row.level != null) details.push(levelLine(row));
   if (row.waterTemp != null)
     details.push(t('Water {value}', { value: formatCelsius(row.waterTemp) }));
-  if (row.airTemp != null)
-    details.push(t('Air {air}', { air: formatCelsius(row.airTemp) }));
   if (row.waveHeight != null)
     details.push(
       t('Wave height {height} m', { height: oneDecimal(row.waveHeight) }),
@@ -103,6 +80,6 @@ export function buildSeaCard(row, { mode = 'wind', nowMs = Date.now() } = {}) {
     interactive: true,
     title: t('SEA WEATHER · {station}', { station: row.name.toUpperCase() }),
     details,
-    accent: seaColor(row, mode),
+    accent: seaColor(row),
   };
 }

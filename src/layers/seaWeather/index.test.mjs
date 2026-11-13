@@ -16,15 +16,10 @@ const station = (id, extra = {}) => ({
   id,
   name: `Station ${id}`,
   point: [11.6 + Number(id) / 100, 57.63],
-  meanWind: 6.7,
-  gust: 7.4,
-  windHeading: 243,
   level: -18,
   levelReference: 'MVY',
   waterTemp: 10.1,
-  airTemp: null,
   waveHeight: null,
-  visibility: null,
   updated: NOW - HOUR,
   ...extra,
 });
@@ -139,7 +134,7 @@ test('the open card follows the newest values without a new drawing', async (t) 
     'Water +10.1 °C',
     'Measured 14:00 · SMHI',
   ]);
-  // Wind and level as before, a new water temperature and time: the dot is
+  // The level as before, a new water temperature and time: the dot is
   // left alone, the card reads the new row.
   const add = t.mock.method(entities, 'add');
   clock.now += 10 * 60_000;
@@ -160,15 +155,14 @@ test('the open card follows the newest values without a new drawing', async (t) 
   layer.destroy();
 });
 
-test('in water level mode only levels against mean water are shown as such', async (t) => {
-  const { layer, entities, labels, chip } = harness(t, [
+test('only levels against mean water are shown as such', async (t) => {
+  const { layer, entities, labels } = harness(t, [
     station('7', { level: 12 }),
     station('8', { level: 48, levelReference: 'Sjökortsnivå' }),
     station('9', { level: 74, levelReference: 'RH2000' }),
   ]);
   layer.enable();
   await layer.update();
-  chip('level').onClick();
   // Vänern's 48 cm above chart datum is neither labelled nor "very high".
   assert.deepEqual(
     labels().map((entry) => [entry.id, entry.title]),
@@ -185,21 +179,17 @@ test('in water level mode only levels against mean water are shown as such', asy
   layer.destroy();
 });
 
-test('stations from SMHI, without wind, are coloured by water level and credit SMHI', async (t) => {
-  const { layer, feed, chip } = harness(t, [station('1'), station('2')]);
+test('stations are coloured by water level and credit SMHI', async (t) => {
+  const { layer, chip } = harness(t, [station('1'), station('2')]);
   layer.enable();
   await layer.update();
   assert.equal(layer.source, 'SMHI');
-  // A row with wind may be coloured by it; SMHI's carry none.
-  assert.equal(chip('wind')?.active, true);
-  feed.stations = [
-    station('3', { meanWind: null, gust: null, windHeading: null }),
-    station('4', { meanWind: null, gust: null, windHeading: null }),
-  ];
-  await layer.update();
-  assert.equal(layer.source, 'SMHI');
-  assert.equal(chip('wind'), undefined);
-  assert.equal(chip('level').active, true);
+  // Water level is the only quantity: no chip to choose it, VALUES stays.
+  assert.deepEqual(
+    layer.getRowControls().chips.map((entry) => entry.id),
+    ['values'],
+  );
+  assert.equal(chip('values').active, true);
   assert.match(
     layer.getRowControls().legend[0].blurb,
     /SMHI’s ocean stations/,

@@ -3380,8 +3380,6 @@
   "40 cm or more above mean": "40 cm ou mais acima da média",
   "Sea weather unavailable": "Tempo no mar indisponível",
   "Colour stations by mean wind": "Colorir as estações pelo vento médio",
-  "WATER LEVEL": "NÍVEL DA ÁGUA",
-  "Colour stations by water level against mean water": "Colorir as estações pelo nível da água em relação ao nível médio",
   "Write the value beside the stations that stand out most": "Escrever o valor ao lado das estações que mais se destacam",
   "Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.": "Os pontos são as estações marítimas do SMHI ao longo da costa. Os pontos cinzentos não medem o que é mostrado. Clique numa estação para ver o nível da água, a temperatura da água e as ondas.",
   "Malformed sea weather snapshot": "Snapshot de tempo no mar malformado",

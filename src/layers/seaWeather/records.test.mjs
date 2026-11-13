@@ -4,7 +4,6 @@ import test from 'node:test';
 import {
   LEVEL_CLASSES,
   NO_VALUE_COLOR,
-  WIND_CLASSES,
   classOf,
   meanWaterLevel,
   mergeSmhiSea,
@@ -13,49 +12,37 @@ import { buildSeaCard, seaColor } from './cards.js';
 
 // 23:00 in Stockholm, a quarter after the reading below.
 const NOW = Date.parse('2026-11-04T22:00:00Z');
-// One station's row as the layer gets it; the wind is there to show the card
-// reads one when a row carries it.
+// One station's row as the layer gets it.
 const ROW = Object.freeze({
   id: '114',
   name: 'Vinga',
   point: [11.6047, 57.632],
-  meanWind: 6.7,
-  gust: 7.4,
-  windHeading: 243,
   level: -18,
   levelReference: 'MVY',
   waterTemp: 10.1,
-  airTemp: null,
-  waveHeight: null,
-  visibility: null,
+  waveHeight: 0.8,
   updated: Date.parse('2026-11-04T21:46:55Z'),
 });
 
 test('classes cover every value and their colours differ', () => {
-  assert.equal(classOf(WIND_CLASSES, 6.7).id, 'moderate');
-  assert.equal(classOf(WIND_CLASSES, 25).id, 'storm');
   assert.equal(classOf(LEVEL_CLASSES, -18).id, 'low');
   assert.equal(classOf(LEVEL_CLASSES, 55).id, 'very-high');
-  assert.equal(classOf(WIND_CLASSES, null), null);
-  assert.equal(new Set(WIND_CLASSES.map((c) => c.color)).size, 5);
+  assert.equal(classOf(LEVEL_CLASSES, null), null);
   assert.equal(new Set(LEVEL_CLASSES.map((c) => c.color)).size, 5);
 });
 
-test('the card reads wind, water level and water temperature', () => {
+test('the card reads water level, water temperature and waves', () => {
   const row = ROW;
   const card = buildSeaCard(row, { nowMs: NOW });
   assert.equal(card.title, 'SEA WEATHER · VINGA');
   assert.deepEqual(card.details, [
-    'Wind 6.7 m/s, gusts 7.4 m/s, from 243°',
     'Water level -18 cm against mean water',
     'Water +10.1 °C',
+    'Wave height 0.8 m',
     'Measured 22:46 · SMHI',
   ]);
-  assert.equal(card.accent, seaColor(row, 'wind'));
-  assert.equal(
-    buildSeaCard(row, { mode: 'level' }).accent,
-    seaColor(row, 'level'),
-  );
+  assert.equal(card.accent, seaColor(row));
+  assert.equal(card.accent, LEVEL_CLASSES[1].color);
 });
 
 test('only a level against mean water is classed and coloured', () => {
@@ -63,7 +50,6 @@ test('only a level against mean water is classed and coloured', () => {
     id: '1',
     name: 'Skoghall',
     point: [13.4385, 59.3163],
-    meanWind: null,
     level,
     levelReference,
     updated: NOW - 60_000,
@@ -74,8 +60,8 @@ test('only a level against mean water is classed and coloured', () => {
   assert.equal(meanWaterLevel(row(null)), null);
   assert.equal(meanWaterLevel({ ...row('MVY'), level: null }), null);
   // 48 cm above chart datum in Vänern is no "very high" water.
-  assert.equal(seaColor(row('MVY'), 'level'), LEVEL_CLASSES.at(-1).color);
-  assert.equal(seaColor(row('Sjökortsnivå'), 'level'), NO_VALUE_COLOR);
+  assert.equal(seaColor(row('MVY')), LEVEL_CLASSES.at(-1).color);
+  assert.equal(seaColor(row('Sjökortsnivå')), NO_VALUE_COLOR);
   // The card names the zero the station measures from.
   const line = (reference, level) =>
     buildSeaCard(row(reference, level), { nowMs: NOW }).details[0];
@@ -137,11 +123,10 @@ test("SMHI's ocean files merge into one row per station against mean water", () 
       row.levelReference,
       row.waterTemp,
       row.waveHeight,
-      row.meanWind,
     ]),
     [
-      ['smhi:2111', 'smhi', 9.6, 'MVY', 9.12, null, null],
-      ['smhi:33', 'smhi', null, null, null, 0.97, null],
+      ['smhi:2111', 'smhi', 9.6, 'MVY', 9.12, null],
+      ['smhi:33', 'smhi', null, null, null, 0.97],
     ],
   );
   assert.equal(meanWaterLevel(rows[0]), 9.6);
@@ -154,15 +139,13 @@ test("an SMHI station's card names SMHI", () => {
       id: 'smhi:2111',
       source: 'smhi',
       name: 'Onsala',
-      meanWind: null,
       level: 9.6,
       levelReference: 'MVY',
       waterTemp: 9.1,
-      airTemp: null,
       waveHeight: null,
       updated: NOW - 70 * 60_000,
     },
-    { mode: 'level', nowMs: NOW },
+    { nowMs: NOW },
   );
   assert.match(card.details.at(-1), /· SMHI$/);
   assert.equal(

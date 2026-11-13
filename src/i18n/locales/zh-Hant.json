@@ -3230,8 +3230,6 @@
   "40 cm or more above mean": "高於平均 40 cm 以上",
   "Sea weather unavailable": "海上天氣無法使用",
   "Colour stations by mean wind": "依平均風速為測站著色",
-  "WATER LEVEL": "水位",
-  "Colour stations by water level against mean water": "依相對平均水位的水位為測站著色",
   "Write the value beside the stations that stand out most": "在最突出的測站旁顯示數值",
   "Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.": "圓點為 SMHI 沿岸的海洋測站。灰色圓點不量測所顯示的項目。點擊測站可查看水位、水溫和波浪。",
   "Malformed sea weather snapshot": "海上天氣快照格式錯誤",

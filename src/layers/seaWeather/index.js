@@ -6,7 +6,6 @@ import { redrawEntities } from '../redrawEntities.js';
 import {
   LEVEL_CLASSES,
   NO_VALUE_COLOR,
-  WIND_CLASSES,
   classOf,
   meanWaterLevel,
 } from './records.js';
@@ -31,13 +30,6 @@ const LABEL_HOST_OPTIONS = Object.freeze({
   collisionCapacity: 40,
   moving: false,
 });
-const WIND_LABELS = Object.freeze({
-  calm: msg('Up to 4 m/s'),
-  moderate: msg('4 to 8 m/s'),
-  fresh: msg('8 to 13 m/s'),
-  gale: msg('13 to 20 m/s (gale)'),
-  storm: msg('Above 20 m/s (storm)'),
-});
 const LEVEL_LABELS = Object.freeze({
   'very-low': msg('40 cm or more below mean'),
   low: msg('10 to 40 cm below mean'),
@@ -45,15 +37,12 @@ const LEVEL_LABELS = Object.freeze({
   high: msg('10 to 40 cm above mean'),
   'very-high': msg('40 cm or more above mean'),
 });
-const oneDecimal = (value) =>
-  formatNumber(value, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 /**
  * Own one Swedish sea weather display: SMHI's ocean stations coloured by
- * water level against mean water (or mean wind, for rows that carry one),
- * with the value
- * written beside the windiest (or furthest-off) stations and click-to-card
- * selection. Share links carry it as token 0u.
+ * water level against mean water, with the level written beside the
+ * stations furthest off it and click-to-card selection. Share links carry it
+ * as token 0u.
  */
 export function createSeaWeatherLayer({
   source,
@@ -86,17 +75,13 @@ export function createSeaWeatherLayer({
   let _stale = false;
   let _selectedId = null;
   let _stations = [];
-  /** 'wind' or 'level'. */
-  let _mode = 'wind';
   let _values = true;
   const _stationById = new Map();
 
   const canSelect = () =>
     overlayHost && screenSpaceEventHandlerFactory && picking;
   // A level counts only against mean water: other zeros share no scale.
-  const shownValue = (row) =>
-    _mode === 'level' ? meanWaterLevel(row) : row.meanWind;
-  const hasWind = () => _stations.some((row) => row.meanWind != null);
+  const shownValue = (row) => meanWaterLevel(row);
 
   function publishSelectedCard() {
     if (!canSelect()) return;
@@ -110,7 +95,7 @@ export function createSeaWeatherLayer({
       );
       return;
     }
-    const card = buildSeaCard(row, { mode: _mode, nowMs: now() });
+    const card = buildSeaCard(row, { nowMs: now() });
     card.position = position(row);
     overlayHost.setEntries(
       SEA_WEATHER_OVERLAY_SOURCE_ID,
@@ -177,12 +162,9 @@ export function createSeaWeatherLayer({
           id: `sea-weather-label:${row.id}`,
           position: position(row),
           variant: 'label',
-          title:
-            _mode === 'level'
-              ? `${formatNumber(value, { signDisplay: 'exceptZero' })} cm`
-              : `${oneDecimal(value)} m/s`,
-          accent: seaColor(row, _mode),
-          // The windiest, or furthest from mean water, win the label budget.
+          title: `${formatNumber(value, { signDisplay: 'exceptZero' })} cm`,
+          accent: seaColor(row),
+          // The furthest from mean water win the label budget.
           priority: Math.round(Math.abs(value) * 100),
           collisionGroup: 'ambient-label',
           paintLane: 'ambient-label',
@@ -228,7 +210,7 @@ export function createSeaWeatherLayer({
           point: {
             pixelSize: has ? 10 : 6,
             color: Cesium.Color.fromCssColorString(
-              has ? seaColor(row, _mode) : NO_VALUE_COLOR,
+              has ? seaColor(row) : NO_VALUE_COLOR,
             ).withAlpha(has ? 1 : 0.6),
             outlineColor: Cesium.Color.fromCssColorString('#0d47a1'),
             outlineWidth: 2,
@@ -243,13 +225,6 @@ export function createSeaWeatherLayer({
     publishLabels();
     if (_selectedId) publishSelectedCard();
     _viewer?.scene?.requestRender?.();
-  }
-
-  function setMode(mode) {
-    if (_mode === mode) return;
-    _mode = mode;
-    render();
-    _rowListener?.();
   }
 
   const layer = {
@@ -306,15 +281,12 @@ export function createSeaWeatherLayer({
         const signature = JSON.stringify(
           snapshot.stations.map((row) => [
             row.id,
-            row.meanWind,
             row.level,
             row.levelReference,
           ]),
         );
         // The newest rows always: the card reads them, drawn again or not.
         _stations = snapshot.stations;
-        // Without any wind the stations are coloured by their water level.
-        if (_mode === 'wind' && !hasWind()) _mode = 'level';
         _stationById.clear();
         for (const row of _stations) _stationById.set(row.id, row);
         // Heights first: the ones this browser kept are drawn at once.
@@ -371,37 +343,15 @@ export function createSeaWeatherLayer({
     },
 
     getRowControls() {
-      const classes = _mode === 'level' ? LEVEL_CLASSES : WIND_CLASSES;
-      const labels = _mode === 'level' ? LEVEL_LABELS : WIND_LABELS;
-      const legend = classes
-        .map(({ id, color }) => ({
-          label: t(labels[id]),
-          color,
-          count: _stations.filter(
-            (row) => classOf(classes, shownValue(row))?.id === id,
-          ).length,
-        }))
-        .filter((item) => item.count > 0);
+      const legend = LEVEL_CLASSES.map(({ id, color }) => ({
+        label: t(LEVEL_LABELS[id]),
+        color,
+        count: _stations.filter(
+          (row) => classOf(LEVEL_CLASSES, shownValue(row))?.id === id,
+        ).length,
+      })).filter((item) => item.count > 0);
       return {
         chips: [
-          ...(hasWind() || !_stations.length
-            ? [
-                {
-                  id: 'wind',
-                  label: t('WIND'),
-                  active: _mode === 'wind',
-                  title: t('Colour stations by mean wind'),
-                  onClick: () => setMode('wind'),
-                },
-              ]
-            : []),
-          {
-            id: 'level',
-            label: t('WATER LEVEL'),
-            active: _mode === 'level',
-            title: t('Colour stations by water level against mean water'),
-            onClick: () => setMode('level'),
-          },
           {
             id: 'values',
             label: t('VALUES'),

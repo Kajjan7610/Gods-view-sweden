@@ -3292,8 +3292,6 @@
   "40 cm or more above mean": "40 cm eller mer över medel",
   "Sea weather unavailable": "Sjöväder otillgängligt",
   "Colour stations by mean wind": "Färga stationerna efter medelvind",
-  "WATER LEVEL": "VATTENSTÅND",
-  "Colour stations by water level against mean water": "Färga stationerna efter vattenstånd mot medelvattenstånd",
   "Write the value beside the stations that stand out most": "Skriv värdet bredvid de stationer som sticker ut mest",
   "Dots are SMHI’s ocean stations along the coast. Grey dots do not measure what is shown. Click a station for water level, water temperature and waves.": "Prickarna är SMHI:s havsstationer längs kusten. Grå prickar mäter inte det som visas. Klicka på en station för vattenstånd, vattentemperatur och vågor.",
   "Malformed sea weather snapshot": "Felaktig ögonblicksbild av sjöväder",
