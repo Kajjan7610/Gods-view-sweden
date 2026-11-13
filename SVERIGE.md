@@ -397,6 +397,22 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-13 (Krisinformation och SMHI:s varningar hämtas en gång)
+- Krisinformation.se och SMHI:s varningsfil läses nu av en gemensam läsare
+  på servern (`server/providers/swedishAlertFeeds.js`) i stället för av tre
+  delar var för sig: VMA-bannern och stadspanelen, vädervarningslagret och
+  cockpit-genomgången. Krisinformation läses högst varannan minut, SMHI:s
+  varningar högst var femte; när alla tre delarna används blir det ungefär
+  en tredjedel färre anrop, och lagret och cockpit får VMA:erna färskare än
+  förut (två minuter i stället för fem).
+- Varje del behåller sin regel för ett svar som inte längre kan bekräftas:
+  bannern visar ett VMA kvar med "Uppdaterad" och tiden hellre än att dölja
+  ett som kanske gäller, kartan släpper det efter en timme. Cockpit visade
+  förut inga VMA alls när Krisinformation inte svarade; nu visar den de
+  senaste i högst en timme, som kartan.
+- Rättat i DATA_SOURCES.md: cockpit hämtar inga nyhetsrubriker över Sverige
+  som standard (sedan tidigare i dag), inte Google News.
+
 ### 2026-11-13 (strängare innehållspolicy)
 - Webbläsarens innehållspolicy (CSP) tillåter inte längre skript och ramar
   från YouTube, Facebook och X. De behövdes bara för Nepal-scenens inbäddade

@@ -1,21 +1,24 @@
-import { normalizeWarnings } from '../../src/layers/smhiWarnings/records.js';
 import {
-  createCountyLookup,
   normalizeCrisisItems,
+  createCountyLookup,
 } from '../../src/layers/smhiWarnings/crisis.js';
 import { createPlaceLookup } from '../../src/layers/policeEvents/records.js';
 import { SWEDISH_MUNICIPALITIES } from './polisen/municipalities.js';
-import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
+import { coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
+import {
+  createKrisinformationFeed,
+  createSmhiWarningsFeed,
+  sharedKrisinformationFeed,
+  sharedSmhiWarningsFeed,
+} from './swedishAlertFeeds.js';
+export { SMHI_WARNINGS_URL } from './swedishAlertFeeds.js';
 
-// SMHI's impact-based weather warnings (CC BY 4.0, no key): one public JSON
-// document with every warning in effect or upcoming, polygons included.
-export const SMHI_WARNINGS_URL =
-  'https://opendata-download-warnings.smhi.se/ibww/api/version/1/warning.json';
-// Krisinformation.se (MSB, no key): VMAs in effect and recent crisis news,
-// fetched with the warnings so everything serious sits in one layer.
-export const KRIS_VMAS_URL = 'https://api.krisinformation.se/v3/vmas';
-export const KRIS_NEWS_URL = 'https://api.krisinformation.se/v3/news?days=3';
+// SMHI's impact-based weather warnings (CC BY 4.0) and Krisinformation.se's
+// VMAs and recent crisis news (MCF, no key), so everything serious sits in
+// one layer. Both come from the server's shared readers
+// (swedishAlertFeeds.js), which the VMA banner, the city dossier and the
+// cockpit briefing read too.
 const crisisLookups = {
   places: createPlaceLookup(SWEDISH_MUNICIPALITIES),
   counties: createCountyLookup(SWEDISH_MUNICIPALITIES),
@@ -28,14 +31,21 @@ export const SMHI_WARNINGS_RETRY_AFTER_FAILURE_MS = 60_000;
  * longest the last crisis list is kept while Krisinformation fails.
  */
 const STALE_MAX_MS = 60 * 60_000;
-const MAX_BODY_BYTES = 16 * 1024 * 1024;
-const FETCH_TIMEOUT_MS = 20_000;
 
 /** Bounded SMHI warning route for dev and preview. */
 export function smhiWarningsProxy({
-  fetchImpl = (...args) => globalThis.fetch(...args),
+  fetchImpl,
   now = () => Date.now(),
+  warningsFeed,
+  crisisFeed,
 } = {}) {
+  // Readers of their own only when a test hands in a fetch.
+  warningsFeed ??= fetchImpl
+    ? createSmhiWarningsFeed({ fetchImpl, now })
+    : sharedSmhiWarningsFeed();
+  crisisFeed ??= fetchImpl
+    ? createKrisinformationFeed({ fetchImpl, now })
+    : sharedKrisinformationFeed();
   let cached = null;
   let retryAfter = 0;
   /** The last crisis list Krisinformation answered with: {items, savedAt}. */
@@ -43,68 +53,48 @@ export function smhiWarningsProxy({
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 30, globalMax: 600 });
 
-  async function getJson(url, signal) {
-    const response = await fetchImpl(url, {
-      signal,
-      redirect: 'manual',
-      headers: { Accept: 'application/json' },
-    });
-    if (!response.ok) {
-      try {
-        await response.body?.cancel();
-      } catch {
-        /* no-op */
-      }
-      throw new Error(
-        `upstream HTTP ${response.status} (${new URL(url).host})`,
-      );
-    }
-    return readResponseJsonCapped(response, MAX_BODY_BYTES);
-  }
-
   async function load() {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    try {
-      const [warnings, vmas, news] = await Promise.allSettled([
-        getJson(SMHI_WARNINGS_URL, controller.signal),
-        getJson(KRIS_VMAS_URL, controller.signal),
-        getJson(KRIS_NEWS_URL, controller.signal),
-      ]);
-      if (warnings.status === 'rejected') throw warnings.reason;
-      const fetchedAt = now();
-      // Crisis messages are an addition: when Krisinformation fails, the
-      // warnings still serve and the last crisis list is kept, for an hour:
-      // a VMA that has ended must not stay on the map.
-      const crisisOk =
-        vmas.status === 'fulfilled' && news.status === 'fulfilled';
-      if (!crisisOk)
-        console.warn(
-          `[smhi-warnings] krisinformation failed: ${
-            (vmas.reason || news.reason)?.message || 'error'
-          }`,
-        );
-      if (crisisOk)
-        lastCrisis = {
-          items: normalizeCrisisItems(
-            { vmas: vmas.value, news: news.value },
-            crisisLookups,
-            fetchedAt,
-          ),
-          savedAt: fetchedAt,
-        };
-      return {
-        ...normalizeWarnings(warnings.value, fetchedAt),
-        crisis:
-          lastCrisis && fetchedAt - lastCrisis.savedAt <= STALE_MAX_MS
-            ? lastCrisis.items
-            : [],
-        crisisStale: !crisisOk,
-        fetchedAt,
+    const [warnings, crisis] = await Promise.allSettled([
+      warningsFeed.read(),
+      crisisFeed.read(),
+    ]);
+    // A warning list that can no longer be confirmed is a failed refresh.
+    if (warnings.status === 'rejected') throw warnings.reason;
+    if (!warnings.value.fresh) throw new Error('SMHI warnings unavailable');
+    const fetchedAt = now();
+    // Crisis messages are an addition: when Krisinformation fails, the
+    // warnings still serve and the last crisis list is kept, for an hour:
+    // a VMA that has ended must not stay on the map.
+    const crisisOk = crisis.status === 'fulfilled' && crisis.value.fresh;
+    if (!crisisOk)
+      console.warn(
+        `[smhi-warnings] krisinformation failed: ${
+          crisis.reason?.message || 'serving the last list'
+        }`,
+      );
+    if (
+      crisis.status === 'fulfilled' &&
+      crisis.value.savedAt !== lastCrisis?.savedAt
+    )
+      lastCrisis = {
+        items: normalizeCrisisItems(
+          { vmas: crisis.value.vmas, news: crisis.value.news },
+          crisisLookups,
+          fetchedAt,
+        ),
+        savedAt: crisis.value.savedAt,
       };
-    } finally {
-      clearTimeout(timer);
-    }
+    return {
+      ...warnings.value.warnings,
+      crisis:
+        lastCrisis && fetchedAt - lastCrisis.savedAt <= STALE_MAX_MS
+          ? lastCrisis.items
+          : [],
+      crisisStale: !crisisOk,
+      // When SMHI was read: the shared reader may have read it for another
+      // part a few minutes ago, and the cache below counts from then.
+      fetchedAt: warnings.value.savedAt,
+    };
   }
 
   /** The last snapshot marked stale, or null once it is too old to show. */
@@ -120,7 +110,7 @@ export function smhiWarningsProxy({
   async function refresh() {
     try {
       const value = await load();
-      cached = { value, savedAt: now() };
+      cached = { value, savedAt: value.fetchedAt };
       retryAfter = 0;
       console.log(
         `[smhi-warnings] ${value.areas.length} warning areas, ${value.crisis.length} crisis messages`,

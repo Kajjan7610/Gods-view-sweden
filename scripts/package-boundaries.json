@@ -515,6 +515,7 @@
       "server/providers/regional/place.js",
       "server/providers/regional/query.js",
       "server/providers/regional/sweden.js",
+      "server/providers/swedishAlertFeeds.js",
       "server/providers/regional/weather-effects.js",
       "server/providers/regional/weather.js",
       "server/providers/polisen/municipalities.js",

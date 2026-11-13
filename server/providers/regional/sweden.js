@@ -1,8 +1,9 @@
 import { fetchRegionalJson } from './http.js';
+import { warningLevel } from '../../../src/layers/smhiWarnings/records.js';
 import {
-  normalizeWarnings,
-  warningLevel,
-} from '../../../src/layers/smhiWarnings/records.js';
+  sharedKrisinformationFeed,
+  sharedSmhiWarningsFeed,
+} from '../swedishAlertFeeds.js';
 import {
   SWEDISH_COUNTIES,
   createCountyLookup,
@@ -24,10 +25,8 @@ const SWEDEN_BOX = Object.freeze({
 });
 const SMHI_FORECAST_URL = (lon, lat) =>
   `https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/${lon}/lat/${lat}/data.json`;
-const SMHI_WARNINGS_URL =
-  'https://opendata-download-warnings.smhi.se/ibww/api/version/1/warning.json';
-const KRIS_VMAS_URL = 'https://api.krisinformation.se/v3/vmas';
-const ALERTS_TTL_MS = 5 * 60_000;
+/** A VMA that can no longer be confirmed is left out after this long. */
+const VMA_STALE_MAX_MS = 60 * 60_000;
 const MAX_ALERTS = 3;
 /** A VMA placed at a town or county counts within this distance. */
 const VMA_RADIUS_KM = 100;
@@ -230,35 +229,42 @@ export async function fetchSmhiNow(point, { now = Date.now } = {}) {
   }
 }
 
-let alertSources = null;
-
-/** SMHI warnings and VMAs, shared by every briefing for five minutes. */
-async function loadAlertSources(now) {
-  if (alertSources && now - alertSources.at < ALERTS_TTL_MS)
-    return alertSources.value;
-  const [warnings, vmas] = await Promise.all([
-    fetchRegionalJson(SMHI_WARNINGS_URL, {
-      timeoutMs: 12_000,
-      redirect: 'error',
-      maxBytes: 16 * 1024 * 1024,
-    }),
-    fetchRegionalJson(KRIS_VMAS_URL, {
-      timeoutMs: 12_000,
-      redirect: 'error',
-    }).catch(() => []),
+/**
+ * SMHI warnings and VMAs from the server's shared readers
+ * (swedishAlertFeeds.js), which the warnings layer and the VMA banner read
+ * too. A warning list SMHI no longer confirms is not shown; the last VMAs are
+ * kept for an hour while Krisinformation does not answer, as on the map.
+ */
+async function loadAlertSources(
+  now,
+  {
+    warningsFeed = sharedSmhiWarningsFeed(),
+    crisisFeed = sharedKrisinformationFeed(),
+  } = {},
+) {
+  const [warnings, crisis] = await Promise.all([
+    warningsFeed.read(),
+    crisisFeed.read().catch(() => null),
   ]);
-  const value = {
-    warnings: normalizeWarnings(warnings, now),
+  if (!warnings.fresh) throw new Error('SMHI warnings unavailable');
+  const vmas =
+    crisis && now - crisis.savedAt <= VMA_STALE_MAX_MS ? crisis.vmas : [];
+  return {
+    warnings: warnings.warnings,
     crisis: normalizeCrisisItems({ vmas, news: [] }, crisisLookups),
   };
-  alertSources = { value, at: now };
-  return value;
 }
 
 /** What is in effect at a point: `{status, alerts}`. */
-export async function fetchSwedishAlerts(point, { now = Date.now } = {}) {
+export async function fetchSwedishAlerts(
+  point,
+  { now = Date.now, warningsFeed, crisisFeed } = {},
+) {
   try {
-    const { warnings, crisis } = await loadAlertSources(now());
+    const { warnings, crisis } = await loadAlertSources(now(), {
+      warningsFeed,
+      crisisFeed,
+    });
     return { status: 'ready', alerts: alertsAt(warnings, crisis, point) };
   } catch {
     return { status: 'unavailable', alerts: [] };

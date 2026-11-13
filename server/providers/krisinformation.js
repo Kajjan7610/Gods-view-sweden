@@ -1,16 +1,18 @@
-import { readResponseJsonCapped } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
+import {
+  createKrisinformationFeed,
+  sharedKrisinformationFeed,
+} from './swedishAlertFeeds.js';
+export { KRISINFORMATION_URL } from './swedishAlertFeeds.js';
 
 // Krisinformation.se (Swedish fork): the public alerts (VMA, Viktigt
 // meddelande till allmänheten) and the crisis news Swedish authorities
 // publish through Krisinformation.se's open API (Myndigheten för civilt
-// försvar, open data, no key). Read at most every two minutes.
-
-export const KRISINFORMATION_URL = 'https://api.krisinformation.se/v3';
-const TTL_MS = 2 * 60_000;
-const NEWS_DAYS = 3;
-const FETCH_TIMEOUT_MS = 15_000;
-const MAX_BODY_BYTES = 2 * 1024 * 1024;
+// försvar, open data, no key), for the VMA banner and the city dossier. The
+// server's one Krisinformation reader (swedishAlertFeeds.js) reads at most
+// every two minutes. An answer that can no longer be confirmed is served
+// marked stale for as long as it is the last: the banner keeps an alert and
+// says when it was last confirmed rather than hide one that may still hold.
 
 const text = (value, max = 400) => {
   const s = String(value ?? '')
@@ -65,56 +67,29 @@ export function normalizeMessage(row, kind) {
 }
 
 /** Bounded Krisinformation route for dev and preview. */
-export function krisinformationProxy({
-  fetchImpl = (...args) => globalThis.fetch(...args),
-  now = () => Date.now(),
-} = {}) {
-  let kept = null;
-  let loading = null;
+export function krisinformationProxy({ feed, fetchImpl, now } = {}) {
+  // A reader of its own only when a test hands in a fetch.
+  feed ??= fetchImpl
+    ? createKrisinformationFeed({ fetchImpl, now })
+    : sharedKrisinformationFeed();
+  /** The last read normalized, kept until the feed reads anew. */
+  let shaped = null;
   const allow = makeRateLimiter({ windowMs: 60_000, max: 60, globalMax: 600 });
 
-  async function getJson(path) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    try {
-      const response = await fetchImpl(`${KRISINFORMATION_URL}${path}`, {
-        signal: controller.signal,
-        redirect: 'manual',
-        headers: { Accept: 'application/json' },
-      });
-      if (!response.ok) throw new Error(`upstream HTTP ${response.status}`);
-      const body = await readResponseJsonCapped(response, MAX_BODY_BYTES);
-      return Array.isArray(body) ? body : [];
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-
   async function read() {
-    if (kept && now() - kept.at < TTL_MS) return kept;
-    loading ??= Promise.all([
-      getJson('/vmas'),
-      getJson(`/news?days=${NEWS_DAYS}`),
-    ])
-      .then(([vmas, news]) => {
-        kept = {
-          at: now(),
-          vmas: vmas.map((row) => normalizeMessage(row, 'vma')).filter(Boolean),
-          news: news
-            .map((row) => normalizeMessage(row, 'news'))
-            .filter(Boolean)
-            .sort((a, b) => (b.published ?? 0) - (a.published ?? 0)),
-          stale: false,
-        };
-        return kept;
-      })
-      .catch((error) => {
-        console.warn(`[krisinformation] ${error?.message}`);
-        if (kept) return { ...kept, stale: true };
-        throw error;
-      })
-      .finally(() => (loading = null));
-    return loading;
+    const answer = await feed.read();
+    if (shaped?.at !== answer.savedAt)
+      shaped = {
+        at: answer.savedAt,
+        vmas: answer.vmas
+          .map((row) => normalizeMessage(row, 'vma'))
+          .filter(Boolean),
+        news: answer.news
+          .map((row) => normalizeMessage(row, 'news'))
+          .filter(Boolean)
+          .sort((x, y) => (y.published ?? 0) - (x.published ?? 0)),
+      };
+    return { ...shaped, stale: !answer.fresh };
   }
 
   async function handler(req, res) {
