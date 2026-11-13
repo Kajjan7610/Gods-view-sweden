@@ -7,8 +7,8 @@ mest för att skaffa nycklarna.
 > **Vad det kostar:** ingenting. Appen tar inte betalt, och de svenska
 > källorna kräver bara en gratis registrering. Det enda som kan kosta är
 > Googles fotorealistiska 3D-städer (kräver ett betalkonto hos Google). Hoppa
-> över den nyckeln om du vill vara säker; appen visar då satellitbilder från
-> Esri i stället.
+> över den nyckeln om du vill vara säker; appen visar då OpenStreetMap, eller
+> satellitbilder från Esri om du lägger in en gratis ArcGIS-nyckel.
 
 ## 1. Installera
 
@@ -59,11 +59,14 @@ sparas bara på din dator och skickas bara till respektive källa.
 
 | Nyckel i panelen | Ger dig | Skaffa den |
 |---|---|---|
-| **TRAFIKVERKET** | 1 550 vägkameror, tåg i realtid, väglag, vägväder, fartkameror | Registrera dig på [data.trafikverket.se](https://data.trafikverket.se/home) och skapa en nyckel |
+| **TRAFIKVERKET** | 1 550 vägkameror, tåg i realtid, väglag, vägväder, fartkameror, vägfärjor | Registrera dig på [data.trafikverket.se](https://data.trafikverket.se/home) och skapa en nyckel |
 | **TRAFIKLAB** (två nycklar) | Bussar, tunnelbana och spårvagnar live i 16 regioner, linjenummer och störningar | Skapa ett projekt på [developer.trafiklab.se](https://developer.trafiklab.se) och lägg till *GTFS Regional Realtime* och *GTFS Regional Static* |
+| **TRAFIKLAB REALTIME** | Bussar, spårvagnar, tunnelbana och båtar från stadens största hållplats i panelen STAD | Lägg till *Trafiklab Realtime APIs* i samma projekt på [developer.trafiklab.se](https://developer.trafiklab.se) (en egen nyckel) |
 | **SWEDAVIA** (två nycklar) | Flygtavlan för Swedavias tio flygplatser och köerna i säkerhetskontrollen | Registrera dig på [apideveloper.swedavia.se](https://apideveloper.swedavia.se) och prenumerera på *FlightInfo* och *WaitTime* (gratisnivåerna) |
 
-Valfritt, också gratis: **ENTSO-E** (flödena i lagret Kraftsystemet, från
+Valfritt, också gratis: **ARCGIS** (Esris satellitbild i stället för
+OpenStreetMap; ett gratis ArcGIS Location Platform-konto, nyckel med bara
+Basemaps), **ENTSO-E** (flödena i lagret Kraftsystemet, från
 den europeiska transparensplattformen), **NASA FIRMS**
 (bränder, öppna data), **CESIUM ION** (fler kartor, terräng och Googles
 3D-städer; gratis för icke-kommersiella personliga projekt) och

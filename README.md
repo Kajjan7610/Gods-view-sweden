@@ -18,7 +18,7 @@ https://github.com/user-attachments/assets/623694ab-79d8-40cf-9997-c6c95ce91400
 
 _28 sekunder med berättarröst: varje flyg över Sverige och Stockholm i rörelse just nu, och varje stad i siffror. For promotional purposes only. Alla källor står i slutskylten._
 
-Ett digitalt jordklot med hela världen live: flyg, satelliter, fartyg, jordbävningar och bränder från över 110 datakällor. Ovanpå det ligger Sveriges öppna data: **21 svenska API:er och 30 datatyper från 14 myndigheter och tjänster**, med hela gränssnittet på svenska.
+Ett digitalt jordklot med hela världen live: flyg, satelliter, fartyg, jordbävningar och bränder från över 110 datakällor. Ovanpå det ligger Sveriges öppna data: **24 svenska API:er och dataset och 33 datatyper från 14 myndigheter och tjänster**, med hela gränssnittet på svenska.
 
 Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av Bilawal Sidhu och Sameh Khamis ([Halfpixel](https://halfpixel.ai)), öppen källkod under [MIT-licensen](LICENSE). Den här forken är ett fristående hobbyprojekt utan koppling till eller stöd från originalets upphovsmän. Fel i de svenska delarna rapporteras här, inte i originalet.
 
@@ -52,8 +52,8 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 </table>
 
 - **Flyg:** följ ett plan i luften från tavlan, dagens rutter på globen, METAR och TAF, och en svensk lägesbild i cockpit.
-- **Varje stad:** panelen STAD för svenska orter med folkmängd, skatt, inkomst, val, läget just nu, tåg från stationen, Sevärt och ett besökspass.
-- **Väg och trafik:** tåg i realtid färgade efter försening, bussar och spårvagnar från 16 regionala trafikbolag, väglag, vägväder och kollektivtrafikstörningar.
+- **Varje stad:** panelen STAD för svenska orter med folkmängd, skatt, inkomst, val, läget just nu, tåg från stationen, bussar och spårvagnar från största hållplatsen, Sevärt och ett besökspass.
+- **Väg och trafik:** tåg i realtid färgade efter försening, bussar och spårvagnar från 16 regionala trafikbolag, väglag, vägväder, kollektivtrafikstörningar och Trafikverkets vägfärjor med nästa avgångar.
 - **Väder, kris och infrastruktur:** SMHI:s väder, varningar, radar, luftkvalitet och vattenföring, VMA och krisnyheter från Krisinformation.se, Polisens händelser, norrskensprognos, elpris per elområde, sjöväder och strålning.
 - **Sparläge:** knappen 3D/2D, eller `?globe=lite`, startar utan Google 3D Tiles så att hemmabruk inte drar av Googles kvot.
 
@@ -64,7 +64,7 @@ npm ci
 npm run dev
 ```
 
-Öppna http://localhost:4173/?lang=sv (kräver Node 24 eller 26). De flesta svenska källor behöver ingen nyckel. Kameror, tåg, kollektivtrafik och flygtavlorna kräver kostnadsfria nycklar från Trafikverket, Trafiklab och Swedavia, som läggs i `.env` (se `.env.example`) eller i appen. Alla svenska tillägg, nycklarna och en logg över varje ändring finns i **[SVERIGE.md](SVERIGE.md)**. Källor och villkor finns i **[DATA_SOURCES.md](DATA_SOURCES.md)**.
+Öppna http://localhost:4173/?lang=sv (kräver Node 24 eller 26). De flesta svenska källor behöver ingen nyckel. Kameror, tåg, kollektivtrafik och flygtavlorna kräver kostnadsfria nycklar från Trafikverket, Trafiklab och Swedavia, som läggs i `.env` (se `.env.example`) eller i appen. Esris satellitbild kräver en gratis ArcGIS-nyckel; utan den visas OpenStreetMap. Alla svenska tillägg, nycklarna och en logg över varje ändring finns i **[SVERIGE.md](SVERIGE.md)**. Källor och villkor finns i **[DATA_SOURCES.md](DATA_SOURCES.md)**.
 
 ### Bygger du vidare?
 
@@ -85,7 +85,7 @@ Knappen **Cite this repository** i sidopanelen på GitHub ger en färdig källh�
 
 ---
 
-<sub>Nedan följer originalprojektets README (på engelska). Den gäller även här, med de svenska tilläggen ovan.</sub>
+<sub>Nedan följer originalprojektets README (på engelska). Den beskriver originalet, och allt i den finns inte i den svenska versionen. Vad som gäller här står ovan och i [SVERIGE.md](SVERIGE.md).</sub>
 
 ---
 
@@ -166,7 +166,7 @@ Start with the included data sources, then add your own. Each layer is a separat
 - **🧭 Tilt and North Up:** Switch between straight-down and a 35° oblique, or put north at the top, while a tracked target stays centered.
 - **🔍 Keyless search:** Type decimal coordinates, a two-dimensional WGS84 `geo:` URI (for example, `geo:39.7392,-104.9903`), or a bundled city or landmark to fly there with no geocoder request; other names use Google when configured, then Photon and Nominatim.
 - **📦 Shareable scenes:** Import, preview and share Director scenes as files or bundles, with camera anchors, authored moves and data packs.
-- **🌊 Nepal flood scene:** Replay the Bhote Koshi flood: flood path, witness sources and before-and-after imagery (bundled data is non-commercial; see [DATA_SOURCES.md](DATA_SOURCES.md)).
+- **🌊 Nepal flood scene:** Replay the Bhote Koshi flood: flood path, witness sources and before-and-after imagery (bundled data is non-commercial; see [DATA_SOURCES.md](DATA_SOURCES.md)). _Not offered in the Swedish version._
 
 ---
 
@@ -181,8 +181,9 @@ Start with the included data sources, then add your own. Each layer is a separat
 ## ⚡ Quick Start
 
 **Local setup needs no account or API keys.** The app opens with
-Esri satellite imagery and keyless terrain. OSM is the fallback if Esri is
-unreachable. Flights, military traffic, satellites, earthquakes, public
+OpenStreetMap and keyless terrain; in the Swedish version Esri satellite
+imagery needs a free ArcGIS key (`ARCGIS_API_KEY`), and OSM stays the fallback.
+Flights, satellites, earthquakes, public
 cameras, radio, and launches are available without keys.
 
 For photorealistic 3D, add a **Cesium ion token** for eligible personal,
@@ -531,7 +532,7 @@ Twenty-two layers and map sources. **Twenty have a keyless path.** Some offer ad
 | 🌍 **Earthquakes**          | Global seismic activity, last 24h                                                                                                                                                                                                                                                                                                                                                   | USGS                                    | 🟢                                                                                                  |
 | ◍ **Air quality**           | Live AQHI on the published 1–10+ health-risk scale, with a Weather-panel card showing the band legend and the highest readings in view. Canada (ECCC AQHI) and, in the Swedish fork, Sweden (SMHI on the European EAQI) | ECCC MSC GeoMet, SMHI Datavärdskap luft | 🟢                                                                                                  |
 | 🚗 **Traffic**              | Simulated vehicles on OSM roads. With TomTom, live flow speeds drive the simulation and congestion colors below ~8 km; individual vehicle positions are not live observations                                                                                                                                                                                                       | TomTom + OSM                            | 🟢 simulation · 🟡 live flow speeds                                                                 |
-| 📹 **CCTV Mesh**            | up to 7,350 camera locations (4,000 shared round-robin slots, plus room for 1,120 Québec and 2,230 World image cameras) projected _into_ the 3D space — Austin · Texas (TxDOT) · California (Caltrans) · London (TfL) · Ontario (511, free developer key) · Ottawa (City of Ottawa, free access certificate) · Finland (Fintraffic) · British Columbia (DriveBC) · Estonia (Tallinn, Tarktee) · Delaware (DelDOT live video) · New South Wales (Live Traffic NSW) · Calgary · Norway (Statens vegvesen) · Sweden (Trafikverket, free key) · Toronto · King County (WA) · Washington (WSDOT) · Catalonia (Servei Català de Trànsit) · Iceland (Vegagerðin) · Hong Kong (Transport Department) · Taiwan (Freeway Bureau, MOTC) · Québec (MTQ locations with Québec 511 links, Montréal locations, regional webcams) · Oregon (TripCheck) · Japan (MLIT river cameras) · Italy (A22 Brennero motorway), plus opt-in New York City (NYC DOT TMC, needs your own NYC DOT agreement), opt-in Lithuania (Via Lietuva / Eismoinfo, photo licence unconfirmed), opt-in Québec 511 in-browser video (embedding terms unconfirmed), opt-in Florida (FL511, individual personal use only; other use needs FDOT's written consent) and opt-in Houston (TranStar, enable only with TxDOT's written permission per TranStar's Content Usage terms). Positions are published or attributed; poses are estimated priors **you calibrate by dragging a gizmo on the camera itself** | City APIs                               | 🟢                                                                                                  |
+| 📹 **CCTV Mesh**            | up to 7,350 camera locations (4,000 shared round-robin slots, plus room for 1,120 Québec and 2,230 World image cameras) projected _into_ the 3D space — Austin · Texas (TxDOT) · California (Caltrans) · London (TfL) · Ontario (511, free developer key) · Ottawa (City of Ottawa, free access certificate) · Finland (Fintraffic) · British Columbia (DriveBC) · Estonia (Tallinn, Tarktee) · Delaware (DelDOT live video) · New South Wales (Live Traffic NSW) · Calgary · Norway (Statens vegvesen) · Sweden (Trafikverket, free key) · Toronto · King County (WA) · Washington (WSDOT) · Catalonia (Servei Català de Trànsit) · Iceland (Vegagerðin) · Hong Kong (Transport Department) · Taiwan (Freeway Bureau, MOTC) · Québec (MTQ locations with Québec 511 links, Montréal locations, regional webcams) · Oregon (TripCheck) · Japan (MLIT river cameras) · Italy (A22 Brennero motorway), plus opt-in New York City (NYC DOT TMC, needs your own NYC DOT agreement), opt-in Lithuania (Via Lietuva / Eismoinfo, photo licence unconfirmed), opt-in Québec 511 in-browser video (embedding terms unconfirmed), opt-in Florida (FL511, individual personal use only; other use needs FDOT's written consent) and opt-in Houston (TranStar, enable only with TxDOT's written permission per TranStar's Content Usage terms). In the Swedish version Austin, Texas, California, Delaware, Tallinn, Tarktee, Warendorf and the A22 load only when switched on (`CCTV_…_ENABLED=1`): their terms are only a courtesy note. Positions are published or attributed; poses are estimated priors **you calibrate by dragging a gizmo on the camera itself** | City APIs                               | 🟢                                                                                                  |
 | 📷 **Mapped ALPR Cameras**  | License-plate-reader camera locations tagged by OpenStreetMap contributors, loaded one city-sized view at a time, with **SHOW NEAREST**. Locations and tags only: no plate data, no video                                                                                                                                                                                           | OpenStreetMap (incl. DeFlock mapping)   | 🟢                                                                                                  |
 | 📷 **Street Level**         | Street-level photos behind one panel, one chip per provider: coverage on the streets, image cones, an embedded viewer with full-screen **EXPAND**. Mapillary, Google Street View, KartaView and Panoramax | Mapillary · Google · KartaView · Panoramax | 🟢 KartaView, Panoramax · 🟡 Mapillary token · 🔴 Google Maps key |
 | 📻 **Radio**                | Geolocated world radio with an **analog tuner** — drag the needle across up to 750 stations and the globe flies to each broadcaster                                                                                                                                                                                                                                                 | Radio Browser / broadcasters            | 🟢                                                                                                  |
@@ -543,7 +544,7 @@ Twenty-two layers and map sources. **Twenty have a keyless path.** Some offer ad
 | 🚀 **Space Missions**       | Rolling 30-day launches with payload, stage, and recovery detail                                                                                                                                                                                                                                                                                                                    | Launch Library 2                        | 🟢 (🔴 optional paid token raises the allowance)                                                         |
 | 🎖️ **Mapped Installations** | Viewport-bounded military-site context from community mapping — incomplete by nature, and labeled that way                                                                                                                                                                                                                                                                          | OpenStreetMap                           | 🟢                                                                                                  |
 | 🚫 **Prohibited & Restricted Airspace** | FAA prohibited (P) and restricted (R) special-use airspace as ground polygons, with name, altitude range and times of use on select. Not the UAS Facility Map or UAS flight restrictions; informational only, not for flight planning | FAA SUA                                 | 🟢                                                                                                  |
-| 🦉 **Wildlife Sightings** | Wildlife observed within 48 h (whales 7 d): density glow, taxon badges and anchored photo cards with creator/licence credit. Salish Sea marine mammals via Acartia; sensitive locations shown as 0.2° cells. Not a census | iNaturalist, Acartia | 🟢 |
+| 🦉 **Wildlife Sightings** | Wildlife observed within 48 h (whales 7 d): density glow, taxon badges and anchored photo cards with creator/licence credit. Sensitive locations shown as 0.2° cells. Not a census. The Swedish version does not read Acartia | iNaturalist | 🟢 |
 | 🌬️ **Wind**                 | Animated 10 m forecast wind with an optional speed, temperature or pressure color field and a reading at map center                                                                                                                                                                                                                                                                 | NOAA GFS / ECMWF IFS                    | 🟢                                                                                                  |
 | 🌦️ **Observed Weather**     | Rain radar (Nordics via SMHI, Europe via EUMETNET OPERA, or contiguous US), Satellite clouds (GOES regional or global infrared, Clouds only or Full image) and Lightning (Europe and Africa via EUMETSAT MTG, or Americas and Pacific) on one history timeline                                                                                                                                                                                                     | NOAA nowCOAST                           | 🟢                                                                                                  |
 | 🛣️ **Road Conditions (Sweden)** | Winter road condition per stretch and live incidents — accidents, roadworks, obstacles, restrictions — from Trafikverket; click a line or dot for details | Trafikverket | 🟡 |
@@ -577,7 +578,7 @@ In the app, **Data Layers** groups them as Movement, Cameras, Infrastructure, Ev
 
 | You have                   | The globe you get                                                                                                                                                            |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🟢 Nothing                 | Esri World Imagery satellite basemap + keyless terrain, in 2D. OSM takes over automatically if Esri is unreachable; if terrain is unavailable the globe continues without it |
+| 🟢 Nothing                 | OpenStreetMap + keyless terrain, in 2D (Esri World Imagery with a free ArcGIS key in the Swedish version); if terrain is unavailable the globe continues without it |
 | 🟡 A free Cesium ion token | **Google Photorealistic 3D cities** and world terrain — eligible personal, non-commercial use; current ion terms and quotas apply                                            |
 | 🔴 A Google Maps key       | The same 3D direct from Google, plus Google place search — the billing-enabled, metered route                                                                                |
 
