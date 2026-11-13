@@ -72,7 +72,10 @@ const settle = async () => {
 const descriptor = (id) => ({ id, label: id, kind: 'imagery' });
 function publicFixture(options) {
   const tileset = { show: true };
-  const registry = createDefaultMapSources({ googleTileset: tileset });
+  const registry = createDefaultMapSources({
+    googleTileset: tileset,
+    arcgisApiKey: 'test-key',
+  });
   const providers = new Map();
   for (const source of registry.sources) {
     if (!source.imagery) continue;

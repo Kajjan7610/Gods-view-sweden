@@ -19,6 +19,7 @@ import { worldClock, worldTimeFor } from '../time/worldClock.js';
 import { followWorldTime } from '../time/viewerClock.js';
 import { onLocaleChange, t } from '../i18n/index.js';
 import { readGlobeSaver } from '../globeSaver.js';
+import { arcgisApiKey } from '../maps/imagery.js';
 
 /** Construct the application globe using the caller's local configuration. */
 export async function createApplicationScene({
@@ -122,12 +123,14 @@ export async function createApplicationScene({
 
   loaderStatus.textContent = t('Initializing systems...');
 
+  // Esri's satellite map needs a key (Swedish fork); OpenStreetMap does not.
+  const keylessStack = arcgisApiKey() ? 'esri-imagery' : 'osm';
   const mapStackController = new MapController(viewer, {
     requestRender: governorRequestRender,
     ...mapOptions,
     googleTileset: tileset,
     cesiumToken,
-    initialStack: tileset ? 'photoreal' : 'esri-imagery',
+    initialStack: tileset ? 'photoreal' : keylessStack,
     // Task 5 (height-datum fix): rebroadcast stack changes as a window
     // CustomEvent so data layers (CCTV per-regime ground resolution) can
     // react without coupling MapStackController to layer modules. Fires on
@@ -141,7 +144,7 @@ export async function createApplicationScene({
     onError: (message) => console.warn('[MapStack]', message),
   });
   defer(() => mapStackController.destroy());
-  await mapStackController.setStack(tileset ? 'photoreal' : 'esri-imagery', {
+  await mapStackController.setStack(tileset ? 'photoreal' : keylessStack, {
     silent: true,
   });
 

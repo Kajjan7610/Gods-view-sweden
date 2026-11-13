@@ -171,6 +171,7 @@ export function createBrowserViteConfig({
   cesiumToken,
   photonUrl,
   mapillaryToken,
+  arcgisToken,
   host = 'localhost',
   port = 4173,
   allowedHosts = DEFAULT_ALLOWED_HOSTS,
@@ -257,6 +258,8 @@ export function createBrowserViteConfig({
       'import.meta.env.MAPILLARY_CLIENT_TOKEN': JSON.stringify(
         mapillaryToken ?? '',
       ),
+      // So is the ArcGIS basemap key; Esri restricts it to the app's address.
+      'import.meta.env.ARCGIS_API_KEY': JSON.stringify(arcgisToken ?? ''),
     },
     build: { chunkSizeWarningLimit: 1500 },
   };

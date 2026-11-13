@@ -1,8 +1,20 @@
 import * as Cesium from 'cesium';
 
 // Attribution and service rights are documented in DATA_SOURCES.md.
+// Esri's attribution rules want "Powered by Esri" and the data sources on
+// the map itself.
 export const ESRI_ATTRIBUTION_HTML =
-  '<a href="https://www.esri.com" target="_blank" rel="noopener">Powered by Esri</a>';
+  '<a href="https://www.esri.com" target="_blank" rel="noopener">Powered by Esri</a> · Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community';
+
+/**
+ * Swedish fork: Esri's satellite basemap needs an ArcGIS Location Platform
+ * key (free tier, "Basemaps" only). The key is public by design, injected
+ * into the browser like the Cesium ion token, and restricted at Esri to this
+ * app's addresses. Without it the keyless map is OpenStreetMap.
+ */
+export function arcgisApiKey() {
+  return String(import.meta.env?.ARCGIS_API_KEY ?? '').trim();
+}
 
 /**
  * OpenStreetMap's tile policy wants the licence attribution visible on the
@@ -18,10 +30,13 @@ export function createOsmImagery() {
   });
 }
 
-export function createEsriImagery() {
-  return Cesium.ArcGisMapServerImageryProvider.fromUrl(
-    'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+export function createEsriImagery(token = arcgisApiKey()) {
+  if (!token) throw new Error('Esri imagery requires ARCGIS_API_KEY');
+  // The keyed World Imagery service (ibasemaps-api.arcgis.com).
+  return Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
+    Cesium.ArcGisBaseMapType.SATELLITE,
     {
+      token,
       credit:
         'Powered by Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
       enablePickFeatures: false,

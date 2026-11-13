@@ -145,6 +145,17 @@ export const KEY_SETUP_KEYS = Object.freeze([
     tier: 'free',
   }),
   Object.freeze({
+    id: 'arcgis',
+    title: 'ARCGIS', // i18n-ignore: provider product name
+    unlocks: msg(
+      'Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap',
+    ),
+    getUrl: 'https://location.arcgis.com/',
+    envVars: Object.freeze(['ARCGIS_API_KEY']),
+    tier: 'free',
+    clientExposed: true,
+  }),
+  Object.freeze({
     id: 'cesium-ion',
     title: 'CESIUM ION', // i18n-ignore: provider product name
     unlocks: msg('Bing imagery map stacks + world terrain'),

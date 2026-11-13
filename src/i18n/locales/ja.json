@@ -4126,5 +4126,6 @@
   "About 70 stations on the coast; with ViVa about 160, also the large lakes and canals": "沿岸の約70観測所。ViVaでは約160、大きな湖や運河も",
   "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0、Sjöfartsverket ViVa（SEA_WEATHER_SOURCE=viva）: 公開ライセンスなし",
   "Photo: {author} · {licence}": "写真: {author} · {licence}",
-  "Coat of arms: {author} · {licence}": "紋章: {author} · {licence}"
+  "Coat of arms: {author} · {licence}": "紋章: {author} · {licence}",
+  "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "2D と節約モードで Esri の衛星画像。Basemaps のみの無料 ArcGIS Location Platform API キー（http://localhost:4173 に限定）。キーがなければ 2D 地図は OpenStreetMap"
 }

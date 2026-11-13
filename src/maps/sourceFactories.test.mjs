@@ -16,7 +16,17 @@ test('Esri uses Re:Earth without keys and preserves ion terrain when configured'
     };
     Cesium.IonResource.fromAssetId = async () =>
       assert.fail('keyless mode must not acquire ion terrain');
-    const keyless = createDefaultMapSources();
+    // Swedish fork: Esri's satellite map needs an ArcGIS key; without one
+    // it is unavailable and the keyless map is OpenStreetMap.
+    const unkeyed = createDefaultMapSources();
+    assert.equal(
+      unkeyed.sources.find(({ descriptor }) => descriptor.id === 'esri-imagery')
+        .available,
+      false,
+    );
+    assert.equal(unkeyed.defaultId, 'osm');
+    const keyless = createDefaultMapSources({ arcgisApiKey: 'arcgis-key' });
+    assert.equal(keyless.defaultId, 'esri-imagery');
     const esri = keyless.sources.find(
       ({ descriptor }) => descriptor.id === 'esri-imagery',
     );

@@ -4541,5 +4541,6 @@
   "About 70 stations on the coast; with ViVa about 160, also the large lakes and canals": "نحو 70 محطة على الساحل؛ ومع ViVa نحو 160، وفي البحيرات الكبرى والقنوات أيضًا",
   "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0؛ Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): لا ترخيص منشورًا",
   "Photo: {author} · {licence}": "صورة: {author} · {licence}",
-  "Coat of arms: {author} · {licence}": "شعار النبالة: {author} · {licence}"
+  "Coat of arms: {author} · {licence}": "شعار النبالة: {author} · {licence}",
+  "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "صور الأقمار الصناعية من Esri في الوضع ثنائي الأبعاد ووضع التوفير. مفتاح API مجاني من ArcGIS Location Platform مع Basemaps فقط، ومقيد بـ http://localhost:4173؛ وبدونه تكون الخريطة ثنائية الأبعاد OpenStreetMap"
 }

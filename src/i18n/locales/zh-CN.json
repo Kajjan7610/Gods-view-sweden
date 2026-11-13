@@ -4126,5 +4126,6 @@
   "About 70 stations on the coast; with ViVa about 160, also the large lakes and canals": "沿海约 70 个站点；使用 ViVa 时约 160 个，还包括大型湖泊和运河",
   "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI：CC BY 4.0；Sjöfartsverket ViVa（SEA_WEATHER_SOURCE=viva）：无公开许可",
   "Photo: {author} · {licence}": "照片：{author} · {licence}",
-  "Coat of arms: {author} · {licence}": "徽章：{author} · {licence}"
+  "Coat of arms: {author} · {licence}": "徽章：{author} · {licence}",
+  "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "2D 和节省模式下的 Esri 卫星影像。仅含 Basemaps 的免费 ArcGIS Location Platform API 密钥，限于 http://localhost:4173；没有密钥时 2D 地图为 OpenStreetMap"
 }

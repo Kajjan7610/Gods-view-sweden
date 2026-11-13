@@ -30,6 +30,7 @@ const PROVIDER_ORIGINS = Object.freeze([
   'https://ecn.t1.tiles.virtualearth.net',
   'https://ecn.t2.tiles.virtualearth.net',
   'https://ecn.t3.tiles.virtualearth.net',
+  'https://ibasemaps-api.arcgis.com',
   'https://services.arcgisonline.com',
   'https://server.arcgisonline.com',
   'https://tile.openstreetmap.org',

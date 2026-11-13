@@ -680,7 +680,10 @@ function failingMapController() {
       return () => listeners.delete(fn);
     },
   };
-  const registry = createDefaultMapSources({ googleTileset: { show: true } });
+  const registry = createDefaultMapSources({
+    googleTileset: { show: true },
+    arcgisApiKey: 'test-key',
+  });
   for (const source of registry.sources) {
     if (!source.imagery) continue;
     const id = source.descriptor.id;

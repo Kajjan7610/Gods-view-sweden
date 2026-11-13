@@ -4,6 +4,7 @@ import { keySetupRequirementEnvVars } from '../keySetupCore.mjs';
 import { t } from '../i18n/index.js';
 import {
   createOsmImagery,
+  arcgisApiKey as configuredArcgisKey,
   createEsriImagery,
   createIonImagery,
   ESRI_ATTRIBUTION_HTML,
@@ -16,9 +17,12 @@ export function createDefaultMapSources({
   googleTileset = null,
   cesiumToken = '',
   googleApiKey = '',
+  arcgisApiKey = configuredArcgisKey(),
 } = {}) {
   const ionToken = String(cesiumToken || '').trim();
   const hasIon = Boolean(ionToken);
+  const esriToken = String(arcgisApiKey || '').trim();
+  const hasEsri = Boolean(esriToken);
   const hasGoogle = Boolean(String(googleApiKey || '').trim());
   const terrain = {
     id: hasIon ? 'world' : 'keyless',
@@ -27,7 +31,7 @@ export function createDefaultMapSources({
       : createKeylessTerrain,
   };
   return {
-    defaultId: googleTileset ? 'photoreal' : 'esri-imagery',
+    defaultId: googleTileset ? 'photoreal' : hasEsri ? 'esri-imagery' : 'osm',
     unknownId: 'photoreal',
     recoveryId: googleTileset ? 'photoreal' : null,
     state: { hasCesiumIonToken: hasIon },
@@ -56,9 +60,18 @@ export function createDefaultMapSources({
           ? () => createIonImagery(descriptor.style, ionToken)
           : descriptor.id === 'osm'
             ? createOsmImagery
-            : createEsriImagery;
+            : () => createEsriImagery(esriToken);
       return {
         ...common,
+        ...(descriptor.id === 'esri-imagery'
+          ? {
+              available: hasEsri,
+              unavailableReason: () =>
+                t('Needs {envVars} — add it in Provider Settings', {
+                  envVars: keySetupRequirementEnvVars('arcgis'),
+                }),
+            }
+          : {}),
         imagery,
         terrain,
         ...(descriptor.id === 'esri-imagery'

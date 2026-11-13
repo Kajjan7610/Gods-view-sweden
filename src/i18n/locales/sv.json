@@ -4209,5 +4209,6 @@
   "About 70 stations on the coast; with ViVa about 160, also the large lakes and canals": "Cirka 70 stationer längs kusten; med ViVa cirka 160, även i de stora sjöarna och kanalerna",
   "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): no published licence": "SMHI: CC BY 4.0; Sjöfartsverket ViVa (SEA_WEATHER_SOURCE=viva): ingen publicerad licens",
   "Photo: {author} · {licence}": "Foto: {author} · {licence}",
-  "Coat of arms: {author} · {licence}": "Vapen: {author} · {licence}"
+  "Coat of arms: {author} · {licence}": "Vapen: {author} · {licence}",
+  "Esri satellite imagery in 2D and saver mode. Free ArcGIS Location Platform API key with only Basemaps, restricted to http://localhost:4173; without it the 2D map is OpenStreetMap": "Esris satellitbild i 2D och sparläget. Gratis API-nyckel från ArcGIS Location Platform med bara Basemaps, begränsad till http://localhost:4173; utan den är 2D-kartan OpenStreetMap"
 }
