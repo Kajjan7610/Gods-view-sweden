@@ -188,7 +188,6 @@ test('pointer input, camera holds and the stock clicks go through the one dispat
       'companyStores',
       'electionDistricts',
       'electricityPrices',
-      'fireStations',
       'gammaRadiation',
       'heritageRemains',
       'hospitals',

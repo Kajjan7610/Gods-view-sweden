@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { bindFakeDraw } from '../testSupport/fakeDrawPort.mjs';
 import {
   ELECTRICITY_OVERLAY_SOURCE_ID,
   createElectricityPricesLayer,
@@ -122,6 +123,7 @@ const LAYERS = [
   {
     name: 'fireStations',
     create: createFireStationsLayer,
+    ported: true,
     sourceId: FIRE_STATIONS_OVERLAY_SOURCE_ID,
     snapshot: { stations: pair({ readiness: 'full-time' }) },
     rows: rows('se-fire-station:', 'fire-stations-card:'),
@@ -364,6 +366,9 @@ function fakeViewer() {
  */
 async function harness(spec, options = {}) {
   const viewer = fakeViewer();
+  // A layer moved onto the draw port draws through it, and takes its clicks
+  // from the input dispatcher with what is under them as `topHit`.
+  if (spec.ported) bindFakeDraw(viewer);
   const entries = new Map();
   const state = {
     cards: () => entries.get(spec.sourceId) ?? [],
@@ -387,10 +392,27 @@ async function harness(spec, options = {}) {
       setVisible() {},
       hitTest: () => state.cardHit,
     },
-    screenSpaceEventHandlerFactory: () => ({
-      setInputAction: (callback) => (state.click = callback),
-      destroy: () => (state.click = null),
-    }),
+    ...(spec.ported
+      ? {
+          input: () => ({
+            onClick(callback) {
+              state.click = (click) =>
+                callback({
+                  screenPosition: click.position,
+                  topHit: viewer.picked
+                    ? { set: spec.name, id: viewer.picked.id, surface: false }
+                    : null,
+                });
+              return () => (state.click = null);
+            },
+          }),
+        }
+      : {
+          screenSpaceEventHandlerFactory: () => ({
+            setInputAction: (callback) => (state.click = callback),
+            destroy: () => (state.click = null),
+          }),
+        }),
     picking: {
       resolvePickId: (picked) => picked?.id ?? null,
       isOwnedByOtherLayer: () => false,

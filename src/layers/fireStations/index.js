@@ -1,8 +1,8 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import { READINESS_CLASSES, UNKNOWN_COLOR, readinessColor } from './records.js';
 import {
   FIRE_STATIONS_OVERLAY_SOURCE_ID,
@@ -13,6 +13,7 @@ export * from './records.js';
 export * from './cards.js';
 export { createFireStationsSource } from './source.js';
 
+export const FIRE_STATIONS_LAYER_ID = 'fire-stations';
 const PICK_PREFIX = 'se-fire-station:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -26,6 +27,13 @@ const PIXEL_SIZE = Object.freeze({
   retained: 8,
   'rescue-post': 7,
 });
+const OUTLINE_COLOR = '#2b0b0b';
+const SCALE_BY_DISTANCE = Object.freeze({
+  near: 2e4,
+  nearValue: 1.2,
+  far: 2e6,
+  farValue: 0.7,
+});
 
 /**
  * Own one Swedish fire station display: MCF's register of the municipal
@@ -35,23 +43,23 @@ const PIXEL_SIZE = Object.freeze({
 export function createFireStationsLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   terrain = null,
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Fire stations require a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
-  const position = (row) =>
-    Cesium.Cartesian3.fromDegrees(
-      row.point[0],
-      row.point[1],
-      _ground.heightOf(row.id),
-    );
+  const position = (row) => ({
+    lon: row.point[0],
+    lat: row.point[1],
+    height: _ground.heightOf(row.id),
+  });
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -64,8 +72,22 @@ export function createFireStationsLayer({
   let _stations = [];
   const _stationById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(FIRE_STATIONS_LAYER_ID);
+
+  /** A station's dot as the set draws it. */
+  const dotOf = (row) => ({
+    id: `${PICK_PREFIX}${row.id}`,
+    pos: position(row),
+    height: 'clampGround',
+    pixelSize: PIXEL_SIZE[row.readiness] ?? 7,
+    color: readinessColor(row.readiness),
+    outlineColor: OUTLINE_COLOR,
+    outlineWidth: 1.5,
+    disableDepthTest: Number.POSITIVE_INFINITY,
+    scaleByDistance: SCALE_BY_DISTANCE,
+  });
 
   function publishSelectedCard() {
     if (!canSelect()) return;
@@ -80,7 +102,8 @@ export function createFireStationsLayer({
       return;
     }
     const card = buildFireStationCard(row);
-    card.position = position(row);
+    const at = position(row);
+    card.position = fromDegrees(at.lon, at.lat, at.height);
     overlayHost.setEntries(
       FIRE_STATIONS_OVERLAY_SOURCE_ID,
       [card],
@@ -88,8 +111,7 @@ export function createFireStationsLayer({
     );
   }
 
-  function pickedStation(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedStation(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -98,32 +120,47 @@ export function createFireStationsLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      FIRE_STATIONS_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
+      const at = click.screenPosition;
       // A card under the click, this layer's or another's, is not the ground.
-      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedStation(picked) : null;
+      if (overlayHost.hitTest?.(at?.x, at?.y)) return;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedStation(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (pickId && picking.isOwnedByOtherLayer(FIRE_STATIONS_LAYER_ID, pickId))
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
+    picking?.unregisterPickOwner?.(FIRE_STATIONS_LAYER_ID);
   }
 
   function clearOverlays() {
@@ -135,51 +172,24 @@ export function createFireStationsLayer({
 
   /** New ground heights: the dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _stationById.get(id);
-        return row && position(row);
-      },
-    );
+    if (!_dots) return;
+    const rows = ids.map((id) => _stationById.get(id)).filter(Boolean);
+    if (!rows.length) return;
+    _dots.upsert(rows.map(dotOf));
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      // Weakest first, so full-time stations draw on top where dots meet.
-      for (const row of [..._stations].reverse()) {
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: position(row),
-          point: {
-            pixelSize: PIXEL_SIZE[row.readiness] ?? 7,
-            color: Cesium.Color.fromCssColorString(
-              readinessColor(row.readiness),
-            ),
-            outlineColor: Cesium.Color.fromCssColorString('#2b0b0b'),
-            outlineWidth: 1.5,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            scaleByDistance: new Cesium.NearFarScalar(2e4, 1.2, 2e6, 0.7),
-          },
-        });
-      }
-    });
+    if (!_dots) return;
+    // Weakest first, so full-time stations draw on top where dots meet.
+    _dots.set([..._stations].reverse().map(dotOf));
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   const layer = {
-    id: 'fire-stations',
+    id: FIRE_STATIONS_LAYER_ID,
     name: 'Fire Stations (Sweden)',
     icon: '🚒',
     source: 'MCF',
@@ -189,16 +199,22 @@ export function createFireStationsLayer({
       if (_viewer)
         throw new Error('Fire stations layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('fire-stations');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: FIRE_STATIONS_LAYER_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // thousands of dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(FIRE_STATIONS_OVERLAY_SOURCE_ID, true);
       installClickHandler();
+      requestRender();
     },
 
     disable() {
@@ -206,13 +222,14 @@ export function createFireStationsLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
-      if (_dataSource) _dataSource.show = false;
+      if (_dots) _dots.show = false;
       removeClickHandler();
       clearOverlays();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -259,16 +276,14 @@ export function createFireStationsLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
       _stationById.clear();
       _stations = [];
       _signature = null;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;
