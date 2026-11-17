@@ -1,13 +1,20 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import * as Cesium from 'cesium';
+import { bindFakeDraw } from '../../testSupport/fakeDrawPort.mjs';
+import * as picking from '../../data/pickRegistry.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
 import {
   clearGroundHeightStore,
   createGroundHeights,
 } from '../groundHeights.js';
-import { SHELTERS_OVERLAY_SOURCE_ID, createSheltersLayer } from './index.js';
+import {
+  SHELTERS_MAX_HEIGHT_M,
+  SHELTERS_OVERLAY_SOURCE_ID,
+  createSheltersLayer,
+  shelterColor,
+} from './index.js';
 
-const shelter = (id, lon, lat, distance) => ({
+const shelter = (id, lon, lat, distance, extra = {}) => ({
   id,
   point: [lon, lat],
   number: `1000${id}-7`,
@@ -16,6 +23,7 @@ const shelter = (id, lon, lat, distance) => ({
   limited: false,
   special: false,
   distance,
+  ...extra,
 });
 const snapshot = (shelters) => ({
   stale: false,
@@ -35,38 +43,49 @@ const deferred = () => {
   return { promise, resolve, reject };
 };
 
-/** A viewer low over Stockholm, as far as the layer looks at one. */
-function fakeViewer({ view = [17.9, 59.2, 18.3, 59.5] } = {}) {
-  const sources = [];
-  return {
-    sources,
-    picked: undefined,
-    dataSources: {
-      add: (source) => sources.push(source),
-      remove: (source) => sources.splice(sources.indexOf(source), 1),
+/**
+ * The renderer's camera low over Stockholm, as far as the layer looks at
+ * it: its pose, the rectangle in view, `moveEnd` and flights.
+ */
+function fakeCamera({ view = [17.9, 59.2, 18.3, 59.5], height = 3000 } = {}) {
+  const [west, south, east, north] = view;
+  const listeners = new Map();
+  const camera = {
+    height,
+    flights: [],
+    listeners,
+    pose: () => ({ lon: 18.1, lat: 59.33, height: camera.height }),
+    viewRectangle: () => ({ west, south, east, north }),
+    on(event, cb) {
+      const set = listeners.get(event) ?? new Set();
+      listeners.set(event, set);
+      set.add(cb);
+      return () => set.delete(cb);
     },
-    camera: {
-      positionCartographic: Cesium.Cartographic.fromDegrees(18.1, 59.33, 3000),
-      computeViewRectangle: () => Cesium.Rectangle.fromDegrees(...view),
-      pickEllipsoid: () => Cesium.Cartesian3.fromDegrees(18.1, 59.4),
-      moveEnd: { addEventListener: () => () => {} },
-      flyTo() {},
-    },
-    scene: {
-      canvas: { clientWidth: 800, clientHeight: 600 },
-      pick() {
-        return this.viewer.picked;
-      },
-      requestRender() {},
+    flyTo(destination, options) {
+      camera.flights.push({ destination, options });
+      return { done: Promise.resolve('complete'), cancel() {} };
     },
   };
+  return camera;
 }
 
-/** The layer with a card host and a click handler a test can drive. */
+/** The layer with a card host and globe clicks a test can drive. */
 function harness(source, viewerOptions, options = {}) {
-  const viewer = fakeViewer(viewerOptions);
-  viewer.scene.viewer = viewer;
-  const state = { cards: [], cardHit: null, click: null, notices: 0 };
+  const viewer = { canvas: { clientWidth: 800, clientHeight: 600 } };
+  const camera = fakeCamera(viewerOptions);
+  const asked = [];
+  const { draw } = bindFakeDraw(viewer, {
+    camera,
+    query: {
+      pickEllipsoid(x, y) {
+        asked.push([x, y]);
+        return fromDegrees(18.1, 59.4);
+      },
+    },
+  });
+  const state = { cards: [], cardHit: null, notices: 0, picked: null };
+  const handlers = [];
   const layer = createSheltersLayer({
     source,
     overlayHost: {
@@ -78,59 +97,145 @@ function harness(source, viewerOptions, options = {}) {
       setVisible() {},
       hitTest: () => state.cardHit,
     },
-    screenSpaceEventHandlerFactory: () => ({
-      setInputAction: (callback) => (state.click = callback),
-      destroy: () => (state.click = null),
+    input: () => ({
+      onClick(callback) {
+        const handler = {
+          click: () =>
+            callback({
+              screenPosition: { x: 10, y: 20 },
+              topHit: state.picked
+                ? { set: 'shelters', id: state.picked, surface: false }
+                : null,
+            }),
+          destroyed: false,
+        };
+        handlers.push(handler);
+        return () => {
+          handler.destroyed = true;
+        };
+      },
     }),
-    picking: {
-      resolvePickId: (picked) => picked?.id ?? null,
-      isOwnedByOtherLayer: () => false,
-    },
+    picking,
+    pointer: { isPointerFree: () => true },
     ...options,
   });
   layer.init(viewer);
   layer.setRowControlsListener(() => state.notices++);
-  return { layer, viewer, state };
+  return {
+    layer,
+    camera,
+    asked,
+    state,
+    handlers,
+    dots: () => draw.find('shelters'),
+    items: () => [...(draw.find('shelters')?.items.values() ?? [])],
+    click(pickId) {
+      state.picked = pickId;
+      handlers.at(-1).click();
+    },
+  };
 }
+
+test('the shelters are one set of dots, shown only while the layer is on', async () => {
+  const h = harness({
+    getSnapshot: async () =>
+      snapshot([shelter('1', 18.1, 59.4, 0), shelter('2', 18.12, 59.41, 900)]),
+  });
+  assert.equal(h.dots().show, false);
+  h.layer.enable();
+  assert.equal(h.dots().show, true);
+  assert.equal(await h.layer.update(), true);
+  assert.equal(h.items().length, 2);
+  h.layer.disable();
+  assert.equal(h.dots().show, false);
+  assert.equal(h.handlers[0].destroyed, true);
+  h.layer.destroy();
+  assert.equal(h.dots(), undefined, 'the set is disposed');
+});
+
+test('a dot is sized by its places and coloured by its state, the nearest drawn last', async () => {
+  const h = harness({
+    getSnapshot: async () =>
+      snapshot([
+        shelter('1', 18.1, 59.4, 0, { places: 300 }),
+        shelter('2', 18.12, 59.41, 900, { places: null, limited: true }),
+      ]),
+  });
+  h.layer.enable();
+  await h.layer.update();
+  const [far, near] = h.items();
+  assert.equal(far.id, 'se-shelter:2');
+  assert.equal(near.id, 'se-shelter:1');
+  assert.equal(near.pixelSize, 11);
+  assert.equal(far.pixelSize, 6);
+  assert.equal(near.color, shelterColor({ limited: false }));
+  assert.equal(far.color, shelterColor({ limited: true }));
+  assert.equal(near.outlineColor, '#0b1a1a');
+  assert.equal(near.outlineWidth, 1.5);
+  assert.equal(near.height, 'clampGround');
+  assert.deepEqual(near.pos, { lon: 18.1, lat: 59.4, height: 0 });
+  assert.equal(near.disableDepthTest, Number.POSITIVE_INFINITY);
+  assert.deepEqual(near.scaleByDistance, {
+    near: 500,
+    nearValue: 1.3,
+    far: 40000,
+    farValue: 0.7,
+  });
+  h.layer.destroy();
+});
+
+test('without ground heights the dots clamp to every surface; with them to terrain only', () => {
+  const source = { getSnapshot: async () => snapshot([]) };
+  assert.equal(harness(source).dots().spec.clampTo, 'both');
+  const terrain = { resolveEllipsoidalGround: async () => [] };
+  assert.equal(
+    harness(source, undefined, { terrain }).dots().spec.clampTo,
+    'terrain',
+  );
+});
 
 test('a fetch the camera overtakes is no failure; one cut off by switching off is', async () => {
   const calls = [];
-  const { layer, viewer } = harness({
+  const h = harness({
     getSnapshot(query) {
       const call = { query, ...deferred() };
       calls.push(call);
       return call.promise;
     },
   });
-  layer.enable();
-  const first = layer.update();
+  h.layer.enable();
+  const first = h.layer.update();
   // The camera settles somewhere else before the first answer is back.
-  const second = layer.update();
+  const second = h.layer.update();
   assert.equal(calls[0].query.signal.aborted, true);
   calls[0].reject(new DOMException('Aborted', 'AbortError'));
   assert.equal(await first, true, 'the data manager keeps the layer on');
   calls[1].resolve(snapshot([shelter('1', 18.1, 59.4, 0)]));
   assert.equal(await second, true);
-  assert.equal(viewer.sources[0].entities.values.length, 1);
-  assert.equal(layer.getStats().count, 1);
-  assert.equal(layer.getStats().error, null);
+  assert.equal(h.items().length, 1);
+  assert.equal(h.layer.getStats().count, 1);
+  assert.equal(h.layer.getStats().error, null);
 
   // Overtaken after the answer arrived, too.
-  const third = layer.update();
-  const fourth = layer.update();
+  const third = h.layer.update();
+  const fourth = h.layer.update();
   calls[2].resolve(snapshot([]));
   assert.equal(await third, true);
-  assert.equal(layer.getStats().count, 1, 'the overtaken answer is not shown');
+  assert.equal(
+    h.layer.getStats().count,
+    1,
+    'the overtaken answer is not shown',
+  );
 
-  layer.disable();
+  h.layer.disable();
   calls[3].resolve(snapshot([]));
   assert.equal(await fourth, false);
-  layer.destroy();
+  h.layer.destroy();
 });
 
 test('a tilted view asks for the box about the centre, not out to the horizon', async () => {
   const queries = [];
-  const { layer } = harness(
+  const h = harness(
     {
       async getSnapshot(query) {
         queries.push(query);
@@ -139,61 +244,127 @@ test('a tilted view asks for the box about the centre, not out to the horizon', 
     },
     { view: [14, 59, 24, 60.5] },
   );
-  layer.enable();
-  await layer.update();
+  h.layer.enable();
+  await h.layer.update();
+  assert.deepEqual(h.asked, [[400, 300]], 'the ground under the canvas centre');
   assert.deepEqual(queries[0].bbox, [16.6, 59, 19.6, 60.5]);
   assert.deepEqual(
     queries[0].center.map((value) => Math.round(value * 1e4) / 1e4),
     [18.1, 59.4],
   );
-  layer.destroy();
+  h.layer.destroy();
+});
+
+test('above the height limit nothing is asked, and the row says to zoom in', async () => {
+  const queries = [];
+  const h = harness(
+    {
+      async getSnapshot(query) {
+        queries.push(query);
+        return snapshot([shelter('1', 18.1, 59.4, 0)]);
+      },
+    },
+    { height: SHELTERS_MAX_HEIGHT_M + 1 },
+  );
+  h.layer.enable();
+  assert.equal(await h.layer.update(), true);
+  assert.deepEqual(queries, []);
+  assert.equal(h.items().length, 0);
+  assert.match(h.layer.getRowControls().info, /Zoom in/);
+  h.layer.destroy();
+});
+
+test("the camera's move end asks again only while the layer is on", () => {
+  const h = harness({ getSnapshot: async () => snapshot([]) });
+  const moveEnd = () => h.camera.listeners.get('moveEnd')?.size ?? 0;
+  assert.equal(moveEnd(), 0);
+  h.layer.enable();
+  assert.equal(moveEnd(), 1);
+  h.layer.disable();
+  assert.equal(moveEnd(), 0);
+  h.layer.destroy();
+});
+
+test('a shelter picked from the list is selected and flown to', async () => {
+  const h = harness({
+    getSnapshot: async () => snapshot([shelter('1', 18.1, 59.4, 0)]),
+  });
+  h.layer.enable();
+  await h.layer.update();
+  assert.equal(h.layer.setParams({ shelterId: '1', focus: true }), true);
+  assert.equal(h.state.cards[0]?.id, 'shelters-card:1');
+  assert.equal(h.camera.flights.length, 1);
+  const [{ destination, options }] = h.camera.flights;
+  assert.equal(destination.lon, 18.1);
+  assert.ok(Math.abs(destination.lat - 59.394) < 1e-9);
+  assert.equal(destination.height, 650);
+  assert.equal(options.durationS, 1.6);
+  assert.deepEqual(options.orientation, {
+    heading: 0,
+    pitch: (-50 * Math.PI) / 180,
+    roll: 0,
+  });
+  assert.equal(h.layer.setParams({ shelterId: '1' }), true);
+  assert.equal(h.camera.flights.length, 1, 'no flight without focus');
+  h.layer.destroy();
 });
 
 test('a click on a card is not a click on the ground', async () => {
-  const { layer, viewer, state } = harness({
+  const h = harness({
     getSnapshot: async () => snapshot([shelter('1', 18.1, 59.4, 0)]),
   });
-  layer.enable();
-  await layer.update();
-  const click = { position: { x: 10, y: 20 } };
-  const before = state.notices;
+  h.layer.enable();
+  await h.layer.update();
+  const before = h.state.notices;
 
-  viewer.picked = { id: 'se-shelter:1' };
-  state.click(click);
-  assert.equal(state.cards.length, 1);
-  assert.equal(state.cards[0].interactive, true, 'the card can be hit');
-  assert.equal(state.notices, before + 1, 'the list marks the chosen shelter');
+  h.click('se-shelter:1');
+  assert.equal(h.state.cards.length, 1);
+  assert.equal(h.state.cards[0].interactive, true, 'the card can be hit');
+  assert.ok(h.state.cards[0].position, 'the card sits on the shelter');
+  assert.equal(
+    h.state.notices,
+    before + 1,
+    'the list marks the chosen shelter',
+  );
 
   // On the card: the dot under it is not picked and the ground not reached.
-  viewer.picked = undefined;
-  state.cardHit = { sourceId: 'hospitals', entryId: 'hospitals-card:x' };
-  state.click(click);
-  assert.equal(state.cards.length, 1);
+  h.state.cardHit = { sourceId: 'hospitals', entryId: 'hospitals-card:x' };
+  h.click(null);
+  assert.equal(h.state.cards.length, 1);
 
-  state.cardHit = null;
-  state.click(click);
-  assert.equal(state.cards.length, 0, 'a click on the ground lets go');
-  assert.equal(state.notices, before + 2);
-  layer.destroy();
+  // Another layer's dot is not the ground either.
+  h.state.cardHit = null;
+  picking.registerPickOwner('hospitals', (id) => id.startsWith('se-hospital:'));
+  try {
+    h.click('se-hospital:1');
+    assert.equal(h.state.cards.length, 1);
+  } finally {
+    picking.unregisterPickOwner('hospitals');
+  }
+
+  h.click(null);
+  assert.equal(h.state.cards.length, 0, 'a click on the ground lets go');
+  assert.equal(h.state.notices, before + 2);
+  h.layer.destroy();
 });
 
 test('switched off, the layer keeps no dots or list and takes no selection', async () => {
-  const { layer, viewer, state } = harness({
+  const h = harness({
     getSnapshot: async () => snapshot([shelter('1', 18.1, 59.4, 0)]),
   });
-  layer.enable();
-  await layer.update();
-  assert.equal(layer.setParams({ shelterId: '1' }), true);
-  assert.equal(state.cards.length, 1);
+  h.layer.enable();
+  await h.layer.update();
+  assert.equal(h.layer.setParams({ shelterId: '1' }), true);
+  assert.equal(h.state.cards.length, 1);
 
-  layer.disable();
-  assert.equal(state.cards.length, 0);
-  assert.equal(viewer.sources[0].entities.values.length, 0);
-  assert.equal(layer.setParams({ shelterId: '1', focus: true }), false);
-  assert.equal(state.cards.length, 0);
-  assert.equal(layer.getRowControls().list, undefined);
-  assert.equal(layer.getStats().count, 63364, 'the register is still known');
-  layer.destroy();
+  h.layer.disable();
+  assert.equal(h.state.cards.length, 0);
+  assert.equal(h.items().length, 0);
+  assert.equal(h.layer.setParams({ shelterId: '1', focus: true }), false);
+  assert.equal(h.state.cards.length, 0);
+  assert.equal(h.layer.getRowControls().list, undefined);
+  assert.equal(h.layer.getStats().count, 63364, 'the register is still known');
+  h.layer.destroy();
 });
 
 test("the dots are lifted where they are; their heights stay apart from the fixed layers'", async (t) => {
@@ -206,28 +377,32 @@ test("the dots are lifted where they are; their heights stay apart from the fixe
       return points.map(() => ({ ellipsoid: 25, source: 'reearth' }));
     },
   };
-  const heightOf = (entity) =>
-    Cesium.Cartographic.fromCartesian(
-      entity.position.getValue(Cesium.JulianDate.now()),
-    ).height;
-  const { layer, viewer } = harness(
+  const h = harness(
     {
       getSnapshot: async () =>
-        snapshot([shelter('1', 18.1, 59.4, 0), shelter('2', 18.12, 59.41, 900)]),
+        snapshot([
+          shelter('1', 18.1, 59.4, 0),
+          shelter('2', 18.12, 59.41, 900),
+        ]),
     },
     undefined,
     { terrain },
   );
-  layer.enable();
-  await layer.update();
-  const entities = viewer.sources[0].entities;
-  const drawn = [...entities.values];
-  assert.equal(drawn.length, 2);
+  h.layer.enable();
+  await h.layer.update();
+  const ids = h.items().map((item) => item.id);
+  assert.equal(ids.length, 2);
+  assert.equal(h.dots().writes, 1);
   for (let i = 0; i < 5; i += 1)
     await new Promise((resolve) => setImmediate(resolve));
   assert.deepEqual(asked, [2]);
-  assert.deepEqual([...entities.values], drawn, 'the same dots are still there');
-  assert.ok(drawn.every((entity) => Math.abs(heightOf(entity) - 25) < 0.01));
+  assert.deepEqual(
+    h.items().map((item) => item.id),
+    ids,
+    'the same dots are still there',
+  );
+  assert.ok(h.items().every((item) => item.pos.height === 25));
+  assert.equal(h.dots().writes, 2, 'moved, not drawn again');
 
   // Another view of shelters finds the place kept; a fixed layer does not,
   // so a tour of the country cannot push the fixed layers' heights out.
@@ -238,5 +413,5 @@ test("the dots are lifted where they are; their heights stay apart from the fixe
   const fixed = createGroundHeights(terrain, () => {}, { gapMs: 0 });
   await fixed.place([{ id: 'station', point: [18.1, 59.4] }]);
   assert.deepEqual(asked, [2, 1]);
-  layer.destroy();
+  h.layer.destroy();
 });

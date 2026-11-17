@@ -1,8 +1,8 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import { FLOW_CLASSES, flowClass, flowsOutdated } from './records.js';
 import {
   RIVER_FLOW_OVERLAY_SOURCE_ID,
@@ -14,8 +14,11 @@ export * from './records.js';
 export * from './cards.js';
 export { createRiverFlowSource } from './source.js';
 
+export const RIVER_FLOW_LAYER_ID = 'river-flow';
 const PICK_PREFIX = 'se-flow:';
 const LABEL_SOURCE_ID = 'river-flow-labels';
+/** White at 0.85, round each dot. */
+const OUTLINE_COLOR = 'rgba(255, 255, 255, 0.85)';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
   collisionCapacity: 1,
@@ -42,24 +45,29 @@ const CLASS_LABELS = Object.freeze({
 export function createRiverFlowLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   terrain = null,
   now = () => Date.now(),
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('River flow requires a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
-  const position = (row) =>
-    Cesium.Cartesian3.fromDegrees(
-      row.point[0],
-      row.point[1],
-      _ground.heightOf(row.id),
-    );
+  const position = (row) => ({
+    lon: row.point[0],
+    lat: row.point[1],
+    height: _ground.heightOf(row.id),
+  });
+  /** Where a card or label on the station sits, in ECEF. */
+  const anchorOf = (row) => {
+    const at = position(row);
+    return fromDegrees(at.lon, at.lat, at.height);
+  };
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -73,8 +81,21 @@ export function createRiverFlowLayer({
   let _values = true;
   const _stationById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(RIVER_FLOW_LAYER_ID);
+
+  /** A station's dot as the set draws it. */
+  const dotOf = (row) => ({
+    id: `${PICK_PREFIX}${row.id}`,
+    pos: position(row),
+    height: 'clampGround',
+    pixelSize: flowClass(row.flow)?.size ?? 6,
+    color: flowColor(row.flow),
+    outlineColor: OUTLINE_COLOR,
+    outlineWidth: 1.5,
+    disableDepthTest: Number.POSITIVE_INFINITY,
+  });
 
   function publishSelectedCard() {
     if (!canSelect()) return;
@@ -89,7 +110,7 @@ export function createRiverFlowLayer({
       return;
     }
     const card = buildFlowCard(row, now());
-    card.position = position(row);
+    card.position = anchorOf(row);
     overlayHost.setEntries(
       RIVER_FLOW_OVERLAY_SOURCE_ID,
       [card],
@@ -97,8 +118,7 @@ export function createRiverFlowLayer({
     );
   }
 
-  function pickedStation(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedStation(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -107,32 +127,47 @@ export function createRiverFlowLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      RIVER_FLOW_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
+      const at = click.screenPosition;
       // A card under the click, this layer's or another's, is not the ground.
-      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedStation(picked) : null;
+      if (overlayHost.hitTest?.(at?.x, at?.y)) return;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedStation(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (pickId && picking.isOwnedByOtherLayer(RIVER_FLOW_LAYER_ID, pickId))
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
+    picking?.unregisterPickOwner?.(RIVER_FLOW_LAYER_ID);
   }
 
   function clearOverlays() {
@@ -151,7 +186,7 @@ export function createRiverFlowLayer({
       for (const row of _stations) {
         entries.push({
           id: `river-flow-label:${row.id}`,
-          position: position(row),
+          position: anchorOf(row),
           variant: 'label',
           title: `${formatFlow(row.flow)} m³/s`, // i18n-ignore: unit
           accent: flowColor(row.flow),
@@ -174,50 +209,25 @@ export function createRiverFlowLayer({
 
   /** New ground heights: the dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _stationById.get(id);
-        return row && position(row);
-      },
-    );
+    if (!_dots) return;
+    const rows = ids.map((id) => _stationById.get(id)).filter(Boolean);
+    if (!rows.length) return;
+    _dots.upsert(rows.map(dotOf));
     publishLabels();
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      for (const row of _stations) {
-        const entry = flowClass(row.flow);
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: position(row),
-          point: {
-            pixelSize: entry?.size ?? 6,
-            color: Cesium.Color.fromCssColorString(flowColor(row.flow)),
-            outlineColor: Cesium.Color.WHITE.withAlpha(0.85),
-            outlineWidth: 1.5,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          },
-        });
-      }
-    });
+    if (!_dots) return;
+    _dots.set(_stations.map(dotOf));
     publishLabels();
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   const layer = {
-    id: 'river-flow',
+    id: RIVER_FLOW_LAYER_ID,
     name: 'River Flow (Sweden)',
     icon: '🏞️',
     source: 'SMHI',
@@ -226,18 +236,24 @@ export function createRiverFlowLayer({
     init(viewer) {
       if (_viewer) throw new Error('River flow layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('river-flow');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: RIVER_FLOW_LAYER_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(RIVER_FLOW_OVERLAY_SOURCE_ID, true);
       overlayHost?.setVisible?.(LABEL_SOURCE_ID, true);
       installClickHandler();
       publishLabels();
+      requestRender();
     },
 
     disable() {
@@ -246,13 +262,14 @@ export function createRiverFlowLayer({
       _ground.cancel();
       _enabled = false;
       _lastError = null;
-      if (_dataSource) _dataSource.show = false;
+      if (_dots) _dots.show = false;
       removeClickHandler();
       clearOverlays();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -308,16 +325,14 @@ export function createRiverFlowLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
       _stationById.clear();
       _stations = [];
       _signature = null;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

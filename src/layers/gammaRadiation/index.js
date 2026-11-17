@@ -1,8 +1,8 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import {
   DOSE_CLASSES,
   SERVICE_COLOR,
@@ -18,8 +18,18 @@ export * from './records.js';
 export * from './cards.js';
 export { createGammaRadiationSource } from './source.js';
 
+export const GAMMA_RADIATION_LAYER_ID = 'gamma-radiation';
 const PICK_PREFIX = 'se-gamma:';
 const LABEL_SOURCE_ID = 'gamma-radiation-labels';
+const OUTLINE_COLOR = '#ffd600';
+/** A station in service or maintenance: its dot a little see-through. */
+const SILENT_ALPHA = 0.7;
+
+/** `#rrggbb` at `alpha`, as a CSS colour. */
+function withAlpha(hex, alpha) {
+  const value = Number.parseInt(hex.slice(1), 16);
+  return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
+}
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
   collisionCapacity: 1,
@@ -50,24 +60,29 @@ function classLabel(entry) {
 export function createGammaRadiationLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   terrain = null,
   now = () => Date.now(),
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Gamma radiation requires a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
-  const position = (row) =>
-    Cesium.Cartesian3.fromDegrees(
-      row.point[0],
-      row.point[1],
-      _ground.heightOf(row.id),
-    );
+  const position = (row) => ({
+    lon: row.point[0],
+    lat: row.point[1],
+    height: _ground.heightOf(row.id),
+  });
+  /** Where a card or label on the station sits, in ECEF. */
+  const anchorOf = (row) => {
+    const at = position(row);
+    return fromDegrees(at.lon, at.lat, at.height);
+  };
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -81,8 +96,25 @@ export function createGammaRadiationLayer({
   let _values = true;
   const _stationById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(GAMMA_RADIATION_LAYER_ID);
+
+  /** A station's dot as the set draws it. */
+  const dotOf = (row) => {
+    const has = row.value != null;
+    const color = doseColor(row.value);
+    return {
+      id: `${PICK_PREFIX}${row.id}`,
+      pos: position(row),
+      height: 'clampGround',
+      pixelSize: has ? 12 : 7,
+      color: has ? color : withAlpha(color, SILENT_ALPHA),
+      outlineColor: OUTLINE_COLOR,
+      outlineWidth: 2,
+      disableDepthTest: Number.POSITIVE_INFINITY,
+    };
+  };
 
   function publishSelectedCard() {
     if (!canSelect()) return;
@@ -97,7 +129,7 @@ export function createGammaRadiationLayer({
       return;
     }
     const card = buildGammaCard(row, now());
-    card.position = position(row);
+    card.position = anchorOf(row);
     overlayHost.setEntries(
       GAMMA_RADIATION_OVERLAY_SOURCE_ID,
       [card],
@@ -105,8 +137,7 @@ export function createGammaRadiationLayer({
     );
   }
 
-  function pickedStation(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedStation(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -115,32 +146,50 @@ export function createGammaRadiationLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      GAMMA_RADIATION_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
+      const at = click.screenPosition;
       // A card under the click, this layer's or another's, is not the ground.
-      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedStation(picked) : null;
+      if (overlayHost.hitTest?.(at?.x, at?.y)) return;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedStation(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (
+        pickId &&
+        picking.isOwnedByOtherLayer(GAMMA_RADIATION_LAYER_ID, pickId)
+      )
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
+    picking?.unregisterPickOwner?.(GAMMA_RADIATION_LAYER_ID);
   }
 
   function clearOverlays() {
@@ -160,7 +209,7 @@ export function createGammaRadiationLayer({
         if (row.value == null) continue;
         entries.push({
           id: `gamma-radiation-label:${row.id}`,
-          position: position(row),
+          position: anchorOf(row),
           variant: 'label',
           title: `${formatDose(row.value)} µSv/h`, // i18n-ignore: unit
           accent: doseColor(row.value),
@@ -183,52 +232,25 @@ export function createGammaRadiationLayer({
 
   /** New ground heights: the dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _stationById.get(id);
-        return row && position(row);
-      },
-    );
+    if (!_dots) return;
+    const rows = ids.map((id) => _stationById.get(id)).filter(Boolean);
+    if (!rows.length) return;
+    _dots.upsert(rows.map(dotOf));
     publishLabels();
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      for (const row of _stations) {
-        const has = row.value != null;
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: position(row),
-          point: {
-            pixelSize: has ? 12 : 7,
-            color: Cesium.Color.fromCssColorString(
-              doseColor(row.value),
-            ).withAlpha(has ? 1 : 0.7),
-            outlineColor: Cesium.Color.fromCssColorString('#ffd600'),
-            outlineWidth: 2,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          },
-        });
-      }
-    });
+    if (!_dots) return;
+    _dots.set(_stations.map(dotOf));
     publishLabels();
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   const layer = {
-    id: 'gamma-radiation',
+    id: GAMMA_RADIATION_LAYER_ID,
     name: 'Radiation (Sweden)',
     icon: '☢️',
     source: 'Strålsäkerhetsmyndigheten',
@@ -238,18 +260,24 @@ export function createGammaRadiationLayer({
       if (_viewer)
         throw new Error('Gamma radiation layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('gamma-radiation');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: GAMMA_RADIATION_LAYER_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(GAMMA_RADIATION_OVERLAY_SOURCE_ID, true);
       overlayHost?.setVisible?.(LABEL_SOURCE_ID, true);
       installClickHandler();
       publishLabels();
+      requestRender();
     },
 
     disable() {
@@ -258,13 +286,14 @@ export function createGammaRadiationLayer({
       _ground.cancel();
       _enabled = false;
       _lastError = null;
-      if (_dataSource) _dataSource.show = false;
+      if (_dots) _dots.show = false;
       removeClickHandler();
       clearOverlays();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -320,16 +349,14 @@ export function createGammaRadiationLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
       _stationById.clear();
       _stations = [];
       _signature = null;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

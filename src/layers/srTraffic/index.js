@@ -1,8 +1,8 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import { SR_PRIORITIES, priorityColor } from './records.js';
 import {
   PRIORITY_LABELS,
@@ -14,6 +14,7 @@ export * from './records.js';
 export * from './cards.js';
 export { createSrTrafficSource } from './source.js';
 
+export const SR_TRAFFIC_LAYER_ID = 'sr-traffic';
 const PICK_PREFIX = 'se-srtrafik:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -22,6 +23,9 @@ const CARD_HOST_OPTIONS = Object.freeze({
 });
 /** Dot size by priority: the serious ones stand out. */
 const PRIORITY_PIXELS = Object.freeze({ 1: 16, 2: 13, 3: 10, 4: 8, 5: 7 });
+/** The serious ones have a white ring; the rest a dark one. */
+const SERIOUS_OUTLINE = '#ffffff';
+const OTHER_OUTLINE = Object.freeze([0, 0, 0, 0.8]);
 
 /**
  * Own one Swedish traffic report display: the messages Sveriges Radio's
@@ -31,25 +35,27 @@ const PRIORITY_PIXELS = Object.freeze({ 1: 16, 2: 13, 3: 10, 4: 8, 5: 7 });
 export function createSrTrafficLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   openExternal = null,
   terrain = null,
   now = () => Date.now(),
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('SR traffic requires a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
-  const position = (row) =>
-    Cesium.Cartesian3.fromDegrees(
-      row.point[0],
-      row.point[1],
-      _ground.heightOf(row.id),
-    );
+  const position = (row) => ({
+    lon: row.point[0],
+    lat: row.point[1],
+    height: _ground.heightOf(row.id),
+  });
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
+  // The reports drawn now, as they were drawn.
+  let _drawn = new Map();
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -64,8 +70,21 @@ export function createSrTrafficLayer({
   const _show = { road: true, transit: true, planned: false, other: true };
   const _messageById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(SR_TRAFFIC_LAYER_ID);
+
+  /** A report's dot as the set draws it. */
+  const dotOf = (row) => ({
+    id: `${PICK_PREFIX}${row.id}`,
+    pos: position(row),
+    height: 'clampGround',
+    pixelSize: PRIORITY_PIXELS[row.priority] || 7,
+    color: priorityColor(row.priority),
+    outlineColor: row.priority <= 2 ? SERIOUS_OUTLINE : OTHER_OUTLINE,
+    outlineWidth: row.priority <= 2 ? 2.5 : 1.5,
+    disableDepthTest: Number.POSITIVE_INFINITY,
+  });
   const visibleMessages = () =>
     _messages.filter((row) => _show[row.category] !== false);
 
@@ -83,7 +102,8 @@ export function createSrTrafficLayer({
       return;
     }
     const card = buildSrCard(row, { linkable: Boolean(openExternal) });
-    card.position = position(row);
+    const at = position(row);
+    card.position = fromDegrees(at.lon, at.lat, at.height);
     if (card.accessibilityLabel)
       card.activate = () => {
         openExternal(SR_TRAFFIC_PAGE);
@@ -97,8 +117,7 @@ export function createSrTrafficLayer({
     );
   }
 
-  function pickedMessage(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedMessage(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -107,13 +126,23 @@ export function createSrTrafficLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      SR_TRAFFIC_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-      );
+      const at = click.screenPosition;
+      const cardHit = overlayHost.hitTest?.(at?.x, at?.y);
       // The selected card leads to SR's traffic page.
       if (
         cardHit?.sourceId === SR_TRAFFIC_OVERLAY_SOURCE_ID &&
@@ -123,27 +152,29 @@ export function createSrTrafficLayer({
         openExternal(SR_TRAFFIC_PAGE);
       // A card under the click, this layer's or another's, is not the ground.
       if (cardHit) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedMessage(picked) : null;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedMessage(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (pickId && picking.isOwnedByOtherLayer(SR_TRAFFIC_LAYER_ID, pickId))
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
+    picking?.unregisterPickOwner?.(SR_TRAFFIC_LAYER_ID);
   }
 
   function clearSelection() {
@@ -157,50 +188,25 @@ export function createSrTrafficLayer({
 
   /** New ground heights: the dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _messageById.get(id);
-        return row && position(row);
-      },
-    );
+    if (!_dots) return;
+    // Only dots drawn now move, looking as they were drawn.
+    const rows = ids.map((id) => _drawn.get(id)).filter(Boolean);
+    if (rows.length) _dots.upsert(rows.map(dotOf));
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
+    if (!_dots) return;
     const shown = visibleMessages();
-    redrawEntities(entities, () => {
-      // Least serious first, so the serious ones are drawn on top.
-      for (const row of [...shown].reverse()) {
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: position(row),
-          point: {
-            pixelSize: PRIORITY_PIXELS[row.priority] || 7,
-            color: Cesium.Color.fromCssColorString(priorityColor(row.priority)),
-            outlineColor:
-              row.priority <= 2
-                ? Cesium.Color.WHITE
-                : Cesium.Color.BLACK.withAlpha(0.8),
-            outlineWidth: row.priority <= 2 ? 2.5 : 1.5,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          },
-        });
-      }
-    });
+    _drawn = new Map();
+    // Least serious first, so the serious ones are drawn on top.
+    _dots.set([...shown].reverse().map(dotOf));
+    _drawn = new Map(shown.map((row) => [row.id, row]));
     if (_selectedId && !shown.some((row) => row.id === _selectedId))
       _selectedId = null;
     publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function toggle(key) {
@@ -210,7 +216,7 @@ export function createSrTrafficLayer({
   }
 
   const layer = {
-    id: 'sr-traffic',
+    id: SR_TRAFFIC_LAYER_ID,
     name: 'Traffic Reports (Sweden)',
     icon: '📻',
     source: 'Sveriges Radio',
@@ -219,16 +225,22 @@ export function createSrTrafficLayer({
     init(viewer) {
       if (_viewer) throw new Error('SR traffic layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('sr-traffic');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: SR_TRAFFIC_LAYER_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(SR_TRAFFIC_OVERLAY_SOURCE_ID, true);
       installClickHandler();
+      requestRender();
     },
 
     disable() {
@@ -237,13 +249,14 @@ export function createSrTrafficLayer({
       _ground.cancel();
       _enabled = false;
       _lastError = null;
-      if (_dataSource) _dataSource.show = false;
+      if (_dots) _dots.show = false;
       removeClickHandler();
       clearSelection();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -301,16 +314,15 @@ export function createSrTrafficLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
       _messageById.clear();
       _messages = [];
+      _drawn = new Map();
       _signature = null;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

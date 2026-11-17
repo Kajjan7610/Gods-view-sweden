@@ -1,7 +1,9 @@
-// The electricity price layer's life: the price now follows its clock, failed
-// drawings and a clean switch-off.
+// The electricity price layer's life: its set of dots, the price now follows
+// its clock, failed drawings, a clean switch-off and its clicks.
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { bindFakeDraw } from '../../testSupport/fakeDrawPort.mjs';
+import * as picking from '../../data/pickRegistry.js';
 import {
   ELECTRICITY_OVERLAY_SOURCE_ID,
   createElectricityPricesLayer,
@@ -10,6 +12,9 @@ import {
 
 const NOW = Date.parse('2026-11-04T10:00:00Z');
 const QUARTER = 15 * 60_000;
+const PICK = 'se-elpris:';
+const SET = 'electricity-prices';
+const LABELS = 'electricity-price-labels';
 
 /** A zone whose first quarter is cheap and second is dear. */
 const zone = (id, extra = {}) => ({
@@ -24,21 +29,19 @@ const zone = (id, extra = {}) => ({
   ...extra,
 });
 
-function harness(t, zones = []) {
+function harness(t, zones = [], { terrain = null } = {}) {
   t.mock.method(console, 'log', () => {});
   const warn = t.mock.method(console, 'warn', () => {});
-  const viewer = {
-    sources: [],
-    picked: undefined,
-    dataSources: {
-      add: (source) => viewer.sources.push(source),
-      remove() {},
-    },
-    scene: { pick: () => viewer.picked, requestRender() {} },
-  };
+  const viewer = {};
+  const { draw } = bindFakeDraw(viewer);
+  // The set the layer holds, so a test can make a write fail.
+  let handle = null;
+  const points = draw.points;
+  draw.points = (spec) => (handle = points(spec));
   const feed = { zones, error: null };
   const clock = { now: NOW };
-  const state = { shown: new Map(), click: null };
+  const state = { shown: new Map(), cardHit: null, handlers: [] };
+  let picked = null;
   const layer = createElectricityPricesLayer({
     source: {
       getSnapshot: async () => {
@@ -50,48 +53,103 @@ function harness(t, zones = []) {
       setEntries: (sourceId, entries) => state.shown.set(sourceId, entries),
       clearSource: (sourceId) => state.shown.delete(sourceId),
       setVisible() {},
-      hitTest: () => null,
+      hitTest: () => state.cardHit,
     },
-    screenSpaceEventHandlerFactory: () => ({
-      setInputAction: (callback) => (state.click = callback),
-      destroy: () => (state.click = null),
+    input: () => ({
+      onClick(callback) {
+        const handler = {
+          click: () =>
+            callback({
+              screenPosition: { x: 1, y: 1 },
+              topHit: picked ? { set: SET, id: picked, surface: false } : null,
+            }),
+          destroyed: false,
+        };
+        state.handlers.push(handler);
+        return () => {
+          handler.destroyed = true;
+        };
+      },
     }),
-    picking: {
-      resolvePickId: (picked) => picked?.id ?? null,
-      isOwnedByOtherLayer: () => false,
-    },
+    picking,
+    pointer: { isPointerFree: () => true },
+    terrain,
     now: () => clock.now,
   });
   layer.init(viewer);
-  const entities = viewer.sources[0].entities;
+  const dots = () => draw.find(SET);
+  const markers = () => [...(dots()?.items.values() ?? [])];
   const card = () => state.shown.get(ELECTRICITY_OVERLAY_SOURCE_ID)?.[0];
   const legendColors = () =>
     layer.getRowControls().legend.map((item) => item.color);
+  const click = (pickId) => {
+    picked = pickId;
+    state.handlers.at(-1).click();
+  };
   return {
     layer,
-    viewer,
     feed,
     clock,
     state,
     warn,
-    entities,
+    dots,
+    markers,
+    set: () => handle,
     card,
     legendColors,
+    click,
   };
 }
 
+test('the zones are one set of dots, shown only while the layer is on', async (t) => {
+  const h = harness(t, [zone('SE3')]);
+  assert.equal(h.dots().show, false);
+  h.layer.enable();
+  assert.equal(h.dots().show, true);
+  await h.layer.update();
+  assert.equal(h.markers().length, 1);
+  assert.equal(h.state.shown.get(LABELS).length, 1, 'with its price label');
+  assert.ok(h.state.shown.get(LABELS)[0].position);
+  h.layer.disable();
+  assert.equal(h.dots().show, false);
+  assert.equal(h.state.handlers[0].destroyed, true);
+  assert.equal(h.state.shown.has(LABELS), false, 'the labels go with it');
+  h.layer.destroy();
+  assert.equal(h.dots(), undefined, 'the set is disposed');
+});
+
+test('a dot is coloured by the price, with a white ring', async (t) => {
+  const h = harness(t, [zone('SE3')]);
+  h.layer.enable();
+  await h.layer.update();
+  const [dot] = h.markers();
+  assert.equal(dot.id, `${PICK}SE3`);
+  assert.equal(dot.color, priceColor(0.4));
+  assert.equal(dot.pixelSize, 20);
+  assert.equal(dot.outlineColor, '#ffffff');
+  assert.equal(dot.outlineWidth, 3);
+  assert.equal(dot.height, 'clampGround');
+  assert.deepEqual(dot.pos, { lon: 16, lat: 59.5, height: 0 });
+  assert.equal(dot.disableDepthTest, Number.POSITIVE_INFINITY);
+  h.layer.destroy();
+});
+
+test('without ground heights the dots clamp to every surface; with them to terrain only', (t) => {
+  assert.equal(harness(t).dots().spec.clampTo, 'both');
+  const terrain = { resolveEllipsoidalGround: async () => [] };
+  assert.equal(harness(t, [], { terrain }).dots().spec.clampTo, 'terrain');
+});
+
 test("the price now, its colour and the card follow the layer's own clock", async (t) => {
-  const { layer, viewer, clock, state, entities, card, legendColors } = harness(
-    t,
-    [zone('SE3')],
-  );
+  const { layer, clock, markers, card, legendColors, click } = harness(t, [
+    zone('SE3'),
+  ]);
   layer.enable();
   await layer.update();
-  const id = entities.values[0].id;
+  const id = markers()[0].id;
   assert.ok(id.endsWith('SE3'), id);
   assert.deepEqual(legendColors(), [priceColor(0.4)]);
-  viewer.picked = { id };
-  state.click({ position: { x: 10, y: 20 } });
+  click(id);
   assert.equal(card().accent, priceColor(0.4));
   assert.match(card().details[0], /0[.,]40/);
   assert.equal(layer.getStats().lastUpdate, NOW);
@@ -99,6 +157,7 @@ test("the price now, its colour and the card follow the layer's own clock", asyn
   clock.now += QUARTER;
   await layer.update();
   assert.deepEqual(legendColors(), [priceColor(2.5)]);
+  assert.equal(markers()[0].color, priceColor(2.5));
   assert.equal(card().accent, priceColor(2.5));
   assert.match(card().details[0], /2[.,]50/);
   // Past the last quarter there is no price now.
@@ -109,11 +168,11 @@ test("the price now, its colour and the card follow the layer's own clock", asyn
 });
 
 test('a drawing that failed is reported as one, and drawn again a minute on', async (t) => {
-  const { layer, warn, entities } = harness(t, [zone('SE3'), zone('SE4')]);
+  const { layer, warn, markers, set } = harness(t, [zone('SE3'), zone('SE4')]);
   layer.enable();
   t.mock.method(
-    entities,
-    'add',
+    set(),
+    'set',
     () => {
       throw new Error('no room');
     },
@@ -127,7 +186,7 @@ test('a drawing that failed is reported as one, and drawn again a minute on', as
   );
   await layer.update();
   assert.equal(layer.getStats().error, null);
-  assert.equal(entities.values.length, 2);
+  assert.equal(markers().length, 2);
   layer.destroy();
 });
 
@@ -140,4 +199,36 @@ test('turning the layer off clears its error', async (t) => {
   layer.disable();
   assert.equal(layer.getStats().error, null);
   layer.destroy();
+});
+
+test('a click on a dot opens its card; the ground closes it', async (t) => {
+  const h = harness(t, [zone('SE3')]);
+  h.layer.enable();
+  await h.layer.update();
+  h.click(`${PICK}SE3`);
+  assert.ok(h.card(), 'a card opens');
+  assert.ok(h.card().position, 'the card sits on the zone');
+  h.click(null);
+  assert.equal(h.card(), undefined);
+  h.layer.destroy();
+});
+
+test("a click on another layer's card or dot leaves the open card alone", async (t) => {
+  const h = harness(t, [zone('SE3')]);
+  h.layer.enable();
+  await h.layer.update();
+  h.click(`${PICK}SE3`);
+  const before = h.card();
+  h.state.cardHit = { sourceId: 'hospitals', entryId: 'hospitals-card:x' };
+  h.click(null);
+  assert.equal(h.card(), before, 'a card is not the ground');
+  h.state.cardHit = null;
+  picking.registerPickOwner('hospitals', (id) => id.startsWith('se-hospital:'));
+  try {
+    h.click('se-hospital:1');
+    assert.equal(h.card(), before, "another layer's dot is not the ground");
+  } finally {
+    picking.unregisterPickOwner('hospitals');
+  }
+  h.layer.destroy();
 });

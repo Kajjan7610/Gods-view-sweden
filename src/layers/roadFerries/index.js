@@ -1,8 +1,8 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import { statusColor } from './records.js';
 import {
   ROAD_FERRIES_OVERLAY_SOURCE_ID,
@@ -13,7 +13,9 @@ export * from './records.js';
 export * from './cards.js';
 export { createRoadFerriesSource } from './source.js';
 
+export const ROAD_FERRIES_LAYER_ID = 'road-ferries';
 const PICK_PREFIX = 'se-ferry:';
+const OUTLINE_COLOR = '#ffffff';
 const LABEL_SOURCE_ID = 'road-ferries-labels';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -48,24 +50,31 @@ const STATUSES = Object.freeze([
 export function createRoadFerriesLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   terrain = null,
   now = () => Date.now(),
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Road ferries require a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
-  const position = (row) =>
-    Cesium.Cartesian3.fromDegrees(
-      row.point[0],
-      row.point[1],
-      _ground.heightOf(row.id),
-    );
+  const position = (row) => ({
+    lon: row.point[0],
+    lat: row.point[1],
+    height: _ground.heightOf(row.id),
+  });
+  /** Where a card or label sits: the dot's place on the ellipsoid (ECEF). */
+  const placeOf = (row) => {
+    const at = position(row);
+    return fromDegrees(at.lon, at.lat, at.height);
+  };
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
+  /** The ids of the rows the set holds: the ones a new height can move. */
+  let _drawn = new Set();
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -79,8 +88,21 @@ export function createRoadFerriesLayer({
   let _times = true;
   const _routeById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(ROAD_FERRIES_LAYER_ID);
+
+  /** A route's dot as the set draws it. */
+  const dotOf = (row) => ({
+    id: `${PICK_PREFIX}${row.id}`,
+    pos: position(row),
+    height: 'clampGround',
+    pixelSize: row.status === 'idle' ? 8 : 12,
+    color: statusColor(row.status),
+    outlineColor: OUTLINE_COLOR,
+    outlineWidth: 2,
+    disableDepthTest: Number.POSITIVE_INFINITY,
+  });
 
   /** The route's departures still to leave by the clock of the moment. */
   const upcoming = (route) =>
@@ -99,7 +121,7 @@ export function createRoadFerriesLayer({
       return;
     }
     const card = buildFerryCard({ ...row, departures: upcoming(row) });
-    card.position = position(row);
+    card.position = placeOf(row);
     overlayHost.setEntries(
       ROAD_FERRIES_OVERLAY_SOURCE_ID,
       [card],
@@ -107,8 +129,7 @@ export function createRoadFerriesLayer({
     );
   }
 
-  function pickedRoute(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedRoute(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -117,32 +138,47 @@ export function createRoadFerriesLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      ROAD_FERRIES_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
+      const at = click.screenPosition;
       // A card under the click, this layer's or another's, is not the ground.
-      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedRoute(picked) : null;
+      if (overlayHost.hitTest?.(at?.x, at?.y)) return;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedRoute(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (pickId && picking.isOwnedByOtherLayer(ROAD_FERRIES_LAYER_ID, pickId))
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
+    picking?.unregisterPickOwner?.(ROAD_FERRIES_LAYER_ID);
   }
 
   function clearOverlays() {
@@ -163,7 +199,7 @@ export function createRoadFerriesLayer({
         if (!next) continue;
         entries.push({
           id: `road-ferries-label:${row.id}`,
-          position: position(row),
+          position: placeOf(row),
           variant: 'label',
           title: ferryClock(next.at),
           accent: statusColor(row.status),
@@ -188,49 +224,28 @@ export function createRoadFerriesLayer({
 
   /** New ground heights: the dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _routeById.get(id);
-        return row && position(row);
-      },
-    );
+    if (!_dots) return;
+    const rows = ids
+      .filter((id) => _drawn.has(id))
+      .map((id) => _routeById.get(id))
+      .filter(Boolean);
+    if (rows.length) _dots.upsert(rows.map(dotOf));
     publishLabels();
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      for (const row of _routes) {
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: position(row),
-          point: {
-            pixelSize: row.status === 'idle' ? 8 : 12,
-            color: Cesium.Color.fromCssColorString(statusColor(row.status)),
-            outlineColor: Cesium.Color.WHITE,
-            outlineWidth: 2,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          },
-        });
-      }
-    });
+    if (!_dots) return;
+    _dots.set(_routes.map(dotOf));
+    _drawn = new Set(_routes.map((row) => row.id));
     publishLabels();
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   const layer = {
-    id: 'road-ferries',
+    id: ROAD_FERRIES_LAYER_ID,
     name: 'Road ferries (Sweden)',
     icon: '⛴️',
     source: 'Trafikverket',
@@ -239,18 +254,24 @@ export function createRoadFerriesLayer({
     init(viewer) {
       if (_viewer) throw new Error('Road ferries layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('road-ferries');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: ROAD_FERRIES_LAYER_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(ROAD_FERRIES_OVERLAY_SOURCE_ID, true);
       overlayHost?.setVisible?.(LABEL_SOURCE_ID, true);
       installClickHandler();
       publishLabels();
+      requestRender();
     },
 
     disable() {
@@ -259,13 +280,14 @@ export function createRoadFerriesLayer({
       _ground.cancel();
       _enabled = false;
       _lastError = null;
-      if (_dataSource) _dataSource.show = false;
+      if (_dots) _dots.show = false;
       removeClickHandler();
       clearOverlays();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -327,16 +349,15 @@ export function createRoadFerriesLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
       _routeById.clear();
       _routes = [];
+      _drawn = new Set();
       _signature = null;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

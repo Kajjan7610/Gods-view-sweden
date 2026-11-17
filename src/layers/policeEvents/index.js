@@ -1,8 +1,9 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { cssColor } from '../../render/color.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import {
   EVENT_CATEGORIES,
   categoryColor,
@@ -13,6 +14,7 @@ export * from './records.js';
 export * from './cards.js';
 export { createPolisenEventsSource } from './source.js';
 
+export const POLISEN_EVENTS_LAYER_ID = 'polisen-events';
 const PICK_PREFIX = 'se-polisen:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -37,6 +39,22 @@ const WINDOWS = Object.freeze({
 });
 /** Notices younger than this are drawn bright. */
 const FRESH_MS = 3 * 60 * 60_000;
+/** A county-wide notice has a white ring; the rest a dark one. */
+const COUNTY_OUTLINE = Object.freeze([1, 1, 1, 0.85]);
+const PLACE_OUTLINE = Object.freeze([0, 0, 0, 0.8]);
+
+/** A category's colour at `alpha`, made once per category and alpha. */
+const _colors = new Map();
+function categoryColorAt(category, alpha) {
+  const key = `${category}:${alpha}`;
+  let color = _colors.get(key);
+  if (!color) {
+    const [r, g, b] = cssColor(categoryColor(category));
+    color = Object.freeze([r, g, b, alpha]);
+    _colors.set(key, color);
+  }
+  return color;
+}
 
 /**
  * Own one Swedish police display: Polisen's event notices as dots coloured
@@ -47,22 +65,29 @@ const FRESH_MS = 3 * 60 * 60_000;
 export function createPolisenEventsLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   openExternal = null,
   terrain = null,
   now = () => Date.now(),
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Polisen events require a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
   // A notice is spread a little around its place, at the place's height.
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
-  const position = (row, [lon, lat]) =>
-    Cesium.Cartesian3.fromDegrees(lon, lat, _ground.heightOf(row.id));
+  const position = (row, [lon, lat]) => ({
+    lon,
+    lat,
+    height: _ground.heightOf(row.id),
+  });
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
+  // The notices drawn now, and the time their brightness was judged at.
+  let _drawnIds = new Set();
+  let _drawnAt = 0;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -79,8 +104,9 @@ export function createPolisenEventsLayer({
   const _eventById = new Map();
   let _positions = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(POLISEN_EVENTS_LAYER_ID);
   const visibleEvents = () => {
     const since = now() - WINDOWS[_window];
     return _events.filter(
@@ -100,7 +126,8 @@ export function createPolisenEventsLayer({
       return;
     }
     const card = buildPoliceCard(row, { linkable: Boolean(openExternal) });
-    card.position = position(row, point);
+    const at = position(row, point);
+    card.position = fromDegrees(at.lon, at.lat, at.height);
     if (card.accessibilityLabel && row.link) {
       card.activate = () => {
         openExternal(row.link);
@@ -111,9 +138,8 @@ export function createPolisenEventsLayer({
     overlayHost.setEntries(POLICE_OVERLAY_SOURCE_ID, [card], CARD_HOST_OPTIONS);
   }
 
-  /** Resolve a scene pick to a notice id of this layer, or null. */
-  function pickedEvent(picked) {
-    const pickId = picking.resolvePickId(picked);
+  /** Resolve a pick id to a notice id of this layer, or null. */
+  function pickedEvent(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -122,13 +148,23 @@ export function createPolisenEventsLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      POLISEN_EVENTS_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-      );
+      const at = click.screenPosition;
+      const cardHit = overlayHost.hitTest?.(at?.x, at?.y);
       if (
         cardHit?.sourceId === POLICE_OVERLAY_SOURCE_ID &&
         cardHit.entryId === _selectedCardId
@@ -138,27 +174,32 @@ export function createPolisenEventsLayer({
       }
       // A card under the click, this layer's or another's, is not the ground.
       if (cardHit) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedEvent(picked) : null;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedEvent(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (
+        pickId &&
+        picking.isOwnedByOtherLayer(POLISEN_EVENTS_LAYER_ID, pickId)
+      )
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
+    picking?.unregisterPickOwner?.(POLISEN_EVENTS_LAYER_ID);
   }
 
   function clearSelection() {
@@ -170,59 +211,50 @@ export function createPolisenEventsLayer({
     }
   }
 
+  /** A notice's dot as the set draws it, bright while it is fresh at `at`. */
+  const dotOf = (row, at) => {
+    const fresh = at - row.time < FRESH_MS;
+    const county = row.precision === 'county';
+    return {
+      id: `${PICK_PREFIX}${row.id}`,
+      pos: position(row, _positions.get(row.id) || row.point),
+      height: 'clampGround',
+      pixelSize: fresh ? 10 : 8,
+      color: categoryColorAt(row.category, fresh ? 1 : 0.7),
+      outlineColor: county ? COUNTY_OUTLINE : PLACE_OUTLINE,
+      outlineWidth: county ? 2 : 1.5,
+      disableDepthTest: Number.POSITIVE_INFINITY,
+    };
+  };
+
   /** New ground heights: the dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _eventById.get(id);
-        const point = row && (_positions.get(id) || row.point);
-        return point && position(row, point);
-      },
-    );
+    if (!_dots) return;
+    // Only dots drawn now move, looking as they were drawn.
+    const rows = ids
+      .filter((id) => _drawnIds.has(id))
+      .map((id) => _eventById.get(id))
+      .filter(Boolean);
+    if (rows.length) _dots.upsert(rows.map((row) => dotOf(row, _drawnAt)));
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
+    if (!_dots) return;
     const shown = visibleEvents();
     _positions = spreadAroundPlaces(shown);
     const at = now();
-    redrawEntities(entities, () => {
-      // Oldest first, so the newest dot of a place is drawn on top.
-      for (const row of [...shown].reverse()) {
-        const fresh = at - row.time < FRESH_MS;
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: position(row, _positions.get(row.id) || row.point),
-          point: {
-            pixelSize: fresh ? 10 : 8,
-            color: Cesium.Color.fromCssColorString(
-              categoryColor(row.category),
-            ).withAlpha(fresh ? 1 : 0.7),
-            outlineColor:
-              row.precision === 'county'
-                ? Cesium.Color.WHITE.withAlpha(0.85)
-                : Cesium.Color.BLACK.withAlpha(0.8),
-            outlineWidth: row.precision === 'county' ? 2 : 1.5,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          },
-        });
-      }
-    });
+    // Oldest first, so the newest dot of a place is drawn on top.
+    _drawnIds = new Set();
+    _dots.set([...shown].reverse().map((row) => dotOf(row, at)));
+    _drawnIds = new Set(shown.map((row) => row.id));
+    _drawnAt = at;
     if (_selectedId && !_eventById.has(_selectedId)) _selectedId = null;
     if (_selectedId && !shown.some((row) => row.id === _selectedId))
       _selectedId = null;
     publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function setWindow(id) {
@@ -239,7 +271,7 @@ export function createPolisenEventsLayer({
   }
 
   const layer = {
-    id: 'polisen-events',
+    id: POLISEN_EVENTS_LAYER_ID,
     name: 'Police Events (Sweden)',
     icon: '🚓',
     source: 'Polisen',
@@ -249,16 +281,22 @@ export function createPolisenEventsLayer({
       if (_viewer)
         throw new Error('Polisen events layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('polisen-events');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: POLISEN_EVENTS_LAYER_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(POLICE_OVERLAY_SOURCE_ID, true);
       installClickHandler();
+      requestRender();
     },
 
     disable() {
@@ -267,13 +305,14 @@ export function createPolisenEventsLayer({
       _ground.cancel();
       _enabled = false;
       _lastError = null;
-      if (_dataSource) _dataSource.show = false;
+      if (_dots) _dots.show = false;
       removeClickHandler();
       clearSelection();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -326,17 +365,16 @@ export function createPolisenEventsLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
       _eventById.clear();
       _events = [];
       _positions = new Map();
+      _drawnIds = new Set();
       _signature = null;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

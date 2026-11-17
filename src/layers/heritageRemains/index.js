@@ -1,8 +1,14 @@
-import * as Cesium from 'cesium';
 import { formatNumber, msg, t, tn } from '../../i18n/index.js';
+import { fromDegrees, toLonLatH } from '../../geo/ellipsoid.js';
+import {
+  canvasOf,
+  drawOf,
+  findCamera,
+  findFrame,
+  findQuery,
+} from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import {
   ASSESSMENT,
   ASSESSMENTS,
@@ -18,6 +24,7 @@ export * from './records.js';
 export * from './cards.js';
 export { createHeritageRemainsSource } from './source.js';
 
+export const HERITAGE_REMAINS_LAYER_ID = 'heritage-remains';
 const PICK_PREFIX = 'se-remain:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -29,6 +36,13 @@ export const REMAINS_MAX_HEIGHT_M = 12_000;
 /** The nearest this many to the map centre are drawn. */
 const SHOWN = 1500;
 const MOVE_SETTLE_MS = 400;
+const OUTLINE_COLOR = '#1a120b';
+const SCALE_BY_DISTANCE = Object.freeze({
+  near: 300,
+  nearValue: 1.3,
+  far: 12000,
+  farValue: 0.7,
+});
 
 /** Dot size: a protected remain reads a little larger. */
 const pixelSize = (row) =>
@@ -44,11 +58,12 @@ const pixelSize = (row) =>
 export function createHeritageRemainsLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   terrain = null,
   openExternal = null,
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Heritage remains require a snapshot source');
@@ -56,14 +71,13 @@ export function createHeritageRemainsLayer({
   const _ground = createGroundHeights(terrain, (ids) => lift(ids), {
     passing: true,
   });
-  const position = (row) =>
-    Cesium.Cartesian3.fromDegrees(
-      row.point[0],
-      row.point[1],
-      _ground.heightOf(row.id),
-    );
+  const position = (row) => ({
+    lon: row.point[0],
+    lat: row.point[1],
+    height: _ground.heightOf(row.id),
+  });
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -81,8 +95,22 @@ export function createHeritageRemainsLayer({
   let _shown = [];
   const _byId = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(HERITAGE_REMAINS_LAYER_ID);
+
+  /** A remain's dot as the set draws it. */
+  const dotOf = (row) => ({
+    id: `${PICK_PREFIX}${row.id}`,
+    pos: position(row),
+    height: 'clampGround',
+    pixelSize: pixelSize(row),
+    color: ASSESSMENT[row.assessment]?.color ?? ASSESSMENT.none.color,
+    outlineColor: OUTLINE_COLOR,
+    outlineWidth: 1.5,
+    disableDepthTest: Number.POSITIVE_INFINITY,
+    scaleByDistance: SCALE_BY_DISTANCE,
+  });
 
   function openSelected() {
     const row = _selectedId ? _byId.get(_selectedId) : null;
@@ -106,7 +134,8 @@ export function createHeritageRemainsLayer({
     }
     const linkable = Boolean(openExternal && row.page);
     const card = buildRemainCard(row, { linkable });
-    card.position = position(row);
+    const at = position(row);
+    card.position = fromDegrees(at.lon, at.lat, at.height);
     if (linkable) card.activate = () => openSelected();
     _selectedCardId = card.id;
     overlayHost.setEntries(
@@ -116,8 +145,7 @@ export function createHeritageRemainsLayer({
     );
   }
 
-  function pickedRemain(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedRemain(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -126,13 +154,23 @@ export function createHeritageRemainsLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      HERITAGE_REMAINS_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-      );
+      const at = click.screenPosition;
+      const cardHit = overlayHost.hitTest?.(at?.x, at?.y);
       // A click on this layer's own card opens the remain at RAÄ.
       if (
         cardHit?.sourceId === HERITAGE_REMAINS_OVERLAY_SOURCE_ID &&
@@ -141,24 +179,34 @@ export function createHeritageRemainsLayer({
         openSelected();
       // A card under the click, this layer's or another's, is not the ground.
       if (cardHit) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedRemain(picked) : null;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedRemain(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         _rowListener?.();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (
+        pickId &&
+        picking.isOwnedByOtherLayer(HERITAGE_REMAINS_LAYER_ID, pickId)
+      )
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
         _rowListener?.();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
+  }
+
+  function removeClickHandler() {
+    _clickHandler?.();
+    _clickHandler = null;
+    picking?.unregisterPickOwner?.(HERITAGE_REMAINS_LAYER_ID);
   }
 
   function clearOverlays() {
@@ -171,70 +219,48 @@ export function createHeritageRemainsLayer({
 
   /** New ground heights: the dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _byId.get(id);
-        return row && position(row);
-      },
-    );
+    if (!_dots) return;
+    const rows = ids.map((id) => _byId.get(id)).filter(Boolean);
+    if (!rows.length) return;
+    _dots.upsert(rows.map(dotOf));
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      // Farthest first, so the nearest draw on top where dots meet.
-      for (const row of [..._shown].reverse()) {
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: position(row),
-          point: {
-            pixelSize: pixelSize(row),
-            color: Cesium.Color.fromCssColorString(
-              ASSESSMENT[row.assessment]?.color ?? ASSESSMENT.none.color,
-            ),
-            outlineColor: Cesium.Color.fromCssColorString('#1a120b'),
-            outlineWidth: 1.5,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            scaleByDistance: new Cesium.NearFarScalar(300, 1.3, 12000, 0.7),
-          },
-        });
-      }
-    });
+    if (!_dots) return;
+    // Farthest first, so the nearest draw on top where dots meet.
+    _dots.set([..._shown].reverse().map(dotOf));
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
+  }
+
+  /** The ground under the canvas centre, in degrees, or null. */
+  function viewCentre() {
+    const query = findQuery(_viewer);
+    const canvas = canvasOf(_viewer);
+    if (typeof query?.pickEllipsoid !== 'function' || !canvas) return null;
+    const middle = query.pickEllipsoid(
+      canvas.clientWidth / 2,
+      canvas.clientHeight / 2,
+    );
+    const ground = middle ? toLonLatH(middle) : null;
+    return ground ? [ground.lon, ground.lat] : null;
   }
 
   /** The view as a box and its centre, or null when the camera is too high. */
   function viewQuery() {
-    const camera = _viewer?.camera;
-    const height = camera?.positionCartographic?.height;
+    const camera = _viewer ? findCamera(_viewer) : null;
+    const pose = camera?.pose();
+    const height = pose?.height;
     if (!Number.isFinite(height) || height > REMAINS_MAX_HEIGHT_M) return null;
-    const rect = camera.computeViewRectangle?.(Cesium.Ellipsoid.WGS84);
+    const rect = camera.viewRectangle?.();
     if (!rect) return null;
-    const deg = Cesium.Math.toDegrees;
-    const canvas = _viewer.scene.canvas;
-    const middle = camera.pickEllipsoid?.(
-      new Cesium.Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2),
-      Cesium.Ellipsoid.WGS84,
-    );
-    const centre = middle
-      ? Cesium.Cartographic.fromCartesian(middle)
-      : camera.positionCartographic;
-    const center = [deg(centre.longitude), deg(centre.latitude)];
+    const center = viewCentre() ?? [pose.lon, pose.lat];
     return {
       // A tilted view reaches the horizon: ask for the part about the centre.
       bbox: clipRemainsBox(
-        [deg(rect.west), deg(rect.south), deg(rect.east), deg(rect.north)],
+        [rect.west, rect.south, rect.east, rect.north],
         center,
       ),
       center,
@@ -252,7 +278,7 @@ export function createHeritageRemainsLayer({
   }
 
   async function refresh() {
-    if (!_enabled || !_dataSource) return false;
+    if (!_enabled || !_dots) return false;
     _request?.abort();
     const query = viewQuery();
     if (!query) {
@@ -315,7 +341,7 @@ export function createHeritageRemainsLayer({
   }
 
   const layer = {
-    id: 'heritage-remains',
+    id: HERITAGE_REMAINS_LAYER_ID,
     name: 'Ancient Monuments (Sweden)',
     icon: '🪨',
     source: 'Riksantikvarieämbetet',
@@ -325,18 +351,25 @@ export function createHeritageRemainsLayer({
       if (_viewer)
         throw new Error('Heritage remains layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('heritage-remains');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: HERITAGE_REMAINS_LAYER_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // thousands of dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(HERITAGE_REMAINS_OVERLAY_SOURCE_ID, true);
       installClickHandler();
       _removeMove ??=
-        _viewer?.camera?.moveEnd?.addEventListener?.(scheduleRefresh) ?? null;
+        (_viewer && findCamera(_viewer)?.on('moveEnd', scheduleRefresh)) ??
+        null;
+      requestRender();
     },
 
     disable() {
@@ -347,9 +380,8 @@ export function createHeritageRemainsLayer({
       _removeMove?.();
       _removeMove = null;
       _enabled = false;
-      if (_dataSource) _dataSource.show = false;
-      _clickHandler?.destroy();
-      _clickHandler = null;
+      if (_dots) _dots.show = false;
+      removeClickHandler();
       clearOverlays();
       clearRows();
       render();
@@ -370,13 +402,11 @@ export function createHeritageRemainsLayer({
       return true;
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

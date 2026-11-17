@@ -1,8 +1,8 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import {
   PRICE_CLASSES,
   priceAt,
@@ -19,7 +19,9 @@ export * from './records.js';
 export * from './cards.js';
 export { createElectricityPricesSource } from './source.js';
 
+export const ELECTRICITY_PRICES_LAYER_ID = 'electricity-prices';
 const PICK_PREFIX = 'se-elpris:';
+const OUTLINE_COLOR = '#ffffff';
 const LABEL_SOURCE_ID = 'electricity-price-labels';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -48,24 +50,31 @@ const CLASS_LABELS = Object.freeze({
 export function createElectricityPricesLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   terrain = null,
   now = () => Date.now(),
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Electricity prices require a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
-  const position = (row) =>
-    Cesium.Cartesian3.fromDegrees(
-      row.point[0],
-      row.point[1],
-      _ground.heightOf(row.id),
-    );
+  const position = (row) => ({
+    lon: row.point[0],
+    lat: row.point[1],
+    height: _ground.heightOf(row.id),
+  });
+  /** Where an overlay entry for `row` sits (ECEF). */
+  const placeOf = (row) => {
+    const at = position(row);
+    return fromDegrees(at.lon, at.lat, at.height);
+  };
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
+  // The zones drawn now, each with the price its dot is coloured by.
+  let _drawn = new Map();
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -79,8 +88,9 @@ export function createElectricityPricesLayer({
   let _mode = 'now';
   const _zoneById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(ELECTRICITY_PRICES_LAYER_ID);
 
   /** The price a zone is coloured and labelled by in the current mode. */
   function shownPrice(zone, nowMs = now()) {
@@ -102,7 +112,7 @@ export function createElectricityPricesLayer({
       return;
     }
     const card = buildZoneCard(zone, now());
-    card.position = position(zone);
+    card.position = placeOf(zone);
     overlayHost.setEntries(
       ELECTRICITY_OVERLAY_SOURCE_ID,
       [card],
@@ -110,8 +120,7 @@ export function createElectricityPricesLayer({
     );
   }
 
-  function pickedZone(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedZone(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -120,32 +129,50 @@ export function createElectricityPricesLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      ELECTRICITY_PRICES_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
+      const at = click.screenPosition;
       // A card under the click, this layer's or another's, is not the ground.
-      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedZone(picked) : null;
+      if (overlayHost.hitTest?.(at?.x, at?.y)) return;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedZone(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (
+        pickId &&
+        picking.isOwnedByOtherLayer(ELECTRICITY_PRICES_LAYER_ID, pickId)
+      )
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
+    picking?.unregisterPickOwner?.(ELECTRICITY_PRICES_LAYER_ID);
   }
 
   function clearOverlays() {
@@ -164,7 +191,7 @@ export function createElectricityPricesLayer({
           const price = shownPrice(zone);
           return {
             id: `electricity-label:${zone.id}`,
-            position: position(zone),
+            position: placeOf(zone),
             variant: 'label',
             title: Number.isFinite(price)
               ? t('{zone} · {price} kr', {
@@ -189,49 +216,45 @@ export function createElectricityPricesLayer({
     overlayHost.setEntries(LABEL_SOURCE_ID, entries, LABEL_HOST_OPTIONS);
   }
 
+  /** A zone's dot as the set draws it, coloured by `price`. */
+  const dotOf = (zone, price) => ({
+    id: `${PICK_PREFIX}${zone.id}`,
+    pos: position(zone),
+    height: 'clampGround',
+    pixelSize: 20,
+    color: priceColor(price),
+    outlineColor: OUTLINE_COLOR,
+    outlineWidth: 3,
+    disableDepthTest: Number.POSITIVE_INFINITY,
+  });
+
   /** New ground heights: the dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _zoneById.get(id);
-        return row && position(row);
-      },
-    );
+    if (!_dots) return;
+    // Only dots drawn now move, coloured as they were drawn.
+    const items = [];
+    for (const id of ids) {
+      const drawn = _drawn.get(id);
+      if (drawn) items.push(dotOf(drawn.zone, drawn.price));
+    }
+    if (items.length) _dots.upsert(items);
     publishLabels();
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      for (const zone of _zones) {
-        entities.add({
-          id: `${PICK_PREFIX}${zone.id}`,
-          position: position(zone),
-          point: {
-            pixelSize: 20,
-            color: Cesium.Color.fromCssColorString(
-              priceColor(shownPrice(zone)),
-            ),
-            outlineColor: Cesium.Color.WHITE,
-            outlineWidth: 3,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          },
-        });
-      }
-    });
+    if (!_dots) return;
+    const nowMs = now();
+    const drawn = new Map(
+      _zones.map((zone) => [zone.id, { zone, price: shownPrice(zone, nowMs) }]),
+    );
+    _drawn = new Map();
+    _dots.set([...drawn.values()].map(({ zone, price }) => dotOf(zone, price)));
+    _drawn = drawn;
     publishLabels();
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function setMode(mode) {
@@ -242,7 +265,7 @@ export function createElectricityPricesLayer({
   }
 
   const layer = {
-    id: 'electricity-prices',
+    id: ELECTRICITY_PRICES_LAYER_ID,
     name: 'Electricity Prices (Sweden)',
     icon: '⚡',
     source: 'elprisetjustnu.se',
@@ -253,18 +276,24 @@ export function createElectricityPricesLayer({
       if (_viewer)
         throw new Error('Electricity prices layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('electricity-prices');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: ELECTRICITY_PRICES_LAYER_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(ELECTRICITY_OVERLAY_SOURCE_ID, true);
       overlayHost?.setVisible?.(LABEL_SOURCE_ID, true);
       installClickHandler();
       publishLabels();
+      requestRender();
     },
 
     disable() {
@@ -273,13 +302,14 @@ export function createElectricityPricesLayer({
       _ground.cancel();
       _enabled = false;
       _lastError = null;
-      if (_dataSource) _dataSource.show = false;
+      if (_dots) _dots.show = false;
       removeClickHandler();
       clearOverlays();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -321,15 +351,14 @@ export function createElectricityPricesLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
       _zoneById.clear();
       _zones = [];
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _drawn = new Map();
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

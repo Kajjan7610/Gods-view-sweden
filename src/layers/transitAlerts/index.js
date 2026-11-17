@@ -1,14 +1,15 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import { ALERT_KINDS, alertColor } from './records.js';
 import { TRANSIT_ALERTS_OVERLAY_SOURCE_ID, buildStopCard } from './cards.js';
 export * from './records.js';
 export * from './cards.js';
 export { createTransitAlertsSource } from './source.js';
 
+export const TRANSIT_ALERTS_LAYER_ID = 'transit-alerts';
 const PICK_PREFIX = 'se-trafikstorning:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -21,6 +22,13 @@ const KIND_LABELS = Object.freeze({
   other: msg('Other disruption'),
 });
 const KIND_SIZE = Object.freeze({ closed: 11, moved: 9, other: 8 });
+const OUTLINE_COLOR = Object.freeze([0, 0, 0, 0.7]);
+const SCALE_BY_DISTANCE = Object.freeze({
+  near: 2e4,
+  nearValue: 1.4,
+  far: 2e6,
+  farValue: 0.6,
+});
 
 /**
  * Own one Swedish public-transport disruption display: every stop area with
@@ -30,24 +38,26 @@ const KIND_SIZE = Object.freeze({ closed: 11, moved: 9, other: 8 });
 export function createTransitAlertsLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   terrain = null,
   now = () => Date.now(),
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Transit disruptions require a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
-  const position = (row) =>
-    Cesium.Cartesian3.fromDegrees(
-      row.point[0],
-      row.point[1],
-      _ground.heightOf(row.id),
-    );
+  const position = (row) => ({
+    lon: row.point[0],
+    lat: row.point[1],
+    height: _ground.heightOf(row.id),
+  });
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
+  // The stops drawn now, as they were drawn.
+  let _drawn = new Map();
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -61,8 +71,22 @@ export function createTransitAlertsLayer({
   let _pending = [];
   const _stopById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(TRANSIT_ALERTS_LAYER_ID);
+
+  /** A stop's dot as the set draws it. */
+  const dotOf = (row) => ({
+    id: `${PICK_PREFIX}${row.id}`,
+    pos: position(row),
+    height: 'clampGround',
+    pixelSize: KIND_SIZE[row.kind] || 8,
+    color: alertColor(row.kind),
+    outlineColor: OUTLINE_COLOR,
+    outlineWidth: 1.5,
+    disableDepthTest: Number.POSITIVE_INFINITY,
+    scaleByDistance: SCALE_BY_DISTANCE,
+  });
 
   function publishSelectedCard() {
     if (!canSelect()) return;
@@ -77,7 +101,8 @@ export function createTransitAlertsLayer({
       return;
     }
     const card = buildStopCard(row);
-    card.position = position(row);
+    const at = position(row);
+    card.position = fromDegrees(at.lon, at.lat, at.height);
     overlayHost.setEntries(
       TRANSIT_ALERTS_OVERLAY_SOURCE_ID,
       [card],
@@ -85,8 +110,7 @@ export function createTransitAlertsLayer({
     );
   }
 
-  function pickedStop(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedStop(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -95,32 +119,50 @@ export function createTransitAlertsLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      TRANSIT_ALERTS_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
+      const at = click.screenPosition;
       // A card under the click, this layer's or another's, is not the ground.
-      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedStop(picked) : null;
+      if (overlayHost.hitTest?.(at?.x, at?.y)) return;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedStop(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (
+        pickId &&
+        picking.isOwnedByOtherLayer(TRANSIT_ALERTS_LAYER_ID, pickId)
+      )
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
+    picking?.unregisterPickOwner?.(TRANSIT_ALERTS_LAYER_ID);
   }
 
   function clearOverlays() {
@@ -132,47 +174,25 @@ export function createTransitAlertsLayer({
 
   /** New ground heights: the dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _stopById.get(id);
-        return row && position(row);
-      },
-    );
+    if (!_dots) return;
+    // Only dots drawn now move, looking as they were drawn.
+    const rows = ids.map((id) => _drawn.get(id)).filter(Boolean);
+    if (rows.length) _dots.upsert(rows.map(dotOf));
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      for (const row of _stops)
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: position(row),
-          point: {
-            pixelSize: KIND_SIZE[row.kind] || 8,
-            color: Cesium.Color.fromCssColorString(alertColor(row.kind)),
-            outlineColor: Cesium.Color.BLACK.withAlpha(0.7),
-            outlineWidth: 1.5,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            scaleByDistance: new Cesium.NearFarScalar(2e4, 1.4, 2e6, 0.6),
-          },
-        });
-    });
+    if (!_dots) return;
+    _drawn = new Map();
+    _dots.set(_stops.map(dotOf));
+    _drawn = new Map(_stops.map((row) => [row.id, row]));
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   const layer = {
-    id: 'transit-alerts',
+    id: TRANSIT_ALERTS_LAYER_ID,
     name: 'Transit Disruptions (Sweden)',
     icon: '🚏',
     source: 'Trafiklab',
@@ -183,16 +203,22 @@ export function createTransitAlertsLayer({
       if (_viewer)
         throw new Error('Transit disruptions layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('transit-alerts');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: TRANSIT_ALERTS_LAYER_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // thousands of dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(TRANSIT_ALERTS_OVERLAY_SOURCE_ID, true);
       installClickHandler();
+      requestRender();
     },
 
     disable() {
@@ -201,13 +227,14 @@ export function createTransitAlertsLayer({
       _ground.cancel();
       _enabled = false;
       _lastError = null;
-      if (_dataSource) _dataSource.show = false;
+      if (_dots) _dots.show = false;
       removeClickHandler();
       clearOverlays();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -261,17 +288,16 @@ export function createTransitAlertsLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
       _stopById.clear();
       _stops = [];
       _pending = [];
+      _drawn = new Map();
       _signature = null;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

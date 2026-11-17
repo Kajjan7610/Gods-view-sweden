@@ -1,7 +1,10 @@
 // The speed camera layer: arrows and dots, the card, and what a bad round leaves.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import * as Cesium from 'cesium';
+import { bindFakeDraw } from '../../testSupport/fakeDrawPort.mjs';
+import { fakeCameraPort } from '../../testSupport/fakeCameraPort.mjs';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import * as picking from '../../data/pickRegistry.js';
 import {
   SPEED_CAMERAS_OVERLAY_SOURCE_ID,
   createSpeedCamerasLayer,
@@ -52,38 +55,21 @@ const site = (over = {}) => ({
   ...over,
 });
 
-function fakeViewer() {
-  const moveEnd = [];
-  const viewer = {
-    sources: [],
-    picked: undefined,
-    moveEnd,
-    dataSources: {
-      add: (source) => viewer.sources.push(source),
-      remove: (source) =>
-        viewer.sources.splice(viewer.sources.indexOf(source), 1),
-    },
-    scene: { pick: () => viewer.picked, requestRender() {} },
-    camera: {
-      positionWC: Cesium.Cartesian3.fromDegrees(17.9, 59.47, 2_000),
-      moveEnd: {
-        addEventListener(listener) {
-          moveEnd.push(listener);
-          return () => moveEnd.splice(moveEnd.indexOf(listener), 1);
-        },
-      },
-    },
-  };
-  return viewer;
-}
+/** The eye straight above the site, `heightM` up. */
+const eyeAt = (heightM) => ({
+  height: heightM,
+  position: fromDegrees(17.9, 59.47, heightM),
+});
 
-/** A layer on a fake viewer, fed by `feed.cameras` (or failing on `feed.error`). */
-function harness(t, cameras = [site()]) {
+/** A layer on a fake renderer, fed by `feed.cameras` (or failing on `feed.error`). */
+function harness(t, cameras = [site()], { terrain = null } = {}) {
   t.mock.method(console, 'log', () => {});
   t.mock.method(console, 'warn', () => {});
-  const viewer = fakeViewer();
+  const viewer = {};
+  const camera = fakeCameraPort({ pose: eyeAt(2_000) });
+  const { draw } = bindFakeDraw(viewer, { camera: camera.port });
   const feed = { cameras, error: null };
-  const state = { cards: [], cardHit: null, click: null };
+  const state = { cards: [], cardHit: null, click: null, picked: null };
   const layer = createSpeedCamerasLayer({
     source: {
       getSnapshot: async () => {
@@ -100,56 +86,102 @@ function harness(t, cameras = [site()]) {
       setVisible() {},
       hitTest: () => state.cardHit,
     },
-    screenSpaceEventHandlerFactory: () => ({
-      setInputAction: (callback) => (state.click = callback),
-      destroy: () => (state.click = null),
+    // The globe's clicks: what is under them comes as `topHit`.
+    input: () => ({
+      onClick(callback) {
+        state.click = () =>
+          callback({
+            screenPosition: { x: 10, y: 20 },
+            topHit: state.picked
+              ? { set: 'speed-cameras', id: state.picked, surface: false }
+              : null,
+          });
+        return () => (state.click = null);
+      },
     }),
-    picking: {
-      resolvePickId: (picked) => picked?.id ?? null,
-      isOwnedByOtherLayer: () => false,
-    },
+    picking,
+    terrain,
   });
   layer.init(viewer);
-  return { layer, viewer, feed, state };
+  const markers = () => [...(draw.find('speed-cameras')?.items.values() ?? [])];
+  return { layer, draw, camera, feed, state, markers };
 }
-
-const CLICK = { position: { x: 10, y: 20 } };
-const markers = (viewer) => viewer.sources[0].entities.values;
 
 // First: the markers are drawn once and kept, so only the first round of
 // this file can meet a canvas that fails.
 test('a drawing that failed is made again on the next round', async (t) => {
-  const { layer, viewer } = harness(t);
+  const { layer, markers } = harness(t);
   layer.enable();
   drawing.failNext = true;
   assert.equal(await layer.update(), true);
   assert.equal(layer.getStats().error, 'no canvas');
-  assert.equal(markers(viewer).length, 0);
+  assert.equal(markers().length, 0);
 
   // The same answer again: it was never drawn, so it is drawn now.
   assert.equal(await layer.update(), true);
   assert.equal(layer.getStats().error, null);
-  assert.equal(markers(viewer).length, 1);
+  assert.equal(markers().length, 1);
   layer.destroy();
 });
 
+test('the sites are one set of icons, shown only while the layer is on', async (t) => {
+  const { layer, draw, state, markers } = harness(t);
+  const set = () => draw.find('speed-cameras');
+  assert.equal(set().kind, 'icons');
+  assert.equal(set().show, false);
+  assert.equal(set().spec.horizonCull, true);
+  layer.enable();
+  assert.equal(set().show, true);
+  await layer.update();
+  assert.equal(markers().length, 1);
+  layer.disable();
+  assert.equal(set().show, false);
+  assert.equal(state.click, null, 'the click handler goes with it');
+  layer.destroy();
+  assert.equal(set(), undefined, 'the set is disposed');
+});
+
+test('without ground heights the markers clamp to every surface; with them to terrain only', (t) => {
+  assert.equal(harness(t).draw.find('speed-cameras').spec.clampTo, 'both');
+  const terrain = { resolveEllipsoidalGround: async () => [] };
+  assert.equal(
+    harness(t, [site()], { terrain }).draw.find('speed-cameras').spec.clampTo,
+    'terrain',
+  );
+});
+
 test('a site without a direction is a dot, one with is an arrow turned to it', async (t) => {
-  const { layer, viewer, feed } = harness(t, [
+  const { layer, feed, markers } = harness(t, [
     site({ id: '1', bearing: 90 }),
     site({ id: '2', bearing: null }),
   ]);
   layer.enable();
   await layer.update();
-  const [arrow, dot] = markers(viewer).map((entity) => ({
-    image: entity.billboard.image.getValue(),
-    rotation: entity.billboard.rotation.getValue(),
-  }));
-  const drew = (image, name) => image.calls.some(([call]) => call === name);
+  const [arrow, dot] = markers();
+  const drew = (item, name) =>
+    item.image.canvas.calls.some(([call]) => call === name);
   assert.notEqual(arrow.image, dot.image);
-  assert.equal(drew(arrow.image, 'lineTo'), true);
-  assert.equal(drew(dot.image, 'lineTo'), false);
-  assert.equal(arrow.rotation, -Cesium.Math.toRadians(90));
+  assert.equal(drew(arrow, 'lineTo'), true);
+  assert.equal(drew(dot, 'lineTo'), false);
+  assert.equal(arrow.image.key, 'speed-camera-arrow');
+  assert.equal(dot.image.key, 'speed-camera-dot');
+  // Turned clockwise from north, up along the Earth's axis as Cesium's
+  // aligned billboards stood.
+  assert.equal(arrow.rotationMode, 'axis');
+  assert.deepEqual(arrow.alignedAxis, { x: 0, y: 0, z: 1 });
+  assert.equal(arrow.rotation, -(90 * (Math.PI / 180)));
   assert.equal(dot.rotation, 0);
+  assert.deepEqual(arrow.size, [24, 24]);
+  assert.equal(arrow.height, 'clampGround');
+  assert.deepEqual(arrow.pos, { lon: 17.9, lat: 59.47, height: 0 });
+  assert.equal(arrow.disableDepthTest, Number.POSITIVE_INFINITY);
+  assert.deepEqual(arrow.displayRange, [0, 400_000]);
+  assert.deepEqual(arrow.scaleByDistance, {
+    near: 2_000,
+    nearValue: 1,
+    far: 400_000,
+    farValue: 0.45,
+  });
 
   assert.deepEqual(
     layer.getRowControls().legend.map((entry) => entry.count),
@@ -168,13 +200,14 @@ test('a site without a direction is a dot, one with is an arrow turned to it', a
 });
 
 test('a new name on a site shows on its card', async (t) => {
-  const { layer, viewer, feed, state } = harness(t);
+  const { layer, feed, state } = harness(t);
   layer.enable();
   await layer.update();
-  viewer.picked = { id: 'se-speed-camera:1' };
-  state.click(CLICK);
+  state.picked = 'se-speed-camera:1';
+  state.click();
   assert.equal(state.cards[0].id, 'speed-camera-card:1');
   assert.ok(state.cards[0].details.includes('Rotebro'));
+  assert.ok(state.cards[0].position, 'the card sits on the site');
 
   // Same id, point and direction; only the name and the county are new.
   feed.cameras = [site({ name: 'Rotebro norra', county: 'Uppsala län' })];
@@ -184,8 +217,43 @@ test('a new name on a site shows on its card', async (t) => {
   layer.destroy();
 });
 
+test('a click on the ground closes the card; another layer’s card or dot leaves it', async (t) => {
+  const { layer, state } = harness(t, [site(), site({ id: '2' })]);
+  layer.enable();
+  await layer.update();
+  state.picked = 'se-speed-camera:1';
+  state.click();
+  assert.equal(state.cards[0].id, 'speed-camera-card:1');
+
+  state.cardHit = { sourceId: 'hospitals', entryId: 'hospitals-card:x' };
+  state.picked = 'se-speed-camera:2';
+  state.click();
+  assert.equal(
+    state.cards[0].id,
+    'speed-camera-card:1',
+    'a card is not the ground',
+  );
+  state.cardHit = null;
+  picking.registerPickOwner('hospitals', (id) => id.startsWith('se-hospital:'));
+  try {
+    state.picked = 'se-hospital:1';
+    state.click();
+    assert.equal(
+      state.cards[0].id,
+      'speed-camera-card:1',
+      "another layer's dot is not the ground",
+    );
+  } finally {
+    picking.unregisterPickOwner('hospitals');
+  }
+  state.picked = null;
+  state.click();
+  assert.deepEqual(state.cards, [], 'the ground lets go');
+  layer.destroy();
+});
+
 test('a site that comes twice is drawn once', async (t) => {
-  const { layer, viewer } = harness(t, [
+  const { layer, markers } = harness(t, [
     site({ name: 'First' }),
     site({ name: 'Second' }),
     site({ id: '2' }),
@@ -195,24 +263,20 @@ test('a site that comes twice is drawn once', async (t) => {
   assert.equal(layer.getStats().error, null);
   assert.equal(layer.getStats().count, 2);
   assert.deepEqual(
-    markers(viewer).map((entity) => entity.id),
+    markers().map((item) => item.id),
     ['se-speed-camera:1', 'se-speed-camera:2'],
   );
   layer.destroy();
 });
 
 test('the card goes when the view moves out of reach of its marker', async (t) => {
-  const { layer, viewer, state } = harness(t);
+  const { layer, camera, state } = harness(t);
   layer.enable();
   await layer.update();
-  assert.equal(viewer.moveEnd.length, 1);
+  assert.equal(camera.listenerCount('moveEnd'), 1);
   const moved = (heightM) => {
-    viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
-      17.9,
-      59.47,
-      heightM,
-    );
-    viewer.moveEnd[0]();
+    camera.setPose(eyeAt(heightM));
+    camera.emit('moveEnd');
   };
 
   // Nothing selected: a move changes nothing.
@@ -228,12 +292,12 @@ test('the card goes when the view moves out of reach of its marker', async (t) =
 
   // Switched off and on again there is still one listener, then none.
   layer.disable();
-  assert.equal(viewer.moveEnd.length, 0);
+  assert.equal(camera.listenerCount('moveEnd'), 0);
   layer.enable();
   layer.enable();
-  assert.equal(viewer.moveEnd.length, 1);
+  assert.equal(camera.listenerCount('moveEnd'), 1);
   layer.destroy();
-  assert.equal(viewer.moveEnd.length, 0);
+  assert.equal(camera.listenerCount('moveEnd'), 0);
 });
 
 test('switching the layer off drops the last failure', async (t) => {

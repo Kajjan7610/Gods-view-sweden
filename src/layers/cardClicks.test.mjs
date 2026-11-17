@@ -108,6 +108,7 @@ const LAYERS = [
   {
     name: 'electricity',
     create: createElectricityPricesLayer,
+    ported: true,
     sourceId: ELECTRICITY_OVERLAY_SOURCE_ID,
     snapshot: {
       zones: pair(
@@ -131,6 +132,7 @@ const LAYERS = [
   {
     name: 'gammaRadiation',
     create: createGammaRadiationLayer,
+    ported: true,
     sourceId: GAMMA_RADIATION_OVERLAY_SOURCE_ID,
     snapshot: { stations: pair({ value: 0.1, updated: NOW }) },
     rows: rows('se-gamma:', 'gamma-radiation-card:'),
@@ -138,6 +140,7 @@ const LAYERS = [
   {
     name: 'lightningStrikes',
     create: createLightningStrikesLayer,
+    ported: true,
     sourceId: LIGHTNING_STRIKES_OVERLAY_SOURCE_ID,
     snapshot: {
       strikes: pair({
@@ -153,6 +156,7 @@ const LAYERS = [
   {
     name: 'riverFlow',
     create: createRiverFlowLayer,
+    ported: true,
     sourceId: RIVER_FLOW_OVERLAY_SOURCE_ID,
     snapshot: { stations: pair({ flow: 12, updated: NOW }) },
     rows: rows('se-flow:', 'river-flow-card:'),
@@ -160,6 +164,7 @@ const LAYERS = [
   {
     name: 'roadWeather',
     create: createTrafikverketWeatherLayer,
+    ported: true,
     sourceId: ROAD_WEATHER_OVERLAY_SOURCE_ID,
     snapshot: {
       stations: pair({
@@ -174,6 +179,7 @@ const LAYERS = [
   {
     name: 'seaWeather',
     create: createSeaWeatherLayer,
+    ported: true,
     sourceId: SEA_WEATHER_OVERLAY_SOURCE_ID,
     snapshot: { stations: pair({ meanWind: 5, updated: NOW }) },
     rows: rows('se-sea:', 'sea-weather-card:'),
@@ -181,6 +187,7 @@ const LAYERS = [
   {
     name: 'smhiWeather',
     create: createSmhiWeatherLayer,
+    ported: true,
     sourceId: SMHI_WEATHER_OVERLAY_SOURCE_ID,
     snapshot: { stations: pair({ airTemp: 3, updated: NOW }) },
     // A selected station asks for its forecast.
@@ -190,6 +197,7 @@ const LAYERS = [
   {
     name: 'speedCameras',
     create: createSpeedCamerasLayer,
+    ported: true,
     sourceId: SPEED_CAMERAS_OVERLAY_SOURCE_ID,
     snapshot: { cameras: pair({ road: 'E4', bearing: 85 }) },
     rows: rows('se-speed-camera:', 'speed-camera-card:'),
@@ -197,6 +205,7 @@ const LAYERS = [
   {
     name: 'srTraffic',
     create: createSrTrafficLayer,
+    ported: true,
     sourceId: SR_TRAFFIC_OVERLAY_SOURCE_ID,
     snapshot: {
       messages: pair({
@@ -214,6 +223,7 @@ const LAYERS = [
   {
     name: 'transitAlerts',
     create: createTransitAlertsLayer,
+    ported: true,
     sourceId: TRANSIT_ALERTS_OVERLAY_SOURCE_ID,
     snapshot: {
       stops: pair({
@@ -236,6 +246,7 @@ const LAYERS = [
   {
     name: 'policeEvents',
     create: createPolisenEventsLayer,
+    ported: true,
     sourceId: POLICE_OVERLAY_SOURCE_ID,
     linked: true,
     snapshot: {

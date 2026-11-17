@@ -1,8 +1,9 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { cssColor } from '../../render/color.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import {
   ICE_RISK_COLOR,
   NO_READING_COLOR,
@@ -19,7 +20,14 @@ export * from './records.js';
 export * from './cards.js';
 export { createTrafikverketWeatherSource } from './source.js';
 
+export const ROAD_WEATHER_LAYER_ID = 'trafikverket-weather';
 const PICK_PREFIX = 'se-roadwx:';
+const OUTLINE_COLOR = 'rgba(0, 0, 0, 0.75)';
+/** A palette colour at `alpha`, as the renderer takes it. */
+const withAlpha = (css, alpha) => {
+  const [r, g, b] = cssColor(css);
+  return [r, g, b, alpha];
+};
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
   collisionCapacity: 1,
@@ -51,25 +59,34 @@ const FADE_AFTER_MS = 60 * 60_000;
 export function createTrafikverketWeatherLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   terrain = null,
   now = () => Date.now(),
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Trafikverket road weather requires a snapshot source');
   const faded = (row, at) => at - row.sampled > FADE_AFTER_MS;
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
-  const position = (row) =>
-    Cesium.Cartesian3.fromDegrees(
-      row.point[0],
-      row.point[1],
-      _ground.heightOf(row.id),
-    );
+  const position = (row) => ({
+    lon: row.point[0],
+    lat: row.point[1],
+    height: _ground.heightOf(row.id),
+  });
+  /** Where a card or label sits: the dot's place on the ellipsoid (ECEF). */
+  const placeOf = (row) => {
+    const at = position(row);
+    return fromDegrees(at.lon, at.lat, at.height);
+  };
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
+  /** The ids of the rows the set holds: the ones a new height can move. */
+  let _drawn = new Set();
+  /** The clock of the last drawing: a dot moved by a height keeps its fade. */
+  let _drawnAt = 0;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -85,11 +102,27 @@ export function createTrafikverketWeatherLayer({
   const _show = { values: true, riskOnly: false };
   const _stationById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(ROAD_WEATHER_LAYER_ID);
   const shownValue = (row) => (_mode === 'air' ? row.airTemp : row.surfaceTemp);
   const visibleStations = () =>
     _show.riskOnly ? _stations.filter((row) => row.risk) : _stations;
+
+  /** A station's dot as the set draws it, faded by the clock at `at`. */
+  const dotOf = (row, at) => {
+    const color = temperatureColor(shownValue(row));
+    return {
+      id: `${PICK_PREFIX}${row.id}`,
+      pos: position(row),
+      height: 'clampGround',
+      pixelSize: row.risk ? 11 : 9,
+      color: faded(row, at) ? withAlpha(color, 0.45) : color,
+      outlineColor: row.risk ? ICE_RISK_COLOR : OUTLINE_COLOR,
+      outlineWidth: row.risk ? 3 : 1.5,
+      disableDepthTest: Number.POSITIVE_INFINITY,
+    };
+  };
 
   function publishSelectedCard() {
     if (!canSelect()) return;
@@ -104,7 +137,7 @@ export function createTrafikverketWeatherLayer({
       return;
     }
     const card = buildStationCard(row, { mode: _mode });
-    card.position = position(row);
+    card.position = placeOf(row);
     overlayHost.setEntries(
       ROAD_WEATHER_OVERLAY_SOURCE_ID,
       [card],
@@ -112,9 +145,8 @@ export function createTrafikverketWeatherLayer({
     );
   }
 
-  /** Resolve a scene pick to a station id of this layer, or null. */
-  function pickedStation(picked) {
-    const pickId = picking.resolvePickId(picked);
+  /** Resolve a pick id to a station id of this layer, or null. */
+  function pickedStation(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -123,32 +155,47 @@ export function createTrafikverketWeatherLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      ROAD_WEATHER_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
+      const at = click.screenPosition;
       // A card under the click, this layer's or another's, is not the ground.
-      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedStation(picked) : null;
+      if (overlayHost.hitTest?.(at?.x, at?.y)) return;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedStation(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (pickId && picking.isOwnedByOtherLayer(ROAD_WEATHER_LAYER_ID, pickId))
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
+    picking?.unregisterPickOwner?.(ROAD_WEATHER_LAYER_ID);
   }
 
   function clearSelection() {
@@ -168,7 +215,7 @@ export function createTrafikverketWeatherLayer({
         if (!Number.isFinite(value)) continue;
         entries.push({
           id: `trafikverket-weather-label:${row.id}`,
-          position: position(row),
+          position: placeOf(row),
           variant: 'label',
           title: formatCelsius(value),
           accent: temperatureColor(value),
@@ -191,51 +238,27 @@ export function createTrafikverketWeatherLayer({
 
   /** New ground heights: the dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _stationById.get(id);
-        return row && position(row);
-      },
-    );
+    if (!_dots) return;
+    const rows = ids
+      .filter((id) => _drawn.has(id))
+      .map((id) => _stationById.get(id))
+      .filter(Boolean);
+    if (rows.length) _dots.upsert(rows.map((row) => dotOf(row, _drawnAt)));
     publishLabels();
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
+    if (!_dots) return;
     const at = now();
-    redrawEntities(entities, () => {
-      for (const row of visibleStations()) {
-        const color = Cesium.Color.fromCssColorString(
-          temperatureColor(shownValue(row)),
-        ).withAlpha(faded(row, at) ? 0.45 : 1);
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: position(row),
-          point: {
-            pixelSize: row.risk ? 11 : 9,
-            color,
-            outlineColor: row.risk
-              ? Cesium.Color.fromCssColorString(ICE_RISK_COLOR)
-              : Cesium.Color.BLACK.withAlpha(0.75),
-            outlineWidth: row.risk ? 3 : 1.5,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          },
-        });
-      }
-    });
+    const rows = visibleStations();
+    _dots.set(rows.map((row) => dotOf(row, at)));
+    _drawn = new Set(rows.map((row) => row.id));
+    _drawnAt = at;
     publishLabels();
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function setMode(mode) {
@@ -252,7 +275,7 @@ export function createTrafikverketWeatherLayer({
   }
 
   const layer = {
-    id: 'trafikverket-weather',
+    id: ROAD_WEATHER_LAYER_ID,
     name: 'Road Weather (Sweden)',
     icon: '🌡️',
     source: 'Trafikverket',
@@ -264,19 +287,25 @@ export function createTrafikverketWeatherLayer({
           'Trafikverket road weather layer is already initialized',
         );
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('trafikverket-weather');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: ROAD_WEATHER_LAYER_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(ROAD_WEATHER_OVERLAY_SOURCE_ID, true);
       overlayHost?.setVisible?.(LABEL_SOURCE_ID, true);
       installClickHandler();
       // Stations already loaded (re-enable) get their labels back at once.
       publishLabels();
+      requestRender();
     },
 
     disable() {
@@ -285,17 +314,18 @@ export function createTrafikverketWeatherLayer({
       _ground.cancel();
       _enabled = false;
       _lastError = null;
-      if (_dataSource) _dataSource.show = false;
+      if (_dots) _dots.show = false;
       removeClickHandler();
       clearSelection();
       if (overlayHost) {
         overlayHost.clearSource(LABEL_SOURCE_ID);
         overlayHost.setVisible?.(LABEL_SOURCE_ID, false);
       }
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -372,16 +402,15 @@ export function createTrafikverketWeatherLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
       _stationById.clear();
       _stations = [];
+      _drawn = new Set();
       _signature = null;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

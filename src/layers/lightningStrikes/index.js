@@ -1,6 +1,8 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
-import { redrawEntities } from '../redrawEntities.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { cssColor } from '../../render/color.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { AGE_CLASSES, ageClass } from './records.js';
 import {
   LIGHTNING_STRIKES_OVERLAY_SOURCE_ID,
@@ -10,6 +12,7 @@ export * from './records.js';
 export * from './cards.js';
 export { createLightningStrikesSource } from './source.js';
 
+export const LIGHTNING_STRIKES_LAYER_ID = 'lightning-strikes';
 const PICK_PREFIX = 'se-lightning:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -19,22 +22,27 @@ const CARD_HOST_OPTIONS = Object.freeze({
 
 // One look per age class and kind, shared by every dot: nothing is made per
 // stroke but its position.
-const SCALE = new Cesium.NearFarScalar(2e4, 1.3, 3e6, 0.7);
+const SCALE = Object.freeze({
+  near: 2e4,
+  nearValue: 1.3,
+  far: 3e6,
+  farValue: 0.7,
+});
 const LOOKS = AGE_CLASSES.map((age) => {
-  const color = Cesium.Color.fromCssColorString(age.color);
+  const [r, g, b] = cssColor(age.color);
   return {
-    ground: {
+    ground: Object.freeze({
       pixelSize: 9,
-      color,
-      outlineColor: Cesium.Color.fromCssColorString('#3a1600'),
+      color: age.color,
+      outlineColor: '#3a1600',
       outlineWidth: 1.5,
-    },
-    cloud: {
+    }),
+    cloud: Object.freeze({
       pixelSize: 6,
-      color: color.withAlpha(0.75),
-      outlineColor: Cesium.Color.fromCssColorString('#5c3b00'),
+      color: Object.freeze([r, g, b, 0.75]),
+      outlineColor: '#5c3b00',
       outlineWidth: 1,
-    },
+    }),
   };
 });
 const look = (row, index) =>
@@ -54,11 +62,12 @@ function ageLabel(entry) {
 export function createLightningStrikesLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   now = () => Date.now(),
   geoid = null,
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Lightning strikes require a snapshot source');
@@ -69,14 +78,13 @@ export function createLightningStrikesLayer({
   // `geoid`: {ensureReady(): Promise, heightAt(lat, lon): number}.
   let _geoidReady = false;
   let _geoidAsked = false;
-  const position = ([lon, lat]) =>
-    Cesium.Cartesian3.fromDegrees(
-      lon,
-      lat,
-      _geoidReady ? geoid.heightAt(lat, lon) : 0,
-    );
+  const position = ([lon, lat]) => ({
+    lon,
+    lat,
+    height: _geoidReady ? geoid.heightAt(lat, lon) : 0,
+  });
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -94,8 +102,9 @@ export function createLightningStrikesLayer({
   // Whether the next drawing starts over instead of updating in place.
   let _redrawAll = true;
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(LIGHTNING_STRIKES_LAYER_ID);
   /** Strokes still inside the hour, which ages on between refreshes. */
   const current = () =>
     _strikes.filter((row) => ageClass(now() - row.at) !== null);
@@ -114,7 +123,8 @@ export function createLightningStrikesLayer({
       return;
     }
     const card = buildStrikeCard(row, now());
-    card.position = position(row.point);
+    const at = position(row.point);
+    card.position = fromDegrees(at.lon, at.lat, at.height);
     overlayHost.setEntries(
       LIGHTNING_STRIKES_OVERLAY_SOURCE_ID,
       [card],
@@ -122,8 +132,7 @@ export function createLightningStrikesLayer({
     );
   }
 
-  function pickedStrike(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedStrike(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -132,32 +141,50 @@ export function createLightningStrikesLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      LIGHTNING_STRIKES_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
+      const at = click.screenPosition;
       // A card under the click, this layer's or another's, is not the ground.
-      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedStrike(picked) : null;
+      if (overlayHost.hitTest?.(at?.x, at?.y)) return;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedStrike(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (
+        pickId &&
+        picking.isOwnedByOtherLayer(LIGHTNING_STRIKES_LAYER_ID, pickId)
+      )
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
+    picking?.unregisterPickOwner?.(LIGHTNING_STRIKES_LAYER_ID);
   }
 
   function clearOverlays() {
@@ -167,83 +194,73 @@ export function createLightningStrikesLayer({
     overlayHost.setVisible?.(LIGHTNING_STRIKES_OVERLAY_SOURCE_ID, false);
   }
 
+  /** A stroke's dot as the set draws it, in the look of age class `index`. */
+  const dotOf = (row, index) => {
+    const style = look(row, index);
+    return {
+      id: `${PICK_PREFIX}${row.id}`,
+      pos: position(row.point),
+      height: 'clampGround',
+      pixelSize: style.pixelSize,
+      color: style.color,
+      outlineColor: style.outlineColor,
+      outlineWidth: style.outlineWidth,
+      disableDepthTest: Number.POSITIVE_INFINITY,
+      scaleByDistance: SCALE,
+    };
+  };
+
   function render() {
-    if (!_dataSource) return;
+    if (!_dots) return;
     const nowMs = now();
-    const entities = _dataSource.entities;
     // Stroke id → index of its age class, for those still inside the hour.
     const next = new Map();
     for (const row of _strikes) {
       const age = ageClass(nowMs - row.at);
       if (age) next.set(row.id, AGE_CLASSES.indexOf(age));
     }
-    const add = (row, index) => {
-      const style = look(row, index);
-      entities.add({
-        id: `${PICK_PREFIX}${row.id}`,
-        position: position(row.point),
-        point: {
-          pixelSize: style.pixelSize,
-          color: style.color,
-          outlineColor: style.outlineColor,
-          outlineWidth: style.outlineWidth,
-          heightReference: geoid
-            ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-            : Cesium.HeightReference.CLAMP_TO_GROUND,
-          disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          scaleByDistance: SCALE,
-        },
-      });
-      _drawn.set(row.id, index);
-    };
     const full = _redrawAll;
     // Until this drawing is done: one that fails is made again from scratch.
     _redrawAll = true;
     if (full) {
       _drawn.clear();
-      redrawEntities(entities, () => {
-        // Oldest first, so the newest strokes draw on top.
-        for (let i = _strikes.length - 1; i >= 0; i--) {
-          const row = _strikes[i];
-          const index = next.get(row.id);
-          if (index !== undefined && !_drawn.has(row.id)) add(row, index);
-        }
-      });
+      const items = [];
+      // Oldest first, so the newest strokes draw on top.
+      for (let i = _strikes.length - 1; i >= 0; i--) {
+        const row = _strikes[i];
+        const index = next.get(row.id);
+        if (index === undefined || _drawn.has(row.id)) continue;
+        items.push(dotOf(row, index));
+        _drawn.set(row.id, index);
+      }
+      _dots.set(items);
     } else {
       // In place: a dot already drawn only ever changes colour, so strokes
       // past the hour go, new ones are added last (on top) and the rest stay.
-      entities.suspendEvents();
-      try {
-        for (const id of _drawn.keys())
-          if (!next.has(id)) {
-            entities.removeById(`${PICK_PREFIX}${id}`);
-            _drawn.delete(id);
-          }
-        for (let i = _strikes.length - 1; i >= 0; i--) {
-          const row = _strikes[i];
-          const index = next.get(row.id);
-          if (index === undefined) continue;
-          const drawn = _drawn.get(row.id);
-          if (drawn === undefined) add(row, index);
-          else if (drawn !== index) {
-            entities.getById(`${PICK_PREFIX}${row.id}`).point.color = look(
-              row,
-              index,
-            ).color;
-            _drawn.set(row.id, index);
-          }
+      const gone = [];
+      for (const id of _drawn.keys())
+        if (!next.has(id)) {
+          gone.push(`${PICK_PREFIX}${id}`);
+          _drawn.delete(id);
         }
-      } finally {
-        entities.resumeEvents();
+      const changed = [];
+      for (let i = _strikes.length - 1; i >= 0; i--) {
+        const row = _strikes[i];
+        const index = next.get(row.id);
+        if (index === undefined || _drawn.get(row.id) === index) continue;
+        changed.push(dotOf(row, index));
+        _drawn.set(row.id, index);
       }
+      if (gone.length) _dots.remove(gone);
+      if (changed.length) _dots.upsert(changed);
     }
     _redrawAll = false;
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   const layer = {
-    id: 'lightning-strikes',
+    id: LIGHTNING_STRIKES_LAYER_ID,
     name: 'Lightning Strikes (Sweden)',
     icon: '⚡',
     source: 'DMI',
@@ -253,16 +270,22 @@ export function createLightningStrikesLayer({
       if (_viewer)
         throw new Error('Lightning strikes layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('lightning-strikes');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: LIGHTNING_STRIKES_LAYER_ID,
+        // With the geoid the dots clamp to terrain only: clamping thousands
+        // of dots to 3D tiles freezes the app (../groundHeights.js).
+        clampTo: geoid ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(LIGHTNING_STRIKES_OVERLAY_SOURCE_ID, true);
       installClickHandler();
+      requestRender();
       // The geoid grid is code-split; load it when the layer is first used.
       if (geoid && !_geoidAsked) {
         _geoidAsked = true;
@@ -295,13 +318,14 @@ export function createLightningStrikesLayer({
       _request = null;
       _enabled = false;
       _lastError = null;
-      if (_dataSource) _dataSource.show = false;
+      if (_dots) _dots.show = false;
       removeClickHandler();
       clearOverlays();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -354,17 +378,15 @@ export function createLightningStrikesLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _strikeById.clear();
       _strikes = [];
       _signature = null;
       _drawn.clear();
       _redrawAll = true;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

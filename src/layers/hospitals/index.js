@@ -1,6 +1,13 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
-import { redrawEntities } from '../redrawEntities.js';
+import { fromDegrees, toLonLatH } from '../../geo/ellipsoid.js';
+import {
+  canvasOf,
+  drawOf,
+  findCamera,
+  findFrame,
+  findQuery,
+} from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import {
   ED_BANDS,
   ED_METRICS,
@@ -23,6 +30,7 @@ export * from './records.js';
 export * from './cards.js';
 export { createHospitalsSource } from './source.js';
 
+export const HOSPITALS_LAYER_ID = 'hospitals';
 const PICK_PREFIX = 'se-hospital:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -31,10 +39,22 @@ const CARD_HOST_OPTIONS = Object.freeze({
 });
 const MOVE_SETTLE_MS = 400;
 const LISTED = 5;
+const OUTLINE_COLOR = '#3b0d0d';
+const SCALE_BY_DISTANCE = Object.freeze({
+  near: 2e4,
+  nearValue: 1.3,
+  far: 2e6,
+  farValue: 0.7,
+});
+/** The look of a flight to a hospital: from the south, 45° down. */
+const FOCUS_PITCH = -45 * (Math.PI / 180);
 
 /** A hospital on the ground: its bundled height above the ellipsoid, else 0. */
-const hospitalPosition = (row) =>
-  Cesium.Cartesian3.fromDegrees(row.point[0], row.point[1], row.height ?? 0);
+const hospitalPosition = (row) => ({
+  lon: row.point[0],
+  lat: row.point[1],
+  height: row.height ?? 0,
+});
 
 /**
  * Own one Swedish hospital display: the hospitals in an OpenStreetMap
@@ -48,14 +68,15 @@ const hospitalPosition = (row) =>
 export function createHospitalsLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Hospitals require a snapshot source');
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -74,8 +95,22 @@ export function createHospitalsLayer({
   let _view = null;
   const _hospitalById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(HOSPITALS_LAYER_ID);
+
+  /** A hospital's dot as the set draws it, in the metric shown. */
+  const dotOf = (row) => ({
+    id: `${PICK_PREFIX}${row.id}`,
+    pos: hospitalPosition(row),
+    height: 'clampGround',
+    pixelSize: row.ed ? 11 : 7,
+    color: hospitalColor(row, _metric, _statistics),
+    outlineColor: OUTLINE_COLOR,
+    outlineWidth: row.ed ? 2 : 1.5,
+    disableDepthTest: Number.POSITIVE_INFINITY,
+    scaleByDistance: SCALE_BY_DISTANCE,
+  });
 
   function publishSelectedCard() {
     if (!canSelect()) return;
@@ -98,7 +133,7 @@ export function createHospitalsLayer({
         : row,
       { metric: _metric, statistics: _statistics },
     );
-    card.position = hospitalPosition(row);
+    card.position = fromDegrees(row.point[0], row.point[1], row.height ?? 0);
     overlayHost.setEntries(
       HOSPITALS_OVERLAY_SOURCE_ID,
       [card],
@@ -106,8 +141,7 @@ export function createHospitalsLayer({
     );
   }
 
-  function pickedHospital(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedHospital(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -116,29 +150,49 @@ export function createHospitalsLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      HOSPITALS_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
+      const at = click.screenPosition;
       // A card under the click, this layer's or another's, is not the ground.
-      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedHospital(picked) : null;
+      if (overlayHost.hitTest?.(at?.x, at?.y)) return;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedHospital(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         _rowListener?.();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (pickId && picking.isOwnedByOtherLayer(HOSPITALS_LAYER_ID, pickId))
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
         _rowListener?.();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
+  }
+
+  function removeClickHandler() {
+    _clickHandler?.();
+    _clickHandler = null;
+    picking?.unregisterPickOwner?.(HOSPITALS_LAYER_ID);
   }
 
   function clearOverlays() {
@@ -149,55 +203,38 @@ export function createHospitalsLayer({
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      // Departments last, so they draw on top of the hospitals around them.
-      const ordered = [..._hospitals].sort(
-        (a, b) => Number(Boolean(a.ed)) - Number(Boolean(b.ed)),
-      );
-      for (const row of ordered) {
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: hospitalPosition(row),
-          point: {
-            pixelSize: row.ed ? 11 : 7,
-            color: Cesium.Color.fromCssColorString(
-              hospitalColor(row, _metric, _statistics),
-            ),
-            outlineColor: Cesium.Color.fromCssColorString('#3b0d0d'),
-            outlineWidth: row.ed ? 2 : 1.5,
-            // Terrain only, with the bundled height (see companyStores).
-            heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            scaleByDistance: new Cesium.NearFarScalar(2e4, 1.3, 2e6, 0.7),
-          },
-        });
-      }
-    });
+    if (!_dots) return;
+    // Departments last, so they draw on top of the hospitals around them.
+    const ordered = [..._hospitals].sort(
+      (a, b) => Number(Boolean(a.ed)) - Number(Boolean(b.ed)),
+    );
+    _dots.set(ordered.map(dotOf));
     publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
+  }
+
+  /** The ground under the canvas centre, in degrees, or null. */
+  function viewCentre() {
+    const query = findQuery(_viewer);
+    const canvas = canvasOf(_viewer);
+    if (typeof query?.pickEllipsoid !== 'function' || !canvas) return null;
+    const middle = query.pickEllipsoid(
+      canvas.clientWidth / 2,
+      canvas.clientHeight / 2,
+    );
+    const ground = middle ? toLonLatH(middle) : null;
+    return ground ? [ground.lon, ground.lat] : null;
   }
 
   /** The view as a box and its centre, from the camera alone. */
   function readView() {
-    const camera = _viewer?.camera;
-    if (!camera?.positionCartographic) return null;
-    const deg = Cesium.Math.toDegrees;
-    const canvas = _viewer.scene.canvas;
-    const middle = camera.pickEllipsoid?.(
-      new Cesium.Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2),
-      Cesium.Ellipsoid.WGS84,
-    );
-    const centre = middle
-      ? Cesium.Cartographic.fromCartesian(middle)
-      : camera.positionCartographic;
-    const rect = camera.computeViewRectangle?.(Cesium.Ellipsoid.WGS84);
+    const camera = _viewer ? findCamera(_viewer) : null;
+    const pose = camera?.pose();
+    if (!pose) return null;
+    const rect = camera.viewRectangle?.() ?? null;
     return {
-      center: [deg(centre.longitude), deg(centre.latitude)],
-      bbox: rect
-        ? [deg(rect.west), deg(rect.south), deg(rect.east), deg(rect.north)]
-        : null,
+      center: viewCentre() ?? [pose.lon, pose.lat],
+      bbox: rect ? [rect.west, rect.south, rect.east, rect.north] : null,
     };
   }
 
@@ -213,7 +250,7 @@ export function createHospitalsLayer({
   }
 
   const layer = {
-    id: 'hospitals',
+    id: HOSPITALS_LAYER_ID,
     name: 'Hospitals & Emergency (Sweden)',
     icon: '🏥',
     source: 'Socialstyrelsen',
@@ -222,26 +259,32 @@ export function createHospitalsLayer({
     init(viewer) {
       if (_viewer) throw new Error('Hospitals layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('hospitals');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: HOSPITALS_LAYER_ID,
+        // Terrain only, with the bundled height (see companyStores).
+        clampTo: 'terrain',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(HOSPITALS_OVERLAY_SOURCE_ID, true);
       installClickHandler();
-      if (!_removeMove && _viewer?.camera) {
+      const camera = _viewer ? findCamera(_viewer) : null;
+      if (!_removeMove && camera) {
         // A jump set from a share link or a search ends no move; `changed`
         // catches it, `moveEnd` the small pans below its threshold.
         const removers = [
-          _viewer.camera.moveEnd?.addEventListener?.(followCamera),
-          _viewer.camera.changed?.addEventListener?.(followCamera),
+          camera.on('moveEnd', followCamera),
+          camera.on('changed', followCamera),
         ].filter(Boolean);
         _removeMove = () => removers.forEach((remove) => remove());
       }
       _view = readView();
+      requestRender();
     },
 
     disable() {
@@ -252,14 +295,14 @@ export function createHospitalsLayer({
       _removeMove?.();
       _removeMove = null;
       _enabled = false;
-      if (_dataSource) _dataSource.show = false;
-      _clickHandler?.destroy();
-      _clickHandler = null;
+      if (_dots) _dots.show = false;
+      removeClickHandler();
       clearOverlays();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       // The snapshot is bundled; one read per session is enough.
       if (_loaded) return true;
       _request?.abort();
@@ -304,31 +347,27 @@ export function createHospitalsLayer({
       publishSelectedCard();
       if (params.focus) {
         const [lon, lat] = row.point;
-        _viewer.camera.flyTo({
-          destination: Cesium.Cartesian3.fromDegrees(lon, lat - 0.012, 1400),
-          orientation: {
-            heading: 0,
-            pitch: Cesium.Math.toRadians(-45),
-            roll: 0,
+        findCamera(_viewer)?.flyTo(
+          { lon, lat: lat - 0.012, height: 1400 },
+          {
+            orientation: { heading: 0, pitch: FOCUS_PITCH, roll: 0 },
+            durationS: 1.8,
           },
-          duration: 1.8,
-        });
+        );
       }
       _rowListener?.();
       return true;
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _hospitalById.clear();
       _hospitals = [];
       _statistics = {};
       _loaded = false;
       _view = null;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

@@ -1,8 +1,9 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { distance } from '../../geo/vector.js';
+import { drawOf, findCamera, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import {
   CAMERA_COLOR,
   SPEED_CAMERAS_OVERLAY_SOURCE_ID,
@@ -12,6 +13,7 @@ export * from './records.js';
 export * from './cards.js';
 export { createSpeedCamerasSource } from './source.js';
 
+export const SPEED_CAMERAS_LAYER_ID = 'speed-cameras';
 const PICK_PREFIX = 'se-speed-camera:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -20,12 +22,30 @@ const CARD_HOST_OPTIONS = Object.freeze({
 });
 /** The arrows show within this camera distance; Sweden whole is a blur. */
 const SHOW_WITHIN_M = 400_000;
+const DISPLAY_RANGE = Object.freeze([0, SHOW_WITHIN_M]);
+const SCALE_BY_DISTANCE = Object.freeze({
+  near: 2_000,
+  nearValue: 1,
+  far: SHOW_WITHIN_M,
+  farValue: 0.45,
+});
+/** The marker's up is the Earth's axis on screen, as north is. */
+const NORTH_AXIS = Object.freeze({ x: 0, y: 0, z: 1 });
 
 /**
  * The two markers on a dark disc, each drawn once and shared by every site
  * it fits: an arrow for a site with a direction, a dot for one without.
  */
 const markerImages = { arrow: null, dot: null };
+/** A marker as the icons set takes it: its canvas, keyed by kind. */
+const markerRefs = { arrow: null, dot: null };
+function markerImage(kind) {
+  const canvas = marker(kind);
+  if (!canvas) return null;
+  if (markerRefs[kind]?.canvas !== canvas)
+    markerRefs[kind] = { canvas, key: `speed-camera-${kind}` };
+  return markerRefs[kind];
+}
 function marker(kind) {
   if (markerImages[kind] || typeof document === 'undefined')
     return markerImages[kind];
@@ -64,23 +84,27 @@ function marker(kind) {
 export function createSpeedCamerasLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   terrain = null,
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Speed cameras require a snapshot source');
   // With ground heights the arrows clamp to terrain only (see groundHeights.js).
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
-  const position = (row) =>
-    Cesium.Cartesian3.fromDegrees(
-      row.point[0],
-      row.point[1],
-      _ground.heightOf(row.id),
-    );
+  const position = (row) => ({
+    lon: row.point[0],
+    lat: row.point[1],
+    height: _ground.heightOf(row.id),
+  });
+  const ecefOf = (row) => {
+    const at = position(row);
+    return fromDegrees(at.lon, at.lat, at.height);
+  };
   let _viewer = null;
-  let _dataSource = null;
+  let _markers = null;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -95,8 +119,29 @@ export function createSpeedCamerasLayer({
   let _withoutDirection = 0;
   const _cameraById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(SPEED_CAMERAS_LAYER_ID);
+
+  /** A site's marker as the set draws it. */
+  const markerOf = (row, arrow, dot) => {
+    const facing = Number.isFinite(row.bearing);
+    return {
+      id: `${PICK_PREFIX}${row.id}`,
+      pos: position(row),
+      height: 'clampGround',
+      // No direction is no arrow: an arrow would point north.
+      image: facing ? arrow : dot,
+      size: [24, 24],
+      // Turned clockwise from north by the camera's bearing.
+      rotationMode: 'axis',
+      alignedAxis: NORTH_AXIS,
+      rotation: facing ? -row.bearing * (Math.PI / 180) : 0,
+      disableDepthTest: Number.POSITIVE_INFINITY,
+      displayRange: DISPLAY_RANGE,
+      scaleByDistance: SCALE_BY_DISTANCE,
+    };
+  };
 
   function publishSelectedCard() {
     if (!overlayHost) return;
@@ -111,7 +156,7 @@ export function createSpeedCamerasLayer({
       return;
     }
     const card = buildSpeedCameraCard(row);
-    card.position = position(row);
+    card.position = ecefOf(row);
     overlayHost.setEntries(
       SPEED_CAMERAS_OVERLAY_SOURCE_ID,
       [card],
@@ -119,8 +164,7 @@ export function createSpeedCamerasLayer({
     );
   }
 
-  function pickedCamera(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedCamera(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -129,32 +173,47 @@ export function createSpeedCamerasLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      SPEED_CAMERAS_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
+      const at = click.screenPosition;
       // A card under the click, this layer's or another's, is not the ground.
-      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedCamera(picked) : null;
+      if (overlayHost.hitTest?.(at?.x, at?.y)) return;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedCamera(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (pickId && picking.isOwnedByOtherLayer(SPEED_CAMERAS_LAYER_ID, pickId))
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
+    picking?.unregisterPickOwner?.(SPEED_CAMERAS_LAYER_ID);
   }
 
   /**
@@ -164,12 +223,12 @@ export function createSpeedCamerasLayer({
   function dropCardOutOfReach() {
     if (!_selectedId) return;
     const row = _cameraById.get(_selectedId);
-    const eye = _viewer?.camera?.positionWC;
+    const eye = _viewer && findCamera(_viewer)?.pose()?.position;
     if (!row || !eye) return;
-    if (Cesium.Cartesian3.distance(eye, position(row)) <= SHOW_WITHIN_M) return;
+    if (distance(eye, ecefOf(row)) <= SHOW_WITHIN_M) return;
     _selectedId = null;
     publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function clearOverlays() {
@@ -181,57 +240,27 @@ export function createSpeedCamerasLayer({
 
   /** New ground heights: the dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _cameraById.get(id);
-        return row && position(row);
-      },
-    );
+    if (!_markers) return;
+    const rows = ids.map((id) => _cameraById.get(id)).filter(Boolean);
+    if (!rows.length) return;
+    const arrow = markerImage('arrow');
+    const dot = markerImage('dot');
+    _markers.upsert(rows.map((row) => markerOf(row, arrow, dot)));
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    const arrow = marker('arrow');
-    const dot = marker('dot');
-    const show = new Cesium.DistanceDisplayCondition(0, SHOW_WITHIN_M);
-    const scale = new Cesium.NearFarScalar(2_000, 1, SHOW_WITHIN_M, 0.45);
-    redrawEntities(entities, () => {
-      for (const row of _cameras) {
-        const facing = Number.isFinite(row.bearing);
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: position(row),
-          billboard: {
-            // No direction is no arrow: an arrow would point north.
-            image: facing ? arrow : dot,
-            width: 24,
-            height: 24,
-            // Turned clockwise from north by the camera's bearing.
-            rotation: facing ? -Cesium.Math.toRadians(row.bearing) : 0,
-            alignedAxis: Cesium.Cartesian3.UNIT_Z,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            distanceDisplayCondition: show,
-            scaleByDistance: scale,
-          },
-        });
-      }
-    });
+    if (!_markers) return;
+    const arrow = markerImage('arrow');
+    const dot = markerImage('dot');
+    _markers.set(_cameras.map((row) => markerOf(row, arrow, dot)));
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   const layer = {
-    id: 'speed-cameras',
+    id: SPEED_CAMERAS_LAYER_ID,
     name: 'Speed Cameras (Sweden)',
     icon: '📷',
     source: 'Trafikverket',
@@ -241,19 +270,25 @@ export function createSpeedCamerasLayer({
     init(viewer) {
       if (_viewer) throw new Error('Speed camera layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('speed-cameras');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _markers = drawOf(viewer).icons({
+        id: SPEED_CAMERAS_LAYER_ID,
+        // Terrain only once the markers have their ground heights: clamping
+        // thousands of them to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_markers) _markers.show = true;
       overlayHost?.setVisible?.(SPEED_CAMERAS_OVERLAY_SOURCE_ID, true);
       installClickHandler();
       _moveEndRemove ??=
-        _viewer?.camera?.moveEnd?.addEventListener?.(dropCardOutOfReach) ??
+        (_viewer && findCamera(_viewer)?.on('moveEnd', dropCardOutOfReach)) ??
         null;
+      requestRender();
     },
 
     disable() {
@@ -261,17 +296,18 @@ export function createSpeedCamerasLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
-      if (_dataSource) _dataSource.show = false;
+      if (_markers) _markers.show = false;
       removeClickHandler();
       _moveEndRemove?.();
       _moveEndRemove = null;
       // Switched on again it starts without the last round's failure.
       _lastError = null;
       clearOverlays();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_markers) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -332,21 +368,19 @@ export function createSpeedCamerasLayer({
       if (!_cameraById.has(String(id))) return false;
       _selectedId = String(id);
       publishSelectedCard();
-      _viewer?.scene?.requestRender?.();
+      requestRender();
       return true;
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
       _cameraById.clear();
       _cameras = [];
       _withoutDirection = 0;
       _signature = null;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _markers?.dispose();
+      _markers = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

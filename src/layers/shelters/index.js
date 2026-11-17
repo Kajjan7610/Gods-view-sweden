@@ -1,8 +1,14 @@
-import * as Cesium from 'cesium';
 import { formatNumber, msg, t, tn } from '../../i18n/index.js';
+import { fromDegrees, toLonLatH } from '../../geo/ellipsoid.js';
+import {
+  canvasOf,
+  drawOf,
+  findCamera,
+  findFrame,
+  findQuery,
+} from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import { SHELTER_STATES, clipViewBox, shelterColor } from './records.js';
 import {
   SHELTERS_OVERLAY_SOURCE_ID,
@@ -14,7 +20,17 @@ export * from './records.js';
 export * from './cards.js';
 export { createSheltersSource } from './source.js';
 
+export const SHELTERS_LAYER_ID = 'shelters';
 const PICK_PREFIX = 'se-shelter:';
+const OUTLINE_COLOR = '#0b1a1a';
+const SCALE_BY_DISTANCE = Object.freeze({
+  near: 500,
+  nearValue: 1.3,
+  far: 40000,
+  farValue: 0.7,
+});
+/** The flight to a shelter picked from the list: 50° down, from the south. */
+const FOCUS_PITCH = (-50 * Math.PI) / 180;
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
   collisionCapacity: 1,
@@ -48,10 +64,11 @@ const pixelSize = (row) =>
 export function createSheltersLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   terrain = null,
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Shelters require a snapshot source');
@@ -61,14 +78,13 @@ export function createSheltersLayer({
   const _ground = createGroundHeights(terrain, (ids) => lift(ids), {
     passing: true,
   });
-  const position = (row) =>
-    Cesium.Cartesian3.fromDegrees(
-      row.point[0],
-      row.point[1],
-      _ground.heightOf(row.id),
-    );
+  const position = (row) => ({
+    lon: row.point[0],
+    lat: row.point[1],
+    height: _ground.heightOf(row.id),
+  });
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -86,8 +102,22 @@ export function createSheltersLayer({
   let _shown = [];
   const _shelterById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(SHELTERS_LAYER_ID);
+
+  /** A shelter's dot as the set draws it. */
+  const dotOf = (row) => ({
+    id: `${PICK_PREFIX}${row.id}`,
+    pos: position(row),
+    height: 'clampGround',
+    pixelSize: pixelSize(row),
+    color: shelterColor(row),
+    outlineColor: OUTLINE_COLOR,
+    outlineWidth: 1.5,
+    disableDepthTest: Number.POSITIVE_INFINITY,
+    scaleByDistance: SCALE_BY_DISTANCE,
+  });
 
   function publishSelectedCard() {
     if (!canSelect()) return;
@@ -98,7 +128,8 @@ export function createSheltersLayer({
       return;
     }
     const card = buildShelterCard(row);
-    card.position = position(row);
+    const at = position(row);
+    card.position = fromDegrees(at.lon, at.lat, at.height);
     overlayHost.setEntries(
       SHELTERS_OVERLAY_SOURCE_ID,
       [card],
@@ -106,8 +137,7 @@ export function createSheltersLayer({
     );
   }
 
-  function pickedShelter(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedShelter(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -116,29 +146,49 @@ export function createSheltersLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      SHELTERS_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
+      const at = click.screenPosition;
       // A card under the click, this layer's or another's, is not the ground.
-      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedShelter(picked) : null;
+      if (overlayHost.hitTest?.(at?.x, at?.y)) return;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedShelter(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         _rowListener?.();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (pickId && picking.isOwnedByOtherLayer(SHELTERS_LAYER_ID, pickId))
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
         _rowListener?.();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
+  }
+
+  function removeClickHandler() {
+    _clickHandler?.();
+    _clickHandler = null;
+    picking?.unregisterPickOwner?.(SHELTERS_LAYER_ID);
   }
 
   function clearOverlays() {
@@ -150,70 +200,42 @@ export function createSheltersLayer({
 
   /** New ground heights: the dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _shelterById.get(id);
-        return row && position(row);
-      },
-    );
+    if (!_dots) return;
+    const rows = ids.map((id) => _shelterById.get(id)).filter(Boolean);
+    if (!rows.length) return;
+    _dots.upsert(rows.map(dotOf));
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      // Farthest first, so the nearest draw on top where dots meet.
-      for (const row of [..._shown].reverse()) {
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: position(row),
-          point: {
-            pixelSize: pixelSize(row),
-            color: Cesium.Color.fromCssColorString(shelterColor(row)),
-            outlineColor: Cesium.Color.fromCssColorString('#0b1a1a'),
-            outlineWidth: 1.5,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            scaleByDistance: new Cesium.NearFarScalar(500, 1.3, 40000, 0.7),
-          },
-        });
-      }
-    });
+    if (!_dots) return;
+    // Farthest first, so the nearest draw on top where dots meet.
+    _dots.set([..._shown].reverse().map(dotOf));
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   /** The view as a box and its centre, or null when the camera is too high. */
   function viewQuery() {
-    const camera = _viewer?.camera;
-    const height = camera?.positionCartographic?.height;
-    if (!Number.isFinite(height) || height > SHELTERS_MAX_HEIGHT_M) return null;
-    const rect = camera.computeViewRectangle?.(Cesium.Ellipsoid.WGS84);
+    const camera = _viewer ? findCamera(_viewer) : null;
+    const pose = camera?.pose();
+    if (!Number.isFinite(pose?.height) || pose.height > SHELTERS_MAX_HEIGHT_M)
+      return null;
+    const rect = camera.viewRectangle?.();
     if (!rect) return null;
-    const deg = Cesium.Math.toDegrees;
-    const canvas = _viewer.scene.canvas;
-    const middle = camera.pickEllipsoid(
-      new Cesium.Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2),
-      Cesium.Ellipsoid.WGS84,
-    );
-    const centre = middle
-      ? Cesium.Cartographic.fromCartesian(middle)
-      : camera.positionCartographic;
-    const center = [deg(centre.longitude), deg(centre.latitude)];
+    const canvas = canvasOf(_viewer);
+    const middle = canvas
+      ? findQuery(_viewer)?.pickEllipsoid(
+          canvas.clientWidth / 2,
+          canvas.clientHeight / 2,
+        )
+      : null;
+    const centre = (middle && toLonLatH(middle)) || pose;
+    const center = [centre.lon, centre.lat];
     return {
       // A tilted view reaches the horizon: ask for the part about the centre.
-      bbox: clipViewBox(
-        [deg(rect.west), deg(rect.south), deg(rect.east), deg(rect.north)],
-        center,
-      ),
+      bbox: clipViewBox([rect.west, rect.south, rect.east, rect.north], center),
       center,
     };
   }
@@ -229,7 +251,7 @@ export function createSheltersLayer({
   }
 
   async function refresh() {
-    if (!_enabled || !_dataSource) return false;
+    if (!_enabled || !_dots) return false;
     _request?.abort();
     const query = viewQuery();
     if (!query) {
@@ -295,7 +317,7 @@ export function createSheltersLayer({
   }
 
   const layer = {
-    id: 'shelters',
+    id: SHELTERS_LAYER_ID,
     name: 'Shelters (Sweden)',
     icon: '🛡️',
     source: 'MCF',
@@ -304,18 +326,25 @@ export function createSheltersLayer({
     init(viewer) {
       if (_viewer) throw new Error('Shelters layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('shelters');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: SHELTERS_LAYER_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(SHELTERS_OVERLAY_SOURCE_ID, true);
       installClickHandler();
       _removeMove ??=
-        _viewer?.camera?.moveEnd?.addEventListener?.(scheduleRefresh) ?? null;
+        (_viewer && findCamera(_viewer)?.on('moveEnd', scheduleRefresh)) ??
+        null;
+      requestRender();
     },
 
     disable() {
@@ -326,9 +355,8 @@ export function createSheltersLayer({
       _removeMove?.();
       _removeMove = null;
       _enabled = false;
-      if (_dataSource) _dataSource.show = false;
-      _clickHandler?.destroy();
-      _clickHandler = null;
+      if (_dots) _dots.show = false;
+      removeClickHandler();
       clearOverlays();
       // The next enable starts from its own view, not this one's dots and list.
       clearRows();
@@ -350,27 +378,24 @@ export function createSheltersLayer({
       publishSelectedCard();
       if (params.focus) {
         const [lon, lat] = row.point;
-        _viewer.camera.flyTo({
-          destination: Cesium.Cartesian3.fromDegrees(lon, lat - 0.006, 650),
-          orientation: {
-            heading: 0,
-            pitch: Cesium.Math.toRadians(-50),
-            roll: 0,
+        findCamera(_viewer)?.flyTo(
+          { lon, lat: lat - 0.006, height: 650 },
+          {
+            orientation: { heading: 0, pitch: FOCUS_PITCH, roll: 0 },
+            durationS: 1.6,
           },
-          duration: 1.6,
-        });
+        );
       }
+      requestRender();
       _rowListener?.();
       return true;
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

@@ -1,21 +1,46 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
-import { redrawEntities } from '../redrawEntities.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { COMPANIES, storeColor, tidyStores } from './records.js';
 import { COMPANY_STORES_OVERLAY_SOURCE_ID, buildStoreCard } from './cards.js';
 export * from './records.js';
 export * from './cards.js';
 export { createCompanyStoresSource } from './source.js';
 
+export const COMPANY_STORES_LAYER_ID = 'company-stores';
 const PICK_PREFIX = 'se-store:';
 
 /** A store on the ground: its bundled height above the ellipsoid, else 0. */
-const storePosition = (row) =>
-  Cesium.Cartesian3.fromDegrees(row.point[0], row.point[1], row.height ?? 0);
+const storePosition = (row) => ({
+  lon: row.point[0],
+  lat: row.point[1],
+  height: row.height ?? 0,
+});
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
   collisionCapacity: 1,
   moving: false,
+});
+const OUTLINE_COLOR = '#101418';
+const SCALE_BY_DISTANCE = Object.freeze({
+  near: 2e4,
+  nearValue: 1.3,
+  far: 2e6,
+  farValue: 0.6,
+});
+
+/** A store's dot as the set draws it. */
+const dotOf = (row) => ({
+  id: `${PICK_PREFIX}${row.id}`,
+  pos: storePosition(row),
+  height: 'clampGround',
+  pixelSize: 8,
+  color: storeColor(row),
+  outlineColor: OUTLINE_COLOR,
+  outlineWidth: 1.5,
+  disableDepthTest: Number.POSITIVE_INFINITY,
+  scaleByDistance: SCALE_BY_DISTANCE,
 });
 
 /**
@@ -27,15 +52,16 @@ const CARD_HOST_OPTIONS = Object.freeze({
 export function createCompanyStoresLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   openExternal = null,
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Company stores require a snapshot source');
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -51,8 +77,9 @@ export function createCompanyStoresLayer({
   const _shown = new Set(COMPANIES.map((company) => company.id));
   const _storeById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(COMPANY_STORES_LAYER_ID);
   const visible = () => _stores.filter((row) => _shown.has(row.company));
 
   function publishSelectedCard() {
@@ -78,7 +105,7 @@ export function createCompanyStoresLayer({
         openExternal(row.website);
         return true;
       };
-    card.position = storePosition(row);
+    card.position = fromDegrees(row.point[0], row.point[1], row.height ?? 0);
     _selectedCardId = card.id;
     overlayHost.setEntries(
       COMPANY_STORES_OVERLAY_SOURCE_ID,
@@ -87,8 +114,7 @@ export function createCompanyStoresLayer({
     );
   }
 
-  function pickedStore(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedStore(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -97,13 +123,23 @@ export function createCompanyStoresLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      COMPANY_STORES_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-      );
+      const at = click.screenPosition;
+      const cardHit = overlayHost.hitTest?.(at?.x, at?.y);
       if (
         cardHit?.sourceId === COMPANY_STORES_OVERLAY_SOURCE_ID &&
         cardHit.entryId === _selectedCardId
@@ -113,27 +149,32 @@ export function createCompanyStoresLayer({
       }
       // A card under the click, this layer's or another's, is not the ground.
       if (cardHit) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedStore(picked) : null;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedStore(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (
+        pickId &&
+        picking.isOwnedByOtherLayer(COMPANY_STORES_LAYER_ID, pickId)
+      )
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
+    picking?.unregisterPickOwner?.(COMPANY_STORES_LAYER_ID);
   }
 
   function clearOverlays() {
@@ -145,34 +186,14 @@ export function createCompanyStoresLayer({
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      for (const row of visible()) {
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: storePosition(row),
-          point: {
-            pixelSize: 8,
-            color: Cesium.Color.fromCssColorString(storeColor(row)),
-            outlineColor: Cesium.Color.fromCssColorString('#101418'),
-            outlineWidth: 1.5,
-            // Terrain only: clamping thousands of points to photorealistic 3D
-            // tiles re-picks each one inside every tile that streams in,
-            // seconds per frame. Without a globe the point keeps its height.
-            heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            scaleByDistance: new Cesium.NearFarScalar(2e4, 1.3, 2e6, 0.6),
-          },
-        });
-      }
-    });
+    if (!_dots) return;
+    _dots.set(visible().map(dotOf));
     publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   const layer = {
-    id: 'company-stores',
+    id: COMPANY_STORES_LAYER_ID,
     name: 'Retail Chains (Sweden)',
     icon: '🛒',
     source: 'OpenStreetMap',
@@ -182,29 +203,37 @@ export function createCompanyStoresLayer({
       if (_viewer)
         throw new Error('Company stores layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('company-stores');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: COMPANY_STORES_LAYER_ID,
+        // Terrain only: clamping thousands of points to photorealistic 3D
+        // tiles re-picks each one inside every tile that streams in,
+        // seconds per frame. Without a globe the point keeps its height.
+        clampTo: 'terrain',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(COMPANY_STORES_OVERLAY_SOURCE_ID, true);
       installClickHandler();
+      requestRender();
     },
 
     disable() {
       _request?.abort();
       _request = null;
       _enabled = false;
-      if (_dataSource) _dataSource.show = false;
+      if (_dots) _dots.show = false;
       removeClickHandler();
       clearOverlays();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       // The snapshot is bundled; one read per session is enough.
       if (_loaded) return true;
       _request?.abort();
@@ -240,17 +269,15 @@ export function createCompanyStoresLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _storeById.clear();
       _stores = [];
       _facts = {};
       _populationYear = null;
       _loaded = false;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

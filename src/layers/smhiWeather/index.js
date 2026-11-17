@@ -1,8 +1,9 @@
-import * as Cesium from 'cesium';
 import { formatNumber, msg, t } from '../../i18n/index.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { cssColor } from '../../render/color.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import {
   NO_READING_COLOR,
   TEMPERATURE_CLASSES,
@@ -16,7 +17,14 @@ export * from './records.js';
 export * from './cards.js';
 export { createSmhiWeatherSource } from './source.js';
 
+export const SMHI_WEATHER_LAYER_ID = 'smhi-weather';
 const PICK_PREFIX = 'se-smhiobs:';
+const OUTLINE_COLOR = 'rgba(255, 255, 255, 0.9)';
+/** A palette colour at `alpha`, as the renderer takes it. */
+const withAlpha = (css, alpha) => {
+  const [r, g, b] = cssColor(css);
+  return [r, g, b, alpha];
+};
 const LABEL_SOURCE_ID = 'smhi-weather-labels';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -57,24 +65,31 @@ const oneDecimal = (value) =>
 export function createSmhiWeatherLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   terrain = null,
   now = () => Date.now(),
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('SMHI weather requires a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
-  const position = (row) =>
-    Cesium.Cartesian3.fromDegrees(
-      row.point[0],
-      row.point[1],
-      _ground.heightOf(row.id),
-    );
+  const position = (row) => ({
+    lon: row.point[0],
+    lat: row.point[1],
+    height: _ground.heightOf(row.id),
+  });
+  /** Where a card or label sits: the dot's place on the ellipsoid (ECEF). */
+  const placeOf = (row) => {
+    const at = position(row);
+    return fromDegrees(at.lon, at.lat, at.height);
+  };
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
+  /** The ids of the rows the set holds: the ones a new height can move. */
+  let _drawn = new Set();
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -92,13 +107,29 @@ export function createSmhiWeatherLayer({
   let _values = true;
   const _stationById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(SMHI_WEATHER_LAYER_ID);
   const shownValue = (row) => (_mode === 'wind' ? row.wind : row.airTemp);
   const colorOf = (row) =>
     _mode === 'wind'
       ? classOf(WIND_CLASSES, row.wind)?.color || NO_READING_COLOR
       : temperatureColor(row.airTemp);
+
+  /** A station's dot as the set draws it. */
+  const dotOf = (row) => {
+    const has = Number.isFinite(shownValue(row));
+    return {
+      id: `${PICK_PREFIX}${row.id}`,
+      pos: position(row),
+      height: 'clampGround',
+      pixelSize: has ? 10 : 6,
+      color: has ? colorOf(row) : withAlpha(NO_READING_COLOR, 0.6),
+      outlineColor: OUTLINE_COLOR,
+      outlineWidth: 1.5,
+      disableDepthTest: Number.POSITIVE_INFINITY,
+    };
+  };
 
   function publishSelectedCard() {
     if (!canSelect()) return;
@@ -117,7 +148,7 @@ export function createSmhiWeatherLayer({
       forecast: entry?.forecast ?? null,
       forecastState: entry?.state ?? 'loading',
     });
-    card.position = position(row);
+    card.position = placeOf(row);
     overlayHost.setEntries(
       SMHI_WEATHER_OVERLAY_SOURCE_ID,
       [card],
@@ -125,8 +156,7 @@ export function createSmhiWeatherLayer({
     );
   }
 
-  function pickedStation(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedStation(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -135,28 +165,42 @@ export function createSmhiWeatherLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      SMHI_WEATHER_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
+      const at = click.screenPosition;
       // A card under the click, this layer's or another's, is not the ground.
-      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedStation(picked) : null;
+      if (overlayHost.hitTest?.(at?.x, at?.y)) return;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedStation(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
         loadForecast(hit);
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (pickId && picking.isOwnedByOtherLayer(SMHI_WEATHER_LAYER_ID, pickId))
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   /** Fetch the selected station's forecast once per half hour, then re-card. */
@@ -185,8 +229,9 @@ export function createSmhiWeatherLayer({
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
+    picking?.unregisterPickOwner?.(SMHI_WEATHER_LAYER_ID);
   }
 
   function clearOverlays() {
@@ -207,7 +252,7 @@ export function createSmhiWeatherLayer({
         if (!Number.isFinite(value)) continue;
         entries.push({
           id: `smhi-weather-label:${row.id}`,
-          position: position(row),
+          position: placeOf(row),
           variant: 'label',
           title:
             _mode === 'wind'
@@ -233,48 +278,24 @@ export function createSmhiWeatherLayer({
 
   /** New ground heights: the dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _stationById.get(id);
-        return row && position(row);
-      },
-    );
+    if (!_dots) return;
+    const rows = ids
+      .filter((id) => _drawn.has(id))
+      .map((id) => _stationById.get(id))
+      .filter(Boolean);
+    if (rows.length) _dots.upsert(rows.map(dotOf));
     publishLabels();
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      for (const row of _stations) {
-        const has = Number.isFinite(shownValue(row));
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: position(row),
-          point: {
-            pixelSize: has ? 10 : 6,
-            color: Cesium.Color.fromCssColorString(
-              has ? colorOf(row) : NO_READING_COLOR,
-            ).withAlpha(has ? 1 : 0.6),
-            outlineColor: Cesium.Color.WHITE.withAlpha(0.9),
-            outlineWidth: 1.5,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          },
-        });
-      }
-    });
+    if (!_dots) return;
+    _dots.set(_stations.map(dotOf));
+    _drawn = new Set(_stations.map((row) => row.id));
     publishLabels();
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function setMode(mode) {
@@ -285,7 +306,7 @@ export function createSmhiWeatherLayer({
   }
 
   const layer = {
-    id: 'smhi-weather',
+    id: SMHI_WEATHER_LAYER_ID,
     name: 'Weather Now (Sweden)',
     icon: '🌡',
     source: 'SMHI',
@@ -294,18 +315,24 @@ export function createSmhiWeatherLayer({
     init(viewer) {
       if (_viewer) throw new Error('SMHI weather layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('smhi-weather');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: SMHI_WEATHER_LAYER_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(SMHI_WEATHER_OVERLAY_SOURCE_ID, true);
       overlayHost?.setVisible?.(LABEL_SOURCE_ID, true);
       installClickHandler();
       publishLabels();
+      requestRender();
     },
 
     disable() {
@@ -314,13 +341,14 @@ export function createSmhiWeatherLayer({
       _ground.cancel();
       _enabled = false;
       _lastError = null;
-      if (_dataSource) _dataSource.show = false;
+      if (_dots) _dots.show = false;
       removeClickHandler();
       clearOverlays();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -385,17 +413,16 @@ export function createSmhiWeatherLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
       _stationById.clear();
       _forecasts.clear();
       _stations = [];
+      _drawn = new Set();
       _signature = null;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

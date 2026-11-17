@@ -11,6 +11,7 @@ import {
 import { buildStopCard } from './cards.js';
 import { encodeAlerts } from './alertFeedFixture.mjs';
 import { createTransitAlertsLayer } from './index.js';
+import { bindFakeDraw } from '../../testSupport/fakeDrawPort.mjs';
 
 const NOW = 1_793_830_000;
 const STOPS = new Map([
@@ -159,16 +160,8 @@ test('long operator prose is folded into short card lines', () => {
 });
 
 test('the layer draws one point per stop and counts them by kind', async () => {
-  const added = [];
-  const viewer = {
-    dataSources: {
-      add(source) {
-        source.entities.add = (entity) => added.push(entity);
-        source.entities.removeAll = () => (added.length = 0);
-      },
-      remove() {},
-    },
-  };
+  const viewer = {};
+  const { draw } = bindFakeDraw(viewer);
   const row = (id, kind) => ({
     id,
     name: id,
@@ -191,14 +184,14 @@ test('the layer draws one point per stop and counts them by kind', async () => {
   layer.init(viewer);
   layer.enable();
   await layer.update();
-  assert.equal(added.length, 3);
+  assert.equal(draw.find('transit-alerts').items.size, 3);
   const { legend } = layer.getRowControls();
   assert.deepEqual(
     legend.map((item) => item.count),
     [2, 0, 1],
   );
   assert.match(legend[0].blurb, /still loading for 1 operators/);
-  layer.destroy(viewer);
+  layer.destroy();
 });
 
 test('a closed lift or entrance is not a closed stop; "trafikeras ej" is', () => {

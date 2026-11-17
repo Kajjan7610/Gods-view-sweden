@@ -1,8 +1,8 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import { DESK_CLASSES, deskClass, deskColor } from './records.js';
 import {
   POLICE_STATIONS_OVERLAY_SOURCE_ID,
@@ -13,6 +13,7 @@ export * from './records.js';
 export * from './cards.js';
 export { createPoliceStationsSource } from './source.js';
 
+export const POLICE_STATIONS_LAYER_ID = 'police-stations';
 const PICK_PREFIX = 'se-police-station:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -21,6 +22,13 @@ const CARD_HOST_OPTIONS = Object.freeze({
 });
 /** Dot size by desk: a passport desk reads largest. */
 const PIXEL_SIZE = Object.freeze({ passport: 10, desk: 8, 'no-desk': 7 });
+const OUTLINE_COLOR = '#0b1a2b';
+const SCALE_BY_DISTANCE = Object.freeze({
+  near: 2e4,
+  nearValue: 1.2,
+  far: 2e6,
+  farValue: 0.7,
+});
 
 /**
  * Own one Swedish police station display: Polismyndigheten's list of its
@@ -31,24 +39,24 @@ const PIXEL_SIZE = Object.freeze({ passport: 10, desk: 8, 'no-desk': 7 });
 export function createPoliceStationsLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   openExternal = null,
   terrain = null,
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Police stations require a snapshot source');
   // With ground heights the dots clamp to terrain only (see groundHeights.js).
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
-  const position = (row) =>
-    Cesium.Cartesian3.fromDegrees(
-      row.point[0],
-      row.point[1],
-      _ground.heightOf(row.id),
-    );
+  const position = (row) => ({
+    lon: row.point[0],
+    lat: row.point[1],
+    height: _ground.heightOf(row.id),
+  });
   let _viewer = null;
-  let _dataSource = null;
+  let _dots = null;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -62,8 +70,22 @@ export function createPoliceStationsLayer({
   let _stations = [];
   const _stationById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(POLICE_STATIONS_LAYER_ID);
+
+  /** A station's dot as the set draws it. */
+  const dotOf = (row) => ({
+    id: `${PICK_PREFIX}${row.id}`,
+    pos: position(row),
+    height: 'clampGround',
+    pixelSize: PIXEL_SIZE[deskClass(row)],
+    color: deskColor(row),
+    outlineColor: OUTLINE_COLOR,
+    outlineWidth: 1.5,
+    disableDepthTest: Number.POSITIVE_INFINITY,
+    scaleByDistance: SCALE_BY_DISTANCE,
+  });
 
   function openPage(row) {
     if (!row?.url || !openExternal) return false;
@@ -89,7 +111,8 @@ export function createPoliceStationsLayer({
       linkable: Boolean(openExternal),
     });
     if (card.accessibilityLabel) card.activate = () => openPage(row);
-    card.position = position(row);
+    const at = position(row);
+    card.position = fromDegrees(at.lon, at.lat, at.height);
     _selectedCardId = card.id;
     overlayHost.setEntries(
       POLICE_STATIONS_OVERLAY_SOURCE_ID,
@@ -98,8 +121,7 @@ export function createPoliceStationsLayer({
     );
   }
 
-  function pickedStation(picked) {
-    const pickId = picking.resolvePickId(picked);
+  function pickedStation(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const id = pickId.slice(PICK_PREFIX.length);
@@ -108,13 +130,23 @@ export function createPoliceStationsLayer({
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(
+      POLICE_STATIONS_LAYER_ID,
+      (pickedId) =>
+        typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+    );
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-      );
+      const at = click.screenPosition;
+      const cardHit = overlayHost.hitTest?.(at?.x, at?.y);
       if (
         cardHit?.sourceId === POLICE_STATIONS_OVERLAY_SOURCE_ID &&
         cardHit.entryId === _selectedCardId
@@ -122,27 +154,32 @@ export function createPoliceStationsLayer({
         openPage(_stationById.get(_selectedId));
       // A card under the click, this layer's or another's, is not the ground.
       if (cardHit) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedStation(picked) : null;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedStation(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (
+        pickId &&
+        picking.isOwnedByOtherLayer(POLICE_STATIONS_LAYER_ID, pickId)
+      )
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
+    picking?.unregisterPickOwner?.(POLICE_STATIONS_LAYER_ID);
   }
 
   function clearOverlays() {
@@ -155,49 +192,24 @@ export function createPoliceStationsLayer({
 
   /** New ground heights: the dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _stationById.get(id);
-        return row && position(row);
-      },
-    );
+    if (!_dots) return;
+    const rows = ids.map((id) => _stationById.get(id)).filter(Boolean);
+    if (!rows.length) return;
+    _dots.upsert(rows.map(dotOf));
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      // Desks without services first, so passport desks draw on top.
-      for (const row of [..._stations].reverse()) {
-        entities.add({
-          id: `${PICK_PREFIX}${row.id}`,
-          position: position(row),
-          point: {
-            pixelSize: PIXEL_SIZE[deskClass(row)],
-            color: Cesium.Color.fromCssColorString(deskColor(row)),
-            outlineColor: Cesium.Color.fromCssColorString('#0b1a2b'),
-            outlineWidth: 1.5,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            scaleByDistance: new Cesium.NearFarScalar(2e4, 1.2, 2e6, 0.7),
-          },
-        });
-      }
-    });
+    if (!_dots) return;
+    // Desks without services first, so passport desks draw on top.
+    _dots.set([..._stations].reverse().map(dotOf));
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   const layer = {
-    id: 'police-stations',
+    id: POLICE_STATIONS_LAYER_ID,
     name: 'Police Stations (Sweden)',
     icon: '👮',
     source: 'Polisen',
@@ -207,16 +219,22 @@ export function createPoliceStationsLayer({
       if (_viewer)
         throw new Error('Police stations layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('police-stations');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _dots = drawOf(viewer).points({
+        id: POLICE_STATIONS_LAYER_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // thousands of dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_dots) _dots.show = true;
       overlayHost?.setVisible?.(POLICE_STATIONS_OVERLAY_SOURCE_ID, true);
       installClickHandler();
+      requestRender();
     },
 
     disable() {
@@ -224,13 +242,14 @@ export function createPoliceStationsLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
-      if (_dataSource) _dataSource.show = false;
+      if (_dots) _dots.show = false;
       removeClickHandler();
       clearOverlays();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -284,16 +303,14 @@ export function createPoliceStationsLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
       _stationById.clear();
       _stations = [];
       _signature = null;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _dots?.dispose();
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;
