@@ -950,6 +950,224 @@ const NIGHT_OVER_SWEDEN_RECIPE = Object.freeze({
   ],
 });
 
+// Swedish fork: the power story. The flows are ENTSO-E's latest published
+// quarter hour (about an hour old), so the captions say so; the spot price
+// is this quarter hour's. Production by type is not shown (it needs Svenska
+// kraftnät's approval), so the story claims nothing about it.
+const POWER_LAYERS = Object.freeze([
+  'river-flow',
+  'power-grid',
+  'electricity-prices',
+]);
+const powerLayers = (...on) =>
+  Object.fromEntries(POWER_LAYERS.map((id) => [id, on.includes(id)]));
+const zoneFlow = (link, fallback) => ({
+  facts: {
+    mw: `power-grid.south.${link}`,
+    north: `power-grid.north.${link}`,
+  },
+  captions: [...FLOW_CAPTIONS[link], { text: fallback }],
+});
+const FLOW_CAPTIONS = {
+  SE1_SE2: [
+    {
+      text: msg(
+        'In the latest published quarter hour, {mw} MW flowed south from SE1 to SE2.',
+      ),
+      when: { mw: { atLeast: 0 } },
+    },
+    {
+      text: msg(
+        'In the latest published quarter hour, {north} MW flowed north from SE2 to SE1.',
+      ),
+    },
+  ],
+  SE2_SE3: [
+    {
+      text: msg(
+        'In the latest published quarter hour, {mw} MW flowed south from SE2 to SE3.',
+      ),
+      when: { mw: { atLeast: 0 } },
+    },
+    {
+      text: msg(
+        'In the latest published quarter hour, {north} MW flowed north from SE3 to SE2.',
+      ),
+    },
+  ],
+  SE3_SE4: [
+    {
+      text: msg(
+        'In the latest published quarter hour, {mw} MW flowed south from SE3 to SE4.',
+      ),
+      when: { mw: { atLeast: 0 } },
+    },
+    {
+      text: msg(
+        'In the latest published quarter hour, {north} MW flowed north from SE4 to SE3.',
+      ),
+    },
+  ],
+};
+
+const JOURNEY_OF_POWER_RECIPE = Object.freeze({
+  id: 'journey-of-power',
+  title: msg('The Journey of Power'),
+  durationSec: 58,
+  style: 'normal',
+  ui: { hidePanels: true, hudMode: 'minimal', safeFrame: '16:9' },
+  layers: { satellites: false, earthquakes: false, traffic: false },
+  post: { bloom: 24, sharpen: true, detectionMode: 'OFF' },
+  installAlongsideSceneId: 'night-over-sweden',
+  refreshWhenUnedited: true,
+  // Generated with ElevenLabs (free plan: non-commercial, credited).
+  narration: Object.freeze({
+    lang: 'sv',
+    src: '/stories/elens-resa.sv.mp3',
+    cues: Object.freeze([
+      { fromMs: 0, toMs: 8600 },
+      { fromMs: 8650, toMs: 13400 },
+      { fromMs: 13450, toMs: 19700 },
+      { fromMs: 19750, toMs: 24900 },
+      { fromMs: 24950, toMs: 28250 },
+      { fromMs: 28300, toMs: 36270 },
+    ]),
+  }),
+  cameraPath: [
+    {
+      title: msg('Water from the North'),
+      captions: [
+        {
+          text: msg(
+            'Most of Sweden’s hydropower comes from the big rivers of the north. SMHI measures how much water flows in them.',
+          ),
+        },
+      ],
+      lat: 61.2,
+      lon: 18.0,
+      alt: 900000,
+      heading: 0,
+      pitch: -45,
+      roll: 0,
+      // The story opens on this view, so the hold carries the first line.
+      duration: 2,
+      hold: 9,
+      layers: powerLayers('river-flow'),
+    },
+    {
+      title: msg('South through the Zones'),
+      ...zoneFlow(
+        'SE1_SE2',
+        msg(
+          'Power flows between Sweden’s four bidding zones, mostly from north to south.',
+        ),
+      ),
+      lat: 58.0,
+      lon: 17.0,
+      alt: 1600000,
+      heading: 0,
+      pitch: -55,
+      roll: 0,
+      duration: 5,
+      hold: 4,
+      layers: powerLayers('power-grid'),
+    },
+    {
+      title: msg('The Big Flow to Mälardalen'),
+      ...zoneFlow(
+        'SE2_SE3',
+        msg(
+          'The biggest flow usually runs from SE2 to SE3, towards Mälardalen and the big cities.',
+        ),
+      ),
+      lat: 58.6,
+      lon: 16.2,
+      alt: 550000,
+      heading: 0,
+      pitch: -45,
+      roll: 0,
+      duration: 5,
+      hold: 4,
+      layers: powerLayers('power-grid'),
+    },
+    {
+      title: msg('Down to Skåne'),
+      ...zoneFlow(
+        'SE3_SE4',
+        msg(
+          'Southern Sweden uses more power than it produces, so power flows south to Skåne.',
+        ),
+      ),
+      // South of Skåne, looking north at the SE3–SE4 link coming in.
+      lat: 53.6,
+      lon: 14.0,
+      alt: 350000,
+      heading: 0,
+      pitch: -50,
+      roll: 0,
+      duration: 5,
+      hold: 4,
+      layers: powerLayers('power-grid'),
+    },
+    {
+      title: msg('The Price Follows'),
+      facts: {
+        se1: 'electricity-prices.ore.SE1',
+        se4: 'electricity-prices.ore.SE4',
+      },
+      captions: [
+        {
+          text: msg(
+            'Right now the spot price is {se1} öre/kWh in SE1 and {se4} öre/kWh in SE4, before tax and fees.',
+          ),
+        },
+        {
+          text: msg(
+            'The spot price is often lower in the north than in the south.',
+          ),
+        },
+      ],
+      lat: 56.5,
+      lon: 16.5,
+      alt: 1800000,
+      heading: 0,
+      pitch: -60,
+      roll: 0,
+      duration: 5,
+      hold: 4,
+      layers: powerLayers('electricity-prices'),
+    },
+    {
+      title: msg('Sweden and Its Neighbours'),
+      facts: {
+        export: 'power-grid.export',
+        import: 'power-grid.import',
+      },
+      captions: [
+        {
+          text: msg(
+            'In the latest published quarter hour, Sweden exported {export} MW and imported {import} MW. Everything here is open data.',
+          ),
+        },
+        {
+          text: msg(
+            'Sweden trades power with its neighbours in both directions, quarter hour by quarter hour. Everything here is open data.',
+          ),
+        },
+      ],
+      lat: 54.5,
+      lon: 15.0,
+      alt: 2400000,
+      heading: 0,
+      pitch: -60,
+      roll: 0,
+      duration: 6,
+      hold: 5,
+      layers: powerLayers('power-grid'),
+    },
+  ],
+});
+
 const PUBLIC_SCENE_RECIPES = [
   {
     id: 'flights-radar',
@@ -1324,6 +1542,7 @@ const PUBLIC_SCENE_RECIPES = [
   },
   SWEDEN_NOW_RECIPE,
   NIGHT_OVER_SWEDEN_RECIPE,
+  JOURNEY_OF_POWER_RECIPE,
 ];
 
 /** Build the recipe list without mutating stored user-authored projects. */
@@ -1371,6 +1590,7 @@ const BUILTIN_SHOT_TITLES = new Set([
   msg('Final view'),
   ...SWEDEN_NOW_RECIPE.cameraPath.map(({ title }) => title),
   ...NIGHT_OVER_SWEDEN_RECIPE.cameraPath.map(({ title }) => title),
+  ...JOURNEY_OF_POWER_RECIPE.cameraPath.map(({ title }) => title),
 ]);
 
 /**

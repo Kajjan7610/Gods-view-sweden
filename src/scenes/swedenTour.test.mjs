@@ -11,14 +11,14 @@ const tour = SCENE_RECIPES.find((recipe) => recipe.id === 'sweden-now');
 
 test('the tour follows the original scenes and installs into saved projects', () => {
   assert.ok(tour);
-  // The aurora story follows it.
-  assert.equal(SCENE_RECIPES.at(-2), tour);
+  // The aurora and power stories follow it.
+  assert.equal(SCENE_RECIPES.at(-3), tour);
   assert.equal(tour.installAlongsideSceneId, 'omniscience-pullback');
   assert.equal(sv[tour.title], 'Sverige just nu');
 });
 
 test('the aurora story follows the tour and uses registered layers only', () => {
-  const night = SCENE_RECIPES.at(-1);
+  const night = SCENE_RECIPES.at(-2);
   assert.equal(night.id, 'night-over-sweden');
   assert.equal(night.installAlongsideSceneId, 'sweden-now');
   assert.equal(sv[night.title], 'Natten över Sverige');
@@ -117,4 +117,35 @@ test('the withdrawn Nepal scene is not offered and leaves saved projects', async
     dropWithdrawnBuiltInScenes(project, WITHDRAWN_BUILT_IN_SCENE_IDS),
     false,
   );
+});
+
+test('the power story follows the aurora story and uses registered layers only', () => {
+  const power = SCENE_RECIPES.at(-1);
+  assert.equal(power.id, 'journey-of-power');
+  assert.equal(power.installAlongsideSceneId, 'night-over-sweden');
+  assert.equal(sv[power.title], 'Elens resa');
+  const scene = recipeToScene(power);
+  assert.deepEqual(
+    scene.shots.map((shot) =>
+      Object.entries(shot.layers)
+        .filter(([, target]) => target.enabled)
+        .map(([id]) => id),
+    ),
+    [
+      ['river-flow'],
+      ['power-grid'],
+      ['power-grid'],
+      ['power-grid'],
+      ['electricity-prices'],
+      ['power-grid'],
+    ],
+  );
+  for (const shot of scene.shots) {
+    for (const id of Object.keys(shot.layers))
+      assert.ok(REGISTERED_LAYER_IDS.includes(id), id);
+    assert.ok(sv[shot.title], `untranslated shot title ${shot.title}`);
+  }
+  for (const frame of power.cameraPath)
+    for (const { text } of frame.captions)
+      assert.ok(sv[text], `untranslated caption ${text}`);
 });

@@ -131,3 +131,15 @@ test('muted, or in another language, it never speaks', () => {
   english.narration.sync({ playing: true, wallMs: 1000 });
   assert.equal(english.audio.created, 0);
 });
+
+test('a clock that trails the voice does not restart a line that has been spoken', () => {
+  const { audio, narration } = setup();
+  narration.sync({ playing: true, wallMs: 1000 });
+  // The voice reached the line's end; the story's clock says 4950 ms.
+  audio.currentTime = 4.96;
+  audio.pause();
+  const plays = audio.plays;
+  narration.sync({ playing: true, wallMs: 4950 });
+  assert.equal(audio.plays, plays);
+  assert.equal(audio.paused, true);
+});

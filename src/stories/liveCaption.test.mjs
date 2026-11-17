@@ -128,3 +128,52 @@ test('the aurora story ships with live captions, one narration line per chapter 
   for (const name of ['NOAA SWPC', 'SMHI', 'Trafikverket', 'elevenlabs.io'])
     assert.ok(credited.includes(name), name);
 });
+
+test('the power story quotes the latest quarter, in the direction it flowed', () => {
+  const story = listStories().find(({ id }) => id === 'gev:journey-of-power');
+  assert.ok(story, 'listed');
+  assert.equal(story.chapters.length, 6);
+  for (const chapter of story.chapters)
+    assert.notEqual(
+      chapterCaption(chapter, () => null, T),
+      '',
+      chapter.title,
+    );
+  const facts = {
+    'power-grid.south.SE2_SE3': 7217,
+    'power-grid.north.SE2_SE3': -7217,
+    'power-grid.south.SE3_SE4': -150,
+    'power-grid.north.SE3_SE4': 150,
+    'electricity-prices.ore.SE1': 38.1,
+    'electricity-prices.ore.SE4': 112.4,
+    'power-grid.export': 4502,
+    'power-grid.import': 2171,
+  };
+  const at = (i) =>
+    chapterCaption(story.chapters[i], (key) => facts[key] ?? null, T);
+  assert.match(at(2), /7,217 MW flowed south from SE2 to SE3/);
+  assert.match(at(3), /150 MW flowed north from SE4 to SE3/);
+  // No number for SE1 to SE2: the words that hold without it.
+  assert.match(at(1), /mostly from north to south/);
+  assert.ok(
+    at(4).includes('38.1 öre/kWh in SE1 and 112.4 öre/kWh in SE4'),
+    at(4),
+  );
+  assert.match(at(5), /exported 4,502 MW and imported 2,171 MW/);
+  const credited = story.sources.map(([name]) => name);
+  // One narration line per chapter, each within its chapter.
+  assert.equal(story.narration.lang, 'sv');
+  assert.equal(story.narration.cues.length, story.chapters.length);
+  story.chapters.forEach((chapter, i) => {
+    const cue = story.narration.cues[i];
+    const next = story.chapters[i + 1]?.wallMs ?? story.durationMs;
+    assert.ok(cue.toMs - cue.fromMs <= next - chapter.wallMs, `line ${i + 1}`);
+  });
+  for (const name of [
+    'ENTSO-E',
+    'Elpriset just nu.se',
+    'SMHI',
+    'elevenlabs.io',
+  ])
+    assert.ok(credited.includes(name), name);
+});

@@ -79,6 +79,7 @@ Två nivåer gäller:
 | Fartkameror: ca 2 800 fasta trafiksäkerhetskameror som pilar i kamerans riktning, och de närmaste i dossiern | Trafikverket (CC0) | Speed Cameras (Sweden), under Infrastructure, och NU-fliken |
 | Sverige-turen "Sverige just nu" | Lagren ovan | Scener |
 | Berättelsen "Natten över Sverige": norrsken, chansen över Kiruna, molnen och vägen mot Abisko, med levande siffror i bildtexterna och svensk berättarröst | NOAA SWPC, SMHI, Trafikverket; rösten från elevenlabs.io | Berättelser (STORIES), och Scener |
+| Berättelsen "Elens resa": från älvarna i norr, söderut genom de fyra elområdena, till priset och grannländerna, med levande flöden och priser i bildtexterna och svensk berättarröst | ENTSO-E (CC BY 4.0), Elpriset just nu.se (Nord Pool via ENTSO-E), SMHI; rösten från elevenlabs.io | Berättelser (STORIES), och Scener |
 | Sparläge: starta utan Google 3D Tiles | – | Knappen 3D/2D, eller `?globe=lite` |
 | Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
@@ -401,6 +402,28 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-18 (berättelsen "Elens resa")
+- Ny inbyggd berättelse i sex kapitel, ca 58 s: vatten från norr
+  (vattenföringen i älvarna), söderut genom elområdena, det stora flödet
+  mot Mälardalen, ner till Skåne, priset följer med och Sverige och
+  grannarna. Den läggs till efter "Natten över Sverige".
+- Bildtexterna citerar kraftnätslagrets flöden mellan elområdena (i den
+  riktning de gick, söderut eller norrut), Sveriges export och import, och
+  ellagrets spotpris den här kvarten i SE1 och SE4. Flödena är ENTSO-E:s
+  senast publicerade kvart, ungefär en timme gammal, så texten säger "den
+  senast publicerade kvarten" och inte "just nu". Är kraftnätets data
+  bara en äldre reserv, eller saknas den, visas en text utan siffror.
+- Svensk berättarröst på samma sätt som i "Natten över Sverige": samma
+  röst, en replik per kapitel, bara på svenska, med högtalarknappen i
+  tidslinjen. Manuset innehåller inga siffror. Rösten är gjord med
+  ElevenLabs gratisplan (icke-kommersiellt, källhänvisning
+  "elevenlabs.io", som står bland berättelsens källor).
+- En replik som berättelsens klocka hinner ikapp först efter att den är
+  uppläst startas inte om (gäller båda berättelserna).
+- Berättelsen säger inget om produktion per kraftslag, som inte visas utan
+  Svenska kraftnäts godkännande. Inga nya dataanrop: den läser lagren som
+  redan finns.
 
 ### 2026-11-17 (berättelsen "Natten över Sverige")
 - Ny inbyggd berättelse i sex kapitel, ca 54 s: mörkret över Norrland,

@@ -165,6 +165,36 @@ const SCENE_CONTEXT = {
       ],
     ],
   },
+  // Swedish fork: the power story.
+  'journey-of-power': {
+    description: msg(
+      'How power travels through Sweden: from the rivers of the north, south through the four bidding zones, to the price and the neighbours.',
+    ),
+    sources: [
+      [
+        'ENTSO-E',
+        msg(
+          'Flows between the bidding zones and to the neighbours (CC BY 4.0)',
+        ),
+        'https://transparency.entsoe.eu/',
+      ],
+      [
+        'Elpriset just nu.se',
+        msg('Spot price per bidding zone (Nord Pool via ENTSO-E)'),
+        'https://www.elprisetjustnu.se/',
+      ],
+      [
+        'SMHI',
+        msg('River flow (CC BY 4.0)'),
+        'https://www.smhi.se/data/oppna-data',
+      ],
+      [
+        'elevenlabs.io',
+        msg('Swedish narration voice generated with elevenlabs.io'),
+        'https://elevenlabs.io/',
+      ],
+    ],
+  },
   'bhote-koshi-nepal-scene': {
     description: msg(
       'The 26 August 2026 Bhote Koshi outburst flood in Nepal, followed down the valley to Trishuli.',

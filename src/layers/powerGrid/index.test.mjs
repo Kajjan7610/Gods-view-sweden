@@ -670,3 +670,39 @@ test('turning the layer off clears its error', async (t) => {
   layer.disable();
   assert.equal(layer.getStats().error, null);
 });
+
+test('a story reads the latest quarter: flows south and north, import, export and net', async (t) => {
+  let answer = snapshot({
+    links: [
+      ...LINKS,
+      {
+        id: 'SE3_SE4',
+        from: 'SE4',
+        to: 'SE3',
+        fromPoint: [13.0, 55.6],
+        toPoint: STOCKHOLM,
+        mw: 120,
+        kind: 'internal',
+      },
+    ],
+  });
+  const { layer } = harness(t, { getSnapshot: async () => answer });
+  assert.deepEqual(layer.storyFacts(), {}, 'nothing before the first answer');
+  layer.enable();
+  await layer.update();
+  assert.deepEqual(layer.storyFacts(), {
+    'south.SE2_SE3': 5699,
+    'north.SE2_SE3': -5699,
+    // SE4 sends to SE3: the flow runs north.
+    'south.SE3_SE4': -120,
+    'north.SE3_SE4': 120,
+    import: 188,
+    export: 387,
+    net: 199,
+    netImport: -199,
+  });
+  // A stale fallback is not quoted as the latest quarter.
+  answer = { ...answer, stale: true };
+  await layer.update();
+  assert.deepEqual(layer.storyFacts(), {});
+});

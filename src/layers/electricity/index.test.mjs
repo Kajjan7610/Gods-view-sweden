@@ -232,3 +232,16 @@ test("a click on another layer's card or dot leaves the open card alone", async 
   }
   h.layer.destroy();
 });
+
+test('a story reads this quarter hour’s spot price per zone, in öre per kWh', async (t) => {
+  const h = harness(t, [zone('SE1'), zone('SE4')]);
+  assert.deepEqual(h.layer.storyFacts(), {});
+  h.layer.enable();
+  await h.layer.update();
+  assert.deepEqual(h.layer.storyFacts(), { 'ore.SE1': 40, 'ore.SE4': 40 });
+  h.clock.now = NOW + QUARTER;
+  assert.deepEqual(h.layer.storyFacts(), { 'ore.SE1': 250, 'ore.SE4': 250 });
+  // Past the day's last quarter there is no price to quote.
+  h.clock.now = NOW + 3 * QUARTER;
+  assert.deepEqual(h.layer.storyFacts(), {});
+});

@@ -692,6 +692,31 @@ export function createPowerGridLayer({
       };
     },
 
+    /**
+     * Swedish fork: the latest published quarter's flows for a story's
+     * captions (src/stories/liveCaption.js): MW south and north on each link
+     * between Swedish zones, and Sweden's import, export and net. Nothing
+     * while the snapshot is a stale fallback.
+     */
+    storyFacts() {
+      const links = _snapshot.links;
+      if (!links.length || _stale) return {};
+      const facts = {};
+      for (const link of links) {
+        if (link.kind !== 'internal' || !Number.isFinite(link.mw)) continue;
+        const south = link.from < link.to ? link.mw : -link.mw;
+        const id = [link.from, link.to].sort().join('_');
+        facts[`south.${id}`] = south;
+        facts[`north.${id}`] = -south;
+      }
+      const totals = exchangeTotals(links);
+      facts.import = totals.import;
+      facts.export = totals.export;
+      facts.net = totals.net;
+      facts.netImport = -totals.net;
+      return facts;
+    },
+
     getStats() {
       return {
         count: _snapshot.links.length,

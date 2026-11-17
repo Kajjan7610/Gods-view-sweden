@@ -429,6 +429,21 @@ export function createElectricityPricesLayer({
         stale: _stale,
       };
     },
+
+    /**
+     * Swedish fork: the spot price this quarter hour per zone, in öre per
+     * kWh, for a story's captions (src/stories/liveCaption.js).
+     */
+    storyFacts() {
+      const facts = {};
+      const nowMs = now();
+      for (const zone of _zones) {
+        const sek = priceAt(zone.today, nowMs)?.sek;
+        if (Number.isFinite(sek))
+          facts[`ore.${zone.id}`] = Math.round(sek * 1000) / 10;
+      }
+      return facts;
+    },
   };
   return layer;
 }

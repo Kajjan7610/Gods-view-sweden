@@ -9,6 +9,9 @@ import { getLocale } from '../i18n/index.js';
 /** Further apart than this, the voice jumps to where the story is. */
 export const NARRATION_DRIFT_MS = 350;
 
+/** Less than this left of a line, and it counts as spoken. */
+const LINE_DONE_MS = 120;
+
 /**
  * The line the story is in at `wallMs`, and where in the recording, or
  * null between lines.
@@ -91,15 +94,19 @@ export function createNarration(
       audio ??= createAudio(narration.src);
       if (Math.abs(audio.currentTime * 1000 - cue.atMs) > NARRATION_DRIFT_MS)
         audio.currentTime = cue.atMs / 1000;
+      // The story's clock may trail the voice a little: a line that has
+      // (nearly) been spoken is not started again.
+      const leftMs = cue.toMs - audio.currentTime * 1000;
+      if (leftMs < LINE_DONE_MS) {
+        silent();
+        return;
+      }
       if (audio.paused) {
         // A browser that blocks sound before a gesture just stays silent.
         Promise.resolve(audio.play()).catch(() => {});
       }
       timers.clearTimeout(lineEnd);
-      lineEnd = timers.setTimeout(
-        silent,
-        Math.max(0, cue.toMs - audio.currentTime * 1000),
-      );
+      lineEnd = timers.setTimeout(silent, leftMs);
     },
     destroy() {
       destroyed = true;
