@@ -398,6 +398,20 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-17 (fem rättelser från originalet)
+- Fem små rättelser är hämtade oförändrade från originalprojektet, med
+  sina upphovspersoner och en hänvisning till respektive pull request:
+  Ctrl, Cmd eller Alt tillsammans med en kortkommandotangent startar inget
+  kortkommando (Ctrl+C slog förut på kameralagret, #1691); parkerade och
+  taxande flygplan från adsb.lol pekar dit nosen pekar i stället för mot
+  norr (#1732); brandlagret frågar inte längre satelliten Suomi NPP, som
+  NASA slutade leverera 2026-11-02 (#1552); en brands ålder avrundas rätt
+  på kortet (#1531); Nominatim-testet kontrollerar filrättigheter bara där
+  de finns, så det fallerar inte längre på Windows (#1547).
+- Resten av originalets ändringar sedan 2026-11-08 är inte hämtade: de
+  bygger på ett nytt sätt att rita kartan, ändrar gränssnittet eller lägger
+  till källor vars villkor först ska granskas.
+
 ### 2026-11-17 (Svenska kraftnäts Kontrollrummet borttaget)
 - Svenska kraftnät svarade 2026-11-16 att Kontrollrummets API:er inte är
   publika och hänvisade till ENTSO-E under CC BY 4.0. Valet
