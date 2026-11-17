@@ -439,6 +439,32 @@ defineExpose({ goChapter });
     <span id="tlTime" class="tl-time" aria-hidden="true">
       <span class="tt-c">{{ headTime }}</span>
     </span>
+    <!-- Swedish fork: a story that speaks in the page's language. -->
+    <button
+      v-if="store.narration"
+      id="stNarration"
+      class="tl-vol"
+      type="button"
+      :aria-label="
+        store.narrationMuted ? t('Turn narration on') : t('Turn narration off')
+      "
+      :title="t('Narration voice: elevenlabs.io')"
+      :aria-pressed="!store.narrationMuted"
+      @click="store.controller.setNarrationMuted(!store.narrationMuted)"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.9"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M4 10v4h4l5 4V6L8 10H4Z" />
+        <path v-if="store.narrationMuted" d="M17 9.5l5 5M22 9.5l-5 5" />
+        <path v-else d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
+      </svg>
+    </button>
     <button
       id="stExpand"
       class="tl-vol"

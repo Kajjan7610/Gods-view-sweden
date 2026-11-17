@@ -11,9 +11,41 @@ const tour = SCENE_RECIPES.find((recipe) => recipe.id === 'sweden-now');
 
 test('the tour follows the original scenes and installs into saved projects', () => {
   assert.ok(tour);
-  assert.equal(SCENE_RECIPES.at(-1), tour);
+  // The aurora story follows it.
+  assert.equal(SCENE_RECIPES.at(-2), tour);
   assert.equal(tour.installAlongsideSceneId, 'omniscience-pullback');
   assert.equal(sv[tour.title], 'Sverige just nu');
+});
+
+test('the aurora story follows the tour and uses registered layers only', () => {
+  const night = SCENE_RECIPES.at(-1);
+  assert.equal(night.id, 'night-over-sweden');
+  assert.equal(night.installAlongsideSceneId, 'sweden-now');
+  assert.equal(sv[night.title], 'Natten över Sverige');
+  const scene = recipeToScene(night);
+  assert.deepEqual(
+    scene.shots.map((shot) =>
+      Object.entries(shot.layers)
+        .filter(([, target]) => target.enabled)
+        .map(([id]) => id),
+    ),
+    [
+      [],
+      ['aurora'],
+      ['aurora'],
+      ['aurora', 'smhi-weather'],
+      ['trafikverket-weather'],
+      ['aurora'],
+    ],
+  );
+  for (const shot of scene.shots) {
+    for (const id of Object.keys(shot.layers))
+      assert.ok(REGISTERED_LAYER_IDS.includes(id), id);
+    assert.ok(sv[shot.title], `untranslated shot title ${shot.title}`);
+  }
+  for (const frame of night.cameraPath)
+    for (const { text } of frame.captions)
+      assert.ok(sv[text], `untranslated caption ${text}`);
 });
 
 test('each shot turns on its own Swedish layers and turns the others off', () => {

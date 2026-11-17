@@ -777,6 +777,179 @@ const SWEDEN_NOW_RECIPE = Object.freeze({
   ],
 });
 
+// Swedish fork: the aurora story. Each shot names all three layers it may
+// use and turns on its own. Captions quote the aurora
+// layer's live numbers when it has a current forecast and fall back to
+// words that hold without them (src/stories/liveCaption.js). The narration
+// is Swedish only: one line per shot, cut from one recording at its pauses.
+const NIGHT_LAYERS = Object.freeze([
+  'aurora',
+  'smhi-weather',
+  'trafikverket-weather',
+]);
+const nightLayers = (...on) =>
+  Object.fromEntries(NIGHT_LAYERS.map((id) => [id, on.includes(id)]));
+
+const NIGHT_OVER_SWEDEN_RECIPE = Object.freeze({
+  id: 'night-over-sweden',
+  title: msg('Night over Sweden'),
+  durationSec: 54,
+  style: 'normal',
+  ui: { hidePanels: true, hudMode: 'minimal', safeFrame: '16:9' },
+  layers: { satellites: false, earthquakes: false, traffic: false },
+  post: { bloom: 30, sharpen: true, detectionMode: 'OFF' },
+  installAlongsideSceneId: 'sweden-now',
+  refreshWhenUnedited: true,
+  // Generated with ElevenLabs (free plan: non-commercial, credited).
+  narration: Object.freeze({
+    lang: 'sv',
+    src: '/stories/natten-over-sverige.sv.mp3',
+    cues: Object.freeze([
+      { fromMs: 0, toMs: 5300 },
+      { fromMs: 5350, toMs: 10750 },
+      { fromMs: 10800, toMs: 14200 },
+      { fromMs: 14250, toMs: 17900 },
+      { fromMs: 17950, toMs: 23450 },
+      { fromMs: 23500, toMs: 30000 },
+    ]),
+  }),
+  cameraPath: [
+    {
+      title: msg('Darkness over the North'),
+      captions: [
+        {
+          text: msg(
+            'In November the sun barely rises in the far north, and darkness comes early.',
+          ),
+        },
+      ],
+      lat: 51.5,
+      lon: 17.0,
+      alt: 2600000,
+      heading: 0,
+      pitch: -58,
+      roll: 0,
+      // The story opens on this view, so the flight is skipped: the hold
+      // carries the first narration line.
+      duration: 2,
+      hold: 6,
+      layers: nightLayers(),
+    },
+    {
+      title: msg('The Aurora Oval'),
+      facts: { kp: 'aurora.kp' },
+      captions: [
+        {
+          text: msg(
+            'Kp {kp} right now: a calm night. The aurora rests, but the stars are out.',
+          ),
+          when: { kp: { below: 3 } },
+        },
+        {
+          text: msg(
+            'Kp {kp} right now. The green band is NOAA’s chance of aurora overhead in the next half hour.',
+          ),
+        },
+        {
+          text: msg(
+            'The green band is NOAA’s chance of aurora overhead in the next half hour.',
+          ),
+        },
+      ],
+      lat: 58.5,
+      lon: 19.0,
+      alt: 1500000,
+      heading: 0,
+      pitch: -45,
+      roll: 0,
+      duration: 5,
+      hold: 4,
+      layers: nightLayers('aurora'),
+    },
+    {
+      title: msg('Chances over Kiruna'),
+      facts: { chance: 'aurora.chance.Kiruna' },
+      captions: [
+        {
+          text: msg(
+            'Chance of aurora overhead in Kiruna right now: {chance} %.',
+          ),
+        },
+        {
+          text: msg('Kiruna and Abisko often have the best chance in Sweden.'),
+        },
+      ],
+      lat: 65.6,
+      lon: 20.2,
+      alt: 300000,
+      heading: 0,
+      pitch: -25,
+      roll: 0,
+      duration: 6,
+      hold: 3,
+      layers: nightLayers('aurora'),
+    },
+    {
+      title: msg('The Clouds Decide'),
+      captions: [
+        {
+          text: msg(
+            'You need a clear sky. SMHI’s stations show the weather right now.',
+          ),
+        },
+      ],
+      lat: 61.5,
+      lon: 18.5,
+      alt: 1100000,
+      heading: 0,
+      pitch: -50,
+      roll: 0,
+      duration: 5,
+      hold: 3,
+      layers: nightLayers('aurora', 'smhi-weather'),
+    },
+    {
+      title: msg('The Road North to Abisko'),
+      captions: [
+        {
+          text: msg(
+            'Along the E10, Trafikverket’s road weather stations report the air, the wind and the road: dry, wet, snow or ice.',
+          ),
+        },
+      ],
+      // Looking north up the E10 to Abisko and Torneträsk.
+      lat: 67.78,
+      lon: 18.9,
+      alt: 70000,
+      heading: 0,
+      pitch: -45,
+      roll: 0,
+      duration: 6,
+      hold: 4,
+      layers: nightLayers('trafikverket-weather'),
+    },
+    {
+      title: msg('Look Up Tonight'),
+      captions: [
+        {
+          text: msg(
+            'Everything here is open data from NOAA, SMHI and Trafikverket. Go out, look north and look up tonight.',
+          ),
+        },
+      ],
+      lat: 56.0,
+      lon: 17.0,
+      alt: 2400000,
+      heading: 0,
+      pitch: -60,
+      roll: 0,
+      duration: 6,
+      hold: 4,
+      layers: nightLayers('aurora'),
+    },
+  ],
+});
+
 const PUBLIC_SCENE_RECIPES = [
   {
     id: 'flights-radar',
@@ -1150,6 +1323,7 @@ const PUBLIC_SCENE_RECIPES = [
     ],
   },
   SWEDEN_NOW_RECIPE,
+  NIGHT_OVER_SWEDEN_RECIPE,
 ];
 
 /** Build the recipe list without mutating stored user-authored projects. */
@@ -1196,6 +1370,7 @@ const BUILTIN_SHOT_TITLES = new Set([
   msg('Devighat / Taadi Khola Bridge'),
   msg('Final view'),
   ...SWEDEN_NOW_RECIPE.cameraPath.map(({ title }) => title),
+  ...NIGHT_OVER_SWEDEN_RECIPE.cameraPath.map(({ title }) => title),
 ]);
 
 /**

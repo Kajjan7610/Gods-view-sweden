@@ -6,6 +6,8 @@ import {
   releaseContinuousRender,
 } from '../renderGovernor.js';
 import { createGevPlayer, directorSettled } from './gevPlayer.js';
+import { createNarration } from './narration.js';
+import { readStoryFact } from './liveCaption.js';
 import { drawThumb } from './thumbs.js';
 import {
   listStories,
@@ -64,6 +66,9 @@ function storyTime(params) {
  *   renderer is bound to; `clock` is the page's world clock (tests replace
  *   it).
  */
+/** Where the narration's mute switch is remembered (Swedish fork). */
+const NARRATION_MUTED_KEY = 'gev:stories-narration-muted';
+
 export function createStoriesController({
   viewer,
   director,
@@ -72,6 +77,13 @@ export function createStoriesController({
   clock = worldClock,
 }) {
   let player = null;
+  try {
+    store.narrationMuted = localStorage.getItem(NARRATION_MUTED_KEY) === '1';
+  } catch {
+    store.narrationMuted = false;
+  }
+  // Swedish fork: a shipped story's spoken narration (narration.js).
+  let narration = null;
   let saved = null;
   let entryReady = null;
   // The view a Close is about to restore, once a stopping scene has settled.
@@ -698,16 +710,41 @@ export function createStoriesController({
   function syncSceneShots(story) {
     const shots = director.listShots?.(story.sceneId) ?? [];
     if (!shots.length) return;
-    story.chapters = shots.map((shot, i) => ({
-      id: shot.id,
-      wallMs: Math.round(shot.startSec * 1000),
-      shot: i + 1,
+    // Swedish fork: a shipped chapter's live captions and narration line
+    // stay with the shot of the same title, so an edited scene never shows
+    // or says another shot's words.
+    // The director names built-in shots in the page's language.
+    const shipped = new Map(
+      story.chapters.flatMap((c, i) => {
+        const own = { chapter: c, cue: story.narration?.cues?.[i] ?? null };
+        return c.title
+          ? [
+              [c.title, own],
+              [t(c.title), own],
+            ]
+          : [];
+      }),
+    );
+    story.chapters = shots.map((shot, i) => {
       // A shipped scene's untitled shots are named by where they go; a
       // title of the person's own stays.
-      title:
-        (untitled(shot.title, i) && story.places?.[i]) || shot.title || null,
-      caption: '',
-    }));
+      const title =
+        (untitled(shot.title, i) && story.places?.[i]) || shot.title || null;
+      const own = shipped.get(title)?.chapter;
+      return {
+        id: shot.id,
+        wallMs: Math.round(shot.startSec * 1000),
+        shot: i + 1,
+        title,
+        caption: '',
+        ...(own?.captions ? { captions: own.captions, facts: own.facts } : {}),
+      };
+    });
+    if (story.narration)
+      story.narration = {
+        ...story.narration,
+        cues: story.chapters.map((c) => shipped.get(c.title)?.cue ?? null),
+      };
     const last = shots.at(-1);
     story.durationMs = Math.round((last.startSec + last.durationSec) * 1000);
     // Key moments sit on the chapters that show them.
@@ -725,6 +762,9 @@ export function createStoriesController({
   function dropPlayer() {
     document.body.classList.remove('stories-scene');
     stopCameraReadout();
+    narration?.destroy();
+    narration = null;
+    store.narration = false;
     player?.destroy();
     player = null;
   }
@@ -737,6 +777,7 @@ export function createStoriesController({
       chapterIndex: state.chapterIndex,
     };
     if (state.playing) store.bigPlay = false;
+    narration?.sync(state);
   }
 
   // A story's tap plays or pauses, and a tap on empty Explore map lets go of
@@ -950,6 +991,20 @@ export function createStoriesController({
   }
 
   const controller = {
+    /** Swedish fork: a live number a story's caption quotes, or null. */
+    fact(key) {
+      return readStoryFact(director.dataManager, key);
+    },
+    /** Swedish fork: mute or unmute a story's narration. */
+    setNarrationMuted(muted) {
+      store.narrationMuted = Boolean(muted);
+      try {
+        localStorage.setItem(NARRATION_MUTED_KEY, muted ? '1' : '0');
+      } catch {
+        // Not remembered in a private window; still muted for now.
+      }
+      narration?.setMuted(store.narrationMuted);
+    },
     open({ fromHistory = false, isCurrent } = {}) {
       if (destroyed || (isCurrent && !isCurrent())) return false;
       cancelInitialLink();
@@ -1085,6 +1140,11 @@ export function createStoriesController({
         // A GEV scene plays on the person's own globe and layers.
         if (saved) saved.ranScene = saved.playedScene = true;
         document.body.classList.add('stories-scene');
+        if (story.narration) {
+          narration = createNarration(story);
+          narration.setMuted(store.narrationMuted);
+          store.narration = narration.offered;
+        }
         player = createGevPlayer(director, story, { onTick });
         drawThumbs();
         startCameraReadout();

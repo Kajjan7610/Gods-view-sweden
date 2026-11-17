@@ -137,6 +137,34 @@ const SCENE_CONTEXT = {
       msg('The whole globe'),
     ],
   },
+  // Swedish fork: the aurora story.
+  'night-over-sweden': {
+    description: msg(
+      'A November night over Sweden: the aurora forecast right now, the chance over Kiruna, the clouds and the road north to Abisko.',
+    ),
+    sources: [
+      [
+        'NOAA SWPC',
+        msg('OVATION aurora forecast and the Kp index (U.S. public domain)'),
+        'https://www.swpc.noaa.gov/products/aurora-30-minute-forecast',
+      ],
+      [
+        'SMHI',
+        msg('Weather observations (CC BY 4.0)'),
+        'https://www.smhi.se/data/oppna-data',
+      ],
+      [
+        'Trafikverket',
+        msg('Road weather stations (CC0 1.0)'),
+        'https://www.trafikverket.se/e-tjanster/trafikverkets-oppna-api-for-trafikinformation/',
+      ],
+      [
+        'elevenlabs.io',
+        msg('Swedish narration voice generated with elevenlabs.io'),
+        'https://elevenlabs.io/',
+      ],
+    ],
+  },
   'bhote-koshi-nepal-scene': {
     description: msg(
       'The 26 August 2026 Bhote Koshi outburst flood in Nepal, followed down the valley to Trishuli.',
@@ -225,6 +253,8 @@ function shippedStory(recipe) {
       shot: i + 1,
       title: shot.title ?? context.places[i] ?? null,
       caption: '',
+      // Swedish fork: captions that may quote live numbers.
+      ...(shot.captions ? { captions: shot.captions, facts: shot.facts } : {}),
     };
     at += ((shot.duration ?? 4) + (shot.hold ?? 0)) * 1000;
     return chapter;
@@ -241,6 +271,7 @@ function shippedStory(recipe) {
       .filter(([, on]) => on)
       .map(([id]) => id),
     durationMs,
+    ...(recipe.narration ? { narration: recipe.narration } : {}),
     cover: coverOf(first),
     chapters,
     events: [],

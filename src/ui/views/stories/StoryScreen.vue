@@ -19,6 +19,7 @@ import {
   nowFacts,
   storyText,
 } from '../../../stories/storyMeta.js';
+import { chapterCaption } from '../../../stories/liveCaption.js';
 import StoriesHeader from './StoriesHeader.vue';
 import StoryTimeline from './StoryTimeline.vue';
 import StoryContext from './StoryContext.vue';
@@ -50,6 +51,14 @@ const chTitle = (c) => chapterTitle(props.story, c);
 const clock = computed(() => clockText(props.story, k.value));
 const layers = computed(() => layersFor(props.story));
 const facts = computed(() => nowFacts(props.story));
+// Swedish fork: a caption may quote live numbers; read again on every tick.
+const caption = computed(() => {
+  void playback.value.wallMs;
+  const c = chapter.value;
+  return c?.captions
+    ? chapterCaption(c, (key) => store.controller?.fact?.(key) ?? null)
+    : storyText(c?.caption);
+});
 const posText = computed(() => {
   const { lat, lon, altKm } = camera.value;
   return {
@@ -410,9 +419,7 @@ watch([k, page], () => nextTick(sizeCard));
                   })
                 }}</div>
                 <div class="t">{{ chTitle(chapter) }}</div>
-                <div v-if="chapter.caption" class="c">{{
-                  storyText(chapter.caption)
-                }}</div>
+                <div v-if="caption" class="c">{{ caption }}</div>
               </section>
               <section
                 :ref="(el) => (pgEls[1] = el)"

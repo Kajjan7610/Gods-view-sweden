@@ -280,6 +280,21 @@ export function createAuroraLayer({ source, now = () => Date.now() } = {}) {
         stale: _stale,
       };
     },
+
+    /**
+     * Swedish fork: the live numbers a story's captions may quote (the Kp
+     * index and the chance over each town), or none while there is no
+     * current forecast (src/stories/liveCaption.js).
+     */
+    storyFacts() {
+      if (!_snapshot || auroraOutdated(_snapshot, now())) return {};
+      const facts = {};
+      const kp = _snapshot.kp?.kp;
+      if (Number.isFinite(kp)) facts.kp = kp;
+      for (const town of AURORA_TOWNS)
+        facts[`chance.${town.name}`] = chanceAt(_snapshot, town.point);
+      return facts;
+    },
   };
   return layer;
 }

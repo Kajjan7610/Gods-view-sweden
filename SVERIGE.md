@@ -78,6 +78,7 @@ Två nivåer gäller:
 | Cockpit: knapp vid kartan och C-tangenten när ett plan, fartyg eller en satellit är valt, Swedavias rader för planet, svensk lägesbild i genomgången (ort och län, SMHI:s väder, varningar och VMA) | Swedavia, SMHI, Krisinformation.se, NOAA (METAR/TAF) | Cockpit |
 | Fartkameror: ca 2 800 fasta trafiksäkerhetskameror som pilar i kamerans riktning, och de närmaste i dossiern | Trafikverket (CC0) | Speed Cameras (Sweden), under Infrastructure, och NU-fliken |
 | Sverige-turen "Sverige just nu" | Lagren ovan | Scener |
+| Berättelsen "Natten över Sverige": norrsken, chansen över Kiruna, molnen och vägen mot Abisko, med levande siffror i bildtexterna och svensk berättarröst | NOAA SWPC, SMHI, Trafikverket; rösten från elevenlabs.io | Berättelser (STORIES), och Scener |
 | Sparläge: starta utan Google 3D Tiles | – | Knappen 3D/2D, eller `?globe=lite` |
 | Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
@@ -400,6 +401,27 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-17 (berättelsen "Natten över Sverige")
+- Ny inbyggd berättelse i sex kapitel, ca 54 s: mörkret över Norrland,
+  norrskensovalen, chansen över Kiruna, molnen, vägen norrut mot Abisko
+  och "titta upp i kväll". Den läggs till efter "Sverige just nu".
+- Bildtexterna kan citera levande siffror från lagren: Kp-index nu och
+  chansen till norrsken rakt ovanför Kiruna, från norrskenslagrets
+  aktuella NOAA-prognos. Vid låg Kp (under 3) säger texten att natten är
+  lugn. Saknas en aktuell prognos, eller är lagret av, visas en text utan
+  siffror, så bildtexten stämmer alltid.
+- Svensk berättarröst (rösten "Johan", eleven_multilingual_v2), bara när
+  sidan är på svenska. Inspelningen är delad i en replik per kapitel som
+  börjar när kapitlet börjar och slutar av sig själv, så paus, sökning och
+  omspelning följer bilden. Knappen med högtalaren i tidslinjen stänger
+  av och slår på rösten och minns valet i webbläsaren.
+- Rösten är gjord med ElevenLabs gratisplan, som bara tillåter
+  icke-kommersiell användning och kräver källhänvisningen "elevenlabs.io".
+  Den står bland berättelsens källor och på högtalarknappen.
+- Källor i berättelsen: NOAA SWPC (allmän egendom i USA), SMHI (CC BY
+  4.0), Trafikverket (CC0 1.0) och elevenlabs.io för rösten. Inga nya
+  dataanrop: berättelsen läser lagren som redan finns.
 
 ### 2026-11-17 (störningar i tågtrafiken)
 - Tåglagret (Rail) visar nu Trafikverkets aktuella störningar i

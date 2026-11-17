@@ -28,6 +28,10 @@ export const useStoriesStore = defineStore('stories', {
       playing: false,
       chapterIndex: 0,
     },
+    /** Swedish fork: the open story speaks in the page's language. */
+    narration: false,
+    /** Swedish fork: the person muted story narration. */
+    narrationMuted: false,
     /** The big Play button over a story that opened paused. */
     bigPlay: false,
     camera: { lat: 0, lon: 0, altKm: 0 },
