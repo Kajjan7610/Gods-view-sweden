@@ -18,6 +18,8 @@ https://github.com/user-attachments/assets/623694ab-79d8-40cf-9997-c6c95ce91400
 
 _28 sekunder med berättarröst: varje flyg över Sverige och Stockholm i rörelse just nu, och varje stad i siffror. For promotional purposes only. Alla källor står i slutskylten._
 
+**På YouTube:** [Live-filmen](https://youtu.be/VSx6TzB1fAY) (varje flyg och tåg i realtid, varje stad i siffror) · [Kulturarvsfilmen](https://youtu.be/WdYw6DMweik) (fornlämningar, flyg och tåg på en karta) · Shorts: [Flyget just nu](https://youtube.com/shorts/9TbymCYQKmc) · [Kulturarv](https://youtube.com/shorts/GIBvBGJ2tKI)
+
 Ett digitalt jordklot med hela världen live: flyg, satelliter, fartyg, jordbävningar och bränder från över 110 datakällor. Ovanpå det ligger Sveriges öppna data: **24 svenska API:er och dataset och 33 datatyper från 14 myndigheter och tjänster**, med hela gränssnittet på svenska.
 
 Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av Bilawal Sidhu och Sameh Khamis ([Halfpixel](https://halfpixel.ai)), öppen källkod under [MIT-licensen](LICENSE). Den här forken är ett fristående hobbyprojekt utan koppling till eller stöd från originalets upphovsmän. Fel i de svenska delarna rapporteras här, inte i originalet.
