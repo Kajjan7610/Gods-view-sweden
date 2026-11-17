@@ -1,9 +1,11 @@
 import * as Cesium from 'cesium';
 import { createFireStationsLayer } from '../../layers/fireStations/index.js';
-import * as picking from '../../data/pickRegistry.js';
 import * as overlays from '../../overlays/worldOverlay.js';
 import { isPointerFree } from '../../data/inputOwnership.js';
-import { onCesiumViewer } from '../../render/cesium/forkViewer.js';
+import {
+  cesiumPicking as picking,
+  onCesiumViewer,
+} from '../../render/cesium/forkViewer.js';
 
 /** Wire MCF's fire stations into the catalog. */
 export function createApplicationFireStations(options) {

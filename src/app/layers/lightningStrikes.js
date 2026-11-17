@@ -1,10 +1,12 @@
 import * as Cesium from 'cesium';
 import { createLightningStrikesLayer } from '../../layers/lightningStrikes/index.js';
-import * as picking from '../../data/pickRegistry.js';
 import * as overlays from '../../overlays/worldOverlay.js';
 import { isPointerFree } from '../../data/inputOwnership.js';
 import { ensureGeoidReady, geoidHeight } from '../../data/geoid.js';
-import { onCesiumViewer } from '../../render/cesium/forkViewer.js';
+import {
+  cesiumPicking as picking,
+  onCesiumViewer,
+} from '../../render/cesium/forkViewer.js';
 
 /** Wire DMI's lightning strokes into the catalog. */
 export function createApplicationLightningStrikes(options) {

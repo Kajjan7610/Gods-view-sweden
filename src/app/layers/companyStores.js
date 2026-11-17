@@ -1,9 +1,11 @@
 import * as Cesium from 'cesium';
 import { createCompanyStoresLayer } from '../../layers/companyStores/index.js';
-import * as picking from '../../data/pickRegistry.js';
 import * as overlays from '../../overlays/worldOverlay.js';
 import { isPointerFree } from '../../data/inputOwnership.js';
-import { onCesiumViewer } from '../../render/cesium/forkViewer.js';
+import {
+  cesiumPicking as picking,
+  onCesiumViewer,
+} from '../../render/cesium/forkViewer.js';
 
 /** Wire the Swedish retail-chain stores into the catalog. */
 export function createApplicationCompanyStores(options) {

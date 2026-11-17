@@ -1,9 +1,11 @@
 import * as Cesium from 'cesium';
 import { createMunicipalitiesLayer } from '../../layers/municipalities/index.js';
-import * as scenePick from '../../data/scenePick.js';
 import * as overlays from '../../overlays/worldOverlay.js';
 import { isPointerFree } from '../../data/inputOwnership.js';
-import { onCesiumViewer } from '../../render/cesium/forkViewer.js';
+import {
+  cesiumScenePick as scenePick,
+  onCesiumViewer,
+} from '../../render/cesium/forkViewer.js';
 
 /** Wire the Swedish municipality and county boundaries into the catalog. */
 export function createApplicationMunicipalities(options) {

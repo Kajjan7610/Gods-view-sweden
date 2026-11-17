@@ -1544,6 +1544,7 @@
   "src/maps/globeEngine.test.mjs",
   "src/render/cesium/viewers.js",
   "src/render/cesium/forkViewer.js",
+  "src/render/cesium/forkViewer.test.mjs",
   "src/app/scene.test.mjs",
   "dev/stub-app/main.js",
   "scripts/qa-stub-boot.mjs",

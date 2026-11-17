@@ -1,6 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
-import { cableClassificationTypeForScene } from '../submarineCables/surface.js';
+import { groundClassificationType } from '../../render/cesium/forkViewer.js';
 import {
   BOUNDARY_KINDS,
   areaAt,
@@ -242,7 +242,7 @@ export function createMunicipalitiesLayer({
 
   /** Move the lines to the surface the map shows now, if it changed. */
   function applyClassification() {
-    const next = cableClassificationTypeForScene(_viewer?.scene);
+    const next = groundClassificationType(_viewer?.scene);
     if (next === _classificationType) return;
     _classificationType = next;
     for (const dataSource of [...Object.values(_borders ?? {}), _highlight]) {
@@ -368,7 +368,7 @@ export function createMunicipalitiesLayer({
       if (_viewer)
         throw new Error('Municipalities layer is already initialized');
       _viewer = viewer;
-      _classificationType = cableClassificationTypeForScene(viewer?.scene);
+      _classificationType = groundClassificationType(viewer?.scene);
       const addDataSource = (name) => {
         const dataSource = new Cesium.CustomDataSource(name);
         dataSource.show = false;

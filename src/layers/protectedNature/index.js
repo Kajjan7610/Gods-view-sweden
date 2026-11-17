@@ -1,6 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
-import { cableClassificationTypeForScene } from '../submarineCables/surface.js';
+import { groundClassificationType } from '../../render/cesium/forkViewer.js';
 import {
   AREA_KINDS,
   KIND,
@@ -293,7 +293,7 @@ export function createProtectedNatureLayer({
   }
 
   function applyClassification() {
-    const next = cableClassificationTypeForScene(_viewer?.scene);
+    const next = groundClassificationType(_viewer?.scene);
     if (next === _classificationType) return;
     _classificationType = next;
     draw();
@@ -343,7 +343,7 @@ export function createProtectedNatureLayer({
       if (_viewer)
         throw new Error('Protected nature layer is already initialized');
       _viewer = viewer;
-      _classificationType = cableClassificationTypeForScene(viewer?.scene);
+      _classificationType = groundClassificationType(viewer?.scene);
       _surface = new Cesium.CustomDataSource('protected-nature');
       _highlight = new Cesium.CustomDataSource('protected-nature-selected');
       for (const dataSource of [_surface, _highlight]) {

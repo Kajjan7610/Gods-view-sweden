@@ -1,9 +1,11 @@
 import * as Cesium from 'cesium';
 import { createPolisenEventsLayer } from '../../layers/policeEvents/index.js';
-import * as picking from '../../data/pickRegistry.js';
 import * as overlays from '../../overlays/worldOverlay.js';
 import { isPointerFree } from '../../data/inputOwnership.js';
-import { onCesiumViewer } from '../../render/cesium/forkViewer.js';
+import {
+  cesiumPicking as picking,
+  onCesiumViewer,
+} from '../../render/cesium/forkViewer.js';
 
 /** Wire Polisen's event notices into the application catalog. */
 export function createApplicationPolisenEvents(options) {

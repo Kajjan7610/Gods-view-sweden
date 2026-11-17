@@ -1,9 +1,11 @@
 import * as Cesium from 'cesium';
 import { createSmhiWeatherLayer } from '../../layers/smhiWeather/index.js';
-import * as picking from '../../data/pickRegistry.js';
 import * as overlays from '../../overlays/worldOverlay.js';
 import { isPointerFree } from '../../data/inputOwnership.js';
-import { onCesiumViewer } from '../../render/cesium/forkViewer.js';
+import {
+  cesiumPicking as picking,
+  onCesiumViewer,
+} from '../../render/cesium/forkViewer.js';
 
 /** Wire SMHI's weather observations and forecasts into the application catalog. */
 export function createApplicationSmhiWeather(options) {

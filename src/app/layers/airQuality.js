@@ -1,10 +1,12 @@
 import * as Cesium from 'cesium';
 import { createAirQualityLayer } from '../../layers/airQuality/index.js';
-import * as picking from '../../data/pickRegistry.js';
 import { hitTestWorldOverlay } from '../../overlays/worldOverlay.js';
 import { isPointerFree } from '../../data/inputOwnership.js';
 import { overlayHost } from './overlayHost.js';
-import { onCesiumViewer } from '../../render/cesium/forkViewer.js';
+import {
+  cesiumPicking as picking,
+  onCesiumViewer,
+} from '../../render/cesium/forkViewer.js';
 /** Wire air-quality readings and station clicks to the application. */
 export function createApplicationAirQuality(options) {
   return onCesiumViewer(

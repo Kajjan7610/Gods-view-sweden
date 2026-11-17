@@ -524,7 +524,8 @@ export function createCityDossier({
       target,
     );
     stopOrbit();
-    const controller = createOrbit(viewer);
+    // The orbit drives the renderer camera port, bound to the scene object.
+    const controller = createOrbit(host);
     orbit = controller;
     const radius = Math.min(12_000, Math.max(2_500, distance));
     // Any input, a camera owner taking over or one full turn ends it.

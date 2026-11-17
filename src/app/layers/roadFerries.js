@@ -1,9 +1,11 @@
 import * as Cesium from 'cesium';
 import { createRoadFerriesLayer } from '../../layers/roadFerries/index.js';
-import * as picking from '../../data/pickRegistry.js';
 import * as overlays from '../../overlays/worldOverlay.js';
 import { isPointerFree } from '../../data/inputOwnership.js';
-import { onCesiumViewer } from '../../render/cesium/forkViewer.js';
+import {
+  cesiumPicking as picking,
+  onCesiumViewer,
+} from '../../render/cesium/forkViewer.js';
 
 /** Wire Trafikverket's road ferries into the catalog. */
 export function createApplicationRoadFerries(options) {

@@ -1,6 +1,6 @@
 import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
-import { cableClassificationTypeForScene } from '../submarineCables/surface.js';
+import { groundClassificationType } from '../../render/cesium/forkViewer.js';
 import {
   OTHER_PARTIES,
   PARTIES,
@@ -306,7 +306,7 @@ export function createElectionDistrictsLayer({
 
   /** Move the areas to the surface the map shows now, if it changed. */
   function applyClassification() {
-    const next = cableClassificationTypeForScene(_viewer?.scene);
+    const next = groundClassificationType(_viewer?.scene);
     if (next === _classificationType) return;
     _classificationType = next;
     draw();
@@ -353,7 +353,7 @@ export function createElectionDistrictsLayer({
       if (_viewer)
         throw new Error('Election districts layer is already initialized');
       _viewer = viewer;
-      _classificationType = cableClassificationTypeForScene(viewer?.scene);
+      _classificationType = groundClassificationType(viewer?.scene);
       _areas = new Cesium.CustomDataSource('election-districts');
       _highlight = new Cesium.CustomDataSource('election-district-selected');
       for (const dataSource of [_areas, _highlight]) {
