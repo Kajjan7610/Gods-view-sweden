@@ -2963,8 +2963,8 @@ export function createCesiumDraw({
     // Lines in the inertial frame, turned with the sky each frame.
     let inertial = null;
     const draped = new Map();
-    // Draped glow lines that look alike: one ground primitive and one
-    // material for them all, so they recolour together in place.
+    // Draped glow or dash lines that look alike: one ground primitive and
+    // one material for them all, so they recolour together in place.
     const glows = new Map();
     // Draped lines a batch cannot draw, each with a primitive of its own.
     const alone = [];
@@ -3016,7 +3016,12 @@ export function createCesiumDraw({
           draped.get(clampTo).push(...instances);
           continue;
         }
-        if (item.style.kind === 'glow' && !revealed(item)) {
+        // Glows and dashes alike share one material per look: thousands of
+        // dashed ground lines are a few batches, not a primitive each.
+        if (
+          (item.style.kind === 'glow' || item.style.kind === 'dash') &&
+          !revealed(item)
+        ) {
           if (!glows.has(part.look)) glows.set(part.look, []);
           glows.get(part.look).push({ item, part });
           continue;

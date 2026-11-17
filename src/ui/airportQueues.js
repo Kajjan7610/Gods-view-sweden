@@ -5,7 +5,6 @@
  * length — read again every three minutes while the view stays. A click on
  * a label opens the airport board's security tab.
  */
-import * as Cesium from 'cesium';
 import { onLocaleChange, t } from '../i18n/index.js';
 import { SWEDAVIA_AIRPORTS } from '../data/swedaviaAirports.js';
 import {
@@ -13,7 +12,20 @@ import {
   queueMarkers,
   queueReachKm,
 } from './airportBoardModel.js';
-import { viewerBehind } from '../render/cesium/forkViewer.js';
+import { fromDegrees, toLonLatH } from '../geo/ellipsoid.js';
+import {
+  canvasOf,
+  drawOf,
+  findCamera,
+  findFrame,
+  findQuery,
+} from '../render/rendererOf.js';
+import { inputFor } from '../input/dispatcher.js';
+import {
+  registerPickOwner,
+  resolvePickId,
+  unregisterPickOwner,
+} from '../data/pickRegistry.js';
 
 /** The labels show while the view is this low and, at the very most, this
     near an airport; how near also follows the view (queueReachKm). */
@@ -25,6 +37,7 @@ const STALE_SHOW_MS = 15 * 60_000;
 const SETTLE_DELAY_MS = 600;
 /** Above the terminal roofs; the marker also draws through the 3D tiles. */
 const MARKER_HEIGHT_M = 35;
+export const AIRPORT_QUEUES_ID = 'airport-queues';
 const LABEL_SOURCE_ID = 'airport-queue-labels';
 const LABEL_HOST_OPTIONS = Object.freeze({
   cohortLimit: 20,
@@ -37,12 +50,13 @@ const LEVEL_COLORS = Object.freeze({
   medium: '#ffd54f',
   long: '#ffab40',
 });
+const OUTLINE_COLOR = '#04101a';
 const QUEUE_AIRPORTS = SWEDAVIA_AIRPORTS.filter((airport) => airport.queues);
 
 /**
- * Own the queue labels for one viewer. Text goes through the world-overlay
- * host (`overlayHost`: setEntries, setVisible, clearSource, hitTest); the
- * markers under it are Cesium points.
+ * Own the queue labels for one scene object (`viewer`). Text goes through
+ * the world-overlay host (`overlayHost`: setEntries, setVisible,
+ * clearSource, hitTest); the markers under it are one points set.
  * @param {{ openBoard: (iata: string) => void }} options
  */
 export function createAirportQueues({
@@ -52,13 +66,9 @@ export function createAirportQueues({
   fetchImpl = (...args) => globalThis.fetch(...args),
   documentRef = globalThis.document,
   now = () => Date.now(),
-  // A seam for tests: the click handler needs a real canvas.
-  screenSpaceEventHandlerFactory = (forViewer) =>
-    new Cesium.ScreenSpaceEventHandler(forViewer.scene.canvas),
+  // The clicks on the globe: the application's input dispatcher.
+  input = (forHost) => inputFor(forHost),
 }) {
-  // Swedish fork: this panel drives Cesium's own viewer, the one behind
-  // the application's scene object (src/render/cesium/forkViewer.js).
-  const viewer = viewerBehind(host);
   let destroyed = false;
   let airport = null;
   let markers = [];
@@ -67,51 +77,43 @@ export function createAirportQueues({
   let loadedAt = 0;
   let refreshTimer = null;
   let settleTimer = null;
-  const source = new Cesium.CustomDataSource('airport-queues');
-  void viewer.dataSources.add(source);
+  const dots = drawOf(host).points({ id: AIRPORT_QUEUES_ID });
+  const requestRender = () => findFrame(host)?.requestRender(AIRPORT_QUEUES_ID);
 
   const cockpit = () =>
     documentRef?.body?.classList?.contains('cockpit-mode') === true;
 
   function viewCenter() {
-    const height = viewer.camera.positionCartographic?.height;
+    const height = findCamera(host)?.pose().height;
     if (!Number.isFinite(height)) return null;
-    const canvas = viewer.scene.canvas;
-    const hit = viewer.camera.pickEllipsoid(
-      new Cesium.Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2),
-    );
+    const canvas = canvasOf(host);
+    const hit = canvas
+      ? findQuery(host)?.pickEllipsoid(
+          canvas.clientWidth / 2,
+          canvas.clientHeight / 2,
+        )
+      : null;
     if (!hit) return null;
-    const carto = Cesium.Cartographic.fromCartesian(hit);
-    return {
-      lat: Cesium.Math.toDegrees(carto.latitude),
-      lon: Cesium.Math.toDegrees(carto.longitude),
-      height,
-    };
+    const { lat, lon } = toLonLatH(hit);
+    return { lat, lon, height };
   }
 
   function draw() {
     const shown = Boolean(airport) && !cockpit();
+    const items = [];
     const entries = [];
-    source.entities.removeAll();
-    source.show = shown;
     for (const marker of shown ? markers : []) {
       const accent = LEVEL_COLORS[marker.level];
-      const position = Cesium.Cartesian3.fromDegrees(
-        marker.lon,
-        marker.lat,
-        airport.groundM + MARKER_HEIGHT_M,
-      );
+      const height = airport.groundM + MARKER_HEIGHT_M;
       const id = `${PICK_PREFIX}${airport.iata}:${marker.key}`;
-      source.entities.add({
+      items.push({
         id,
-        position,
-        point: {
-          pixelSize: 9,
-          color: Cesium.Color.fromCssColorString(accent),
-          outlineColor: Cesium.Color.fromCssColorString('#04101a'),
-          outlineWidth: 2,
-          disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        },
+        pos: { lon: marker.lon, lat: marker.lat, height },
+        pixelSize: 9,
+        color: accent,
+        outlineColor: OUTLINE_COLOR,
+        outlineWidth: 2,
+        disableDepthTest: Number.POSITIVE_INFINITY,
       });
       const fast =
         marker.fastTrack === null
@@ -119,7 +121,7 @@ export function createAirportQueues({
           : `${t('Fast track')} ${t('{minutes} min', { minutes: marker.fastTrack })}`;
       entries.push({
         id,
-        position,
+        position: fromDegrees(marker.lon, marker.lat, height),
         variant: 'label',
         title: [
           marker.terminal,
@@ -144,9 +146,11 @@ export function createAirportQueues({
         placement: 'above',
       });
     }
+    dots.set(items);
+    dots.show = shown;
     overlayHost.setEntries(LABEL_SOURCE_ID, entries, LABEL_HOST_OPTIONS);
     overlayHost.setVisible?.(LABEL_SOURCE_ID, shown);
-    viewer.scene.requestRender?.();
+    requestRender();
   }
   async function load() {
     if (!airport || destroyed) return;
@@ -210,7 +214,7 @@ export function createAirportQueues({
         });
     if (next?.iata === airport?.iata) {
       // The same airport: back from a hidden page, or out of cockpit.
-      if (source.show !== (Boolean(airport) && !cockpit())) draw();
+      if (dots.show !== (Boolean(airport) && !cockpit())) draw();
       if (airport && !refreshTimer && !request) void load();
       return;
     }
@@ -223,22 +227,34 @@ export function createAirportQueues({
     draw();
     if (airport) void load();
   }
-  const removeMoveEnd = viewer.camera.moveEnd.addEventListener(() => {
+  const removeMoveEnd = findCamera(host)?.on('moveEnd', () => {
     clearTimeout(settleTimer);
     settleTimer = setTimeout(settle, SETTLE_DELAY_MS);
   });
 
-  const clicks = screenSpaceEventHandlerFactory(viewer);
-  clicks.setInputAction((click) => {
-    if (!airport || !source.show) return;
+  registerPickOwner(
+    AIRPORT_QUEUES_ID,
+    (pickedId) =>
+      typeof pickedId === 'string' && pickedId.startsWith(PICK_PREFIX),
+  );
+  // A scene with no renderer input bound takes no clicks.
+  let clicks = null;
+  try {
+    clicks = input(host) ?? null;
+  } catch {
+    clicks = null;
+  }
+  const removeClick = clicks?.onClick((click) => {
+    if (!airport || !dots.show) return;
     // The label first (it is the bigger target), then the marker under it.
-    const label = overlayHost.hitTest?.(click.position?.x, click.position?.y, {
+    const at = click.screenPosition;
+    const label = overlayHost.hitTest?.(at?.x, at?.y, {
       sourceId: LABEL_SOURCE_ID,
     });
-    const id = label?.entryId ?? viewer.scene.pick(click.position)?.id?.id;
+    const id = label?.entryId ?? resolvePickId(click.topHit);
     if (typeof id === 'string' && id.startsWith(PICK_PREFIX))
       openBoard(airport.iata);
-  }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+  });
 
   const removeLocale = onLocaleChange(draw);
   // Looked at again after being hidden: the refresh that was skipped.
@@ -257,9 +273,11 @@ export function createAirportQueues({
       removeMoveEnd?.();
       removeLocale?.();
       documentRef?.removeEventListener?.('visibilitychange', onVisible);
-      clicks.destroy();
+      removeClick?.();
+      unregisterPickOwner(AIRPORT_QUEUES_ID);
       overlayHost.clearSource?.(LABEL_SOURCE_ID);
-      viewer.dataSources.remove(source, true);
+      dots.dispose();
+      requestRender();
     },
   };
 }

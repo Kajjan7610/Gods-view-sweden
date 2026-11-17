@@ -1,9 +1,17 @@
 // The protected nature layer's life: areas read for the view, drawn as one
-// batch, the national parks alone when wide, and a card that opens the area.
+// batch of areas and one of outlines through the renderer's draw port, the
+// national parks alone when wide, and a card that opens the area.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import * as Cesium from 'cesium';
-import { createProtectedNatureLayer } from './index.js';
+import { bindFakeDraw } from '../../testSupport/fakeDrawPort.mjs';
+import { fakeCameraPort } from '../../testSupport/fakeCameraPort.mjs';
+import { cssColor } from '../../render/color.js';
+import * as picking from '../../data/pickRegistry.js';
+import {
+  AREA_KINDS,
+  PROTECTED_NATURE_LAYER_ID,
+  createProtectedNatureLayer,
+} from './index.js';
 import { encodeLine } from '../electionDistricts/records.js';
 
 const square = (lon, lat) =>
@@ -25,32 +33,33 @@ const area = (i, t, lon, lat) => ({
   g: [[square(lon, lat)]],
 });
 
-function harness(t, { height = 20_000, wide = false, capped = false } = {}) {
+function harness(
+  t,
+  { height = 20_000, wide = false, capped = false, rect = undefined } = {},
+) {
   t.mock.method(console, 'warn', () => {});
   t.mock.timers.enable({ apis: ['setTimeout'] });
-  const state = { height, reads: [], picked: undefined, click: null, hit: null };
-  const opened = [];
-  const sources = [];
-  const viewer = {
-    dataSources: {
-      add: (source) => sources.push(source),
-      remove() {},
-    },
-    scene: {
-      globe: { show: true },
-      pick: () => state.picked,
-      requestRender() {},
-    },
-    camera: {
-      get positionCartographic() {
-        return { height: state.height };
-      },
-      computeViewRectangle: () =>
-        Cesium.Rectangle.fromDegrees(18.1, 59.1, 18.4, 59.3),
-      moveEnd: { addEventListener: () => () => {} },
-      changed: { addEventListener: () => () => {} },
-    },
+  const state = {
+    reads: [],
+    picked: null,
+    click: null,
+    hit: null,
+    globeVisible: true,
   };
+  const opened = [];
+  const viewer = {};
+  const camera = fakeCameraPort({
+    pose: { lon: 18.25, lat: 59.2, height },
+    viewRectangle:
+      rect === undefined
+        ? { west: 18.1, south: 59.1, east: 18.4, north: 59.3 }
+        : rect,
+  });
+  const { draw } = bindFakeDraw(viewer, {
+    camera: camera.port,
+    globe: { isGlobeVisible: () => state.globeVisible },
+  });
+  const stack = new EventTarget();
   const shown = new Map();
   const layer = createProtectedNatureLayer({
     source: {
@@ -75,23 +84,38 @@ function harness(t, { height = 20_000, wide = false, capped = false } = {}) {
       clearSource: (id) => shown.delete(id),
       hitTest: () => state.hit,
     },
-    screenSpaceEventHandlerFactory: () => ({
-      setInputAction: (callback) => (state.click = callback),
-      destroy: () => (state.click = null),
+    picking,
+    mapStackEventTarget: stack,
+    // The globe's clicks: what is under them comes as `topHit`.
+    input: () => ({
+      onClick(callback) {
+        state.click = () =>
+          callback({ screenPosition: { x: 1, y: 1 }, topHit: state.picked });
+        return () => (state.click = null);
+      },
     }),
     openExternal: (url) => opened.push(url),
   });
   layer.init(viewer);
-  // Areas and their outlines are the first data source.
-  const drawn = () => sources[0].entities.values.length;
-  return { layer, state, drawn, shown, opened };
+  const set = (name) => draw.set(`${PROTECTED_NATURE_LAYER_ID}:${name}`);
+  const items = (name) => [...(set(name)?.items.values() ?? [])];
+  const drawn = () => set('areas').items.size + set('edges').items.size;
+  return { layer, state, draw, set, items, drawn, shown, opened, stack };
 }
 
 const legendLabels = (layer) =>
   layer.getRowControls().legend.map(({ label, count }) => `${label} ${count}`);
+const kindFill = (id) => {
+  const [r, g, b] = cssColor(AREA_KINDS.find((kind) => kind.id === id).color);
+  return [r, g, b, 0.4];
+};
 
 test('a view reads and draws its areas, each kind in its colour', async (t) => {
-  const { layer, state, drawn } = harness(t);
+  const { layer, state, set, items, drawn } = harness(t);
+  assert.equal(set('areas').kind, 'shapes');
+  assert.equal(set('edges').kind, 'lines');
+  assert.equal(set('selected').kind, 'lines');
+  assert.equal(set('areas').show, false);
   layer.enable();
   await layer.update();
   assert.equal(state.reads.length, 1);
@@ -99,7 +123,24 @@ test('a view reads and draws its areas, each kind in its colour', async (t) => {
   const [w, s, e, n] = state.reads[0];
   assert.ok(w < 18.1 && s < 59.1 && e > 18.4 && n > 59.3);
   assert.equal(drawn(), 6, 'an area and an outline per area');
-  assert.deepEqual(legendLabels(layer), ['National park 1', 'Nature reserve 2']);
+  assert.equal(set('areas').show, true);
+  assert.equal(set('edges').show, true);
+  assert.deepEqual(
+    items('areas').map((item) => [item.id, item.fill, item.height]),
+    [
+      ['protected-nature:2000001:0', kindFill('np'), 'clampGround'],
+      ['protected-nature:2000002:0', kindFill('nr'), 'clampGround'],
+      ['protected-nature:2000003:0', kindFill('nr'), 'clampGround'],
+    ],
+  );
+  const [edge] = items('edges');
+  assert.equal(edge.mode, 'draped');
+  assert.equal(edge.widthPx, 1.2);
+  assert.deepEqual(edge.style, { kind: 'solid', color: [1, 1, 1, 0.4] });
+  assert.deepEqual(legendLabels(layer), [
+    'National park 1',
+    'Nature reserve 2',
+  ]);
   assert.equal(layer.getRowControls().info, '');
   assert.equal(layer.getStats().count, 3);
   // The same view again: nothing new to read.
@@ -107,6 +148,9 @@ test('a view reads and draws its areas, each kind in its colour', async (t) => {
   assert.equal(state.reads.length, 1);
   layer.disable();
   assert.equal(drawn(), 0);
+  assert.equal(set('areas').show, false);
+  layer.destroy();
+  assert.equal(set('areas'), undefined, 'disposed');
 });
 
 test('a wide view asks to zoom in for the reserves, and reads again', async (t) => {
@@ -119,6 +163,13 @@ test('a wide view asks to zoom in for the reserves, and reads again', async (t) 
   );
   await layer.update();
   assert.equal(state.reads.length, 2);
+});
+
+test('a view that sees the horizon reads Sweden', async (t) => {
+  const { layer, state } = harness(t, { rect: null });
+  layer.enable();
+  await layer.update();
+  assert.deepEqual(state.reads[0], [10, 55, 24.5, 69.2]);
 });
 
 test('a capped view says how many areas it shows', async (t) => {
@@ -139,19 +190,43 @@ test('a view from too high reads nothing', async (t) => {
   assert.equal(drawn(), 0);
 });
 
+test('the areas follow the map stack to the surface it shows', async (t) => {
+  const { layer, draw, state, stack } = harness(t);
+  const clamps = () =>
+    [...draw.sets.values()].map((record) => record.spec.clampTo);
+  assert.deepEqual(clamps(), ['terrain', 'terrain', 'terrain']);
+  layer.enable();
+  state.globeVisible = false;
+  stack.dispatchEvent(new Event('gev:map-stack-changed'));
+  assert.deepEqual(clamps(), ['tiles', 'tiles', 'tiles']);
+  layer.disable();
+  state.globeVisible = true;
+  stack.dispatchEvent(new Event('gev:map-stack-changed'));
+  assert.deepEqual(clamps(), ['tiles', 'tiles', 'tiles'], 'waits for enable');
+  layer.enable();
+  assert.deepEqual(clamps(), ['terrain', 'terrain', 'terrain']);
+});
+
 test('a click on an area shows its card; a click on the card opens Skyddad natur', async (t) => {
-  const { layer, state, shown, opened } = harness(t);
+  const { layer, state, shown, opened, items } = harness(t);
   layer.enable();
   await layer.update();
-  state.picked = { id: { id: 'protected-nature:2000001:0:1' } };
-  state.click({ position: { x: 1, y: 1 } });
+  state.picked = {
+    set: 'protected-nature:areas',
+    id: 'protected-nature:2000001:0',
+    surface: false,
+  };
+  state.click();
   const [card] = shown.get('protected-nature');
   assert.equal(card.title, 'NATIONAL PARK · Area 2000001');
   assert.equal(layer.areaAt([18.255, 59.185])?.i, '2000001');
   assert.equal(layer.areaAt([18.0, 59.0]), null);
+  const [outline] = items('selected');
+  assert.equal(outline.widthPx, 3.5);
+  assert.deepEqual(outline.style, { kind: 'solid', color: [1, 1, 1, 0.95] });
 
   state.hit = { sourceId: 'protected-nature', entryId: card.id };
-  state.click({ position: { x: 1, y: 1 } });
+  state.click();
   assert.deepEqual(opened, [
     'https://skyddadnatur.naturvardsverket.se/sknat/?nvrid=2000001',
   ]);
@@ -160,10 +235,27 @@ test('a click on an area shows its card; a click on the card opens Skyddad natur
   assert.equal(card.activate(), true);
   assert.equal(opened.length, 2);
 
+  // Another layer's card or object is not the map either.
+  state.hit = { sourceId: 'hospitals', entryId: 'x' };
+  state.click();
   state.hit = null;
-  state.picked = undefined;
-  state.click({ position: { x: 1, y: 1 } });
+  state.picked = { set: 'hospitals', id: 'se-hospital:1', surface: false };
+  state.click();
+  assert.equal(shown.get('protected-nature').length, 1);
+  assert.equal(opened.length, 2);
+  // Its ids are the layer's own, for other layers' clicks.
+  assert.equal(
+    picking.findPickOwner('protected-nature:2000002:0'),
+    PROTECTED_NATURE_LAYER_ID,
+  );
+
+  state.picked = null;
+  state.click();
   assert.deepEqual(shown.get('protected-nature'), []);
+  assert.deepEqual(items('selected'), []);
+  layer.disable();
+  assert.equal(state.click, null, 'no clicks while off');
+  assert.equal(picking.findPickOwner('protected-nature:2000002:0'), null);
 });
 
 test('an area is selected by its id while shown', async (t) => {

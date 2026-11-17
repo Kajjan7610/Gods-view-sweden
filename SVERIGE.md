@@ -398,6 +398,24 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-17 (svenska lagren på originalets ritport)
+- De svenska lagren ritar nu genom originalets ritport och tar emot klick
+  via originalets gemensamma dispatcher, som originalets egna lager gör.
+  Detsamma gäller stadspanelen och flygplatspanelerna (tavlan, köerna
+  och rutterna). Data, färger, kort, förklaringar och statistik är som
+  förut. Markhöjderna ligger kvar, så punkterna klistras fortfarande bara
+  mot terrängen och inte mot 3D-tiles.
+- Uppmätt i appen: lika snabbt som förut. Originalets Cesium-del slår nu
+  också ihop streckade linjer på marken som ser likadana ut, så att
+  vägincidenternas linjer blir ett tiotal ritobjekt i stället för ett per
+  linje.
+- Ett klick på kartan i 3D-läget avmarkerar nu ett valt valdistrikt eller
+  naturområde, och ett klick på ett distrikt eller område stänger inte
+  längre ett annat lagers kort, som i de andra lagren. Klick i panelerna
+  gäller inte medan ett verktyg håller pekaren.
+- Kraftnätet ritar fortfarande direkt med Cesium, för sina egna rörliga
+  pilar. Det enda som återstår på `src/render/cesiumForkList.json`.
+
 ### 2026-11-17 (originalet sammanslaget)
 - Originalprojektet är sammanslaget fram till 2026-11-17: det nya sättet
   att rita kartan (renderarens portar), klick genom en gemensam

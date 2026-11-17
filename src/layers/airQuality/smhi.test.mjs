@@ -12,6 +12,14 @@ import {
 } from './source.js';
 import { setLocale } from '../../i18n/index.js';
 import { buildStationCard, createAirQualityLayer } from './index.js';
+import { bindFakeDraw } from '../../testSupport/fakeDrawPort.mjs';
+
+/** A viewer double the layer draws on through a fake draw port. */
+function drawnViewer() {
+  const viewer = {};
+  bindFakeDraw(viewer);
+  return viewer;
+}
 
 const NOW = Date.parse('2026-11-04T22:00:00Z');
 
@@ -155,7 +163,7 @@ test('the readout names every network behind the readings', async () => {
     source: { getSnapshot: async () => rows },
     overlayHost: { setEntries() {}, setVisible() {}, clearSource() {} },
   });
-  layer.init({ dataSources: { add() {}, remove() {} } });
+  layer.init(drawnViewer());
   layer.enable();
   await layer.update();
   let summary = layer.getRowControls().summary;
@@ -214,7 +222,7 @@ test('a network that failed is named beside the readings of the other', async (t
     source,
     overlayHost: { setEntries() {}, setVisible() {}, clearSource() {} },
   });
-  layer.init({ dataSources: { add() {}, remove() {} } });
+  layer.init(drawnViewer());
   layer.enable();
   await layer.update();
   assert.equal(layer.getStats().count, 1);

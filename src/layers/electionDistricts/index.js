@@ -1,6 +1,9 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
-import { groundClassificationType } from '../../render/cesium/forkViewer.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { cssColor } from '../../render/color.js';
+import { drawOf, findCamera, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
+import { cableClassificationTypeForScene } from '../submarineCables/surface.js';
 import {
   OTHER_PARTIES,
   PARTIES,
@@ -30,9 +33,20 @@ const MOVE_SETTLE_MS = 500;
 const VIEW_PADDING = 0.25;
 const FILL_ALPHA = 0.45;
 const NO_RESULT_COLOR = '#616161';
+export const ELECTION_DISTRICTS_LAYER_ID = 'election-districts';
 const PICK_PREFIX = 'election-district:';
-const OUTLINE_COLOR = Cesium.Color.WHITE.withAlpha(0.35);
-const SELECTED_COLOR = Cesium.Color.WHITE.withAlpha(0.95);
+/** The selected outline's ids: not a district's, so a click on it is not one. */
+const SELECTED_PICK_PREFIX = 'election-district-selected:';
+const OUTLINE_COLOR = Object.freeze([1, 1, 1, 0.35]);
+const OUTLINE_WIDTH = 1.2;
+const SELECTED_COLOR = Object.freeze([1, 1, 1, 0.95]);
+const SELECTED_WIDTH = 3.5;
+const withAlpha = ([r, g, b], alpha) => [r, g, b, alpha];
+/** A ring of [lon, lat] pairs as the draw port's positions. */
+const ringDegrees = (ring) => ring.map(([lon, lat]) => ({ lon, lat }));
+/** A ring's edge on the ellipsoid, closed back to its first point, in ECEF. */
+const closedRing = (ring) =>
+  [...ring, ring[0]].map(([lon, lat]) => fromDegrees(lon, lat));
 const TURNOUT_LABELS = Object.freeze({
   'below-70': msg('Below 70 %'),
   '70-80': msg('70 to 80 %'),
@@ -51,23 +65,21 @@ const TURNOUT_LABELS = Object.freeze({
 export function createElectionDistrictsLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
+  picking = null,
   pointer = null,
   mapStackEventTarget = null,
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getDistricts !== 'function')
     throw new TypeError('Election districts require a districts source');
   let _viewer = null;
-  /** The district areas and outlines, and the selected outline apart. */
+  /** The district areas, their outlines, and the selected outline apart. */
   let _areas = null;
-  /**
-   * A new number for every drawing: Cesium takes an entity removed and added
-   * again under the same id, in one suspended batch, for the old one and
-   * keeps its old colour.
-   */
-  let _drawing = 0;
+  let _edges = null;
   let _highlight = null;
-  let _classificationType;
+  /** The surface the areas lie on (the cables' rule). */
+  let _clampTo;
   let _enabled = false;
   let _request = null;
   let _clickHandler = null;
@@ -89,89 +101,75 @@ export function createElectionDistrictsLayer({
   let _lastUpdate = null;
   let _lastError = null;
 
-  const canSelect = () => overlayHost && screenSpaceEventHandlerFactory;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(ELECTION_DISTRICTS_LAYER_ID);
+  const drawSets = () => [_areas, _edges, _highlight].filter(Boolean);
 
   function colorOf(district) {
     const css =
       _mode === 'turnout'
         ? (turnoutClass(district.t)?.color ?? NO_RESULT_COLOR)
         : (leadingParty(district.s)?.color ?? NO_RESULT_COLOR);
-    return Cesium.Color.fromCssColorString(css);
+    return cssColor(css);
   }
 
-  /** Draw the shown districts. Ground entities of one kind are batched by Cesium. */
-  function draw() {
+  /**
+   * Draw the shown districts, each polygon an area in one set and its outer
+   * edge a line in another; `edges: false` recolours the areas alone.
+   */
+  function draw({ edges = true } = {}) {
     if (!_areas) return;
-    const entities = _areas.entities;
-    _drawing += 1;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
-      if (_enabled)
-        for (const district of _districts) {
-          const material = colorOf(district).withAlpha(FILL_ALPHA);
-          (_shapes.get(district.c) ?? []).forEach((rings, index) => {
-            const [outer, ...holes] = rings.map((ring) =>
-              Cesium.Cartesian3.fromDegreesArray(ring.flat()),
-            );
-            const id = `${PICK_PREFIX}${district.c}:${index}:${_drawing}`;
-            entities.add({
-              id,
-              polygon: {
-                hierarchy: new Cesium.PolygonHierarchy(
-                  outer,
-                  holes.map((hole) => new Cesium.PolygonHierarchy(hole)),
-                ),
-                material,
-                classificationType: _classificationType,
-              },
-            });
-            entities.add({
-              id: `${id}:edge`,
-              polyline: {
-                positions: [...outer, outer[0]],
-                width: 1.2,
-                material: OUTLINE_COLOR,
-                clampToGround: true,
-                classificationType: _classificationType,
-              },
-            });
+    const areas = [];
+    const outlines = [];
+    if (_enabled)
+      for (const district of _districts) {
+        const fill = withAlpha(colorOf(district), FILL_ALPHA);
+        (_shapes.get(district.c) ?? []).forEach((rings, index) => {
+          const id = `${PICK_PREFIX}${district.c}:${index}`;
+          areas.push({
+            id,
+            geometry: { kind: 'polygon', rings: rings.map(ringDegrees) },
+            fill,
+            height: 'clampGround',
           });
-        }
-    } finally {
-      entities.resumeEvents();
-    }
+          if (edges)
+            outlines.push({
+              id: `${id}:edge`,
+              positions: closedRing(rings[0]),
+              widthPx: OUTLINE_WIDTH,
+              mode: 'draped',
+              style: { kind: 'solid', color: OUTLINE_COLOR },
+            });
+        });
+      }
+    _areas.set(areas);
     _areas.show = _enabled;
-    _viewer?.scene?.requestRender?.();
+    if (edges) {
+      _edges.set(outlines);
+      _edges.show = _enabled;
+    }
+    requestRender();
   }
 
   /** The selected district's outline, apart from the batches. */
   function drawSelection() {
     if (_highlight) {
-      const entities = _highlight.entities;
-      entities.suspendEvents();
-      try {
-        entities.removeAll();
-        if (_enabled && _selected)
-          for (const rings of _shapes.get(_selected.c) ?? []) {
-            const outer = Cesium.Cartesian3.fromDegreesArray(rings[0].flat());
-            entities.add({
-              polyline: {
-                positions: [...outer, outer[0]],
-                width: 3.5,
-                material: SELECTED_COLOR,
-                clampToGround: true,
-                classificationType: _classificationType,
-              },
-            });
-          }
-      } finally {
-        entities.resumeEvents();
-      }
+      _highlight.set(
+        _enabled && _selected
+          ? (_shapes.get(_selected.c) ?? []).map((rings, index) => ({
+              id: `${SELECTED_PICK_PREFIX}${_selected.c}:${index}`,
+              positions: closedRing(rings[0]),
+              widthPx: SELECTED_WIDTH,
+              mode: 'draped',
+              style: { kind: 'solid', color: SELECTED_COLOR },
+            }))
+          : [],
+      );
       _highlight.show = _enabled;
     }
     publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function publishSelectedCard() {
@@ -186,11 +184,7 @@ export function createElectionDistrictsLayer({
     }
     const card = buildDistrictCard(_selected);
     const [west, south, east, north] = _selected.b;
-    card.position = Cesium.Cartesian3.fromDegrees(
-      (west + east) / 2,
-      (south + north) / 2,
-      0,
-    );
+    card.position = fromDegrees((west + east) / 2, (south + north) / 2, 0);
     overlayHost.setEntries(
       ELECTION_DISTRICTS_OVERLAY_SOURCE_ID,
       [card],
@@ -207,20 +201,14 @@ export function createElectionDistrictsLayer({
 
   /** The view as a padded box, or null when it is too high or unknown. */
   function readBox() {
-    const camera = _viewer?.camera;
-    const height = camera?.positionCartographic?.height;
+    const camera = _viewer ? findCamera(_viewer) : null;
+    const height = camera?.pose()?.height;
     if (!Number.isFinite(height)) return null;
     _tooHigh = height > MAX_SHOW_HEIGHT_M;
     if (_tooHigh) return null;
-    const rect = camera.computeViewRectangle?.(Cesium.Ellipsoid.WGS84);
+    const rect = camera.viewRectangle?.() ?? null;
     if (!rect) return null;
-    const deg = Cesium.Math.toDegrees;
-    const [west, south, east, north] = [
-      deg(rect.west),
-      deg(rect.south),
-      deg(rect.east),
-      deg(rect.north),
-    ];
+    const { west, south, east, north } = rect;
     const padX = (east - west) * VIEW_PADDING;
     const padY = (north - south) * VIEW_PADDING;
     return [west - padX, south - padY, east + padX, north + padY];
@@ -306,25 +294,37 @@ export function createElectionDistrictsLayer({
 
   /** Move the areas to the surface the map shows now, if it changed. */
   function applyClassification() {
-    const next = groundClassificationType(_viewer?.scene);
-    if (next === _classificationType) return;
-    _classificationType = next;
-    draw();
-    drawSelection();
+    const next = cableClassificationTypeForScene(_viewer);
+    if (next === _clampTo) return;
+    _clampTo = next;
+    for (const set of drawSets()) set.setOptions({ clampTo: next });
+    requestRender();
   }
+
+  const isOwnPick = (pickId) =>
+    typeof pickId === 'string' && pickId.startsWith(PICK_PREFIX);
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(ELECTION_DISTRICTS_LAYER_ID, isOwnPick);
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
+      const at = click.screenPosition;
       // A card under the click, this layer's or another's, is not the ground.
-      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
-      const picked = _viewer.scene.pick(click.position);
-      const id = typeof picked?.id?.id === 'string' ? picked.id.id : null;
-      if (id?.startsWith(PICK_PREFIX)) {
+      if (overlayHost.hitTest?.(at?.x, at?.y)) return;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      if (isOwnPick(pickId)) {
         const district = _byCode.get(
-          id.slice(PICK_PREFIX.length).split(':')[0],
+          pickId.slice(PICK_PREFIX.length).split(':')[0],
         );
         select(district && district !== _selected ? district : null);
         return;
@@ -332,18 +332,25 @@ export function createElectionDistrictsLayer({
       // Anything else picked is another layer's to select.
       if (picked) return;
       if (_selected) select(null);
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
+  }
+
+  function removeClickHandler() {
+    _clickHandler?.();
+    _clickHandler = null;
+    picking?.unregisterPickOwner?.(ELECTION_DISTRICTS_LAYER_ID);
   }
 
   function setMode(mode) {
     if (_mode === mode) return;
     _mode = mode;
-    draw();
+    // Only the areas' colours change; the outlines stay as drawn.
+    draw({ edges: false });
     _rowListener?.();
   }
 
   const layer = {
-    id: 'election-districts',
+    id: ELECTION_DISTRICTS_LAYER_ID,
     name: 'Election Districts 2026 (Sweden)',
     icon: '🗳️',
     source: 'Valmyndigheten',
@@ -352,14 +359,17 @@ export function createElectionDistrictsLayer({
     init(viewer) {
       if (_viewer)
         throw new Error('Election districts layer is already initialized');
+      _clampTo = cableClassificationTypeForScene(viewer);
+      const draw = drawOf(viewer);
+      const spec = (name) => ({
+        id: `${ELECTION_DISTRICTS_LAYER_ID}:${name}`,
+        clampTo: _clampTo,
+        show: false,
+      });
+      _areas = draw.shapes(spec('areas'));
+      _edges = draw.lines(spec('edges'));
+      _highlight = draw.lines(spec('selected'));
       _viewer = viewer;
-      _classificationType = groundClassificationType(viewer?.scene);
-      _areas = new Cesium.CustomDataSource('election-districts');
-      _highlight = new Cesium.CustomDataSource('election-district-selected');
-      for (const dataSource of [_areas, _highlight]) {
-        dataSource.show = false;
-        viewer.dataSources.add(dataSource);
-      }
       if (mapStackEventTarget?.addEventListener) {
         // Switching between the globe and 3D tiles moves the areas' surface.
         _stackListener = () => {
@@ -377,10 +387,11 @@ export function createElectionDistrictsLayer({
       applyClassification();
       overlayHost?.setVisible?.(ELECTION_DISTRICTS_OVERLAY_SOURCE_ID, true);
       installClickHandler();
-      if (!_removeMove && _viewer?.camera) {
+      const camera = _viewer ? findCamera(_viewer) : null;
+      if (!_removeMove && camera) {
         const removers = [
-          _viewer.camera.moveEnd?.addEventListener?.(followCamera),
-          _viewer.camera.changed?.addEventListener?.(followCamera),
+          camera.on('moveEnd', followCamera),
+          camera.on('changed', followCamera),
         ].filter(Boolean);
         _removeMove = () => removers.forEach((remove) => remove());
       }
@@ -394,8 +405,7 @@ export function createElectionDistrictsLayer({
       _removeMove?.();
       _removeMove = null;
       _enabled = false;
-      _clickHandler?.destroy();
-      _clickHandler = null;
+      removeClickHandler();
       _selected = null;
       _districts = [];
       _byCode = new Map();
@@ -412,7 +422,7 @@ export function createElectionDistrictsLayer({
       return refresh();
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       if (_stackListener)
         mapStackEventTarget?.removeEventListener?.(
@@ -420,9 +430,9 @@ export function createElectionDistrictsLayer({
           _stackListener,
         );
       _stackListener = null;
-      for (const dataSource of [_areas, _highlight])
-        if (dataSource) viewer?.dataSources?.remove(dataSource, true);
+      for (const set of drawSets()) set.dispose();
       _areas = null;
+      _edges = null;
       _highlight = null;
       _viewer = null;
       _lastUpdate = null;

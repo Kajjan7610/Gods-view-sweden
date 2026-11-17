@@ -268,6 +268,7 @@ const LAYERS = [
   {
     name: 'roadConditions',
     create: createTrafikverketRoadsLayer,
+    ported: true,
     sourceId: ROAD_OVERLAY_SOURCE_ID,
     linked: true,
     snapshot: {
@@ -303,6 +304,7 @@ const LAYERS = [
   {
     name: 'smhiWarnings',
     create: createSmhiWarningsLayer,
+    ported: true,
     sourceId: SMHI_WARNINGS_OVERLAY_SOURCE_ID,
     linked: true,
     snapshot: {

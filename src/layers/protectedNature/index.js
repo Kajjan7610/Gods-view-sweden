@@ -1,6 +1,9 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
-import { groundClassificationType } from '../../render/cesium/forkViewer.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { cssColor } from '../../render/color.js';
+import { drawOf, findCamera, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
+import { cableClassificationTypeForScene } from '../submarineCables/surface.js';
 import {
   AREA_KINDS,
   KIND,
@@ -26,9 +29,20 @@ const MOVE_SETTLE_MS = 500;
 /** The view box is widened by this much, so small pans need no new read. */
 const VIEW_PADDING = 0.25;
 const FILL_ALPHA = 0.4;
+export const PROTECTED_NATURE_LAYER_ID = 'protected-nature';
 const PICK_PREFIX = 'protected-nature:';
-const OUTLINE_COLOR = Cesium.Color.WHITE.withAlpha(0.4);
-const SELECTED_COLOR = Cesium.Color.WHITE.withAlpha(0.95);
+/** The selected outline's ids: not an area's, so a click on it is not one. */
+const SELECTED_PICK_PREFIX = 'protected-nature-selected:';
+const OUTLINE_COLOR = Object.freeze([1, 1, 1, 0.4]);
+const OUTLINE_WIDTH = 1.2;
+const SELECTED_COLOR = Object.freeze([1, 1, 1, 0.95]);
+const SELECTED_WIDTH = 3.5;
+const withAlpha = ([r, g, b], alpha) => [r, g, b, alpha];
+/** A ring of [lon, lat] pairs as the draw port's positions. */
+const ringDegrees = (ring) => ring.map(([lon, lat]) => ({ lon, lat }));
+/** A ring's edge on the ellipsoid, closed back to its first point, in ECEF. */
+const closedRing = (ring) =>
+  [...ring, ring[0]].map(([lon, lat]) => fromDegrees(lon, lat));
 const KIND_LABELS = Object.freeze({
   np: msg('National park'),
   nr: msg('Nature reserve'),
@@ -45,20 +59,22 @@ const KIND_LABELS = Object.freeze({
 export function createProtectedNatureLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
+  picking = null,
   pointer = null,
   mapStackEventTarget = null,
   openExternal = null,
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getAreas !== 'function')
     throw new TypeError('Protected nature requires an areas source');
   let _viewer = null;
-  /** The areas and their outlines, and the selected outline apart. */
+  /** The areas, their outlines, and the selected outline apart. */
   let _surface = null;
+  let _edges = null;
   let _highlight = null;
-  /** A new number for every drawing (see electionDistricts/index.js). */
-  let _drawing = 0;
-  let _classificationType;
+  /** The surface the areas lie on (the cables' rule). */
+  let _clampTo;
   let _enabled = false;
   let _request = null;
   let _clickHandler = null;
@@ -79,81 +95,62 @@ export function createProtectedNatureLayer({
   let _lastUpdate = null;
   let _lastError = null;
 
-  const canSelect = () => overlayHost && screenSpaceEventHandlerFactory;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(PROTECTED_NATURE_LAYER_ID);
+  const drawSets = () => [_surface, _edges, _highlight].filter(Boolean);
 
+  /** Each polygon an area in one set, its outer edge a line in another. */
   function draw() {
     if (!_surface) return;
-    const entities = _surface.entities;
-    _drawing += 1;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
-      if (_enabled)
-        for (const area of _areas) {
-          const material = Cesium.Color.fromCssColorString(
-            KIND[area.t]?.color ?? KIND.nr.color,
-          ).withAlpha(FILL_ALPHA);
-          (_shapes.get(area.i) ?? []).forEach((rings, index) => {
-            const [outer, ...holes] = rings.map((ring) =>
-              Cesium.Cartesian3.fromDegreesArray(ring.flat()),
-            );
-            const id = `${PICK_PREFIX}${area.i}:${index}:${_drawing}`;
-            entities.add({
-              id,
-              polygon: {
-                hierarchy: new Cesium.PolygonHierarchy(
-                  outer,
-                  holes.map((hole) => new Cesium.PolygonHierarchy(hole)),
-                ),
-                material,
-                classificationType: _classificationType,
-              },
-            });
-            entities.add({
-              id: `${id}:edge`,
-              polyline: {
-                positions: [...outer, outer[0]],
-                width: 1.2,
-                material: OUTLINE_COLOR,
-                clampToGround: true,
-                classificationType: _classificationType,
-              },
-            });
+    const areas = [];
+    const outlines = [];
+    if (_enabled)
+      for (const area of _areas) {
+        const fill = withAlpha(
+          cssColor(KIND[area.t]?.color ?? KIND.nr.color),
+          FILL_ALPHA,
+        );
+        (_shapes.get(area.i) ?? []).forEach((rings, index) => {
+          const id = `${PICK_PREFIX}${area.i}:${index}`;
+          areas.push({
+            id,
+            geometry: { kind: 'polygon', rings: rings.map(ringDegrees) },
+            fill,
+            height: 'clampGround',
           });
-        }
-    } finally {
-      entities.resumeEvents();
-    }
-    _surface.show = _enabled;
-    _viewer?.scene?.requestRender?.();
+          outlines.push({
+            id: `${id}:edge`,
+            positions: closedRing(rings[0]),
+            widthPx: OUTLINE_WIDTH,
+            mode: 'draped',
+            style: { kind: 'solid', color: OUTLINE_COLOR },
+          });
+        });
+      }
+    _surface.set(areas);
+    _edges.set(outlines);
+    _surface.show = _edges.show = _enabled;
+    requestRender();
   }
 
   function drawSelection() {
     if (_highlight) {
-      const entities = _highlight.entities;
-      entities.suspendEvents();
-      try {
-        entities.removeAll();
-        if (_enabled && _selected)
-          for (const rings of _shapes.get(_selected.i) ?? []) {
-            const outer = Cesium.Cartesian3.fromDegreesArray(rings[0].flat());
-            entities.add({
-              polyline: {
-                positions: [...outer, outer[0]],
-                width: 3.5,
-                material: SELECTED_COLOR,
-                clampToGround: true,
-                classificationType: _classificationType,
-              },
-            });
-          }
-      } finally {
-        entities.resumeEvents();
-      }
+      _highlight.set(
+        _enabled && _selected
+          ? (_shapes.get(_selected.i) ?? []).map((rings, index) => ({
+              id: `${SELECTED_PICK_PREFIX}${_selected.i}:${index}`,
+              positions: closedRing(rings[0]),
+              widthPx: SELECTED_WIDTH,
+              mode: 'draped',
+              style: { kind: 'solid', color: SELECTED_COLOR },
+            }))
+          : [],
+      );
       _highlight.show = _enabled;
     }
     publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function publishSelectedCard() {
@@ -170,11 +167,7 @@ export function createProtectedNatureLayer({
     const area = _selected;
     const card = buildAreaCard(area, { linkable: Boolean(openExternal) });
     const [west, south, east, north] = area.b;
-    card.position = Cesium.Cartesian3.fromDegrees(
-      (west + east) / 2,
-      (south + north) / 2,
-      0,
-    );
+    card.position = fromDegrees((west + east) / 2, (south + north) / 2, 0);
     if (openExternal)
       card.activate = () => {
         openExternal(skyddadNaturUrl(area.i));
@@ -197,18 +190,12 @@ export function createProtectedNatureLayer({
 
   /** The view as a padded box, or null when it is too high or unknown. */
   function readBox() {
-    const camera = _viewer?.camera;
-    const height = camera?.positionCartographic?.height;
+    const camera = _viewer ? findCamera(_viewer) : null;
+    const height = camera?.pose()?.height;
     if (!Number.isFinite(height) || height > MAX_SHOW_HEIGHT_M) return null;
-    const rect = camera.computeViewRectangle?.(Cesium.Ellipsoid.WGS84);
+    const rect = camera.viewRectangle?.() ?? null;
     if (!rect) return [...SWEDEN_BOX];
-    const deg = Cesium.Math.toDegrees;
-    const [west, south, east, north] = [
-      deg(rect.west),
-      deg(rect.south),
-      deg(rect.east),
-      deg(rect.north),
-    ];
+    const { west, south, east, north } = rect;
     const padX = (east - west) * VIEW_PADDING;
     const padY = (north - south) * VIEW_PADDING;
     return [west - padX, south - padY, east + padX, north + padY];
@@ -293,22 +280,31 @@ export function createProtectedNatureLayer({
   }
 
   function applyClassification() {
-    const next = groundClassificationType(_viewer?.scene);
-    if (next === _classificationType) return;
-    _classificationType = next;
-    draw();
-    drawSelection();
+    const next = cableClassificationTypeForScene(_viewer);
+    if (next === _clampTo) return;
+    _clampTo = next;
+    for (const set of drawSets()) set.setOptions({ clampTo: next });
+    requestRender();
   }
+
+  const isOwnPick = (pickId) =>
+    typeof pickId === 'string' && pickId.startsWith(PICK_PREFIX);
 
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    picking.registerPickOwner?.(PROTECTED_NATURE_LAYER_ID, isOwnPick);
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-      );
+      const at = click.screenPosition;
+      const cardHit = overlayHost.hitTest?.(at?.x, at?.y);
       // A click on this layer's own card opens the area in Skyddad natur.
       if (
         cardHit?.sourceId === PROTECTED_NATURE_OVERLAY_SOURCE_ID &&
@@ -319,21 +315,27 @@ export function createProtectedNatureLayer({
         openExternal(skyddadNaturUrl(_selected.i));
       // A card under the click, this layer's or another's, is not the ground.
       if (cardHit) return;
-      const picked = _viewer.scene.pick(click.position);
-      const id = typeof picked?.id?.id === 'string' ? picked.id.id : null;
-      if (id?.startsWith(PICK_PREFIX)) {
-        const area = _byId.get(id.slice(PICK_PREFIX.length).split(':')[0]);
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      if (isOwnPick(pickId)) {
+        const area = _byId.get(pickId.slice(PICK_PREFIX.length).split(':')[0]);
         select(area && area !== _selected ? area : null);
         return;
       }
       // Anything else picked is another layer's to select.
       if (picked) return;
       if (_selected) select(null);
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
+  }
+
+  function removeClickHandler() {
+    _clickHandler?.();
+    _clickHandler = null;
+    picking?.unregisterPickOwner?.(PROTECTED_NATURE_LAYER_ID);
   }
 
   const layer = {
-    id: 'protected-nature',
+    id: PROTECTED_NATURE_LAYER_ID,
     name: 'Protected Nature (Sweden)',
     icon: '🌲',
     source: 'Naturvårdsverket',
@@ -342,14 +344,17 @@ export function createProtectedNatureLayer({
     init(viewer) {
       if (_viewer)
         throw new Error('Protected nature layer is already initialized');
+      _clampTo = cableClassificationTypeForScene(viewer);
+      const draw = drawOf(viewer);
+      const spec = (name) => ({
+        id: `${PROTECTED_NATURE_LAYER_ID}:${name}`,
+        clampTo: _clampTo,
+        show: false,
+      });
+      _surface = draw.shapes(spec('areas'));
+      _edges = draw.lines(spec('edges'));
+      _highlight = draw.lines(spec('selected'));
       _viewer = viewer;
-      _classificationType = groundClassificationType(viewer?.scene);
-      _surface = new Cesium.CustomDataSource('protected-nature');
-      _highlight = new Cesium.CustomDataSource('protected-nature-selected');
-      for (const dataSource of [_surface, _highlight]) {
-        dataSource.show = false;
-        viewer.dataSources.add(dataSource);
-      }
       if (mapStackEventTarget?.addEventListener) {
         _stackListener = () => {
           if (_enabled) applyClassification();
@@ -366,10 +371,11 @@ export function createProtectedNatureLayer({
       applyClassification();
       overlayHost?.setVisible?.(PROTECTED_NATURE_OVERLAY_SOURCE_ID, true);
       installClickHandler();
-      if (!_removeMove && _viewer?.camera) {
+      const camera = _viewer ? findCamera(_viewer) : null;
+      if (!_removeMove && camera) {
         const removers = [
-          _viewer.camera.moveEnd?.addEventListener?.(followCamera),
-          _viewer.camera.changed?.addEventListener?.(followCamera),
+          camera.on('moveEnd', followCamera),
+          camera.on('changed', followCamera),
         ].filter(Boolean);
         _removeMove = () => removers.forEach((remove) => remove());
       }
@@ -383,8 +389,7 @@ export function createProtectedNatureLayer({
       _removeMove?.();
       _removeMove = null;
       _enabled = false;
-      _clickHandler?.destroy();
-      _clickHandler = null;
+      removeClickHandler();
       _selected = null;
       _areas = [];
       _byId = new Map();
@@ -402,7 +407,7 @@ export function createProtectedNatureLayer({
       return refresh();
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       if (_stackListener)
         mapStackEventTarget?.removeEventListener?.(
@@ -410,9 +415,9 @@ export function createProtectedNatureLayer({
           _stackListener,
         );
       _stackListener = null;
-      for (const dataSource of [_surface, _highlight])
-        if (dataSource) viewer?.dataSources?.remove(dataSource, true);
+      for (const set of drawSets()) set.dispose();
       _surface = null;
+      _edges = null;
       _highlight = null;
       _viewer = null;
       _lastUpdate = null;

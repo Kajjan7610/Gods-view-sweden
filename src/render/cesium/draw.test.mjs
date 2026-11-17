@@ -1395,7 +1395,7 @@ test('the world annotation renderer draws, fades, hides and lets go of every kin
   );
 });
 
-test('the air quality layer draws its stations as ground fills on a viewer of its own', { skip: 'Swedish fork: air quality still draws with Cesium data sources until it moves to the draw port' }, async () => {
+test('the air quality layer draws its stations as ground fills on a viewer of its own', async () => {
   const { createAirQualityLayer } =
     await import('../../layers/airQuality/index.js');
   const scene = fakeScene();
@@ -5516,6 +5516,40 @@ test('draped glow and dash lines drape with their materials, each on a ground pr
         Cesium.Color.TRANSPARENT,
       ),
     );
+    set.dispose();
+  }));
+
+test('draped dash lines that look alike share one ground primitive and material', () =>
+  withImageClasses(() => {
+    const { scene, draw } = drawOver();
+    const set = draw.lines({ id: 'incidents', clampTo: 'both' });
+    const dash = (id, color, lon) => ({
+      id,
+      positions: [
+        { lon, lat: 0 },
+        { lon: lon + 0.01, lat: 0.01 },
+      ],
+      widthPx: 4,
+      mode: 'draped',
+      style: { kind: 'dash', color, length: 14 },
+    });
+    set.set([
+      dash('a', '#ffb300', 0),
+      dash('b', '#ffb300', 1),
+      dash('c', '#e53935', 2),
+    ]);
+    const host = scene.added[0];
+    const grounds = [];
+    for (let i = 0; i < host.length; i++)
+      if (host.get(i) instanceof Cesium.GroundPolylinePrimitive)
+        grounds.push(host.get(i));
+    assert.equal(grounds.length, 2, 'one per look, not one per line');
+    const ids = grounds.map((ground) =>
+      ground.geometryInstances.map((instance) => instance.id.id).sort(),
+    );
+    assert.deepEqual(ids.sort(), [['a', 'b'], ['c']]);
+    for (const ground of grounds)
+      assert.equal(ground.appearance.material.type, 'PolylineDash');
     set.dispose();
   }));
 

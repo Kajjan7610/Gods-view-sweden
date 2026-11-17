@@ -3,7 +3,9 @@
 // details, day switch and closing against a stubbed /api/airport-board.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import * as Cesium from 'cesium';
+import { fromDegrees } from '../geo/ellipsoid.js';
+import { bindFakeDraw } from '../testSupport/fakeDrawPort.mjs';
+import { fakeCameraPort } from '../testSupport/fakeCameraPort.mjs';
 import { createAirportBoard } from './airportBoard.js';
 import {
   aircraftFor,
@@ -154,25 +156,30 @@ test('the airport under the view: near its point and low enough', () => {
   assert.equal(airportUnder(null), null);
 });
 
+/**
+ * A scene object with the renderer's camera and query bound to it: the
+ * ground under the canvas centre is `camera`'s `lat` and `lon`, and
+ * `settle` ends a move.
+ */
 function fakeViewer(lat, lon, height) {
-  const listeners = [];
-  const camera = {
-    positionCartographic: { height },
-    pickEllipsoid: () => Cesium.Cartesian3.fromDegrees(camera.lon, camera.lat),
-    lat,
-    lon,
-    moveEnd: {
-      addEventListener(fn) {
-        listeners.push(fn);
-        return () => listeners.splice(listeners.indexOf(fn), 1);
-      },
-    },
+  const camera = { lat, lon };
+  const port = fakeCameraPort({ pose: { lon, lat, height } });
+  const flights = [];
+  port.port.flyTo = (destination, options) => {
+    flights.push({ destination, options });
+    return { done: Promise.resolve('complete'), cancel() {} };
   };
-  return {
+  const viewer = {
     camera,
-    scene: { canvas: { clientWidth: 800, clientHeight: 600 } },
-    settle: () => listeners.forEach((fn) => fn()),
+    flights,
+    canvas: { clientWidth: 800, clientHeight: 600 },
+    settle: () => port.emit('moveEnd'),
   };
+  bindFakeDraw(viewer, {
+    camera: port.port,
+    query: { pickEllipsoid: () => fromDegrees(camera.lon, camera.lat) },
+  });
+  return viewer;
 }
 
 const boardBody = (date = '2026-11-07') => ({
@@ -568,5 +575,37 @@ test('a destination opens the board filtered on it; the routes leave the board',
   actions.showRoutes();
   assert.deepEqual(shown, ['ARN']);
   assert.equal(published.at(-1).board, null);
+  controller.destroy();
+});
+
+test('a checkpoint is looked at from the south, its terminal ahead', async () => {
+  let actions = null;
+  const published = [];
+  const viewer = fakeViewer(59.33, 18.07, 3000);
+  const body = boardBody();
+  body.security[0] = { ...body.security[0], lat: 59.6489, lon: 17.9293 };
+  const controller = createAirportBoard({
+    viewer,
+    publish: (view) => published.push(view),
+    connect: (next) => ((actions = next), () => {}),
+    fetchImpl: async () => new Response(JSON.stringify(body)),
+    now: () => NOW,
+    documentRef: null,
+  });
+  actions.open('ARN');
+  await settled();
+  // A checkpoint without a position: nowhere to look.
+  actions.showQueue('6');
+  assert.equal(viewer.flights.length, 0);
+  actions.showQueue('5');
+  assert.equal(published.at(-1).board, null, 'the board makes way');
+  assert.equal(viewer.flights.length, 1);
+  const [{ destination, options }] = viewer.flights;
+  assert.equal(destination.lon, 17.9293);
+  assert.ok(Math.abs(destination.lat - (59.6489 - 0.0105)) < 1e-9);
+  assert.equal(destination.height, 900);
+  assert.equal(Math.round((options.orientation.pitch * 180) / Math.PI), -35);
+  assert.equal(options.orientation.heading, 0);
+  assert.equal(options.durationS, 2);
   controller.destroy();
 });

@@ -1,9 +1,12 @@
 // The city dossier's controller: the live picture is fetched only for someone
-// looking at it, a part that does not answer is named, and a first visit
-// glides into its orbit instead of cutting to it.
+// looking at it, a part that does not answer is named, a first visit glides
+// into its orbit instead of cutting to it, and the passport's towns are drawn.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import * as Cesium from 'cesium';
+import { fromDegrees, toLonLatH } from '../geo/ellipsoid.js';
+import { distance, toDegrees } from '../geo/vector.js';
+import { bindFakeDraw } from '../testSupport/fakeDrawPort.mjs';
+import { fakeCameraPort } from '../testSupport/fakeCameraPort.mjs';
 import { createCityDossier } from './cityDossier.js';
 
 const NOW = Date.parse('2026-11-05T14:00:00Z');
@@ -46,7 +49,10 @@ const settle = async () => {
     await new Promise((resolve) => setImmediate(resolve));
 };
 
-function harness(t, { stamps = {} } = {}) {
+/** Whether two ECEF points are the same to a millimetre. */
+const samePoint = (a, b) => distance(a, b) < 1e-3;
+
+function harness(t, { stamps = {}, showMap = false } = {}) {
   // The settle timer, the orbit's watch and the title card never fire alone.
   t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
   t.mock.method(console, 'warn', () => {});
@@ -62,37 +68,48 @@ function harness(t, { stamps = {} } = {}) {
     actions: null,
     flights: [],
     cancelled: 0,
+    // Flights to a place (a sight, a camera), as `camera.flyTo` is given them.
+    flyTos: [],
+    sightsShown: [],
     orbits: [],
     stops: 0,
     listeners: new Map(),
     bodies: {},
   };
-  const viewer = {
-    scene: {
-      canvas: { clientWidth: 800, clientHeight: 600 },
-      requestRender() {},
-    },
-    dataSources: { add() {}, remove() {} },
-    camera: {
+  // The scene object, with the renderer's camera and query bound to it: the
+  // eye 3 km over the town, on heading 0.5, the town under the centre.
+  const viewer = { canvas: { clientWidth: 800, clientHeight: 600 } };
+  const camera = fakeCameraPort();
+  const fixed = camera.port.pose;
+  Object.assign(camera.port, {
+    pose: () => ({
+      ...fixed(),
+      height: state.height,
       heading: 0.5,
-      get positionCartographic() {
-        return { height: state.height };
-      },
-      get positionWC() {
-        return Cesium.Cartesian3.fromDegrees(...state.town.point, 3000);
-      },
-      pickEllipsoid: () =>
-        Cesium.Cartesian3.fromDegrees(...state.town.point, 0),
-      moveEnd: { addEventListener: () => () => {} },
-      flyToBoundingSphere: (sphere, options) =>
-        state.flights.push({ sphere, options }),
-      cancelFlight: () => {
-        state.cancelled += 1;
-      },
+      position: fromDegrees(...state.town.point, 3000),
+    }),
+    flying: false,
+    flyToBounds(sphere, options) {
+      state.flights.push({ sphere, options });
+      return { done: new Promise(() => {}), cancel() {} };
     },
-  };
+    cancelFlight() {
+      state.cancelled += 1;
+    },
+    flyTo(destination, options) {
+      state.flyTos.push({ destination, options });
+      return { done: new Promise(() => {}), cancel() {} };
+    },
+  });
+  const { draw } = bindFakeDraw(viewer, {
+    camera: camera.port,
+    query: { pickEllipsoid: () => fromDegrees(...state.town.point, 0) },
+  });
   const store = new Map([
-    ['gev:visit-passport:v1', JSON.stringify({ stamps, cinematic: true })],
+    [
+      'gev:visit-passport:v1',
+      JSON.stringify({ stamps, cinematic: true, showMap }),
+    ],
   ]);
   const dossier = createCityDossier({
     viewer,
@@ -136,7 +153,14 @@ function harness(t, { stamps = {} } = {}) {
       state.panelChanged = onChange;
       return () => {};
     },
-    createSights: () => ({ show() {}, hide() {}, destroy() {} }),
+    createSights: (options) => {
+      state.sightsOptions = options;
+      return {
+        show: (items, chosen) => state.sightsShown.push({ items, chosen }),
+        hide: () => state.sightsShown.push(null),
+        destroy() {},
+      };
+    },
     createOrbit: () => ({
       active: false,
       start(target, options) {
@@ -157,7 +181,7 @@ function harness(t, { stamps = {} } = {}) {
     await dossier.visit();
     await settle();
   };
-  return { dossier, state, asked, visit };
+  return { dossier, state, asked, visit, draw, camera };
 }
 
 test('the live picture is fetched only while the panel shows the NOW tab', async (t) => {
@@ -248,19 +272,14 @@ test('a first visit offers the flight in; nothing moves until it is taken', asyn
   assert.equal(state.flights.length, 1);
   assert.equal(state.orbits.length, 0);
   const [{ sphere, options }] = state.flights;
-  assert.ok(
-    Cesium.Cartesian3.equalsEpsilon(
-      sphere.center,
-      Cesium.Cartesian3.fromDegrees(...TOWNS.arboga.point, 0),
-      1e-9,
-    ),
-  );
-  assert.equal(options.duration, 1.5);
+  assert.ok(samePoint(sphere.center, fromDegrees(...TOWNS.arboga.point, 0)));
+  assert.equal(sphere.radius, 0);
+  assert.equal(options.durationS, 1.5);
   assert.equal(options.offset.heading, 0.5, 'on the heading the camera has');
-  assert.equal(Math.round(Cesium.Math.toDegrees(options.offset.pitch)), -32);
+  assert.equal(Math.round(toDegrees(options.offset.pitch)), -32);
   assert.equal(Math.round(options.offset.range), 3000);
   // The glide ends where the orbit begins: same range, same tilt.
-  options.complete();
+  options.onComplete();
   assert.equal(state.orbits.length, 1);
   assert.deepEqual(
     {
@@ -277,24 +296,23 @@ test('a first visit offers the flight in; nothing moves until it is taken', asyn
   state.actions.flyIn();
   assert.equal(state.flights.length, 2);
   assert.ok(
-    Cesium.Cartesian3.equalsEpsilon(
+    samePoint(
       state.flights[1].sphere.center,
-      Cesium.Cartesian3.fromDegrees(...TOWNS.koping.point, 0),
-      1e-9,
+      fromDegrees(...TOWNS.koping.point, 0),
     ),
   );
   state.listeners.get('keydown')();
   assert.equal(state.cancelled, 1);
-  state.flights[1].options.complete();
+  state.flights[1].options.onComplete();
   assert.equal(state.orbits.length, 1);
   // Another flight taking the camera during a glide is left alone.
   state.now += 60_000;
   await visit(TOWNS.orebro);
   state.actions.flyIn();
   assert.equal(state.flights.length, 3);
-  state.flights[2].options.cancel();
+  state.flights[2].options.onCancel();
   assert.equal(state.cancelled, 1, 'theirs is not cancelled');
-  state.flights[2].options.complete();
+  state.flights[2].options.onComplete();
   assert.equal(state.orbits.length, 1);
 });
 
@@ -438,8 +456,22 @@ test('the STATISTICS tab reads the town once, with year, Sweden and place', asyn
   state.bodies['/api/city-dossier/stats'] = {
     code: '1984',
     stats: [
-      { key: 'meritValue', year: 2026, value: 224.5, sweden: 229.7, rank: 86, count: 290 },
-      { key: 'reportedCrimes', year: 2025, value: 13914.7, sweden: null, rank: 18, count: 290 },
+      {
+        key: 'meritValue',
+        year: 2026,
+        value: 224.5,
+        sweden: 229.7,
+        rank: 86,
+        count: 290,
+      },
+      {
+        key: 'reportedCrimes',
+        year: 2025,
+        value: 13914.7,
+        sweden: null,
+        rank: 18,
+        count: 290,
+      },
     ],
   };
   await visit(TOWNS.arboga);
@@ -449,7 +481,10 @@ test('the STATISTICS tab reads the town once, with year, Sweden and place', asyn
   assert.deepEqual(asked(), ['/api/city-dossier/stats']);
   const view = state.view.stats;
   assert.deepEqual(
-    view.groups.map((group) => [group.title, group.rows.map((row) => [row.value, row.detail])]),
+    view.groups.map((group) => [
+      group.title,
+      group.rows.map((row) => [row.value, row.detail]),
+    ]),
     [
       ['School', [['224.5', '2026 · Sweden 229.7 · Place 86 of 290']]],
       ['Safety', [['13,915', '2025 · Place 18 of 290']]],
@@ -465,4 +500,95 @@ test('the STATISTICS tab reads the town once, with year, Sweden and place', asyn
   state.down.add('/api/city-dossier/stats');
   await visit(TOWNS.koping);
   assert.equal(state.view.stats.status, 'Statistics unavailable right now');
+});
+
+test("the passport's towns are drawn on the ground, joined in order, while the map is on", async (t) => {
+  const { state, visit, draw, dossier } = harness(t, { showMap: true });
+  const towns = () => draw.set('visit-passport');
+  const way = () => draw.set('visit-passport-route');
+  assert.equal(towns().kind, 'points');
+  assert.equal(towns().spec.clampTo, 'both');
+  assert.equal(towns().items.size, 0);
+  state.now += 21_000;
+  await visit(TOWNS.arboga);
+  const arboga = towns().items.get('visit-passport:1984');
+  assert.deepEqual(arboga.pos, { lon: 15.8269, lat: 59.3994, height: 0 });
+  assert.equal(arboga.height, 'clampGround');
+  assert.equal(arboga.pixelSize, 9);
+  assert.equal(arboga.color, '#ffc94d');
+  assert.deepEqual(arboga.outlineColor, [0, 0, 0, 0.6]);
+  assert.equal(arboga.disableDepthTest, Number.POSITIVE_INFINITY);
+  assert.equal(way().items.size, 0, 'one town is no journey');
+  state.now += 60_000;
+  await visit(TOWNS.koping);
+  assert.equal(towns().items.size, 2);
+  const [route] = way().items.values();
+  assert.equal(route.mode, 'draped');
+  assert.equal(route.widthPx, 2);
+  assert.equal(route.style.kind, 'dash');
+  assert.equal(route.style.length, 14);
+  assert.equal(route.style.color[3], 0.8);
+  assert.equal(route.positions.length, 2);
+  const [from, to] = route.positions.map((p) => toLonLatH(p));
+  assert.ok(Math.abs(from.lon - TOWNS.arboga.point[0]) < 1e-9);
+  assert.ok(Math.abs(to.lon - TOWNS.koping.point[0]) < 1e-9);
+  // The map off: the sets go; on again, they come back.
+  state.actions.togglePassMap();
+  assert.equal(towns(), undefined);
+  assert.equal(way(), undefined);
+  state.actions.togglePassMap();
+  assert.equal(towns().items.size, 2);
+  assert.equal(way().items.size, 1);
+  dossier.destroy();
+  assert.equal(towns(), undefined);
+  assert.equal(way(), undefined);
+});
+
+test('a settled camera is a visit; a sight chosen is flown to from the south', async (t) => {
+  const { state, asked, camera } = harness(t);
+  // A view already over a town is a visit, half a second after the start.
+  t.mock.timers.tick(500);
+  await settle();
+  assert.deepEqual(asked(), ['/api/city-dossier']);
+  assert.equal(state.view.name, 'Arboga');
+  // The sights get the scene object itself.
+  assert.ok(state.sightsOptions.viewer.canvas);
+  // The camera comes to rest over the next town: a visit, half a second on.
+  state.town = TOWNS.koping;
+  camera.emit('moveEnd');
+  t.mock.timers.tick(499);
+  await settle();
+  assert.deepEqual(asked(), []);
+  t.mock.timers.tick(1);
+  await settle();
+  assert.deepEqual(asked(), ['/api/city-dossier']);
+  assert.equal(state.view.name, 'Köping');
+  // Its sights on the SIGHTS tab, and one of them chosen.
+  state.bodies['/api/city-sights'] = {
+    sights: [
+      {
+        id: 'q1',
+        name: 'Kungsörs kungsgård',
+        kind: 'manor',
+        lat: 59.42,
+        lon: 16.1,
+      },
+    ],
+  };
+  state.actions.setTab('sights');
+  await settle();
+  assert.equal(state.sightsShown.at(-1).items[0].id, 'q1');
+  state.actions.chooseSight('q1');
+  assert.equal(state.sightsShown.at(-1).chosen, 'q1');
+  assert.equal(state.flyTos.length, 1);
+  const [{ destination, options }] = state.flyTos;
+  assert.equal(destination.lon, 16.1);
+  assert.ok(Math.abs(destination.lat - (59.42 - 0.011)) < 1e-9);
+  assert.equal(destination.height, 900);
+  assert.equal(Math.round(toDegrees(options.orientation.pitch)), -35);
+  assert.equal(options.orientation.heading, 0);
+  assert.equal(options.durationS, 2);
+  // Away from the tab: the markers go.
+  state.actions.setTab('about');
+  assert.equal(state.sightsShown.at(-1), null);
 });

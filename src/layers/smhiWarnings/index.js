@@ -1,9 +1,10 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { cssColor } from '../../render/color.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
-import { WARNING_LEVELS, levelColor, warningLevel } from './records.js';
+import { WARNING_LEVELS, levelColor } from './records.js';
 import { CRISIS_KINDS } from './crisis.js';
 import { spreadAroundPlaces } from '../policeEvents/records.js';
 import {
@@ -18,6 +19,14 @@ export * from './cards.js';
 export * from './crisis.js';
 export { createSmhiWarningsSource } from './source.js';
 
+export const SMHI_WARNINGS_LAYER_ID = 'smhi-warnings';
+/**
+ * The draw sets the layer draws in, one per kind of thing drawn: the
+ * warning areas' fills, their edges, and the crisis messages' dots on top.
+ */
+export const SMHI_WARNING_FILLS_SET_ID = `${SMHI_WARNINGS_LAYER_ID}:fills`;
+export const SMHI_WARNING_EDGES_SET_ID = `${SMHI_WARNINGS_LAYER_ID}:edges`;
+export const SMHI_CRISIS_DOTS_SET_ID = `${SMHI_WARNINGS_LAYER_ID}:crisis`;
 const PICK_PREFIX = 'se-smhiwarn:';
 const CRISIS_PICK_PREFIX = 'se-krisinfo:';
 const CRISIS_LABELS = Object.freeze({
@@ -29,6 +38,21 @@ const CARD_HOST_OPTIONS = Object.freeze({
   collisionCapacity: 1,
   moving: false,
 });
+/** The ring around every crisis dot. */
+const CRISIS_OUTLINE = '#ffffff';
+
+/** A CSS colour at `alpha`, as a renderer colour made once per both. */
+const _colors = new Map();
+function colorAt(css, alpha) {
+  const key = `${css}|${alpha}`;
+  let color = _colors.get(key);
+  if (!color) {
+    const [r, g, b] = cssColor(css);
+    color = Object.freeze([r, g, b, alpha]);
+    _colors.set(key, color);
+  }
+  return color;
+}
 
 /** Vertex average of a polygon's largest outer ring: where its card stands. */
 function anchorOf(row) {
@@ -43,6 +67,8 @@ function anchorOf(row) {
   return [sum[0] / ring.length, sum[1] / ring.length];
 }
 
+const ringDegrees = (ring) => ring.map(([lon, lat]) => ({ lon, lat }));
+
 /**
  * Own one Swedish weather warning display: SMHI's impact-based warnings as
  * areas coloured by level (yellow, orange, red; messages behind a toggle),
@@ -53,12 +79,13 @@ function anchorOf(row) {
 export function createSmhiWarningsLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   openExternal = null,
   terrain = null,
   now = () => Date.now(),
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('SMHI warnings require a snapshot source');
@@ -67,7 +94,12 @@ export function createSmhiWarningsLayer({
   // A dot spread around its place keeps the place's height.
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
   let _viewer = null;
-  let _dataSource = null;
+  /** The draw sets: area fills, area edges, crisis dots. */
+  let _fills = null;
+  let _edges = null;
+  let _dots = null;
+  /** The crisis messages drawn now. */
+  let _drawnCrisis = new Set();
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -88,12 +120,13 @@ export function createSmhiWarningsLayer({
   const crisisPoint = (row) => _crisisPositions.get(row.id) || row.point;
   const crisisPosition = (row) => {
     const [lon, lat] = crisisPoint(row);
-    return Cesium.Cartesian3.fromDegrees(lon, lat, _ground.heightOf(row.id));
+    return { lon, lat, height: _ground.heightOf(row.id) };
   };
   const visibleCrisis = () => (_show.crisis ? _crisis : []);
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(SMHI_WARNINGS_LAYER_ID);
   const visibleAreas = () =>
     _areas.filter(
       (row) =>
@@ -106,7 +139,8 @@ export function createSmhiWarningsLayer({
     const crisis = _selectedId ? _crisisById.get(_selectedId) : null;
     if (crisis) {
       const card = buildCrisisCard(crisis, { linkable: Boolean(openExternal) });
-      card.position = crisisPosition(crisis);
+      const at = crisisPosition(crisis);
+      card.position = fromDegrees(at.lon, at.lat, at.height);
       if (card.accessibilityLabel) {
         card.activate = () => {
           openExternal(crisis.link);
@@ -134,7 +168,7 @@ export function createSmhiWarningsLayer({
       return;
     }
     const card = buildWarningCard(row, { linkable: Boolean(openExternal) });
-    card.position = Cesium.Cartesian3.fromDegrees(anchor[0], anchor[1]);
+    card.position = fromDegrees(anchor[0], anchor[1]);
     if (card.accessibilityLabel) {
       card.activate = () => {
         openExternal(SMHI_WARNINGS_PAGE);
@@ -149,16 +183,15 @@ export function createSmhiWarningsLayer({
     );
   }
 
-  /** Resolve a scene pick to an area id of this layer, or null. */
-  function pickedArea(picked) {
-    const pickId = picking.resolvePickId(picked);
+  /** Resolve a pick id to an area or crisis id of this layer, or null. */
+  function pickedArea(pickId) {
     if (typeof pickId === 'string' && pickId.startsWith(CRISIS_PICK_PREFIX)) {
       const crisisId = pickId.slice(CRISIS_PICK_PREFIX.length);
       return _crisisById.has(crisisId) ? crisisId : null;
     }
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
-    // Area ids are "<warning>:<area>"; the entity suffix is the last segment.
+    // Area ids are "<warning>:<area>"; the item suffix is the last segment.
     const id = pickId
       .slice(PICK_PREFIX.length)
       .split(':')
@@ -171,13 +204,18 @@ export function createSmhiWarningsLayer({
     if (!canSelect() || _clickHandler || !_viewer) return;
     // Like the road layer, deliberately NOT registered in the pick-ownership
     // registry: large areas would otherwise make sibling cards inert.
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-      );
+      const at = click.screenPosition;
+      const cardHit = overlayHost.hitTest?.(at?.x, at?.y);
       if (
         cardHit?.sourceId === SMHI_WARNINGS_OVERLAY_SOURCE_ID &&
         cardHit.entryId === _selectedCardId
@@ -188,26 +226,27 @@ export function createSmhiWarningsLayer({
       }
       // A card under the click, this layer's or another's, is not the ground.
       if (cardHit) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedArea(picked) : null;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedArea(pickId);
       if (hit) {
         _selectedId = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (pickId && picking.isOwnedByOtherLayer(SMHI_WARNINGS_LAYER_ID, pickId))
+        return;
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
   }
 
@@ -220,92 +259,77 @@ export function createSmhiWarningsLayer({
     }
   }
 
-  const positions = (ring) =>
-    ring.map(([lon, lat]) => Cesium.Cartesian3.fromDegrees(lon, lat));
+  /** A crisis message's dot as the set draws it: a VMA large, news smaller. */
+  const dotOf = (row) => {
+    const vma = row.kind === 'vma';
+    return {
+      id: `${CRISIS_PICK_PREFIX}${row.id}`,
+      pos: crisisPosition(row),
+      height: 'clampGround',
+      pixelSize: vma ? 16 : 11,
+      color:
+        CRISIS_KINDS.find((kind) => kind.id === row.kind)?.color || '#40c4ff',
+      outlineColor: CRISIS_OUTLINE,
+      outlineWidth: vma ? 3 : 2,
+      disableDepthTest: Number.POSITIVE_INFINITY,
+    };
+  };
 
   /** New ground heights: the crisis dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${CRISIS_PICK_PREFIX}${id}`,
-      (id) => {
-        const row = _crisisById.get(id);
-        return row && crisisPosition(row);
-      },
-    );
+    if (!_dots) return;
+    const rows = ids
+      .filter((id) => _drawnCrisis.has(id))
+      .map((id) => _crisisById.get(id))
+      .filter(Boolean);
+    if (rows.length) _dots.upsert(rows.map(dotOf));
     if (_selectedId && ids.includes(_selectedId)) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      // Least severe first, so red is drawn over orange over yellow.
-      for (const row of visibleAreas()) {
-        const rank = warningLevel(row.level)?.rank ?? 0;
-        const color = Cesium.Color.fromCssColorString(levelColor(row.level));
-        row.polygons.forEach((polygon, index) => {
-          entities.add({
-            id: `${PICK_PREFIX}${row.id}:fill${index}`,
-            polygon: {
-              hierarchy: new Cesium.PolygonHierarchy(
-                positions(polygon.outer),
-                polygon.holes.map(
-                  (hole) => new Cesium.PolygonHierarchy(positions(hole)),
-                ),
-              ),
-              material: new Cesium.ColorMaterialProperty(
-                color.withAlpha(row.upcoming ? 0.12 : 0.3),
-              ),
-              classificationType: Cesium.ClassificationType.BOTH,
-              zIndex: rank,
-            },
-          });
-          entities.add({
-            id: `${PICK_PREFIX}${row.id}:edge${index}`,
-            polyline: {
-              positions: positions([...polygon.outer, polygon.outer[0]]),
-              clampToGround: true,
-              width: row.level === 'MESSAGE' ? 1.5 : 2.5,
-              material: row.upcoming
-                ? new Cesium.PolylineDashMaterialProperty({
-                    color: color.withAlpha(0.85),
-                    dashLength: 16,
-                  })
-                : new Cesium.ColorMaterialProperty(color.withAlpha(0.9)),
-              zIndex: rank,
-            },
-          });
-        });
-      }
-      // Crisis messages on top of the areas: a VMA large, news smaller.
-      _crisisPositions = spreadAroundPlaces(visibleCrisis(), 20_000);
-      for (const row of visibleCrisis()) {
-        const vma = row.kind === 'vma';
-        entities.add({
-          id: `${CRISIS_PICK_PREFIX}${row.id}`,
-          position: crisisPosition(row),
-          point: {
-            pixelSize: vma ? 16 : 11,
-            color: Cesium.Color.fromCssColorString(
-              CRISIS_KINDS.find((kind) => kind.id === row.kind)?.color ||
-                '#40c4ff',
-            ),
-            outlineColor: Cesium.Color.WHITE,
-            outlineWidth: vma ? 3 : 2,
-            heightReference: _ground.enabled
-              ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-              : Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    if (!_dots) return;
+    // Least severe first, so red is drawn over orange over yellow.
+    const fills = [];
+    const edges = [];
+    for (const row of visibleAreas()) {
+      const css = levelColor(row.level);
+      const fill = colorAt(css, row.upcoming ? 0.12 : 0.3);
+      const edge = row.upcoming
+        ? { kind: 'dash', color: colorAt(css, 0.85), length: 16 }
+        : { kind: 'solid', color: colorAt(css, 0.9) };
+      const widthPx = row.level === 'MESSAGE' ? 1.5 : 2.5;
+      row.polygons.forEach((polygon, index) => {
+        fills.push({
+          id: `${PICK_PREFIX}${row.id}:fill${index}`,
+          geometry: {
+            kind: 'polygon',
+            rings: [polygon.outer, ...polygon.holes].map(ringDegrees),
           },
+          fill,
+          height: 'clampGround',
         });
-      }
-    });
+        edges.push({
+          id: `${PICK_PREFIX}${row.id}:edge${index}`,
+          positions: [...polygon.outer, polygon.outer[0]].map(([lon, lat]) =>
+            fromDegrees(lon, lat),
+          ),
+          widthPx,
+          mode: 'draped',
+          style: edge,
+        });
+      });
+    }
+    // Crisis messages on top of the areas.
+    const crisis = visibleCrisis();
+    _crisisPositions = spreadAroundPlaces(crisis, 20_000);
+    _drawnCrisis = new Set();
+    _fills.set(fills);
+    _edges.set(edges);
+    _dots.set(crisis.map(dotOf));
+    _drawnCrisis = new Set(crisis.map((row) => row.id));
     if (_selectedId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   function toggle(key) {
@@ -321,8 +345,10 @@ export function createSmhiWarningsLayer({
     _rowListener?.();
   }
 
+  const sets = () => [_fills, _edges, _dots];
+
   const layer = {
-    id: 'smhi-warnings',
+    id: SMHI_WARNINGS_LAYER_ID,
     name: 'Weather Warnings (Sweden)',
     icon: '⚠️',
     source: 'SMHI',
@@ -332,16 +358,34 @@ export function createSmhiWarningsLayer({
       if (_viewer)
         throw new Error('SMHI warnings layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('smhi-warnings');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      const draw = drawOf(viewer);
+      // The areas lie on every surface, terrain and 3D tiles both.
+      _fills = draw.shapes({
+        id: SMHI_WARNING_FILLS_SET_ID,
+        clampTo: 'both',
+        show: false,
+      });
+      _edges = draw.lines({
+        id: SMHI_WARNING_EDGES_SET_ID,
+        clampTo: 'both',
+        show: false,
+      });
+      _dots = draw.points({
+        id: SMHI_CRISIS_DOTS_SET_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      for (const set of sets()) if (set) set.show = true;
       overlayHost?.setVisible?.(SMHI_WARNINGS_OVERLAY_SOURCE_ID, true);
       installClickHandler();
+      requestRender();
     },
 
     disable() {
@@ -350,13 +394,14 @@ export function createSmhiWarningsLayer({
       _ground.cancel();
       _enabled = false;
       _lastError = null;
-      if (_dataSource) _dataSource.show = false;
+      for (const set of sets()) if (set) set.show = false;
       removeClickHandler();
       clearSelection();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -429,18 +474,20 @@ export function createSmhiWarningsLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
       _areaById.clear();
       _areas = [];
       _crisisById.clear();
       _crisis = [];
+      _crisisPositions = new Map();
+      _drawnCrisis = new Set();
       _signature = null;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      for (const set of sets()) set?.dispose();
+      _fills = null;
+      _edges = null;
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

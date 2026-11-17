@@ -5,7 +5,6 @@
  * over the airport. The day comes from /api/airport-board and is read again
  * every three minutes while the board is open and the page is visible.
  */
-import * as Cesium from 'cesium';
 import { getLocale, msg, onLocaleChange, t } from '../i18n/index.js';
 import { swedaviaAirport } from '../data/swedaviaAirports.js';
 import {
@@ -23,7 +22,9 @@ import {
   nowIndex,
   queueLevel,
 } from './airportBoardModel.js';
-import { viewerBehind } from '../render/cesium/forkViewer.js';
+import { toLonLatH } from '../geo/ellipsoid.js';
+import { toRadians } from '../geo/vector.js';
+import { canvasOf, findCamera, findQuery } from '../render/rendererOf.js';
 
 const REFRESH_MS = 3 * 60_000;
 /** The "now" line and gone rows move on this often while the board shows. */
@@ -39,6 +40,7 @@ const AIRCRAFT_INDEX_MAX = 50_000;
     back at a 35° pitch, so its label sits near mid-screen). */
 const QUEUE_VIEW_SOUTH_DEG = 0.0105;
 const QUEUE_VIEW_HEIGHT_M = 900;
+const QUEUE_VIEW_PITCH = toRadians(-35);
 const TABS = Object.freeze([
   ['departures', msg('Departures'), 'flight_takeoff'],
   ['arrivals', msg('Arrivals'), 'flight_land'],
@@ -73,7 +75,7 @@ const bilingual = (value) =>
       ? value.sv
       : value.en;
 
-/** Own the board for one viewer; `publish` receives `{ card, board }`. */
+/** Own the board for one scene object (`viewer`); `publish` receives `{ card, board }`. */
 export function createAirportBoard({
   viewer: host,
   // The flights layer, for following a board row's aircraft (optional).
@@ -88,9 +90,6 @@ export function createAirportBoard({
   now = () => Date.now(),
   documentRef = globalThis.document,
 }) {
-  // Swedish fork: this panel drives Cesium's own viewer, the one behind
-  // the application's scene object (src/render/cesium/forkViewer.js).
-  const viewer = viewerBehind(host);
   let destroyed = false;
   let airport = null;
   let tab = 'departures';
@@ -198,19 +197,18 @@ export function createAirportBoard({
 
   // ---- the airport the view is over -----------------------------------------
   function viewCenter() {
-    const height = viewer.camera.positionCartographic?.height;
+    const height = findCamera(host)?.pose().height;
     if (!Number.isFinite(height)) return null;
-    const canvas = viewer.scene.canvas;
-    const hit = viewer.camera.pickEllipsoid(
-      new Cesium.Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2),
-    );
+    const canvas = canvasOf(host);
+    const hit = canvas
+      ? findQuery(host)?.pickEllipsoid(
+          canvas.clientWidth / 2,
+          canvas.clientHeight / 2,
+        )
+      : null;
     if (!hit) return null;
-    const carto = Cesium.Cartographic.fromCartesian(hit);
-    return {
-      lat: Cesium.Math.toDegrees(carto.latitude),
-      lon: Cesium.Math.toDegrees(carto.longitude),
-      height,
-    };
+    const { lat, lon } = toLonLatH(hit);
+    return { lat, lon, height };
   }
 
   function settle() {
@@ -225,7 +223,7 @@ export function createAirportBoard({
     near = under;
     render();
   }
-  const removeMoveEnd = viewer.camera.moveEnd.addEventListener(() => {
+  const removeMoveEnd = findCamera(host)?.on('moveEnd', () => {
     clearTimeout(settleTimer);
     settleTimer = setTimeout(settle, SETTLE_DELAY_MS);
   });
@@ -603,19 +601,17 @@ export function createAirportBoard({
       close();
       // From the south, looking north over the checkpoint's terminal; its
       // label (src/ui/airportQueues.js) shows once the view settles.
-      viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(
-          queue.lon,
-          queue.lat - QUEUE_VIEW_SOUTH_DEG,
-          QUEUE_VIEW_HEIGHT_M,
-        ),
-        orientation: {
-          heading: 0,
-          pitch: Cesium.Math.toRadians(-35),
-          roll: 0,
+      findCamera(host)?.flyTo(
+        {
+          lon: queue.lon,
+          lat: queue.lat - QUEUE_VIEW_SOUTH_DEG,
+          height: QUEUE_VIEW_HEIGHT_M,
         },
-        duration: 2,
-      });
+        {
+          orientation: { heading: 0, pitch: QUEUE_VIEW_PITCH, roll: 0 },
+          durationS: 2,
+        },
+      );
     },
   });
   const removeLocale = onLocaleChange(render);

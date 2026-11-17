@@ -6,7 +6,6 @@
  * radio). Facts come from /api/city-dossier; the live part reuses the
  * briefing, air quality and police routes the layers already use.
  */
-import * as Cesium from 'cesium';
 import {
   formatNumber,
   getLocale,
@@ -40,10 +39,17 @@ import { OrbitController } from '../orbit.js';
 import { messagesFor } from './krisinformationModel.js';
 import { SIGHT_COLORS, createSightsLayer } from './citySights.js';
 import { facingText } from '../layers/speedCameras/cards.js';
-import { redrawEntities } from '../layers/redrawEntities.js';
 import { localP4Channel } from './cityDossierRadio.js';
-import { findCamera } from '../render/rendererOf.js';
-import { viewerBehind } from '../render/cesium/forkViewer.js';
+import { fromDegrees, toLonLatH } from '../geo/ellipsoid.js';
+import { distance, toRadians } from '../geo/vector.js';
+import { hexColor } from '../render/color.js';
+import {
+  canvasOf,
+  drawOf,
+  findCamera,
+  findFrame,
+  findQuery,
+} from '../render/rendererOf.js';
 
 const PANEL_ID = 'city-panel';
 /** Higher than this the view is looking at a region, not visiting a town. */
@@ -153,6 +159,14 @@ const ARRIVAL_PITCH_DEG = -32;
 /** The start view (or a shared link) is a visit too, but not an arrival. */
 const STARTUP_QUIET_MS = 20_000;
 const STAMP_COLOR = '#ffc94d';
+const STAMP_OUTLINE = Object.freeze([0, 0, 0, 0.6]);
+const JOURNEY_STYLE = Object.freeze({
+  kind: 'dash',
+  color: hexColor(STAMP_COLOR, 0.8),
+  length: 14,
+});
+/** The visit passport's towns and the dashed way between them. */
+const JOURNEY_ID = 'visit-passport';
 const PARTY_COLORS = Object.freeze({
   S: '#ed1b34',
   V: '#af0000',
@@ -244,9 +258,6 @@ export function createCityDossier({
   createSights = createSightsLayer,
   createOrbit = (forViewer) => new OrbitController(forViewer),
 }) {
-  // Swedish fork: this panel drives Cesium's own viewer, the one behind
-  // the application's scene object (src/render/cesium/forkViewer.js).
-  const viewer = viewerBehind(host);
   let destroyed = false;
   const createdAt = now();
   const passport = loadPassport(storage);
@@ -272,23 +283,25 @@ export function createCityDossier({
   /** The town's Kolada figures: `{ code, status, stats }`. */
   let stats = null;
   let statsRequest = null;
+  const requestRender = () => findFrame(host)?.requestRender('city-dossier');
   const sightsLayer = createSights({
-    viewer,
+    viewer: host,
     overlayHost,
     onPick: (id) => chooseSight(id),
   });
 
   function viewCenter() {
-    const canvas = viewer.scene.canvas;
-    const height = viewer.camera.positionCartographic?.height;
+    const canvas = canvasOf(host);
+    const height = findCamera(host)?.pose().height;
     if (!Number.isFinite(height) || height > MAX_VISIT_HEIGHT_M) return null;
-    const hit = viewer.camera.pickEllipsoid(
-      new Cesium.Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2),
-    );
+    const hit = canvas
+      ? findQuery(host)?.pickEllipsoid(
+          canvas.clientWidth / 2,
+          canvas.clientHeight / 2,
+        )
+      : null;
     if (!hit) return null;
-    const carto = Cesium.Cartographic.fromCartesian(hit);
-    const lat = Cesium.Math.toDegrees(carto.latitude);
-    const lon = Cesium.Math.toDegrees(carto.longitude);
+    const { lat, lon } = toLonLatH(hit);
     if (
       lon < SWEDEN.west ||
       lon > SWEDEN.east ||
@@ -511,23 +524,22 @@ export function createCityDossier({
    */
   function flyIn() {
     const town = arrival?.town;
+    const camera = findCamera(host);
     if (
       !town ||
+      !camera ||
       isCameraBusy() ||
       documentRef?.body?.classList?.contains('cockpit-mode')
     )
       return;
     const [lon, lat] = town.point;
-    const target = Cesium.Cartesian3.fromDegrees(lon, lat, 0);
-    const distance = Cesium.Cartesian3.distance(
-      viewer.camera.positionWC,
-      target,
-    );
+    const target = fromDegrees(lon, lat, 0);
+    const away = distance(camera.pose().position, target);
     stopOrbit();
     // The orbit drives the renderer camera port, bound to the scene object.
     const controller = createOrbit(host);
     orbit = controller;
-    const radius = Math.min(12_000, Math.max(2_500, distance));
+    const radius = Math.min(12_000, Math.max(2_500, away));
     // Any input, a camera owner taking over or one full turn ends it.
     const interrupt = () => stopOrbit();
     for (const type of ['pointerdown', 'wheel', 'keydown', 'touchstart'])
@@ -560,20 +572,23 @@ export function createCityDossier({
     // To the circle's first position in one glide, from where the camera is
     // and on its own heading; the circle takes over where the glide ends.
     controller.gliding = true;
-    viewer.camera.flyToBoundingSphere(new Cesium.BoundingSphere(target, 0), {
-      offset: new Cesium.HeadingPitchRange(
-        viewer.camera.heading,
-        Cesium.Math.toRadians(ARRIVAL_PITCH_DEG),
-        radius,
-      ),
-      duration: ARRIVAL_FLY_S,
-      complete: circle,
-      // Another flight took the camera: it is theirs, and left alone.
-      cancel: () => {
-        controller.gliding = false;
-        if (orbit === controller) stopOrbit();
+    camera.flyToBounds(
+      { center: target, radius: 0 },
+      {
+        offset: {
+          heading: camera.pose().heading,
+          pitch: toRadians(ARRIVAL_PITCH_DEG),
+          range: radius,
+        },
+        durationS: ARRIVAL_FLY_S,
+        onComplete: circle,
+        // Another flight took the camera: it is theirs, and left alone.
+        onCancel: () => {
+          controller.gliding = false;
+          if (orbit === controller) stopOrbit();
+        },
       },
-    });
+    );
     // The panel takes over from the card.
     closeArrival();
     openPanel();
@@ -593,7 +608,7 @@ export function createCityDossier({
     // Still gliding in: the glide is ours to end.
     if (stopping.gliding) {
       stopping.gliding = false;
-      viewer.camera.cancelFlight?.();
+      findCamera(host)?.cancelFlight();
     }
     if (stopping.active) stopping.stop();
   }
@@ -602,52 +617,59 @@ export function createCityDossier({
   function renderJourney() {
     if (!passport.showMap) {
       if (journey) {
-        viewer.dataSources.remove(journey, true);
-        journey = null;
+        disposeJourney();
+        requestRender();
       }
       return;
     }
     if (!journey) {
-      journey = new Cesium.CustomDataSource('visit-passport');
-      viewer.dataSources.add(journey);
+      const port = drawOf(host);
+      // On the ground and the 3D tiles, as the stamps always were.
+      journey = {
+        towns: port.points({ id: JOURNEY_ID, clampTo: 'both' }),
+        route: port.lines({ id: `${JOURNEY_ID}-route`, clampTo: 'both' }),
+      };
     }
-    const entities = journey.entities;
-    redrawEntities(entities, () => {
-      const stamps = stampsInOrder(passport).filter((stamp) =>
-        Array.isArray(stamp.point),
-      );
-      const gold = Cesium.Color.fromCssColorString(STAMP_COLOR);
-      for (const stamp of stamps)
-        entities.add({
-          id: `visit-passport:${stamp.code}`,
-          position: Cesium.Cartesian3.fromDegrees(...stamp.point),
-          point: {
-            pixelSize: 9,
-            color: gold,
-            outlineColor: Cesium.Color.BLACK.withAlpha(0.6),
-            outlineWidth: 1.5,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          },
-        });
-      if (stamps.length > 1)
-        entities.add({
-          id: 'visit-passport:route',
-          polyline: {
-            positions: stamps.map((stamp) =>
-              Cesium.Cartesian3.fromDegrees(...stamp.point),
-            ),
-            width: 2,
-            arcType: Cesium.ArcType.GEODESIC,
-            clampToGround: true,
-            material: new Cesium.PolylineDashMaterialProperty({
-              color: gold.withAlpha(0.8),
-              dashLength: 14,
-            }),
-          },
-        });
-    });
-    viewer.scene.requestRender?.();
+    const stamps = stampsInOrder(passport).filter((stamp) =>
+      Array.isArray(stamp.point),
+    );
+    journey.towns.set(
+      stamps.map((stamp) => ({
+        id: `visit-passport:${stamp.code}`,
+        pos: {
+          lon: stamp.point[0],
+          lat: stamp.point[1],
+          height: 0,
+        },
+        height: 'clampGround',
+        pixelSize: 9,
+        color: STAMP_COLOR,
+        outlineColor: STAMP_OUTLINE,
+        outlineWidth: 1.5,
+        disableDepthTest: Number.POSITIVE_INFINITY,
+      })),
+    );
+    journey.route.set(
+      stamps.length > 1
+        ? [
+            {
+              id: 'visit-passport:route',
+              positions: stamps.map((stamp) => fromDegrees(...stamp.point)),
+              widthPx: 2,
+              mode: 'draped',
+              clampTo: 'both',
+              style: JOURNEY_STYLE,
+            },
+          ]
+        : [],
+    );
+    requestRender();
+  }
+
+  function disposeJourney() {
+    journey?.towns.dispose();
+    journey?.route.dispose();
+    journey = null;
   }
 
   /** "Visit 4 · first 5 Nov" for the town shown, if it is stamped. */
@@ -788,19 +810,17 @@ export function createCityDossier({
     if (!sight) return;
     chosenSight = id;
     stopOrbit();
-    viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(
-        sight.lon,
-        sight.lat - SIGHT_VIEW_SOUTH_DEG,
-        SIGHT_VIEW_HEIGHT_M,
-      ),
-      orientation: {
-        heading: 0,
-        pitch: Cesium.Math.toRadians(-35),
-        roll: 0,
+    findCamera(host)?.flyTo(
+      {
+        lon: sight.lon,
+        lat: sight.lat - SIGHT_VIEW_SOUTH_DEG,
+        height: SIGHT_VIEW_HEIGHT_M,
       },
-      duration: 2,
-    });
+      {
+        orientation: { heading: 0, pitch: toRadians(-35), roll: 0 },
+        durationS: 2,
+      },
+    );
     drawSights();
     render();
   }
@@ -1398,15 +1418,13 @@ export function createCityDossier({
     if (!camera) return false;
     stopOrbit();
     const [lon, lat] = camera.point;
-    viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(
-        lon,
-        lat - CAMERA_VIEW_SOUTH_DEG,
-        CAMERA_VIEW_HEIGHT_M,
-      ),
-      orientation: { heading: 0, pitch: Cesium.Math.toRadians(-40), roll: 0 },
-      duration: 2,
-    });
+    findCamera(host)?.flyTo(
+      { lon, lat: lat - CAMERA_VIEW_SOUTH_DEG, height: CAMERA_VIEW_HEIGHT_M },
+      {
+        orientation: { heading: 0, pitch: toRadians(-40), roll: 0 },
+        durationS: 2,
+      },
+    );
     await dataManager?.setEnabled?.('speed-cameras', true, { origin: 'user' });
     const layer = dataManager?.layers?.get?.('speed-cameras')?.module;
     // The first read of the sites may still be on its way: wait for it, and
@@ -1566,7 +1584,7 @@ export function createCityDossier({
   renderJourney();
   const removeLocaleListener = onLocaleChange(render);
   watchPanelOnce();
-  const removeMoveEnd = viewer.camera.moveEnd.addEventListener(() => {
+  const removeMoveEnd = findCamera(host)?.on('moveEnd', () => {
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => void visit(), SETTLE_DELAY_MS);
   });
@@ -1584,12 +1602,11 @@ export function createCityDossier({
       if (timer) clearTimeout(timer);
       request?.abort();
       liveRequest?.abort();
-      removeMoveEnd();
+      removeMoveEnd?.();
       removeLocaleListener();
       stopWatchingPanel?.();
       stopOrbit();
-      if (journey) viewer.dataSources.remove(journey, true);
-      journey = null;
+      disposeJourney();
       sightsRequest?.abort();
       sightsLayer.destroy();
       disconnect();

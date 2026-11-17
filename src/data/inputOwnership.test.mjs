@@ -183,18 +183,7 @@ test('pointer input, camera holds and the stock clicks go through the one dispat
   // Swedish fork: its own layers and panels still bind a handler of their
   // own, as they did before the dispatcher; moving them onto it is to come.
   const forkOwnHandlers = new Set([
-    ...[
-      'airQuality',
-      'electionDistricts',
-      'municipalities',
-      'powerGrid',
-      'protectedNature',
-      'smhiWarnings',
-      'trafikverketRoads',
-    ].map((name) => `src/app/layers/${name}.js`),
-    'src/ui/airportQueues.js',
-    'src/ui/airportRoutes.js',
-    'src/ui/citySights.js',
+    ...['powerGrid'].map((name) => `src/app/layers/${name}.js`),
   ]);
   // Paths with forward slashes on every platform, as the rules name them.
   const walk = (dir) =>

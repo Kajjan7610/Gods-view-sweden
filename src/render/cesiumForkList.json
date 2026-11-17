@@ -1,24 +1,5 @@
 [
-  "src/app/layers/airQuality.js",
-  "src/app/layers/aurora.js",
-  "src/app/layers/electionDistricts.js",
-  "src/app/layers/municipalities.js",
   "src/app/layers/powerGrid.js",
-  "src/app/layers/protectedNature.js",
-  "src/app/layers/smhiWarnings.js",
-  "src/app/layers/trafikverketRoads.js",
-  "src/layers/airQuality/index.js",
-  "src/layers/aurora/index.js",
-  "src/layers/electionDistricts/index.js",
-  "src/layers/municipalities/index.js",
   "src/layers/powerGrid/flowMaterial.js",
-  "src/layers/powerGrid/index.js",
-  "src/layers/protectedNature/index.js",
-  "src/layers/roadConditions/index.js",
-  "src/layers/smhiWarnings/index.js",
-  "src/ui/airportBoard.js",
-  "src/ui/airportQueues.js",
-  "src/ui/airportRoutes.js",
-  "src/ui/cityDossier.js",
-  "src/ui/citySights.js"
+  "src/layers/powerGrid/index.js"
 ]

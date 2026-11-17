@@ -1,8 +1,9 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
+import { fromDegrees } from '../../geo/ellipsoid.js';
+import { cssColor } from '../../render/color.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { liftEntities } from '../liftEntities.js';
-import { redrawEntities } from '../redrawEntities.js';
 import {
   INCIDENT_KINDS,
   OTHER_INCIDENT,
@@ -20,6 +21,15 @@ export * from './records.js';
 export * from './cards.js';
 export { createTrafikverketRoadsSource } from './source.js';
 
+export const TRAFIKVERKET_ROADS_LAYER_ID = 'trafikverket-roads';
+/**
+ * The draw sets the layer draws in, one per kind of thing drawn: the
+ * stretches of road condition, the incidents' dashed stretches, and the
+ * incidents' dots on top.
+ */
+export const ROAD_CONDITION_LINES_SET_ID = `${TRAFIKVERKET_ROADS_LAYER_ID}:conditions`;
+export const ROAD_INCIDENT_LINES_SET_ID = `${TRAFIKVERKET_ROADS_LAYER_ID}:incident-lines`;
+export const ROAD_INCIDENT_DOTS_SET_ID = `${TRAFIKVERKET_ROADS_LAYER_ID}:incidents`;
 const PICK_PREFIX = 'se-road:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -45,11 +55,26 @@ const KIND_LABELS = Object.freeze({
   other: msg('Other'),
 });
 /** The ring around a closed road's white dot and its dashed stretch. */
-const CLOSURE_RING = Cesium.Color.fromCssColorString('#ff1744');
+const CLOSURE_RING = '#ff1744';
+/** The ring around every other incident's dot. */
+const DOT_OUTLINE = Object.freeze([0, 0, 0, 0.8]);
 /** Point size by Trafikverket SeverityCode (1, 2, 4, 5; higher is worse). */
 const severityPixels = (severity) =>
   ({ 5: 15, 4: 13, 2: 10, 1: 8 })[severity] || 9;
 const conditionWidth = (code) => ({ 3: 6, 2: 4, 4: 4, 1: 2 })[code] || 3;
+
+/** A CSS colour at `alpha`, as a renderer colour made once per both. */
+const _colors = new Map();
+function colorAt(css, alpha) {
+  const key = `${css}|${alpha}`;
+  let color = _colors.get(key);
+  if (!color) {
+    const [r, g, b] = cssColor(css);
+    color = Object.freeze([r, g, b, alpha]);
+    _colors.set(key, color);
+  }
+  return color;
+}
 
 /**
  * Own one Swedish road display: winter road condition per stretch and live
@@ -59,12 +84,13 @@ const conditionWidth = (code) => ({ 3: 6, 2: 4, 4: 4, 1: 2 })[code] || 3;
 export function createTrafikverketRoadsLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
   picking = null,
   pointer = null,
   openExternal = null,
   terrain = null,
   now = () => Date.now(),
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Trafikverket roads require a snapshot source');
@@ -72,12 +98,18 @@ export function createTrafikverketRoadsLayer({
   // groundHeights.js); road lines stay ground-clamped, which is cheap.
   const _ground = createGroundHeights(terrain, (ids) => lift(ids));
   let _viewer = null;
-  let _dataSource = null;
+  /** The draw sets: condition stretches, incident stretches, incident dots. */
+  let _conditionLines = null;
+  let _incidentLines = null;
+  let _dots = null;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
   let _rowListener = null;
-  /** What is on the map: "c:<id>" or "i:<id>" → {print, ids of its entities}. */
+  /**
+   * What is on the map: "c:<id>" or "i:<id>" → {print, its line items, the
+   * id of its dot or null}.
+   */
   const _drawn = new Map();
   /** The next drawing starts over: the first one, and after one that failed. */
   let _redrawAll = true;
@@ -97,8 +129,9 @@ export function createTrafikverketRoadsLayer({
   const _conditionById = new Map();
   const _incidentById = new Map();
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && picking;
+  const canSelect = () => overlayHost && picking;
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(TRAFIKVERKET_ROADS_LAYER_ID);
 
   function selectedRow() {
     if (!_selected) return null;
@@ -127,7 +160,7 @@ export function createTrafikverketRoadsLayer({
       _selected.kind === 'c'
         ? buildConditionCard(row)
         : buildIncidentCard(row, { linkable: Boolean(openExternal) });
-    card.position = Cesium.Cartesian3.fromDegrees(
+    card.position = fromDegrees(
       anchor[0],
       anchor[1],
       _selected.kind === 'i' ? _ground.heightOf(row.id) : 0,
@@ -142,13 +175,12 @@ export function createTrafikverketRoadsLayer({
     overlayHost.setEntries(ROAD_OVERLAY_SOURCE_ID, [card], CARD_HOST_OPTIONS);
   }
 
-  /** Resolve a scene pick to {kind, id} of this layer, or null. */
-  function pickedRow(picked) {
-    const pickId = picking.resolvePickId(picked);
+  /** Resolve a pick id to {kind, id} of this layer, or null. */
+  function pickedRow(pickId) {
     if (typeof pickId !== 'string' || !pickId.startsWith(PICK_PREFIX))
       return null;
     const [kind, ...rest] = pickId.slice(PICK_PREFIX.length).split(':');
-    // Ids may themselves contain ':'; the entity suffix is the last segment.
+    // Ids may themselves contain ':'; the item suffix is the last segment.
     const id = rest.length > 1 ? rest.slice(0, -1).join(':') : rest[0];
     const map = kind === 'c' ? _conditionById : _incidentById;
     return map.has(id) ? { kind, id } : null;
@@ -158,13 +190,18 @@ export function createTrafikverketRoadsLayer({
     if (!canSelect() || _clickHandler || !_viewer) return;
     // Like fire perimeters, deliberately NOT registered in the pick-ownership
     // registry: long road lines would otherwise make sibling cards inert.
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (pointer && !pointer.isPointerFree()) return;
-      const cardHit = overlayHost.hitTest?.(
-        click.position?.x,
-        click.position?.y,
-      );
+      const at = click.screenPosition;
+      const cardHit = overlayHost.hitTest?.(at?.x, at?.y);
       if (
         cardHit?.sourceId === ROAD_OVERLAY_SOURCE_ID &&
         cardHit.entryId === _selectedCardId
@@ -174,26 +211,30 @@ export function createTrafikverketRoadsLayer({
       }
       // A card under the click, this layer's or another's, is not the ground.
       if (cardHit) return;
-      const picked = _viewer.scene.pick(click.position);
-      const hit = picked ? pickedRow(picked) : null;
+      const picked = click.topHit;
+      const pickId = picked ? (picking.resolvePickId(picked) ?? null) : null;
+      const hit = pickedRow(pickId);
       if (hit) {
         _selected = hit;
         publishSelectedCard();
+        requestRender();
         return;
       }
-      if (picked) {
-        const pickId = picking.resolvePickId(picked);
-        if (pickId && picking.isOwnedByOtherLayer(layer.id, pickId)) return;
-      }
+      if (
+        pickId &&
+        picking.isOwnedByOtherLayer(TRAFIKVERKET_ROADS_LAYER_ID, pickId)
+      )
+        return;
       if (_selected) {
         _selected = null;
         publishSelectedCard();
+        requestRender();
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
   }
 
   function removeClickHandler() {
-    _clickHandler?.destroy();
+    _clickHandler?.();
     _clickHandler = null;
   }
 
@@ -206,31 +247,39 @@ export function createTrafikverketRoadsLayer({
     }
   }
 
-  const positions = (line) =>
-    line.map(([lon, lat]) => Cesium.Cartesian3.fromDegrees(lon, lat));
+  const positions = (line) => line.map(([lon, lat]) => fromDegrees(lon, lat));
 
-  const incidentPosition = (row) =>
-    Cesium.Cartesian3.fromDegrees(
-      row.point[0],
-      row.point[1],
-      _ground.heightOf(row.id),
-    );
+  /** An incident's dot as the set draws it. */
+  const dotOf = (row) => {
+    const closure = row.kind === 'closure';
+    return {
+      id: `${PICK_PREFIX}i:${row.id}:point`,
+      pos: {
+        lon: row.point[0],
+        lat: row.point[1],
+        height: _ground.heightOf(row.id),
+      },
+      height: 'clampGround',
+      pixelSize: row.kind === 'minor' ? 6 : severityPixels(row.severity),
+      color: incidentColor(row.kind),
+      outlineColor: closure ? CLOSURE_RING : DOT_OUTLINE,
+      outlineWidth: closure ? 3 : 1.5,
+      disableDepthTest: Number.POSITIVE_INFINITY,
+    };
+  };
 
   /** New ground heights: the incident dots already drawn move where they are. */
   function lift(ids) {
-    if (!_dataSource) return;
-    liftEntities(
-      _dataSource.entities,
-      ids,
-      (id) => `${PICK_PREFIX}i:${id}:point`,
-      (id) => {
-        const row = _incidentById.get(id);
-        return row && incidentPosition(row);
-      },
-    );
+    if (!_dots) return;
+    const dots = [];
+    for (const id of ids) {
+      const row = _incidentById.get(id);
+      if (row && _drawn.get(`i:${id}`)?.dot) dots.push(dotOf(row));
+    }
+    if (dots.length) _dots.upsert(dots);
     if (_selected?.kind === 'i' && ids.includes(_selected.id))
       publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   /** A cheap fingerprint of every vertex a row draws. */
@@ -246,64 +295,42 @@ export function createTrafikverketRoadsLayer({
     return hash;
   };
 
-  /** Draw one road-condition stretch; the ids of the entities added. */
-  function drawCondition(entities, row) {
-    const color = Cesium.Color.fromCssColorString(
+  /** One road-condition stretch as the sets draw it. */
+  function drawCondition(row) {
+    const color = colorAt(
       conditionColor(row.code),
-    ).withAlpha(row.code === 1 ? 0.55 : 0.9);
-    return row.lines.map(
-      (line, index) =>
-        entities.add({
-          id: `${PICK_PREFIX}c:${row.id}:${index}`,
-          polyline: {
-            positions: positions(line),
-            clampToGround: true,
-            width: conditionWidth(row.code),
-            material: new Cesium.ColorMaterialProperty(color),
-          },
-        }).id,
+      row.code === 1 ? 0.55 : 0.9,
     );
+    return {
+      lines: row.lines.map((line, index) => ({
+        id: `${PICK_PREFIX}c:${row.id}:${index}`,
+        positions: positions(line),
+        widthPx: conditionWidth(row.code),
+        mode: 'draped',
+        style: { kind: 'solid', color },
+      })),
+      dot: null,
+    };
   }
 
-  /** Draw one incident, its stretch and its dot; the ids of the entities added. */
-  function drawIncident(entities, row) {
+  /** One incident, its stretch and its dot, as the sets draw them. */
+  function drawIncident(row) {
     const closure = row.kind === 'closure';
-    const color = Cesium.Color.fromCssColorString(incidentColor(row.kind));
     // Dashed, so an incident's stretch never reads as a road condition.
-    const ids = row.lines.map(
-      (line, index) =>
-        entities.add({
-          id: `${PICK_PREFIX}i:${row.id}:line${index}`,
-          polyline: {
-            positions: positions(line),
-            clampToGround: true,
-            width: closure ? 4 : 3,
-            material: new Cesium.PolylineDashMaterialProperty({
-              color: (closure ? CLOSURE_RING : color).withAlpha(0.8),
-              dashLength: 14,
-            }),
-          },
-        }).id,
+    const color = colorAt(
+      closure ? CLOSURE_RING : incidentColor(row.kind),
+      0.8,
     );
-    ids.push(
-      entities.add({
-        id: `${PICK_PREFIX}i:${row.id}:point`,
-        position: incidentPosition(row),
-        point: {
-          pixelSize: row.kind === 'minor' ? 6 : severityPixels(row.severity),
-          color,
-          outlineColor: closure
-            ? CLOSURE_RING
-            : Cesium.Color.BLACK.withAlpha(0.8),
-          outlineWidth: closure ? 3 : 1.5,
-          heightReference: _ground.enabled
-            ? Cesium.HeightReference.CLAMP_TO_TERRAIN
-            : Cesium.HeightReference.CLAMP_TO_GROUND,
-          disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        },
-      }).id,
-    );
-    return ids;
+    return {
+      lines: row.lines.map((line, index) => ({
+        id: `${PICK_PREFIX}i:${row.id}:line${index}`,
+        positions: positions(line),
+        widthPx: closure ? 4 : 3,
+        mode: 'draped',
+        style: { kind: 'dash', color, length: 14 },
+      })),
+      dot: dotOf(row),
+    };
   }
 
   /**
@@ -333,67 +360,70 @@ export function createTrafikverketRoadsLayer({
     return wanted;
   }
 
+  /** Every line item drawn now of the rows whose key starts with `kind`. */
+  function drawnLines(kind) {
+    const lines = [];
+    for (const [key, drawn] of _drawn)
+      if (key.startsWith(kind)) lines.push(...drawn.lines);
+    return lines;
+  }
+
   /**
    * Bring the map in line with the rows and the toggles. In place: a row that
    * is drawn as it should be is left alone, so one new incident among
-   * thousands adds one dot instead of drawing the whole country again.
+   * thousands adds one dot instead of drawing the whole country again, and a
+   * set of lines none of whose rows changed is not written at all.
    * @returns {number} How many rows were added, removed or drawn anew.
    */
   function render() {
-    if (!_dataSource) return 0;
-    const entities = _dataSource.entities;
+    if (!_dots) return 0;
     const wanted = wantedRows();
-    const add = (key, item) =>
-      _drawn.set(key, {
-        print: item.print,
-        ids: item.draw(entities, item.row),
-      });
     let touched = 0;
     const full = _redrawAll;
     // Until this drawing is done: one that fails is made again from scratch.
     _redrawAll = true;
     if (full) {
       _drawn.clear();
-      redrawEntities(entities, () => {
-        for (const [key, item] of wanted) add(key, item);
-      });
+      for (const [key, item] of wanted)
+        _drawn.set(key, { print: item.print, ...item.draw(item.row) });
+      _conditionLines.set(drawnLines('c:'));
+      _incidentLines.set(drawnLines('i:'));
+      const dots = [];
+      for (const drawn of _drawn.values()) if (drawn.dot) dots.push(drawn.dot);
+      _dots.set(dots);
       touched = wanted.size;
     } else {
-      // Gone and changed rows leave in a suspension of their own: inside one
-      // suspension Cesium cancels a removal against an addition under the
-      // same id (see redrawEntities.js).
-      const gone = [];
+      // Gone and changed rows leave, then new and changed ones come; the
+      // dots change where they are, a set of lines is written once, whole.
+      const linesChanged = { c: false, i: false };
+      const goneDots = [];
       for (const [key, drawn] of _drawn)
-        if (wanted.get(key)?.print !== drawn.print) gone.push(key);
-      if (gone.length) {
-        entities.suspendEvents();
-        try {
-          for (const key of gone) {
-            for (const id of _drawn.get(key).ids) entities.removeById(id);
-            _drawn.delete(key);
-          }
-        } finally {
-          entities.resumeEvents();
+        if (wanted.get(key)?.print !== drawn.print) {
+          if (drawn.lines.length) linesChanged[key[0]] = true;
+          if (drawn.dot) goneDots.push(drawn.dot.id);
+          _drawn.delete(key);
+          touched += 1;
         }
-      }
-      touched = gone.length;
-      entities.suspendEvents();
-      try {
-        for (const [key, item] of wanted)
-          if (!_drawn.has(key)) {
-            add(key, item);
-            touched += 1;
-          }
-      } finally {
-        entities.resumeEvents();
-      }
+      const newDots = [];
+      for (const [key, item] of wanted)
+        if (!_drawn.has(key)) {
+          const drawn = { print: item.print, ...item.draw(item.row) };
+          _drawn.set(key, drawn);
+          if (drawn.lines.length) linesChanged[key[0]] = true;
+          if (drawn.dot) newDots.push(drawn.dot);
+          touched += 1;
+        }
+      if (goneDots.length) _dots.remove(goneDots);
+      if (newDots.length) _dots.upsert(newDots);
+      if (linesChanged.c) _conditionLines.set(drawnLines('c:'));
+      if (linesChanged.i) _incidentLines.set(drawnLines('i:'));
     }
     _redrawAll = false;
     // A row the toggles or Trafikverket took off the map keeps no card.
     if (_selected && !_drawn.has(`${_selected.kind}:${_selected.id}`))
       _selected = null;
     if (_selected || _selectedCardId) publishSelectedCard();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
     return touched;
   }
 
@@ -403,8 +433,10 @@ export function createTrafikverketRoadsLayer({
     _rowListener?.();
   }
 
+  const sets = () => [_conditionLines, _incidentLines, _dots];
+
   const layer = {
-    id: 'trafikverket-roads',
+    id: TRAFIKVERKET_ROADS_LAYER_ID,
     name: 'Road Conditions (Sweden)',
     icon: '🛣️',
     source: 'Trafikverket',
@@ -414,16 +446,34 @@ export function createTrafikverketRoadsLayer({
       if (_viewer)
         throw new Error('Trafikverket roads layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('trafikverket-roads');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      const draw = drawOf(viewer);
+      // Road lines drape on every surface, as ground-clamped lines did.
+      _conditionLines = draw.lines({
+        id: ROAD_CONDITION_LINES_SET_ID,
+        clampTo: 'both',
+        show: false,
+      });
+      _incidentLines = draw.lines({
+        id: ROAD_INCIDENT_LINES_SET_ID,
+        clampTo: 'both',
+        show: false,
+      });
+      _dots = draw.points({
+        id: ROAD_INCIDENT_DOTS_SET_ID,
+        // Terrain only once the dots have their ground heights: clamping
+        // thousands of dots to 3D tiles freezes the app (groundHeights.js).
+        clampTo: _ground.enabled ? 'terrain' : 'both',
+        horizonCull: true,
+        show: false,
+      });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      for (const set of sets()) if (set) set.show = true;
       overlayHost?.setVisible?.(ROAD_OVERLAY_SOURCE_ID, true);
       installClickHandler();
+      requestRender();
     },
 
     disable() {
@@ -432,13 +482,14 @@ export function createTrafikverketRoadsLayer({
       _ground.cancel();
       _enabled = false;
       _lastError = null;
-      if (_dataSource) _dataSource.show = false;
+      for (const set of sets()) if (set) set.show = false;
       removeClickHandler();
       clearSelection();
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_dots) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -492,7 +543,7 @@ export function createTrafikverketRoadsLayer({
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _ground.clear();
       _conditionById.clear();
@@ -501,10 +552,10 @@ export function createTrafikverketRoadsLayer({
       _incidents = [];
       _drawn.clear();
       _redrawAll = true;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      for (const set of sets()) set?.dispose();
+      _conditionLines = null;
+      _incidentLines = null;
+      _dots = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

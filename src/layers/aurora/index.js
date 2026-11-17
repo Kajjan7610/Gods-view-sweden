@@ -1,7 +1,7 @@
-import * as Cesium from 'cesium';
 import { formatNumber, msg, t } from '../../i18n/index.js';
+import { cssColor } from '../../render/color.js';
+import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { measuredWhen } from '../measuredWhen.js';
-import { redrawEntities } from '../redrawEntities.js';
 import {
   AURORA_SOUTH,
   AURORA_TOWNS,
@@ -12,8 +12,18 @@ import {
 export * from './records.js';
 export { createAuroraSource } from './source.js';
 
+export const AURORA_LAYER_ID = 'aurora';
+/** The band's one item. */
+const OVAL_ID = 'aurora-oval';
 /** The oval floats at the height auroras glow, so no terrain or tiles clip it. */
 const AURORA_HEIGHT_M = 110_000;
+/** The northern band, in degrees. */
+const AURORA_RECT = Object.freeze({
+  west: -180,
+  south: AURORA_SOUTH,
+  east: 180,
+  north: 90,
+});
 
 /** Each one-degree cell becomes this many pixels a side before smoothing. */
 const SMOOTH_SCALE = 6;
@@ -22,10 +32,10 @@ const SMOOTH_SCALE = 6;
 function rgba(chance) {
   const css = auroraColor(chance);
   if (!css) return [0, 0, 0, 0];
-  const color = Cesium.Color.fromCssColorString(css);
+  const [red, green, blue] = cssColor(css);
   // Faint at the oval's edge, strong at its heart.
   const alpha = Math.min(0.75, 0.04 + chance / 55);
-  return [color.red * 255, color.green * 255, color.blue * 255, alpha * 255];
+  return [red * 255, green * 255, blue * 255, alpha * 255];
 }
 
 /** The northern band as a canvas: x is longitude -180..179, y is 90 N down. */
@@ -69,7 +79,8 @@ export function createAuroraLayer({ source, now = () => Date.now() } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Aurora requires a snapshot source');
   let _viewer = null;
-  let _dataSource = null;
+  /** The band: one rectangle at aurora height, filled with the forecast. */
+  let _band = null;
   let _request = null;
   let _enabled = false;
   let _rowListener = null;
@@ -79,35 +90,41 @@ export function createAuroraLayer({ source, now = () => Date.now() } = {}) {
   let _snapshot = null;
   /** The time of the grid last drawn; undefined before one is. */
   let _drawn;
+  /** Each painting's canvas is new content, under a key of its own. */
+  let _paintings = 0;
+
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(AURORA_LAYER_ID);
 
   function render() {
-    if (!_dataSource) return;
-    const entities = _dataSource.entities;
-    redrawEntities(entities, () => {
-      if (_snapshot?.rows?.length) {
-        entities.add({
-          id: 'aurora-oval',
-          rectangle: {
-            coordinates: Cesium.Rectangle.fromDegrees(
-              -180,
-              AURORA_SOUTH,
-              180,
-              90,
-            ),
-            height: AURORA_HEIGHT_M,
-            material: new Cesium.ImageMaterialProperty({
-              image: paint(_snapshot.rows),
-              transparent: true,
-            }),
+    if (!_band) return;
+    if (_snapshot?.rows?.length) {
+      const oval = {
+        id: OVAL_ID,
+        geometry: {
+          kind: 'rectangle',
+          rect: AURORA_RECT,
+          height: AURORA_HEIGHT_M,
+        },
+        height: 'absolute',
+        fill: {
+          image: {
+            canvas: paint(_snapshot.rows),
+            key: `aurora:${++_paintings}`,
           },
-        });
-      }
-    });
-    _viewer?.scene?.requestRender?.();
+        },
+        // Shaded by the scene's light, as the band always was.
+        lit: true,
+      };
+      // A band already drawn takes the new forecast in place.
+      if (_band.size()) _band.upsert([oval]);
+      else _band.set([oval]);
+    } else _band.set([]);
+    requestRender();
   }
 
   const layer = {
-    id: 'aurora',
+    id: AURORA_LAYER_ID,
     name: 'Aurora Forecast',
     icon: '🌌',
     source: 'NOAA SWPC',
@@ -116,14 +133,13 @@ export function createAuroraLayer({ source, now = () => Date.now() } = {}) {
     init(viewer) {
       if (_viewer) throw new Error('Aurora layer is already initialized');
       _viewer = viewer;
-      _dataSource = new Cesium.CustomDataSource('aurora');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _band = drawOf(viewer).shapes({ id: AURORA_LAYER_ID, show: false });
     },
 
     enable() {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (_band) _band.show = true;
+      requestRender();
     },
 
     disable() {
@@ -131,11 +147,12 @@ export function createAuroraLayer({ source, now = () => Date.now() } = {}) {
       _request = null;
       _enabled = false;
       _lastError = null;
-      if (_dataSource) _dataSource.show = false;
+      if (_band) _band.show = false;
+      requestRender();
     },
 
     async update() {
-      if (!_enabled || !_dataSource) return false;
+      if (!_enabled || !_band) return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
@@ -186,14 +203,12 @@ export function createAuroraLayer({ source, now = () => Date.now() } = {}) {
       }
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       _snapshot = null;
       _drawn = undefined;
-      if (_dataSource) {
-        viewer.dataSources.remove(_dataSource, true);
-        _dataSource = null;
-      }
+      _band?.dispose();
+      _band = null;
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;

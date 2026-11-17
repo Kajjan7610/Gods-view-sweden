@@ -706,84 +706,71 @@ test('history time keeps the hour whatever the length of the localized date', ()
   }
 });
 
-test(
-  'air-quality readout renders its band legend, Canada coverage and worst-first list',
-  {
-    skip: 'Swedish fork: air quality still draws with Cesium data sources until it moves to the draw port',
-  },
-  async () => {
-    const observedMs = Date.now() - 10 * 60_000;
-    const reading = (stationId, value, band, name) => ({
-      id: `eccc:${stationId}`,
-      provider: 'eccc',
-      scale: 'AQHI',
-      value,
-      band,
-      stationId,
-      name,
-      zone: 'on',
-      lat: 43.65,
-      lon: -79.38,
-      observedMs,
-      color: '#4cc9f0',
-      label: String(value),
-      risk: `${band} risk`,
-      note: null,
-    });
-    const layer = createAirQualityLayer({
-      source: {
-        getSnapshot: async () => [
-          reading('B', 8, 'high', 'Hamilton'),
-          reading('A', 2, 'low', 'Toronto'),
-        ],
-      },
-      overlayHost: { setEntries() {}, setVisible() {}, clearSource() {} },
-    });
-    const viewer = {};
-    bindFakeDraw(viewer);
-    layer.init(viewer);
-    layer.enable();
-    await layer.update();
-    const f = fixture();
-    const view = createWeatherPanel(f);
-    view.update([
-      { id: layer.id, icon: layer.icon, ...layer.getRowControls() },
-    ]);
-    const aq = card(f, 'air-quality');
-    assert.ok(aq, 'the air-quality card is shown');
-    assert.equal(aq.dataset.open, 'true');
-    assert.match(
-      f.find((n) => n.classList?.contains?.('rail-card-badge'), aq).textContent,
-      /Canada only/,
-    );
-    assert.match(line(f, 'air-quality', 'status').textContent, /2 stations/);
-    const entries = f.find(
-      (n) => n.className === 'rail-card-legend-entries',
-      aq,
-    );
-    assert.equal(entries.hidden, false);
-    assert.deepEqual(
-      [...entries.children].map((entry) => entry.children[1].textContent),
-      ['Low', 'Moderate', 'High', 'Very High'],
-    );
-    assert.equal(
-      f.find((n) => n.className === 'rail-card-ramp', aq).hidden,
-      true,
-    );
-    const list = f.find((n) => n.dataset.blockId === 'list', aq);
-    assert.equal(list.hidden, false);
-    assert.deepEqual(
-      [...list.children].map((item) =>
-        [...item.children[0].children]
-          .map((part) => part.textContent)
-          .join(' '),
-      ),
-      ['AQHI 8 Hamilton · high risk', 'AQHI 2 Toronto · low risk'],
-    );
-    view.destroy();
-    layer.destroy();
-  },
-);
+test('air-quality readout renders its band legend, Canada coverage and worst-first list', async () => {
+  const observedMs = Date.now() - 10 * 60_000;
+  const reading = (stationId, value, band, name) => ({
+    id: `eccc:${stationId}`,
+    provider: 'eccc',
+    scale: 'AQHI',
+    value,
+    band,
+    stationId,
+    name,
+    zone: 'on',
+    lat: 43.65,
+    lon: -79.38,
+    observedMs,
+    color: '#4cc9f0',
+    label: String(value),
+    risk: `${band} risk`,
+    note: null,
+  });
+  const layer = createAirQualityLayer({
+    source: {
+      getSnapshot: async () => [
+        reading('B', 8, 'high', 'Hamilton'),
+        reading('A', 2, 'low', 'Toronto'),
+      ],
+    },
+    overlayHost: { setEntries() {}, setVisible() {}, clearSource() {} },
+  });
+  const viewer = {};
+  bindFakeDraw(viewer);
+  layer.init(viewer);
+  layer.enable();
+  await layer.update();
+  const f = fixture();
+  const view = createWeatherPanel(f);
+  view.update([{ id: layer.id, icon: layer.icon, ...layer.getRowControls() }]);
+  const aq = card(f, 'air-quality');
+  assert.ok(aq, 'the air-quality card is shown');
+  assert.equal(aq.dataset.open, 'true');
+  assert.match(
+    f.find((n) => n.classList?.contains?.('rail-card-badge'), aq).textContent,
+    /Canada only/,
+  );
+  assert.match(line(f, 'air-quality', 'status').textContent, /2 stations/);
+  const entries = f.find((n) => n.className === 'rail-card-legend-entries', aq);
+  assert.equal(entries.hidden, false);
+  assert.deepEqual(
+    [...entries.children].map((entry) => entry.children[1].textContent),
+    ['Low', 'Moderate', 'High', 'Very High'],
+  );
+  assert.equal(
+    f.find((n) => n.className === 'rail-card-ramp', aq).hidden,
+    true,
+  );
+  const list = f.find((n) => n.dataset.blockId === 'list', aq);
+  assert.equal(list.hidden, false);
+  assert.deepEqual(
+    [...list.children].map((item) =>
+      [...item.children[0].children].map((part) => part.textContent).join(' '),
+    ),
+    ['AQHI 8 Hamilton · high risk', 'AQHI 2 Toronto · low risk'],
+  );
+  view.destroy();
+  layer.destroy();
+});
 test('source-supplied legend units are shown as given; catalog units are translated', () => {
   setLocale('ru');
   try {

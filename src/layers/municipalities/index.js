@@ -1,6 +1,19 @@
-import * as Cesium from 'cesium';
 import { msg, t } from '../../i18n/index.js';
-import { groundClassificationType } from '../../render/cesium/forkViewer.js';
+import {
+  fromDegrees,
+  fromDegreesInto,
+  toLonLatH,
+} from '../../geo/ellipsoid.js';
+import { cssColor } from '../../render/color.js';
+import {
+  canvasOf,
+  drawOf,
+  findCamera,
+  findFrame,
+  findQuery,
+} from '../../render/rendererOf.js';
+import { inputFor } from '../../input/dispatcher.js';
+import { cableClassificationTypeForScene } from '../submarineCables/surface.js';
 import {
   BOUNDARY_KINDS,
   areaAt,
@@ -38,7 +51,7 @@ const KIND = Object.freeze(
   Object.fromEntries(BOUNDARY_KINDS.map((kind) => [kind.id, kind])),
 );
 /**
- * The border lines' data sources: what the lines are in the snapshot ("m"
+ * The border lines' sets: what the lines are in the snapshot ("m"
  * municipal only, "c" county and municipal at once) and the kind they are
  * drawn as.
  */
@@ -48,8 +61,29 @@ const BORDER_SETS = Object.freeze([
   ['countyAsMunicipality', 'c', 'municipality'],
 ]);
 
-const groundPositions = (points) =>
-  Cesium.Cartesian3.fromDegreesArray(points.flat());
+export const MUNICIPALITIES_LAYER_ID = 'municipalities';
+/** The border sets' ids start with this; picks name them as `Hit.set`. */
+export const MUNICIPALITY_SET_PREFIX = 'municipalities:';
+const BORDER_PICK_PREFIX = 'municipality-border:';
+const SELECTED_PICK_PREFIX = 'municipality-selected:';
+const BORDER_ALPHA = 0.85;
+const SELECTED_COLOR = Object.freeze([1, 1, 1, 0.9]);
+const SELECTED_WIDTH = 4;
+
+const withAlpha = ([r, g, b], alpha) => [r, g, b, alpha];
+
+/** [lon, lat] pairs on the ellipsoid, as packed ECEF `x, y, z`. */
+function groundPositions(points) {
+  const out = new Float64Array(points.length * 3);
+  const at = { x: 0, y: 0, z: 0 };
+  points.forEach(([lon, lat], index) => {
+    fromDegreesInto(lon, lat, 0, at);
+    out[index * 3] = at.x;
+    out[index * 3 + 1] = at.y;
+    out[index * 3 + 2] = at.z;
+  });
+  return out;
+}
 
 /**
  * Own one Swedish boundary display: the 290 municipalities and 21 counties
@@ -62,15 +96,15 @@ const groundPositions = (points) =>
 export function createMunicipalitiesLayer({
   source,
   overlayHost = null,
-  screenSpaceEventHandlerFactory = null,
-  scenePick = null,
   pointer = null,
   mapStackEventTarget = null,
+  // The clicks on the globe: the application's input dispatcher.
+  input = (viewer) => inputFor(viewer),
 } = {}) {
   if (typeof source?.getSnapshot !== 'function')
     throw new TypeError('Municipalities require a snapshot source');
   let _viewer = null;
-  // One data source per border set, so the chips only show and hide lines
+  // One line set per border set, so the chips only show and hide lines
   // that are already there. A county border is a municipal border too: with
   // the counties hidden it is drawn as a municipal one, from a set that is
   // filled the first time it is asked for.
@@ -78,9 +112,11 @@ export function createMunicipalitiesLayer({
   // The selected municipality's outline, apart from the lines, so selecting
   // one never rebuilds the batched border lines.
   let _highlight = null;
+  /** The ids of the sets above, as picks name them. */
+  let _setIds = new Set();
   // The surface the lines are drawn on: the globe's terrain, or the
   // photorealistic 3D tiles when the globe is hidden (the cables' rule).
-  let _classificationType;
+  let _clampTo;
   let _request = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -100,10 +136,11 @@ export function createMunicipalitiesLayer({
   let _view = null;
   const _shown = new Set(BOUNDARY_KINDS.map((kind) => kind.id));
 
-  const canSelect = () =>
-    overlayHost && screenSpaceEventHandlerFactory && scenePick;
-  const labelPosition = (area) =>
-    Cesium.Cartesian3.fromDegrees(area.label[0], area.label[1], 0);
+  const canSelect = () => Boolean(overlayHost);
+  const labelPosition = (area) => fromDegrees(area.label[0], area.label[1], 0);
+  const requestRender = () =>
+    _viewer && findFrame(_viewer)?.requestRender(MUNICIPALITIES_LAYER_ID);
+  const lineSets = () => [...Object.values(_borders ?? {}), _highlight];
 
   function publishSelectedCard() {
     if (!canSelect()) return;
@@ -130,7 +167,7 @@ export function createMunicipalitiesLayer({
   /** Names for the view: counties from high up, municipalities lower down. */
   function publishLabels() {
     if (!overlayHost) return;
-    const height = _viewer?.camera?.positionCartographic?.height;
+    const height = _viewer ? findCamera(_viewer)?.pose()?.height : undefined;
     const preferred = height < COUNTY_NAMES_ABOVE_M ? 'municipality' : 'county';
     // A hidden kind takes its names with it; the other kind's stand in.
     const kind = _shown.has(preferred)
@@ -194,30 +231,25 @@ export function createMunicipalitiesLayer({
     }
   }
 
-  /** Fill one border set with its lines, drawn as its kind. */
-  function addLines(dataSource, code, kind) {
-    const material = Cesium.Color.fromCssColorString(kind.color).withAlpha(
-      0.85,
-    );
-    const entities = dataSource.entities;
-    entities.suspendEvents();
-    try {
-      _lines.forEach((points, index) => {
-        const line = _snapshot.lines[index];
-        if (line.s || line.k !== code || !hasLength(points)) return;
-        entities.add({
-          polyline: {
-            positions: groundPositions(points),
-            width: kind.width,
-            material,
-            clampToGround: true,
-            classificationType: _classificationType,
-          },
-        });
+  /** Fill one border set with its lines, drawn as its kind, in one write. */
+  function addLines(set, code, kind) {
+    const style = {
+      kind: 'solid',
+      color: withAlpha(cssColor(kind.color), BORDER_ALPHA),
+    };
+    const items = [];
+    _lines.forEach((points, index) => {
+      const line = _snapshot.lines[index];
+      if (line.s || line.k !== code || !hasLength(points)) return;
+      items.push({
+        id: `${BORDER_PICK_PREFIX}${index}`,
+        positions: groundPositions(points),
+        widthPx: kind.width,
+        mode: 'draped',
+        style,
       });
-    } finally {
-      entities.resumeEvents();
-    }
+    });
+    set.set(items);
   }
 
   /** Show the border sets the chips ask for; build nothing twice. */
@@ -231,78 +263,64 @@ export function createMunicipalitiesLayer({
       countyAsMunicipality: municipal && !county,
     };
     for (const [id, code, kind] of BORDER_SETS) {
-      const dataSource = _borders[id];
-      if (show[id] && _loaded && dataSource.entities.values.length === 0)
-        addLines(dataSource, code, KIND[kind]);
-      dataSource.show = show[id];
+      const set = _borders[id];
+      if (show[id] && _loaded && set.size() === 0)
+        addLines(set, code, KIND[kind]);
+      set.show = show[id];
     }
     if (_highlight) _highlight.show = _enabled;
-    _viewer?.scene?.requestRender?.();
+    requestRender();
   }
 
   /** Move the lines to the surface the map shows now, if it changed. */
   function applyClassification() {
-    const next = groundClassificationType(_viewer?.scene);
-    if (next === _classificationType) return;
-    _classificationType = next;
-    for (const dataSource of [...Object.values(_borders ?? {}), _highlight]) {
-      if (!dataSource) continue;
-      const entities = dataSource.entities;
-      entities.suspendEvents();
-      try {
-        for (const entity of entities.values)
-          if (entity.polyline) entity.polyline.classificationType = next;
-      } finally {
-        entities.resumeEvents();
-      }
-    }
-    _viewer?.scene?.requestRender?.();
+    const next = cableClassificationTypeForScene(_viewer);
+    if (next === _clampTo) return;
+    _clampTo = next;
+    for (const set of lineSets()) set?.setOptions({ clampTo: next });
+    requestRender();
   }
 
   function renderSelection() {
     if (!_highlight) return;
-    const entities = _highlight.entities;
-    entities.suspendEvents();
-    try {
-      entities.removeAll();
-      if (_selected)
-        for (const ring of _selected.rings)
-          entities.add({
-            polyline: {
-              positions: groundPositions(ringPoints(ring, _lines)),
-              width: 4,
-              material: Cesium.Color.WHITE.withAlpha(0.9),
-              clampToGround: true,
-              classificationType: _classificationType,
-            },
-          });
-    } finally {
-      entities.resumeEvents();
-    }
+    _highlight.set(
+      _selected
+        ? _selected.rings.map((ring, index) => ({
+            id: `${SELECTED_PICK_PREFIX}${_selected.code}:${index}`,
+            positions: groundPositions(ringPoints(ring, _lines)),
+            widthPx: SELECTED_WIDTH,
+            mode: 'draped',
+            style: { kind: 'solid', color: SELECTED_COLOR },
+          }))
+        : [],
+    );
     publishSelectedCard();
     publishLabels();
-    _viewer?.scene?.requestRender?.();
+    requestRender();
+  }
+
+  /** The ground under the canvas centre, in degrees, or null. */
+  function viewCentre() {
+    const query = findQuery(_viewer);
+    const canvas = canvasOf(_viewer);
+    if (typeof query?.pickEllipsoid !== 'function' || !canvas) return null;
+    const middle = query.pickEllipsoid(
+      canvas.clientWidth / 2,
+      canvas.clientHeight / 2,
+    );
+    const ground = middle ? toLonLatH(middle) : null;
+    return ground ? [ground.lon, ground.lat] : null;
   }
 
   /** The view as a box and its centre, from the camera alone. */
   function readView() {
-    const camera = _viewer?.camera;
-    if (!camera?.positionCartographic) return null;
-    const deg = Cesium.Math.toDegrees;
-    const canvas = _viewer.scene.canvas;
-    const middle = camera.pickEllipsoid?.(
-      new Cesium.Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2),
-      Cesium.Ellipsoid.WGS84,
-    );
-    const centre = middle
-      ? Cesium.Cartographic.fromCartesian(middle)
-      : camera.positionCartographic;
-    const rect = camera.computeViewRectangle?.(Cesium.Ellipsoid.WGS84);
+    const camera = _viewer ? findCamera(_viewer) : null;
+    const pose = camera?.pose();
+    if (!pose) return null;
+    const rect = camera.viewRectangle?.() ?? null;
     return {
-      center: [deg(centre.longitude), deg(centre.latitude)],
-      bbox: rect
-        ? [deg(rect.west), deg(rect.south), deg(rect.east), deg(rect.north)]
-        : null,
+      center: viewCentre() ?? [pose.lon, pose.lat],
+      bbox: rect ? [rect.west, rect.south, rect.east, rect.north] : null,
     };
   }
 
@@ -325,40 +343,41 @@ export function createMunicipalitiesLayer({
     _rowListener?.();
   }
 
-  /** Whether a pick is one of this layer's own lines. */
-  function isOwnLine(picked) {
-    const owner = picked?.id?.entityCollection?.owner;
-    return Boolean(
-      owner &&
-      (owner === _highlight || Object.values(_borders ?? {}).includes(owner)),
-    );
-  }
-
   function installClickHandler() {
     if (!canSelect() || _clickHandler || !_viewer) return;
-    _clickHandler = screenSpaceEventHandlerFactory(_viewer);
-    _clickHandler.setInputAction((click) => {
+    // A viewer with no renderer input bound takes no clicks.
+    let clicks = null;
+    try {
+      clicks = input(_viewer) ?? null;
+    } catch {
+      clicks = null;
+    }
+    if (!clicks) return;
+    _clickHandler = clicks.onClick((click) => {
       if (!_loaded || (pointer && !pointer.isPointerFree())) return;
+      const at = click.screenPosition;
       // A card under the click, this layer's or another's, is not the ground.
-      if (overlayHost.hitTest?.(click.position?.x, click.position?.y)) return;
+      if (overlayHost.hitTest?.(at?.x, at?.y)) return;
       // Nor is another layer's object: that click is that layer's to select.
-      // Only the map itself and these borders count.
-      const picked = _viewer.scene.pick(click.position);
-      if (!scenePick.isSurfacePick(picked) && !isOwnLine(picked)) return;
+      // Only the map itself (no hit) and these borders count.
+      const picked = click.topHit;
+      if (picked && !_setIds.has(picked.set)) return;
       // The surface the lines lie on, not the ellipsoid under it.
-      const point = scenePick.pickGroundPosition(_viewer, click.position);
-      if (!point) return;
-      const where = Cesium.Cartographic.fromCartesian(point);
-      const hit = areaAt(_municipalityIndex, [
-        Cesium.Math.toDegrees(where.longitude),
-        Cesium.Math.toDegrees(where.latitude),
-      ]);
+      const point = click.ground?.() ?? null;
+      const where = point ? toLonLatH(point) : null;
+      if (!where) return;
+      const hit = areaAt(_municipalityIndex, [where.lon, where.lat]);
       select(hit && hit !== _selected ? hit : null);
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    });
+  }
+
+  function removeClickHandler() {
+    _clickHandler?.();
+    _clickHandler = null;
   }
 
   const layer = {
-    id: 'municipalities',
+    id: MUNICIPALITIES_LAYER_ID,
     name: 'Municipalities & Counties (Sweden)',
     icon: '🗺️',
     source: 'SCB',
@@ -367,18 +386,20 @@ export function createMunicipalitiesLayer({
     init(viewer) {
       if (_viewer)
         throw new Error('Municipalities layer is already initialized');
-      _viewer = viewer;
-      _classificationType = groundClassificationType(viewer?.scene);
-      const addDataSource = (name) => {
-        const dataSource = new Cesium.CustomDataSource(name);
-        dataSource.show = false;
-        viewer.dataSources.add(dataSource);
-        return dataSource;
-      };
+      _clampTo = cableClassificationTypeForScene(viewer);
+      const draw = drawOf(viewer);
+      const addSet = (name) =>
+        draw.lines({
+          id: `${MUNICIPALITY_SET_PREFIX}${name}`,
+          clampTo: _clampTo,
+          show: false,
+        });
       _borders = Object.fromEntries(
-        BORDER_SETS.map(([id]) => [id, addDataSource(`municipalities-${id}`)]),
+        BORDER_SETS.map(([id]) => [id, addSet(id)]),
       );
-      _highlight = addDataSource('municipality-selected');
+      _highlight = addSet('selected');
+      _setIds = new Set(lineSets().map((set) => set.id));
+      _viewer = viewer;
       if (mapStackEventTarget?.addEventListener) {
         // Switching between the globe and 3D tiles moves the lines' surface.
         // While the layer is off that waits for enable().
@@ -402,12 +423,13 @@ export function createMunicipalitiesLayer({
       ])
         overlayHost?.setVisible?.(id, true);
       installClickHandler();
-      if (!_removeMove && _viewer?.camera) {
+      const camera = _viewer ? findCamera(_viewer) : null;
+      if (!_removeMove && camera) {
         // A jump set from a share link or a search ends no move; `changed`
         // catches it, `moveEnd` the small pans below its threshold.
         const removers = [
-          _viewer.camera.moveEnd?.addEventListener?.(followCamera),
-          _viewer.camera.changed?.addEventListener?.(followCamera),
+          camera.on('moveEnd', followCamera),
+          camera.on('changed', followCamera),
         ].filter(Boolean);
         _removeMove = () => removers.forEach((remove) => remove());
       }
@@ -423,8 +445,7 @@ export function createMunicipalitiesLayer({
       _removeMove = null;
       _enabled = false;
       applyShown();
-      _clickHandler?.destroy();
-      _clickHandler = null;
+      removeClickHandler();
       // Nothing of the view outlives the layer being off: no selection, no
       // map centre in the row.
       _centre = null;
@@ -487,15 +508,15 @@ export function createMunicipalitiesLayer({
       select(municipality);
       if (params.focus) {
         const [lon, lat] = municipality.label;
-        _viewer.camera.flyTo({
-          destination: Cesium.Cartesian3.fromDegrees(lon, lat, 60_000),
-          duration: 1.8,
-        });
+        findCamera(_viewer)?.flyTo(
+          { lon, lat, height: 60_000 },
+          { durationS: 1.8 },
+        );
       }
       return true;
     },
 
-    destroy(viewer = _viewer) {
+    destroy() {
       layer.disable();
       if (_stackListener)
         mapStackEventTarget?.removeEventListener?.(
@@ -508,13 +529,10 @@ export function createMunicipalitiesLayer({
       _municipalityIndex = [];
       _countyByCode = new Map();
       _loaded = false;
-      for (const dataSource of Object.values(_borders ?? {}))
-        viewer.dataSources.remove(dataSource, true);
+      for (const set of lineSets()) set?.dispose();
       _borders = null;
-      if (_highlight) {
-        viewer.dataSources.remove(_highlight, true);
-        _highlight = null;
-      }
+      _highlight = null;
+      _setIds = new Set();
       _viewer = null;
       _lastUpdate = null;
       _lastError = null;
