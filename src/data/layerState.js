@@ -313,6 +313,13 @@ const OPTION_GROUPS = Object.freeze({
       high: 'h',
     }),
   ]),
+  rail: Object.freeze([
+    booleanOption('transit', 't', true),
+    booleanOption('local', 'l', true),
+    booleanOption('regional', 'r', true),
+    booleanOption('national', 'n', true),
+    booleanOption('international', 'i', true),
+  ]),
   'wildlife-sightings': Object.freeze([
     booleanOption('confirmed', 'c', false),
     enumOption(
@@ -764,6 +771,7 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     token: '0f',
     disposition: 'enabled-only',
   }),
+  Object.freeze({ id: 'news', token: '00', disposition: 'enabled-only' }),
   Object.freeze({
     id: 'police-stations',
     token: '0i',
@@ -789,6 +797,12 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     token: 'r',
     disposition: 'enabled+options',
     optionOwner: 'radio',
+  }),
+  Object.freeze({
+    id: 'rail',
+    token: '02',
+    disposition: 'enabled+options',
+    optionOwner: 'rail',
   }),
   Object.freeze({
     id: 'recent-imagery',
@@ -833,6 +847,7 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     token: '0h',
     disposition: 'enabled-only',
   }),
+  Object.freeze({ id: 'shipwrecks', token: '01', disposition: 'enabled-only' }),
   Object.freeze({ id: 'ski-pistes', token: '7', disposition: 'enabled-only' }),
   Object.freeze({
     id: 'smhi-warnings',

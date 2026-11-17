@@ -2,23 +2,27 @@ import { MAP_STACKS } from './catalog.js';
 import { photorealUnavailableReason } from './availability.js';
 import { keySetupRequirementEnvVars } from '../keySetupCore.mjs';
 import { t } from '../i18n/index.js';
+import { mapEngine } from './engine.js';
 import {
-  createOsmImagery,
-  arcgisApiKey as configuredArcgisKey,
-  createEsriImagery,
-  createIonImagery,
   ESRI_ATTRIBUTION_HTML,
   OSM_ATTRIBUTION_HTML,
-} from './imagery.js';
-import { createWorldTerrain, createKeylessTerrain } from './terrain.js';
+  arcgisApiKey as configuredArcgisKey,
+} from './attribution.js';
 
-/** Select sources and setup guidance without putting provider branches in the controller. */
+/**
+ * Select sources and setup guidance without putting provider branches in the
+ * controller. Each source builds its imagery and terrain through the
+ * `engine` given (the scene's map engine, `engine.js`), else the one the
+ * adapter provided for viewers with no renderer, when it is first shown.
+ */
 export function createDefaultMapSources({
   googleTileset = null,
   cesiumToken = '',
   googleApiKey = '',
   arcgisApiKey = configuredArcgisKey(),
+  engine = null,
 } = {}) {
+  const engineOf = () => engine ?? mapEngine();
   const ionToken = String(cesiumToken || '').trim();
   const hasIon = Boolean(ionToken);
   const esriToken = String(arcgisApiKey || '').trim();
@@ -27,8 +31,8 @@ export function createDefaultMapSources({
   const terrain = {
     id: hasIon ? 'world' : 'keyless',
     create: hasIon
-      ? (request) => createWorldTerrain(ionToken, request)
-      : createKeylessTerrain,
+      ? (request) => engineOf().terrain.world(ionToken, request)
+      : (request) => engineOf().terrain.keyless(request),
   };
   return {
     defaultId: googleTileset ? 'photoreal' : hasEsri ? 'esri-imagery' : 'osm',
@@ -57,10 +61,10 @@ export function createDefaultMapSources({
         };
       const imagery =
         descriptor.kind === 'ion'
-          ? () => createIonImagery(descriptor.style, ionToken)
+          ? () => engineOf().imagery.ion(descriptor.style, ionToken)
           : descriptor.id === 'osm'
-            ? createOsmImagery
-            : () => createEsriImagery(esriToken);
+            ? () => engineOf().imagery.osm()
+            : () => engineOf().imagery.esri(esriToken);
       return {
         ...common,
         ...(descriptor.id === 'esri-imagery'

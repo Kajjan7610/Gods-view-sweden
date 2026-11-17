@@ -7,6 +7,7 @@
  */
 import * as Cesium from 'cesium';
 import { getLocale, onLocaleChange, t } from '../i18n/index.js';
+import { viewerBehind } from '../render/cesium/forkViewer.js';
 
 const PICK_PREFIX = 'airport-route:';
 const LABEL_SOURCE_ID = 'airport-route-labels';
@@ -97,12 +98,15 @@ export function overview(day) {
  * @param {{ openBoard: (iata: string, query: string) => void }} options
  */
 export function createAirportRoutes({
-  viewer,
+  viewer: host,
   overlayHost,
   publish,
   openBoard,
   fetchImpl = (...args) => globalThis.fetch(...args),
 }) {
+  // Swedish fork: this panel drives Cesium's own viewer, the one behind
+  // the application's scene object (src/render/cesium/forkViewer.js).
+  const viewer = viewerBehind(host);
   let destroyed = false;
   let day = null;
   let request = null;

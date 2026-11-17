@@ -23,6 +23,7 @@ import {
   nowIndex,
   queueLevel,
 } from './airportBoardModel.js';
+import { viewerBehind } from '../render/cesium/forkViewer.js';
 
 const REFRESH_MS = 3 * 60_000;
 /** The "now" line and gone rows move on this often while the board shows. */
@@ -74,7 +75,7 @@ const bilingual = (value) =>
 
 /** Own the board for one viewer; `publish` receives `{ card, board }`. */
 export function createAirportBoard({
-  viewer,
+  viewer: host,
   // The flights layer, for following a board row's aircraft (optional).
   dataManager = null,
   // Told which airport a followed aircraft's row came from (optional).
@@ -87,6 +88,9 @@ export function createAirportBoard({
   now = () => Date.now(),
   documentRef = globalThis.document,
 }) {
+  // Swedish fork: this panel drives Cesium's own viewer, the one behind
+  // the application's scene object (src/render/cesium/forkViewer.js).
+  const viewer = viewerBehind(host);
   let destroyed = false;
   let airport = null;
   let tab = 'departures';

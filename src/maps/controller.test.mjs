@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { MapSourceController } from './controller.js';
+// The controller switches stacks through the Cesium map engine.
+import { cesiumMapEngine } from '../render/cesium/mapEngine.js';
 import { createDefaultMapSources } from './defaultSources.js';
+import { bindRenderer } from '../render/rendererOf.js';
 
 function event() {
   const listeners = new Set();
@@ -28,16 +31,6 @@ function fixture(registry, options = {}) {
     scene: {
       globe: { show: true },
       requestRender() {},
-      frameState: {
-        creditDisplay: {
-          addStaticCredit(value) {
-            credits.add(value);
-          },
-          removeStaticCredit(value) {
-            credits.delete(value);
-          },
-        },
-      },
       primitives: {
         add(value) {
           primitives.push(value);
@@ -58,8 +51,17 @@ function fixture(registry, options = {}) {
       },
     },
   };
+  bindRenderer(viewer, {
+    credits: {
+      addStatic(credit) {
+        credits.add(credit);
+        return () => credits.delete(credit);
+      },
+    },
+  });
   const controller = new MapSourceController(viewer, {
     registry,
+    engine: cesiumMapEngine,
     createImageryLayer: (provider) => ({ provider }),
     onChange: (state) => changes.push(state),
     ...options,
@@ -272,14 +274,25 @@ test('Esri construction fallback reports and attributes the source actually rend
   assert.equal(env.imagery[0].provider, env.providers.get('osm'));
   // The OpenStreetMap that took over names its contributors on the map.
   assert.equal(env.credits.size, 1);
-  assert.match([...env.credits][0].html, /OpenStreetMap contributors/);
+  assert.match([...env.credits][0].text, /OpenStreetMap contributors/);
   env.controller.destroy();
 });
 
 test('one Esri tile failure stays put, two fall back, and stale errors cannot replace a selection', async () => {
   const env = publicFixture();
   await env.controller.setStack('esri-imagery');
-  assert.equal(env.credits.size, 1);
+  assert.deepEqual(
+    [...env.credits],
+    // Swedish fork: Esri's data sources are named on the map too.
+    [
+      {
+        text: 'Powered by Esri · Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+        href: 'https://www.esri.com',
+        linkText: 'Powered by Esri',
+        inline: true,
+      },
+    ],
+  );
   const errorEvent = env.providers.get('esri-imagery').errorEvent;
   errorEvent.raise();
   await settle();
@@ -289,7 +302,7 @@ test('one Esri tile failure stays put, two fall back, and stale errors cannot re
   assert.equal(env.controller.getActiveId(), 'osm');
   // The OpenStreetMap that took over names its contributors on the map.
   assert.equal(env.credits.size, 1);
-  assert.match([...env.credits][0].html, /OpenStreetMap contributors/);
+  assert.match([...env.credits][0].text, /OpenStreetMap contributors/);
   assert.equal(
     env.controller.getState().lastError,
     'Esri Satellite tile requests failed; using OSM',
@@ -458,12 +471,18 @@ test('imagery host tileset follows supplied, owned and globe map sources', async
   assert.equal(controller.getImageryHostTileset(), supplied);
   await controller.setStack('owned');
   assert.equal(controller.getImageryHostTileset(), owned);
+  assert.equal(controller.getDrapeSurface(), 'tileset');
   await controller.setStack('globe');
   assert.equal(controller.getImageryHostTileset(), null);
+  assert.equal(controller.getDrapeSurface(), 'globe');
   await controller.setStack('supplied');
   assert.equal(controller.getImageryHostTileset(), supplied);
+  assert.equal(controller.getDrapeSurface(), 'tileset');
+  supplied.show = false;
+  assert.equal(controller.getDrapeSurface(), 'none');
   controller.destroy();
   assert.equal(controller.getImageryHostTileset(), null);
+  assert.equal(controller.getDrapeSurface(), null);
 });
 
 function leaseFixture() {

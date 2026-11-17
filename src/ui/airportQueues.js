@@ -13,6 +13,7 @@ import {
   queueMarkers,
   queueReachKm,
 } from './airportBoardModel.js';
+import { viewerBehind } from '../render/cesium/forkViewer.js';
 
 /** The labels show while the view is this low and, at the very most, this
     near an airport; how near also follows the view (queueReachKm). */
@@ -45,7 +46,7 @@ const QUEUE_AIRPORTS = SWEDAVIA_AIRPORTS.filter((airport) => airport.queues);
  * @param {{ openBoard: (iata: string) => void }} options
  */
 export function createAirportQueues({
-  viewer,
+  viewer: host,
   overlayHost,
   openBoard,
   fetchImpl = (...args) => globalThis.fetch(...args),
@@ -55,6 +56,9 @@ export function createAirportQueues({
   screenSpaceEventHandlerFactory = (forViewer) =>
     new Cesium.ScreenSpaceEventHandler(forViewer.scene.canvas),
 }) {
+  // Swedish fork: this panel drives Cesium's own viewer, the one behind
+  // the application's scene object (src/render/cesium/forkViewer.js).
+  const viewer = viewerBehind(host);
   let destroyed = false;
   let airport = null;
   let markers = [];

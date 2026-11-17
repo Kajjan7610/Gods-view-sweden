@@ -12,6 +12,7 @@ Run the script by hand after changing `sources.txt`.
 | Inter | SIL Open Font License 1.1 | `OFL-inter.txt` |
 | JetBrains Mono | SIL Open Font License 1.1 | `OFL-jetbrainsmono.txt` |
 | Noto Sans Arabic | SIL Open Font License 1.1 | `OFL-notosansarabic.txt` |
+| Noto Sans Hebrew | SIL Open Font License 1.1 | `OFL-notosanshebrew.txt` |
 | Material Symbols Outlined (subset) | Apache License 2.0 | `LICENSE-material-symbols.txt` |
 
 The fonts are not covered by the project's MIT License; they keep their own

@@ -29,6 +29,7 @@ import {
   nextTransitBackoffMs,
   resolveTransitRoute,
   transitCacheState,
+  transitFeedTtlMs,
   transitRedirectDecision,
   transitResponseHeaders,
   transitUpstreamHeaders,
@@ -356,7 +357,7 @@ export function createTransitService({
       );
     }
     const cached = cache.get(feed.id);
-    const state = transitCacheState(cached, now);
+    const state = transitCacheState(cached, now, transitFeedTtlMs(feed));
     if (state === 'fresh') {
       return reply(
         200,

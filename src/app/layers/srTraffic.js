@@ -3,6 +3,7 @@ import { createSrTrafficLayer } from '../../layers/srTraffic/index.js';
 import * as picking from '../../data/pickRegistry.js';
 import * as overlays from '../../overlays/worldOverlay.js';
 import { isPointerFree } from '../../data/inputOwnership.js';
+import { onCesiumViewer } from '../../render/cesium/forkViewer.js';
 
 /** Wire Sveriges Radio's traffic reports into the application catalog. */
 export function createApplicationSrTraffic(options) {
@@ -24,5 +25,5 @@ export function createApplicationSrTraffic(options) {
   // streaming, so the layer is kept for merges, never listed, and its source
   // asks nothing (src/layers/srTraffic/source.js).
   layer.showInTogglePanel = false;
-  return layer;
+  return onCesiumViewer(layer);
 }

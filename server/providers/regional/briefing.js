@@ -9,6 +9,7 @@ import {
   swedishPlaceAt,
 } from './sweden.js';
 import { validRegionalPoint } from './query.js';
+import { REGIONAL_NEWS_WINDOW_HOURS } from '../../../src/data/regionalModel.js';
 import { coalesceProxyRequest } from '../common/http.js';
 
 // ---------------------------------------------------------------------------
@@ -77,10 +78,11 @@ function regionalBriefProxy({
     if (!regionalBriefHasAnySource({ place, weather, news })) {
       throw new Error('All regional briefing sources unavailable');
     }
+    const retrievedAt = new Date().toISOString();
     const payload = {
       status:
         place && weather && news.status !== 'unavailable' ? 'ready' : 'partial',
-      retrievedAt: new Date().toISOString(),
+      retrievedAt,
       coordinates: point,
       place,
       placeStatus: place ? 'ready' : 'unavailable',
@@ -92,6 +94,9 @@ function regionalBriefProxy({
       newsStatus: news.status,
       newsQuery: news.query,
       newsSource: news.source,
+      newsWindowHours: REGIONAL_NEWS_WINDOW_HOURS,
+      // A cached or stale answer keeps this, so the client can show its age.
+      newsFetchedAt: retrievedAt,
       articles: news.articles,
     };
     _regionalBriefCache.set(key, { payload, cachedAt: Date.now() });

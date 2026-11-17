@@ -11,8 +11,8 @@
  * for each stylesheet as a current Chrome would (woff2 with unicode ranges),
  * downloads every font file it names into public/fonts/files/ and writes
  * public/fonts/fonts.css pointing at the local copies. Fonts: Inter, JetBrains
- * Mono and Noto Sans Arabic (SIL Open Font License 1.1) and Material Symbols
- * Outlined (Apache License 2.0); see public/fonts/README.md.
+ * Mono, Noto Sans Arabic and Noto Sans Hebrew (SIL Open Font License 1.1) and
+ * Material Symbols Outlined (Apache License 2.0); see public/fonts/README.md.
  */
 import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';

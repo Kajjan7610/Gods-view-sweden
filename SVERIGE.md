@@ -398,6 +398,52 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-17 (originalet sammanslaget)
+- Originalprojektet är sammanslaget fram till 2026-11-17: det nya sättet
+  att rita kartan (renderarens portar), klick genom en gemensam
+  dispatcher, kartmotorn, kreditraden, flygplans- och fartygsmodeller som
+  byggs i koden (MIT), foton på flygplan och fartyg, tåglagret, vrak,
+  hebreiska och originalets rättelser. Alla svenska lager, källor och
+  avgränsningar finns kvar.
+- Kameran ställs direkt över Västerås vid start i stället för att flyga
+  dit.
+- Esris satellitbild: originalets nya ställen som visar den (globens
+  kartmotor, berättelsernas kortbilder, satellitvyn och cockpitvyn på
+  flygkortet) hämtar bara med egen ArcGIS-nyckel, från den nyckelbundna
+  tjänsten. Utan nyckel visas ingen Esri-bild där.
+- Foton: ett flygfoto från Planespotters visas bara när fotografen är
+  namngiven, eftersom namnet är villkoret för att visa bilden. Ett
+  fartygsfoto från Open Vessel Photos under CC BY eller CC BY-SA visas bara
+  med fotografens namn; bara CC0 och allmän egendom får visas utan.
+- Nyhetslagret erbjuds inte, och dess serverrutter läser ingenting. De
+  regionala nyheterna i cockpiten fungerar som förut.
+- Datakatalogen (96 kartkällor) erbjuder ingen källa förrän dess villkor,
+  och vad den tillför kartan, är granskade. Operatören slår på varje källa
+  med `GEV_LIBRARY_ENABLE`.
+- Kollektivtrafik och tåg: 13 nya trafikflöden och 4 tågflöden hämtas inte,
+  eftersom deras operatörer inte anger någon licens (bland andra Kraków,
+  Rom, Turin, Atlanta, Tri-Rail och Irish Rails positioner). Övriga nya
+  flöden har öppna licenser (CC0, CC BY, Etalab, ODbL, NLOD).
+- Vrak från EMODnet (CC BY 4.0) och Wikidata (CC0) är med och anges i
+  appen. Servern presenterar sig med det här repots namn när den hämtar
+  dem.
+- Hebreiska: originalet lade till språket, och de svenska tilläggens 878
+  texter är översatta. Typsnittet Noto Sans Hebrew och originalets nya
+  ikoner ligger lokalt, som de andra typsnitten.
+- Rättelser som hålls kvar: ett klick på ett annat lagers kort räknas inte
+  som ett klick på marken (drönarzoner, brandperimetrar, GhostMaps).
+  Google News frågas bara med `REGIONAL_NEWS_GOOGLE=on`.
+- Översättningar som originalet förbättrat och som den svenska versionen
+  aldrig ändrat har originalets nya lydelse.
+- README tar upp tåglagret: av originalets 30 tågflöden hämtar den svenska
+  versionen 26.
+- Kvar att göra: de svenska lagren och tre paneler har fortfarande egna
+  klickhanterare, och luftkvalitetslagret ritar fortfarande direkt med
+  Cesium. Båda fungerar som förut, men ska flyttas till originalets
+  dispatcher och ritport. De 57 filer som fortfarande använder Cesium
+  direkt står på en egen lista, `src/render/cesiumForkList.json`, som
+  bara får krympa.
+
 ### 2026-11-17 (fem rättelser från originalet)
 - Fem små rättelser är hämtade oförändrade från originalprojektet, med
   sina upphovspersoner och en hänvisning till respektive pull request:

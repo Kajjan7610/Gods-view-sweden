@@ -42,6 +42,8 @@ import { SIGHT_COLORS, createSightsLayer } from './citySights.js';
 import { facingText } from '../layers/speedCameras/cards.js';
 import { redrawEntities } from '../layers/redrawEntities.js';
 import { localP4Channel } from './cityDossierRadio.js';
+import { findCamera } from '../render/rendererOf.js';
+import { viewerBehind } from '../render/cesium/forkViewer.js';
 
 const PANEL_ID = 'city-panel';
 /** Higher than this the view is looking at a region, not visiting a town. */
@@ -221,7 +223,7 @@ const bilingual = (value) =>
  * and its live picture, and publish the panel's view.
  */
 export function createCityDossier({
-  viewer,
+  viewer: host,
   dataManager,
   publish,
   connect,
@@ -242,6 +244,9 @@ export function createCityDossier({
   createSights = createSightsLayer,
   createOrbit = (forViewer) => new OrbitController(forViewer),
 }) {
+  // Swedish fork: this panel drives Cesium's own viewer, the one behind
+  // the application's scene object (src/render/cesium/forkViewer.js).
+  const viewer = viewerBehind(host);
   let destroyed = false;
   const createdAt = now();
   const passport = loadPassport(storage);
@@ -546,7 +551,7 @@ export function createCityDossier({
           isCameraBusy() ||
           documentRef?.body?.classList?.contains('cockpit-mode') ||
           // A flight someone else started (search, voice, a link) wins.
-          viewer.camera._currentFlight
+          findCamera(host)?.flying
         )
           stopOrbit();
       }, 100);
