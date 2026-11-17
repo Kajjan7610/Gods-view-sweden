@@ -8,8 +8,10 @@
  * what leaves the server: only vehicles a feed's classifier recognises as
  * trains, each tagged with its category, mode and position source. On top of
  * that come the Irish Rail XML and SIRI-VM adapters and trip updates. Every
- * train is placed where its operator reports it. Every feed is open: no
- * request carries a credential.
+ * train is placed where its operator reports it. Every upstream feed is open:
+ * no request carries a credential, but for the Swedish fork's Trafikverket
+ * feed, whose server-side adapter (src/sources/trafikverketTrains.js) sends
+ * its key and hands its trains over decoded (buildRailSnapshotFromVehicles).
  */
 
 import {
@@ -162,7 +164,10 @@ function keepTrains(feed, vehicles, routeFor = null) {
   for (const vehicle of vehicles) {
     if (isNoTrainPositionPoint(vehicle.lat, vehicle.lon)) continue;
     const routeId = resolvedRouteId(feed, vehicle, routeFor);
-    const kind = classifyTrain(feed, routeId, { tripId: vehicle.tripId });
+    const kind = classifyTrain(feed, routeId, {
+      tripId: vehicle.tripId,
+      record: vehicle,
+    });
     if (!kind) continue;
     trains.push({
       ...vehicle,
@@ -344,6 +349,35 @@ export function buildRailSnapshot(
     truncated: decoded.truncated,
     count: trains.length,
     dropped: decoded.vehicles.length - trains.length,
+    positions: railFeedPositions(feed),
+    trains,
+  };
+}
+
+/**
+ * The snapshot for a feed whose server-side adapter has decoded it already
+ * (Swedish fork: Trafikverket's trains, read from the snapshot the Transit
+ * layer shares, src/sources/trafikverketTrains.js). The classifier pass and
+ * the snapshot shape are buildRailSnapshot's; the adapter's records carry
+ * their own report times.
+ * @param {object} feed Rail registry entry.
+ * @param {{vehicles: object[], fetchedAt: number, entityCount: number,
+ *   truncated: boolean}} decoded
+ * @returns {ReturnType<typeof buildRailSnapshot>}
+ */
+export function buildRailSnapshotFromVehicles(feed, decoded) {
+  const vehicles = Array.isArray(decoded?.vehicles) ? decoded.vehicles : [];
+  const trains = keepTrains(feed, vehicles);
+  return {
+    feedId: feed.id,
+    name: feed.name,
+    fetchedAt: decoded.fetchedAt,
+    feedTimestamp: null,
+    version: null,
+    entityCount: decoded.entityCount ?? vehicles.length,
+    truncated: decoded.truncated === true,
+    count: trains.length,
+    dropped: vehicles.length - trains.length,
     positions: railFeedPositions(feed),
     trains,
   };

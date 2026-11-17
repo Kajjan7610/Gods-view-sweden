@@ -4918,5 +4918,7 @@
   "Every 2 minutes": "每 2 分钟",
   "About 70 stations on the coast": "沿海约 70 个站点",
   "{source} · flows {flows} · production {production}": "{source} · 潮流 {flows} · 发电 {production}",
-  "Gaps are quarter-hours ENTSO-E has not published.": "空缺是 ENTSO-E 尚未发布的 15 分钟时段。"
+  "Gaps are quarter-hours ENTSO-E has not published.": "空缺是 ENTSO-E 尚未发布的 15 分钟时段。",
+  "Trains across Sweden by service category, with their delays": "瑞典全境的列车，按服务类别分类，并显示晚点",
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "美国、加拿大、澳大利亚、芬兰、西班牙、挪威、马来西亚、日本和法国的实时列车"
 }

@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { cityTransitProxy } from './cityTransit.js';
 import { powerGridEntsoeProxy } from './powerGridEntsoe.js';
+import { railProxy } from './rail.js';
 import { speedCamerasProxy } from './speedCameras.js';
 import { trafikverketRoadsProxy } from './trafikverketRoads.js';
 import { trafikverketWeatherProxy } from './trafikverketWeather.js';
@@ -82,6 +83,57 @@ test('a key-spending Swedish route refuses another site before anything is asked
   ])
     assert.ok(paths.includes(path), path);
   assert.ok(paths.length >= 9, 'the two Trafikverket layers too');
+});
+
+test("the Rail layer's Trafikverket trains refuse another site; keyless feeds do not", async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  let asked = 0;
+  const plugin = railProxy({
+    fetchImpl: async () => {
+      asked += 1;
+      return new Response('{}');
+    },
+    env: { TRAFIKVERKET_API_KEY: 'a' },
+    readPathPack: async () => '{"paths":1}',
+    pathPackVersion: async () => 'v1',
+  });
+  t.after(() => plugin.closeBundle());
+  const handler = mounted(plugin).get('/api/rail');
+  const foreign = {
+    host: 'localhost:4173',
+    origin: 'https://example.com',
+    'sec-fetch-site': 'cross-site',
+  };
+  const res = () => ({
+    statusCode: 0,
+    headersSent: false,
+    setHeader() {},
+    writeHead(status) {
+      this.statusCode = status;
+    },
+    end() {},
+    destroy() {},
+  });
+  const swedish = res();
+  await handler(
+    {
+      method: 'GET',
+      url: '/trains/trafikverket-trains',
+      headers: foreign,
+      socket: {},
+    },
+    swedish,
+  );
+  assert.equal(swedish.statusCode, 403);
+  assert.equal(asked, 0, 'Trafikverket is never asked');
+  // A keyless feed's pack is answered as before, wherever it is asked from.
+  const keyless = res();
+  await handler(
+    { method: 'GET', url: '/paths/mta-lirr', headers: foreign, socket: {} },
+    keyless,
+  );
+  assert.notEqual(keyless.statusCode, 403);
 });
 
 test("the app's own page is still answered", async (t) => {

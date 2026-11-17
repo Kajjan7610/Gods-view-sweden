@@ -33,6 +33,17 @@ export const LAYER_PROVENANCE = Object.freeze({
     updates: msg('Every 15 seconds'),
     licence: `${CC0} (Trafiklab, Trafikverket)`,
   }),
+  rail: added({
+    // Sweden's trains come from Trafikverket, the request Transit makes.
+    meta: 'GTFS-RT · Trafikverket',
+    source: 'Trafikverket',
+    sweden: msg('Trains across Sweden by service category, with their delays'),
+    original: msg(
+      'Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France',
+    ),
+    updates: msg('Every 15 seconds'),
+    licence: `${CC0} (Trafikverket)`,
+  }),
   // Cameras
   cctv: added({
     source: 'Trafikverket',

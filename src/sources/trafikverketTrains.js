@@ -7,12 +7,21 @@
  * JSON answer into the same vehicle records `decodeVehiclePositions` returns.
  *
  * The API needs a free key (TRAFIKVERKET_API_KEY). The key is read by the
- * server-side transit service and only ever travels in the request body to
- * Trafikverket; it is never logged and never reaches the browser.
+ * server-side transit and rail services and only ever travels in the request
+ * body to Trafikverket; it is never logged and never reaches the browser.
+ *
+ * The Transit layer shows every train and the Rail layer the same trains by
+ * service category, so both read one shared snapshot (sharedTrainSnapshot):
+ * Trafikverket is asked at most once per TRAFIKVERKET_TRAINS_SHARE_MS
+ * however many layers are watching.
  */
 
 import { readResponseBytesCapped } from './httpBody.js';
-import { repairVehicleTimestamps } from '../data/transitProxy.js';
+import {
+  TRANSIT_PROXY_TIMEOUT_MS,
+  TRANSIT_PROXY_TTL_MS,
+  repairVehicleTimestamps,
+} from '../data/transitProxy.js';
 
 export const TRAFIKVERKET_TRAINS_KIND = 'trafikverket-trainposition';
 export const TRAFIKVERKET_API_URL =
@@ -49,6 +58,8 @@ const DELAY_WINDOW_MS = 30 * 60_000;
 const DELAY_KEEP_MS = 3 * 60 * 60_000;
 const STATIONS_REFRESH_MS = 24 * 60 * 60_000;
 const DELAY_MAX_BODY_BYTES = 16 * 1024 * 1024;
+// Product, owner and origin only sort a train into the Rail layer's service
+// categories (railFeeds.js, swedenTrain); the Transit card does not read them.
 const ANNOUNCEMENT_FIELDS = [
   'OperationalTrainNumber',
   'LocationSignature',
@@ -56,6 +67,15 @@ const ANNOUNCEMENT_FIELDS = [
   'TimeAtLocation',
   'ActivityType',
   'ToLocation',
+  'FromLocation',
+  'ProductInformation',
+  'InformationOwner',
+];
+/** Station fields: the country tells a train that ends abroad. */
+const STATION_FIELDS = [
+  'LocationSignature',
+  'AdvertisedShortLocationName',
+  'CountryCode',
 ];
 
 /** Escape a value for an XML attribute. */
@@ -224,15 +244,36 @@ export function trafikverketDelayQuery(key, sinceIso, withStations) {
     (withStations
       ? '<QUERY objecttype="TrainStation" schemaversion="1.4">' +
         '<FILTER><EQ name="Advertised" value="true" /></FILTER>' +
-        include(['LocationSignature', 'AdvertisedShortLocationName']) +
+        include(STATION_FIELDS) +
         '</QUERY>'
       : '') +
     '</REQUEST>'
   );
 }
 
+/** The terminal of an ordered `FromLocation`/`ToLocation` list, or null. */
+function endLocation(list, last) {
+  const sorted = (Array.isArray(list) ? list : [])
+    .slice()
+    .sort((a, b) => (a?.Order ?? 0) - (b?.Order ?? 0));
+  return (
+    String((last ? sorted.at(-1) : sorted[0])?.LocationName ?? '').slice(
+      0,
+      12,
+    ) || null
+  );
+}
+
+/** A short text field, or null. */
+function shortText(value, max = 40) {
+  const text = String(value ?? '').trim();
+  return text ? text.slice(0, max) : null;
+}
+
 /**
  * Fold station calls into the newest call per operational train number.
+ * A call that leaves out the product, owner or origin keeps the train's
+ * earlier ones: they describe the train, not the call.
  * @param {object[]} records TrainAnnouncement records.
  * @param {Map<string, object>} byTrain Updated in place.
  */
@@ -245,17 +286,19 @@ export function foldTrainCalls(records, byTrain) {
       continue;
     const previous = byTrain.get(train);
     if (previous && previous.at > actual) continue;
-    const to = Array.isArray(record.ToLocation) ? record.ToLocation : [];
     byTrain.set(train, {
       at: actual,
       delayMinutes: Math.round((actual - planned) / 60_000),
       station: String(record.LocationSignature ?? '').slice(0, 12) || null,
       departed: /avg/i.test(String(record.ActivityType ?? '')),
-      destination:
-        String(
-          [...to].sort((a, b) => (a?.Order ?? 0) - (b?.Order ?? 0)).at(-1)
-            ?.LocationName ?? '',
-        ).slice(0, 12) || null,
+      destination: endLocation(record.ToLocation, true),
+      origin:
+        endLocation(record.FromLocation, false) ?? previous?.origin ?? null,
+      product:
+        shortText(record.ProductInformation?.[0]?.Description) ??
+        previous?.product ??
+        null,
+      owner: shortText(record.InformationOwner) ?? previous?.owner ?? null,
     });
   }
 }
@@ -265,17 +308,33 @@ const delayState = {
   refreshedAt: 0,
   byTrain: new Map(),
   stations: new Map(),
+  /** Signatures of stations outside Sweden (TrainStation CountryCode). */
+  abroad: new Set(),
   stationsAt: 0,
   inFlight: null,
 };
 
-/** Forget every delay and station (tests). */
+/**
+ * The last shared positions snapshot (or failure) and the request under way,
+ * each tagged with the key it was asked with (sharedTrainSnapshot).
+ */
+const sharedState = {
+  /** @type {{key: string, at: number, value?: object, error?: Error}|null} */
+  result: null,
+  /** @type {{key: string, promise: Promise<object>}|null} */
+  inFlight: null,
+};
+
+/** Forget every delay, station and shared snapshot (tests). */
 export function resetTrainDelays() {
   delayState.refreshedAt = 0;
   delayState.byTrain = new Map();
   delayState.stations = new Map();
+  delayState.abroad = new Set();
   delayState.stationsAt = 0;
   delayState.inFlight = null;
+  sharedState.result = null;
+  sharedState.inFlight = null;
 }
 
 async function refreshTrainDelays({ key, fetchImpl, now, signal }) {
@@ -315,6 +374,16 @@ async function refreshTrainDelays({ key, fetchImpl, now, signal }) {
           String(row.LocationSignature),
           String(row.AdvertisedShortLocationName || row.LocationSignature),
         ]),
+    );
+    delayState.abroad = new Set(
+      stations
+        .filter(
+          (row) =>
+            row?.LocationSignature &&
+            /^[A-Z]{2}$/.test(String(row.CountryCode ?? '')) &&
+            row.CountryCode !== 'SE',
+        )
+        .map((row) => String(row.LocationSignature)),
     );
     delayState.stationsAt = now;
   }
@@ -365,6 +434,171 @@ export async function withTrainDelays(
   });
 }
 
+/** How long one fetched snapshot answers every layer that asks (ms). */
+export const TRAFIKVERKET_TRAINS_SHARE_MS = TRANSIT_PROXY_TTL_MS;
+
+/**
+ * What the Rail layer sorts a train by, from its newest station call: the
+ * product and owner Trafikverket publishes, its origin's name, and whether
+ * either end of its run is a station outside Sweden. Null for a train that
+ * has made no call yet.
+ * @param {object} vehicle
+ * @returns {{product: string|null, operator: string|null,
+ *   origin: string|null, abroad: boolean}|null}
+ */
+function trainServiceOf(vehicle) {
+  const call = delayState.byTrain.get(vehicle.id.split('-')[0]);
+  if (!call) return null;
+  return {
+    product: call.product,
+    operator: call.owner,
+    origin: call.origin
+      ? delayState.stations.get(call.origin) || call.origin
+      : null,
+    abroad: [call.origin, call.destination].some(
+      (signature) => signature && delayState.abroad.has(signature),
+    ),
+  };
+}
+
+/** Wait for a shared promise, but stop waiting when this caller aborts. */
+function untilAborted(promise, signal) {
+  if (!signal) return promise;
+  signal.throwIfAborted();
+  return new Promise((resolve, reject) => {
+    const onAbort = () => reject(signal.reason ?? new Error('aborted'));
+    signal.addEventListener('abort', onAbort, { once: true });
+    promise.then(
+      (value) => {
+        signal.removeEventListener('abort', onAbort);
+        resolve(value);
+      },
+      (error) => {
+        signal.removeEventListener('abort', onAbort);
+        reject(error);
+      },
+    );
+  });
+}
+
+/**
+ * One positions request plus the delay refresh it may carry. It runs on its
+ * own abort and timeout, not on the asking layer's: a second layer waiting on
+ * the same request must not lose it when the first one gives up.
+ */
+async function fetchSharedSnapshot({ key, fetchImpl, now }) {
+  const controller = new AbortController();
+  const timeout = setTimeout(
+    () => controller.abort(),
+    TRANSIT_PROXY_TIMEOUT_MS,
+  );
+  try {
+    const since = new Date(now - TRAFIKVERKET_TRAINS_MAX_AGE_MS).toISOString();
+    const response = await fetchImpl(TRAFIKVERKET_API_URL, {
+      method: 'POST',
+      signal: controller.signal,
+      redirect: 'manual',
+      headers: {
+        'Content-Type': 'text/xml; charset=utf-8',
+        Accept: 'application/json',
+        'User-Agent':
+          'gods-eye-view-transit-proxy/1.0 (+https://github.com/Kajjan7610/Gods-view-sweden)',
+      },
+      body: trafikverketTrainQuery(key, since),
+    });
+    if (!response.ok) {
+      try {
+        await response.body?.cancel();
+      } catch {
+        /* no-op */
+      }
+      const error = new Error(`upstream HTTP ${response.status}`);
+      error.upstreamStatus = response.status;
+      throw error;
+    }
+    const bytes = await readResponseBytesCapped(
+      response,
+      TRAFIKVERKET_TRAINS_MAX_BODY_BYTES,
+    );
+    const payload = JSON.parse(new TextDecoder().decode(bytes));
+    const {
+      vehicles: positions,
+      entityCount,
+      truncated,
+    } = trafikverketTrainsToVehicles(payload);
+    const vehicles = await withTrainDelays(positions, {
+      key,
+      fetchImpl,
+      now,
+      signal: controller.signal,
+    });
+    const services = new Map();
+    for (const vehicle of vehicles) {
+      const service = trainServiceOf(vehicle);
+      if (service) services.set(vehicle.id, service);
+    }
+    return {
+      host: new URL(TRAFIKVERKET_API_URL).hostname,
+      fetchedAt: now,
+      entityCount,
+      truncated,
+      vehicles,
+      services,
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * The positions snapshot both layers read. A snapshot (or a failure) younger
+ * than TRAFIKVERKET_TRAINS_SHARE_MS answers every caller with the same key,
+ * and callers that ask while a request is under way share it, so watching
+ * Transit and Rail at once costs Trafikverket no more than either alone: at
+ * most four position requests a minute, plus the delay refresh once a
+ * minute and the station list once a day (withTrainDelays). A failure is
+ * kept for the same window, so the two layers do not each retry it.
+ *
+ * @param {{key: string, fetchImpl?: typeof fetch, now?: number,
+ *   signal?: AbortSignal}} options
+ * @returns {Promise<{host: string, fetchedAt: number, entityCount: number,
+ *   truncated: boolean, vehicles: object[], services: Map<string, object>}>}
+ */
+export async function sharedTrainSnapshot({
+  key,
+  fetchImpl = fetch,
+  now = Date.now(),
+  signal,
+} = {}) {
+  const kept = sharedState.result;
+  if (
+    kept &&
+    kept.key === key &&
+    now >= kept.at &&
+    now - kept.at < TRAFIKVERKET_TRAINS_SHARE_MS
+  ) {
+    if (kept.error) throw kept.error;
+    return kept.value;
+  }
+  if (sharedState.inFlight?.key !== key) {
+    const flight = {
+      key,
+      promise: fetchSharedSnapshot({ key, fetchImpl, now }),
+    };
+    sharedState.inFlight = flight;
+    const settle = (outcome) => {
+      if (sharedState.inFlight !== flight) return;
+      sharedState.result = { key, at: now, ...outcome };
+      sharedState.inFlight = null;
+    };
+    flight.promise.then(
+      (value) => settle({ value }),
+      (error) => settle({ error }),
+    );
+  }
+  return untilAborted(sharedState.inFlight.promise, signal);
+}
+
 /**
  * Fetch one snapshot, in the shape `buildTransitSnapshot` produces.
  *
@@ -376,59 +610,55 @@ export async function fetchTrafikverketTrainSnapshot(
   feed,
   { key, signal, fetchImpl = fetch, now = Date.now() },
 ) {
-  const since = new Date(now - TRAFIKVERKET_TRAINS_MAX_AGE_MS).toISOString();
-  const response = await fetchImpl(TRAFIKVERKET_API_URL, {
-    method: 'POST',
-    signal,
-    redirect: 'manual',
-    headers: {
-      'Content-Type': 'text/xml; charset=utf-8',
-      Accept: 'application/json',
-      'User-Agent':
-        'gods-eye-view-transit-proxy/1.0 (+https://github.com/Kajjan7610/Gods-view-sweden)',
-    },
-    body: trafikverketTrainQuery(key, since),
-  });
-  if (!response.ok) {
-    try {
-      await response.body?.cancel();
-    } catch {
-      /* no-op */
-    }
-    const error = new Error(`upstream HTTP ${response.status}`);
-    error.upstreamStatus = response.status;
-    throw error;
-  }
-  const bytes = await readResponseBytesCapped(
-    response,
-    TRAFIKVERKET_TRAINS_MAX_BODY_BYTES,
-  );
-  const payload = JSON.parse(new TextDecoder().decode(bytes));
-  const {
-    vehicles: positions,
-    entityCount,
-    truncated,
-  } = trafikverketTrainsToVehicles(payload);
-  const vehicles = await withTrainDelays(positions, {
-    key,
-    fetchImpl,
-    now,
-    signal,
-  });
+  const shared = await sharedTrainSnapshot({ key, signal, fetchImpl, now });
+  const { vehicles, fetchedAt } = shared;
   return {
-    host: new URL(TRAFIKVERKET_API_URL).hostname,
+    host: shared.host,
     snapshot: {
       feedId: feed.id,
       name: feed.name,
-      fetchedAt: now,
+      fetchedAt,
       // The API has no snapshot header time, so a position without its own
       // TimeStamp falls back to fetch time, labelled as the guess it is.
       feedTimestamp: null,
       version: null,
-      entityCount,
-      truncated,
+      entityCount: shared.entityCount,
+      truncated: shared.truncated,
       count: vehicles.length,
-      vehicles: repairVehicleTimestamps(vehicles, null, Math.floor(now / 1000)),
+      vehicles: repairVehicleTimestamps(
+        vehicles,
+        null,
+        Math.floor(fetchedAt / 1000),
+      ),
     },
   };
+}
+
+/**
+ * The shared snapshot's trains as the Rail layer reads them, before its
+ * classifier (railFeeds.js, `swedenTrain`): the Transit record plus the
+ * destination as `headsign`, a label that names the product ("Pågatåg
+ * 1043", else the Transit label "Tåg 1043"), and the product, owner, origin
+ * and `abroad` the classifier sorts by.
+ * @param {Awaited<ReturnType<typeof sharedTrainSnapshot>>} shared
+ * @returns {object[]}
+ */
+export function trafikverketRailVehicles(shared) {
+  const fetchedS = Math.floor(shared.fetchedAt / 1000);
+  return repairVehicleTimestamps(shared.vehicles, null, fetchedS).map(
+    (vehicle) => {
+      const service = shared.services?.get(vehicle.id) ?? null;
+      return {
+        ...vehicle,
+        label: service?.product
+          ? `${service.product} ${vehicle.routeId}`
+          : vehicle.label,
+        headsign: vehicle.destination ?? null,
+        product: service?.product ?? null,
+        operator: service?.operator ?? null,
+        origin: service?.origin ?? null,
+        abroad: service?.abroad === true,
+      };
+    },
+  );
 }

@@ -22,8 +22,10 @@ const counts = {
   stationReports: RAIL_FEED_REGISTRY.filter(
     (feed) => railFeedPositions(feed) === 'event',
   ).length,
+  // Swedish fork: a feed that needs a key (Trafikverket) is not out of the
+  // box either.
   outOfTheBox: RAIL_ENABLED_FEEDS.filter(
-    (feed) => !railFeedNeedsSchedulePack(feed),
+    (feed) => !railFeedNeedsSchedulePack(feed) && !feed.requiresKey,
   ).length,
   tripUpdates: RAIL_FEED_REGISTRY.filter(
     (feed) => typeof feed.tripUpdatesUrl === 'string',
@@ -34,16 +36,21 @@ const counts = {
 };
 
 test('the registry holds the feeds the documents count', () => {
-  // Swedish fork: the four feeds that publish no licence are not polled.
+  // Swedish fork: the four feeds that publish no licence are not polled,
+  // and Trafikverket's trains are added (they need the free key).
   assert.deepEqual(counts, {
-    registry: 30,
-    gps: 29,
+    registry: 31,
+    gps: 30,
     stationReports: 1,
     outOfTheBox: 24,
     tripUpdates: 22,
     staticGtfs: 29,
   });
-  assert.equal(RAIL_ENABLED_FEEDS.length, 26, 'all but the four unlicensed');
+  assert.equal(
+    RAIL_ENABLED_FEEDS.length,
+    27,
+    'all but the four unlicensed, with Trafikverket',
+  );
   assert.deepEqual(
     RAIL_FEED_REGISTRY.filter(
       (feed) => railFeedPositions(feed) === 'event',
@@ -57,11 +64,11 @@ test('DATA_SOURCES.md states the rail counts and has one row per feed', () => {
   const sources = read('DATA_SOURCES.md');
   const { registry, gps, outOfTheBox, tripUpdates, staticGtfs } = counts;
   for (const phrase of [
-    `The registry lists ${registry} feeds, all switched on upstream; the Swedish fork polls ${RAIL_ENABLED_FEEDS.length} of them`,
+    `The registry lists ${registry} feeds: the original's ${registry - 1}, all switched on upstream, and the Swedish fork's Trafikverket feed. The Swedish fork polls ${RAIL_ENABLED_FEEDS.length} of them`,
     `${gps} feeds publish live GPS positions (SJ Nord's through SIRI VM), and Irish Rail reports the station or timing point a train last passed`,
     `${tripUpdates} feeds register trip updates`,
     `out of the box upstream, ${outOfTheBox} in the Swedish fork`,
-    `(${staticGtfs} of the ${registry} have one)`,
+    `(${staticGtfs} of the original's ${registry - 1} have one; Trafikverket has none)`,
   ])
     assert.ok(sources.includes(phrase), phrase);
   const rows = sources

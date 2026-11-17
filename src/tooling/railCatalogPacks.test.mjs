@@ -71,6 +71,8 @@ test('pack-routed feeds wait for their pack; other feeds stay', async (t) => {
 test('with no way to tell, no feed that needs a pack is listed', async (t) => {
   let calls = 0;
   const service = createRailService({
+    // Swedish fork: no Trafikverket key, so its feed is not listed either.
+    env: {},
     fetchImpl: async () => {
       calls += 1;
       throw new Error('no network in tests');
@@ -81,7 +83,7 @@ test('with no way to tell, no feed that needs a pack is listed', async (t) => {
   assert.ok(!ids.has('ktmb'), 'a pack-routed feed waits for its pack');
   assert.ok(!ids.has('renfe-larga-distancia'), 'all of them');
   assert.ok(ids.has('mbta-rail'), 'live feed is listed');
-  const packless = publicRailCatalog().filter(
+  const packless = publicRailCatalog({ keyConfigured: () => false }).filter(
     (feed) => !railFeedNeedsSchedulePack(getRegisteredRailFeed(feed.id)),
   );
   assert.equal(ids.size, packless.length);

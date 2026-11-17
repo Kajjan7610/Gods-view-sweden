@@ -42,6 +42,7 @@ Två nivåer gäller:
 | Vägkameror (1 553 st, livebilder i 3D) | Trafikverket, objekt `Camera` | Cameras / CCTV |
 | Tåg i realtid, färgade efter försening (rosa 3–14 min, magenta 15+ min) | Trafikverket, objekt `TrainPosition` och `TrainAnnouncement` | Transit |
 | Bussar, tunnelbana, spårvagn, pendeltåg (16 regionbolag, med linjenummer) | Trafiklab GTFS Regional | Transit |
+| Tåg i originalets tåglager, färgade efter trafikslag (lokal, regional, nationell, internationell), med destination och försening vid senaste station | Trafikverket, samma hämtning som Transit (`TrainPosition`, `TrainAnnouncement`, `TrainStation`) | Rail |
 | Väglag och händelser (olyckor, avstängda vägar, vägarbeten, hinder, färjor) | Trafikverket, `RoadCondition` och `Situation` | Road Conditions (Sweden), under Events |
 | Nederbördsradar, Norden (var 5:e minut, senaste timmen) | SMHI, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Nordics) |
 | Nederbördsradar, Europa inkl. Norge, Finland, Danmark och Baltikum (var 5:e minut) | EUMETNET OPERA, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Europe) |
@@ -93,6 +94,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | | Lager | Källa | Omfattning | Uppdateras | Licens |
 |---|---|---|---|---|---|
 | +SE | Kollektivtrafik | Trafiklab (Samtrafiken) · Trafikverket | Bussar, tunnelbana, spårvagn och pendeltåg från 16 regionala trafikbolag, och tåg med förseningar. Originalet: Öppna GTFS-RT-flöden i USA, Kanada, Finland, Nederländerna, Norge, Australien och Brasilien | Var 15:e sekund | CC0 1.0 (Trafiklab, Trafikverket) |
+| +SE | Järnväg | Trafikverket | Tåg i hela Sverige efter trafikslag, med förseningar. Originalet: Tåg i realtid i USA, Kanada, Australien, Finland, Spanien, Norge, Malaysia, Japan och Frankrike | Var 15:e sekund | CC0 1.0 (Trafikverket) |
 | +SE | Kameror | Trafikverket | Cirka 1 550 vägkameror med livebilder. Originalet: Offentliga trafikkameror i många länder | Bilderna uppdateras medan de visas | CC0 1.0 (Trafikverket) |
 | SE | Fartkameror (Sverige) | Trafikverket | Cirka 2 800 fasta fartkameror i hela Sverige | Varje timme | CC0 1.0 |
 | SE | Elpris (Sverige) | elprisetjustnu.se · Nord Pool via ENTSO-E | Spotpris per kvart i elområdena SE1–SE4 | Var 15:e minut | Fri att använda enligt Elpriset just nu; priserna kommer från Nord Pool via ENTSO-E |
@@ -397,6 +399,44 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-17 (sex granskade källor i datakatalogen)
+- Datakatalogen erbjuder nu sex källor vars licens, villkor för
+  kartbitarna och vad de tillför kartan är granskade: Mapterhorns
+  terrängrelief (öppna licenser per källa; Sverige från Lantmäteriets
+  Markhöjdmodell, CC0), JRC:s vattenytor (Copernicus, fri användning,
+  "Source: EC JRC/Google") och Kartverkets topografiska karta, gråtonskarta,
+  turkarta och sjökort (CC BY 4.0, "© Kartverket"). Övriga källor kräver
+  fortfarande att operatören slår på dem med `GEV_LIBRARY_ENABLE`.
+- JRC:s vattenytor visar det nyaste datasetet, 1984–2024, i stället för
+  1984–2021.
+- Kartbitarna hämtas direkt från respektive leverantör av webbläsaren,
+  som OpenStreetMaps kartbitar. Sjökortet är inte till för navigering.
+
+### 2026-11-17 (svenska tåg i tåglagret)
+- Originalets tåglager (Rail) visar nu Sveriges tåg från Trafikverket,
+  samma tåg som Transit. Varje tåg får originalets kort, färg, filterknapp
+  och förklaring efter trafikslag: lokal (pendeltåg, Östgötapendeln,
+  Pågatåg, Upptåget, Arlanda Express), regional (Mälartåg och Regional,
+  Krösatåg, Öresundståg, Västtåg, Norrtåg, Tåg i Bergslagen,
+  Värmlandstrafik), nationell (SJ Snabbtåg, InterCity, nattåg, MTRX,
+  Snälltåget) och internationell när tågets start- eller slutstation
+  ligger utomlands (till exempel Oslo, København eller Narvik). Tåg utan
+  känd produkt, som godståg, räknas som nationella.
+- Trafikslaget kommer ur det Trafikverket publicerar: produkten och
+  informationsägaren i stationsanropen och stationens land. Fälten är
+  tillagda i de frågor som redan ställs; inga nya frågor.
+- Kortet visar destinationen och hur försenat tåget var vid senaste
+  station, med samma texter som kortet i Transit.
+- Båda lagren läser samma hämtning: Trafikverket frågas högst fyra gånger
+  i minuten om positioner, en gång i minuten om förseningar och en gång
+  om dygnet om stationer, även när båda lagren är på. Ett misslyckat svar
+  delas också, så att lagren inte försöker var för sig.
+- Kräver samma gratisnyckel som förut (`TRAFIKVERKET_API_KEY`). Utan den
+  finns flödet inte med i tåglagret och Trafikverket kontaktas inte.
+  Transit fungerar som förut.
+- Tåglagret räknar nu 31 flöden: originalets 30 och Trafikverkets. Den
+  svenska versionen hämtar 27 av dem; 24 fungerar utan nyckel.
 
 ### 2026-11-17 (svenska lagren på originalets ritport)
 - De svenska lagren ritar nu genom originalets ritport och tar emot klick

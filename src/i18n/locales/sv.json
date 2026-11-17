@@ -5028,5 +5028,7 @@
   "Every 2 minutes": "Varannan minut",
   "About 70 stations on the coast": "Cirka 70 stationer längs kusten",
   "{source} · flows {flows} · production {production}": "{source} · flöden {flows} · produktion {production}",
-  "Gaps are quarter-hours ENTSO-E has not published.": "Luckorna är kvartar som ENTSO-E inte har publicerat."
+  "Gaps are quarter-hours ENTSO-E has not published.": "Luckorna är kvartar som ENTSO-E inte har publicerat.",
+  "Trains across Sweden by service category, with their delays": "Tåg i hela Sverige efter trafikslag, med förseningar",
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "Tåg i realtid i USA, Kanada, Australien, Finland, Spanien, Norge, Malaysia, Japan och Frankrike"
 }

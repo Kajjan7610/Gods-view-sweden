@@ -206,14 +206,37 @@ export const LIBRARY_MANIFESTS = Object.freeze([
   wvStatewideImagery,
 ]);
 
-// Swedish fork: no shipped entry is offered until its licence, and what it
-// adds to the map, are reviewed; the operator switches each one on
-// (GEV_LIBRARY_ENABLE).
+/**
+ * Swedish fork: the entries whose licence, tile terms and what they add to
+ * the map were reviewed (2026-11-17), offered as the original offers them:
+ * - Mapterhorn's terrain relief: per-source open licences (Sweden from
+ *   Lantmäteriet's Markhöjdmodell, CC0), a public tile endpoint.
+ * - JRC Global Surface Water: Copernicus, free without restriction of use,
+ *   credited "Source: EC JRC/Google"; the 1984–2024 tiles.
+ * - Kartverket's cache maps (topographic, greyscale, hiking, nautical):
+ *   CC BY 4.0, credited "© Kartverket", a WMTS Kartverket offers for
+ *   websites.
+ * Their tiles go straight from the browser to each provider, as OSM's do.
+ */
+export const FORK_REVIEWED_ENTRIES = Object.freeze(
+  new Set([
+    'mapterhorn-terrain',
+    'jrc-surface-water',
+    'kartverket-topo',
+    'kartverket-topo-grey',
+    'kartverket-toporaster',
+    'kartverket-nautical-charts',
+  ]),
+);
+
+// Swedish fork: any other shipped entry is offered only once the operator
+// switches it on (GEV_LIBRARY_ENABLE), until it too is reviewed.
 const validated = validateLibraryCatalog(
-  LIBRARY_MANIFESTS.map((manifest) => ({
-    ...manifest,
-    licence: { ...manifest.licence, operatorOptIn: true },
-  })),
+  LIBRARY_MANIFESTS.map((manifest) =>
+    FORK_REVIEWED_ENTRIES.has(manifest.id)
+      ? manifest
+      : { ...manifest, licence: { ...manifest.licence, operatorOptIn: true } },
+  ),
 );
 if (!validated.ok)
   throw new TypeError(

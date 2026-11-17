@@ -4,7 +4,7 @@
   "family": "environment",
   "title": "Surface water occurrence (JRC)",
   "provider": "EC JRC",
-  "description": "How often each place was covered by water between 1984 and 2021, from 38 years of Landsat imagery.",
+  "description": "How often each place was covered by water between 1984 and 2024, from 41 years of Landsat imagery.",
   "icon": "≋",
   "maintainer": "github:asturksever",
   "coverage": {
@@ -12,7 +12,7 @@
   },
   "source": {
     "format": "xyz",
-    "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/{z}/{x}/{y}.png",
+    "url": "https://storage.googleapis.com/water-world/tiles2024/occurrence/{z}/{x}/{y}.png",
     "fetch": "browser-direct",
     "cacheSeconds": 86400,
     "minZoom": 0,

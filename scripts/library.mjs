@@ -67,7 +67,7 @@ export function libraryDocsSection(entries = LIBRARY_ENTRIES) {
     '',
     '## Data Library entries (fetched at runtime — not stored in this repo)',
     '',
-    'Swedish fork: no entry is offered until its licence, and what it adds to the map, are reviewed; the operator switches each one on with `GEV_LIBRARY_ENABLE` (a comma-separated list of entry ids). Each Data Library entry is a manifest in `src/library/entries/` pointing at a live upstream its provider hosts; see [docs/DATA-LIBRARY.md](docs/DATA-LIBRARY.md). An entry appears on the map only after a viewer adds it from **DATA LAYERS ▸ Browse data library**, and its attribution is registered in the Data attribution popover while it is in use. This table is generated from the manifests: edit the manifest, then run `npm run library:docs`.',
+    'Swedish fork: an entry is offered once its licence, its tile terms and what it adds to the map are reviewed. Reviewed so far (2026-11-17): Mapterhorn terrain relief, JRC surface water (the 1984–2024 tiles) and Kartverket’s topographic, greyscale, hiking and nautical maps. The operator switches any other entry on with `GEV_LIBRARY_ENABLE` (a comma-separated list of entry ids). Each Data Library entry is a manifest in `src/library/entries/` pointing at a live upstream its provider hosts; see [docs/DATA-LIBRARY.md](docs/DATA-LIBRARY.md). An entry appears on the map only after a viewer adds it from **DATA LAYERS ▸ Browse data library**, and its attribution is registered in the Data attribution popover while it is in use. This table is generated from the manifests: edit the manifest, then run `npm run library:docs`.',
     '',
     '| Entry | How it is served | Licence / terms | Attribution |',
     '| --- | --- | --- | --- |',

@@ -4,7 +4,11 @@ import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
 import { createRailService } from '../../src/sources/railService.js';
-import { RAIL_FEED_ID_PATTERN } from '../../src/data/railFeeds.js';
+import {
+  RAIL_FEED_ID_PATTERN,
+  getRegisteredRailFeed,
+} from '../../src/data/railFeeds.js';
+import { admitSameSite } from './common/same-site.js';
 
 /**
  * Where development and preview look for path and schedule packs when
@@ -254,6 +258,13 @@ export function railProxy(options = {}) {
   }
   function install(server) {
     server.middlewares.use('/api/rail', async (req, res) => {
+      // Swedish fork: a feed that spends a key (Trafikverket's trains)
+      // answers the app's own page only, as the fork's other key routes do.
+      const feedId = String(req.url || '')
+        .split('?')[0]
+        .split('/')[2];
+      if (getRegisteredRailFeed(feedId)?.requiresKey && admitSameSite(req, res))
+        return;
       try {
         const response = await service.handle({
           url: `http://localhost/api/rail${req.url || '/'}`,

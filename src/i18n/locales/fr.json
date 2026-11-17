@@ -5138,5 +5138,7 @@
   "Every 2 minutes": "Toutes les 2 minutes",
   "About 70 stations on the coast": "Environ 70 stations sur la côte",
   "{source} · flows {flows} · production {production}": "{source} · flux {flows} · production {production}",
-  "Gaps are quarter-hours ENTSO-E has not published.": "Les trous sont des quarts d’heure qu’ENTSO-E n’a pas publiés."
+  "Gaps are quarter-hours ENTSO-E has not published.": "Les trous sont des quarts d’heure qu’ENTSO-E n’a pas publiés.",
+  "Trains across Sweden by service category, with their delays": "Trains dans toute la Suède par type de service, avec leurs retards",
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "Trains en direct aux États-Unis, au Canada, en Australie, en Finlande, en Espagne, en Norvège, en Malaisie, au Japon et en France"
 }

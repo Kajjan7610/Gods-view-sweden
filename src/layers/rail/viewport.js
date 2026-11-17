@@ -54,11 +54,14 @@ export function createViewport({ state, services, parts, source }) {
    * Bundled feeds used until the catalog has loaded: those that need no
    * schedule pack. A live feed that reads its routes from one is used only
    * once the catalog lists it, which it does only once its pack is built.
+   * Swedish fork: so is a feed that needs a server key (`requiresKey`),
+   * which the catalog lists only once the key is set.
    */
   const PACKLESS_FEEDS = RAIL_ENABLED_FEEDS.filter(
     (feed) =>
       isLiveRailPositionSource(feed.positions) &&
-      !railFeedNeedsSchedulePack(feed),
+      !railFeedNeedsSchedulePack(feed) &&
+      !feed.requiresKey,
   );
 
   /** The server's catalog once it has loaded, else the packless feeds. */

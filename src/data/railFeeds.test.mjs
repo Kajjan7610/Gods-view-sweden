@@ -30,8 +30,14 @@ test('every registered feed is complete, https and uniquely named', () => {
     assert.ok(isHttps(feed.url), feed.id);
     for (const url of [feed.tripUpdatesUrl, feed.staticGtfsUrl])
       if (url !== undefined) assert.ok(isHttps(url), `${feed.id} ${url}`);
+    // Swedish fork: Trafikverket's trains come through the server adapter.
     assert.ok(
-      ['gtfs-rt', 'irish-rail-xml', 'siri-vm'].includes(feed.format),
+      [
+        'gtfs-rt',
+        'irish-rail-xml',
+        'siri-vm',
+        'trafikverket-trainposition',
+      ].includes(feed.format),
       feed.id,
     );
     if (feed.format === 'irish-rail-xml')
@@ -88,6 +94,10 @@ const REGISTRY_FIELDS = new Set([
   'defaultEnabled',
   'terms',
   'classify',
+  // Swedish fork: Trafikverket's key, held server-side, and Sweden's
+  // coverage circles; only that feed may carry them (test below).
+  'requiresKey',
+  'coverage',
 ]);
 
 test('every feed reports live positions: GPS or signalling events', () => {
@@ -172,6 +182,16 @@ test('every feed is on, credited with its licence and terms, and fetched as publ
         );
   }
   assert.equal(ids.size, RAIL_FEED_REGISTRY.length);
+  // Swedish fork: the one feed that needs a key is Trafikverket's, and its
+  // key names a server environment variable, never a value.
+  assert.deepEqual(
+    RAIL_FEED_REGISTRY.filter((feed) => feed.requiresKey).map((f) => f.id),
+    ['trafikverket-trains'],
+  );
+  assert.equal(
+    getRegisteredRailFeed('trafikverket-trains').requiresKey,
+    'TRAFIKVERKET_API_KEY',
+  );
   // Swedish fork: all but the feeds that state no licence.
   assert.deepEqual(
     RAIL_ENABLED_FEEDS.map((feed) => feed.id),

@@ -472,6 +472,8 @@ test('every train answer comes from the operator, never from a timetable', async
   });
   const asked = [];
   const service = createRailService({
+    // Swedish fork: Trafikverket's feed is asked only with its key.
+    env: { TRAFIKVERKET_API_KEY: 'test-key' },
     fetchImpl: async (url) => {
       asked.push(url);
       return new Response('', { status: 503 });

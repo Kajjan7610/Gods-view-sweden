@@ -7764,6 +7764,8 @@
     "exports": ["./server/providers/rail"],
     "modules": [
       "server/providers/rail.js",
+      "server/providers/common/same-site.js",
+      "src/localRequestGate.mjs",
       "src/data/railFeeds.js",
       "src/data/railProxy.js",
       "src/data/irishRail.js",
@@ -7782,6 +7784,7 @@
       "src/i18n/marker.js",
       "src/sources/transitHistory.js",
       "src/sources/railService.js",
+      "src/sources/trafikverketTrains.js",
       "src/sources/rateLimit.js"
     ],
     "external": ["pbf"]
@@ -7812,6 +7815,7 @@
       "src/i18n/marker.js",
       "src/sources/transitHistory.js",
       "src/sources/railService.js",
+      "src/sources/trafikverketTrains.js",
       "src/sources/rateLimit.js"
     ],
     "external": ["pbf"]

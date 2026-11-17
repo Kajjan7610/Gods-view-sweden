@@ -395,6 +395,28 @@ function railCardTitle(record, headsign, t) {
   return `🚆 ${t('Vehicle {vehicle}', { vehicle: label || record.id })}`;
 }
 
+/**
+ * Swedish fork: how late a train was at its last station call, and that
+ * call ("4 min late · departed Uppsala C"), in the Transit card's words, for
+ * a feed that states it on the train (`delayMinutes`, Trafikverket).
+ */
+function lastCallLine(record, t) {
+  const minutes = record.delayMinutes;
+  const delay =
+    minutes >= 1
+      ? t('{minutes} min late', { minutes })
+      : minutes <= -1
+        ? t('{minutes} min early', { minutes: -minutes })
+        : t('On time');
+  if (typeof record.lastStation !== 'string' || !record.lastStation)
+    return delay;
+  return `${delay} · ${
+    record.lastStationDeparted
+      ? t('departed {station}', { station: record.lastStation })
+      : t('at {station}', { station: record.lastStation })
+  }`;
+}
+
 /** "Next Yonkers 14:32 T−4 (+3 min late)" / "Prev Riverdale 14:24 T+3". */
 function stopLine(stop, which, t) {
   const values = {
@@ -476,6 +498,9 @@ export function buildRailSelectionCopy(
   if (roles.previous >= 0)
     add(3, stopLine(stops[roles.previous], 'previous', t));
   const haveStops = roles.next >= 0 || roles.previous >= 0;
+  // Without timetable stops, the delay the train's last station call states.
+  if (!haveStops && Number.isFinite(record.delayMinutes))
+    add(2, lastCallLine(record, t));
 
   const ageS = Math.round(
     (Number.isFinite(entry?.sample?.latestReportAgeMs)

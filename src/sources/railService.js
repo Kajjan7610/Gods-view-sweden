@@ -9,7 +9,10 @@
  * serve-stale-on-failure for up to 10 minutes, a fixed-window admission
  * limiter and a per-feed cooldown ladder. No disk cache and no history store.
  *
- * Every registered feed is open: no request carries a credential.
+ * Every registered feed is open: no request carries a credential. Swedish
+ * fork: but for Trafikverket's trains (`requiresKey`), read through the
+ * adapter the Transit proxy uses (src/sources/trafikverketTrains.js), from the
+ * snapshot both layers share, with the key from the server's environment.
  */
 
 import { coalesceProxyRequest, readResponseBytesCapped } from './httpBody.js';
@@ -31,6 +34,7 @@ import {
   RAIL_PROXY_TIMEOUT_MS,
   RailFeedShapeError,
   buildRailSnapshot,
+  buildRailSnapshotFromVehicles,
   buildRailTripUpdatesSnapshot,
   railAdmissionGlobalMax,
   isAcceptableRailUpstreamUrl,
@@ -48,6 +52,11 @@ import {
   schedulePackEndMs,
 } from '../data/railSchedule.js';
 import { createRunIndex } from '../data/railScheduleIndex.js';
+import {
+  TRAFIKVERKET_TRAINS_KIND,
+  sharedTrainSnapshot,
+  trafikverketRailVehicles,
+} from './trafikverketTrains.js';
 
 const JSON_NO_STORE = Object.freeze({
   'Content-Type': 'application/json',
@@ -214,7 +223,13 @@ const SCHEDULE_PACK_PROBE_RETRY_S = SCHEDULE_PACK_PROBE_TTL_MS / 1000;
  * ETag, and a request whose If-None-Match names it is answered 304 without
  * reading the pack.
  *
+ * Swedish fork: a feed with `requiresKey` reads that key from `env` on every
+ * request, so a key added to .env takes effect without a restart. Without
+ * it the feed is left out of the catalog and its trains answer "not
+ * configured" (503, Retry-After an hour) without contacting the operator.
+ *
  * @param {{fetchImpl?: typeof fetch,
+ *   env?: Record<string, string|undefined>,
  *   readPathPack?: (feedId: string, options: {maxBytes: number}) =>
  *     Promise<string|Uint8Array|null>,
  *   readSchedulePack?: (feedId: string, options: {maxBytes: number}) =>
@@ -227,6 +242,7 @@ const SCHEDULE_PACK_PROBE_RETRY_S = SCHEDULE_PACK_PROBE_TTL_MS / 1000;
  */
 export function createRailService({
   fetchImpl = fetch,
+  env = globalThis.process?.env ?? {},
   readPathPack = null,
   readSchedulePack = null,
   hasSchedulePack = null,
@@ -234,6 +250,13 @@ export function createRailService({
   pathPackVersion = null,
   now: clock = () => Date.now(),
 } = {}) {
+  /** The configured key for a feed that needs one, or ''. */
+  function feedKey(feed) {
+    return feed.requiresKey ? String(env[feed.requiresKey] ?? '').trim() : '';
+  }
+  /** Feeds whose missing key has been logged, so the line appears once. */
+  const missingKeyLogged = new Set();
+
   /** Whether a feed's timetable pack is built, as the host can tell. */
   const probeSchedulePack =
     typeof hasSchedulePack === 'function'
@@ -287,6 +310,7 @@ export function createRailService({
     );
     return publicRailCatalog({
       schedulePackBuilt: (feedId) => built.has(feedId),
+      keyConfigured: (name) => String(env[name] ?? '').trim() !== '',
     });
   }
   /**
@@ -616,6 +640,34 @@ export function createRailService({
     const timeout = setTimeout(() => controller.abort(), RAIL_PROXY_TIMEOUT_MS);
     const previous = cache.get(cacheKey);
     try {
+      // Swedish fork: Trafikverket's trains, from the snapshot the Transit
+      // layer shares; no second request to Trafikverket.
+      if (feed.format === TRAFIKVERKET_TRAINS_KIND) {
+        const shared = await sharedTrainSnapshot({
+          key: feedKey(feed),
+          signal: controller.signal,
+          fetchImpl,
+          now: at,
+        });
+        if (closed) throw new Error('Rail provider closed');
+        const snapshot = buildRailSnapshotFromVehicles(feed, {
+          vehicles: trafikverketRailVehicles(shared),
+          fetchedAt: shared.fetchedAt,
+          entityCount: shared.entityCount,
+          truncated: shared.truncated,
+        });
+        const entry = {
+          at: snapshot.fetchedAt,
+          contactedAt: snapshot.fetchedAt,
+          body: JSON.stringify(snapshot),
+          host: shared.host,
+          etag: null,
+          lastModified: null,
+        };
+        cache.set(cacheKey, entry);
+        cooldown.delete(cacheKey);
+        return entry;
+      }
       const validators = previous
         ? { etag: previous.etag, lastModified: previous.lastModified }
         : null;
@@ -929,6 +981,29 @@ export function createRailService({
       return servePack(route.feed, route.route, incoming);
     const { feed } = route;
     const updates = route.route === 'updates';
+    // Swedish fork: a feed whose key is not set is never contacted.
+    if (feed.requiresKey && !feedKey(feed)) {
+      if (!missingKeyLogged.has(feed.id)) {
+        missingKeyLogged.add(feed.id);
+        console.warn(
+          `[rail-proxy] ${feed.id} skipped: set ${feed.requiresKey} to enable it`,
+        );
+      }
+      return reply(
+        503,
+        JSON.stringify({
+          error: 'Rail feed not configured',
+          feedId: feed.id,
+          retryInSec: 3600,
+        }),
+        {
+          ...JSON_NO_STORE,
+          'X-GEV-Cache': 'NONE',
+          'Retry-After': '3600',
+          'X-Rail-Backoff': 'not-configured',
+        },
+      );
+    }
     // A pack-routed feed whose pack is not built is not served: the
     // operator is not contacted for trains this server cannot name.
     if (!(await feedServable(feed)))

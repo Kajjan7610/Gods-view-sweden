@@ -2,13 +2,17 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  TRAFIKVERKET_TRAINS_SHARE_MS,
   foldTrainCalls,
   resetTrainDelays,
+  sharedTrainSnapshot,
   trafikverketDelayQuery,
+  trafikverketRailVehicles,
   trafikverketTrainQuery,
   trafikverketTrainToVehicle,
   trafikverketTrainsToVehicles,
 } from './trafikverketTrains.js';
+import { createRailService } from './railService.js';
 import { createTransitService } from './transitService.js';
 import {
   getTransitFeed,
@@ -286,6 +290,7 @@ test('Trafiklab feeds send their key as ?key= and cover their own county', async
 });
 
 test('a refused key is a 502 with a cooldown, and the key is never logged', async (t) => {
+  resetTrainDelays();
   const lines = [];
   t.mock.method(console, 'warn', (...args) => lines.push(args.join(' ')));
   const service = createTransitService({
@@ -336,6 +341,9 @@ test('station calls fold into the newest call per train, with its delay', () => 
       station: 'Cst',
       departed: true,
       destination: 'U',
+      origin: null,
+      product: null,
+      owner: null,
     },
   );
   const query = trafikverketDelayQuery('k"', '2026-11-03T18:00:00.000Z', true);
@@ -346,4 +354,295 @@ test('station calls fold into the newest call per train, with its delay', () => 
     trafikverketDelayQuery('k', '2026-11-03T18:00:00.000Z', false),
     /TrainStation/,
   );
+});
+
+// Swedish fork, Rail layer: two trains, one to Oslo (an SJ Snabbtåg) and one
+// SL commuter train, each with one station call; Oslo S is in Norway.
+const RAIL_CALLED = Date.now() - 5 * 60_000;
+const railCall = (train, extra) => ({
+  OperationalTrainNumber: train,
+  LocationSignature: 'Cst',
+  ActivityType: 'Avgang',
+  AdvertisedTimeAtLocation: new Date(RAIL_CALLED - 4 * 60_000).toISOString(),
+  TimeAtLocation: new Date(RAIL_CALLED).toISOString(),
+  ...extra,
+});
+const RAIL_DELAYS = {
+  RESPONSE: {
+    RESULT: [
+      {
+        TrainAnnouncement: [
+          railCall('541', {
+            FromLocation: [{ LocationName: 'Cst', Priority: 1, Order: 0 }],
+            ToLocation: [{ LocationName: 'Ods', Priority: 1, Order: 0 }],
+            ProductInformation: [
+              { Code: 'PNA054', Description: 'SJ Snabbtåg' },
+            ],
+            InformationOwner: 'SJ',
+          }),
+          railCall('2245', {
+            FromLocation: [{ LocationName: 'Söc', Priority: 1, Order: 0 }],
+            ToLocation: [{ LocationName: 'Mr', Priority: 1, Order: 0 }],
+            ProductInformation: [{ Code: 'PNA025', Description: 'Pendeltåg' }],
+            InformationOwner: 'SL',
+          }),
+        ],
+      },
+      {
+        TrainStation: [
+          {
+            LocationSignature: 'Cst',
+            AdvertisedShortLocationName: 'Stockholm C',
+            CountryCode: 'SE',
+          },
+          {
+            LocationSignature: 'Ods',
+            AdvertisedShortLocationName: 'Oslo S',
+            CountryCode: 'NO',
+          },
+          {
+            LocationSignature: 'Mr',
+            AdvertisedShortLocationName: 'Märsta',
+            CountryCode: 'SE',
+          },
+        ],
+      },
+    ],
+  },
+};
+const RAIL_POSITIONS = payload([
+  RECORD,
+  {
+    ...RECORD,
+    Train: {
+      AdvertisedTrainNumber: '2245',
+      OperationalTrainNumber: '2245',
+      OperationalTrainDepartureDate: '2026-11-03T00:00:00.000+01:00',
+    },
+    Position: { WGS84: 'POINT (17.95 59.40)' },
+  },
+]);
+
+/** A fetch that answers positions and delays, counting each request. */
+function railFetch(calls) {
+  return async (url, init) => {
+    const delays = /TrainAnnouncement/.test(init.body);
+    calls.push(delays ? 'delays' : 'positions');
+    return Response.json(delays ? RAIL_DELAYS : RAIL_POSITIONS);
+  };
+}
+
+test('the delay query asks for product, owner and ends, and station countries', () => {
+  const query = trafikverketDelayQuery('k', '2026-11-03T18:00:00.000Z', true);
+  for (const field of [
+    'ProductInformation',
+    'InformationOwner',
+    'FromLocation',
+    'ToLocation',
+    'CountryCode',
+  ])
+    assert.match(query, new RegExp(`<INCLUDE>${field}</INCLUDE>`), field);
+  // Still one request with its two queries: no new request type.
+  assert.equal(query.match(/<QUERY /g).length, 2);
+});
+
+test('a call without a product keeps the one the train already had', () => {
+  const byTrain = new Map();
+  foldTrainCalls(
+    [RAIL_DELAYS.RESPONSE.RESULT[0].TrainAnnouncement[0]],
+    byTrain,
+  );
+  foldTrainCalls(
+    [
+      railCall('541', {
+        TimeAtLocation: new Date(RAIL_CALLED + 60_000).toISOString(),
+        LocationSignature: 'U',
+      }),
+    ],
+    byTrain,
+  );
+  const call = byTrain.get('541');
+  assert.equal(call.station, 'U');
+  assert.equal(call.product, 'SJ Snabbtåg');
+  assert.equal(call.owner, 'SJ');
+  assert.equal(call.origin, 'Cst');
+});
+
+test('Transit and Rail share one request, and Transit is unchanged', async (t) => {
+  resetTrainDelays();
+  const calls = [];
+  const env = { TRAFIKVERKET_API_KEY: 'secret-key' };
+  const transit = createTransitService({ env, fetchImpl: railFetch(calls) });
+  const rail = createRailService({ env, fetchImpl: railFetch(calls) });
+  t.after(transit.close);
+  t.after(rail.close);
+
+  const transitAnswer = await transit.handle(
+    request('/api/transit/vehicles/trafikverket-trains'),
+  );
+  assert.equal(transitAnswer.status, 200);
+  const railAnswer = await rail.handle(
+    request('/api/rail/trains/trafikverket-trains'),
+  );
+  assert.equal(railAnswer.status, 200);
+  // One positions request and one delay refresh, for both layers.
+  assert.deepEqual(calls, ['positions', 'delays']);
+
+  const transitBody = await transitAnswer.json();
+  const railBody = await railAnswer.json();
+  assert.equal(railBody.fetchedAt, transitBody.fetchedAt);
+  // The Transit record has exactly the fields it had before the Rail feed.
+  const sj = transitBody.vehicles.find((v) => v.routeId === '541');
+  assert.deepEqual(Object.keys(sj).sort(), [
+    'bearing',
+    'delayMinutes',
+    'destination',
+    'directionId',
+    'id',
+    'label',
+    'lastStation',
+    'lastStationDeparted',
+    'lat',
+    'lon',
+    'occupancy',
+    'routeId',
+    'speedMps',
+    'status',
+    'stopId',
+    'timestamp',
+    'timestampSource',
+    'tripId',
+  ]);
+  assert.equal(sj.label, 'Tåg 541');
+
+  const byRoute = new Map(
+    railBody.trains.map((train) => [train.routeId, train]),
+  );
+  assert.equal(railBody.count, 2);
+  assert.equal(railBody.dropped, 0);
+  assert.equal(railBody.positions, 'gps');
+  const toOslo = byRoute.get('541');
+  assert.equal(toOslo.category, 'international', 'ends in Norway');
+  assert.equal(toOslo.mode, 'rail');
+  assert.equal(toOslo.label, 'SJ Snabbtåg 541');
+  assert.equal(toOslo.headsign, 'Oslo S');
+  assert.equal(toOslo.delayMinutes, 4);
+  assert.equal(toOslo.lastStation, 'Stockholm C');
+  assert.equal(toOslo.positionSource, 'gps');
+  const commuter = byRoute.get('2245');
+  assert.equal(commuter.category, 'local');
+  assert.equal(commuter.label, 'Pendeltåg 2245');
+  assert.equal(commuter.headsign, 'Märsta');
+  assert.equal(JSON.stringify(railBody).includes('secret-key'), false);
+
+  // Within the window, either layer is answered from what is held.
+  await rail.handle(request('/api/rail/trains/trafikverket-trains'));
+  await transit.handle(request('/api/transit/vehicles/trafikverket-trains'));
+  assert.equal(calls.length, 2);
+});
+
+test('a snapshot younger than the window answers the other layer', async () => {
+  resetTrainDelays();
+  const calls = [];
+  const fetchImpl = railFetch(calls);
+  const positions = () => calls.filter((c) => c === 'positions').length;
+  const at = Date.now();
+  const first = await sharedTrainSnapshot({ key: 'k', fetchImpl, now: at });
+  const again = await sharedTrainSnapshot({
+    key: 'k',
+    fetchImpl,
+    now: at + TRAFIKVERKET_TRAINS_SHARE_MS - 1,
+  });
+  assert.equal(again, first);
+  assert.equal(positions(), 1);
+  const vehicles = trafikverketRailVehicles(first);
+  assert.equal(vehicles.length, 2);
+  assert.ok(vehicles.every((v) => typeof v.abroad === 'boolean'));
+  // Two layers asking at once share the request under way.
+  resetTrainDelays();
+  calls.length = 0;
+  await Promise.all([
+    sharedTrainSnapshot({ key: 'k', fetchImpl, now: at }),
+    sharedTrainSnapshot({ key: 'k', fetchImpl, now: at }),
+  ]);
+  assert.equal(positions(), 1);
+  // Once the window has passed, Trafikverket is asked again.
+  await sharedTrainSnapshot({
+    key: 'k',
+    fetchImpl,
+    now: at + TRAFIKVERKET_TRAINS_SHARE_MS,
+  });
+  assert.equal(positions(), 2);
+  // Another key is another snapshot.
+  await sharedTrainSnapshot({
+    key: 'other',
+    fetchImpl,
+    now: at + TRAFIKVERKET_TRAINS_SHARE_MS,
+  });
+  assert.equal(positions(), 3);
+});
+
+test('a refused request is not retried by the other layer within the window', async (t) => {
+  resetTrainDelays();
+  t.mock.method(console, 'warn', () => {});
+  let calls = 0;
+  const fetchImpl = async () => {
+    calls += 1;
+    return new Response('nope', { status: 401 });
+  };
+  const env = { TRAFIKVERKET_API_KEY: 'secret-key' };
+  const transit = createTransitService({ env, fetchImpl });
+  const rail = createRailService({ env, fetchImpl });
+  t.after(transit.close);
+  t.after(rail.close);
+  const one = await transit.handle(
+    request('/api/transit/vehicles/trafikverket-trains'),
+  );
+  const two = await rail.handle(
+    request('/api/rail/trains/trafikverket-trains'),
+  );
+  assert.equal(one.status, 502);
+  assert.equal(two.status, 502);
+  assert.equal(calls, 1);
+});
+
+test('without its key the Rail feed is not offered and never fetches', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  let calls = 0;
+  const fetchImpl = async () => {
+    calls += 1;
+    throw new Error('unexpected');
+  };
+  const keyless = createRailService({ env: {}, fetchImpl });
+  t.after(keyless.close);
+  const catalog = async (service) =>
+    (await (await service.handle(request('/api/rail/feeds'))).json()).feeds;
+  assert.equal(
+    (await catalog(keyless)).some((f) => f.id === 'trafikverket-trains'),
+    false,
+  );
+  const refused = await keyless.handle(
+    request('/api/rail/trains/trafikverket-trains'),
+  );
+  assert.equal(refused.status, 503);
+  assert.equal(refused.headers.get('x-rail-backoff'), 'not-configured');
+  assert.equal(refused.headers.get('retry-after'), '3600');
+  assert.equal(calls, 0);
+
+  const keyed = createRailService({
+    env: { TRAFIKVERKET_API_KEY: 'secret-key' },
+    fetchImpl,
+  });
+  t.after(keyed.close);
+  const listed = (await catalog(keyed)).find(
+    (f) => f.id === 'trafikverket-trains',
+  );
+  assert.ok(listed);
+  assert.equal(listed.coverage.length, 3);
+  assert.equal(listed.license, 'CC0 1.0');
+  // The catalog names neither the key nor its variable.
+  const text = JSON.stringify(listed);
+  assert.equal(text.includes('secret-key'), false);
+  assert.equal(text.includes('TRAFIKVERKET_API_KEY'), false);
+  assert.equal(calls, 0);
 });

@@ -23,7 +23,10 @@ import { greatCircleKm } from '../geoDistance.js';
  * and never offered to the browser.
  *
  * Every feed is keyless: its realtime feed and its static timetable are
- * published for anyone to fetch. Values are shown as the source gives them:
+ * published for anyone to fetch. Swedish fork: one exception, Trafikverket's
+ * trains (`requiresKey`), whose free key stays on the server and which the
+ * Rail layer reads from the snapshot the Transit layer shares (SVERIGE.md).
+ * Values are shown as the source gives them:
  * positions where the operator reports them, and, once a host has built a
  * feed's optional pack (scripts/build-rail-paths.mjs), route lines from the
  * operator's own shapes.
@@ -463,6 +466,92 @@ function triRailTrain(routeId, context) {
 const OWNER_AUTHORIZED_NO_TERMS =
   'Publishes no terms; used without a published licence (project owner decision, 2026-11-10).';
 
+// ------------------------------------------ Sweden (Swedish fork)
+// Helpers for the Trafikverket entry. They sit before the registry, which
+// uses them.
+
+/** Lowercase, without accents: `Pågatåg` → `pagatag`. */
+function folded(text) {
+  return String(text ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+/**
+ * Trafikverket product names (`ProductInformation`, folded), narrowest
+ * first: the first that matches decides.
+ */
+const SWEDEN_PRODUCTS = Object.freeze([
+  // Commuter and airport trains.
+  [/pendel|pagatag|upptaget|arlanda express/, LOCAL_RAIL],
+  // Regional trains, inside one region or between neighbours.
+  [
+    /regional|malartag|krosatag|oresundstag|vasttag|norrtag|tag i bergslagen|varmland|kustpilen|inlandsbanan/,
+    REGIONAL_RAIL,
+  ],
+  // Long distance across the country, by day or by night.
+  [
+    /snabbtag|intercity|nattag|night|mtrx|mtr express|snalltaget/,
+    NATIONAL_RAIL,
+  ],
+]);
+
+/**
+ * Owners of the timetable information (`InformationOwner`, folded), read
+ * only when a train's call names no product.
+ */
+const SWEDEN_OWNERS = Object.freeze([
+  [
+    /^sl$|storstockholms lokaltrafik|arlanda express|upptaget|ostgotatrafiken/,
+    LOCAL_RAIL,
+  ],
+  [
+    /vasttrafik|malardalstrafik|norrtag|varmlandstrafik|oresundstag/,
+    REGIONAL_RAIL,
+  ],
+  [/^sj\b|^mtr|snalltaget/, NATIONAL_RAIL],
+]);
+
+/**
+ * Sweden (Trafikverket, src/sources/trafikverketTrains.js), from what
+ * Trafikverket publishes with each station call (TrainAnnouncement 1.9) and
+ * for each station (TrainStation 1.4), as the adapter passes it on the
+ * record (`context.record`):
+ *  1. international: either end of the run (`FromLocation`, `ToLocation`)
+ *     is a station whose `CountryCode` is not SE (Oslo, København, Narvik,
+ *     Berlin), whatever the product: `abroad`.
+ *  2. by product (`ProductInformation`, case and accents ignored):
+ *     local: Pendeltåg (Stockholm, Göteborg), Östgötapendeln, Pågatåg,
+ *     Upptåget, Arlanda Express. Regional: Mälartåg and Regional (SJ
+ *     Regional, Regionaltåg), Krösatåg, Öresundståg, Västtåg, Norrtåg, Tåg i
+ *     Bergslagen, Värmlandstrafik, Kustpilen, Inlandsbanan. National: SJ
+ *     Snabbtåg, InterCity, night trains (Nattåg, EuroNight), MTRX,
+ *     Snälltåget.
+ *  3. by the information owner, when the call names no product: SL, Arlanda
+ *     Express, Upptåget and Östgötatrafiken local; Västtrafik,
+ *     Mälardalstrafik, Norrtåg, Värmlandstrafik and Öresundståg regional;
+ *     SJ, MTR and Snälltåget national.
+ *  4. anything else (a train that has made no call in the last half hour,
+ *     a freight train, empty stock): national, a train on the national
+ *     network, as Irish Rail's unknown InterCity stays national.
+ * No train is dropped: everything Trafikverket positions runs on rails.
+ */
+function swedenTrain(routeId, context) {
+  const record = context?.record;
+  if (record?.abroad === true) return INTERNATIONAL_RAIL;
+  const product = folded(record?.product);
+  if (product)
+    for (const [pattern, kind] of SWEDEN_PRODUCTS)
+      if (pattern.test(product)) return kind;
+  const owner = folded(record?.operator);
+  if (owner)
+    for (const [pattern, kind] of SWEDEN_OWNERS)
+      if (pattern.test(owner)) return kind;
+  return NATIONAL_RAIL;
+}
+
 /**
  * Registry of feeds. Order is presentation order in the stats/credit text.
  * `loadRadiusKm` is the distance from `center` inside which the feed is polled.
@@ -504,10 +593,19 @@ const OWNER_AUTHORIZED_NO_TERMS =
  * of this kind is offered only once that pack is built
  * (railFeedNeedsSchedulePack). `positionsByTrainNumber` (Irish Rail) matches
  * each reported train to its pack run by train code instead of trip id.
+ *
+ * Swedish fork: `format: 'trafikverket-trainposition'` is read by the server
+ * adapter src/sources/trafikverketTrains.js, never fetched as a GTFS-RT URL;
+ * `requiresKey` names the server environment variable holding the feed's key
+ * (the feed is offered only when it is set), and `coverage` lists circles
+ * that replace the single `center`/`loadRadiusKm` circle when choosing feeds
+ * in range (a long, thin country), as in src/data/transitFeeds.js.
  * @type {ReadonlyArray<Readonly<{
  *   id: string, name: string, operator: string, region: string,
  *   center: {lat: number, lon: number}, loadRadiusKm: number,
- *   format: 'gtfs-rt'|'irish-rail-xml'|'siri-vm',
+ *   format: 'gtfs-rt'|'irish-rail-xml'|'siri-vm'|'trafikverket-trainposition',
+ *   requiresKey?: string,
+ *   coverage?: ReadonlyArray<{lat: number, lon: number, radiusKm: number}>,
  *   url: string,
  *   positions?: 'gps'|'event',
  *   headers?: Record<string, string>, headerClock?: 'untrusted',
@@ -1119,6 +1217,40 @@ export const RAIL_FEED_REGISTRY = Object.freeze([
     }),
     classify: norwayTrain,
   }),
+  // Swedish fork: Sweden's trains, the Transit layer's Trafikverket feed.
+  Object.freeze({
+    id: 'trafikverket-trains',
+    name: 'Trafikverket',
+    operator: 'Trafikverket (Swedish national train positions)',
+    region: 'Sweden',
+    // The Transit entry's circles (src/data/transitFeeds.js): one circle
+    // holding Trelleborg and Riksgränsen would also reach Oslo and Helsinki.
+    center: Object.freeze({ lat: 62.0, lon: 16.5 }),
+    loadRadiusKm: 790,
+    coverage: Object.freeze([
+      Object.freeze({ lat: 57.3, lon: 14.5, radiusKm: 300 }),
+      Object.freeze({ lat: 59.9, lon: 16.0, radiusKm: 260 }),
+      Object.freeze({ lat: 64.8, lon: 19.0, radiusKm: 430 }),
+    ]),
+    // Not GTFS-Realtime: the server reads it through its own adapter
+    // (src/sources/trafikverketTrains.js), the snapshot Transit shares.
+    format: 'trafikverket-trainposition',
+    url: 'https://api.trafikinfo.trafikverket.se/v2/data.json',
+    // Server-side environment variable holding the free API key. Without it
+    // the feed is not offered and Trafikverket is never contacted.
+    requiresKey: 'TRAFIKVERKET_API_KEY',
+    license: 'CC0 1.0',
+    licenseUrl:
+      'https://www.trafikverket.se/e-tjanster/trafikverkets-oppna-api-for-trafikinformation/',
+    attribution: 'Trafikverket open API (CC0 1.0)',
+    defaultEnabled: true,
+    terms: Object.freeze({
+      quote:
+        'API ... en tjänst för öppna data för trafikinformation väg och järnväg i realtid. ... Licens - senaste versionen [CC0 1.0 Universal].',
+      note: 'The same feed the Transit layer polls, read from the one snapshot both layers share: watching both asks Trafikverket no more than watching one (about four position requests a minute while someone watches Sweden, the delay refresh once a minute, the station list once a day). It needs a free key, issued after registering at data.trafikverket.se and accepting the CC0 licence; the key stays server-side (TRAFIKVERKET_API_KEY) and only travels in the request body. The category comes from the product, owner and ends of the run Trafikverket publishes with each station call. Not every train reports a position.',
+    }),
+    classify: swedenTrain,
+  }),
   // National sources. Licences were read at the source on 2026-11-09; their
   // classifier helpers follow the registry.
   Object.freeze({
@@ -1584,13 +1716,43 @@ export function railFeedsInRange(
         Number.isFinite(feed?.center?.lon) &&
         Number.isFinite(feed?.loadRadiusKm),
     )
-    .map((feed) => ({
-      feed,
-      km: greatCircleKm({ lat, lon }, feed.center),
-    }))
-    .filter(({ feed, km }) => km <= feed.loadRadiusKm + Math.max(0, slackKm))
+    .map((feed) => feedRange(feed, lat, lon, Math.max(0, slackKm)))
+    .filter(({ inside }) => inside)
     .sort((a, b) => a.km - b.km)
     .map(({ feed }) => feed);
+}
+
+/**
+ * How far a point is from a feed, and whether the feed covers it: its one
+ * circle (`center`, `loadRadiusKm`), or, for a feed that lists `coverage`
+ * circles (Swedish fork: Sweden), any of those.
+ * @param {object} feed
+ * @param {number} lat
+ * @param {number} lon
+ * @param {number} slackKm
+ * @returns {{feed: object, km: number, inside: boolean}}
+ */
+function feedRange(feed, lat, lon, slackKm) {
+  const circles = Array.isArray(feed.coverage)
+    ? feed.coverage.filter(
+        (circle) =>
+          Number.isFinite(circle?.lat) &&
+          Number.isFinite(circle?.lon) &&
+          Number.isFinite(circle?.radiusKm),
+      )
+    : [];
+  if (!circles.length) {
+    const km = greatCircleKm({ lat, lon }, feed.center);
+    return { feed, km, inside: km <= feed.loadRadiusKm + slackKm };
+  }
+  let km = Infinity;
+  let inside = false;
+  for (const circle of circles) {
+    const distance = greatCircleKm({ lat, lon }, circle);
+    km = Math.min(km, distance);
+    if (distance <= circle.radiusKm + slackKm) inside = true;
+  }
+  return { feed, km, inside };
 }
 
 /**
@@ -1600,8 +1762,10 @@ export function railFeedsInRange(
  * inventing a category.
  * @param {object} feed Registry entry.
  * @param {string|null} routeId GTFS route_id from the vehicle's trip.
- * @param {{tripId?: string|null}} [context] More of the record, for feeds
- *   whose route id alone does not say what the train is (Irish Rail).
+ * @param {{tripId?: string|null, record?: object}} [context] More of the
+ *   record, for feeds whose route id alone does not say what the train is
+ *   (Irish Rail's train code; Swedish fork: Trafikverket's product, owner
+ *   and ends of the run, on the whole decoded `record`).
  * @returns {{category: string, mode: string}|null}
  */
 export function classifyTrain(feed, routeId, context = null) {
@@ -1621,16 +1785,24 @@ export function classifyTrain(feed, routeId, context = null) {
  * it could misuse. With `schedulePackBuilt`, a feed that needs its pack
  * (`railFeedNeedsSchedulePack`) appears only once the host has that pack:
  * packs are opt-in build output, so a feed nobody has built is absent rather
- * than shown as unavailable.
- * @param {{schedulePackBuilt?: ((feedId: string) => boolean)|null}}
- *   [options]
+ * than shown as unavailable. Swedish fork: with `keyConfigured`, a feed that
+ * needs a server key (`requiresKey`) appears only once that key is set, for
+ * the same reason; the catalog names neither the key nor its variable.
+ * @param {{schedulePackBuilt?: ((feedId: string) => boolean)|null,
+ *   keyConfigured?: ((name: string) => boolean)|null}} [options]
  * @returns {object[]}
  */
-export function publicRailCatalog({ schedulePackBuilt = null } = {}) {
+export function publicRailCatalog({
+  schedulePackBuilt = null,
+  keyConfigured = null,
+} = {}) {
   const listed = (feed) =>
-    typeof schedulePackBuilt !== 'function' ||
-    !railFeedNeedsSchedulePack(feed) ||
-    schedulePackBuilt(feed.id) === true;
+    (typeof schedulePackBuilt !== 'function' ||
+      !railFeedNeedsSchedulePack(feed) ||
+      schedulePackBuilt(feed.id) === true) &&
+    (typeof keyConfigured !== 'function' ||
+      !feed.requiresKey ||
+      keyConfigured(feed.requiresKey) === true);
   return railEnabledFeeds()
     .filter(listed)
     .map((feed) => ({
@@ -1640,6 +1812,9 @@ export function publicRailCatalog({ schedulePackBuilt = null } = {}) {
       region: feed.region,
       center: { ...feed.center },
       loadRadiusKm: feed.loadRadiusKm,
+      ...(feed.coverage
+        ? { coverage: feed.coverage.map((circle) => ({ ...circle })) }
+        : {}),
       positions: railFeedPositions(feed),
       tripUpdates: railFeedHasTripUpdates(feed),
       license: feed.license,

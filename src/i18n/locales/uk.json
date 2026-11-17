@@ -5248,5 +5248,7 @@
   "Every 2 minutes": "Кожні 2 хвилини",
   "About 70 stations on the coast": "Близько 70 станцій на узбережжі",
   "{source} · flows {flows} · production {production}": "{source} · перетоки {flows} · виробництво {production}",
-  "Gaps are quarter-hours ENTSO-E has not published.": "Пропуски — це чверті години, які ENTSO-E не опублікував."
+  "Gaps are quarter-hours ENTSO-E has not published.": "Пропуски — це чверті години, які ENTSO-E не опублікував.",
+  "Trains across Sweden by service category, with their delays": "Потяги по всій Швеції за категоріями сполучення, із запізненнями",
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "Потяги в реальному часі у США, Канаді, Австралії, Фінляндії, Іспанії, Норвегії, Малайзії, Японії та Франції"
 }

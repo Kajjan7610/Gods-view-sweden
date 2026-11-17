@@ -5468,5 +5468,7 @@
   "Every 2 minutes": "كل دقيقتين",
   "About 70 stations on the coast": "نحو 70 محطة على الساحل",
   "{source} · flows {flows} · production {production}": "{source} · التدفقات {flows} · الإنتاج {production}",
-  "Gaps are quarter-hours ENTSO-E has not published.": "الفجوات أرباع ساعات لم تنشرها ENTSO-E."
+  "Gaps are quarter-hours ENTSO-E has not published.": "الفجوات أرباع ساعات لم تنشرها ENTSO-E.",
+  "Trains across Sweden by service category, with their delays": "قطارات في جميع أنحاء السويد حسب فئة الخدمة، مع تأخيراتها",
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "قطارات مباشرة في الولايات المتحدة وكندا وأستراليا وفنلندا وإسبانيا والنرويج وماليزيا واليابان وفرنسا"
 }

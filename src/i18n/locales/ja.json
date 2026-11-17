@@ -4918,5 +4918,7 @@
   "Every 2 minutes": "2分ごと",
   "About 70 stations on the coast": "沿岸の約70観測所",
   "{source} · flows {flows} · production {production}": "{source} · 潮流 {flows} · 発電 {production}",
-  "Gaps are quarter-hours ENTSO-E has not published.": "空白は ENTSO-E が公開していない15分間です。"
+  "Gaps are quarter-hours ENTSO-E has not published.": "空白は ENTSO-E が公開していない15分間です。",
+  "Trains across Sweden by service category, with their delays": "スウェーデン全土の列車（運行種別ごと、遅延付き）",
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "米国、カナダ、オーストラリア、フィンランド、スペイン、ノルウェー、マレーシア、日本、フランスのリアルタイム列車"
 }
