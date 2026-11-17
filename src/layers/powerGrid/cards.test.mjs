@@ -38,7 +38,7 @@ test('a zone card lists its own flows, then Sweden, then the time', () => {
     'wind 9,637 MW',
   ]);
   // 10:15 UTC in November is 11:15 in Stockholm.
-  assert.equal(card.details[4], 'Svenska kraftnät · 11:15');
+  assert.equal(card.details[4], 'ENTSO-E (CC BY 4.0) · 11:15');
   assert.equal(card.details.length, 5);
 });
 
@@ -51,18 +51,18 @@ test('flows and production from different quarters each get their time', () => {
   const card = buildAreaCard(SE3, snapshot({ production }));
   assert.equal(
     card.details.at(-1),
-    'Svenska kraftnät · flows 11:15 · production 12:00',
+    'ENTSO-E (CC BY 4.0) · flows 11:15 · production 12:00',
   );
   // Within the same minute there is one time to tell.
   const same = { ...production, at: UPDATED + 20_000 };
   assert.equal(
     buildAreaCard(SE3, snapshot({ production: same })).details.at(-1),
-    'Svenska kraftnät · 11:15',
+    'ENTSO-E (CC BY 4.0) · 11:15',
   );
   // Production alone dates the card when the flows have no time.
   assert.equal(
     buildAreaCard(SE3, snapshot({ production, updated: null })).details.at(-1),
-    'Svenska kraftnät · 12:00',
+    'ENTSO-E (CC BY 4.0) · 12:00',
   );
 });
 
@@ -73,7 +73,7 @@ test('an answer without production says so with a dash', () => {
       'Import 5,699 MW · export 387 MW',
       'from SE2 5,699 · to FI 387 MW',
       'Sweden: production – MW, consumption – MW',
-      'Svenska kraftnät · 11:15',
+      'ENTSO-E (CC BY 4.0) · 11:15',
     ]);
     assert.doesNotMatch(card.details.join('\n'), /NaN|undefined|\b0 MW/);
   }
@@ -100,7 +100,7 @@ test('a card with nothing but the zone still reads', () => {
   });
   assert.deepEqual(card.details, [
     'Sweden: production – MW, consumption – MW',
-    'Svenska kraftnät',
+    'ENTSO-E (CC BY 4.0)',
   ]);
 });
 
@@ -118,7 +118,7 @@ test('the accent follows the zone’s net', () => {
 test('a zone card from ENTSO-E credits it and shows no production', () => {
   const card = buildAreaCard(
     SE3,
-    snapshot({ source: 'entsoe', productionOffered: false, production: {} }),
+    snapshot({ productionOffered: false, production: {} }),
   );
   assert.deepEqual(card.details, [
     'Import 5,699 MW · export 387 MW',

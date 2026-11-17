@@ -3643,8 +3643,6 @@
   "wind": "رياح",
   "thermal": "حراري",
   "other": "أخرى",
-  "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
-  "Svenska kraftnät · flows {flows} · production {production}": "Svenska kraftnät · التدفقات {flows} · الإنتاج {production}",
   "POWER GRID · {zone} {name}": "شبكة الكهرباء · {zone} {name}",
   "Between Swedish zones": "بين المناطق السويدية",
   "Power grid unavailable": "شبكة الكهرباء غير متاحة",
@@ -4046,9 +4044,7 @@
   "export {mw} MW": "تصدير {mw} ميغاواط",
   "import {mw} MW": "استيراد {mw} ميغاواط",
   "balanced": "متوازن",
-  "Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).": "تبادل السويد مع جيرانها، مجموعًا على الوصلات لآخر ربع ساعة (Svenska kraftnät).",
   "Sweden’s exchange with its neighbours, summed over the links for the latest published quarter-hour (ENTSO-E, CC BY 4.0).": "تبادل السويد مع جيرانها، مجموعًا عبر الوصلات لآخر ربع ساعة منشور (ENTSO-E، CC BY 4.0).",
-  "Flows from ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): no published licence": "التدفقات من ENTSO-E: CC BY 4.0؛ Svenska kraftnät (POWER_GRID_SOURCE=svk): لا توجد رخصة منشورة",
   "Power flows between Sweden’s bidding zones and its neighbours (CC BY 4.0): needed for the power grid layer": "تدفقات الكهرباء بين مناطق العروض في السويد وجيرانها (CC BY 4.0): مطلوب لطبقة الشبكة الكهربائية",
   "ENTSO-E key not configured (set ENTSOE_SECURITY_TOKEN)": "مفتاح ENTSO-E غير مُعد (عيّن ENTSOE_SECURITY_TOKEN)",
   "ENTSO-E refused the key (check ENTSOE_SECURITY_TOKEN)": "رفضت ENTSO-E المفتاح (تحقق من ENTSOE_SECURITY_TOKEN)",
@@ -4072,7 +4068,6 @@
   "So far today: produced {production} GWh, used {consumption} GWh": "اليوم حتى الآن: أُنتج {production} غيغاواط ساعة، واستُهلك {consumption} غيغاواط ساعة",
   "Week": "الأسبوع",
   "Last 7 days: produced {production} GWh, used {consumption} GWh": "آخر 7 أيام: أُنتج {production} غيغاواط ساعة، واستُهلك {consumption} غيغاواط ساعة",
-  "Svenska kraftnät shows the current day only, so the week is the days this server kept; gaps are times it was not running.": "تعرض Svenska kraftnät اليوم الحالي فقط، لذا فالأسبوع هو الأيام التي حفظها هذا الخادم؛ والفجوات أوقات لم يكن يعمل فيها.",
   "Malformed power week": "بيانات أسبوع غير صالحة",
   "Time span": "المدة",
   "No quarter-hours yet today": "لا توجد قيم ربع ساعية اليوم بعد",
@@ -4559,5 +4554,7 @@
   "Road ferries (Sweden)": "عبّارات الطرق (السويد)",
   "About 40 road ferry routes, departures in the coming three hours": "نحو 40 خط عبّارة، والمغادرات خلال الساعات الثلاث القادمة",
   "Every 2 minutes": "كل دقيقتين",
-  "About 70 stations on the coast": "نحو 70 محطة على الساحل"
+  "About 70 stations on the coast": "نحو 70 محطة على الساحل",
+  "{source} · flows {flows} · production {production}": "{source} · التدفقات {flows} · الإنتاج {production}",
+  "Gaps are quarter-hours ENTSO-E has not published.": "الفجوات أرباع ساعات لم تنشرها ENTSO-E."
 }

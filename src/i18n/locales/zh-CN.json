@@ -3268,8 +3268,6 @@
   "wind": "风电",
   "thermal": "火电",
   "other": "其他",
-  "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
-  "Svenska kraftnät · flows {flows} · production {production}": "Svenska kraftnät · 潮流 {flows} · 发电 {production}",
   "POWER GRID · {zone} {name}": "电网 · {zone} {name}",
   "Between Swedish zones": "瑞典电价区之间",
   "Power grid unavailable": "电网不可用",
@@ -3651,9 +3649,7 @@
   "export {mw} MW": "出口 {mw} MW",
   "import {mw} MW": "进口 {mw} MW",
   "balanced": "持平",
-  "Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).": "瑞典与邻国的电力交换，按最近一刻钟各联络线汇总（Svenska kraftnät）。",
   "Sweden’s exchange with its neighbours, summed over the links for the latest published quarter-hour (ENTSO-E, CC BY 4.0).": "瑞典与邻国的电力交换，按各联络线汇总，取最新发布的一刻钟（ENTSO-E，CC BY 4.0）。",
-  "Flows from ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): no published licence": "来自 ENTSO-E 的潮流：CC BY 4.0；Svenska kraftnät（POWER_GRID_SOURCE=svk）：无公开许可",
   "Power flows between Sweden’s bidding zones and its neighbours (CC BY 4.0): needed for the power grid layer": "瑞典各竞价区之间及与邻国之间的电力潮流（CC BY 4.0）：电网图层需要",
   "ENTSO-E key not configured (set ENTSOE_SECURITY_TOKEN)": "未配置 ENTSO-E 密钥（设置 ENTSOE_SECURITY_TOKEN）",
   "ENTSO-E refused the key (check ENTSOE_SECURITY_TOKEN)": "ENTSO-E 拒绝了该密钥（检查 ENTSOE_SECURITY_TOKEN）",
@@ -3677,7 +3673,6 @@
   "So far today: produced {production} GWh, used {consumption} GWh": "今天至今：发电 {production} GWh，用电 {consumption} GWh",
   "Week": "一周",
   "Last 7 days: produced {production} GWh, used {consumption} GWh": "最近 7 天：发电 {production} GWh，用电 {consumption} GWh",
-  "Svenska kraftnät shows the current day only, so the week is the days this server kept; gaps are times it was not running.": "Svenska kraftnät 只提供当天数据，所以一周是本服务器保存的各天；空白是服务器未运行的时段。",
   "Malformed power week": "一周数据格式错误",
   "Time span": "时间范围",
   "No quarter-hours yet today": "今天尚无每刻钟数据",
@@ -4144,5 +4139,7 @@
   "Road ferries (Sweden)": "公路渡轮（瑞典）",
   "About 40 road ferry routes, departures in the coming three hours": "约 40 条渡轮航线，未来三小时的出发",
   "Every 2 minutes": "每 2 分钟",
-  "About 70 stations on the coast": "沿海约 70 个站点"
+  "About 70 stations on the coast": "沿海约 70 个站点",
+  "{source} · flows {flows} · production {production}": "{source} · 潮流 {flows} · 发电 {production}",
+  "Gaps are quarter-hours ENTSO-E has not published.": "空缺是 ENTSO-E 尚未发布的 15 分钟时段。"
 }

@@ -3418,8 +3418,6 @@
   "wind": "eólica",
   "thermal": "térmica",
   "other": "otra",
-  "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
-  "Svenska kraftnät · flows {flows} · production {production}": "Svenska kraftnät · flujos {flows} · producción {production}",
   "POWER GRID · {zone} {name}": "RED ELÉCTRICA · {zone} {name}",
   "Between Swedish zones": "Entre zonas suecas",
   "Power grid unavailable": "Red eléctrica no disponible",
@@ -3809,9 +3807,7 @@
   "export {mw} MW": "exportación {mw} MW",
   "import {mw} MW": "importación {mw} MW",
   "balanced": "equilibrado",
-  "Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).": "Intercambio de Suecia con sus vecinos, sumado sobre los enlaces del último cuarto de hora (Svenska kraftnät).",
   "Sweden’s exchange with its neighbours, summed over the links for the latest published quarter-hour (ENTSO-E, CC BY 4.0).": "Intercambio de Suecia con sus vecinos, sumado sobre las interconexiones para el último cuarto de hora publicado (ENTSO-E, CC BY 4.0).",
-  "Flows from ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): no published licence": "Flujos de ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): sin licencia publicada",
   "Power flows between Sweden’s bidding zones and its neighbours (CC BY 4.0): needed for the power grid layer": "Flujos eléctricos entre las zonas de oferta de Suecia y sus vecinos (CC BY 4.0): necesario para la capa de la red eléctrica",
   "ENTSO-E key not configured (set ENTSOE_SECURITY_TOKEN)": "Clave de ENTSO-E no configurada (define ENTSOE_SECURITY_TOKEN)",
   "ENTSO-E refused the key (check ENTSOE_SECURITY_TOKEN)": "ENTSO-E rechazó la clave (revisa ENTSOE_SECURITY_TOKEN)",
@@ -3835,7 +3831,6 @@
   "So far today: produced {production} GWh, used {consumption} GWh": "Hoy hasta ahora: producido {production} GWh, consumido {consumption} GWh",
   "Week": "Semana",
   "Last 7 days: produced {production} GWh, used {consumption} GWh": "Últimos 7 días: producido {production} GWh, consumido {consumption} GWh",
-  "Svenska kraftnät shows the current day only, so the week is the days this server kept; gaps are times it was not running.": "Svenska kraftnät solo muestra el día en curso, así que la semana son los días que este servidor guardó; los huecos son momentos en que no estaba en marcha.",
   "Malformed power week": "Semana eléctrica mal formada",
   "Time span": "Periodo",
   "No quarter-hours yet today": "Aún no hay cuartos de hora hoy",
@@ -4310,5 +4305,7 @@
   "Road ferries (Sweden)": "Transbordadores de carretera (Suecia)",
   "About 40 road ferry routes, departures in the coming three hours": "Unas 40 líneas de transbordador, salidas en las tres horas siguientes",
   "Every 2 minutes": "Cada 2 minutos",
-  "About 70 stations on the coast": "Unas 70 estaciones en la costa"
+  "About 70 stations on the coast": "Unas 70 estaciones en la costa",
+  "{source} · flows {flows} · production {production}": "{source} · flujos {flows} · producción {production}",
+  "Gaps are quarter-hours ENTSO-E has not published.": "Los huecos son cuartos de hora que ENTSO-E no ha publicado."
 }

@@ -57,8 +57,8 @@ import { gammaRadiationProxy } from './gammaRadiation.js';
 import { auroraProxy } from './aurora.js';
 import { smhiWeatherProxy } from './smhiWeather.js';
 import { smhiAirQualityProxy } from './smhiAirQuality.js';
-// Svenska kraftnät's control room, or ENTSO-E when POWER_GRID_SOURCE=entsoe.
-import { powerGridProxyFor } from './powerGridEntsoe.js';
+// Sweden's power flows from ENTSO-E's Transparency Platform.
+import { powerGridEntsoeProxy } from './powerGridEntsoe.js';
 import { transitAlertsProxy } from './transitAlerts.js';
 import { ghostMapsProxy } from './ghostMaps.js';
 import { droneAirspaceProxy } from './droneAirspace.js';
@@ -144,7 +144,7 @@ function localProviderPlugins({
     auroraProxy(),
     smhiWeatherProxy(),
     smhiAirQualityProxy(),
-    powerGridProxyFor(process.env),
+    powerGridEntsoeProxy(),
     transitAlertsProxy(),
     ghostMapsProxy(),
     droneAirspaceProxy(),

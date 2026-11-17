@@ -3268,8 +3268,6 @@
   "wind": "風力",
   "thermal": "火力",
   "other": "その他",
-  "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
-  "Svenska kraftnät · flows {flows} · production {production}": "Svenska kraftnät · 潮流 {flows} · 発電 {production}",
   "POWER GRID · {zone} {name}": "電力網 · {zone} {name}",
   "Between Swedish zones": "スウェーデン国内の区域間",
   "Power grid unavailable": "電力網を利用できません",
@@ -3651,9 +3649,7 @@
   "export {mw} MW": "輸出 {mw} MW",
   "import {mw} MW": "輸入 {mw} MW",
   "balanced": "均衡",
-  "Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).": "近隣国とのスウェーデンの電力融通。直近 15 分の各連系線の合計（Svenska kraftnät）。",
   "Sweden’s exchange with its neighbours, summed over the links for the latest published quarter-hour (ENTSO-E, CC BY 4.0).": "最新の公表済み15分間について、各連系線を合計したスウェーデンと近隣国の電力交換（ENTSO-E、CC BY 4.0）。",
-  "Flows from ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): no published licence": "ENTSO-E の潮流：CC BY 4.0。Svenska kraftnät（POWER_GRID_SOURCE=svk）：公開ライセンスなし",
   "Power flows between Sweden’s bidding zones and its neighbours (CC BY 4.0): needed for the power grid layer": "スウェーデンの入札区域と近隣国の間の電力潮流（CC BY 4.0）：送電網レイヤーに必要",
   "ENTSO-E key not configured (set ENTSOE_SECURITY_TOKEN)": "ENTSO-E キーが設定されていません（ENTSOE_SECURITY_TOKEN を設定）",
   "ENTSO-E refused the key (check ENTSOE_SECURITY_TOKEN)": "ENTSO-E がキーを拒否しました（ENTSOE_SECURITY_TOKEN を確認）",
@@ -3677,7 +3673,6 @@
   "So far today: produced {production} GWh, used {consumption} GWh": "今日これまで: 発電 {production} GWh、消費 {consumption} GWh",
   "Week": "週",
   "Last 7 days: produced {production} GWh, used {consumption} GWh": "直近 7 日: 発電 {production} GWh、消費 {consumption} GWh",
-  "Svenska kraftnät shows the current day only, so the week is the days this server kept; gaps are times it was not running.": "Svenska kraftnät は当日分のみ公開しているため、週はこのサーバーが保存した日の分です。空白はサーバーが動いていなかった時間です。",
   "Malformed power week": "不正な週次データ",
   "Time span": "期間",
   "No quarter-hours yet today": "今日の 15 分値はまだありません",
@@ -4144,5 +4139,7 @@
   "Road ferries (Sweden)": "道路フェリー（スウェーデン）",
   "About 40 road ferry routes, departures in the coming three hours": "約40のフェリー航路、今後3時間の出発",
   "Every 2 minutes": "2分ごと",
-  "About 70 stations on the coast": "沿岸の約70観測所"
+  "About 70 stations on the coast": "沿岸の約70観測所",
+  "{source} · flows {flows} · production {production}": "{source} · 潮流 {flows} · 発電 {production}",
+  "Gaps are quarter-hours ENTSO-E has not published.": "空白は ENTSO-E が公開していない15分間です。"
 }

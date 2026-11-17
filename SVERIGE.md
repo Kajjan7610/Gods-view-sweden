@@ -55,7 +55,7 @@ Två nivåer gäller:
 | Väder nu: ca 185 SMHI-stationer (temperatur, vind, byar, nederbörd senaste timmen) och SMHI:s prognos för platsen vid klick | SMHI metobs och prognos snow1g (CC BY 4.0, ingen nyckel) | Weather Now (Sweden) / Väder nu, under Weather |
 | Luftkvalitet: ca 75 SMHI-mätstationer (NO2, PM10, PM2.5, O3) på europeiska EAQI-skalan, tillsammans med Kanadas stationer | SMHI Datavärdskap luft (CC BY 4.0, ingen nyckel) | Air quality / Luftkvalitet, under Weather |
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
-| Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (rörliga vinklar i flödesriktningen, MW), Sveriges import, export och netto totalt och per grannland, val av import/export/inrikes och en knapp per land som lyfter fram dess förbindelser, en KRAFT-panel i högerkanten med dygnet hittills eller senaste veckan per kvart (produktion per kraftslag, förbrukning och utbyte), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | ENTSO-E Transparency Platform (CC BY 4.0, gratisnyckel `ENTSOE_SECURITY_TOKEN`); Svenska kraftnäts Kontrollrummet bara med `POWER_GRID_SOURCE=svk` | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
+| Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (rörliga vinklar i flödesriktningen, MW), Sveriges import, export och netto totalt och per grannland, val av import/export/inrikes och en knapp per land som lyfter fram dess förbindelser, en KRAFT-panel i högerkanten med dygnet hittills eller senaste veckan per kvart (produktion per kraftslag, förbrukning och utbyte), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | ENTSO-E Transparency Platform (CC BY 4.0, gratisnyckel `ENTSOE_SECURITY_TOKEN`) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, senast publicerade flöde i m³/s (kvartsvärden, publiceras med fördröjning) och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
 | Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp, City Gross), Lidls och Systembolagets butiker samt apoteken hos Apotek Hjärtat (ICA Gruppen), Apoteket, Kronans Apotek (med Apoteksgruppen) och DOZ Apotek, färgade efter företag och koncept, med en knapp per företag; klick ger adress, om butiken är öppen nu, kartlagd storlek, webbsida, telefon, rullstol och paketombud, hur många som bor inom 2 km, närmaste hållplats, närmaste andra kedjor och företaget (org.nr och huvudkontor); klick på kortet öppnar butikens webbsida. Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0), befolkning från SCB:s 1 km-rutor (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
 | Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
@@ -96,7 +96,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | +SE | Kameror | Trafikverket | Cirka 1 550 vägkameror med livebilder. Originalet: Offentliga trafikkameror i många länder | Bilderna uppdateras medan de visas | CC0 1.0 (Trafikverket) |
 | SE | Fartkameror (Sverige) | Trafikverket | Cirka 2 800 fasta fartkameror i hela Sverige | Varje timme | CC0 1.0 |
 | SE | Elpris (Sverige) | elprisetjustnu.se · Nord Pool via ENTSO-E | Spotpris per kvart i elområdena SE1–SE4 | Var 15:e minut | Fri att använda enligt Elpriset just nu; priserna kommer från Nord Pool via ENTSO-E |
-| SE | Kraftsystemet (Sverige) | ENTSO-E · Svenska kraftnät | Sveriges förbindelser mellan elområdena och till grannländerna | Var 5:e minut | Flöden från ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): ingen publicerad licens |
+| SE | Kraftsystemet (Sverige) | ENTSO-E | Sveriges förbindelser mellan elområdena och till grannländerna | Var 15:e minut | CC BY 4.0 |
 | SE | Strålning (Sverige) | Strålsäkerhetsmyndigheten (SSM) | Cirka 25 gammastationer | Var 10:e minut | Ingen angiven licens; källan anges |
 | SE | Brandstationer (Sverige) | Myndigheten för civilt försvar (MCF) | Räddningstjänsternas alla brandstationer | En gång per dygn | EU-värdefullt dataset, källan anges |
 | SE | Polisstationer (Sverige) | Polismyndigheten | Alla polisstationer, cirka 260 | En gång per dygn | Öppna data, källan anges |
@@ -191,9 +191,10 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   nyckel ber lagret om den och visar inget. ENTSO-E publicerar senast en
   timme efter driftperioden, så lagret visar senaste publicerade kvarten,
   inte nuet. Svenska kraftnäts egen kontrollrumstjänst, samma som sidan
-  svk.se/om-kraftsystemet/kontrollrummet använder, är odokumenterad och
-  har ingen licens; den används bara med `POWER_GRID_SOURCE=svk`. Svenska
-  kraftnät är tillfrågat (2026-11-10). Provat mot riktig data 2026-11-11: alla 14
+  svk.se/om-kraftsystemet/kontrollrummet använder, används inte: Svenska
+  kraftnät svarade 2026-11-16 att dess API:er inte är publika och hänvisade
+  till ENTSO-E under CC BY 4.0 (och till sin dataportal data.svk.se, vars
+  villkor inte tillåter den som direkt källa för en app). Provat mot riktig data 2026-11-11: alla 14
   förbindelser svarade, produktionen stämde med Svenska kraftnäts på
   megawatten, och inga överlappande serier eller luckor fanns. En riktning
   som ändå kommer två gånger för samma kvart lämnas bort i stället för att
@@ -396,6 +397,16 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-17 (Svenska kraftnäts Kontrollrummet borttaget)
+- Svenska kraftnät svarade 2026-11-16 att Kontrollrummets API:er inte är
+  publika och hänvisade till ENTSO-E under CC BY 4.0. Valet
+  `POWER_GRID_SOURCE=svk` och all kod som läste Kontrollrummet är därför
+  borta, liksom Svenska kraftnät som källa i kortet, KRAFT-panelen,
+  källhänvisningen, ursprungsuppgifterna och dokumentationen. Kraftsystemet
+  läser bara ENTSO-E, som har varit standard sedan 2026-11-11; det som syns i
+  appen ändras inte. Produktion och förbrukning visas fortfarande bara med
+  `ENTSOE_PRODUCTION=on`.
 
 ### 2026-11-13 (sjöväder utan vindläge)
 - Sjöväder har inte längre något vindläge. SMHI:s havsstationer mäter ingen

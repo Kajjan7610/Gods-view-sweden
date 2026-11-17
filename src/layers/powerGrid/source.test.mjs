@@ -38,7 +38,7 @@ test('a failed day or week read throws with the status', async () => {
   await assert.rejects(source.getWeek(), { status: 502 });
 });
 
-test('the snapshot and the day say when they come from ENTSO-E without production', async () => {
+test('the snapshot and the day say when production is not offered', async () => {
   const entsoe = await sourceAnswering({
     links: [],
     areas: [],
@@ -46,11 +46,9 @@ test('the snapshot and the day say when they come from ENTSO-E without productio
     source: 'entsoe',
     productionOffered: false,
   }).getSnapshot();
-  assert.equal(entsoe.source, 'entsoe');
   assert.equal(entsoe.productionOffered, false);
-  const svk = await sourceAnswering({ links: [], areas: [] }).getSnapshot();
-  assert.equal('source' in svk, false);
-  assert.equal('productionOffered' in svk, false);
+  const offered = await sourceAnswering({ links: [], areas: [] }).getSnapshot();
+  assert.equal('productionOffered' in offered, false);
   const day = await sourceAnswering({
     date: '2026-11-11',
     points: [],
@@ -58,7 +56,6 @@ test('the snapshot and the day say when they come from ENTSO-E without productio
     productionOffered: false,
   }).getDay();
   assert.equal(day.productionOffered, false);
-  assert.equal(day.source, 'entsoe');
 });
 
 test('a missing or refused ENTSO-E key says what to do', async () => {

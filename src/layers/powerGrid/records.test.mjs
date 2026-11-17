@@ -9,50 +9,14 @@ import {
   flowWidth,
   latestProduction,
   linkTouches,
-  normalizeFlows,
-  normalizeProduction,
-  normalizeProductionDay,
 } from './records.js';
 import { buildDayChart, dayStartOf, pointAt } from './dayChart.js';
 import { buildAreaCard, netText, zoneName } from './cards.js';
 import { flowRepeat, flowSpeed } from './flowMaterial.js';
 import { createPowerGridLayer } from './index.js';
 
-// Shaped like svk.se/services/controlroom/v2/map/flow.
-const FLOW = {
-  Data: [
-    {
-      id: '1',
-      data: [
-        { id: 'SE2_SE3', value: 5698.9531 },
-        { id: 'SE3_SE4', value: 1033.7026 },
-        { id: 'DE_SE4', value: 188.4222 },
-        { id: 'FI_SE3', value: -387.17 },
-        { id: 'NO1_NO2', value: 2219.74 },
-        { id: 'SE4_PL', value: 'n/a' },
-      ],
-    },
-    {
-      id: '2',
-      data: [
-        {
-          id: 'SE',
-          value: 2404,
-          ElectricalAreas: [
-            { AreaName: 'SE3', Import: 5698.9531, Export: 3544.7132 },
-            { AreaName: 'SE4', Import: 1394.871, Export: 178.31 },
-          ],
-        },
-        {
-          id: 'NO',
-          value: 1802,
-          ElectricalAreas: [{ AreaName: 'NO1', Import: 4176, Export: 2219 }],
-        },
-      ],
-    },
-  ],
-  LastUpdated: 1793828700000,
-};
+// Sweden's links and zones as the layer gets them.
+const FLOWS = Object.freeze({"links":[{"id":"DE_SE4","from":"DE","to":"SE4","fromPoint":[10.69,53.87],"toPoint":[13.6,56.1],"place":"Lübeck","mw":188,"kind":"import"},{"id":"FI_SE3","from":"SE3","to":"FI","fromPoint":[16,59.5],"toPoint":[21.51,61.13],"place":"Rauma","mw":387,"kind":"export"},{"id":"SE2_SE3","from":"SE2","to":"SE3","fromPoint":[17.31,62.39],"toPoint":[16,59.5],"place":null,"mw":5699,"kind":"internal"},{"id":"SE3_SE4","from":"SE3","to":"SE4","fromPoint":[16,59.5],"toPoint":[13.6,56.1],"place":null,"mw":1034,"kind":"internal"}],"areas":[{"id":"SE3","import":5699,"export":3545},{"id":"SE4","import":1395,"export":178}],"updated":1793828700000});
 
 test('every link touches Sweden and lands its foreign end somewhere', () => {
   for (const link of LINKS) {
@@ -61,118 +25,6 @@ test('every link touches Sweden and lands its foreign end somewhere', () => {
     assert.equal(link.bPoint.length, 2);
   }
   assert.equal(new Set(LINKS.map((link) => link.id)).size, LINKS.length);
-});
-
-test('flows run from sender to receiver and say how they meet Sweden', () => {
-  const { links, areas, updated } = normalizeFlows(FLOW);
-  assert.equal(updated, 1793828700000);
-  assert.deepEqual(
-    links.map((link) => [link.id, link.from, link.to, link.mw, link.kind]),
-    [
-      ['DE_SE4', 'DE', 'SE4', 188, 'import'],
-      ['FI_SE3', 'SE3', 'FI', 387, 'export'],
-      ['SE2_SE3', 'SE2', 'SE3', 5699, 'internal'],
-      ['SE3_SE4', 'SE3', 'SE4', 1034, 'internal'],
-    ],
-  );
-  const fi = links.find((link) => link.id === 'FI_SE3');
-  assert.deepEqual(fi.toPoint, [21.51, 61.13], 'drawn towards Rauma');
-  assert.equal(fi.place, 'Rauma');
-  assert.deepEqual(areas, [
-    { id: 'SE3', import: 5699, export: 3545 },
-    { id: 'SE4', import: 1395, export: 178 },
-  ]);
-  assert.deepEqual(normalizeFlows(null), {
-    links: [],
-    areas: [],
-    updated: null,
-  });
-});
-
-test('a link without a value is no flow, and a link named twice counts once', () => {
-  const flows = (...groups) =>
-    normalizeFlows({ Data: groups.map((data, i) => ({ id: String(i), data })) })
-      .links;
-  // Number(null) and Number('') are 0: neither is a link standing still.
-  assert.deepEqual(
-    flows([
-      { id: 'SE1_SE2', value: null },
-      { id: 'SE2_SE3' },
-      { id: 'SE3_SE4', value: '' },
-      { id: 'FI_SE1', value: '  ' },
-      { id: 'FI_SE3', value: NaN },
-      { id: 'NO4_SE1', value: Infinity },
-      { id: 'NO4_SE2', value: 'n/a' },
-      { id: 'NO3_SE2', value: false },
-      { id: 'NO1_SE3', value: [] },
-    ]),
-    [],
-  );
-  assert.deepEqual(
-    flows([
-      { id: 'SE1_SE2', value: 0 },
-      { id: 'SE2_SE3', value: '412.6' },
-      { id: 'SE3_SE4', value: -0.2 },
-    ]).map((link) => [link.id, link.from, link.to, link.mw]),
-    [
-      ['SE1_SE2', 'SE1', 'SE2', 0],
-      ['SE2_SE3', 'SE2', 'SE3', 413],
-      ['SE3_SE4', 'SE4', 'SE3', 0],
-    ],
-    'a real 0 MW stays',
-  );
-  assert.deepEqual(
-    flows(
-      [
-        { id: 'SE2_SE3', value: 5000 },
-        { id: 'SE3_SE4', value: null },
-      ],
-      [
-        { id: 'SE2_SE3', value: -70 },
-        { id: 'SE3_SE4', value: 900 },
-      ],
-    ).map((link) => [link.id, link.from, link.mw]),
-    [
-      ['SE2_SE3', 'SE2', 5000],
-      ['SE3_SE4', 'SE3', 900],
-    ],
-    'the first value wins; a missing one does not claim the link',
-  );
-});
-
-test('production is every type at the newest quarter-hour with a total', () => {
-  const series = (id, ...ys) => ({
-    id,
-    data: ys.map((y, i) => ({ x: 1000 + i * 900, y })),
-  });
-  // Wind and consumption run a quarter ahead of the total; hydro lags.
-  assert.deepEqual(
-    normalizeProduction({
-      Data: [
-        series('1', 17000, 17468.4, null),
-        series('2', 3646, 3650),
-        series('3', 2956),
-        series('5', 9000, 9637, 9800),
-        series('7', 17888, 17900, 18000),
-        series('99', 5, 5, 5),
-      ],
-    }),
-    {
-      at: 1900,
-      total: 17468,
-      nuclear: 3650,
-      wind: 9637,
-      consumption: 17900,
-    },
-    'no hydro from the older quarter, nothing from the newer one',
-  );
-  assert.deepEqual(
-    normalizeProduction({ Data: [series('7', 17888), series('5', 9000)] }),
-    { at: null },
-    'no total, no values',
-  );
-  assert.deepEqual(normalizeProduction(null), { at: null });
-  assert.deepEqual(normalizeProduction({ Data: [] }), { at: null });
 });
 
 test('the latest values of a kept day are its last quarter-hour with a total', () => {
@@ -200,7 +52,7 @@ test('a zone card lists its flows and Sweden’s production', () => {
   const card = buildAreaCard(
     { id: 'SE4', name: 'Malmö' },
     {
-      ...normalizeFlows(FLOW),
+      ...FLOWS,
       production: {
         total: 17468,
         consumption: 17888,
@@ -223,14 +75,14 @@ test('a zone card lists its flows and Sweden’s production', () => {
     card.details[3],
     'nuclear 3,646 · hydro 2,956 · wind 9,637 · thermal 1,229 MW',
   );
-  assert.match(card.details[4], /^Svenska kraftnät · \d\d:\d\d$/);
+  assert.match(card.details[4], /^ENTSO-E \(CC BY 4\.0\) · \d\d:\d\d$/);
 });
 
 test('the layer draws its links and sums the exchange per country', async () => {
   const layer = createPowerGridLayer({
     source: {
       getSnapshot: async () => ({
-        ...normalizeFlows(FLOW),
+        ...FLOWS,
         production: {},
         stale: false,
         fetchedAt: null,
@@ -348,53 +200,17 @@ test('faster chevrons for larger flows, more of them on longer links', () => {
 
 test('the day reads as quarter-hours and as a chart', () => {
   const at = Date.parse('2026-11-08T23:00:00Z'); // 00:00 in Stockholm
-  const points = normalizeProductionDay({
-    Data: [
-      {
-        id: '2',
-        data: [
-          { x: at, y: 3600 },
-          { x: at + 900_000, y: 3650 },
-        ],
-      },
-      {
-        id: '3',
-        data: [
-          { x: at, y: 5000 },
-          { x: at + 900_000, y: 5100 },
-        ],
-      },
-      {
-        id: '1',
-        data: [
-          { x: at, y: 8600 },
-          { x: at + 900_000, y: 8750 },
-        ],
-      },
-      {
-        id: '7',
-        data: [
-          { x: at, y: 8000 },
-          { x: at + 900_000, y: 9000 },
-        ],
-      },
-      {
-        id: '8',
-        data: [
-          { x: at, y: 600 },
-          { x: at + 900_000, y: -250 },
-        ],
-      },
-    ],
-  });
-  assert.deepEqual(points[1], {
-    at: at + 900_000,
-    nuclear: 3650,
-    hydro: 5100,
-    total: 8750,
-    consumption: 9000,
-    net: -250,
-  });
+  const points = [
+    { at, nuclear: 3600, hydro: 5000, total: 8600, consumption: 8000, net: 600 },
+    {
+      at: at + 900_000,
+      nuclear: 3650,
+      hydro: 5100,
+      total: 8750,
+      consumption: 9000,
+      net: -250,
+    },
+  ];
   const chart = buildDayChart(points);
   assert.equal(dayStartOf(points), at);
   assert.deepEqual(
@@ -437,35 +253,4 @@ test('a week chart spans seven midnights and leaves gaps open', () => {
   assert.equal(chart.areas[0].d.split('Z').length - 1, 2, 'two runs, a gap');
   assert.equal(chart.consumption.split('M').length - 1, 2);
   assert.ok(chart.points[2].x > 250, 'the last day sits at the right');
-});
-
-test('a zone or a stamp that is missing is left out, never read as 0', () => {
-  const answer = (areas, LastUpdated) =>
-    normalizeFlows({
-      Data: [
-        {
-          id: '2',
-          data: [{ id: 'SE', value: 2404, ElectricalAreas: areas }],
-        },
-      ],
-      LastUpdated,
-    });
-  const { areas, updated } = answer(
-    [
-      { AreaName: 'SE1', Import: 150, Export: 3110 },
-      { AreaName: 'SE2', Import: null, Export: 2000 },
-      { AreaName: 'SE3', Import: 5699, Export: '' },
-      { AreaName: 'SE4', Import: 0, Export: 178.31 },
-    ],
-    1794372300000,
-  );
-  assert.deepEqual(areas, [
-    { id: 'SE1', import: 150, export: 3110 },
-    // A real zero is still a zero.
-    { id: 'SE4', import: 0, export: 178 },
-  ]);
-  assert.equal(updated, 1794372300000);
-  // No stamp is no time, not one o'clock on 1 January 1970.
-  for (const missing of [null, undefined, '', 0])
-    assert.equal(answer([], missing).updated, null);
 });

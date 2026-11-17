@@ -1,12 +1,11 @@
 /**
- * Sweden's power system now, from Svenska kraftnät's control room
- * (svk.se/om-kraftsystemet/kontrollrummet): the flow on every link that
- * touches a Swedish bidding zone, and the country's production per type and
- * consumption. Pure parsing shared by the server proxy and the layer. No
- * Cesium, no Node built-ins.
+ * Sweden's power system now: the flow on every link that touches a Swedish
+ * bidding zone, and the country's production per type and consumption, as
+ * the ENTSO-E reader (entsoe.js) gives them. Shapes and helpers shared by the
+ * server proxy and the layer. No Cesium, no Node built-ins.
  *
- * A flow is reported as `FROM_TO` with a signed MW value: positive runs from
- * the first area to the second. No open map of the zone borders is used:
+ * A link is named `FROM_TO`; a flow runs from the area that sends to the one
+ * that receives. No open map of the zone borders is used:
  * Swedish zones sit in a town well inside them (as on the price layer) and
  * each foreign end of a link at the place the interconnector lands.
  */
@@ -57,18 +56,6 @@ const LINK_BY_ID = new Map(LINKS.map((link) => [link.id, link]));
 
 export const isSwedish = (area) => SWEDISH_POINT.has(area);
 
-/** SvK's production series ids. */
-export const PRODUCTION_TYPES = Object.freeze({
-  1: 'total',
-  2: 'nuclear',
-  3: 'hydro',
-  4: 'thermal',
-  5: 'wind',
-  6: 'unspecified',
-  7: 'consumption',
-  8: 'net',
-});
-
 /** How a link's flow relates to Sweden, with its colour. */
 export const FLOW_KINDS = Object.freeze([
   Object.freeze({ id: 'internal', color: '#40c4ff' }),
@@ -88,70 +75,6 @@ function flowValue(raw) {
 }
 
 /**
- * The map/flow answer to the Swedish links, each drawn from the area that
- * sends to the one that receives, and the Swedish zones' import and export.
- * A link without a value is left out; one named twice counts once.
- * @param {object} payload
- */
-export function normalizeFlows(payload) {
-  const groups = Array.isArray(payload?.Data) ? payload.Data : [];
-  const links = [];
-  const areas = [];
-  const seen = new Set();
-  for (const group of groups) {
-    for (const row of Array.isArray(group?.data) ? group.data : []) {
-      const value = flowValue(row?.value);
-      const link = LINK_BY_ID.get(String(row?.id ?? ''));
-      if (link && Number.isFinite(value) && !seen.has(link.id)) {
-        seen.add(link.id);
-        const forward = value >= 0;
-        const from = forward ? link.a : link.b;
-        const to = forward ? link.b : link.a;
-        links.push({
-          id: link.id,
-          from,
-          to,
-          fromPoint: forward ? link.aPoint : link.bPoint,
-          toPoint: forward ? link.bPoint : link.aPoint,
-          place: link.place,
-          mw: Math.round(Math.abs(value)),
-          kind:
-            isSwedish(from) && isSwedish(to)
-              ? 'internal'
-              : isSwedish(to)
-                ? 'import'
-                : 'export',
-        });
-      }
-      if (row?.id === 'SE')
-        for (const area of Array.isArray(row.ElectricalAreas)
-          ? row.ElectricalAreas
-          : []) {
-          const id = String(area?.AreaName ?? '');
-          if (!isSwedish(id)) continue;
-          const imported = flowValue(area.Import);
-          const exported = flowValue(area.Export);
-          // A zone without both figures is left out, never shown at 0 MW.
-          if (!Number.isFinite(imported) || !Number.isFinite(exported))
-            continue;
-          areas.push({
-            id,
-            import: Math.round(imported),
-            export: Math.round(exported),
-          });
-        }
-    }
-  }
-  // A missing stamp is no time, never 1970.
-  const updated = flowValue(payload?.LastUpdated);
-  return {
-    links: links.sort((a, b) => a.id.localeCompare(b.id)),
-    areas: areas.sort((a, b) => a.id.localeCompare(b.id)),
-    updated: Number.isFinite(updated) && updated > 0 ? updated : null,
-  };
-}
-
-/**
  * The latest values among a day's quarter-hours (oldest first): every type
  * reported at the newest quarter that has a total, in MW, and when. A type
  * missing at that quarter is absent, never taken from an older one.
@@ -163,39 +86,6 @@ export function latestProduction(points) {
     if (Number.isFinite(points[i]?.total) && Number.isFinite(points[i].at))
       return { ...points[i] };
   return { at: null };
-}
-
-/**
- * The production answer to its latest values per type, in MW, and when.
- * @param {object} payload
- */
-export function normalizeProduction(payload) {
-  return latestProduction(normalizeProductionDay(payload));
-}
-
-/**
- * The production answer as the day's quarter-hours, oldest first: each with
- * its time and MW per type (total, nuclear, hydro, thermal, wind,
- * unspecified, consumption and net, positive when Sweden exports).
- * @param {object} payload
- * @returns {Array<{at: number} & Record<string, number>>}
- */
-export function normalizeProductionDay(payload) {
-  const byTime = new Map();
-  for (const series of Array.isArray(payload?.Data) ? payload.Data : []) {
-    const type = PRODUCTION_TYPES[series?.id];
-    if (!type) continue;
-    for (const point of Array.isArray(series.data) ? series.data : []) {
-      const at = Number(point?.x);
-      if (point?.y == null || !Number.isFinite(at)) continue;
-      const value = Number(point.y);
-      if (!Number.isFinite(value)) continue;
-      const entry = byTime.get(at) ?? { at };
-      entry[type] = Math.round(value);
-      byTime.set(at, entry);
-    }
-  }
-  return [...byTime.values()].sort((a, b) => a.at - b.at);
 }
 
 /** The country of a bidding zone: "NO3" is "NO", "FI" is "FI". */

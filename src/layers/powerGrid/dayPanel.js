@@ -1,8 +1,7 @@
 /**
  * The power day on the right rail while the power grid layer is on: today's
  * quarter-hours of Sweden's production by type, consumption and exchange, or
- * the last seven days. Svenska kraftnät's control room serves the current day
- * only, so the week is the days the server kept (gaps where it did not run).
+ * the last seven days, from ENTSO-E (gaps where it has published nothing).
  * Fetches through the layer's source and publishes a view the panel draws;
  * the panel answers with `show`. No Cesium.
  */
@@ -91,8 +90,8 @@ export function createPowerDay({ source }) {
   /** The last load failed; what `data` holds is from the one before. */
   let failed = false;
   let request = null;
-  /** Whether production may be shown at all (not from ENTSO-E without
-   * Svenska kraftnät's consent); the panel hides when not. */
+  /** Whether production may be shown at all (ENTSOE_PRODUCTION=on); the
+   * panel hides when not. */
   let offered = true;
 
   /** "11:15", with its weekday over a week. */
@@ -211,9 +210,7 @@ export function createPowerDay({ source }) {
         : '',
       note:
         span === 'week' && data?.missing
-          ? t(
-              'Svenska kraftnät shows the current day only, so the week is the days this server kept; gaps are times it was not running.',
-            )
+          ? t('Gaps are quarter-hours ENTSO-E has not published.')
           : '',
       legend: [
         ...DAY_TYPES.filter((type) => shown.has(type.id)).map((type) => ({
@@ -230,7 +227,7 @@ export function createPowerDay({ source }) {
         { id: 'import', color: IMPORT_COLOR, label: t('import') },
       ],
       // i18n-ignore: the source's name
-      source: data?.fromEntsoe ? ENTSOE_CREDIT : 'Svenska kraftnät',
+      source: ENTSOE_CREDIT,
       latest: readout(chart?.points.at(-1)),
       readout,
     };
@@ -250,7 +247,6 @@ export function createPowerDay({ source }) {
         days: 1,
         missing: false,
         stale: day.stale === true,
-        fromEntsoe: day.source === 'entsoe',
         productionOffered: day.productionOffered !== false,
       };
     }
@@ -263,7 +259,6 @@ export function createPowerDay({ source }) {
       days: days.length || WEEK_DAYS,
       missing: days.slice(0, -1).some((day) => day.points.length < WHOLE_DAY),
       stale: week.stale === true,
-      fromEntsoe: week.source === 'entsoe',
       productionOffered: week.productionOffered !== false,
     };
   }

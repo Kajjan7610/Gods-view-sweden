@@ -3343,8 +3343,6 @@
   "wind": "Windkraft",
   "thermal": "Wärmekraft",
   "other": "Sonstige",
-  "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
-  "Svenska kraftnät · flows {flows} · production {production}": "Svenska kraftnät · Flüsse {flows} · Erzeugung {production}",
   "POWER GRID · {zone} {name}": "STROMNETZ · {zone} {name}",
   "Between Swedish zones": "Zwischen schwedischen Gebotszonen",
   "Power grid unavailable": "Stromnetz nicht verfügbar",
@@ -3730,9 +3728,7 @@
   "export {mw} MW": "Export {mw} MW",
   "import {mw} MW": "Import {mw} MW",
   "balanced": "ausgeglichen",
-  "Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).": "Schwedens Austausch mit den Nachbarländern, summiert über die Verbindungen der letzten Viertelstunde (Svenska kraftnät).",
   "Sweden’s exchange with its neighbours, summed over the links for the latest published quarter-hour (ENTSO-E, CC BY 4.0).": "Schwedens Austausch mit den Nachbarländern, summiert über die Verbindungen für die zuletzt veröffentlichte Viertelstunde (ENTSO-E, CC BY 4.0).",
-  "Flows from ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): no published licence": "Flüsse von ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): keine veröffentlichte Lizenz",
   "Power flows between Sweden’s bidding zones and its neighbours (CC BY 4.0): needed for the power grid layer": "Stromflüsse zwischen Schwedens Gebotszonen und den Nachbarländern (CC BY 4.0): nötig für die Stromnetz-Ebene",
   "ENTSO-E key not configured (set ENTSOE_SECURITY_TOKEN)": "ENTSO-E-Schlüssel nicht konfiguriert (ENTSOE_SECURITY_TOKEN setzen)",
   "ENTSO-E refused the key (check ENTSOE_SECURITY_TOKEN)": "ENTSO-E hat den Schlüssel abgelehnt (ENTSOE_SECURITY_TOKEN prüfen)",
@@ -3756,7 +3752,6 @@
   "So far today: produced {production} GWh, used {consumption} GWh": "Heute bisher: erzeugt {production} GWh, verbraucht {consumption} GWh",
   "Week": "Woche",
   "Last 7 days: produced {production} GWh, used {consumption} GWh": "Letzte 7 Tage: erzeugt {production} GWh, verbraucht {consumption} GWh",
-  "Svenska kraftnät shows the current day only, so the week is the days this server kept; gaps are times it was not running.": "Svenska kraftnät zeigt nur den aktuellen Tag, daher besteht die Woche aus den Tagen, die dieser Server gespeichert hat; Lücken sind Zeiten, in denen er nicht lief.",
   "Malformed power week": "Fehlerhafte Stromwoche",
   "Time span": "Zeitraum",
   "No quarter-hours yet today": "Heute noch keine Viertelstundenwerte",
@@ -4227,5 +4222,7 @@
   "Road ferries (Sweden)": "Straßenfähren (Schweden)",
   "About 40 road ferry routes, departures in the coming three hours": "Etwa 40 Fährverbindungen, Abfahrten in den kommenden drei Stunden",
   "Every 2 minutes": "Alle 2 Minuten",
-  "About 70 stations on the coast": "Etwa 70 Stationen an der Küste"
+  "About 70 stations on the coast": "Etwa 70 Stationen an der Küste",
+  "{source} · flows {flows} · production {production}": "{source} · Flüsse {flows} · Erzeugung {production}",
+  "Gaps are quarter-hours ENTSO-E has not published.": "Lücken sind Viertelstunden, die ENTSO-E nicht veröffentlicht hat."
 }

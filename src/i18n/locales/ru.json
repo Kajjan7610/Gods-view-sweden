@@ -3493,8 +3493,6 @@
   "wind": "ветер",
   "thermal": "ТЭС",
   "other": "прочее",
-  "Svenska kraftnät · {time}": "Svenska kraftnät · {time}",
-  "Svenska kraftnät · flows {flows} · production {production}": "Svenska kraftnät · перетоки {flows} · производство {production}",
   "POWER GRID · {zone} {name}": "ЭНЕРГОСИСТЕМА · {zone} {name}",
   "Between Swedish zones": "Между шведскими зонами",
   "Power grid unavailable": "Энергосистема недоступна",
@@ -3888,9 +3886,7 @@
   "export {mw} MW": "экспорт {mw} МВт",
   "import {mw} MW": "импорт {mw} МВт",
   "balanced": "баланс",
-  "Sweden’s exchange with its neighbours, summed over the links for the latest quarter-hour (Svenska kraftnät).": "Обмен Швеции с соседями, суммированный по линиям за последние четверть часа (Svenska kraftnät).",
   "Sweden’s exchange with its neighbours, summed over the links for the latest published quarter-hour (ENTSO-E, CC BY 4.0).": "Обмен Швеции с соседями, суммированный по связям за последнюю опубликованную четверть часа (ENTSO-E, CC BY 4.0).",
-  "Flows from ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): no published licence": "Перетоки от ENTSO-E: CC BY 4.0; Svenska kraftnät (POWER_GRID_SOURCE=svk): опубликованной лицензии нет",
   "Power flows between Sweden’s bidding zones and its neighbours (CC BY 4.0): needed for the power grid layer": "Перетоки между ценовыми зонами Швеции и соседями (CC BY 4.0): нужен для слоя энергосистемы",
   "ENTSO-E key not configured (set ENTSOE_SECURITY_TOKEN)": "Ключ ENTSO-E не настроен (задайте ENTSOE_SECURITY_TOKEN)",
   "ENTSO-E refused the key (check ENTSOE_SECURITY_TOKEN)": "ENTSO-E отклонил ключ (проверьте ENTSOE_SECURITY_TOKEN)",
@@ -3914,7 +3910,6 @@
   "So far today: produced {production} GWh, used {consumption} GWh": "Сегодня пока: произведено {production} ГВт·ч, потреблено {consumption} ГВт·ч",
   "Week": "Неделя",
   "Last 7 days: produced {production} GWh, used {consumption} GWh": "Последние 7 дней: произведено {production} ГВт·ч, потреблено {consumption} ГВт·ч",
-  "Svenska kraftnät shows the current day only, so the week is the days this server kept; gaps are times it was not running.": "Svenska kraftnät показывает только текущий день, поэтому неделя — это дни, сохранённые этим сервером; пропуски — время, когда он не работал.",
   "Malformed power week": "Некорректные данные за неделю",
   "Time span": "Период",
   "No quarter-hours yet today": "Сегодня пока нет четвертьчасовых значений",
@@ -4393,5 +4388,7 @@
   "Road ferries (Sweden)": "Автопаромы (Швеция)",
   "About 40 road ferry routes, departures in the coming three hours": "Около 40 паромных линий, отправления на три часа вперёд",
   "Every 2 minutes": "Каждые 2 минуты",
-  "About 70 stations on the coast": "Около 70 станций на побережье"
+  "About 70 stations on the coast": "Около 70 станций на побережье",
+  "{source} · flows {flows} · production {production}": "{source} · перетоки {flows} · производство {production}",
+  "Gaps are quarter-hours ENTSO-E has not published.": "Пропуски — это четверти часа, которые ENTSO-E не опубликовал."
 }

@@ -127,15 +127,13 @@ export function buildAreaCard(area, snapshot) {
     : flowsAt;
   // The flows and the production row can be from different quarters; one
   // time under both would date one of them wrongly.
-  if (snapshot.source === 'entsoe')
+  if (!flowsAt || productionAt === flowsAt)
     // i18n-ignore: the source's name and licence
     details.push(flowsAt ? `${ENTSOE_CREDIT} · ${flowsAt}` : ENTSOE_CREDIT);
-  else if (!flowsAt) details.push('Svenska kraftnät');
-  else if (productionAt === flowsAt)
-    details.push(t('Svenska kraftnät · {time}', { time: flowsAt }));
   else
     details.push(
-      t('Svenska kraftnät · flows {flows} · production {production}', {
+      t('{source} · flows {flows} · production {production}', {
+        source: ENTSOE_CREDIT,
         flows: flowsAt,
         production: productionAt,
       }),

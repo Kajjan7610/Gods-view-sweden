@@ -5,7 +5,7 @@ import * as overlays from '../../overlays/worldOverlay.js';
 import { isPointerFree } from '../../data/inputOwnership.js';
 import { governorRequestRender } from '../../renderGovernor.js';
 
-/** Wire Svenska kraftnät's power flows into the application catalog. */
+/** Wire Sweden's power flows (ENTSO-E) into the application catalog. */
 export function createApplicationPowerGrid(options) {
   return createPowerGridLayer({
     overlayHost: {

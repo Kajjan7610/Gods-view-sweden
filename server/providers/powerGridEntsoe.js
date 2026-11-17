@@ -13,11 +13,11 @@ import {
 import { latestProduction } from '../../src/layers/powerGrid/records.js';
 import { readResponseTextCapped, coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
-import { WEEK_DAYS, powerGridProxy, stepDate } from './powerGrid.js';
 
 // The power-grid routes (/api/power-grid, /day, /week) from the ENTSO-E
-// Transparency Platform, the Swedish version's source; Svenska kraftnät's
-// control room only with POWER_GRID_SOURCE=svk. It needs a free security token in
+// Transparency Platform. Svenska kraftnät's control-room service is not used:
+// Svenska kraftnät answered (2026-11-16) that it is not public and refers to
+// ENTSO-E under CC BY 4.0. It needs a free security token in
 // ENTSOE_SECURITY_TOKEN (server-side only; it travels in the query string to
 // ENTSO-E and is never logged or answered). Only the flows are free to re-use
 // (CC BY 4.0); generation and load are read only with ENTSOE_PRODUCTION=on,
@@ -47,16 +47,15 @@ const STOCKHOLM_DATE = new Intl.DateTimeFormat('sv-SE', {
   day: '2-digit',
 });
 const stockholmDate = (ms) => STOCKHOLM_DATE.format(ms);
+/** Days the week route shows, today included. */
+export const WEEK_DAYS = 7;
 
-/** The proxy the server mounts: ENTSO-E unless the control room is chosen. */
-export function powerGridProxyFor(env = process.env, options = {}) {
-  // Svenska kraftnät's control-room service has no documentation and no
-  // licence, so it is used only when chosen (POWER_GRID_SOURCE=svk).
-  return String(env.POWER_GRID_SOURCE ?? '')
-    .trim()
-    .toLowerCase() === 'svk'
-    ? powerGridProxy(options)
-    : powerGridEntsoeProxy({ env, ...options });
+/** A "YYYY-MM-DD" date moved by whole days. */
+export function stepDate(date, days) {
+  const [year, month, day] = date.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day + days))
+    .toISOString()
+    .slice(0, 10);
 }
 
 /** Bounded power-grid routes over ENTSO-E, for dev and preview. */
@@ -269,9 +268,7 @@ export function powerGridEntsoeProxy({
     if (!token) {
       if (!keylessLogged) {
         keylessLogged = true;
-        console.warn(
-          '[power-grid] the power grid needs ENTSOE_SECURITY_TOKEN (or POWER_GRID_SOURCE=svk)',
-        );
+        console.warn('[power-grid] the power grid needs ENTSOE_SECURITY_TOKEN');
       }
       return json(
         503,

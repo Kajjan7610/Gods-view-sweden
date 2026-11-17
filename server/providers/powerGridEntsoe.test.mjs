@@ -2,7 +2,7 @@
 // the control room's answer shapes, a cache and a pause after failure.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { powerGridEntsoeProxy, powerGridProxyFor } from './powerGridEntsoe.js';
+import { powerGridEntsoeProxy } from './powerGridEntsoe.js';
 import { ENTSOE_AREAS } from '../../src/layers/powerGrid/entsoe.js';
 import {
   entsoeAcknowledgement,
@@ -110,34 +110,15 @@ function quietLogs(t) {
   return lines;
 }
 
-test('ENTSO-E is the source unless the control room is chosen', async (t) => {
+test('without a token ENTSO-E is not asked', async (t) => {
   quietLogs(t);
   const urls = [];
   const fetchImpl = async (url) => {
     urls.push(String(url));
     return new Response('down', { status: 503 });
   };
-  await harness(
-    powerGridProxyFor(
-      { ENTSOE_SECURITY_TOKEN: TOKEN },
-      { fetchImpl, now: () => NOW },
-    ),
-  )();
-  assert.ok(urls.length && urls.every((url) => url.includes('entsoe.eu')));
-  urls.length = 0;
-  // Svenska kraftnät's undocumented service only when asked for.
-  await harness(
-    powerGridProxyFor(
-      { POWER_GRID_SOURCE: ' SVK ', ENTSOE_SECURITY_TOKEN: TOKEN },
-      { fetchImpl, now: () => NOW },
-    ),
-  )();
-  assert.ok(urls.length && urls.every((url) => url.includes('svk.se')));
-  // Without a token ENTSO-E is not asked and the control room is not
-  // taken instead.
-  urls.length = 0;
   const keyless = await harness(
-    powerGridProxyFor({}, { fetchImpl, now: () => NOW }),
+    powerGridEntsoeProxy({ env: {}, fetchImpl, now: () => NOW }),
   )();
   assert.equal(keyless.status, 503);
   assert.deepEqual(urls, []);

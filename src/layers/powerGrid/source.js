@@ -50,7 +50,6 @@ export function createPowerGridSource({
           : null,
         // ENTSO-E without its production says so; the control room's
         // answers stay as they were.
-        ...(payload.source === 'entsoe' ? { source: 'entsoe' } : {}),
         ...(payload.productionOffered === false
           ? { productionOffered: false }
           : {}),
@@ -93,7 +92,6 @@ export function createPowerGridSource({
         stale: payload.stale === true,
         // ENTSO-E without its production says so; the control room's
         // answers stay as they were.
-        ...(payload.source === 'entsoe' ? { source: 'entsoe' } : {}),
         ...(payload.productionOffered === false
           ? { productionOffered: false }
           : {}),
@@ -137,7 +135,6 @@ export function createPowerGridSource({
         stale: payload.stale === true,
         // ENTSO-E without its production says so; the control room's
         // answers stay as they were.
-        ...(payload.source === 'entsoe' ? { source: 'entsoe' } : {}),
         ...(payload.productionOffered === false
           ? { productionOffered: false }
           : {}),
