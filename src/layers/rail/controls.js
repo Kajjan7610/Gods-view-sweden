@@ -131,7 +131,13 @@ export function createControls({ state, parts, timetable }) {
         color: RAIL_CATEGORY_COLORS[category],
         count: counts.get(category),
       }));
-      return { chips, legend };
+      // Swedish fork: Trafikverket's railway disruptions (disruptions.js).
+      const disruptionChip = parts.disruptions?.chip();
+      const disruptionLegend = parts.disruptions?.legend();
+      return {
+        chips: disruptionChip ? [...chips, disruptionChip] : chips,
+        legend: disruptionLegend ? [...legend, disruptionLegend] : legend,
+      };
     },
     /** Route-line, stop, schedule and camera-follow state, for QA probes. */
     getRouteDisplayStats() {

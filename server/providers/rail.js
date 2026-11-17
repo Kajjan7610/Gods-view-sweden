@@ -4,6 +4,7 @@ import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
 import { createRailService } from '../../src/sources/railService.js';
+import { createRailDisruptionsService } from '../../src/sources/trafikverketRailDisruptions.js';
 import {
   RAIL_FEED_ID_PATTERN,
   getRegisteredRailFeed,
@@ -246,6 +247,13 @@ export function railProxy(options = {}) {
       options.pathPackVersion ||
       (options.readPathPack ? null : createFsPathPackVersion(pathsDir)),
   });
+  // Swedish fork: Trafikverket's railway disruptions (/api/rail/disruptions),
+  // one cached snapshot shared by every viewer.
+  const disruptions = createRailDisruptionsService({
+    ...(options.fetchImpl ? { fetchImpl: options.fetchImpl } : {}),
+    ...(options.env ? { env: options.env } : {}),
+    ...(options.now ? { now: options.now } : {}),
+  });
   // A throw here would escape into the HTTP server's event loop and end the
   // whole dev server (Node exits on an unhandled rejection or a throwing
   // 'close' listener), so failures stay inside the rail routes.
@@ -260,11 +268,28 @@ export function railProxy(options = {}) {
     server.middlewares.use('/api/rail', async (req, res) => {
       // Swedish fork: a feed that spends a key (Trafikverket's trains)
       // answers the app's own page only, as the fork's other key routes do.
-      const feedId = String(req.url || '')
-        .split('?')[0]
-        .split('/')[2];
+      const route = String(req.url || '').split('?')[0];
+      const feedId = route.split('/')[2];
       if (getRegisteredRailFeed(feedId)?.requiresKey && admitSameSite(req, res))
         return;
+      // Swedish fork: Trafikverket's railway disruptions spend the same key
+      // and answer the same page only.
+      if (route === '/disruptions' || route === '/disruptions/') {
+        if (admitSameSite(req, res)) return;
+        try {
+          const answer = await disruptions.handle({ method: req.method });
+          if (res.destroyed) return;
+          res.writeHead(answer.status, answer.headers);
+          res.end(answer.body);
+        } catch (error) {
+          console.warn('[rail] disruptions failed', error?.message || error);
+          if (!res.headersSent) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Rail provider error' }));
+          }
+        }
+        return;
+      }
       try {
         const response = await service.handle({
           url: `http://localhost/api/rail${req.url || '/'}`,

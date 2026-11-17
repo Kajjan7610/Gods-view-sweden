@@ -5249,6 +5249,19 @@
   "About 70 stations on the coast": "Близько 70 станцій на узбережжі",
   "{source} · flows {flows} · production {production}": "{source} · перетоки {flows} · виробництво {production}",
   "Gaps are quarter-hours ENTSO-E has not published.": "Пропуски — це чверті години, які ENTSO-E не опублікував.",
-  "Trains across Sweden by service category, with their delays": "Потяги по всій Швеції за категоріями сполучення, із запізненнями",
-  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "Потяги в реальному часі у США, Канаді, Австралії, Фінляндії, Іспанії, Норвегії, Малайзії, Японії та Франції"
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "Потяги в реальному часі у США, Канаді, Австралії, Фінляндії, Іспанії, Норвегії, Малайзії, Японії та Франції",
+  "Rail disruption": "Порушення руху поїздів",
+  "Stretch: {stretch}": "Ділянка: {stretch}",
+  "Since {time}": "З {time}",
+  "Expected to last until {time}": "Очікується до {time}",
+  "Next forecast expected {time}": "Наступний прогноз очікується {time}",
+  "More disruptions here: {count}": "Ще порушення тут: {count}",
+  "Rail disruption · {place}": "Порушення руху поїздів · {place}",
+  "DISRUPTIONS": "ПОРУШЕННЯ",
+  "Hide railway disruptions": "Приховати порушення руху поїздів",
+  "Show railway disruptions": "Показати порушення руху поїздів",
+  "Railway disruptions (Trafikverket)": "Порушення руху поїздів (Trafikverket)",
+  "Red dots are the stations Trafikverket names in its current railway traffic messages (track work, train faults, faults in the infrastructure). Click a dot for what Trafikverket says.": "Червоні точки — станції, які Trafikverket називає у своїх поточних повідомленнях про рух поїздів (колійні роботи, несправності поїздів, несправності інфраструктури). Натисніть на точку, щоб прочитати повідомлення Trafikverket.",
+  "Trains across Sweden by service category, with their delays, and current railway disruptions": "Поїзди по всій Швеції за видом перевезень, із затримками, і поточні порушення руху поїздів",
+  "Trains every 15 seconds, disruptions every 2 minutes": "Поїзди кожні 15 секунд, порушення кожні 2 хвилини"
 }

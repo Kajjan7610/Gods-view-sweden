@@ -5139,6 +5139,19 @@
   "Largest": "הגדול ביותר",
   "Text size: {size}": "גודל טקסט: {size}",
   "Read more": "קרא עוד",
-  "Trains across Sweden by service category, with their delays": "רכבות בכל רחבי שוודיה לפי סוג השירות, עם העיכובים שלהן",
-  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "רכבות בזמן אמת בארה״ב, קנדה, אוסטרליה, פינלנד, ספרד, נורווגיה, מלזיה, יפן וצרפת"
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "רכבות בזמן אמת בארה״ב, קנדה, אוסטרליה, פינלנד, ספרד, נורווגיה, מלזיה, יפן וצרפת",
+  "Rail disruption": "שיבוש בתנועת הרכבות",
+  "Stretch: {stretch}": "קטע: {stretch}",
+  "Since {time}": "מאז {time}",
+  "Expected to last until {time}": "צפוי להימשך עד {time}",
+  "Next forecast expected {time}": "התחזית הבאה צפויה ב-{time}",
+  "More disruptions here: {count}": "שיבושים נוספים כאן: {count}",
+  "Rail disruption · {place}": "שיבוש בתנועת הרכבות · {place}",
+  "DISRUPTIONS": "שיבושים",
+  "Hide railway disruptions": "הסתרת שיבושים בתנועת הרכבות",
+  "Show railway disruptions": "הצגת שיבושים בתנועת הרכבות",
+  "Railway disruptions (Trafikverket)": "שיבושים בתנועת הרכבות (Trafikverket)",
+  "Red dots are the stations Trafikverket names in its current railway traffic messages (track work, train faults, faults in the infrastructure). Click a dot for what Trafikverket says.": "הנקודות האדומות הן התחנות ש-Trafikverket מזכירה בהודעות התנועה הנוכחיות שלה על הרכבות (עבודות במסילה, תקלות ברכבות, תקלות בתשתית). לחצו על נקודה כדי לקרוא מה Trafikverket כותבת.",
+  "Trains across Sweden by service category, with their delays, and current railway disruptions": "רכבות בכל רחבי שוודיה לפי סוג השירות, עם העיכובים שלהן, ושיבושים נוכחיים בתנועת הרכבות",
+  "Trains every 15 seconds, disruptions every 2 minutes": "רכבות כל 15 שניות, שיבושים כל 2 דקות"
 }

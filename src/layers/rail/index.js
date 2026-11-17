@@ -10,6 +10,7 @@ import { createLifecycle } from './lifecycle.js';
 import { createRailCockpitSubject } from './cockpitSubject.js';
 import { createRouteDisplay } from './routeDisplay.js';
 import { createRailSchedules } from './schedules.js';
+import { createRailDisruptions } from './disruptions.js';
 import { getRegisteredRailFeed } from '../../data/railFeeds.js';
 import { DEFAULT_RAIL_CATEGORY_VISIBILITY, RAIL_POLL_MS } from './policy.js';
 
@@ -196,6 +197,8 @@ export function createRailLayer({
   parts.viewport = createViewport(context);
   parts.lifecycle = createLifecycle(context);
   parts.cockpit = createRailCockpitSubject(context);
+  // Swedish fork: Trafikverket's railway disruptions (disruptions.js).
+  parts.disruptions = createRailDisruptions(context);
 
   return Object.assign(
     { updateInterval: RAIL_POLL_MS },
@@ -203,6 +206,8 @@ export function createRailLayer({
     parts.controls.methods,
     parts.cockpit.methods,
     {
+      /** Swedish fork: a disruption dot's name for the Context panel. */
+      findByQuery: (query) => parts.disruptions.describe(query),
       /** Test seams: this instance's own state and parts. */
       _railStateForTest: () => state,
       _railPartsForTest: () => parts,

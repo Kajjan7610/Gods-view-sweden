@@ -4919,6 +4919,19 @@
   "About 70 stations on the coast": "沿岸の約70観測所",
   "{source} · flows {flows} · production {production}": "{source} · 潮流 {flows} · 発電 {production}",
   "Gaps are quarter-hours ENTSO-E has not published.": "空白は ENTSO-E が公開していない15分間です。",
-  "Trains across Sweden by service category, with their delays": "スウェーデン全土の列車（運行種別ごと、遅延付き）",
-  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "米国、カナダ、オーストラリア、フィンランド、スペイン、ノルウェー、マレーシア、日本、フランスのリアルタイム列車"
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "米国、カナダ、オーストラリア、フィンランド、スペイン、ノルウェー、マレーシア、日本、フランスのリアルタイム列車",
+  "Rail disruption": "鉄道運行障害",
+  "Stretch: {stretch}": "区間：{stretch}",
+  "Since {time}": "{time} から",
+  "Expected to last until {time}": "{time} まで続く見込み",
+  "Next forecast expected {time}": "次の見通しは {time} 予定",
+  "More disruptions here: {count}": "この場所のその他の障害：{count}",
+  "Rail disruption · {place}": "鉄道運行障害 · {place}",
+  "DISRUPTIONS": "運行障害",
+  "Hide railway disruptions": "鉄道の運行障害を隠す",
+  "Show railway disruptions": "鉄道の運行障害を表示",
+  "Railway disruptions (Trafikverket)": "鉄道の運行障害（Trafikverket）",
+  "Red dots are the stations Trafikverket names in its current railway traffic messages (track work, train faults, faults in the infrastructure). Click a dot for what Trafikverket says.": "赤い点は、Trafikverket が現在の鉄道運行情報（線路工事、列車の故障、設備の故障）で挙げている駅です。点をクリックすると Trafikverket の発表内容を表示します。",
+  "Trains across Sweden by service category, with their delays, and current railway disruptions": "スウェーデン全土の列車（運行種別ごと、遅延付き）と現在の鉄道運行障害",
+  "Trains every 15 seconds, disruptions every 2 minutes": "列車は15秒ごと、運行障害は2分ごと"
 }

@@ -84,7 +84,11 @@ const headersOf = (values = {}) => ({
  *   source has no path route at all); `fleet`: the fleet-model services
  *   (testSupport/fleetModelFakes.mjs), with a camera that looks straight
  *   down for them (none by default: trains stay icons); `placement`: a
- *   host-supplied placement provider (../data/placementProvider.js).
+ *   host-supplied placement provider (../data/placementProvider.js);
+ *   `disruptions` (Swedish fork): what `/api/rail/disruptions` answers, a
+ *   function called per request that returns the snapshot or throws
+ *   (without it the source has no disruptions route at all), each request's
+ *   time listed in `disruptionRequests`.
  */
 /** The frame of an eye over `view`'s place looking straight down. */
 function lookingDown(view) {
@@ -104,6 +108,7 @@ export function railLayerHarness(
     paths = null,
     fleet = null,
     placement = null,
+    disruptions = null,
   } = {},
 ) {
   const T0 = RAIL_HARNESS_T0;
@@ -284,6 +289,8 @@ export function railLayerHarness(
   const requestedPaths = [];
   /** When each catalog request was made. */
   const catalogRequests = [];
+  /** When each disruptions request was made. */
+  const disruptionRequests = [];
   /**
    * A pack as the proxy serves it: 200 with its body, a number as that
    * failure status, else 404.
@@ -343,6 +350,14 @@ export function railLayerHarness(
           async requestPaths(feedId) {
             requestedPaths.push(feedId);
             return packAnswer(paths[feedId]);
+          },
+        }
+      : {}),
+    ...(disruptions
+      ? {
+          async requestDisruptions() {
+            disruptionRequests.push(Date.now());
+            return disruptions();
           },
         }
       : {}),
@@ -434,6 +449,7 @@ export function railLayerHarness(
     requestedSchedules,
     requestedPaths,
     catalogRequests,
+    disruptionRequests,
     draw,
     camera,
     follows,

@@ -173,6 +173,14 @@ export function createSelection({ state, services, parts }) {
       if (!state._enabled) return;
       // A held train keeps the selection until its view lets it go.
       if (state._cockpitSubjectKey) return;
+      // Swedish fork: a disruption dot opens its card (disruptions.js).
+      const place = parts.disruptions?.placeOf(event.drawHit) ?? null;
+      if (place) {
+        if (state._selectedKey) clearSelection();
+        parts.disruptions.select(place);
+        return;
+      }
+      parts.disruptions?.select(null);
       const key = trainKeyOf(event.drawHit);
       if (key) selectAndFocusTrain(key);
       else if (state._selectedKey) clearSelection();

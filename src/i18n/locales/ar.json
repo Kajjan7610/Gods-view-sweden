@@ -5469,6 +5469,19 @@
   "About 70 stations on the coast": "نحو 70 محطة على الساحل",
   "{source} · flows {flows} · production {production}": "{source} · التدفقات {flows} · الإنتاج {production}",
   "Gaps are quarter-hours ENTSO-E has not published.": "الفجوات أرباع ساعات لم تنشرها ENTSO-E.",
-  "Trains across Sweden by service category, with their delays": "قطارات في جميع أنحاء السويد حسب فئة الخدمة، مع تأخيراتها",
-  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "قطارات مباشرة في الولايات المتحدة وكندا وأستراليا وفنلندا وإسبانيا والنرويج وماليزيا واليابان وفرنسا"
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "قطارات مباشرة في الولايات المتحدة وكندا وأستراليا وفنلندا وإسبانيا والنرويج وماليزيا واليابان وفرنسا",
+  "Rail disruption": "اضطراب في حركة القطارات",
+  "Stretch: {stretch}": "المقطع: {stretch}",
+  "Since {time}": "منذ {time}",
+  "Expected to last until {time}": "يُتوقع أن يستمر حتى {time}",
+  "Next forecast expected {time}": "موعد التوقع التالي: {time}",
+  "More disruptions here: {count}": "اضطرابات أخرى هنا: {count}",
+  "Rail disruption · {place}": "اضطراب في حركة القطارات · {place}",
+  "DISRUPTIONS": "الاضطرابات",
+  "Hide railway disruptions": "إخفاء اضطرابات حركة القطارات",
+  "Show railway disruptions": "إظهار اضطرابات حركة القطارات",
+  "Railway disruptions (Trafikverket)": "اضطرابات حركة القطارات (Trafikverket)",
+  "Red dots are the stations Trafikverket names in its current railway traffic messages (track work, train faults, faults in the infrastructure). Click a dot for what Trafikverket says.": "النقاط الحمراء هي المحطات التي تذكرها Trafikverket في رسائلها الحالية عن حركة القطارات (أعمال على السكة، أعطال القطارات، أعطال البنية التحتية). انقر على نقطة لقراءة ما تقوله Trafikverket.",
+  "Trains across Sweden by service category, with their delays, and current railway disruptions": "قطارات في جميع أنحاء السويد حسب فئة الخدمة، مع تأخيراتها، واضطرابات حركة القطارات الحالية",
+  "Trains every 15 seconds, disruptions every 2 minutes": "القطارات كل 15 ثانية، والاضطرابات كل دقيقتين"
 }

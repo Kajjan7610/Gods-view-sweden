@@ -5029,6 +5029,19 @@
   "About 70 stations on the coast": "Etwa 70 Stationen an der Küste",
   "{source} · flows {flows} · production {production}": "{source} · Flüsse {flows} · Erzeugung {production}",
   "Gaps are quarter-hours ENTSO-E has not published.": "Lücken sind Viertelstunden, die ENTSO-E nicht veröffentlicht hat.",
-  "Trains across Sweden by service category, with their delays": "Züge in ganz Schweden nach Verkehrsart, mit Verspätungen",
-  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "Live-Züge in den USA, Kanada, Australien, Finnland, Spanien, Norwegen, Malaysia, Japan und Frankreich"
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "Live-Züge in den USA, Kanada, Australien, Finnland, Spanien, Norwegen, Malaysia, Japan und Frankreich",
+  "Rail disruption": "Bahnstörung",
+  "Stretch: {stretch}": "Strecke: {stretch}",
+  "Since {time}": "Seit {time}",
+  "Expected to last until {time}": "Voraussichtlich bis {time}",
+  "Next forecast expected {time}": "Nächste Prognose erwartet {time}",
+  "More disruptions here: {count}": "Weitere Störungen hier: {count}",
+  "Rail disruption · {place}": "Bahnstörung · {place}",
+  "DISRUPTIONS": "STÖRUNGEN",
+  "Hide railway disruptions": "Bahnstörungen ausblenden",
+  "Show railway disruptions": "Bahnstörungen einblenden",
+  "Railway disruptions (Trafikverket)": "Bahnstörungen (Trafikverket)",
+  "Red dots are the stations Trafikverket names in its current railway traffic messages (track work, train faults, faults in the infrastructure). Click a dot for what Trafikverket says.": "Rote Punkte sind die Bahnhöfe, die Trafikverket in seinen aktuellen Verkehrsmeldungen für die Bahn nennt (Gleisarbeiten, Zugstörungen, Störungen an der Infrastruktur). Klicken Sie auf einen Punkt, um zu lesen, was Trafikverket schreibt.",
+  "Trains across Sweden by service category, with their delays, and current railway disruptions": "Züge in ganz Schweden nach Verkehrsart, mit Verspätungen, und aktuelle Bahnstörungen",
+  "Trains every 15 seconds, disruptions every 2 minutes": "Züge alle 15 Sekunden, Störungen alle 2 Minuten"
 }

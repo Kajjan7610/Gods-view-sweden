@@ -39,6 +39,7 @@ export function createLifecycle({ state, services, parts, timetable }) {
     init(viewer) {
       state._viewer = viewer;
       parts.rendering.createMarkers(viewer);
+      parts.disruptions.createSet(viewer);
       state._enabled = false;
       state._overlayHost.setVisible(RAIL_SELECTED_OVERLAY_SOURCE_ID, false);
       state._overlayHost.setVisible(RAIL_STOP_OVERLAY_SOURCE_ID, false);
@@ -62,7 +63,12 @@ export function createLifecycle({ state, services, parts, timetable }) {
       state._overlayHost.setVisible(RAIL_SELECTED_OVERLAY_SOURCE_ID, true);
       state._overlayHost.setVisible(RAIL_STOP_OVERLAY_SOURCE_ID, true);
       parts.selection.installClickHandler(viewer);
-      registerPickOwner('rail', (pickedId) => state._trains.has(pickedId));
+      registerPickOwner(
+        'rail',
+        (pickedId) =>
+          state._trains.has(pickedId) || parts.disruptions.owns(pickedId),
+      );
+      parts.disruptions.enable();
       if (!state._cameraChangedAttached) {
         parts.viewport.watchCamera(viewer);
         // Attached only with a camera to listen to, so a later enable retries.
@@ -86,6 +92,7 @@ export function createLifecycle({ state, services, parts, timetable }) {
       state._overlayHost.setVisible(RAIL_STOP_OVERLAY_SOURCE_ID, false);
       parts.selection.removeClickHandler();
       unregisterPickOwner('rail');
+      parts.disruptions.disable();
       // Unconditional: whatever watching started, none of it outlives this.
       parts.viewport.unwatchCamera();
       state._cameraChangedAttached = false;
@@ -117,11 +124,13 @@ export function createLifecycle({ state, services, parts, timetable }) {
       parts.ingestion.sweepAgedTrains(Date.now());
       parts.routes.releaseIdleFeeds(Date.now());
       const generation = state._generation;
-      await Promise.all(
-        [...state._activeFeeds.values()].map((feed) =>
+      await Promise.all([
+        ...[...state._activeFeeds.values()].map((feed) =>
           parts.ingestion.pollFeed(feed, generation),
         ),
-      );
+        // Swedish fork: at most once every two minutes (disruptions.js).
+        parts.disruptions.refresh(),
+      ]);
     },
 
     /** Tear down the icon set and release every shared registration. */
@@ -130,6 +139,7 @@ export function createLifecycle({ state, services, parts, timetable }) {
       parts.rendering.stopModels(true);
       parts.routes.destroy();
       parts.rendering.destroyMarkers();
+      parts.disruptions.destroy();
       state._overlayHost.clearSource(RAIL_SELECTED_OVERLAY_SOURCE_ID);
       state._dataManager = null;
       state._viewer = null;

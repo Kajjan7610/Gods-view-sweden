@@ -5139,6 +5139,19 @@
   "About 70 stations on the coast": "Environ 70 stations sur la côte",
   "{source} · flows {flows} · production {production}": "{source} · flux {flows} · production {production}",
   "Gaps are quarter-hours ENTSO-E has not published.": "Les trous sont des quarts d’heure qu’ENTSO-E n’a pas publiés.",
-  "Trains across Sweden by service category, with their delays": "Trains dans toute la Suède par type de service, avec leurs retards",
-  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "Trains en direct aux États-Unis, au Canada, en Australie, en Finlande, en Espagne, en Norvège, en Malaisie, au Japon et en France"
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "Trains en direct aux États-Unis, au Canada, en Australie, en Finlande, en Espagne, en Norvège, en Malaisie, au Japon et en France",
+  "Rail disruption": "Perturbation ferroviaire",
+  "Stretch: {stretch}": "Tronçon : {stretch}",
+  "Since {time}": "Depuis : {time}",
+  "Expected to last until {time}": "Fin prévue : {time}",
+  "Next forecast expected {time}": "Prochaine prévision : {time}",
+  "More disruptions here: {count}": "Autres perturbations ici : {count}",
+  "Rail disruption · {place}": "Perturbation ferroviaire · {place}",
+  "DISRUPTIONS": "PERTURBATIONS",
+  "Hide railway disruptions": "Masquer les perturbations ferroviaires",
+  "Show railway disruptions": "Afficher les perturbations ferroviaires",
+  "Railway disruptions (Trafikverket)": "Perturbations ferroviaires (Trafikverket)",
+  "Red dots are the stations Trafikverket names in its current railway traffic messages (track work, train faults, faults in the infrastructure). Click a dot for what Trafikverket says.": "Les points rouges sont les gares que Trafikverket cite dans ses messages actuels sur le trafic ferroviaire (travaux sur la voie, pannes de train, défaillances de l’infrastructure). Cliquez sur un point pour lire ce qu’indique Trafikverket.",
+  "Trains across Sweden by service category, with their delays, and current railway disruptions": "Trains dans toute la Suède par type de service, avec leurs retards, et perturbations ferroviaires en cours",
+  "Trains every 15 seconds, disruptions every 2 minutes": "Trains toutes les 15 secondes, perturbations toutes les 2 minutes"
 }

@@ -203,3 +203,28 @@ test('timetables and trip updates use the same per-feed wrapper', async () => {
   assert.throws(() => source.requestSchedule(''), TypeError);
   assert.throws(() => source.requestUpdates(42), TypeError);
 });
+
+test("Swedish fork: Trafikverket's disruptions are read from their own route", async () => {
+  const requested = [];
+  const body = { fetchedAt: 1, stale: false, disruptions: [], places: [] };
+  const source = createRailSource({
+    fetchImpl: async (url) => {
+      requested.push(url);
+      return json(body);
+    },
+  });
+  assert.deepEqual(await source.requestDisruptions(), body);
+  assert.deepEqual(requested, ['/api/rail/disruptions']);
+  await assert.rejects(
+    createRailSource({
+      fetchImpl: async () => json({ error: 'not_configured' }, 503),
+    }).requestDisruptions(),
+    /Rail disruptions HTTP 503/,
+  );
+  await assert.rejects(
+    createRailSource({
+      fetchImpl: async () => json({ places: 1 }),
+    }).requestDisruptions(),
+    /Malformed rail disruptions/,
+  );
+});

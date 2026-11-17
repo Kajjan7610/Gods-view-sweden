@@ -43,6 +43,7 @@ Två nivåer gäller:
 | Tåg i realtid, färgade efter försening (rosa 3–14 min, magenta 15+ min) | Trafikverket, objekt `TrainPosition` och `TrainAnnouncement` | Transit |
 | Bussar, tunnelbana, spårvagn, pendeltåg (16 regionbolag, med linjenummer) | Trafiklab GTFS Regional | Transit |
 | Tåg i originalets tåglager, färgade efter trafikslag (lokal, regional, nationell, internationell), med destination och försening vid senaste station | Trafikverket, samma hämtning som Transit (`TrainPosition`, `TrainAnnouncement`, `TrainStation`) | Rail |
+| Störningar i tågtrafiken: Trafikverkets aktuella trafikmeddelanden för järnvägen (banarbeten, tågfel, fel i anläggningen) som röda punkter på de svenska stationer de gäller, med knappen STÖRNINGAR; klick ger meddelandet, sträckan och Trafikverkets prognos för de två nyaste störningarna | Trafikverket, objekt `OperativeEvent` och `TrainStation` (befintlig nyckel) | Rail |
 | Väglag och händelser (olyckor, avstängda vägar, vägarbeten, hinder, färjor) | Trafikverket, `RoadCondition` och `Situation` | Road Conditions (Sweden), under Events |
 | Nederbördsradar, Norden (var 5:e minut, senaste timmen) | SMHI, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Nordics) |
 | Nederbördsradar, Europa inkl. Norge, Finland, Danmark och Baltikum (var 5:e minut) | EUMETNET OPERA, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Europe) |
@@ -94,7 +95,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | | Lager | Källa | Omfattning | Uppdateras | Licens |
 |---|---|---|---|---|---|
 | +SE | Kollektivtrafik | Trafiklab (Samtrafiken) · Trafikverket | Bussar, tunnelbana, spårvagn och pendeltåg från 16 regionala trafikbolag, och tåg med förseningar. Originalet: Öppna GTFS-RT-flöden i USA, Kanada, Finland, Nederländerna, Norge, Australien och Brasilien | Var 15:e sekund | CC0 1.0 (Trafiklab, Trafikverket) |
-| +SE | Järnväg | Trafikverket | Tåg i hela Sverige efter trafikslag, med förseningar. Originalet: Tåg i realtid i USA, Kanada, Australien, Finland, Spanien, Norge, Malaysia, Japan och Frankrike | Var 15:e sekund | CC0 1.0 (Trafikverket) |
+| +SE | Järnväg | Trafikverket | Tåg i hela Sverige efter trafikslag, med förseningar, och aktuella störningar i tågtrafiken. Originalet: Tåg i realtid i USA, Kanada, Australien, Finland, Spanien, Norge, Malaysia, Japan och Frankrike | Tåg var 15:e sekund, störningar varannan minut | CC0 1.0 (Trafikverket) |
 | +SE | Kameror | Trafikverket | Cirka 1 550 vägkameror med livebilder. Originalet: Offentliga trafikkameror i många länder | Bilderna uppdateras medan de visas | CC0 1.0 (Trafikverket) |
 | SE | Fartkameror (Sverige) | Trafikverket | Cirka 2 800 fasta fartkameror i hela Sverige | Varje timme | CC0 1.0 |
 | SE | Elpris (Sverige) | elprisetjustnu.se · Nord Pool via ENTSO-E | Spotpris per kvart i elområdena SE1–SE4 | Var 15:e minut | Fri att använda enligt Elpriset just nu; priserna kommer från Nord Pool via ENTSO-E |
@@ -399,6 +400,34 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-17 (störningar i tågtrafiken)
+- Tåglagret (Rail) visar nu Trafikverkets aktuella störningar i
+  tågtrafiken: banarbeten, tågfel och fel i anläggningen, som röda punkter
+  på de svenska stationer störningen gäller. Knappen STÖRNINGAR visar och
+  döljer dem (på från början) och förklaringen räknar dem.
+- Klick på en punkt öppnar ett kort med det Trafikverket publicerar:
+  rubrik och text i meddelandet, sträckan och Trafikverkets prognos (när
+  trafikpåverkan väntas upphöra eller när nästa prognos kommer), eller när
+  störningen började om prognos saknas. Kortet visar de två nyaste
+  störningarna och räknar resten. Långa texter kortas vid ett ord med
+  "…", eftersom ett kort som är högre än skärmen inte ritas alls. Context-
+  panelen namnger punkten ("Rail disruption · Helsingborg C"). Inget läggs
+  till eller gissas.
+- Källan är objektet `OperativeEvent` (som ersatte `TrainMessage` 2025),
+  bara pågående händelser som har börjat och inte avslutats. Störningen
+  placeras på de berörda stationerna med resandeutbyte, annars på övriga
+  berörda platser eller sträckans ändar, med stationernas lägen från
+  `TrainStation`. En händelse utan känd svensk station placeras i den
+  mittpunkt Trafikverket anger, om den inte bara gäller platser utomlands.
+- Servern frågar Trafikverket högst en gång varannan minut, i en enda
+  fråga som alla tittare delar; stationslistan följer med en gång om
+  dygnet. Ett misslyckat svar väntar också två minuter, och den senaste
+  bilden visas under tiden, markerad som gammal, i högst en timme.
+  Webbläsaren frågar bara när Sveriges tåg är i bruk.
+- Samma gratisnyckel som tågen (`TRAFIKVERKET_API_KEY`). Utan den finns
+  knappen inte och Trafikverket kontaktas inte. Liksom tågen svarar
+  `/api/rail/disruptions` bara appens egen sida. Licens CC0 1.0.
 
 ### 2026-11-17 (sex granskade källor i datakatalogen)
 - Datakatalogen erbjuder nu sex källor vars licens, villkor för

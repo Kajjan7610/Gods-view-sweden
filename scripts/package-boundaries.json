@@ -5112,6 +5112,7 @@
       "src/layers/rail/routeLines.js",
       "src/layers/rail/schedules.js",
       "src/layers/rail/stopLabels.js",
+      "src/layers/rail/disruptions.js",
       "src/data/railPaths.js",
       "src/data/railSchedule.js",
       "src/data/railTimeZones.js",
@@ -6343,6 +6344,7 @@
       "src/layers/rail/routeLines.js",
       "src/layers/rail/schedules.js",
       "src/layers/rail/stopLabels.js",
+      "src/layers/rail/disruptions.js",
       "src/data/railPaths.js",
       "src/data/railSchedule.js",
       "src/data/railTimeZones.js",
@@ -7785,6 +7787,7 @@
       "src/sources/transitHistory.js",
       "src/sources/railService.js",
       "src/sources/trafikverketTrains.js",
+      "src/sources/trafikverketRailDisruptions.js",
       "src/sources/rateLimit.js"
     ],
     "external": ["pbf"]

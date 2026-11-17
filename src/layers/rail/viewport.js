@@ -200,6 +200,8 @@ export function createViewport({ state, services, parts, source }) {
     parts.routes.onCamera();
     parts.routes.applyNetwork();
     parts.rendering.syncRenderHold();
+    // Swedish fork: Sweden's disruptions follow its train feed.
+    parts.disruptions?.sync();
     state._dataManager?.refreshLayerStats?.();
     governorRequestRender('rail-proximity');
   }

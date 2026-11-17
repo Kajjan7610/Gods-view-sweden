@@ -4919,6 +4919,19 @@
   "About 70 stations on the coast": "沿海约 70 个站点",
   "{source} · flows {flows} · production {production}": "{source} · 潮流 {flows} · 发电 {production}",
   "Gaps are quarter-hours ENTSO-E has not published.": "空缺是 ENTSO-E 尚未发布的 15 分钟时段。",
-  "Trains across Sweden by service category, with their delays": "瑞典全境的列车，按服务类别分类，并显示晚点",
-  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "美国、加拿大、澳大利亚、芬兰、西班牙、挪威、马来西亚、日本和法国的实时列车"
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "美国、加拿大、澳大利亚、芬兰、西班牙、挪威、马来西亚、日本和法国的实时列车",
+  "Rail disruption": "铁路运行中断",
+  "Stretch: {stretch}": "区段：{stretch}",
+  "Since {time}": "自 {time} 起",
+  "Expected to last until {time}": "预计持续至 {time}",
+  "Next forecast expected {time}": "下次预测预计于 {time}",
+  "More disruptions here: {count}": "此处其他中断：{count}",
+  "Rail disruption · {place}": "铁路运行中断 · {place}",
+  "DISRUPTIONS": "中断",
+  "Hide railway disruptions": "隐藏铁路运行中断",
+  "Show railway disruptions": "显示铁路运行中断",
+  "Railway disruptions (Trafikverket)": "铁路运行中断（Trafikverket）",
+  "Red dots are the stations Trafikverket names in its current railway traffic messages (track work, train faults, faults in the infrastructure). Click a dot for what Trafikverket says.": "红点是 Trafikverket 在当前铁路交通信息（线路施工、列车故障、设施故障）中提到的车站。点击红点查看 Trafikverket 的说明。",
+  "Trains across Sweden by service category, with their delays, and current railway disruptions": "瑞典全境的列车，按服务类别分类，并显示晚点，以及当前的铁路运行中断",
+  "Trains every 15 seconds, disruptions every 2 minutes": "列车每 15 秒，中断每 2 分钟"
 }

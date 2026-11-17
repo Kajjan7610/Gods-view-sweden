@@ -5139,6 +5139,19 @@
   "About 70 stations on the coast": "Unas 70 estaciones en la costa",
   "{source} · flows {flows} · production {production}": "{source} · flujos {flows} · producción {production}",
   "Gaps are quarter-hours ENTSO-E has not published.": "Los huecos son cuartos de hora que ENTSO-E no ha publicado.",
-  "Trains across Sweden by service category, with their delays": "Trenes de toda Suecia por tipo de servicio, con sus retrasos",
-  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "Trenes en directo en EE. UU., Canadá, Australia, Finlandia, España, Noruega, Malasia, Japón y Francia"
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "Trenes en directo en EE. UU., Canadá, Australia, Finlandia, España, Noruega, Malasia, Japón y Francia",
+  "Rail disruption": "Incidencia ferroviaria",
+  "Stretch: {stretch}": "Tramo: {stretch}",
+  "Since {time}": "Desde: {time}",
+  "Expected to last until {time}": "Fin previsto: {time}",
+  "Next forecast expected {time}": "Próxima previsión: {time}",
+  "More disruptions here: {count}": "Más incidencias aquí: {count}",
+  "Rail disruption · {place}": "Incidencia ferroviaria · {place}",
+  "DISRUPTIONS": "INCIDENCIAS",
+  "Hide railway disruptions": "Ocultar incidencias ferroviarias",
+  "Show railway disruptions": "Mostrar incidencias ferroviarias",
+  "Railway disruptions (Trafikverket)": "Incidencias ferroviarias (Trafikverket)",
+  "Red dots are the stations Trafikverket names in its current railway traffic messages (track work, train faults, faults in the infrastructure). Click a dot for what Trafikverket says.": "Los puntos rojos son las estaciones que Trafikverket nombra en sus avisos actuales de tráfico ferroviario (obras en la vía, averías de trenes, fallos en la infraestructura). Haga clic en un punto para leer lo que dice Trafikverket.",
+  "Trains across Sweden by service category, with their delays, and current railway disruptions": "Trenes en toda Suecia por tipo de servicio, con sus retrasos, e incidencias ferroviarias actuales",
+  "Trains every 15 seconds, disruptions every 2 minutes": "Trenes cada 15 segundos, incidencias cada 2 minutos"
 }

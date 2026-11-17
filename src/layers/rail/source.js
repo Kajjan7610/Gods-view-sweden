@@ -60,6 +60,24 @@ export function createRailSource({
     requestSchedule(feedId, options) {
       return requestFeedJson('schedule', feedId, options);
     },
+    /**
+     * Swedish fork: Trafikverket's current railway disruptions
+     * (`/api/rail/disruptions`), `{fetchedAt, stale, disruptions, places}`.
+     */
+    async requestDisruptions({ signal } = {}) {
+      signal?.throwIfAborted();
+      const response = await fetchImpl('/api/rail/disruptions', {
+        signal,
+        headers: { Accept: 'application/json' },
+      });
+      if (!response.ok)
+        throw new Error('Rail disruptions HTTP ' + response.status);
+      const body = await response.json();
+      signal?.throwIfAborted();
+      if (!Array.isArray(body?.places) || !Array.isArray(body?.disruptions))
+        throw new Error('Malformed rail disruptions');
+      return body;
+    },
     /** The feed's live trip updates (delays); 404 for a feed without them. */
     requestUpdates(feedId, options) {
       return requestFeedJson('updates', feedId, options);

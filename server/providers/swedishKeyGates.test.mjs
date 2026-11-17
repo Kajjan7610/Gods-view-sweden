@@ -136,6 +136,78 @@ test("the Rail layer's Trafikverket trains refuse another site; keyless feeds do
   assert.notEqual(keyless.statusCode, 403);
 });
 
+test("the Rail layer's railway disruptions refuse another site, and without the key ask nothing", async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  let asked = 0;
+  const fetchImpl = async () => {
+    asked += 1;
+    return new Response(
+      JSON.stringify({ RESPONSE: { RESULT: [{ OperativeEvent: [] }] } }),
+    );
+  };
+  const res = () => ({
+    statusCode: 0,
+    headersSent: false,
+    destroyed: false,
+    setHeader() {},
+    writeHead(status) {
+      this.statusCode = status;
+    },
+    end(body) {
+      this.body = body;
+    },
+    destroy() {},
+  });
+  const handlerWith = (env) => {
+    const plugin = railProxy({
+      fetchImpl,
+      env,
+      readPathPack: async () => null,
+      pathPackVersion: async () => null,
+    });
+    t.after(() => plugin.closeBundle());
+    return mounted(plugin).get('/api/rail');
+  };
+  const own = {
+    host: 'localhost:4173',
+    origin: 'http://localhost:4173',
+    'sec-fetch-site': 'same-origin',
+  };
+  const foreign = {
+    host: 'localhost:4173',
+    origin: 'https://example.com',
+    'sec-fetch-site': 'cross-site',
+  };
+  const keyed = handlerWith({ TRAFIKVERKET_API_KEY: 'a' });
+  const refused = res();
+  await keyed(
+    { method: 'GET', url: '/disruptions', headers: foreign, socket: {} },
+    refused,
+  );
+  assert.equal(refused.statusCode, 403);
+  assert.equal(asked, 0, 'Trafikverket is never asked for another site');
+
+  const keyless = handlerWith({});
+  const notConfigured = res();
+  await keyless(
+    { method: 'GET', url: '/disruptions', headers: own, socket: {} },
+    notConfigured,
+  );
+  assert.equal(notConfigured.statusCode, 503);
+  assert.equal(JSON.parse(notConfigured.body).error, 'not_configured');
+  assert.equal(asked, 0, 'without the key Trafikverket is never asked');
+
+  const served = res();
+  await keyed(
+    { method: 'GET', url: '/disruptions', headers: own, socket: {} },
+    served,
+  );
+  assert.equal(served.statusCode, 200);
+  assert.equal(asked, 1);
+  assert.deepEqual(JSON.parse(served.body).disruptions, []);
+});
+
 test("the app's own page is still answered", async (t) => {
   t.mock.method(console, 'log', () => {});
   t.mock.method(console, 'warn', () => {});

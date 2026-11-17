@@ -5029,6 +5029,19 @@
   "About 70 stations on the coast": "Cirka 70 stationer längs kusten",
   "{source} · flows {flows} · production {production}": "{source} · flöden {flows} · produktion {production}",
   "Gaps are quarter-hours ENTSO-E has not published.": "Luckorna är kvartar som ENTSO-E inte har publicerat.",
-  "Trains across Sweden by service category, with their delays": "Tåg i hela Sverige efter trafikslag, med förseningar",
-  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "Tåg i realtid i USA, Kanada, Australien, Finland, Spanien, Norge, Malaysia, Japan och Frankrike"
+  "Live trains in the USA, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France": "Tåg i realtid i USA, Kanada, Australien, Finland, Spanien, Norge, Malaysia, Japan och Frankrike",
+  "Rail disruption": "Trafikstörning",
+  "Stretch: {stretch}": "Sträcka: {stretch}",
+  "Since {time}": "Sedan {time}",
+  "Expected to last until {time}": "Beräknas pågå till {time}",
+  "Next forecast expected {time}": "Ny prognos väntas {time}",
+  "More disruptions here: {count}": "Fler störningar här: {count}",
+  "Rail disruption · {place}": "Trafikstörning · {place}",
+  "DISRUPTIONS": "STÖRNINGAR",
+  "Hide railway disruptions": "Dölj störningar i tågtrafiken",
+  "Show railway disruptions": "Visa störningar i tågtrafiken",
+  "Railway disruptions (Trafikverket)": "Störningar i tågtrafiken (Trafikverket)",
+  "Red dots are the stations Trafikverket names in its current railway traffic messages (track work, train faults, faults in the infrastructure). Click a dot for what Trafikverket says.": "Röda punkter är de stationer Trafikverket nämner i sina aktuella trafikmeddelanden för järnvägen (banarbeten, tågfel, fel i anläggningen). Klicka på en punkt för vad Trafikverket skriver.",
+  "Trains across Sweden by service category, with their delays, and current railway disruptions": "Tåg i hela Sverige efter trafikslag, med förseningar, och aktuella störningar i tågtrafiken",
+  "Trains every 15 seconds, disruptions every 2 minutes": "Tåg var 15:e sekund, störningar varannan minut"
 }
