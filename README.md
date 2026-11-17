@@ -12,11 +12,11 @@
 
 </div>
 
-### ▶ Se filmen
+### ▶ Se filmen (röst: elevenlabs.io · musik: Eleven Music)
 
 https://github.com/user-attachments/assets/623694ab-79d8-40cf-9997-c6c95ce91400
 
-_28 sekunder med berättarröst: varje flyg över Sverige och Stockholm i rörelse just nu, och varje stad i siffror. For promotional purposes only. Alla källor står i slutskylten._
+_28 sekunder med berättarröst: varje flyg över Sverige och Stockholm i rörelse just nu, och varje stad i siffror. For promotional purposes only. Alla källor står i slutskylten. Berättarrösten är gjord med elevenlabs.io och musiken med Eleven Music (created in collaboration with ElevenLabs)._
 
 **På YouTube:** [Live-filmen](https://youtu.be/VSx6TzB1fAY) (varje flyg och tåg i realtid, varje stad i siffror) · [Kulturarvsfilmen](https://youtu.be/WdYw6DMweik) (fornlämningar, flyg och tåg på en karta) · Shorts: [Flyget just nu](https://youtube.com/shorts/9TbymCYQKmc) · [Kulturarv](https://youtube.com/shorts/GIBvBGJ2tKI)
 
