@@ -261,10 +261,12 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   välja platser för fartkameror (11.6.8). Slutanvändare ska godkänna ett
   licensavtal minst lika strängt som TomToms (12). TomToms
   upphovsrättsnotis ska hämtas från deras Copyright API (17.3).
-  Originalets trafiklager läser, enligt originalets dokumentation,
-  fortfarande TomToms flödesdata genom en serverproxy med 120 sekunders
-  cache när `TOMTOM_API_KEY` är satt; samma villkor gäller där, och utan
-  nyckeln kör lagret sin simulering. Köerna i dossiern kommer sedan
+  Originalets trafiklager läser TomToms flödesdata genom en serverproxy
+  med 120 sekunders cache när `TOMTOM_API_KEY` är satt, men sedan
+  2026-11-18 aldrig för kartrutor som berör Sverige: där kör lagret sin
+  simulering även med nyckel. Utanför Sverige gäller TomToms villkor för
+  den som lägger in en egen nyckel. Utan nyckel kör lagret sin simulering
+  överallt. Köerna i dossiern kommer sedan
   2026-11-18 från Trafikverket (CC0, se lagret Köer och restider).
 - **Valmyndigheten (valresultat i dossiern och valdistrikten):** öppna data
   som är fria att använda med Valmyndigheten angiven som källa (val.se, "Om
@@ -402,6 +404,22 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-18 (TomTom frågas aldrig inom Sverige)
+- Originalets trafiklager (Gatutrafik) frågar inte längre TomTom om
+  kartrutor som berör Sverige, även om `TOMTOM_API_KEY` är satt. Proxyn
+  svarar med en tom ruta, så vägarna där får simulerad trafik, och de
+  uppmätta köerna visas i lagret Köer och restider. Sveriges kontur är
+  Natural Earths landsgräns som appen redan har; en ruta som bara
+  nuddar Sverige räknas som svensk. Utanför Sverige fungerar lagret som i
+  originalet.
+- Skälet: appen uppfyller inte TomToms villkor (se avsnittet om TomTom
+  ovan). Nyckeln är i dag inte satt, så ändringen är ett skydd om den
+  läggs in igen.
+- Att låta Trafikverkets hastigheter färga det animerade lagret prövades
+  och valdes bort: restidssträckorna är bara ca 218 km väg, mätpunkterna
+  saknar vägsträckning, och lagret skulle ändå vara simulerat nästan
+  överallt.
 
 ### 2026-11-18 (köer och restider)
 - Nytt lager Köer och restider under Movement. Trafikverkets ca 200

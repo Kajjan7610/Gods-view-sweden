@@ -486,6 +486,7 @@
     "exports": ["./server/providers/traffic"],
     "modules": [
       "server/providers/traffic.js",
+      "server/providers/swedenTiles.js",
       "server/providers/common/http.js",
       "src/sources/httpBody.js",
       "src/i18n/marker.js",

@@ -9,6 +9,7 @@ import {
   isOverBudget as isTomTomOverBudget,
 } from '../../src/data/tomtomTiles.js';
 import { admitSameSite } from './common/same-site.js';
+import { tileTouchesSweden } from './swedenTiles.js';
 
 /**
  * TomTom traffic-flow vector-tile proxy with a daily budget governor.
@@ -230,6 +231,14 @@ export function tomtomProxy() {
 
         const key = `${z}/${x}/${y}`;
         const now = Date.now();
+
+        // Swedish fork: inside Sweden TomTom is never asked (the app does not
+        // meet its terms); an empty tile leaves those roads simulated, and
+        // Trafikverket's queues layer shows the measured traffic.
+        if (tileTouchesSweden(z, x, y)) {
+          sendTile({ at: now, buf: Buffer.alloc(0) }, 'SKIP-SWEDEN');
+          return;
+        }
 
         let entry = mem.get(key);
         if (!entry) {
