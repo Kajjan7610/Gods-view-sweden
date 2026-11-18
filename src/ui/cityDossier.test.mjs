@@ -440,6 +440,60 @@ test('the dossier lists no queues and names no TomTom, whatever the route answer
   assert.doesNotMatch(state.view.source, /TomTom/);
   assert.equal(state.view.now.failed, '');
 });
+/** The NOW tab of Arboga with the given queues in the transport answer. */
+async function queuesShown(t, queues) {
+  const { state, visit } = harness(t);
+  state.panelOpen = true;
+  state.bodies['/api/city-transit'] = { trains: null, flights: null, queues };
+  await visit(TOWNS.arboga);
+  state.actions.setTab('now');
+  await settle();
+  return state.view;
+}
+
+test('the queues around the town are Trafikverket’s, worst first, and credited', async (t) => {
+  const view = await queuesShown(t, {
+    routes: 12,
+    points: 80,
+    pointsQueued: 2,
+    items: [
+      {
+        name: 'Sotartunneln',
+        status: 'heavy',
+        delayS: 50,
+        speedKmh: 25.9,
+        lengthM: 580,
+      },
+    ],
+  });
+  const queues = view.now.queues;
+  assert.equal(queues.items.length, 1);
+  assert.equal(queues.items[0].title, 'Sotartunneln');
+  assert.equal(queues.items[0].status, 'Slow traffic');
+  assert.equal(queues.items[0].detail, '+1 min · 26 km/h · 0.6 km');
+  assert.equal(queues.empty, '');
+  assert.match(view.source, /Trafikverket/);
+});
+
+test('with nothing queued the dossier says what was measured', async (t) => {
+  const view = await queuesShown(t, {
+    routes: 12,
+    points: 80,
+    pointsQueued: 0,
+    items: [],
+  });
+  assert.equal(
+    view.now.queues.empty,
+    'No queues right now · 12 stretches and 80 measuring points',
+  );
+});
+
+test('a failed read of the queues is named, not shown as an empty list', async (t) => {
+  const view = await queuesShown(t, { items: [], error: true });
+  assert.equal(view.now.queues, null);
+  assert.equal(view.now.failed, 'No answer from: Traffic');
+});
+
 test("a sight's picture names its Wikimedia Commons page too", async () => {
   const { commonsPage } = await import('./cityDossier.js');
   // Wikidata names a picture by its file path, over plain http.

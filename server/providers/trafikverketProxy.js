@@ -122,6 +122,18 @@ export function trafikverketProxy({
     }
   }
 
+  /**
+   * The snapshot for another server route that shares it: the cached one,
+   * else a refresh as the route would make one. Null without a key or data.
+   */
+  async function read() {
+    const key = String(env.TRAFIKVERKET_API_KEY ?? '').trim();
+    if (!key) return null;
+    if (cached && now() - cached.savedAt < ttlMs) return cached.value;
+    if (now() < retryAfter) return lastKnown();
+    return coalesceProxyRequest(inFlight, name, () => refresh(key)).promise;
+  }
+
   async function handler(req, res) {
     const json = (status, value, headers = {}) => {
       if (res.destroyed) return;
@@ -170,6 +182,7 @@ export function trafikverketProxy({
 
   return {
     name,
+    read,
     configureServer({ middlewares }) {
       middlewares.use(route, sameSiteGated(handler));
     },

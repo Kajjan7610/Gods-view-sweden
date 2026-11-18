@@ -55,6 +55,7 @@ import { createApplicationSpeedCameras } from './layers/speedCameras.js';
 import { createApplicationRiverFlow } from './layers/riverFlow.js';
 import { createApplicationGammaRadiation } from './layers/gammaRadiation.js';
 import { createApplicationRoadFerries } from './layers/roadFerries.js';
+import { createApplicationRoadQueues } from './layers/roadQueues.js';
 import { createApplicationAurora } from './layers/aurora.js';
 import { createApplicationSmhiWeather } from './layers/smhiWeather.js';
 import { createApplicationGhostMaps } from './layers/ghostMaps.js';
@@ -259,6 +260,10 @@ export function createApplicationCatalog({
         }),
         createApplicationRoadFerries({
           source: sources['road-ferries'],
+          terrain: surface.terrain,
+        }),
+        createApplicationRoadQueues({
+          source: sources['road-queues'],
           terrain: surface.terrain,
         }),
         createApplicationAurora({

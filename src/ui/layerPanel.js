@@ -58,6 +58,7 @@ const PANEL_GROUPS = [
       'local-adsb',
       'ais-live-vessels',
       'traffic',
+      'road-queues',
       'transit',
       'road-ferries',
       'rail',

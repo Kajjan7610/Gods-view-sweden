@@ -337,7 +337,9 @@
     "{kind} {name}",
     "{n} mm",
     "Route",
-    "KT"
+    "KT",
+    "{minutes} min {seconds} s",
+    "{speed} km/h"
   ],
   "es": [
     "1090 MHz",
@@ -563,7 +565,9 @@
     "{h} h {m} min",
     "{n} min",
     "{n} mm",
-    "KT"
+    "KT",
+    "{minutes} min {seconds} s",
+    "{speed} km/h"
   ],
   "fr": [
     "1090 MHz",
@@ -868,7 +872,9 @@
     "{h} h {m} min",
     "{n} min",
     "{n} mm",
-    "KT"
+    "KT",
+    "{minutes} min {seconds} s",
+    "{speed} km/h"
   ],
   "it": [
     "1090 MHz",
@@ -1141,7 +1147,9 @@
     "{h} h {m} min",
     "{n} min",
     "{n} mm",
-    "KT"
+    "KT",
+    "{minutes} min {seconds} s",
+    "{speed} km/h"
   ],
   "ja": [
     "1090 MHz",
@@ -1469,7 +1477,9 @@
     "{h} h {m} min",
     "{n} min",
     "{n} mm",
-    "KT"
+    "KT",
+    "{minutes} min {seconds} s",
+    "{speed} km/h"
   ],
   "ru": [
     "AIS: --",
@@ -1747,7 +1757,9 @@
     "{n} min",
     "{n} mm",
     "3D",
-    "KT"
+    "KT",
+    "{minutes} min {seconds} s",
+    "{speed} km/h"
   ],
   "uk": [
     "AIS: --",

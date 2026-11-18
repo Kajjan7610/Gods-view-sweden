@@ -821,6 +821,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     disposition: 'enabled-only',
   }),
   Object.freeze({
+    id: 'road-queues',
+    token: '11',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'rocket-launches',
     token: 'x',
     disposition: 'enabled-only',

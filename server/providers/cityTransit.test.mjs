@@ -193,6 +193,50 @@ test('the route answers trains only with the key, and never asks TomTom', async 
   assert.equal(none.local, null);
   assert.equal((await keyless('/?lat=x')).status, 400);
 });
+test('the queues around the town come from the shared Trafikverket snapshot', async () => {
+  const snapshot = {
+    routes: [
+      {
+        id: '674',
+        name: 'Sotartunneln',
+        status: 'heavy',
+        delayS: 50,
+        speedKmh: 25.9,
+        lengthM: 580,
+        lines: [
+          [
+            [18.05, 59.31],
+            [18.06, 59.312],
+          ],
+        ],
+      },
+    ],
+    points: [],
+  };
+  const fetchImpl = async () => new Response('', { status: 404 });
+  const stockholm = route({ fetchImpl, env: {}, queues: async () => snapshot });
+  const body = (await stockholm('/?lat=59.33&lon=18.07')).body;
+  assert.equal(body.queues.routes, 1);
+  assert.equal(body.queues.items[0].name, 'Sotartunneln');
+  // Where Trafikverket measures nothing nearby there is no section.
+  assert.equal((await stockholm('/?lat=63.83&lon=20.26')).body.queues, null);
+  // A failed read is no answer, not a town without queues.
+  const failing = route({
+    fetchImpl,
+    env: {},
+    queues: async () => {
+      throw new Error('down');
+    },
+  });
+  const failed = (await failing('/?lat=59.33&lon=18.07')).body.queues;
+  assert.equal(failed.error, true);
+  // Without the key the shared snapshot is null.
+  assert.equal(
+    (await route({ fetchImpl, env: {} })('/?lat=59.33&lon=18.07')).body.queues,
+    null,
+  );
+});
+
 test('the airport board route: one Swedavia airport, today or tomorrow', async () => {
   const calls = [];
   const fetchImpl = async (url) => {

@@ -75,6 +75,12 @@ const LOCAL_MODES = Object.freeze({
   METRO: msg('Metro {line}'),
   BOAT: msg('Boat {line}'),
 });
+/** Trafikverket's verdict on a stretch that is not flowing freely. */
+const QUEUE_LABELS = Object.freeze({
+  heavy: msg('Slow traffic'),
+  congested: msg('Queue'),
+  impossible: msg('Standstill'),
+});
 const SWEDEN = Object.freeze({
   west: 10.5,
   south: 55,
@@ -1077,6 +1083,7 @@ export function createCityDossier({
         live?.transit?.trains,
         live?.transit?.flights,
         live?.transit?.local,
+        live?.transit?.queues,
       ].some((part) => part?.error === true));
 
   /** "No answer from: Polisen, Traffic", or '' when every part answered. */
@@ -1175,6 +1182,7 @@ export function createCityDossier({
               }),
       trains: trainsView(live.transit?.trains),
       local: localView(live.transit?.local),
+      queues: queuesView(live.transit?.queues),
       flights: flightsView(live.transit?.flights),
       kris: krisView(live.kris),
       aurora: auroraView(live.aurora),
@@ -1249,6 +1257,53 @@ export function createCityDossier({
             ? t('stop {platform}', { platform: row.platform })
             : null,
           row.note,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      })),
+    };
+  }
+
+  /**
+   * The queues Trafikverket measures around the town: its stretches that are
+   * not flowing freely, worst first; null where it measures nothing nearby.
+   */
+  function queuesView(queues) {
+    // A read that failed is no answer, not a road without queues.
+    if (!queues || queues.error) return null;
+    const count = t('{routes} stretches and {points} measuring points', {
+      routes: queues.routes,
+      points: queues.points,
+    });
+    return {
+      title: t('Queues around the town'),
+      empty: queues.items.length
+        ? ''
+        : queues.pointsQueued
+          ? t(
+              'Slow traffic at {count} measuring points; no stretch queued · {all}',
+              {
+                count: queues.pointsQueued,
+                all: count,
+              },
+            )
+          : t('No queues right now · {all}', { all: count }),
+      items: queues.items.map((row, index) => ({
+        key: `${index}:${row.name}`,
+        title: row.name,
+        status: QUEUE_LABELS[row.status] ? t(QUEUE_LABELS[row.status]) : '',
+        detail: [
+          row.delayS > 0
+            ? t('+{minutes} min', {
+                minutes: Math.max(1, Math.round(row.delayS / 60)),
+              })
+            : null,
+          Number.isFinite(row.speedKmh)
+            ? t('{speed} km/h', { speed: Math.round(row.speedKmh) })
+            : null,
+          Number.isFinite(row.lengthM)
+            ? t('{km} km', { km: oneDecimal(row.lengthM / 1000) })
+            : null,
         ]
           .filter(Boolean)
           .join(' · '),
@@ -1525,12 +1580,17 @@ export function createCityDossier({
       // Provider names; the live transport ones only once they show.
       source: [
         'SCB · Kolada · Valmyndigheten · Wikidata · Wikipedia · SMHI · Polisen', // i18n-ignore: provider names
-        live?.transit?.trains?.station ? 'Trafikverket' : null, // i18n-ignore: provider name
+        live?.transit?.trains?.station ||
+        Number.isFinite(live?.transit?.queues?.routes)
+          ? 'Trafikverket' // i18n-ignore: provider name
+          : null,
         live?.transit?.flights?.airports?.length ? 'Swedavia' : null, // i18n-ignore: provider name
         live?.transit?.local?.stop ? 'Trafiklab (CC BY 4.0)' : null, // i18n-ignore: provider name
         live?.kris ? 'Krisinformation.se' : null, // i18n-ignore: provider name
         live?.aurora?.level ? 'NOAA SWPC' : null, // i18n-ignore: provider name
-        live?.cameras && !live?.transit?.trains?.station
+        live?.cameras &&
+        !live?.transit?.trains?.station &&
+        !Number.isFinite(live?.transit?.queues?.routes)
           ? 'Trafikverket' // i18n-ignore: provider name
           : null,
       ]

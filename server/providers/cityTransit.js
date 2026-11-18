@@ -6,14 +6,16 @@ import { greatCircleKm } from '../../src/geoDistance.js';
 import { createSwedaviaFlights } from './cityFlights.js';
 import { createLocalDepartures } from './cityLocalTransit.js';
 import { createAirportIndex } from './ourAirports.js';
+import { queuesNear } from '../../src/layers/roadQueues/records.js';
 
 // The city dossier's live transport: the next departures from the town's
 // railway station (Trafikverket, CC0, the existing TRAFIKVERKET_API_KEY),
 // the next buses, trams, metro trains and boats from the town's busiest stop
-// (Trafiklab Realtime, cityLocalTransit.js), plus the nearby Swedavia
-// airports' flights (cityFlights.js). Keys stay server-side; each part is
-// simply absent without its key. Stations are read once a day, departures
-// every minute.
+// (Trafiklab Realtime, cityLocalTransit.js), the nearby Swedavia airports'
+// flights (cityFlights.js) and the queues Trafikverket measures around the
+// town (the queues layer's shared snapshot, trafikverketQueues.js). Keys stay
+// server-side; each part is simply absent without its key. Stations are read
+// once a day, departures every minute.
 const STATIONS_TTL_MS = 24 * 60 * 60_000;
 const DEPARTURES_TTL_MS = 60_000;
 const CACHE_MAX = 200;
@@ -171,6 +173,8 @@ export function cityTransitProxy({
   now = () => Date.now(),
   env = process.env,
   airportIndex = createAirportIndex({ fetchImpl, now }),
+  // The queues layer's snapshot: () => Promise<{routes, points}|null>.
+  queues = async () => null,
 } = {}) {
   let stations = null;
   const departures = new Map();
@@ -302,15 +306,17 @@ export function cityTransitProxy({
       return json(400, { error: 'lat_lon_required' });
     if (!allow(clientKey(req))) return json(429, { error: 'rate_limited' });
     const point = { latitude, longitude };
-    const [rail, air, local] = await Promise.allSettled([
+    const [rail, air, local, road] = await Promise.allSettled([
       trains(point, town),
       swedavia.nearby(point),
       localTransit.nearby(point, town),
+      queues().then((snapshot) => queuesNear(snapshot, point)),
     ]);
     for (const [label, result] of [
       ['trains', rail],
       ['flights', air],
       ['local', local],
+      ['queues', road],
     ])
       if (result.status === 'rejected')
         console.warn(`[city-transit] ${label}: ${result.reason?.message}`);
@@ -329,6 +335,9 @@ export function cityTransitProxy({
         local.status === 'fulfilled'
           ? local.value
           : { stop: null, departures: [], error: true },
+      // Null where Trafikverket measures nothing near the town.
+      queues:
+        road.status === 'fulfilled' ? road.value : { items: [], error: true },
       fetchedAt: now(),
     });
   }

@@ -43,6 +43,7 @@ test('reference factories retain compatibility without starting acquisition or s
     'river-flow',
     'gamma-radiation',
     'road-ferries',
+    'road-queues',
     'aurora',
     'smhi-weather',
   ]);
@@ -69,6 +70,7 @@ test('reference factories retain compatibility without starting acquisition or s
   assert.notEqual(first['transit-alerts'], second['transit-alerts']);
   assert.notEqual(first['gamma-radiation'], second['gamma-radiation']);
   assert.notEqual(first['road-ferries'], second['road-ferries']);
+  assert.notEqual(first['road-queues'], second['road-queues']);
   assert.notEqual(first['river-flow'], second['river-flow']);
   assert.notEqual(first['speed-cameras'], second['speed-cameras']);
   assert.notEqual(first['fire-stations'], second['fire-stations']);

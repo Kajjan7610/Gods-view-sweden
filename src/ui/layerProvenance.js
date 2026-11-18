@@ -178,6 +178,14 @@ export const LAYER_PROVENANCE = Object.freeze({
     updates: msg('Every 2 minutes'),
     licence: CC0,
   }),
+  'road-queues': own({
+    source: 'Trafikverket',
+    coverage: msg(
+      'About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg',
+    ),
+    updates: msg('Every minute'),
+    licence: CC0,
+  }),
   'polisen-events': own({
     source: 'Polismyndigheten',
     coverage: msg('The 500 latest notices, about ten days, all of Sweden'),

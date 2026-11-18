@@ -314,11 +314,13 @@
   font-size: 9px;
   text-transform: uppercase;
 }
-.city-dossier-trains {
+.city-dossier-trains,
+.city-dossier-jams {
   display: grid;
   gap: 2px;
 }
 .city-dossier-trains > strong,
+.city-dossier-jams > strong,
 .city-dossier-police > strong {
   color: rgba(220, 238, 255, 0.75);
   font-size: 9.5px;
@@ -342,7 +344,8 @@
   overflow: hidden;
   color: rgba(244, 251, 255, 0.9);
 }
-.city-dossier-dest small {
+.city-dossier-dest small,
+.city-dossier-jam small {
   overflow: hidden;
   color: rgba(220, 238, 255, 0.5);
   font-size: 9px;
@@ -441,6 +444,24 @@
   max-width: 92px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+/* A stretch Trafikverket measures as not flowing freely, and its verdict. */
+.city-dossier-jam {
+  display: grid;
+  gap: 1px;
+  padding: 3px 0 3px 7px;
+  border-left: 2px solid #ff5252;
+}
+.city-dossier-jam > span {
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+  color: rgba(244, 251, 255, 0.9);
+}
+.city-dossier-jam em {
+  flex: none;
+  color: #ffab00;
+  font-style: normal;
 }
 /* Tonight's northern lights; the colour follows the chance. */
 .city-dossier-cameras > strong {

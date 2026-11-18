@@ -48,6 +48,7 @@ Två nivåer gäller:
 | Nederbördsradar, Norden (var 5:e minut, senaste timmen) | SMHI, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Nordics) |
 | Nederbördsradar, Europa inkl. Norge, Finland, Danmark och Baltikum (var 5:e minut) | EUMETNET OPERA, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Europe) |
 | Vägfärjor: Trafikverkets ca 40 färjeleder med nästa avgångar de kommande tre timmarna och nästa avgångstid bredvid varje led; gula där Trafikverket har ett meddelande för leden (inställda turer, nedsatt kapacitet, planerade avstängningar) | Trafikverket, objekt `FerryRoute`, `FerryAnnouncement` och färjemeddelanden i `Situation` (befintlig nyckel) | Road ferries (Sweden) / Vägfärjor, under Movement |
+| Köer och restider: Trafikverkets ca 200 restidssträckor, färgade efter Trafikverkets egen bedömning (fritt, trög trafik, kö, stillastående), och ca 1 200 mätpunkter där hastigheten nu jämförs med det normala för timmen (röd under hälften, gul klart under). Stockholm och Göteborg, några runt Malmö. Klick ger restid nu och normalt, hastighet och flöde | Trafikverket, objekt `TravelTimeRoute` 1.6 och `TrafficFlow` 1.6 med `BaselineTraffic` (befintlig nyckel) | Queues and travel times (Sweden) / Köer och restider, under Movement |
 | Vägväder: ca 830 väderstationer längs vägarna (vägbanans och luftens temperatur, daggpunkt, vind, sikt, nederbörd; halkrisk markeras) | Trafikverket, objekt `WeatherMeasurepoint` | Road Weather (Sweden), under Events |
 | Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk), samt VMA och krisnyheter som punkter | SMHI, IBWW-varningar (CC BY 4.0) och Krisinformation.se (MSB); ingen nyckel | Weather Warnings (Sweden), under Weather |
 | Polisens händelser (de 500 senaste notiserna, ca 10 dagar), placerade vid kommunens centralort | Polismyndigheten, `polisen.se/api/events` (öppna data, ange källan) | Police Events (Sweden), under Events |
@@ -115,6 +116,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Väglag (Sverige) | Trafikverket | Väglag och aktuella händelser i hela Sverige | Var 3:e minut | CC0 1.0 |
 | SE | Vägväder (Sverige) | Trafikverket | Cirka 830 vägväderstationer | Var 5:e minut | CC0 1.0 |
 | SE | Vägfärjor (Sverige) | Trafikverket | Omkring 40 färjeleder, avgångar de kommande tre timmarna | Varannan minut | CC0 1.0 |
+| SE | Köer och restider (Sverige) | Trafikverket | Cirka 200 restidssträckor och 1 200 mätpunkter, Stockholm och Göteborg | Varje minut | CC0 1.0 |
 | SE | Polishändelser (Sverige) | Polismyndigheten | De 500 senaste notiserna, cirka tio dagar, hela Sverige | Var 5:e minut | Öppna data, källan anges |
 | SE | Kollektivtrafikstörningar (Sverige) | Trafiklab (Samtrafiken) | Störningar vid hållplatserna hos 16 regionala trafikbolag | Var 15:e minut | CC0 1.0 |
 | +SE | Luftkvalitet | SMHI | Cirka 75 mätstationer på den europeiska EAQI-skalan. Originalet: Kanadensiska stationer (ECCC AQHI) | Varje timme | CC BY 4.0 (SMHI); EAQI-indexet räknas fram av appen |
@@ -262,10 +264,8 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   Originalets trafiklager läser, enligt originalets dokumentation,
   fortfarande TomToms flödesdata genom en serverproxy med 120 sekunders
   cache när `TOMTOM_API_KEY` är satt; samma villkor gäller där, och utan
-  nyckeln kör lagret sin simulering. Köerna i dossiern ska ersättas med
-  Trafikverkets TrafficFlow (CC0), tidigast när schemaversion 1.6 med
-  normalflöde (BaselineTraffic) är i drift, planerad till 2026-11-18, och
-  täckningen är kontrollerad mot verkliga data.
+  nyckeln kör lagret sin simulering. Köerna i dossiern kommer sedan
+  2026-11-18 från Trafikverket (CC0, se lagret Köer och restider).
 - **Valmyndigheten (valresultat i dossiern och valdistrikten):** öppna data
   som är fria att använda med Valmyndigheten angiven som källa (val.se, "Om
   våra öppna data"). Valmyndigheten anges som källa.
@@ -402,6 +402,36 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-18 (köer och restider)
+- Nytt lager Köer och restider under Movement. Trafikverkets ca 200
+  restidssträckor ritas som linjer i färg efter Trafikverkets egen
+  bedömning: grönt fritt, gult trög trafik, rött kö, mörkrött
+  stillastående. Ca 1 200 mätpunkter ritas som prickar: körfälten på
+  samma plats och i samma riktning läses ihop, och hastigheten nu jämförs
+  med Trafikverkets normalvärde för samma tid (`BaselineTraffic`, ny i
+  `TrafficFlow` 1.6 från i dag). Röd under hälften av det normala, gul
+  under tre fjärdedelar och mer än två standardavvikelser under. Där
+  vägen normalt har färre än 120 fordon i timmen ges ingen bedömning av
+  en låg hastighet. Utan hastighet (tom väg) ingen bedömning alls.
+- Klick på en sträcka visar restiden nu och normalt, hastighet, längd och
+  mättid. Klick på en mätpunkt visar riktning, antal körfält, hastighet
+  och flöde nu och normalt. Knapparna MÄTPUNKTER och BARA KÖER.
+- Täckningen, kontrollerad mot verkliga data 2026-11-18: 200 sträckor
+  (193 i Stockholms län, 5 i Västra Götaland, 2 i Skåne) och 3 214
+  körfält i Stockholms och Västra Götalands län, som blir ca 1 200
+  mätpunkter. 98 % av körfälten hade redan normalvärden.
+- Stadsdossierns "Köer runt staden" är tillbaka i fliken Nu, nu från
+  Trafikverket: sträckor som inte flyter fritt inom 15 km, värst först,
+  med fördröjning, hastighet och längd, och hur många sträckor och
+  mätpunkter som finns nära orten. Avsnittet visas bara där Trafikverket
+  mäter något, alltså i praktiken Stockholm och Göteborg. Lagret och
+  dossiern delar en hämtning per minut.
+- Källa: Trafikverkets öppna API (CC0 1.0), befintlig nyckel. Datan är
+  sammanräknad trafik per körfält och sträcka, utan uppgifter om enskilda
+  fordon. Att lägga ihop restider och mätpunkter avslöjar inget utöver det
+  Trafikverket redan visar på sin trafikinformation.
+- Originalets animerade trafiklager är orört i den här ändringen.
 
 ### 2026-11-18 (berättelsen "Elens resa")
 - Ny inbyggd berättelse i sex kapitel, ca 58 s: vatten från norr

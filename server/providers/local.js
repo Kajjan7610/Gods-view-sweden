@@ -31,6 +31,7 @@ import { gnssIntegrityProxy } from './gnssIntegrity.js';
 import { trafikverketRoadsProxy } from './trafikverketRoads.js';
 import { trafikverketWeatherProxy } from './trafikverketWeather.js';
 import { trafikverketFerriesProxy } from './trafikverketFerries.js';
+import { trafikverketQueuesProxy } from './trafikverketQueues.js';
 import { smhiWarningsProxy } from './smhiWarnings.js';
 import { polisenEventsProxy } from './polisenEvents.js';
 import { electricityPricesProxy } from './electricityPrices.js';
@@ -88,6 +89,9 @@ function localProviderPlugins({
     !path.isAbsolute(nominatimStorageDir)
   )
     throw new TypeError('nominatimStorageDir must be an absolute directory');
+  // One snapshot of Trafikverket's measured traffic for the queues layer and
+  // the city dossier.
+  const queues = trafikverketQueuesProxy();
   return [
     openSkyProxy(),
     celestrakProxy(),
@@ -122,6 +126,7 @@ function localProviderPlugins({
     trafikverketRoadsProxy(),
     trafikverketWeatherProxy(),
     trafikverketFerriesProxy(),
+    queues,
     smhiWarningsProxy(),
     polisenEventsProxy(),
     electricityPricesProxy(),
@@ -140,7 +145,7 @@ function localProviderPlugins({
     speedCamerasProxy(),
     riverFlowProxy(),
     cityDossierProxy(),
-    cityTransitProxy(),
+    cityTransitProxy({ queues: queues.read }),
     aviationWeatherProxy(),
     krisinformationProxy(),
     auroraOutlookProxy(),

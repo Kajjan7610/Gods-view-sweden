@@ -27,6 +27,7 @@ test('panel presentation places Transit and Rail between Street Traffic and Bike
       'local-adsb',
       'ais-live-vessels',
       'traffic',
+      'road-queues',
       'transit',
       'road-ferries',
       'rail',
