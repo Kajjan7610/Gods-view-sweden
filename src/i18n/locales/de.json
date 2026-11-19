@@ -5149,14 +5149,16 @@
   "Q{quarter} {year}": "Q{quarter} {year}",
   "Born / died": "Geboren / gestorben",
   "Net moves": "Wanderungssaldo",
-  "Detached house, mean price": "Einfamilienhaus, Durchschnittspreis",
   "{value} million kr": "{value} Mio. kr",
   "{count} sold · {year}": "{count} verkauft · {year}",
   "Dwellings started, last four quarters": "Begonnene Wohnungen, letzte vier Quartale",
-  "New cars that are electric": "Neuwagen mit Elektroantrieb",
   "Commute in / out": "Einpendler / Auspendler",
   "Most commute to": "Die meisten pendeln nach",
   "{count} people · {year}": "{count} Personen · {year}",
   "Most commute in from": "Die meisten pendeln ein aus",
-  "{electric} of {total} (Trafikanalys) · {from}–{to} · share computed by the app": "{electric} von {total} (Trafikanalys) · {from}–{to} · Anteil von der App berechnet"
+  "House, mean price": "Einfamilienhaus, Durchschnittspreis",
+  "Newly registered cars that are fully electric": "Neu zugelassene Pkw, rein elektrisch",
+  "{electric} of {total} · {from}–{to} · computed by the app from Trafikanalys statistics": "{electric} von {total} · {from}–{to} · von der App aus Statistiken von Trafikanalys berechnet",
+  "latest quarters preliminary": "letzte Quartale vorläufig",
+  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "Die Zeiten stammen von SOS Alarm und umfassen die zwölf Monate bis Juni des angezeigten Jahres; die Brände stammen aus dem Register der MCF und umfassen fünf Jahre."
 }

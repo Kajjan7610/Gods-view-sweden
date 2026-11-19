@@ -97,6 +97,8 @@ const SWEDEN = Object.freeze({
   east: 24.3,
   north: 69.1,
 });
+/** The tabs that show SCB's further figures. */
+const FIGURE_TABS = new Set(['people', 'society']);
 const TABS = Object.freeze([
   ['about', msg('ABOUT')],
   ['people', msg('POPULATION')],
@@ -134,6 +136,8 @@ const STAT_FIGURES = Object.freeze({
       'Building fires that spread beyond where they started, per 1,000 inhabitants',
     ),
     (v) => oneDecimal(v),
+    // Kolada's figure covers the five years up to the year it is filed under.
+    (year) => `${year - 4}–${year}`,
   ],
   lifeWomen: [
     msg('Life expectancy, women'),
@@ -172,9 +176,14 @@ const STAT_GROUPS = Object.freeze([
     msg('Rescue service'),
     ['rescueResponse', 'alarmHandling', 'spreadingFires'],
     // Distance sets the times: a sparse municipality is not a slow one.
-    msg(
-      'Response times follow the distances: in a sparsely populated municipality the rescue service has further to go. Compare with Sweden, not with other towns.',
-    ),
+    [
+      msg(
+        'Response times follow the distances: in a sparsely populated municipality the rescue service has further to go. Compare with Sweden, not with other towns.',
+      ),
+      msg(
+        'The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.',
+      ),
+    ],
   ],
   [msg('Health'), ['lifeWomen', 'lifeMen', 'sickDays']],
   [msg('Economy'), ['debtors', 'newFirms']],
@@ -337,6 +346,9 @@ export function createCityDossier({
   /** The town's Kolada figures: `{ code, status, stats }`. */
   let stats = null;
   let statsRequest = null;
+  /** The town whose SCB figures were asked for, read when a tab needs them. */
+  let figuresCode = null;
+  let figuresRequest = null;
   const requestRender = () => findFrame(host)?.requestRender('city-dossier');
   const sightsLayer = createSights({
     viewer: host,
@@ -431,6 +443,7 @@ export function createCityDossier({
         drawSights();
         if (tab === 'sights') void loadSights();
         if (tab === 'stats') void loadStats();
+        if (FIGURE_TABS.has(tab)) void loadFigures();
       }
       if (liveIsDue()) void loadLive();
     } catch (error) {
@@ -742,6 +755,35 @@ export function createCityDossier({
     ].join(' · ');
   }
 
+  /**
+   * SCB's births and moves, house prices, building, new cars and commuting:
+   * their own read, so the card never waits for them. A failed read is tried
+   * again the next time a tab that shows them opens.
+   */
+  async function loadFigures() {
+    if (!city || !facts || figuresCode === city.code) return;
+    const forCity = city;
+    const forFacts = facts;
+    figuresCode = forCity.code;
+    figuresRequest?.abort();
+    const controller = new AbortController();
+    figuresRequest = controller;
+    try {
+      const body = await getJson(
+        `/api/city-dossier/figures?code=${encodeURIComponent(forCity.code)}`,
+        controller.signal,
+      );
+      if (destroyed || facts !== forFacts) return;
+      facts = { ...facts, figures: body?.figures ?? null };
+      render();
+    } catch (error) {
+      if (error?.name !== 'AbortError' && figuresCode === forCity.code)
+        figuresCode = null;
+    } finally {
+      if (figuresRequest === controller) figuresRequest = null;
+    }
+  }
+
   // ---- statistics ----------------------------------------------------------
   /** The town's Kolada figures, read once per town while the tab is open. */
   async function loadStats() {
@@ -782,17 +824,20 @@ export function createCityDossier({
     const byKey = new Map(stats.stats.map((row) => [row.key, row]));
     const groups = STAT_GROUPS.map(([title, keys, note]) => ({
       title: t(title),
-      note: note ? t(note) : '',
+      note: [note ?? []]
+        .flat()
+        .map((text) => t(text))
+        .join(' '),
       rows: keys
         .filter((key) => byKey.has(key))
         .map((key) => {
           const row = byKey.get(key);
-          const [label, read] = STAT_FIGURES[key];
+          const [label, read, period = String] = STAT_FIGURES[key];
           return {
             label: t(label),
             value: read(row.value),
             detail: [
-              String(row.year),
+              period(row.year),
               Number.isFinite(row.sweden)
                 ? t('Sweden {value}', { value: read(row.sweden) })
                 : null,
@@ -1046,10 +1091,14 @@ export function createCityDossier({
       });
     // SCB's births, deaths and moves in the latest month.
     const changes = facts?.figures?.changes;
-    if (changes && Number.isFinite(changes.births))
+    if (
+      changes &&
+      Number.isFinite(changes.births) &&
+      Number.isFinite(changes.deaths)
+    )
       rows.push({
         label: t('Born / died'),
-        value: `${whole(changes.births)} / ${whole(changes.deaths ?? 0)}`,
+        value: `${whole(changes.births)} / ${whole(changes.deaths)}`,
         detail: monthLabel(changes),
       });
     if (changes && Number.isFinite(changes.netMoves))
@@ -1114,30 +1163,34 @@ export function createCityDossier({
     const figures = facts?.figures ?? {};
     if (figures.houses)
       rows.push({
-        label: t('Detached house, mean price'),
+        label: t('House, mean price'),
         value: t('{value} million kr', {
           value: formatNumber(figures.houses.meanPrice / 1e6, {
             maximumFractionDigits: 1,
           }),
         }),
-        detail: t('{count} sold · {year}', {
-          count: whole(figures.houses.sold ?? 0),
-          year: figures.houses.year,
-        }),
+        detail: Number.isFinite(figures.houses.sold)
+          ? t('{count} sold · {year}', {
+              count: whole(figures.houses.sold),
+              year: figures.houses.year,
+            })
+          : String(figures.houses.year),
       });
     if (figures.starts)
       rows.push({
         label: t('Dwellings started, last four quarters'),
         value: whole(figures.starts.started),
-        detail: `${quarterLabel(figures.starts.from)}–${quarterLabel(figures.starts.to)}`,
+        // SCB fills in the latest quarters for a year after.
+        detail: `${quarterLabel(figures.starts.from)}–${quarterLabel(figures.starts.to)} · ${t('latest quarters preliminary')}`,
       });
     if (figures.cars)
       rows.push({
-        label: t('New cars that are electric'),
+        label: t('Newly registered cars that are fully electric'),
         value: `${oneDecimal(figures.cars.share)} %`,
-        // The counts are Trafikanalys's; the share is the app's own sum.
+        // Trafikanalys asks not to be named the source of figures processed
+        // by others: the sums and the share are the app's own.
         detail: t(
-          '{electric} of {total} (Trafikanalys) · {from}–{to} · share computed by the app',
+          '{electric} of {total} · {from}–{to} · computed by the app from Trafikanalys statistics',
           {
             electric: whole(figures.cars.electric),
             total: whole(figures.cars.total),
@@ -1740,7 +1793,6 @@ export function createCityDossier({
       // Provider names; the live transport ones only once they show.
       source: [
         'SCB · Kolada · Valmyndigheten · Wikidata · Wikipedia · SMHI · Polisen', // i18n-ignore: provider names
-        facts?.figures?.cars ? 'Trafikanalys' : null, // i18n-ignore: provider name
         live?.transit?.trains?.station ||
         Number.isFinite(live?.transit?.queues?.routes) ||
         Number.isFinite(live?.transit?.incidents?.count)
@@ -1770,6 +1822,7 @@ export function createCityDossier({
       if (id !== 'sights') chosenSight = null;
       if (id === 'sights') void loadSights();
       if (id === 'stats') void loadStats();
+      if (FIGURE_TABS.has(id)) void loadFigures();
       drawSights();
       render();
     },

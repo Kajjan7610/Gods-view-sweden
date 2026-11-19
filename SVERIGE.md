@@ -408,22 +408,32 @@ git merge origin/main
 ### 2026-11-19 (nya siffror i stadskortet)
 - Fliken BEFOLKNING visar födda, döda och flyttnetto den senaste månaden
   (SCB, TAB6473).
-- Fliken SAMHÄLLE visar villornas snittpris och hur många som såldes
+- Fliken SAMHÄLLE visar småhusens medelpris och hur många som såldes
   (permanentbostad, TAB1169), påbörjade bostäder de senaste fyra kvartalen
-  (TAB4572), andelen nya bilar som är elbilar de senaste tolv månaderna
-  (TAB3277) och pendlingen in och ut med det största flödet åt varje håll
-  (TAB1830). Bilarnas antal är Trafikanalys officiella statistik och
-  krediteras Trafikanalys; andelen räknar appen själv och det står, eftersom
-  Trafikanalys inte vill stå som källa för bearbetade siffror.
-- Fliken STATISTIK har en ny grupp Räddningstjänst ur Kolada: tid från
-  112-samtalet till första enhet på plats (median), larmbehandlingstid
-  (median) och byggnadsbränder som spred sig från startobjektet. Siffrorna
-  visas mot Sverige men utan placering bland kommunerna, med en rad om att
-  avstånden styr insatstiderna i glesbygd.
+  med en rad om att de senaste kvartalen är preliminära (TAB4572), andelen
+  elbilar bland nyregistrerade bilar de senaste tolv månaderna (TAB3277) och
+  pendlingen in och ut med det största flödet åt varje håll (TAB1830).
+  Bilsiffrorna bygger på Trafikanalys officiella statistik, men summorna och
+  andelen räknar appen själv. Därför står det "räknat av appen ur
+  Trafikanalys statistik" och Trafikanalys anges inte som källa, eftersom de
+  inte vill stå som källa för bearbetade siffror.
+- Siffrorna från SCB hämtas för sig när fliken BEFOLKNING eller SAMHÄLLE
+  öppnas, så stadskortet väntar aldrig på dem. Ortens befolkning går före i
+  SCB-kön; de övriga siffrorna står i en kort kö som ger upp direkt när den
+  är full, och en tabell som SCB inte längre listar söks igen först efter en
+  halvtimme. Summeringar hoppar över kategorier som "totalt" och "riket".
+- Fliken STATISTIK har en ny grupp Räddningstjänst ur Kolada: responstid från
+  112-samtalet till första enhet på plats (median) och larmbehandlingstid
+  (median), båda från SOS Alarm och för tolv månader fram till juni, samt
+  byggnadsbränder som spred sig från startobjektet (MCF:s register, fem år).
+  Siffrorna visas mot Sverige men utan placering bland kommunerna, med en
+  rad om att avstånden styr responstiderna i glesbygd.
 - SCB anger två olika gränser (30 och 10 anrop per 10 sekunder per adress);
   uppslagen håller sig till den strängare och läser en tabell i taget.
-- Licenserna kontrollerades av en fristående agent 2026-11-19: SCB CC0
-  (Trafikanalys för TAB3277), Kolada fritt med "Källa: Kolada".
+- Licenserna och påståendena kontrollerades av fristående agenter
+  2026-11-19: SCB CC0, Kolada fritt med "Källa: Kolada". Deras fynd (källan
+  för responstiderna, femårsperioden för bränderna, preliminära kvartal,
+  Trafikanalys villkor och SCB-kön) är rättade.
 
 ### 2026-11-19 (trafiken runt orter utan kömätning)
 - Trafikverket mäter köer bara runt Stockholm och Göteborg (och två

@@ -341,7 +341,7 @@ export function cityDossierProxy({
     ];
     const value = (result) =>
       result.status === 'fulfilled' ? result.value : null;
-    const [kolada, wikidata, scbTown, scbMonthly, latestElection, scbFigures] =
+    const [kolada, wikidata, scbTown, scbMonthly, latestElection] =
       await Promise.allSettled([
         getJson(
           `${KOLADA_URL}/${kpis.join(',')}/municipality/${seat.code}/year/${years.join(',')}`,
@@ -355,8 +355,6 @@ export function cityDossierProxy({
         population.townPopulation(seat.code, townNames(seat)),
         population.municipalityPopulation(seat.code),
         results.forMunicipality(seat.code),
-        // Births and moves, house prices, building, new cars, commuting.
-        population.municipalityFigures?.(seat.code) ?? null,
       ]);
     // Each source may fail alone; say which, so a quiet gap is explained.
     for (const [label, result] of [
@@ -365,7 +363,6 @@ export function cityDossierProxy({
       ['scb town', scbTown],
       ['scb month', scbMonthly],
       ['election', latestElection],
-      ['scb figures', scbFigures],
     ])
       if (result.status === 'rejected')
         console.warn(
@@ -423,21 +420,48 @@ export function cityDossierProxy({
       scbMonthly,
       latestElection,
     ].some((result) => result.status === 'rejected');
-    const figures = value(scbFigures);
-    for (const failure of figures?.failed ?? [])
-      console.warn(`[city-dossier] ${seat.locality} scb ${failure}`);
     return {
       municipality,
       town: townFacts,
       wikipedia,
-      figures: figures?.figures ?? null,
-      partial:
-        partial ||
-        wikipediaFailed ||
-        creditsFailed ||
-        Boolean(figures?.failed?.length),
+      partial: partial || wikipediaFailed || creditsFailed,
       fetchedAt: now(),
     };
+  }
+
+  /**
+   * SCB's further figures for one municipality: births and moves, house
+   * prices, building, new cars and commuting. Their own route, so the town
+   * card never waits for SCB's queue; a day's cache, ten minutes when a
+   * table failed.
+   */
+  const figureCache = new Map();
+  async function loadFigures(code) {
+    const hit = figureCache.get(code);
+    if (
+      hit &&
+      now() - hit.savedAt <
+        (hit.value.failed ? PARTIAL_FACTS_TTL_MS : FACTS_TTL_MS)
+    )
+      return hit.value;
+    const { promise } = coalesceProxyRequest(
+      inFlight,
+      `figures:${code}`,
+      async () => {
+        const { figures, failed } = await population.municipalityFigures(code);
+        for (const failure of failed)
+          console.warn(`[city-dossier] ${code} scb ${failure}`);
+        return { figures, failed: failed.length };
+      },
+    );
+    const value = await promise;
+    if (Object.values(value.figures).every((figure) => figure === null))
+      return hit?.value ?? null;
+    figureCache.delete(code);
+    figureCache.set(code, { value, savedAt: now() });
+    if (figureCache.size > FACTS_CACHE_MAX)
+      figureCache.delete(figureCache.keys().next().value);
+    return value;
   }
 
   async function handler(req, res) {
@@ -464,6 +488,17 @@ export function cityDossierProxy({
       return answer
         ? json(200, { code, ...answer })
         : json(502, { code, error: 'city_dossier_stats_unavailable' });
+    }
+    if (url.pathname === '/figures') {
+      const code = url.searchParams.get('code') || '';
+      if (!/^\d{4}$/.test(code) || code === '0000')
+        return json(400, { error: 'municipality_code_required' });
+      if (!allow(clientKey(req)))
+        return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
+      const answer = await loadFigures(code).catch(() => null);
+      return answer
+        ? json(200, { code, ...answer })
+        : json(502, { code, error: 'city_dossier_figures_unavailable' });
     }
     if (url.pathname !== '/' && url.pathname !== '')
       return json(404, { error: 'unknown_route' });

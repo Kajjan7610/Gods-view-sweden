@@ -5259,14 +5259,16 @@
   "Q{quarter} {year}": "רבעון {quarter} {year}",
   "Born / died": "נולדו / נפטרו",
   "Net moves": "מאזן הגירה",
-  "Detached house, mean price": "בית פרטי, מחיר ממוצע",
   "{value} million kr": "{value} מיליון כתר",
   "{count} sold · {year}": "{count} נמכרו · {year}",
   "Dwellings started, last four quarters": "דירות שבנייתן החלה, ארבעת הרבעונים האחרונים",
-  "New cars that are electric": "מכוניות חדשות חשמליות",
   "Commute in / out": "נוסעים לעבודה פנימה / החוצה",
   "Most commute to": "הרוב נוסעים לעבודה ב",
   "{count} people · {year}": "{count} אנשים · {year}",
   "Most commute in from": "הרוב מגיעים לעבודה מ",
-  "{electric} of {total} (Trafikanalys) · {from}–{to} · share computed by the app": "{electric} מתוך {total} (Trafikanalys) · {from}–{to} · השיעור חושב על ידי האפליקציה"
+  "House, mean price": "בית צמוד קרקע, מחיר ממוצע",
+  "Newly registered cars that are fully electric": "מכוניות חדשות שנרשמו, חשמליות לגמרי",
+  "{electric} of {total} · {from}–{to} · computed by the app from Trafikanalys statistics": "{electric} מתוך {total} · {from}–{to} · חושב על ידי האפליקציה מנתוני Trafikanalys",
+  "latest quarters preliminary": "הרבעונים האחרונים ראשוניים",
+  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "הזמנים מ-SOS Alarm ומכסים את שנים-עשר החודשים עד יוני של השנה המוצגת; השריפות ממרשם MCF ומכסות חמש שנים."
 }

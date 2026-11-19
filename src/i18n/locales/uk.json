@@ -5369,14 +5369,16 @@
   "Q{quarter} {year}": "{quarter} кв. {year}",
   "Born / died": "Народилося / померло",
   "Net moves": "Міграційне сальдо",
-  "Detached house, mean price": "Приватний будинок, середня ціна",
   "{value} million kr": "{value} млн крон",
   "{count} sold · {year}": "продано {count} · {year}",
   "Dwellings started, last four quarters": "Розпочато житла, останні чотири квартали",
-  "New cars that are electric": "Нові автомобілі — електромобілі",
   "Commute in / out": "Приїжджають / виїжджають на роботу",
   "Most commute to": "Найчастіше їздять на роботу до",
   "{count} people · {year}": "осіб: {count} · {year}",
   "Most commute in from": "Найчастіше приїжджають з",
-  "{electric} of {total} (Trafikanalys) · {from}–{to} · share computed by the app": "{electric} з {total} (Trafikanalys) · {from}–{to} · частку розраховано застосунком"
+  "House, mean price": "Приватний будинок, середня ціна",
+  "Newly registered cars that are fully electric": "Уперше зареєстровані повністю електричні автомобілі",
+  "{electric} of {total} · {from}–{to} · computed by the app from Trafikanalys statistics": "{electric} з {total} · {from}–{to} · розраховано застосунком за статистикою Trafikanalys",
+  "latest quarters preliminary": "останні квартали попередні",
+  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "Час — за даними SOS Alarm за дванадцять місяців до червня зазначеного року; пожежі — з реєстру MCF за п’ять років."
 }

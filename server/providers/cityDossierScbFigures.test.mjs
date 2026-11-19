@@ -340,19 +340,82 @@ test('a table that fails is named, and the others still answer', async () => {
   assert.ok(figures.houses);
 });
 
-test('SCB is asked at most ten times per ten seconds', async () => {
-  let clock = 0;
-  const waits = [];
-  const scb = createScbPopulation(async () => ({ tables: [] }), {
-    now: () => clock,
-    wait: async (ms) => {
-      waits.push(ms);
-      clock += ms;
+/** A clock that moves only when the throttle waits. */
+function fakeTime() {
+  const time = { clock: 0, waits: [] };
+  time.now = () => time.clock;
+  time.wait = async (ms) => {
+    time.waits.push(ms);
+    // Calls already granted go out before the clock moves on.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    time.clock += ms;
+  };
+  return time;
+}
+
+test('SCB is asked at most ten times per ten seconds, however many towns ask', async () => {
+  const time = fakeTime();
+  const sentAt = [];
+  const scb = fakeScb([]);
+  const population = createScbPopulation(
+    async (url) => {
+      sentAt.push(time.clock);
+      return scb(url);
     },
-  });
-  // Each read fails at its table search, which is then asked again: three
-  // towns are fifteen calls.
-  for (let i = 0; i < 3; i += 1) await scb.municipalityFigures('1980');
-  assert.ok(waits.length > 0, 'the eleventh call waits for the window');
-  assert.ok(waits.every((ms) => ms <= 10_000));
+    { now: time.now, wait: time.wait, laterQueueMax: Infinity },
+  );
+  const answers = await Promise.all(
+    ['1980', '1980', '1980', '1980'].map((code) =>
+      population.municipalityFigures(code),
+    ),
+  );
+  assert.ok(answers.every(({ failed }) => failed.length === 0));
+  assert.ok(sentAt.length > 20, 'enough calls to need the window');
+  for (const start of sentAt)
+    assert.ok(
+      sentAt.filter((at) => at >= start && at < start + 10_000).length <= 10,
+      `more than ten calls in the ten seconds from ${start}`,
+    );
+});
+
+test('the town population goes before the further figures, which are turned away when the line is full', async () => {
+  const time = fakeTime();
+  const order = [];
+  const scb = fakeScb([]);
+  const population = createScbPopulation(
+    async (url) => {
+      order.push(url.includes('TAB6473') ? 'figure' : 'other');
+      return url.includes('/tables?') && url.includes('Folkm')
+        ? { tables: [] }
+        : scb(url);
+    },
+    { now: time.now, wait: time.wait, laterQueueMax: 3 },
+  );
+  const figures = [1, 2, 3, 4, 5].map(() =>
+    population.municipalityFigures('1980'),
+  );
+  // The fourth and fifth town find the line full at once.
+  const answers = await Promise.all(figures);
+  const turnedAway = answers.filter(({ failed }) =>
+    failed.some((failure) => /queue full/.test(failure)),
+  );
+  assert.ok(turnedAway.length >= 2, 'a full line answers at once');
+  // A population read asked while figures wait is sent before them.
+  const time2 = fakeTime();
+  const sent = [];
+  const busy = createScbPopulation(
+    async (url) => {
+      sent.push(
+        url.includes('/tables?') && /Folkm/.test(url) ? 'town' : 'figure',
+      );
+      return url.includes('/tables?') && /Folkm/.test(url)
+        ? { tables: [] }
+        : scb(url);
+    },
+    { now: time2.now, wait: time2.wait, limit: 1, windowMs: 1000 },
+  );
+  const slow = busy.municipalityFigures('1980');
+  const town = busy.municipalityPopulation('1980').catch(() => null);
+  await Promise.all([slow, town]);
+  assert.ok(sent.indexOf('town') < 3, `the town read waited: ${sent.join()}`);
 });

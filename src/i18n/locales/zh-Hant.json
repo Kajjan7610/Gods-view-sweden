@@ -5039,14 +5039,16 @@
   "Q{quarter} {year}": "{year}年第{quarter}季",
   "Born / died": "出生 / 死亡",
   "Net moves": "淨遷入",
-  "Detached house, mean price": "獨棟住宅平均價格",
   "{value} million kr": "{value}百萬克朗",
   "{count} sold · {year}": "售出{count}戶 · {year}",
   "Dwellings started, last four quarters": "新開工住宅(最近四季)",
-  "New cars that are electric": "新車中的電動車",
   "Commute in / out": "通勤流入 / 流出",
   "Most commute to": "通勤最多前往",
   "{count} people · {year}": "{count}人 · {year}",
   "Most commute in from": "通勤最多來自",
-  "{electric} of {total} (Trafikanalys) · {from}–{to} · share computed by the app": "{total}輛中{electric}輛(Trafikanalys) · {from}–{to} · 比例由應用程式計算"
+  "House, mean price": "獨棟住宅,平均價格",
+  "Newly registered cars that are fully electric": "新註冊汽車中的純電動車",
+  "{electric} of {total} · {from}–{to} · computed by the app from Trafikanalys statistics": "{total}輛中{electric}輛 · {from}–{to} · 由應用程式依 Trafikanalys 統計計算",
+  "latest quarters preliminary": "最近幾季為初步數據",
+  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "時間來自 SOS Alarm,涵蓋截至所示年份六月的十二個月;火災資料來自 MCF 的登記,涵蓋五年。"
 }

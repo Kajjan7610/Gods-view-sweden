@@ -9,6 +9,13 @@ export const SCB_API = 'https://statistikdatabasen.scb.se/api/v2';
 /** SCB's open-data page: at most ten calls per ten seconds per address. */
 export const SCB_CALLS_PER_WINDOW = 10;
 export const SCB_WINDOW_MS = 10_000;
+/** Further-figure reads that may wait at once, and for how long at most. */
+const FIGURES_QUEUE_MAX = 12;
+const FIGURES_WAIT_MS = 20_000;
+/** A table SCB no longer lists is looked for again after this long. */
+const MISSING_TABLE_RETRY_MS = 30 * 60_000;
+/** Category texts that sum others: left out where categories are added up. */
+const AGGREGATE = /^(totalt|samtliga|riket|summa|alla|utlandet|okänd)/;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 /**
  * Table titles; the newest matching table (by last period) is used. The
@@ -225,6 +232,10 @@ const placeName = (text) =>
     .replace(/\s*\([^)]*\)\s*$/, '')
     .trim();
 
+/** "Totalt", "00 Riket", "Utlandet": a category that is not one place or kind. */
+const isAggregate = (text) =>
+  AGGREGATE.test(fold(String(text ?? '').replace(/^\d+\s+/, '')));
+
 /** "2026M09" as {year, month}, or null. */
 const monthOf = (period) => {
   const match = /^(\d{4})M(\d{2})$/.exec(String(period ?? ''));
@@ -254,24 +265,55 @@ export function createScbPopulation(
     windowMs = SCB_WINDOW_MS,
     now = Date.now,
     wait = sleep,
+    laterQueueMax = FIGURES_QUEUE_MAX,
+    laterWaitMs = FIGURES_WAIT_MS,
   } = {},
 ) {
   // SCB's stricter page allows ten calls per ten seconds from one address:
-  // every read waits for its turn in that window.
+  // every read waits for its turn in that window. The town's population goes
+  // first; the further figures queue behind it in a short line that turns
+  // callers away when full, so a busy SCB never holds up the dossier.
   const sent = [];
-  let queue = Promise.resolve();
-  const getJson = (url, init) => {
-    const turn = queue.then(async () => {
-      while (sent.length >= limit) {
-        const ready = sent[0] + windowMs - now();
-        if (ready > 0) await wait(ready);
+  const waiting = { first: [], later: [] };
+  let pumping = false;
+  async function pump() {
+    if (pumping) return;
+    pumping = true;
+    try {
+      while (waiting.first.length || waiting.later.length) {
         while (sent.length && now() - sent[0] >= windowMs) sent.shift();
+        if (sent.length >= limit) {
+          await wait(Math.max(1, sent[0] + windowMs - now()));
+          continue;
+        }
+        const next = waiting.first.shift() ?? waiting.later.shift();
+        if (now() > next.deadline) {
+          next.reject(new Error('SCB busy'));
+          continue;
+        }
+        sent.push(now());
+        next.resolve();
       }
-      sent.push(now());
+    } finally {
+      pumping = false;
+    }
+  }
+  const turn = (lane) => {
+    if (lane === 'later' && waiting.later.length >= laterQueueMax)
+      return Promise.reject(new Error('SCB queue full'));
+    return new Promise((resolve, reject) => {
+      waiting[lane].push({
+        resolve,
+        reject,
+        deadline: lane === 'later' ? now() + laterWaitMs : Infinity,
+      });
+      pump();
     });
-    queue = turn.catch(() => {});
-    return turn.then(() => getJsonDirect(url, init));
   };
+  const getJson = (url, init) =>
+    turn('first').then(() => getJsonDirect(url, init));
+  const laterJson = (url, init) =>
+    turn('later').then(() => getJsonDirect(url, init));
   let town = null;
   let monthly = null;
 
@@ -348,15 +390,19 @@ export function createScbPopulation(
       const { match, search } = SCB_TABLES[name];
       const load = (async () => {
         const id = newestTable(
-          await getJson(
+          await laterJson(
             `${SCB_API}/tables?lang=sv&pageSize=50&query=${encodeURIComponent(search)}`,
           ),
           match,
         );
-        if (!id) throw new Error(`no SCB table "${name}"`);
+        if (!id) {
+          // Asked again in half an hour, not on every dossier.
+          missing.set(name, now());
+          throw new Error(`no SCB table "${name}"`);
+        }
         return {
           id,
-          meta: await getJson(`${SCB_API}/tables/${id}/metadata?lang=sv`),
+          meta: await laterJson(`${SCB_API}/tables/${id}/metadata?lang=sv`),
         };
       })().catch((error) => {
         further.delete(name);
@@ -366,6 +412,11 @@ export function createScbPopulation(
     }
     return further.get(name);
   };
+  const missing = new Map();
+  const tableFor = (name) =>
+    now() - (missing.get(name) ?? -Infinity) < MISSING_TABLE_RETRY_MS
+      ? Promise.reject(new Error(`no SCB table "${name}"`))
+      : furtherTable(name);
 
   /** The region variable and the town's code in it, or nulls. */
   const regionIn = (meta, code, labelTest = () => true) => {
@@ -378,13 +429,17 @@ export function createScbPopulation(
       : { id: null, value: null };
   };
 
+  /** A variable's codes without its totals ("totalt", "Riket"…). */
+  const partsOf = (values) =>
+    values.values.filter((_, i) => !isAggregate(values.valueTexts?.[i]));
+
   const contentsOf = (meta, pattern) =>
     codeByText(dimensionValues(meta, 'ContentsCode'), pattern) ??
     dimensionValues(meta, 'ContentsCode').values[0];
 
   /** Births, deaths and net moves in the latest month. */
   async function changes(code) {
-    const { id, meta } = await furtherTable('changes');
+    const { id, meta } = await tableFor('changes');
     const region = regionIn(meta, code);
     const kind = findDimension(meta, (_, values) =>
       values.valueTexts.some((text) => fold(text) === 'födda'),
@@ -403,12 +458,10 @@ export function createScbPopulation(
       ['ContentsCode', [contentsOf(meta, /./)]],
       ['Tid', ['top(1)']],
     ];
-    if (sex)
-      selections.push([
-        sex,
-        [codeByText(dimensionValues(meta, sex), /^totalt/)],
-      ]);
-    const answer = await getJson(dataUrl(id, selections));
+    const bothSexes = sex && codeByText(dimensionValues(meta, sex), /^totalt/);
+    if (sex && !bothSexes) return null;
+    if (sex) selections.push([sex, [bothSexes]]);
+    const answer = await laterJson(dataUrl(id, selections));
     const cells = jsonStatCells(answer);
     const read = (pick) =>
       cells.find((cell) => cell.coords[kind] === pick)?.value ?? null;
@@ -427,16 +480,18 @@ export function createScbPopulation(
 
   /** Permanent detached houses sold in the latest year, and the mean price. */
   async function houses(code) {
-    const { id, meta } = await furtherTable('houses');
+    const { id, meta } = await tableFor('houses');
     const region = regionIn(meta, code);
     const type = findDimension(meta, (label) => label.startsWith('fastighet'));
-    if (!region.id || !type) return null;
+    const homes =
+      type && codeByText(dimensionValues(meta, type), /^permanentbostad/);
+    if (!region.id || !homes) return null;
     const count = contentsOf(meta, /^antal/);
     const price = contentsOf(meta, /^köpeskilling, medelvärde/);
-    const answer = await getJson(
+    const answer = await laterJson(
       dataUrl(id, [
         [region.id, [region.value]],
-        [type, [codeByText(dimensionValues(meta, type), /^permanentbostad/)]],
+        [type, [homes]],
         ['ContentsCode', [count, price]],
         ['Tid', ['top(1)']],
       ]),
@@ -454,7 +509,7 @@ export function createScbPopulation(
 
   /** Dwellings started in new buildings in the latest four quarters. */
   async function starts(code) {
-    const { id, meta } = await furtherTable('starts');
+    const { id, meta } = await tableFor('starts');
     const region = regionIn(meta, code);
     const type = findDimension(meta, (label) => label.startsWith('hustyp'));
     if (!region.id) return null;
@@ -463,11 +518,11 @@ export function createScbPopulation(
       ['ContentsCode', [contentsOf(meta, /^påbörjade/)]],
       ['Tid', ['top(4)']],
     ];
-    if (type) selections.push([type, dimensionValues(meta, type).values]);
-    const answer = await getJson(dataUrl(id, selections));
+    if (type) selections.push([type, partsOf(dimensionValues(meta, type))]);
+    const answer = await laterJson(dataUrl(id, selections));
     const cells = jsonStatCells(answer);
     const quarters = dimensionValues(answer, 'Tid').values;
-    if (!quarters.length) return null;
+    if (!quarters.length || !cells.length) return null;
     return {
       from: quarters[0],
       to: quarters.at(-1),
@@ -477,7 +532,7 @@ export function createScbPopulation(
 
   /** New cars in the latest twelve months, and how many were electric. */
   async function cars(code) {
-    const { id, meta } = await furtherTable('cars');
+    const { id, meta } = await tableFor('cars');
     const region = regionIn(meta, code);
     const fuel = findDimension(meta, (_, values) =>
       values.valueTexts.some((text) => fold(text) === 'el'),
@@ -485,10 +540,10 @@ export function createScbPopulation(
     if (!region.id || !fuel) return null;
     const fuels = dimensionValues(meta, fuel);
     const electric = codeByText(fuels, /^el$/);
-    const answer = await getJson(
+    const answer = await laterJson(
       dataUrl(id, [
         [region.id, [region.value]],
-        [fuel, fuels.values],
+        [fuel, partsOf(fuels)],
         ['ContentsCode', [contentsOf(meta, /./)]],
         ['Tid', ['top(12)']],
       ]),
@@ -511,18 +566,17 @@ export function createScbPopulation(
    * way. Two reads: the town as home, and the town as workplace.
    */
   async function commuting(code) {
-    const { id, meta } = await furtherTable('commuting');
+    const { id, meta } = await tableFor('commuting');
     const home = regionIn(meta, code, (label) => label.includes('bostad'));
     const work = regionIn(meta, code, (label) =>
       label.includes('arbetsställe'),
     );
     const sex = findDimension(meta, (label) => label.startsWith('kön'));
-    if (!home.id || !work.id) return null;
-    const total = sex
-      ? [[sex, [codeByText(dimensionValues(meta, sex), /^totalt/)]]]
-      : [];
+    const bothSexes = sex && codeByText(dimensionValues(meta, sex), /^totalt/);
+    if (!home.id || !work.id || (sex && !bothSexes)) return null;
+    const total = sex ? [[sex, [bothSexes]]] : [];
     const read = (selections) =>
-      getJson(
+      laterJson(
         dataUrl(id, [
           ...selections,
           ...total,
@@ -546,11 +600,11 @@ export function createScbPopulation(
       return jsonStatCells(answer)
         .filter((cell) => cell.coords[other] !== self)
         .map((cell) => ({
-          name: placeName(
-            names.valueTexts[names.values.indexOf(cell.coords[other])],
-          ),
+          text: names.valueTexts[names.values.indexOf(cell.coords[other])],
           count: cell.value,
         }))
+        .filter(({ text }) => !isAggregate(text))
+        .map(({ text, count }) => ({ name: placeName(text), count }))
         .sort((a, b) => b.count - a.count);
     };
     const outFlows = flows(out, work.id, work.value);
@@ -579,7 +633,7 @@ export function createScbPopulation(
     const parts = { changes, houses, starts, cars, commuting };
     const figures = {};
     const failed = [];
-    // One table at a time: SCB allows 30 requests per 10 seconds, and the
+    // One table at a time: SCB allows ten requests per ten seconds, and the
     // first town also reads every table's metadata.
     for (const [name, read] of Object.entries(parts)) {
       try {

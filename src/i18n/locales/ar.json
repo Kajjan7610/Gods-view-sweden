@@ -5589,14 +5589,16 @@
   "Q{quarter} {year}": "الربع {quarter} {year}",
   "Born / died": "المواليد / الوفيات",
   "Net moves": "صافي الهجرة",
-  "Detached house, mean price": "منزل مستقل، متوسط السعر",
   "{value} million kr": "{value} مليون كرونة",
   "{count} sold · {year}": "بيع {count} · {year}",
   "Dwellings started, last four quarters": "المساكن التي بدأ بناؤها، آخر أربعة أرباع",
-  "New cars that are electric": "السيارات الجديدة الكهربائية",
   "Commute in / out": "يتنقلون إليها / منها",
   "Most commute to": "أكثرهم يتنقل إلى",
   "{count} people · {year}": "{count} شخصًا · {year}",
   "Most commute in from": "أكثرهم يأتي من",
-  "{electric} of {total} (Trafikanalys) · {from}–{to} · share computed by the app": "{electric} من {total} (Trafikanalys) · {from}–{to} · النسبة من حساب التطبيق"
+  "House, mean price": "منزل، متوسط السعر",
+  "Newly registered cars that are fully electric": "السيارات المسجلة حديثًا الكهربائية بالكامل",
+  "{electric} of {total} · {from}–{to} · computed by the app from Trafikanalys statistics": "{electric} من {total} · {from}–{to} · من حساب التطبيق استنادًا إلى إحصاءات Trafikanalys",
+  "latest quarters preliminary": "الأرباع الأخيرة أولية",
+  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "الأوقات من SOS Alarm وتغطي الأشهر الاثني عشر حتى يونيو من السنة المعروضة؛ والحرائق من سجل MCF وتغطي خمس سنوات."
 }

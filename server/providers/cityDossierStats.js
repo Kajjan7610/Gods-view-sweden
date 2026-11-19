@@ -19,8 +19,9 @@ export const STAT_KPIS = Object.freeze([
   ['reportedCrimes', 'N07540'],
   ['violentCrimes', 'N07403'],
   // The rescue service: the median minutes from the 112 call to the first
-  // unit on site and of the alarm handling, and building fires that spread
-  // beyond where they started (MCF's register via Kolada).
+  // unit on site and of the alarm handling (SOS Alarm, the twelve months to
+  // June), and building fires that spread beyond where they started over
+  // five years (MCF's register of rescue operations); all via Kolada.
   ['rescueResponse', 'U07442'],
   ['alarmHandling', 'U07440'],
   ['spreadingFires', 'N07415'],

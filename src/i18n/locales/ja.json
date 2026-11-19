@@ -5039,14 +5039,16 @@
   "Q{quarter} {year}": "{year}年第{quarter}四半期",
   "Born / died": "出生 / 死亡",
   "Net moves": "転入超過",
-  "Detached house, mean price": "戸建て住宅の平均価格",
   "{value} million kr": "{value}百万クローナ",
   "{count} sold · {year}": "{count}件売却 · {year}",
   "Dwellings started, last four quarters": "着工住宅数(直近4四半期)",
-  "New cars that are electric": "新車のうち電気自動車",
   "Commute in / out": "通勤流入 / 流出",
   "Most commute to": "最も多い通勤先",
   "{count} people · {year}": "{count}人 · {year}",
   "Most commute in from": "最も多い通勤元",
-  "{electric} of {total} (Trafikanalys) · {from}–{to} · share computed by the app": "{total}台中{electric}台(Trafikanalys) · {from}–{to} · 割合はアプリで計算"
+  "House, mean price": "戸建て住宅、平均価格",
+  "Newly registered cars that are fully electric": "新規登録車のうち完全電気自動車",
+  "{electric} of {total} · {from}–{to} · computed by the app from Trafikanalys statistics": "{total}台中{electric}台 · {from}–{to} · Trafikanalysの統計からアプリで計算",
+  "latest quarters preliminary": "直近の四半期は速報値",
+  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "時間はSOS Alarmによるもので、表示年の6月までの12か月間です。火災はMCFの記録によるもので、5年間を対象とします。"
 }
