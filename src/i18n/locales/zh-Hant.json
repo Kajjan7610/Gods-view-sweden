@@ -5025,5 +5025,9 @@
   "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg": "約 200 個行程時間路段和 1 200 個測量點，斯德哥爾摩和哥德堡",
   "Travel time · {name}": "行程時間 · {name}",
   "Measuring point · {direction}": "測量點 · {direction}",
-  "Measuring point": "測量點"
+  "Measuring point": "測量點",
+  "Traffic around the town": "城鎮周邊交通",
+  "Trafikverket measures no queues here; its incidents within {km} km:": "Trafikverket 在此處不測量壅塞；其 {km} 公里內的事件：",
+  "No incidents right now": "目前沒有事件",
+  "{count} more on the Road Conditions layer": "道路狀況圖層中還有 {count} 則"
 }

@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   INCIDENT_KINDS,
   incidentKind,
+  incidentsNear,
   normalizeDeviation,
   normalizeRoadCondition,
   normalizeRoadSnapshot,
@@ -262,4 +263,62 @@ test('flash ice and a vehicle on fire are hazards, not grey leftovers', () => {
   assert.equal(incidentKind('Olycka', 'Brand i fordon').id, 'accident');
   assert.equal(incidentKind('Väglag', 'Vägen avstängd').id, 'closure');
   assert.equal(incidentKind('Något nytt', '').id, 'other');
+});
+
+test('the incidents near a town: most serious first, routine notices left out', () => {
+  const row = (id, kind, point, extra = {}) => ({
+    id,
+    kind,
+    point,
+    lines: [],
+    code: null,
+    header: null,
+    type: null,
+    road: null,
+    location: null,
+    severity: null,
+    severityText: null,
+    ...extra,
+  });
+  const vasteras = { latitude: 59.61, longitude: 16.55 };
+  const near = incidentsNear(
+    {
+      incidents: [
+        row('a', 'roadwork', [16.56, 59.6], { code: 'Vägarbete', road: 'E18' }),
+        row('b', 'minor', [16.55, 59.61], {
+          code: 'Hastighetsbegränsning gäller',
+        }),
+        row('c', 'accident', [16.6, 59.62], {
+          code: 'Olycka',
+          road: 'E20',
+          location: 'Trafikplats Västerås västra',
+          severityText: 'Stor påverkan',
+        }),
+        row('d', 'ferry', [16.55, 59.6]),
+        // Far away by its point, but its stretch passes the town.
+        row('e', 'closure', [17.5, 59.9], {
+          header: 'Vägen avstängd',
+          lines: [
+            [
+              [17.5, 59.9],
+              [16.57, 59.62],
+            ],
+          ],
+        }),
+        row('f', 'accident', [18.07, 59.33]),
+      ],
+    },
+    vasteras,
+  );
+  assert.equal(near.count, 3);
+  assert.deepEqual(
+    near.items.map((item) => item.kind),
+    ['closure', 'accident', 'roadwork'],
+  );
+  assert.equal(near.items[1].title, 'Olycka');
+  assert.equal(near.items[1].road, 'E20');
+  assert.equal(near.items[1].severity, 'Stor påverkan');
+  assert.equal(near.items[0].title, 'Vägen avstängd');
+  assert.equal(incidentsNear({ incidents: [] }, vasteras).count, 0);
+  assert.equal(incidentsNear(null, vasteras), null);
 });

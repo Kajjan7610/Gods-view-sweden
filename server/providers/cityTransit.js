@@ -7,13 +7,16 @@ import { createSwedaviaFlights } from './cityFlights.js';
 import { createLocalDepartures } from './cityLocalTransit.js';
 import { createAirportIndex } from './ourAirports.js';
 import { queuesNear } from '../../src/layers/roadQueues/records.js';
+import { incidentsNear } from '../../src/layers/roadConditions/records.js';
 
 // The city dossier's live transport: the next departures from the town's
 // railway station (Trafikverket, CC0, the existing TRAFIKVERKET_API_KEY),
 // the next buses, trams, metro trains and boats from the town's busiest stop
 // (Trafiklab Realtime, cityLocalTransit.js), the nearby Swedavia airports'
 // flights (cityFlights.js) and the queues Trafikverket measures around the
-// town (the queues layer's shared snapshot, trafikverketQueues.js). Keys stay
+// town (the queues layer's shared snapshot, trafikverketQueues.js) or, where
+// it measures none, its incidents near the town (the road conditions layer's
+// snapshot, trafikverketRoads.js). Keys stay
 // server-side; each part is simply absent without its key. Stations are read
 // once a day, departures every minute.
 const STATIONS_TTL_MS = 24 * 60 * 60_000;
@@ -175,6 +178,8 @@ export function cityTransitProxy({
   airportIndex = createAirportIndex({ fetchImpl, now }),
   // The queues layer's snapshot: () => Promise<{routes, points}|null>.
   queues = async () => null,
+  // The road conditions layer's snapshot: () => Promise<{incidents}|null>.
+  roads = async () => null,
 } = {}) {
   let stations = null;
   const departures = new Map();
@@ -312,6 +317,16 @@ export function cityTransitProxy({
       localTransit.nearby(point, town),
       queues().then((snapshot) => queuesNear(snapshot, point)),
     ]);
+    // Where Trafikverket measures no queues, its incidents around the town
+    // say what is going on there instead; nothing is read where it does.
+    const [near] =
+      road.status === 'fulfilled' && road.value === null
+        ? await Promise.allSettled([
+            roads().then((snapshot) => incidentsNear(snapshot, point)),
+          ])
+        : [{ status: 'fulfilled', value: null }];
+    if (near.status === 'rejected')
+      console.warn(`[city-transit] incidents: ${near.reason?.message}`);
     for (const [label, result] of [
       ['trains', rail],
       ['flights', air],
@@ -338,6 +353,9 @@ export function cityTransitProxy({
       // Null where Trafikverket measures nothing near the town.
       queues:
         road.status === 'fulfilled' ? road.value : { items: [], error: true },
+      // Null where queues are listed, or without the key.
+      incidents:
+        near.status === 'fulfilled' ? near.value : { items: [], error: true },
       fetchedAt: now(),
     });
   }

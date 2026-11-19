@@ -92,6 +92,8 @@ function localProviderPlugins({
   // One snapshot of Trafikverket's measured traffic for the queues layer and
   // the city dossier.
   const queues = trafikverketQueuesProxy();
+  // The road conditions layer's snapshot, shared with the city dossier too.
+  const roads = trafikverketRoadsProxy();
   return [
     openSkyProxy(),
     celestrakProxy(),
@@ -123,7 +125,7 @@ function localProviderPlugins({
     mapillaryProxy(),
     firePerimetersProxy(),
     gnssIntegrityProxy(),
-    trafikverketRoadsProxy(),
+    roads,
     trafikverketWeatherProxy(),
     trafikverketFerriesProxy(),
     queues,
@@ -145,7 +147,7 @@ function localProviderPlugins({
     speedCamerasProxy(),
     riverFlowProxy(),
     cityDossierProxy(),
-    cityTransitProxy({ queues: queues.read }),
+    cityTransitProxy({ queues: queues.read, roads: roads.read }),
     aviationWeatherProxy(),
     krisinformationProxy(),
     auroraOutlookProxy(),

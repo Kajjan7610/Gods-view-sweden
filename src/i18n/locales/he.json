@@ -5245,5 +5245,9 @@
   "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg": "כ-200 מקטעי זמן נסיעה ו-1,200 נקודות מדידה, שטוקהולם ויטבורג",
   "Travel time · {name}": "זמן נסיעה · {name}",
   "Measuring point · {direction}": "נקודת מדידה · {direction}",
-  "Measuring point": "נקודת מדידה"
+  "Measuring point": "נקודת מדידה",
+  "Traffic around the town": "התנועה סביב העיר",
+  "Trafikverket measures no queues here; its incidents within {km} km:": "Trafikverket אינה מודדת פקקים כאן; האירועים שלה בטווח {km} ק״מ:",
+  "No incidents right now": "אין אירועים כרגע",
+  "{count} more on the Road Conditions layer": "עוד {count} בשכבת מצב הכבישים"
 }

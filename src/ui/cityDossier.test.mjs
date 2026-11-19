@@ -494,6 +494,43 @@ test('a failed read of the queues is named, not shown as an empty list', async (
   assert.equal(view.now.failed, 'No answer from: Traffic');
 });
 
+test('without measured queues the dossier lists the incidents around the town', async (t) => {
+  const { state, visit } = harness(t);
+  state.panelOpen = true;
+  state.bodies['/api/city-transit'] = {
+    trains: null,
+    flights: null,
+    queues: null,
+    incidents: {
+      count: 3,
+      radiusKm: 15,
+      items: [
+        {
+          kind: 'accident',
+          title: 'Olycka',
+          road: 'E18',
+          location: 'Trafikplats Västerås västra',
+          severity: 'Stor påverkan',
+        },
+      ],
+    },
+  };
+  await visit(TOWNS.arboga);
+  state.actions.setTab('now');
+  await settle();
+  const incidents = state.view.now.incidents;
+  assert.equal(state.view.now.queues, null);
+  assert.equal(incidents.items[0].title, 'E18 · Olycka');
+  assert.equal(incidents.items[0].status, 'Accident');
+  assert.equal(
+    incidents.items[0].detail,
+    'Trafikplats Västerås västra · Stor påverkan',
+  );
+  assert.equal(incidents.more, '2 more on the Road Conditions layer');
+  assert.match(incidents.note, /15 km/);
+  assert.match(state.view.source, /Trafikverket/);
+});
+
 test("a sight's picture names its Wikimedia Commons page too", async () => {
   const { commonsPage } = await import('./cityDossier.js');
   // Wikidata names a picture by its file path, over plain http.

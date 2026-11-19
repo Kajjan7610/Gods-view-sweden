@@ -328,3 +328,67 @@ export function normalizeRoadSnapshot(payload, nowMs) {
       records.length > MAX_CONDITIONS || incidents.length >= MAX_INCIDENTS,
   };
 }
+
+/** The kinds the city dossier lists around a town, most serious first. */
+const NEARBY_KINDS = Object.freeze([
+  'closure',
+  'accident',
+  'obstacle',
+  'important',
+  'restriction',
+  'roadwork',
+  'message',
+]);
+
+const kmBetween = ([lon1, lat1], [lon2, lat2]) => {
+  const rad = Math.PI / 180;
+  const a =
+    Math.sin(((lat2 - lat1) * rad) / 2) ** 2 +
+    Math.cos(lat1 * rad) *
+      Math.cos(lat2 * rad) *
+      Math.sin(((lon2 - lon1) * rad) / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(a));
+};
+
+/**
+ * The incidents around a town for the city dossier where no queues are
+ * measured: within `radiusKm` of the town by their point or any vertex of
+ * their stretch, most serious kind first. Speed limits, lane closures and
+ * ferries are left out, as on the map by default.
+ * @param {{incidents: object[]}|null} snapshot
+ * @param {{latitude: number, longitude: number}} town
+ * @param {{radiusKm?: number, max?: number}} [options]
+ * @returns {{count: number, radiusKm: number, items: object[]}|null}
+ */
+export function incidentsNear(snapshot, town, { radiusKm = 15, max = 4 } = {}) {
+  if (!Array.isArray(snapshot?.incidents)) return null;
+  const at = [town.longitude, town.latitude];
+  const near = [];
+  for (const row of snapshot.incidents) {
+    const rank = NEARBY_KINDS.indexOf(row.kind);
+    if (rank < 0) continue;
+    let distanceKm = kmBetween(row.point, at);
+    for (const line of row.lines ?? [])
+      for (const vertex of line)
+        distanceKm = Math.min(distanceKm, kmBetween(vertex, at));
+    if (distanceKm <= radiusKm) near.push({ row, rank, distanceKm });
+  }
+  near.sort(
+    (a, b) =>
+      a.rank - b.rank ||
+      (b.row.severity ?? 0) - (a.row.severity ?? 0) ||
+      a.distanceKm - b.distanceKm,
+  );
+  return {
+    count: near.length,
+    radiusKm,
+    items: near.slice(0, max).map(({ row, distanceKm }) => ({
+      kind: row.kind,
+      title: row.code || row.header || row.type,
+      road: row.road,
+      location: row.location,
+      severity: row.severityText,
+      distanceKm: Math.round(distanceKm * 10) / 10,
+    })),
+  };
+}

@@ -75,6 +75,16 @@ const LOCAL_MODES = Object.freeze({
   METRO: msg('Metro {line}'),
   BOAT: msg('Boat {line}'),
 });
+/** Trafikverket's incident kinds, as the road conditions layer names them. */
+const INCIDENT_LABELS = Object.freeze({
+  closure: msg('Road closed'),
+  accident: msg('Accident'),
+  obstacle: msg('Obstacle'),
+  important: msg('Important traffic info'),
+  restriction: msg('Restriction'),
+  roadwork: msg('Roadwork'),
+  message: msg('Traffic message'),
+});
 /** Trafikverket's verdict on a stretch that is not flowing freely. */
 const QUEUE_LABELS = Object.freeze({
   heavy: msg('Slow traffic'),
@@ -1084,6 +1094,7 @@ export function createCityDossier({
         live?.transit?.flights,
         live?.transit?.local,
         live?.transit?.queues,
+        live?.transit?.incidents,
       ].some((part) => part?.error === true));
 
   /** "No answer from: Polisen, Traffic", or '' when every part answered. */
@@ -1183,6 +1194,7 @@ export function createCityDossier({
       trains: trainsView(live.transit?.trains),
       local: localView(live.transit?.local),
       queues: queuesView(live.transit?.queues),
+      incidents: incidentsView(live.transit?.incidents),
       flights: flightsView(live.transit?.flights),
       kris: krisView(live.kris),
       aurora: auroraView(live.aurora),
@@ -1307,6 +1319,37 @@ export function createCityDossier({
         ]
           .filter(Boolean)
           .join(' · '),
+      })),
+    };
+  }
+
+  /**
+   * Where Trafikverket measures no queues: its incidents around the town,
+   * most serious first; null where queues are listed or without the key.
+   */
+  function incidentsView(incidents) {
+    // A read that failed is no answer, not a quiet road.
+    if (!incidents || incidents.error) return null;
+    return {
+      title: t('Traffic around the town'),
+      note: t(
+        'Trafikverket measures no queues here; its incidents within {km} km:',
+        {
+          km: incidents.radiusKm,
+        },
+      ),
+      empty: incidents.items.length ? '' : t('No incidents right now'),
+      more:
+        incidents.count > incidents.items.length
+          ? t('{count} more on the Road Conditions layer', {
+              count: incidents.count - incidents.items.length,
+            })
+          : '',
+      items: incidents.items.map((row, index) => ({
+        key: `${index}:${row.title}`,
+        title: [row.road, row.title].filter(Boolean).join(' · '),
+        status: INCIDENT_LABELS[row.kind] ? t(INCIDENT_LABELS[row.kind]) : '',
+        detail: [row.location, row.severity].filter(Boolean).join(' · '),
       })),
     };
   }
@@ -1581,7 +1624,8 @@ export function createCityDossier({
       source: [
         'SCB · Kolada · Valmyndigheten · Wikidata · Wikipedia · SMHI · Polisen', // i18n-ignore: provider names
         live?.transit?.trains?.station ||
-        Number.isFinite(live?.transit?.queues?.routes)
+        Number.isFinite(live?.transit?.queues?.routes) ||
+        Number.isFinite(live?.transit?.incidents?.count)
           ? 'Trafikverket' // i18n-ignore: provider name
           : null,
         live?.transit?.flights?.airports?.length ? 'Swedavia' : null, // i18n-ignore: provider name
@@ -1590,7 +1634,8 @@ export function createCityDossier({
         live?.aurora?.level ? 'NOAA SWPC' : null, // i18n-ignore: provider name
         live?.cameras &&
         !live?.transit?.trains?.station &&
-        !Number.isFinite(live?.transit?.queues?.routes)
+        !Number.isFinite(live?.transit?.queues?.routes) &&
+        !Number.isFinite(live?.transit?.incidents?.count)
           ? 'Trafikverket' // i18n-ignore: provider name
           : null,
       ]

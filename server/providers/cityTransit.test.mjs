@@ -237,6 +237,51 @@ test('the queues around the town come from the shared Trafikverket snapshot', as
   );
 });
 
+test('where no queues are measured, the incidents near the town are listed instead', async () => {
+  const fetchImpl = async () => new Response('', { status: 404 });
+  let roadsRead = 0;
+  const roads = async () => {
+    roadsRead += 1;
+    return {
+      incidents: [
+        {
+          id: 'x',
+          kind: 'accident',
+          point: [16.56, 59.61],
+          lines: [],
+          code: 'Olycka',
+          road: 'E18',
+        },
+      ],
+    };
+  };
+  const queues = async () => ({
+    routes: [
+      {
+        name: 'Sotartunneln',
+        status: 'heavy',
+        lines: [
+          [
+            [18.05, 59.31],
+            [18.06, 59.312],
+          ],
+        ],
+      },
+    ],
+    points: [],
+  });
+  const answer = route({ fetchImpl, env: {}, queues, roads });
+  const vasteras = (await answer('/?lat=59.61&lon=16.55')).body;
+  assert.equal(vasteras.queues, null);
+  assert.equal(vasteras.incidents.count, 1);
+  assert.equal(vasteras.incidents.items[0].road, 'E18');
+  // Where queues are measured, the incidents are not read at all.
+  const stockholm = (await answer('/?lat=59.33&lon=18.07')).body;
+  assert.equal(stockholm.queues.routes, 1);
+  assert.equal(stockholm.incidents, null);
+  assert.equal(roadsRead, 1);
+});
+
 test('the airport board route: one Swedavia airport, today or tomorrow', async () => {
   const calls = [];
   const fetchImpl = async (url) => {

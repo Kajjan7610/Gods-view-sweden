@@ -150,6 +150,13 @@ watch(
               <p v-if="d.now.queues.empty" class="city-dossier-note">{{ d.now.queues.empty }}</p>
               <div v-for="row in d.now.queues.items" :key="row.key" class="city-dossier-jam"><span>{{ row.title }}<em>{{ row.status }}</em></span><small>{{ row.detail }}</small></div>
             </div>
+            <div v-if="d.now.incidents" class="city-dossier-jams">
+              <strong>{{ d.now.incidents.title }}</strong>
+              <p class="city-dossier-note">{{ d.now.incidents.note }}</p>
+              <p v-if="d.now.incidents.empty" class="city-dossier-note">{{ d.now.incidents.empty }}</p>
+              <div v-for="row in d.now.incidents.items" :key="row.key" class="city-dossier-jam"><span>{{ row.title }}<em>{{ row.status }}</em></span><small v-if="row.detail">{{ row.detail }}</small></div>
+              <p v-if="d.now.incidents.more" class="city-dossier-note">{{ d.now.incidents.more }}</p>
+            </div>
             <div v-for="airport in d.now.flights || []" :key="airport.key" class="city-dossier-trains city-dossier-flights">
               <div class="city-dossier-flights-head">
                 <strong>{{ airport.title }}</strong>

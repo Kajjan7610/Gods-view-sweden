@@ -405,6 +405,19 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-19 (trafiken runt orter utan kömätning)
+- Trafikverket mäter köer bara runt Stockholm och Göteborg (och två
+  sträckor vid Malmö). I andra orter visar stadskortets flik Nu i stället
+  "Trafiken runt staden": Trafikverkets aktuella händelser inom 15 km,
+  allvarligast först (avstängd väg, olycka, hinder, viktig
+  trafikinformation, restriktion, vägarbete, trafikmeddelande), med väg,
+  plats och påverkan, och hur många fler som finns i lagret Väglag.
+  Hastighetsbegränsningar, körfältsavstängningar och färjor räknas inte
+  med, precis som på kartan.
+- Händelserna kommer ur samma hämtning som lagret Väglag (cachad tre
+  minuter på servern) och läses bara där inga köer mäts. Där köer finns
+  visas köerna som förut.
+
 ### 2026-11-19 (trailrarna med egen musik)
 - Trailermusiken var gjord med Eleven Music på ElevenLabs gratisplan,
   som inte tillåter att musik laddas ner (kontot har aldrig haft en betald
