@@ -5280,7 +5280,7 @@
   "falling": "יורד",
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "דגימה {date}. כל מגמה משווה את הדגימה האחרונה לשתיים שלפניה באותו מתקן. דגימה בודדת יכולה להשתנות מאוד; זו אינה ספירה של חולים, וערים אינן מושוות. שיטת המעבדה עדיין בפיתוח.",
   "trends computed by the app": "המגמות חושבו על ידי האפליקציה",
-  "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "רעידות האדמה מגיעות מהזנה החיה של הסקר הגאולוגי של ארה״ב, והקטנות בארצות הנורדיות מ-EMSC.",
-  "Nordic earthquakes (CC BY 4.0)": "רעידות אדמה בארצות הנורדיות (CC BY 4.0)",
-  "The sky over Kiruna now (all-sky camera)": "השמיים מעל קירונה עכשיו (מצלמת כל-שמיים)"
+  "The sky over Kiruna (all-sky camera, {km} km away)": "השמיים מעל קירונה (מצלמת כל-שמיים, {km} ק״מ מכאן)",
+  "Earthquakes come from the U.S. Geological Survey’s live feed, and those in northern Europe (54–72° N, 4–33° E) from the EMSC.": "רעידות האדמה מגיעות מהזנה החיה של הסקר הגאולוגי של ארה״ב, ואלה בצפון אירופה (‎54–72° צפון, 4–33° מזרח) מ-EMSC.",
+  "Earthquakes in northern Europe (CC BY 4.0)": "רעידות אדמה בצפון אירופה (CC BY 4.0)"
 }

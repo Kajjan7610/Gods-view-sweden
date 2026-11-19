@@ -888,9 +888,21 @@ test("Kiruna's all-sky camera: near Kiruna and only while its sky is dark", asyn
   state.actions.setTab('now');
   await settle();
   const camera = state.view.now.aurora.camera;
-  assert.match(camera.src, /^\/api\/kiruna-allsky\?minute=\d+$/);
-  assert.match(camera.credit, /^Data from Kiruna allsky camera provided by/);
-  assert.equal(camera.licenseText, 'this license');
+  assert.match(camera.src, /^\/api\/kiruna-allsky\?at=\d+$/);
+  assert.equal(camera.title, 'The sky over Kiruna (all-sky camera, 8 km away)');
+  // The IRF's credit in its own words, with its three links.
+  assert.equal(
+    camera.credit.map(([text]) => text).join(''),
+    'Data from Kiruna allsky camera provided by Kiruna Atmospheric and Geophysical Observatory at Swedish Institute of Space Physics under this license.',
+  );
+  assert.deepEqual(
+    camera.credit.filter(([, url]) => url).map(([, url]) => url),
+    [
+      'https://firmament.irf.se',
+      'https://www.irf.se',
+      'https://www.irf.se/en/forskning/kago/license/',
+    ],
+  );
   // Far from Kiruna: the camera's sky is not the town's.
   await visit(TOWNS.arboga);
   state.actions.setTab('now');

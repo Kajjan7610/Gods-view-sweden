@@ -5170,7 +5170,7 @@
   "Influenza B": "Influenza B",
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Probe {date}. Jeder Trend vergleicht die neueste Probe mit den zwei vorherigen derselben Kläranlage. Eine einzelne Probe kann stark schwanken; das ist keine Zahl der Erkrankten, und Orte werden nicht verglichen. Die Methode des Labors wird noch entwickelt.",
   "trends computed by the app": "Trends von der App berechnet",
-  "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "Erdbeben stammen aus dem Live-Feed des U.S. Geological Survey, die kleinen in den nordischen Ländern vom EMSC.",
-  "Nordic earthquakes (CC BY 4.0)": "Erdbeben in Nordeuropa (CC BY 4.0)",
-  "The sky over Kiruna now (all-sky camera)": "Der Himmel über Kiruna jetzt (Allsky-Kamera)"
+  "The sky over Kiruna (all-sky camera, {km} km away)": "Der Himmel über Kiruna (Allsky-Kamera, {km} km entfernt)",
+  "Earthquakes come from the U.S. Geological Survey’s live feed, and those in northern Europe (54–72° N, 4–33° E) from the EMSC.": "Erdbeben stammen aus dem Live-Feed des U.S. Geological Survey, die in Nordeuropa (54–72° N, 4–33° O) vom EMSC.",
+  "Earthquakes in northern Europe (CC BY 4.0)": "Erdbeben in Nordeuropa (CC BY 4.0)"
 }

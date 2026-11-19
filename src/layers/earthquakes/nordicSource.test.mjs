@@ -10,7 +10,9 @@ import {
 
 const usgs = [
   { stableId: 'us1', lat: 35, lon: 140, mag: 5 },
-  { stableId: 'us2', lat: 62, lon: 5, mag: 2.8 },
+  { stableId: 'us2', lat: 62, lon: 5, mag: 2.8, time: 30_000 },
+  // In the box but not in the EMSC's answer (newer, or typed otherwise).
+  { stableId: 'us3', lat: 60, lon: 20, mag: 3.1, time: 90_000_000 },
 ];
 const emsc = [
   {
@@ -26,10 +28,15 @@ const emsc = [
   { id: 'e2', lat: 40, lon: 20, mag: 3, time: 2, region: 'Greece' },
 ];
 
-test('inside the Nordic box the EMSC list replaces USGS; outside, USGS stands', () => {
+test('a quake in both lists is drawn once, from the EMSC; one only USGS has stays', () => {
   assert.deepEqual(
     mergeNordicRows(usgs, emsc).map((row) => row.stableId),
-    ['us1', 'emsc:e1'],
+    ['us1', 'us3', 'emsc:e1'],
+  );
+  // An empty EMSC answer hides nothing.
+  assert.deepEqual(
+    mergeNordicRows(usgs, []).map((row) => row.stableId),
+    ['us1', 'us2', 'us3'],
   );
   // No EMSC answer: USGS's rows as they were.
   assert.equal(mergeNordicRows(usgs, null), usgs);
@@ -50,5 +57,5 @@ test('the EMSC route failing leaves the world feed working', async () => {
       return new Response(JSON.stringify({ events: emsc }));
     },
   });
-  assert.equal((await working.getSnapshot()).length, 2);
+  assert.equal((await working.getSnapshot()).length, 3);
 });

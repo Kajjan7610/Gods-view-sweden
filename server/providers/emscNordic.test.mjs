@@ -32,10 +32,12 @@ const ANSWER = {
     feature({ unid: 'a' }),
     feature({ unid: 'b', evtype: 'km', flynn_region: 'NORTHERN SWEDEN' }),
     feature({ unid: 'c', evtype: '' }),
+    feature({ unid: 'e', mag: null }),
     feature({
       unid: 'd',
       evtype: 'fe',
-      time: '2026-11-19T05:00:00Z',
+      // No zone written: still UTC.
+      time: '2026-11-19T05:00:00',
       flynn_region: 'NORWAY-SWEDEN BORDER REG.',
     }),
   ],
@@ -61,6 +63,7 @@ test('earthquakes only: mining blasts and untyped events are left out', () => {
   );
   assert.equal(events[1].depthKm, 9);
   assert.equal(events[1].time, Date.parse('2026-11-19T03:12:45.1Z'));
+  assert.equal(events[0].time, Date.parse('2026-11-19T05:00:00Z'));
   assert.equal(normalizeEmscEvents({}), null);
 });
 

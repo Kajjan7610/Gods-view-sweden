@@ -2,8 +2,9 @@ import { createUsgsEarthquakeSource } from './source.js';
 
 // Swedish fork: USGS's world feed (M2.5 and up, one day) with the EMSC's
 // Nordic quakes of the same day, small ones included, from the app's own
-// /api/emsc-nordic. Inside the Nordic box the EMSC's list replaces USGS's,
-// which it already holds; when the EMSC does not answer, USGS's stands.
+// /api/emsc-nordic. Inside the box a USGS quake the EMSC also lists is drawn
+// once, from the EMSC; one the EMSC lacks (newer than its answer, or typed
+// otherwise) stays from USGS.
 const EMSC_ROUTE = '/api/emsc-nordic';
 /** The box the server asks the EMSC about (server/providers/emscNordic.js). */
 const NORDIC_BOX = Object.freeze({
@@ -33,13 +34,31 @@ export function emscRow(event) {
   };
 }
 
-/** USGS's rows with the Nordic box's taken from the EMSC where it answers. */
+/** The same quake in both lists: within two minutes and 100 km. */
+const SAME_SECONDS = 120;
+const SAME_KM = 100;
+const kmBetween = (a, b) => {
+  const rad = Math.PI / 180;
+  const h =
+    Math.sin(((b.lat - a.lat) * rad) / 2) ** 2 +
+    Math.cos(a.lat * rad) *
+      Math.cos(b.lat * rad) *
+      Math.sin(((b.lon - a.lon) * rad) / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+};
+
+/** USGS's rows and the EMSC's in the box, each quake once. */
 export function mergeNordicRows(usgsRows, emscEvents) {
   if (!Array.isArray(emscEvents)) return usgsRows;
-  return [
-    ...usgsRows.filter((row) => !inBox(row)),
-    ...emscEvents.filter(inBox).map(emscRow),
-  ];
+  const emsc = emscEvents.filter(inBox);
+  const listed = (row) =>
+    inBox(row) &&
+    emsc.some(
+      (event) =>
+        Math.abs(event.time - row.time) <= SAME_SECONDS * 1000 &&
+        kmBetween(event, row) <= SAME_KM,
+    );
+  return [...usgsRows.filter((row) => !listed(row)), ...emsc.map(emscRow)];
 }
 
 export function createNordicEarthquakeSource({

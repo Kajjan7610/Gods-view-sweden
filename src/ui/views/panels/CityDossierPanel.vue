@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, watch } from 'vue';
+import { nextTick, reactive, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { t } from '../../../i18n/index.js';
 import RailPanel from '../../rail/RailPanel.vue';
@@ -13,6 +13,12 @@ const store = useCityDossierStore();
 const { view: d } = storeToRefs(store);
 // "Full board" opens the airport board (src/ui/airportBoard.js).
 const airportBoard = useAirportBoardStore();
+// A camera picture the server could not give (none taken lately) is hidden.
+const cameraFailed = reactive({});
+const fail = (event) => {
+  const src = event.target.getAttribute('src');
+  cameraFailed[src] = true;
+};
 // A sight picked on the map scrolls into view in the list.
 watch(
   () => d.value?.sights?.chosen,
@@ -110,9 +116,9 @@ watch(
             <div v-if="d.now.aurora" class="city-dossier-aurora" :data-level="d.now.aurora.level">
               <strong><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span>{{ d.now.aurora.title }}</strong>
               <small v-if="d.now.aurora.detail">{{ d.now.aurora.detail }}</small>
-              <figure v-if="d.now.aurora.camera" class="city-dossier-allsky">
-                <a :href="d.now.aurora.camera.sourceUrl" target="_blank" rel="noopener noreferrer"><img :src="d.now.aurora.camera.src" :alt="d.now.aurora.camera.title" loading="lazy" decoding="async" width="240" height="240" /></a>
-                <figcaption><strong>{{ d.now.aurora.camera.title }}</strong> {{ d.now.aurora.camera.credit }} <a :href="d.now.aurora.camera.licenseUrl" target="_blank" rel="noopener noreferrer">{{ d.now.aurora.camera.licenseText }}</a>.</figcaption>
+              <figure v-if="d.now.aurora.camera" v-show="!cameraFailed[d.now.aurora.camera.src]" class="city-dossier-allsky">
+                <img :src="d.now.aurora.camera.src" loading="lazy" decoding="async" width="240" height="240" @error="fail" :alt="d.now.aurora.camera.title" />
+                <figcaption><strong>{{ d.now.aurora.camera.title }}</strong> <template v-for="([text, url], index) in d.now.aurora.camera.credit" :key="index"><a v-if="url" :href="url" target="_blank" rel="noopener noreferrer">{{ text }}</a><template v-else>{{ text }}</template></template></figcaption>
               </figure>
               <button v-if="!d.now.aurora.layerOn" type="button" @click="store.act('showAurora')">{{ t('Show the aurora oval on the map') }}</button>
             </div>

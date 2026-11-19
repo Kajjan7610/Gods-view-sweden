@@ -75,8 +75,8 @@ Två nivåer gäller:
 | Stadsdossier: när vyn stannar lågt över en svensk ort visar panelen STAD i högerkanten stadsvapen, foto och inledning, tätortens och kommunens folkmängd med kurva, skattesats, inkomst, arbetslöshet och kommunvalet, tolv nyckeltal under STATISTIK (skola, trygghet, hälsa, ekonomi, miljö och besökare, med hela Sveriges värde och kommunens plats bland kommunerna), samt läget just nu (väder, luft, varningar, Polisen, sol) och en länk till ortens P4-kanal hos Sveriges Radio | Kolada (RKA), Wikidata (CC0), Wikipedia (CC BY-SA 4.0), SMHI, Polisen; ingen nyckel | Panelen STAD i högerkanten (dyker upp vid första besöket) |
 | Stadsdossierns flikar Sevärt (slott, kyrkor, museer m.m. utpekade på kartan), besökspass, tåg från stadens station, bussar, spårvagnar, tunnelbana och båtar från stadens mest trafikerade hållplats, VMA-banner och norrsken i natt | Wikidata (CC0), Trafikverket, Trafiklab Realtime (CC BY 4.0), Krisinformation.se, NOAA SWPC | Panelen STAD |
 | Virus i avloppsvattnet: om covid-19, influensa A och B och RSV stiger, är stabila, sjunker, påvisas nu eller inte påvisas i det senaste veckoprovet, för orter med ett reningsverk i mätningen (Stockholmsområdets fyra verk som kolumner) | SLU och SEEC via SciLifeLab Pathogens Portal (CC BY 4.0, DOI 10.17044/scilifelab.14256317), ingen nyckel | Panelen STAD, fliken NU |
-| Små jordskalv i Norden: EMSC:s jordbävningar det senaste dygnet i Norden, även de små, i stället för USGS:s från M2.5 där; resten av världen är som förut USGS | EMSC FDSN (CC BY 4.0, ingen nyckel) | Earthquakes (24h) / Jordbävningar (24 h), under Events |
-| Himlen över Kiruna: den senaste bilden från IRF:s allhimmelskamera i stadskortets norrskensrad, för orter inom 300 km från Kiruna och bara när det är mörkt där | IRF, Kiruna Atmospheric and Geophysical Observatory (CC BY 4.0), ingen nyckel | Panelen STAD, fliken NU |
+| Små jordskalv i norra Europa: EMSC:s jordbävningar det senaste dygnet i rutan 54–72° N, 4–33° Ö, även de små, tillsammans med USGS:s (samma skalv ritas en gång); resten av världen är som förut USGS | EMSC FDSN (CC BY 4.0, ingen nyckel) | Earthquakes (24h) / Jordbävningar (24 h), under Events |
+| Himlen över Kiruna: den senaste bilden från IRF:s firmamentkamera i stadskortets norrskensrad, för orter inom 300 km från Kiruna och bara när det är mörkt där | IRF, Kiruna Atmospheric and Geophysical Observatory (CC BY 4.0), ingen nyckel | Panelen STAD, fliken NU |
 | Flygtavla: Swedavias tio flygplatser, hela dagens avgångar och ankomster, köerna i säkerhetskontrollen över terminalerna, följ planet i luften och dagens rutter på globen | Swedavia FlightInfo och WaitTime (gratisnycklar) | Kortet över en Swedavia-flygplats och tavlans egen panel |
 | Flygväder: METAR och TAF för flygplatserna | NOAA Aviation Weather Center (ingen nyckel) | Flygtavlan och cockpit |
 | Cockpit: knapp vid kartan och C-tangenten när ett plan, fartyg eller en satellit är valt, Swedavias rader för planet, svensk lägesbild i genomgången (ort och län, SMHI:s väder, varningar och VMA) | Swedavia, SMHI, Krisinformation.se, NOAA (METAR/TAF) | Cockpit |
@@ -413,9 +413,13 @@ git merge origin/main
   Institutet för rymdfysiks allhimmelskamera i Kiruna, för orter inom 300 km
   från kameran och bara när solen står mer än 6° under horisonten där.
 - Kameran tar en bild i minuten. Servern hämtar den högst en gång i minuten
-  hur många som än tittar, och lämnar aldrig ut en bild äldre än tio minuter.
-- CC BY 4.0. Krediteringen står med IRF:s egna ord under bilden, och bilden
-  länkar till kamerans sida.
+  hur många som än tittar, och visar ingen bild som kameran tog för mer än tio
+  minuter sedan (enligt filens egen tid: kameran pausar på dagen och mellan
+  säsongerna). En öppen NU-flik hämtar en ny bild var femte minut, eftersom
+  varje bild är ungefär en halv megabyte. Rubriken säger hur långt bort
+  Kiruna ligger, så att ingen tror att bilden visar den egna orten.
+- CC BY 4.0. Krediteringen står med IRF:s egna ord och tre länkar under
+  bilden. Svensk rubrik: "firmamentkamera", IRF:s eget ord.
 - Granskarnas UI-fynd för stadskortet är rättade samtidigt: långa rader i
   SAMHÄLLE trängde ihop etiketten, länken i avloppsraden gick inte att läsa,
   datumet gav dubbel punkt på svenska, och siffrorna från SCB säger nu
@@ -424,14 +428,18 @@ git merge origin/main
 ### 2026-11-19 (små jordskalv i Norden)
 - Lagret Jordbävningar (24 h) visade bara USGS:s skalv från M2.5, vilket
   utelämnar nästan alla skalv som känns i Sverige. Nu hämtar appens server
-  EMSC:s jordbävningar det senaste dygnet i rutan 54–72° N, 4–33° E, även
-  små, och de ersätter USGS:s i den rutan. Svarar inte EMSC står USGS:s kvar.
+  EMSC:s jordbävningar det senaste dygnet i rutan 54–72° N, 4–33° Ö (den
+  omfattar också Baltikum, norra Tyskland och Polen och nordvästra Ryssland),
+  även små. Ett skalv som båda listar (inom två minuter och 100 km) ritas en
+  gång, från EMSC; ett som bara USGS har står kvar.
 - Bara händelser som EMSC typar som jordbävningar (känd, misstänkt, kännbar,
-  skadande) visas; gruvsprängningar och andra sprängningar eller otypade
+  skadande) visas. Inducerade händelser och bergsmällar (också de i gruvorna
+  i Kiruna och Malmberget), alla sprängningar, skred och okända eller otypade
   händelser tas bort.
 - EMSC ber att svar inte sparas längre än tio minuter och inte speglas i
   stort: servern frågar högst var femte minut och lämnar aldrig ut ett svar
-  äldre än tio minuter. CC BY 4.0, krediteras "EMSC" i kreditlistan och i
+  äldre än tio minuter (regeln står i seismicportal.eu/llms.txt). CC BY 4.0,
+  krediteras "EMSC-CSEM SeismicPortal" i kreditlistan och EMSC i
   berättelsernas källor.
 - Under en vanlig vecka finns bara ett fåtal sådana skalv i Norden, så lagret
   är ofta tomt där under ett dygn.

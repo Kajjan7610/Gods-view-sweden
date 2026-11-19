@@ -5610,7 +5610,7 @@
   "falling": "في انخفاض",
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "عينة {date}. يقارن كل اتجاه أحدث عينة بالعينتين السابقتين في المحطة نفسها. قد تتفاوت العينة الواحدة كثيرًا؛ وهذا ليس عددًا للمرضى، ولا تُقارن المدن. ولا تزال طريقة المختبر قيد التطوير.",
   "trends computed by the app": "الاتجاهات من حساب التطبيق",
-  "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "تأتي الزلازل من البث المباشر لهيئة المسح الجيولوجي الأمريكية، والصغيرة منها في بلدان الشمال الأوروبي من EMSC.",
-  "Nordic earthquakes (CC BY 4.0)": "زلازل بلدان الشمال (CC BY 4.0)",
-  "The sky over Kiruna now (all-sky camera)": "السماء فوق كيرونا الآن (كاميرا السماء الكاملة)"
+  "The sky over Kiruna (all-sky camera, {km} km away)": "السماء فوق كيرونا (كاميرا السماء الكاملة، على بعد {km} كم)",
+  "Earthquakes come from the U.S. Geological Survey’s live feed, and those in northern Europe (54–72° N, 4–33° E) from the EMSC.": "تأتي الزلازل من البث المباشر لهيئة المسح الجيولوجي الأمريكية، وتلك في شمال أوروبا (54–72° شمالًا، 4–33° شرقًا) من EMSC.",
+  "Earthquakes in northern Europe (CC BY 4.0)": "الزلازل في شمال أوروبا (CC BY 4.0)"
 }

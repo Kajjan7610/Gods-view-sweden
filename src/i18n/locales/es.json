@@ -5280,7 +5280,7 @@
   "falling": "en descenso",
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Muestra {date}. Cada tendencia compara la muestra más reciente con las dos anteriores de la misma planta. Una sola muestra puede variar mucho; esto no cuenta a las personas enfermas y no se comparan localidades. El método del laboratorio aún está en desarrollo.",
   "trends computed by the app": "tendencias calculadas por la app",
-  "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "Los terremotos proceden del feed en directo del Servicio Geológico de EE. UU., y los pequeños de los países nórdicos, del EMSC.",
-  "Nordic earthquakes (CC BY 4.0)": "Terremotos nórdicos (CC BY 4.0)",
-  "The sky over Kiruna now (all-sky camera)": "El cielo sobre Kiruna ahora (cámara de cielo completo)"
+  "The sky over Kiruna (all-sky camera, {km} km away)": "El cielo sobre Kiruna (cámara de cielo completo, a {km} km)",
+  "Earthquakes come from the U.S. Geological Survey’s live feed, and those in northern Europe (54–72° N, 4–33° E) from the EMSC.": "Los terremotos proceden del feed en directo del Servicio Geológico de EE. UU., y los del norte de Europa (54–72° N, 4–33° E), del EMSC.",
+  "Earthquakes in northern Europe (CC BY 4.0)": "Terremotos en el norte de Europa (CC BY 4.0)"
 }

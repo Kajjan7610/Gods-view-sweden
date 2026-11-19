@@ -64,3 +64,19 @@ test('an answer that is not a JPEG is refused', async () => {
   });
   assert.equal((await call(proxy)).status, 502);
 });
+
+test('a picture the camera took long ago is not shown, however newly fetched', async () => {
+  const clock = Date.parse('2026-11-19T15:00:00Z');
+  const proxy = kirunaAllskyProxy({
+    now: () => clock,
+    fetchImpl: async () =>
+      new Response(new Uint8Array([0xff, 0xd8]), {
+        headers: {
+          'content-type': 'image/jpeg',
+          // The camera paused by day: the file is from the morning.
+          'last-modified': 'Thu, 19 Nov 2026 07:13:00 GMT',
+        },
+      }),
+  });
+  assert.equal((await call(proxy)).status, 502);
+});

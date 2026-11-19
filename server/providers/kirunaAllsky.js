@@ -8,18 +8,19 @@ import { sameSiteGated } from './common/same-site.js';
 // Swedish fork: the newest picture from the all-sky camera at the Kiruna
 // Atmospheric and Geophysical Observatory (IRF, CC BY 4.0), for the city
 // dossier's northern lights. The camera takes one picture a minute; the
-// server asks for it at most once a minute however many people look, and
-// keeps the IRF's required credit with it.
+// server asks for it at most once a minute however many people look.
 export const KIRUNA_ALLSKY_URL =
   'https://www.irf.se/alis/allsky/krn/latest_medium.jpeg';
-/** The camera's place, for towns near enough to share its sky. */
-export const KIRUNA_CAMERA = Object.freeze({ lat: 67.8408, lon: 20.4108 });
 const TTL_MS = 60_000;
-/** An older picture is no longer "the sky now". */
+/**
+ * A picture the camera took longer ago than this is not shown: the camera
+ * pauses by day and between seasons, and its file then stays as it was.
+ */
 const STALE_MAX_MS = 10 * 60_000;
 const RETRY_AFTER_FAILURE_MS = 2 * 60_000;
 const MAX_BYTES = 2 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 15_000;
+const JPEG = /^image\/jpe?g/i;
 const USER_AGENT =
   'GodsEyeView-Sweden/0.1 (https://github.com/Kajjan7610/Gods-view-sweden)';
 
@@ -50,32 +51,39 @@ export function kirunaAllskyProxy({
         throw new Error(`upstream HTTP ${response.status}`);
       }
       const type = response.headers.get('content-type') || '';
-      if (!/^image\/jpe?g/i.test(type)) throw new Error(`not a JPEG: ${type}`);
-      return await readResponseBytesCapped(
+      if (!JPEG.test(type)) throw new Error(`not a JPEG: ${type}`);
+      // When the camera took it: the file's own time, else the fetch's.
+      const modified = Date.parse(response.headers.get('last-modified') ?? '');
+      const bytes = await readResponseBytesCapped(
         response,
         MAX_BYTES,
         controller.signal,
       );
+      return {
+        body: Buffer.from(bytes),
+        takenAt: Number.isFinite(modified) ? modified : now(),
+      };
     } finally {
       clearTimeout(timer);
     }
   }
 
-  const fresh = (maxAge) => cached && now() - cached.savedAt < maxAge;
+  /** The cached picture while the camera took it recently enough. */
+  const current = () =>
+    cached && now() - cached.takenAt <= STALE_MAX_MS ? cached : null;
 
   async function read() {
-    if (fresh(TTL_MS)) return cached;
-    if (now() < retryAfter) return fresh(STALE_MAX_MS) ? cached : null;
+    if (cached && now() - cached.savedAt < TTL_MS) return current();
+    if (now() < retryAfter) return current();
     return coalesceProxyRequest(inFlight, 'allsky', async () => {
       try {
-        cached = { bytes: await load(), savedAt: now() };
+        cached = { ...(await load()), savedAt: now() };
         retryAfter = 0;
-        return cached;
       } catch (error) {
         console.warn(`[kiruna-allsky] ${error?.message || error}`);
         retryAfter = now() + RETRY_AFTER_FAILURE_MS;
-        return fresh(STALE_MAX_MS) ? cached : null;
       }
+      return current();
     }).promise;
   }
 
@@ -95,14 +103,15 @@ export function kirunaAllskyProxy({
       res.writeHead(502, { 'Cache-Control': 'no-store' });
       return res.end();
     }
-    const age = Math.max(0, Math.round((now() - picture.savedAt) / 1000));
     res.writeHead(200, {
       'Content-Type': 'image/jpeg',
-      'Content-Length': String(picture.bytes.byteLength),
-      'Cache-Control': `private, max-age=${Math.max(0, 60 - age)}`,
-      'X-Picture-Age': String(age),
+      'Content-Length': String(picture.body.byteLength),
+      'Cache-Control': 'private, max-age=60',
+      'X-Picture-Age': String(
+        Math.max(0, Math.round((now() - picture.takenAt) / 1000)),
+      ),
     });
-    res.end(Buffer.from(picture.bytes));
+    res.end(picture.body);
   }
 
   return {

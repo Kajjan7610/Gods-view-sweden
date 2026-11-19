@@ -65,10 +65,16 @@ export function normalizeEmscEvents(geojson) {
     const p = feature?.properties;
     if (!p || !EARTHQUAKE_TYPES.has(String(p.evtype ?? '').toLowerCase()))
       continue;
+    // A missing magnitude is no M0.
+    if (p.mag == null || p.mag === '') continue;
     const lat = Number(p.lat);
     const lon = Number(p.lon);
     const mag = Number(p.mag);
-    const time = Date.parse(p.time);
+    // FDSN times are UTC; one written without a zone is read as UTC too.
+    const stamp = String(p.time ?? '');
+    const time = Date.parse(
+      /(Z|[+-]\d\d:?\d\d)$/i.test(stamp) ? stamp : `${stamp}Z`,
+    );
     if (![lat, lon, mag, time].every(Number.isFinite)) continue;
     const depth = Number(p.depth);
     events.push({
@@ -119,8 +125,13 @@ export function emscNordicProxy({
         MAX_BYTES,
       );
       if (tooLarge) throw new Error('upstream answer too large');
-      const events = normalizeEmscEvents(JSON.parse(text));
+      const answer = JSON.parse(text);
+      const events = normalizeEmscEvents(answer);
       if (!events) throw new Error('malformed EMSC answer');
+      // How many the type filter kept, to see it never drops real quakes.
+      console.log(
+        `[emsc] ${events.length} of ${answer.features.length} Nordic events are earthquakes`,
+      );
       return events;
     } finally {
       clearTimeout(timer);

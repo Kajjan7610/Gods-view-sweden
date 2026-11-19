@@ -5170,7 +5170,7 @@
   "falling": "sjunker",
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Prov {date}. Varje trend jämför det senaste provet med de två före vid samma reningsverk. Ett enskilt prov kan variera mycket; det här räknar inte hur många som är sjuka, och orter jämförs inte. Laboratoriets metod utvecklas fortfarande.",
   "trends computed by the app": "trenderna räknade av appen",
-  "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "Jordbävningarna kommer från U.S. Geological Surveys realtidsflöde, och de små i Norden från EMSC.",
-  "Nordic earthquakes (CC BY 4.0)": "Jordbävningar i Norden (CC BY 4.0)",
-  "The sky over Kiruna now (all-sky camera)": "Himlen över Kiruna nu (allhimmelskamera)"
+  "The sky over Kiruna (all-sky camera, {km} km away)": "Himlen över Kiruna (firmamentkamera, {km} km bort)",
+  "Earthquakes come from the U.S. Geological Survey’s live feed, and those in northern Europe (54–72° N, 4–33° E) from the EMSC.": "Jordbävningarna kommer från U.S. Geological Surveys realtidsflöde, och de i norra Europa (54–72° N, 4–33° Ö) från EMSC.",
+  "Earthquakes in northern Europe (CC BY 4.0)": "Jordbävningar i norra Europa (CC BY 4.0)"
 }

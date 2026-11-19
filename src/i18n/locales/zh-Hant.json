@@ -5060,7 +5060,7 @@
   "falling": "下降",
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "採樣 {date}。每個趨勢將同一處理廠的最新樣本與之前兩次比較。單一樣本可能波動很大;這不是患病人數,也不比較各城鎮。實驗室的方法仍在開發中。",
   "trends computed by the app": "趨勢由應用程式計算",
-  "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "地震資料來自美國地質調查局的即時資料,北歐的小地震來自 EMSC。",
-  "Nordic earthquakes (CC BY 4.0)": "北歐地震 (CC BY 4.0)",
-  "The sky over Kiruna now (all-sky camera)": "基律納此刻的天空(全天相機)"
+  "The sky over Kiruna (all-sky camera, {km} km away)": "基律納的天空(全天相機,相距 {km} 公里)",
+  "Earthquakes come from the U.S. Geological Survey’s live feed, and those in northern Europe (54–72° N, 4–33° E) from the EMSC.": "地震資料來自美國地質調查局的即時資料,北歐(北緯54–72°,東經4–33°)的地震來自 EMSC。",
+  "Earthquakes in northern Europe (CC BY 4.0)": "北歐地震 (CC BY 4.0)"
 }

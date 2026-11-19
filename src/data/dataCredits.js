@@ -194,8 +194,8 @@ export const DATA_CREDITS = [
     // Swedish fork: the small Nordic quakes.
     key: 'emsc',
     html:
-      'Earthquakes in the Nordic countries: ' +
-      '<a href="https://www.seismicportal.eu/" target="_blank" rel="noopener">EMSC</a> (CC BY 4.0)',
+      'Earthquakes in northern Europe: ' +
+      '<a href="https://www.seismicportal.eu/" target="_blank" rel="noopener">EMSC-CSEM SeismicPortal</a> (CC BY 4.0)',
   },
   {
     key: 'openseamap',

@@ -86,8 +86,16 @@ const CAMERA_RADIUS_KM = 300;
 /** Below this solar elevation the camera's sky is dark enough to show. */
 const CAMERA_DARK_ELEVATION = -6;
 /** The IRF's credit, in the words its licence page asks for. */
-const CAMERA_CREDIT =
-  'Data from Kiruna allsky camera provided by Kiruna Atmospheric and Geophysical Observatory at Swedish Institute of Space Physics under'; // i18n-ignore: required credit
+const CAMERA_CREDIT = Object.freeze([
+  ['Data from Kiruna allsky camera', 'https://firmament.irf.se'], // i18n-ignore: required credit
+  [' provided by Kiruna Atmospheric and Geophysical Observatory at '], // i18n-ignore: required credit
+  ['Swedish Institute of Space Physics', 'https://www.irf.se'], // i18n-ignore: required credit
+  [' under this '], // i18n-ignore: required credit
+  ['license', 'https://www.irf.se/en/forskning/kago/license/'], // i18n-ignore: required credit
+  ['.'],
+]);
+/** How often an open NOW tab asks for the camera's newest picture. */
+const CAMERA_REFRESH_MS = 5 * 60_000;
 /** Great-circle kilometres between two [lat, lon] points. */
 const kmBetween = (aLat, aLon, bLat, bLon) => {
   const rad = Math.PI / 180;
@@ -387,6 +395,8 @@ export function createCityDossier({
   /** The town whose SCB figures were asked for, read when a tab needs them. */
   let figuresCode = null;
   let figuresRequest = null;
+  /** Redraws the camera picture while the NOW tab shows it. */
+  let cameraTimer = null;
   const requestRender = () => findFrame(host)?.requestRender('city-dossier');
   const sightsLayer = createSights({
     viewer: host,
@@ -1701,11 +1711,8 @@ export function createCityDossier({
   function cameraView() {
     if (!city) return null;
     const [lon, lat] = city.point;
-    if (
-      kmBetween(lat, lon, KIRUNA_CAMERA.lat, KIRUNA_CAMERA.lon) >
-      CAMERA_RADIUS_KM
-    )
-      return null;
+    const km = kmBetween(lat, lon, KIRUNA_CAMERA.lat, KIRUNA_CAMERA.lon);
+    if (km > CAMERA_RADIUS_KM) return null;
     const at = now();
     if (
       solarElevation(KIRUNA_CAMERA.lat, KIRUNA_CAMERA.lon, at) >=
@@ -1713,12 +1720,13 @@ export function createCityDossier({
     )
       return null;
     return {
-      src: `/api/kiruna-allsky?minute=${Math.floor(at / 60_000)}`,
-      title: t('The sky over Kiruna now (all-sky camera)'),
+      // A new picture every few minutes: each is about half a megabyte.
+      src: `/api/kiruna-allsky?at=${Math.floor(at / CAMERA_REFRESH_MS)}`,
+      title: t('The sky over Kiruna (all-sky camera, {km} km away)', {
+        km: whole(km),
+      }),
       credit: CAMERA_CREDIT,
-      licenseText: 'this license', // i18n-ignore: required credit
-      licenseUrl: 'https://creativecommons.org/licenses/by/4.0/',
-      sourceUrl: 'https://www.irf.se/alis/allsky/krn/',
+      sourceUrl: 'https://firmament.irf.se',
     };
   }
 
@@ -1902,8 +1910,21 @@ export function createCityDossier({
     };
   }
 
+  /** The next camera picture is asked for only while it is on screen. */
+  function scheduleCamera() {
+    if (cameraTimer) clearTimeout(cameraTimer);
+    cameraTimer = null;
+    if (destroyed || !city || !live?.aurora || !wantsLive() || !cameraView())
+      return;
+    cameraTimer = setTimeout(
+      render,
+      CAMERA_REFRESH_MS - (now() % CAMERA_REFRESH_MS) + 1_000,
+    );
+  }
+
   function render() {
     if (destroyed) return;
+    scheduleCamera();
     if (!city) {
       publish(null);
       return;
@@ -2022,6 +2043,7 @@ export function createCityDossier({
     destroy() {
       destroyed = true;
       if (timer) clearTimeout(timer);
+      if (cameraTimer) clearTimeout(cameraTimer);
       request?.abort();
       liveRequest?.abort();
       removeMoveEnd?.();
