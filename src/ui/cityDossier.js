@@ -77,6 +77,8 @@ const WASTEWATER_VIRUSES = Object.freeze([
   ['fluB', msg('Influenza B')],
   ['rsv', 'RSV'], // i18n-ignore: virus name
 ]);
+const WASTEWATER_CREDIT =
+  'SLU · SEEC (Székely et al. 2026) · SciLifeLab Pathogens Portal · CC BY 4.0'; // i18n-ignore: source credit
 /** Each trend as an arrow and the words it stands for. */
 const WASTEWATER_TRENDS = Object.freeze({
   rising: ['↑', msg('rising')],
@@ -443,6 +445,9 @@ export function createCityDossier({
         facts = body.error ? null : body;
         status = body.error ? 'error' : 'ready';
         live = null;
+        // The new town's figures are its own read; the last town's stops.
+        figuresRequest?.abort();
+        figuresCode = null;
         liveAt = 0;
         // The card belongs to the town it was shown for.
         closeArrival();
@@ -1730,12 +1735,8 @@ export function createCityDossier({
   }
 
   /**
-   * Krisinformation.se for the town: its active alerts (VMA) and the newest
-   * news for it, its county or the whole country; null until read.
-   */
-  /**
    * Each virus's trend at the town's treatment plants: one column per plant
-   * (Stockholm has four), never a level to compare with other towns.
+   * (the Stockholm area has four), never a level to compare with other towns.
    */
   function wastewaterView(plants) {
     if (!plants?.length) return null;
@@ -1777,7 +1778,7 @@ export function createCityDossier({
         }),
       })),
       note: t(
-        'Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.',
+        'Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.',
         { date: sampled },
       ),
       // Arrows alone in several columns: what each stands for.
@@ -1786,10 +1787,16 @@ export function createCityDossier({
             .map(([symbol, words]) => `${symbol} ${t(words)}`)
             .join(' · ')
         : '',
-      credit: 'SLU · SEEC · SciLifeLab Pathogens Portal (CC BY 4.0)', // i18n-ignore: source credit
+      // CC BY 4.0 asks that changes are said: the trends are the app's own.
+      credit: `${WASTEWATER_CREDIT} · ${t('trends computed by the app')}`,
+      creditUrl: 'https://www.pathogens.se/dashboards/slu-wastewater/',
     };
   }
 
+  /**
+   * Krisinformation.se for the town: its active alerts (VMA) and the newest
+   * news for it, its county or the whole country; null until read.
+   */
   function krisView(kris) {
     if (!kris) return null;
     const when = (ms) =>

@@ -5385,9 +5385,10 @@
   "Influenza A": "Грипп A",
   "Influenza B": "Грипп B",
   "not detected": "не обнаружен",
-  "newly detected": "снова обнаружен",
+  "newly detected": "обнаружен сейчас",
   "rising": "растёт",
   "steady": "без изменений",
   "falling": "снижается",
-  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "Проба {date}. Каждая тенденция сравнивает последнюю пробу с двумя предыдущими на той же станции; уровни между городами не сравниваются."
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Проба {date}. Каждая тенденция сравнивает последнюю пробу с двумя предыдущими на той же станции. Одна проба может сильно колебаться; это не число заболевших, и города не сравниваются. Метод лаборатории ещё разрабатывается.",
+  "trends computed by the app": "тенденции рассчитаны приложением"
 }

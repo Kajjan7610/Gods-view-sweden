@@ -436,14 +436,19 @@ export function cityDossierProxy({
    * table failed.
    */
   const figureCache = new Map();
-  async function loadFigures(code) {
+  /** The cached figures while still fresh, or null. */
+  const freshFigures = (code) => {
     const hit = figureCache.get(code);
-    if (
-      hit &&
+    return hit &&
       now() - hit.savedAt <
         (hit.value.failed ? PARTIAL_FACTS_TTL_MS : FACTS_TTL_MS)
-    )
-      return hit.value;
+      ? hit.value
+      : null;
+  };
+  async function loadFigures(code) {
+    const hit = figureCache.get(code);
+    const fresh = freshFigures(code);
+    if (fresh) return fresh;
     const { promise } = coalesceProxyRequest(
       inFlight,
       `figures:${code}`,
@@ -493,6 +498,9 @@ export function cityDossierProxy({
       const code = url.searchParams.get('code') || '';
       if (!/^\d{4}$/.test(code) || code === '0000')
         return json(400, { error: 'municipality_code_required' });
+      // A cached answer costs SCB nothing and is not counted.
+      const cached = freshFigures(code);
+      if (cached) return json(200, { code, ...cached });
       if (!allow(clientKey(req)))
         return json(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
       const answer = await loadFigures(code).catch(() => null);

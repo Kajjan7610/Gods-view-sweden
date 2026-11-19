@@ -5055,9 +5055,10 @@
   "Influenza A": "インフルエンザA",
   "Influenza B": "インフルエンザB",
   "not detected": "未検出",
-  "newly detected": "再検出",
+  "newly detected": "今回検出",
   "rising": "上昇",
   "steady": "横ばい",
   "falling": "低下",
-  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "採取 {date}。各傾向は同じ処理場の直近の検体をその前の2回と比べたもので、町どうしの値は比較しません。"
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "採取 {date}。各傾向は同じ処理場の直近の検体をその前の2回と比べたものです。1回の検体は大きく変動することがあり、患者数を示すものではなく、町どうしも比較しません。検査機関の手法は現在も開発中です。",
+  "trends computed by the app": "傾向はアプリで算出"
 }

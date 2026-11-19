@@ -5275,9 +5275,10 @@
   "Influenza A": "שפעת A",
   "Influenza B": "שפעת B",
   "not detected": "לא זוהה",
-  "newly detected": "זוהה שוב",
+  "newly detected": "זוהה כעת",
   "rising": "עולה",
   "steady": "יציב",
   "falling": "יורד",
-  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "דגימה {date}. כל מגמה משווה את הדגימה האחרונה לשתיים שלפניה באותו מתקן; הרמות אינן מושוות בין ערים."
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "דגימה {date}. כל מגמה משווה את הדגימה האחרונה לשתיים שלפניה באותו מתקן. דגימה בודדת יכולה להשתנות מאוד; זו אינה ספירה של חולים, וערים אינן מושוות. שיטת המעבדה עדיין בפיתוח.",
+  "trends computed by the app": "המגמות חושבו על ידי האפליקציה"
 }

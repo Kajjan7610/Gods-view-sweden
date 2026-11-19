@@ -5167,7 +5167,8 @@
   "rising": "steigend",
   "steady": "gleichbleibend",
   "falling": "fallend",
-  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "Probe {date}. Jeder Trend vergleicht die neueste Probe mit den zwei vorherigen derselben Kläranlage; Werte werden nicht zwischen Orten verglichen.",
   "Influenza A": "Influenza A",
-  "Influenza B": "Influenza B"
+  "Influenza B": "Influenza B",
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Probe {date}. Jeder Trend vergleicht die neueste Probe mit den zwei vorherigen derselben Kläranlage. Eine einzelne Probe kann stark schwanken; das ist keine Zahl der Erkrankten, und Orte werden nicht verglichen. Die Methode des Labors wird noch entwickelt.",
+  "trends computed by the app": "Trends von der App berechnet"
 }

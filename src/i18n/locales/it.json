@@ -5273,11 +5273,12 @@
   "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "I tempi sono di SOS Alarm e coprono i dodici mesi fino a giugno dell’anno indicato; gli incendi provengono dal registro della MCF e coprono cinque anni.",
   "Viruses in wastewater": "Virus nelle acque reflue",
   "not detected": "non rilevato",
-  "newly detected": "di nuovo rilevato",
+  "newly detected": "appena rilevato",
   "rising": "in aumento",
   "steady": "stabile",
   "falling": "in calo",
-  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "Campione {date}. Ogni tendenza confronta il campione più recente con i due precedenti dello stesso impianto; i livelli non sono confrontati tra città.",
   "Influenza A": "Influenza A",
-  "Influenza B": "Influenza B"
+  "Influenza B": "Influenza B",
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Campione {date}. Ogni tendenza confronta il campione più recente con i due precedenti dello stesso impianto. Un singolo campione può variare molto; non è un conteggio dei malati e le città non sono confrontate. Il metodo del laboratorio è ancora in sviluppo.",
+  "trends computed by the app": "tendenze calcolate dall’app"
 }

@@ -85,13 +85,18 @@ export function normalizeWastewater(csv) {
   for (const line of lines.slice(1)) {
     if (!line) continue;
     const cells = line.split(',');
+    // A quoted comma would shift every column: such a row is left out.
+    if (cells.length !== header.length) continue;
     const virus = WASTEWATER_TARGETS[cells[col.target]];
     const date = cells[col.sampling_date];
     const city = cells[col.city]?.trim();
     if (!virus || !city || !DATE.test(date) || date < METHOD_FROM) continue;
-    const value = Number(cells[col.pmmov_normalised]);
     const negative = /^negative/i.test(cells[col.category] ?? '');
-    const level = negative || !Number.isFinite(value) ? 0 : Math.max(0, value);
+    const cell = cells[col.pmmov_normalised]?.trim() ?? '';
+    const value = cell === '' ? NaN : Number(cell);
+    // A positive sample without a level says nothing about the trend.
+    if (!negative && !Number.isFinite(value)) continue;
+    const level = negative ? 0 : Math.max(0, value);
     let plant = plants.get(city);
     if (!plant) {
       plant = { city, samples: new Map() };
@@ -126,7 +131,8 @@ function plantView({ city, samples }, latest) {
         date,
       };
     });
-  // "Stockholm-Bromma" is the Bromma plant serving Stockholm.
+  // "Stockholm-Kappala" is the Käppala plant, filed under Stockholm though
+  // it also serves the municipalities north and east of the city.
   const [place, plant = null] = city.split('-');
   return {
     city,

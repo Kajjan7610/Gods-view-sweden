@@ -5275,9 +5275,10 @@
   "Influenza A": "Grippe A",
   "Influenza B": "Grippe B",
   "not detected": "non détecté",
-  "newly detected": "de nouveau détecté",
+  "newly detected": "nouvellement détecté",
   "rising": "en hausse",
   "steady": "stable",
   "falling": "en baisse",
-  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "Prélèvement {date}. Chaque tendance compare le dernier prélèvement aux deux précédents de la même station ; les niveaux ne sont pas comparés entre villes."
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Prélèvement {date}. Chaque tendance compare le dernier prélèvement aux deux précédents de la même station. Un seul prélèvement peut beaucoup varier ; ce n’est pas un décompte des malades, et les villes ne sont pas comparées. La méthode du laboratoire est encore en développement.",
+  "trends computed by the app": "tendances calculées par l’app"
 }

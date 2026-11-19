@@ -12,6 +12,10 @@ export const SCB_WINDOW_MS = 10_000;
 /** Further-figure reads that may wait at once, and for how long at most. */
 const FIGURES_QUEUE_MAX = 12;
 const FIGURES_WAIT_MS = 20_000;
+/** The longest one town's figures may take, all tables together. */
+const FIGURES_BUDGET_MS = 40_000;
+/** Calls of each window only the town's population may use. */
+const FIRST_RESERVED = 3;
 /** A table SCB no longer lists is looked for again after this long. */
 const MISSING_TABLE_RETRY_MS = 30 * 60_000;
 /** Category texts that sum others: left out where categories are added up. */
@@ -271,42 +275,67 @@ export function createScbPopulation(
 ) {
   // SCB's stricter page allows ten calls per ten seconds from one address:
   // every read waits for its turn in that window. The town's population goes
-  // first; the further figures queue behind it in a short line that turns
-  // callers away when full, so a busy SCB never holds up the dossier.
+  // first and always has a few calls of the window kept for it; the further
+  // figures queue behind in a short line that turns callers away when full
+  // and drops those that waited too long, so a busy SCB never holds up the
+  // dossier.
   const sent = [];
   const waiting = { first: [], later: [] };
+  const laterRoom = Math.max(1, limit - FIRST_RESERVED);
   let pumping = false;
+  /** Wakes a pump waiting for the figures' room when the town's read comes. */
+  let wake = null;
+  const dropExpired = () => {
+    waiting.later = waiting.later.filter((entry) => {
+      if (now() <= entry.deadline) return true;
+      entry.reject(new Error('SCB busy'));
+      return false;
+    });
+  };
   async function pump() {
     if (pumping) return;
     pumping = true;
     try {
-      while (waiting.first.length || waiting.later.length) {
+      for (;;) {
         while (sent.length && now() - sent[0] >= windowMs) sent.shift();
-        if (sent.length >= limit) {
-          await wait(Math.max(1, sent[0] + windowMs - now()));
-          continue;
-        }
-        const next = waiting.first.shift() ?? waiting.later.shift();
-        if (now() > next.deadline) {
-          next.reject(new Error('SCB busy'));
+        dropExpired();
+        const lane = waiting.first.length
+          ? 'first'
+          : waiting.later.length
+            ? 'later'
+            : null;
+        if (!lane) break;
+        const room = lane === 'first' ? limit : laterRoom;
+        if (sent.length >= room) {
+          // Until enough of the window has passed for this lane.
+          const freedAt = sent[sent.length - room] + windowMs;
+          await new Promise((resolve) => {
+            wake = lane === 'later' ? resolve : null;
+            wait(Math.max(1, freedAt - now())).then(resolve);
+          });
+          wake = null;
           continue;
         }
         sent.push(now());
-        next.resolve();
+        waiting[lane].shift().resolve();
       }
     } finally {
       pumping = false;
     }
   }
   const turn = (lane) => {
-    if (lane === 'later' && waiting.later.length >= laterQueueMax)
-      return Promise.reject(new Error('SCB queue full'));
+    if (lane === 'later') {
+      dropExpired();
+      if (waiting.later.length >= laterQueueMax)
+        return Promise.reject(new Error('SCB queue full'));
+    }
     return new Promise((resolve, reject) => {
       waiting[lane].push({
         resolve,
         reject,
         deadline: lane === 'later' ? now() + laterWaitMs : Infinity,
       });
+      if (lane === 'first') wake?.();
       pump();
     });
   };
@@ -633,10 +662,13 @@ export function createScbPopulation(
     const parts = { changes, houses, starts, cars, commuting };
     const figures = {};
     const failed = [];
+    const started = now();
     // One table at a time: SCB allows ten requests per ten seconds, and the
     // first town also reads every table's metadata.
     for (const [name, read] of Object.entries(parts)) {
       try {
+        // A town whose figures have taken long gives up on the rest.
+        if (now() - started > FIGURES_BUDGET_MS) throw new Error('SCB busy');
         figures[name] = await read(code);
       } catch (error) {
         figures[name] = null;

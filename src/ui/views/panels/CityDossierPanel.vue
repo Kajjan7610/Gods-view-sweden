@@ -133,7 +133,7 @@ watch(
               </table>
               <small v-if="d.now.wastewater.legend">{{ d.now.wastewater.legend }}</small>
               <small>{{ d.now.wastewater.note }}</small>
-              <small>{{ d.now.wastewater.credit }}</small>
+              <small><a :href="d.now.wastewater.creditUrl" target="_blank" rel="noopener noreferrer">{{ d.now.wastewater.credit }}</a></small>
             </div>
             <div v-if="d.now.cameras" class="city-dossier-trains city-dossier-cameras">
               <strong><span class="material-symbols-outlined" aria-hidden="true">speed_camera</span>{{ d.now.cameras.title }}</strong>

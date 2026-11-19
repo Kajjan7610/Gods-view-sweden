@@ -5165,9 +5165,10 @@
   "Influenza A": "Influensa A",
   "Influenza B": "Influensa B",
   "not detected": "ej påvisat",
-  "newly detected": "påvisat igen",
+  "newly detected": "påvisat nu",
   "rising": "stiger",
-  "steady": "oförändrat",
+  "steady": "stabilt",
   "falling": "sjunker",
-  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "Prov {date}. Varje trend jämför det senaste provet med de två före vid samma reningsverk; nivåerna jämförs inte mellan orter."
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Prov {date}. Varje trend jämför det senaste provet med de två före vid samma reningsverk. Ett enskilt prov kan variera mycket; det här räknar inte hur många som är sjuka, och orter jämförs inte. Laboratoriets metod utvecklas fortfarande.",
+  "trends computed by the app": "trenderna räknade av appen"
 }

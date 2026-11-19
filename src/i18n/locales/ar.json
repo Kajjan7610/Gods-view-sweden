@@ -5605,9 +5605,10 @@
   "Influenza A": "الإنفلونزا أ",
   "Influenza B": "الإنفلونزا ب",
   "not detected": "غير مكتشف",
-  "newly detected": "اكتُشف مجددًا",
+  "newly detected": "اكتُشف الآن",
   "rising": "في ارتفاع",
   "steady": "مستقر",
   "falling": "في انخفاض",
-  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "عينة {date}. يقارن كل اتجاه أحدث عينة بالعينتين السابقتين في المحطة نفسها؛ ولا تُقارن المستويات بين المدن."
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "عينة {date}. يقارن كل اتجاه أحدث عينة بالعينتين السابقتين في المحطة نفسها. قد تتفاوت العينة الواحدة كثيرًا؛ وهذا ليس عددًا للمرضى، ولا تُقارن المدن. ولا تزال طريقة المختبر قيد التطوير.",
+  "trends computed by the app": "الاتجاهات من حساب التطبيق"
 }

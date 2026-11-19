@@ -120,3 +120,17 @@ test('a town finds its own plants by name or municipality, never a neighbour', (
   assert.deepEqual(wastewaterFor(snapshot, { name: 'Arboga' }), []);
   assert.deepEqual(wastewaterFor(null, { name: 'Arboga' }), []);
 });
+
+test('a positive sample without a level, or a row with a shifted column, is left out', () => {
+  const { plants } = normalizeWastewater(
+    [
+      HEADER,
+      row('RSV', '2026-09-07', 'Umea', 0.4),
+      row('RSV', '2026-09-14', 'Umea', ''),
+      `RSV,s,2026-09-14,"Umea, north",1000,1,1,9,Positive sample,1`,
+    ].join('\n'),
+  );
+  assert.deepEqual(plants[0].viruses, [
+    { virus: 'rsv', trend: 'detected', date: '2026-09-07' },
+  ]);
+});

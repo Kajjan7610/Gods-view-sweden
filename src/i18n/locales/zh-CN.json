@@ -5055,9 +5055,10 @@
   "Influenza A": "甲型流感",
   "Influenza B": "乙型流感",
   "not detected": "未检出",
-  "newly detected": "再次检出",
+  "newly detected": "本次检出",
   "rising": "上升",
   "steady": "持平",
   "falling": "下降",
-  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "采样 {date}。每个趋势将同一处理厂的最新样本与之前两次比较;不同城镇之间的水平不作比较。"
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "采样 {date}。每个趋势将同一处理厂的最新样本与之前两次比较。单个样本可能波动很大;这不是患病人数,也不比较各城镇。实验室的方法仍在开发中。",
+  "trends computed by the app": "趋势由应用计算"
 }

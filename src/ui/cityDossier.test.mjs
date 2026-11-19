@@ -836,11 +836,37 @@ test("wastewater: each virus's trend at the town's plants, one column per plant"
       ['RSV', '—'],
     ],
   );
-  assert.match(view.note, /^Sample Nov 9\. .* not compared between towns\.$/);
-  assert.match(view.credit, /SciLifeLab Pathogens Portal \(CC BY 4\.0\)/);
+  assert.match(
+    view.note,
+    /^Sample Nov 9\. .* towns are not compared\. .* still being developed\.$/,
+  );
+  assert.match(
+    view.credit,
+    /SciLifeLab Pathogens Portal · CC BY 4\.0 · trends computed by the app$/,
+  );
+  assert.match(view.creditUrl, /^https:\/\/www\.pathogens\.se\//);
   // A town without a plant: no block.
   await visit(TOWNS.arboga);
   state.actions.setTab('now');
   await settle();
   assert.equal(state.view.now.wastewater, null);
+});
+
+test('back in a town, its figures are read again for the new card', async (t) => {
+  const { state, asked, visit } = harness(t);
+  state.bodies['/api/city-dossier/figures'] = {
+    figures: { changes: { year: 2026, month: 9, births: 1, deaths: 2 } },
+  };
+  await visit(TOWNS.arboga);
+  state.actions.setTab('people');
+  await settle();
+  // Away on the first tab while the map moves to Köping and back.
+  state.actions.setTab('about');
+  await visit(TOWNS.koping);
+  await visit(TOWNS.arboga);
+  asked();
+  state.actions.setTab('people');
+  await settle();
+  assert.deepEqual(asked(), ['/api/city-dossier/figures']);
+  assert.ok(state.view.people.rows.some((row) => row.label === 'Born / died'));
 });

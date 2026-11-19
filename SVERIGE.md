@@ -74,7 +74,7 @@ Två nivåer gäller:
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
 | Stadsdossier: när vyn stannar lågt över en svensk ort visar panelen STAD i högerkanten stadsvapen, foto och inledning, tätortens och kommunens folkmängd med kurva, skattesats, inkomst, arbetslöshet och kommunvalet, tolv nyckeltal under STATISTIK (skola, trygghet, hälsa, ekonomi, miljö och besökare, med hela Sveriges värde och kommunens plats bland kommunerna), samt läget just nu (väder, luft, varningar, Polisen, sol) och en länk till ortens P4-kanal hos Sveriges Radio | Kolada (RKA), Wikidata (CC0), Wikipedia (CC BY-SA 4.0), SMHI, Polisen; ingen nyckel | Panelen STAD i högerkanten (dyker upp vid första besöket) |
 | Stadsdossierns flikar Sevärt (slott, kyrkor, museer m.m. utpekade på kartan), besökspass, tåg från stadens station, bussar, spårvagnar, tunnelbana och båtar från stadens mest trafikerade hållplats, VMA-banner och norrsken i natt | Wikidata (CC0), Trafikverket, Trafiklab Realtime (CC BY 4.0), Krisinformation.se, NOAA SWPC | Panelen STAD |
-| Virus i avloppsvattnet: om covid-19, influensa A och B och RSV stiger, är oförändrade, sjunker, påvisas igen eller inte påvisas i det senaste veckoprovet, för orter med ett reningsverk i mätningen (Stockholms fyra verk som kolumner) | SLU och SEEC via SciLifeLab Pathogens Portal (CC BY 4.0, DOI 10.17044/scilifelab.14256317), ingen nyckel | Panelen STAD, fliken NU |
+| Virus i avloppsvattnet: om covid-19, influensa A och B och RSV stiger, är stabila, sjunker, påvisas nu eller inte påvisas i det senaste veckoprovet, för orter med ett reningsverk i mätningen (Stockholmsområdets fyra verk som kolumner) | SLU och SEEC via SciLifeLab Pathogens Portal (CC BY 4.0, DOI 10.17044/scilifelab.14256317), ingen nyckel | Panelen STAD, fliken NU |
 | Flygtavla: Swedavias tio flygplatser, hela dagens avgångar och ankomster, köerna i säkerhetskontrollen över terminalerna, följ planet i luften och dagens rutter på globen | Swedavia FlightInfo och WaitTime (gratisnycklar) | Kortet över en Swedavia-flygplats och tavlans egen panel |
 | Flygväder: METAR och TAF för flygplatserna | NOAA Aviation Weather Center (ingen nyckel) | Flygtavlan och cockpit |
 | Cockpit: knapp vid kartan och C-tangenten när ett plan, fartyg eller en satellit är valt, Swedavias rader för planet, svensk lägesbild i genomgången (ort och län, SMHI:s väder, varningar och VMA) | Swedavia, SMHI, Krisinformation.se, NOAA (METAR/TAF) | Cockpit |
@@ -408,19 +408,28 @@ git merge origin/main
 
 ### 2026-11-19 (virus i avloppsvattnet)
 - Stadskortets flik NU visar virus i avloppsvattnet för de orter där SLU
-  och SEEC tar veckoprov, 16 orter i november 2026 (Stockholm har fyra
-  reningsverk, som visas som kolumner): covid-19, influensa A, influensa B
-  och RSV, var och en som
-  stiger, oförändrat, sjunker, påvisat igen eller ej påvisat.
+  och SEEC tar veckoprov, 16 orter i november 2026. Stockholmsområdets fyra
+  reningsverk visas som kolumner; Käppala tar också emot avloppsvatten från
+  kommunerna norr och öster om staden. Covid-19, influensa A, influensa B
+  och RSV visas var och en som stiger, stabilt, sjunker, påvisat nu eller
+  ej påvisat.
 - Trenden jämför det senaste provet med de två före vid samma reningsverk.
-  Nivåerna är normerade mot PMMoV och går bara att jämföra inom ett verk,
-  så appen visar aldrig nivåer eller rangordning mellan orter.
+  Nivåerna är normerade mot PMMoV, men upptagningsområden, regn och lov
+  skiljer sig, så appen jämför inte nivåer mellan verk och visar aldrig
+  rangordning. Noten säger att ett enskilt prov kan variera mycket, att det
+  inte räknar sjuka och att laboratoriets metod fortfarande utvecklas (den
+  är inte ackrediterad).
 - Bara prov från vecka 36 2026 läses, eftersom laboratoriet bytte metod då.
   Ett verk vars senaste prov ligger tre veckor efter de andra visas inte.
 - Datafilen byter namn varje vecka, så servern läser först dashboardsidan
-  efter länken, högst var sjätte timme. CC BY 4.0, krediteras "SLU · SEEC ·
-  SciLifeLab Pathogens Portal (CC BY 4.0)" och med DOI i DATA_SOURCES.md.
-  Licensen kontrollerades av en fristående agent 2026-11-19.
+  efter länken, högst var sjätte timme. CC BY 4.0, krediteras "SLU · SEEC
+  (Székely et al. 2026) · SciLifeLab Pathogens Portal · CC BY 4.0 ·
+  trenderna räknade av appen" med länk till dashboarden, och med DOI i
+  DATA_SOURCES.md. CC BY 4.0 kräver att ändringar anges, därav "räknade av
+  appen".
+- Licensen och påståendena kontrollerades av fristående agenter 2026-11-19;
+  deras fynd (kreditering, Stockholmsområdets verk, ordval och tolkningen
+  av CSV-filen) är rättade.
 
 ### 2026-11-19 (nya siffror i stadskortet)
 - Fliken BEFOLKNING visar födda, döda och flyttnetto den senaste månaden
