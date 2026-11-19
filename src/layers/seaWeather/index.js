@@ -1,9 +1,10 @@
-import { formatNumber, msg, t } from '../../i18n/index.js';
+import { formatNumber, msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { cssColor } from '../../render/color.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { analystRows } from '../analystRows.js';
 import {
   LEVEL_CLASSES,
   NO_VALUE_COLOR,
@@ -89,6 +90,7 @@ export function createSeaWeatherLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
+  let _offLocale = null;
   let _stations = [];
   let _values = true;
   const _stationById = new Map();
@@ -266,6 +268,10 @@ export function createSeaWeatherLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -351,6 +357,8 @@ export function createSeaWeatherLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _ground.clear();
       _stationById.clear();
@@ -402,6 +410,19 @@ export function createSeaWeatherLayer({
             : item,
         ),
       };
+    },
+
+    /** The stations drawn, as the context panel counts and the analyst reads them. */
+    getAnalystRecords(maxCount = 500) {
+      if (!_enabled) return [];
+      return analystRows(_stations, maxCount, {
+        extra: (row) => ({
+          // Only a level against mean water reads as one.
+          waterLevelCmMeanWater: shownValue(row),
+          waterTempC: row.waterTemp,
+          waveHeightM: row.waveHeight,
+        }),
+      });
     },
 
     getStats() {

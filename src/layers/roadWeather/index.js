@@ -1,9 +1,10 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { cssColor } from '../../render/color.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { analystRows } from '../analystRows.js';
 import {
   ICE_RISK_COLOR,
   NO_READING_COLOR,
@@ -96,6 +97,7 @@ export function createTrafikverketWeatherLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
+  let _offLocale = null;
   let _stations = [];
   /** 'surface' or 'air': which temperature colours the dots. */
   let _mode = 'surface';
@@ -295,6 +297,10 @@ export function createTrafikverketWeatherLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -403,6 +409,8 @@ export function createTrafikverketWeatherLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _ground.clear();
       _stationById.clear();
@@ -492,6 +500,18 @@ export function createTrafikverketWeatherLayer({
             : item,
         ),
       };
+    },
+
+    /** The stations drawn, as the context panel counts and the analyst reads them. */
+    getAnalystRecords(maxCount = 2000) {
+      if (!_enabled) return [];
+      return analystRows(visibleStations(), maxCount, {
+        extra: (row) => ({
+          surfaceTempC: row.surfaceTemp,
+          airTempC: row.airTemp,
+          iceRisk: Boolean(row.risk),
+        }),
+      });
     },
 
     getStats() {

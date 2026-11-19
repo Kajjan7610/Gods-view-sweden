@@ -13,7 +13,7 @@ const CARD_BASE = Object.freeze({
 });
 
 /** Farthest from a municipal seat that a station still carries its name. */
-const TITLE_PLACE_WITHIN_KM = 5;
+export const TITLE_PLACE_WITHIN_KM = 5;
 
 /** The readiness form in the language. */
 export function readinessLabel(id) {

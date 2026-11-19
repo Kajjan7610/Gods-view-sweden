@@ -268,3 +268,30 @@ test('a row of the list selects its hospital and flies to it', async (t) => {
   assert.equal(flights.length, 1);
   layer.destroy();
 });
+
+test('the analyst reads the hospitals and their medians, and nothing while off', async (t) => {
+  quiet(t);
+  const { layer } = harness();
+  layer.enable();
+  await layer.update();
+  const records = layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map((r) => [r.id, r.name, r.lat, r.lon]),
+    [
+      ['n', 'Sjukhus n', 59.4, 18.0],
+      ['p', 'Sjukhus p', 59.3, 18.0],
+      ['s', 'Sjukhus s', 59.2, 18.0],
+    ],
+  );
+  const [north, plain] = records;
+  assert.equal(north.emergencyDepartment, true);
+  assert.equal(north.medianMinutesToPhysician, 40);
+  assert.equal(north.medianMinutesTotalStay, 320);
+  assert.equal(north.statisticsYear, 2025);
+  assert.equal(plain.emergencyDepartment, false);
+  assert.equal(plain.medianMinutesToPhysician, null);
+  assert.equal(layer.getAnalystRecords(2).length, 2);
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+  layer.destroy();
+});

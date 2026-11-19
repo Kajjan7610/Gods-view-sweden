@@ -279,3 +279,26 @@ test('a district is selected by its code while shown', async (t) => {
     'ELECTION DISTRICT · District 01800101',
   );
 });
+
+test('the analyst reads the shown districts, and nothing while off', async (t) => {
+  const { layer } = harness(t);
+  layer.enable();
+  await layer.update();
+  const records = layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map(({ name }) => name),
+    ['District 01800101', 'District 01800102'],
+  );
+  const [first] = records;
+  // The middle of the district's square.
+  assert.ok(Math.abs(first.lon - 18.005) < 1e-6);
+  assert.ok(Math.abs(first.lat - 59.305) < 1e-6);
+  assert.equal(first.municipality, 'Stockholm');
+  assert.equal(first.leadingParty, 'S');
+  assert.equal(first.leadingSharePercent, 30);
+  assert.equal(first.turnoutPercent, 90);
+  assert.equal(layer.getAnalystRecords(1).length, 1);
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+  layer.destroy();
+});

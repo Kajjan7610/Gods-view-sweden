@@ -128,6 +128,28 @@ test('the stops are one set of dots, shown only while the layer is on', async (t
   assert.equal(h.dots(), undefined, 'the set is disposed');
 });
 
+test('the analyst reads the stops drawn, and nothing while the layer is off', async (t) => {
+  const { layer } = harness(t, [
+    stop('a'),
+    stop('b', { point: [11.97, 57.71] }),
+  ]);
+  layer.enable();
+  await layer.update();
+  const records = layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map(({ name, lat, lon }) => ({ name, lat, lon })),
+    [
+      { name: 'Hållplats a', lat: 59.33, lon: 18.07 },
+      { name: 'Hållplats b', lat: 57.71, lon: 11.97 },
+    ],
+  );
+  assert.equal(records[0].operator, 'SL');
+  assert.equal(records[0].firstAlert, 'Hållplatsen trafikeras inte');
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+  layer.destroy();
+});
+
 test('a dot is coloured and sized by how serious its alerts are', async (t) => {
   const h = harness(t, [stop('a'), stop('b', { kind: 'moved' })]);
   h.layer.enable();

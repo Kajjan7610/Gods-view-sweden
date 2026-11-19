@@ -1,9 +1,10 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { cssColor } from '../../render/color.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { analystRows, middleOf } from '../analystRows.js';
 import { WARNING_LEVELS, levelColor } from './records.js';
 import { CRISIS_KINDS } from './crisis.js';
 import { spreadAroundPlaces } from '../policeEvents/records.js';
@@ -13,6 +14,7 @@ import {
   SMHI_WARNINGS_PAGE,
   buildCrisisCard,
   buildWarningCard,
+  warningLanguage,
 } from './cards.js';
 export * from './records.js';
 export * from './cards.js';
@@ -109,6 +111,7 @@ export function createSmhiWarningsLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
+  let _offLocale = null;
   let _selectedCardId = null;
   let _areas = [];
   let _crisis = [];
@@ -378,6 +381,10 @@ export function createSmhiWarningsLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -475,6 +482,8 @@ export function createSmhiWarningsLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _ground.clear();
       _areaById.clear();
@@ -558,6 +567,56 @@ export function createSmhiWarningsLayer({
             : item,
         ),
       };
+    },
+
+    /**
+     * The areas and crisis messages drawn, as the context panel counts and
+     * the analyst reads them: an area at the middle of its largest polygon,
+     * each named as its card is.
+     */
+    getAnalystRecords(maxCount = 500) {
+      if (!_enabled) return [];
+      const language = warningLanguage();
+      const pick = (node) => node?.[language] || node?.en || node?.sv || null;
+      const areas = analystRows(visibleAreas(), maxCount, {
+        place: (row) =>
+          middleOf(
+            row.polygons.reduce(
+              (best, polygon) =>
+                polygon.outer.length > (best?.length ?? 0)
+                  ? polygon.outer
+                  : best,
+              null,
+            ),
+          ),
+        name: (row) => {
+          const headline = pick(row.description) || pick(row.event);
+          const level = t(LEVEL_TITLES[row.level] || LEVEL_TITLES.MESSAGE);
+          return headline ? `${level} · ${headline}` : level;
+        },
+        extra: (row) => ({
+          level: row.level,
+          area: pick(row.area),
+          upcoming: row.upcoming,
+          starts: Number.isFinite(row.start)
+            ? new Date(row.start).toISOString()
+            : null,
+          ends: Number.isFinite(row.end)
+            ? new Date(row.end).toISOString()
+            : null,
+        }),
+      });
+      const crisis = analystRows(
+        visibleCrisis(),
+        Math.max(1, maxCount - areas.length),
+        {
+          place: crisisPoint,
+          name: (row) =>
+            `${row.kind === 'vma' ? 'VMA' : t('CRISIS INFORMATION')} · ${row.headline}`,
+          extra: (row) => ({ kind: row.kind, place: row.place ?? null }),
+        },
+      );
+      return [...areas, ...crisis].slice(0, Math.max(1, maxCount));
     },
 
     getStats() {

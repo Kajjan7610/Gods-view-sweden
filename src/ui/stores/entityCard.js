@@ -10,7 +10,12 @@ import {
   searchEntities,
   viewSummary,
 } from '../../data/entityContext.js';
-import { formatDate, formatNumber, t } from '../../i18n/index.js';
+import {
+  formatDate,
+  formatNumber,
+  onLocaleChange,
+  t,
+} from '../../i18n/index.js';
 
 const FACT_DATE = Object.freeze({
   day: 'numeric',
@@ -278,6 +283,31 @@ export const useEntityCardStore = defineStore('gev-entity-card', () => {
     requestRoute(current?.identity);
     return true;
   }
+
+  // An open card is read again in the new language at once. One with no
+  // record behind it is named by the layer it was picked from ("Rest area ·
+  // Storlien"), so the layer names it again; a callsign or a registration
+  // is the same in every language.
+  onLocaleChange(() => {
+    const current = card.value;
+    const identity = current?.identity;
+    if (!identity) return;
+    let label = identity.label;
+    if (current.basis === 'identity' && typeof identity.id === 'string') {
+      let found = null;
+      try {
+        found =
+          dataManager()
+            ?.layers?.get?.(identity.layerId)
+            ?.module?.findByQuery?.(identity.id) || null;
+      } catch {
+        found = null;
+      }
+      const name = String(found?.name ?? '').trim();
+      if (name && !found.callsign && !found.registration) label = name;
+    }
+    read({ ...identity, label });
+  });
 
   function clear() {
     if (following.value) shell.value?.letGo?.(card.value);

@@ -129,6 +129,29 @@ test('the stations are one set of dots, shown only while the layer is on', async
   assert.equal(dots(), undefined, 'the set is disposed');
 });
 
+test('the analyst reads the stations drawn, and nothing while the layer is off', async (t) => {
+  const { layer } = harness(t, [
+    station('1'),
+    station('2', { levelReference: 'RH2000' }),
+  ]);
+  layer.enable();
+  await layer.update();
+  const records = layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map(({ name, lat, lon }) => ({ name, lat, lon })),
+    [
+      { name: 'Station 1', lat: 57.63, lon: 11.61 },
+      { name: 'Station 2', lat: 57.63, lon: 11.62 },
+    ],
+  );
+  assert.equal(records[0].waterLevelCmMeanWater, -18);
+  assert.equal(records[1].waterLevelCmMeanWater, null, 'another zero');
+  assert.equal(records[0].waterTempC, 10.1);
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+  layer.destroy();
+});
+
 test('a dot is coloured by its level; one without a level against mean water is small and grey', async (t) => {
   const { layer, items } = harness(t, [
     station('7', { level: 12 }),

@@ -1,8 +1,9 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { cssColor } from '../../render/color.js';
 import { drawOf, findCamera, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
+import { analystRows, middleOf } from '../analystRows.js';
 import { cableClassificationTypeForScene } from '../submarineCables/surface.js';
 import {
   OTHER_PARTIES,
@@ -98,6 +99,7 @@ export function createElectionDistrictsLayer({
   let _capped = false;
   let _tooHigh = false;
   let _selected = null;
+  let _offLocale = null;
   let _lastUpdate = null;
   let _lastError = null;
 
@@ -349,6 +351,26 @@ export function createElectionDistrictsLayer({
     _rowListener?.();
   }
 
+  /** Each district's middle, worked out once per shape it is drawn with. */
+  const _middles = new WeakMap();
+  function middleOfDistrict(district) {
+    const shape = _shapes.get(district.c);
+    if (!shape) return null;
+    if (_middles.has(shape)) return _middles.get(shape);
+    const outers = shape.map((rings) => rings[0] ?? []);
+    let middle = null;
+    if (outers.length) {
+      const ring = outers.reduce((a, b) => (b.length > a.length ? b : a));
+      // A closed ring counts its first point once.
+      const [first, last] = [ring[0], ring[ring.length - 1]];
+      const closed =
+        ring.length > 1 && first[0] === last[0] && first[1] === last[1];
+      middle = middleOf(closed ? ring.slice(0, -1) : ring);
+    }
+    _middles.set(shape, middle);
+    return middle;
+  }
+
   const layer = {
     id: ELECTION_DISTRICTS_LAYER_ID,
     name: 'Election Districts 2026 (Sweden)',
@@ -380,6 +402,10 @@ export function createElectionDistrictsLayer({
           _stackListener,
         );
       }
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selected) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -423,6 +449,8 @@ export function createElectionDistrictsLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       if (_stackListener)
         mapStackEventTarget?.removeEventListener?.(
@@ -518,6 +546,35 @@ export function createElectionDistrictsLayer({
           return district;
       }
       return null;
+    },
+
+    /**
+     * The shown districts, as the analyst reads them: each at the middle of
+     * its largest outer ring, with its votes in percent.
+     */
+    getAnalystRecords(maxCount = 1000) {
+      if (!_enabled) return [];
+      return analystRows(_districts, maxCount, {
+        place: middleOfDistrict,
+        name: (district) => district.n,
+        extra: (district) => {
+          const shares = Array.isArray(district.s) ? district.s : [];
+          const leader = leadingParty(shares);
+          return {
+            id: district.c,
+            code: district.c,
+            municipality: district.m ?? null,
+            votes: Number.isFinite(district.v) ? district.v : null,
+            turnoutPercent: Number.isFinite(district.t)
+              ? district.t / 10
+              : null,
+            leadingParty: leader?.id ?? null,
+            leadingSharePercent: leader
+              ? shares[PARTIES.indexOf(leader)] / 10
+              : null,
+          };
+        },
+      });
     },
 
     getStats() {

@@ -1,12 +1,14 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { cssColor } from '../../render/color.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
+import { analystRows } from '../analystRows.js';
 import { AGE_CLASSES, ageClass } from './records.js';
 import {
   LIGHTNING_STRIKES_OVERLAY_SOURCE_ID,
   buildStrikeCard,
+  strikeKindLabel,
 } from './cards.js';
 export * from './records.js';
 export * from './cards.js';
@@ -95,6 +97,7 @@ export function createLightningStrikesLayer({
   let _stale = false;
   let _truncated = false;
   let _selectedId = null;
+  let _offLocale = null;
   let _strikes = [];
   const _strikeById = new Map();
   // Stroke id → index of the age class its dot is drawn in.
@@ -278,6 +281,10 @@ export function createLightningStrikesLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -379,6 +386,8 @@ export function createLightningStrikesLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _strikeById.clear();
       _strikes = [];
@@ -422,6 +431,28 @@ export function createLightningStrikesLayer({
                 : ''
             : '',
       };
+    },
+
+    /**
+     * The strokes of the last hour, newest first, as the analyst reads them:
+     * named as on their card, with the peak current in kA.
+     */
+    getAnalystRecords(maxCount = 2000) {
+      if (!_enabled) return [];
+      const nowMs = now();
+      return analystRows(current(), maxCount, {
+        name: (row) =>
+          row.kind === 'cloud'
+            ? t('LIGHTNING · IN CLOUD')
+            : t('LIGHTNING STRIKE'),
+        extra: (row) => ({
+          kind: strikeKindLabel(row.kind),
+          time: new Date(row.at).toISOString(),
+          minutesAgo: Math.max(0, Math.round((nowMs - row.at) / 60_000)),
+          peakCurrentKa: row.amp,
+          sensors: row.sensors ?? null,
+        }),
+      });
     },
 
     getStats() {

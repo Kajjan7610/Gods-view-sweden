@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { analystRows, middleOf } from '../analystRows.js';
 import { createPowerDay } from './dayPanel.js';
 import {
   SWEDISH_AREAS,
@@ -715,6 +716,34 @@ export function createPowerGridLayer({
       facts.net = totals.net;
       facts.netImport = -totals.net;
       return facts;
+    },
+
+    /**
+     * The four zones at their dots, with their import and export, and the
+     * links drawn now at their middles, with their flow.
+     */
+    getAnalystRecords(maxCount = 200) {
+      if (!_enabled) return [];
+      const zones = analystRows(SWEDISH_AREAS, maxCount, {
+        name: (area) => `${area.id} ${area.name}`,
+        extra: (area) => {
+          const totals = _snapshot.areas?.find((one) => one.id === area.id);
+          return {
+            importMw: totals ? totals.import : null,
+            exportMw: totals ? totals.export : null,
+          };
+        },
+      });
+      const links = analystRows(
+        shownLinks().filter((link) => link.mw >= 1),
+        maxCount - zones.length,
+        {
+          place: (link) => middleOf([link.fromPoint, link.toPoint]),
+          name: (link) => `${zoneName(link.from)} → ${zoneName(link.to)}`,
+          extra: (link) => ({ mw: link.mw, kind: link.kind }),
+        },
+      );
+      return [...zones, ...(maxCount > zones.length ? links : [])];
     },
 
     getStats() {

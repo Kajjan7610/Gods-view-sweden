@@ -1,4 +1,4 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import {
   fromDegrees,
   fromDegreesInto,
@@ -13,6 +13,7 @@ import {
   findQuery,
 } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
+import { analystRows } from '../analystRows.js';
 import { cableClassificationTypeForScene } from '../submarineCables/surface.js';
 import {
   BOUNDARY_KINDS,
@@ -132,6 +133,7 @@ export function createMunicipalitiesLayer({
   let _municipalityIndex = [];
   let _countyByCode = new Map();
   let _selected = null;
+  let _offLocale = null;
   let _centre = null;
   let _view = null;
   const _shown = new Set(BOUNDARY_KINDS.map((kind) => kind.id));
@@ -411,6 +413,10 @@ export function createMunicipalitiesLayer({
           _stackListener,
         );
       }
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selected) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -517,6 +523,8 @@ export function createMunicipalitiesLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       if (_stackListener)
         mapStackEventTarget?.removeEventListener?.(
@@ -590,6 +598,26 @@ export function createMunicipalitiesLayer({
           : '',
         infoTitle: date ? t('Population on {date} (SCB)', { date }) : '',
       };
+    },
+
+    /**
+     * The municipalities and counties whose borders show, each at its label
+     * point, for the context panel and the analyst.
+     */
+    getAnalystRecords(maxCount = 400) {
+      if (!_enabled || !_loaded) return [];
+      const areas = [
+        ...(_shown.has('municipality') ? _snapshot.municipalities : []),
+        ...(_shown.has('county') ? _snapshot.counties : []),
+      ];
+      return analystRows(areas, maxCount, {
+        place: (area) => area.label,
+        extra: (area) => ({
+          id: area.code,
+          kind: _snapshot.counties.includes(area) ? 'county' : 'municipality',
+          population: Number.isFinite(area.population) ? area.population : null,
+        }),
+      });
     },
 
     getStats() {

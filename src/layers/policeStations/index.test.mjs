@@ -301,3 +301,25 @@ test('ground heights lift the dots where they are; a browser that kept them asks
   assert.deepEqual(again.asked, []);
   second.layer.destroy();
 });
+
+test('the stations are records with their names and desks', async () => {
+  const h = harness({
+    getSnapshot: async () =>
+      snapshot([station('1', { services: ['passport-apply'] }), station('2')]),
+  });
+  h.layer.enable();
+  await h.layer.update();
+  const records = h.layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map(({ id, name, lat, lon, desk }) => [id, name, lat, lon, desk]),
+    [
+      ['1', 'Station 1', 59.33, 18.04, 'passport'],
+      ['2', 'Station 2', 59.33, 18.04, 'desk'],
+    ],
+  );
+  assert.equal(records[0].address, 'Storgatan 1');
+  assert.equal(h.layer.getAnalystRecords(1).length, 1);
+  h.layer.disable();
+  assert.deepEqual(h.layer.getAnalystRecords(), []);
+  h.layer.destroy();
+});

@@ -249,3 +249,22 @@ test("the card dates a reading by the layer's own clock", async (t) => {
   );
   h.layer.destroy();
 });
+
+test('the analyst reads the stations and their dose rates, and nothing while off', async (t) => {
+  const h = harness(t, [station('7'), station('8', { value: null })]);
+  h.layer.enable();
+  await h.layer.update();
+  const records = h.layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map((r) => [r.id, r.name, r.lat, r.lon, r.doseRate]),
+    [
+      ['7', 'Station 7', 60.67, 17.14, 0.121],
+      ['8', 'Station 8', 60.67, 17.14, null],
+    ],
+  );
+  assert.equal(records[0].unit, 'µSv/h');
+  assert.equal(records[0].measured, NOW - HOUR);
+  h.layer.disable();
+  assert.deepEqual(h.layer.getAnalystRecords(), []);
+  h.layer.destroy();
+});

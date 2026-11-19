@@ -284,3 +284,34 @@ test('the layer shows tidy stores: one per store, with the chain’s own links',
   assert.equal(state.cards.length, 0, 'the twin is gone');
   layer.destroy();
 });
+
+test('the analyst reads the shown stores, and nothing while the layer is off', async () => {
+  const { layer } = harness([
+    store(1),
+    store(2, { company: 'city-gross', brand: 'City Gross' }),
+  ]);
+  layer.enable();
+  await layer.update();
+  const records = layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map((r) => [r.name, r.lat, r.lon]),
+    [
+      ['ICA Nära 1', store(1).point[1], store(1).point[0]],
+      ['ICA Nära 2', store(2).point[1], store(2).point[0]],
+    ],
+  );
+  assert.equal(records[0].company, 'ICA');
+  assert.equal(records[0].brand, 'ICA Nära');
+  layer
+    .getRowControls()
+    .chips.find((c) => c.id === 'company-ica')
+    .onClick();
+  assert.deepEqual(
+    layer.getAnalystRecords().map((r) => r.id),
+    ['n2'],
+  );
+  assert.equal(layer.getAnalystRecords(1).length, 1);
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+  layer.destroy();
+});

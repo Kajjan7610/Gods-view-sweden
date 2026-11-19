@@ -1,4 +1,4 @@
-import { formatNumber, msg, t, tn } from '../../i18n/index.js';
+import { formatNumber, msg, onLocaleChange, t, tn } from '../../i18n/index.js';
 import { fromDegrees, toLonLatH } from '../../geo/ellipsoid.js';
 import {
   canvasOf,
@@ -9,6 +9,7 @@ import {
 } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { analystRows } from '../analystRows.js';
 import { SHELTER_STATES, clipViewBox, shelterColor } from './records.js';
 import {
   SHELTERS_OVERLAY_SOURCE_ID,
@@ -99,6 +100,7 @@ export function createSheltersLayer({
   let _places = null;
   let _count = null;
   let _selectedId = null;
+  let _offLocale = null;
   let _shown = [];
   const _shelterById = new Map();
 
@@ -334,6 +336,10 @@ export function createSheltersLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -392,6 +398,8 @@ export function createSheltersLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _ground.clear();
       _dots?.dispose();
@@ -469,6 +477,24 @@ export function createSheltersLayer({
           })),
         },
       };
+    },
+
+    /** The shelters drawn (the nearest to the map centre), as the analyst reads them. */
+    getAnalystRecords(maxCount = SHOWN) {
+      if (!_enabled) return [];
+      return analystRows(_shown, maxCount, {
+        // Named as its card is: a shelter number alone says little.
+        name: (row) =>
+          row.number
+            ? t('SHELTER · {number}', { number: row.number })
+            : t('SHELTER'),
+        extra: (row) => ({
+          property: row.property,
+          places: row.places,
+          restricted: row.limited,
+          distanceFromCentreM: row.distance,
+        }),
+      });
     },
 
     getStats() {

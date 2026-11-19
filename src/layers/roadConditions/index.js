@@ -1,9 +1,10 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { cssColor } from '../../render/color.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { analystRows } from '../analystRows.js';
 import {
   INCIDENT_KINDS,
   OTHER_INCIDENT,
@@ -16,6 +17,7 @@ import {
   ROAD_OVERLAY_SOURCE_ID,
   buildConditionCard,
   buildIncidentCard,
+  incidentHeadline,
 } from './cards.js';
 export * from './records.js';
 export * from './cards.js';
@@ -117,6 +119,7 @@ export function createTrafikverketRoadsLayer({
   let _lastError = null;
   let _stale = false;
   let _selected = null;
+  let _offLocale = null;
   let _selectedCardId = null;
   let _conditions = [];
   let _incidents = [];
@@ -466,6 +469,10 @@ export function createTrafikverketRoadsLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selected) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -544,6 +551,8 @@ export function createTrafikverketRoadsLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _ground.clear();
       _conditionById.clear();
@@ -648,6 +657,48 @@ export function createTrafikverketRoadsLayer({
             : item,
         ),
       };
+    },
+
+    /**
+     * The stretches and incidents the toggles leave on the map, each where
+     * its card stands: an incident's dot, a stretch's middle.
+     */
+    getAnalystRecords(maxCount = 3000) {
+      if (!_enabled) return [];
+      const where = (row) => ({
+        road: row.road || null,
+        location: row.location || null,
+      });
+      const conditions = analystRows(
+        _show.conditions
+          ? _conditions.filter((row) => row.code !== 1 || _show.normal)
+          : [],
+        maxCount,
+        {
+          place: anchorOf,
+          name: (row) =>
+            [row.text || t('Unknown'), row.road].filter(Boolean).join(' · '),
+          extra: (row) => ({ condition: row.text || null, ...where(row) }),
+        },
+      );
+      if (conditions.length >= maxCount) return conditions;
+      const incidents = analystRows(
+        _show.incidents
+          ? _incidents.filter((row) => row.kind !== 'minor' || _show.minor)
+          : [],
+        maxCount - conditions.length,
+        {
+          place: anchorOf,
+          name: (row) =>
+            [incidentHeadline(row), row.road].filter(Boolean).join(' · '),
+          extra: (row) => ({
+            incident: incidentHeadline(row),
+            ...where(row),
+            severity: row.severityText || null,
+          }),
+        },
+      );
+      return [...conditions, ...incidents];
     },
 
     getStats() {

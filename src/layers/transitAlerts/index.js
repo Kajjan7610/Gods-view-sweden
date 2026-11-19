@@ -1,8 +1,9 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { analystRows } from '../analystRows.js';
 import { ALERT_KINDS, alertColor } from './records.js';
 import { TRANSIT_ALERTS_OVERLAY_SOURCE_ID, buildStopCard } from './cards.js';
 export * from './records.js';
@@ -67,6 +68,7 @@ export function createTransitAlertsLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
+  let _offLocale = null;
   let _stops = [];
   let _pending = [];
   const _stopById = new Map();
@@ -211,6 +213,10 @@ export function createTransitAlertsLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -289,6 +295,8 @@ export function createTransitAlertsLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _ground.clear();
       _stopById.clear();
@@ -330,6 +338,20 @@ export function createTransitAlertsLayer({
           index === 0 ? { ...item, blurb } : item,
         ),
       };
+    },
+
+    /** The stops drawn, as the context panel counts and the analyst reads them. */
+    getAnalystRecords(maxCount = 1000) {
+      if (!_enabled) return [];
+      return analystRows(_stops, maxCount, {
+        extra: (row) => ({
+          operator: row.operatorName,
+          kind: row.kind,
+          alerts: row.alerts.length,
+          // The most serious alert's heading, as the card opens with it.
+          firstAlert: row.alerts[0]?.header ?? null,
+        }),
+      });
     },
 
     getStats() {

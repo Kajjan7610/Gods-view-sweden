@@ -122,6 +122,26 @@ test('the reports are one set of dots, shown only while the layer is on', async 
   assert.equal(h.dots(), undefined, 'the set is disposed');
 });
 
+test('the analyst reads the reports drawn, and nothing while the layer is off', async (t) => {
+  const { layer } = harness(t, [
+    message('1'),
+    message('2', { category: 'planned', point: [11.97, 57.71] }),
+  ]);
+  layer.enable();
+  await layer.update();
+  const records = layer.getAnalystRecords();
+  // Planned work is hidden until its chip is on.
+  assert.deepEqual(
+    records.map(({ name, lat, lon }) => ({ name, lat, lon })),
+    [{ name: 'Trafikolycka · E4 Stockholm', lat: 59.33, lon: 18.05 }],
+  );
+  assert.equal(records[0].location, 'Vid Norrtull');
+  assert.equal(records[0].priority, 3);
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+  layer.destroy();
+});
+
 test('a dot is coloured and sized by priority, the serious ones on top', async (t) => {
   const h = harness(t, [message('1', { priority: 1 }), message('2')]);
   h.layer.enable();

@@ -1,9 +1,10 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { cssColor } from '../../render/color.js';
 import { drawOf, findCamera, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { cableClassificationTypeForScene } from '../submarineCables/surface.js';
+import { analystRows } from '../analystRows.js';
 import {
   AREA_KINDS,
   KIND,
@@ -91,6 +92,7 @@ export function createProtectedNatureLayer({
   /** Decoded polygons per area id, for drawing and clicks. */
   let _shapes = new Map();
   let _selected = null;
+  let _offLocale = null;
   let _selectedCardId = null;
   let _lastUpdate = null;
   let _lastError = null;
@@ -364,6 +366,10 @@ export function createProtectedNatureLayer({
           _stackListener,
         );
       }
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selected) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -408,6 +414,8 @@ export function createProtectedNatureLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       if (_stackListener)
         mapStackEventTarget?.removeEventListener?.(
@@ -468,6 +476,25 @@ export function createProtectedNatureLayer({
         if (polygonsContain(_shapes.get(area.i) ?? [], point)) return area;
       }
       return null;
+    },
+
+    /** The areas shown, each where its card stands: its box's middle. */
+    getAnalystRecords(maxCount = 1500) {
+      if (!_enabled) return [];
+      return analystRows(_areas, maxCount, {
+        place: ({ b: [west, south, east, north] }) => [
+          (west + east) / 2,
+          (south + north) / 2,
+        ],
+        name: (area) => area.n,
+        extra: (area) => ({
+          id: area.i,
+          kind: t(KIND_LABELS[area.t] ?? KIND_LABELS.nr),
+          municipality: area.k || null,
+          hectares: Number.isFinite(area.h) ? area.h : null,
+          protectedSince: Number.isFinite(area.y) ? area.y : null,
+        }),
+      });
     },
 
     getStats() {

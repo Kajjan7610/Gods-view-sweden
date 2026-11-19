@@ -706,3 +706,34 @@ test('a story reads the latest quarter: flows south and north, import, export an
   await layer.update();
   assert.deepEqual(layer.storyFacts(), {});
 });
+
+test('the zones and the links drawn are records, the links at their middles', async (t) => {
+  const { layer } = harness(t, {
+    getSnapshot: async () => snapshot({ links: withMw('DE_SE4', 0) }),
+  });
+  layer.enable();
+  await layer.update();
+  const records = layer.getAnalystRecords();
+  assert.deepEqual(records.map(({ id, name }) => [id, name]).slice(0, 4), [
+    ['SE1', 'SE1 Luleå'],
+    ['SE2', 'SE2 Sundsvall'],
+    ['SE3', 'SE3 Stockholm'],
+    ['SE4', 'SE4 Malmö'],
+  ]);
+  assert.equal(records[2].importMw, 5699);
+  assert.equal(records[0].importMw, null);
+  // A link with no flow is not drawn, so not counted.
+  const links = records.slice(4);
+  assert.deepEqual(
+    links.map(({ id }) => id),
+    ['FI_SE3', 'SE2_SE3'],
+  );
+  const internal = links[1];
+  assert.equal(internal.name, 'SE2 → SE3');
+  assert.equal(internal.mw, 5699);
+  assert.ok(Math.abs(internal.lon - (17.3 + 18.07) / 2) < 1e-9);
+  assert.ok(Math.abs(internal.lat - (62.39 + 59.33) / 2) < 1e-9);
+  assert.equal(layer.getAnalystRecords(4).length, 4);
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+});

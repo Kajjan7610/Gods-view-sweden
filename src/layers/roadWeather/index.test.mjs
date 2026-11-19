@@ -136,6 +136,34 @@ test('the stations are one set of dots, shown only while the layer is on', async
   assert.equal(dots(), undefined, 'the set is disposed');
 });
 
+test('the analyst reads the stations drawn, and nothing while the layer is off', async (t) => {
+  const { layer, chip } = harness(t, [
+    station('a', 5, { risk: 'frost' }),
+    station('b', 5),
+  ]);
+  layer.enable();
+  await layer.update();
+  const records = layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map(({ name, lat, lon }) => ({ name, lat, lon })),
+    [
+      { name: 'Station a', lat: 59.38, lon: 18.04 },
+      { name: 'Station b', lat: 59.38, lon: 18.04 },
+    ],
+  );
+  assert.equal(records[0].surfaceTempC, -0.6);
+  assert.equal(records[0].iceRisk, true);
+  chip('risk').onClick();
+  assert.deepEqual(
+    layer.getAnalystRecords().map((record) => record.id),
+    ['a'],
+    'only the stations shown',
+  );
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+  layer.destroy();
+});
+
 test('a dot is coloured by temperature, ringed white where the road risks ice', async (t) => {
   const { layer, item } = harness(t, [
     station('a', 5),

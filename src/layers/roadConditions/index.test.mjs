@@ -643,3 +643,49 @@ test('the time of the last update follows the injected clock', async (t) => {
   assert.equal(layer.getStats().lastUpdate, NOW + 3 * MINUTE);
   layer.destroy();
 });
+
+test('the stretches and incidents shown are records where their cards stand', async (t) => {
+  const { layer, chip } = harness(
+    t,
+    [
+      condition('c1', 2, {
+        lines: [
+          [
+            [18, 59],
+            [18.1, 59.1],
+            [18.2, 59.2],
+          ],
+        ],
+      }),
+      condition('ok', 1),
+    ],
+    [
+      incident('a'),
+      incident('t', { type: 'Trafikmeddelande', code: 'Vägen avstängd' }),
+      incident('m', { kind: 'minor' }),
+    ],
+  );
+  layer.enable();
+  await layer.update();
+  const records = layer.getAnalystRecords();
+  // Normal stretches and minor notices stay out while they are hidden.
+  assert.deepEqual(
+    records.map(({ id, name, lat, lon }) => [id, name, lat, lon]),
+    [
+      ['c1', 'Besvärligt (risk för) · E4', 59.1, 18.1],
+      ['a', 'Vägarbete · E4', 59, 18],
+      ['t', 'Vägen avstängd · E4', 59, 18],
+    ],
+  );
+  assert.equal(records[0].condition, 'Besvärligt (risk för)');
+  assert.equal(records[1].road, 'E4');
+  assert.equal(layer.getAnalystRecords(2).length, 2);
+  chip('incidents');
+  assert.deepEqual(
+    layer.getAnalystRecords().map(({ id }) => id),
+    ['c1'],
+  );
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+  layer.destroy();
+});

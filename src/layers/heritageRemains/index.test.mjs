@@ -294,3 +294,34 @@ test("a click on another layer's card or dot leaves the open card alone", async 
   }
   layer.destroy();
 });
+
+test('the analyst reads the shown remains, named as on the card, and nothing while off', async () => {
+  const { layer } = harness({
+    answer: {
+      remains: [
+        { ...ROWS[0], name: 'Anundshög' },
+        ROWS[1],
+        { ...ROWS[2], type: null },
+      ],
+    },
+  });
+  layer.enable();
+  await layer.update();
+  const records = layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map((r) => [r.name, r.lat, r.lon]),
+    [
+      ['Anundshög', 59.611, 16.545],
+      ['Gravfält', 59.615, 16.55],
+      ['Remain', 59.62, 16.56],
+    ],
+  );
+  assert.equal(records[0].number, 'L1:1');
+  assert.equal(records[0].municipality, 'Västerås');
+  assert.equal(records[0].confirmed, true);
+  assert.equal(records[0].assessment, 'Ancient monument (protected)');
+  assert.equal(layer.getAnalystRecords(1).length, 1);
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+  layer.destroy();
+});

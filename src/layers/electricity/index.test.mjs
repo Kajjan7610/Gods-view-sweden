@@ -245,3 +245,22 @@ test('a story reads this quarter hour’s spot price per zone, in öre per kWh',
   h.clock.now = NOW + 3 * QUARTER;
   assert.deepEqual(h.layer.storyFacts(), {});
 });
+
+test('the analyst reads the zones and their prices, and nothing while off', async (t) => {
+  const h = harness(t, [zone('SE3')]);
+  h.layer.enable();
+  await h.layer.update();
+  const [record, ...rest] = h.layer.getAnalystRecords();
+  assert.equal(rest.length, 0);
+  assert.equal(record.name, 'SE3 Stockholm');
+  assert.equal(record.lat, 59.5);
+  assert.equal(record.lon, 16);
+  assert.equal(record.sekPerKwhNow, 0.4);
+  assert.ok(Number.isFinite(record.sekPerKwhTodayMean));
+  assert.equal(record.sekPerKwhTomorrowMean, null, 'no prices for tomorrow');
+  h.clock.now = NOW + QUARTER;
+  assert.equal(h.layer.getAnalystRecords()[0].sekPerKwhNow, 2.5);
+  h.layer.disable();
+  assert.deepEqual(h.layer.getAnalystRecords(), []);
+  h.layer.destroy();
+});

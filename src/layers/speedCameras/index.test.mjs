@@ -300,6 +300,29 @@ test('the card goes when the view moves out of reach of its marker', async (t) =
   assert.equal(camera.listenerCount('moveEnd'), 0);
 });
 
+test('the analyst reads the sites within reach, and nothing while the layer is off', async (t) => {
+  const { layer, camera } = harness(t, [
+    site(),
+    site({ id: '2', name: 'Haparanda', point: [24.14, 65.83] }),
+  ]);
+  layer.enable();
+  await layer.update();
+  const records = layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map(({ name, lat, lon }) => ({ name, lat, lon })),
+    [{ name: 'Rotebro', lat: 59.47, lon: 17.9 }],
+    'the site 1,000 km off shows no marker',
+  );
+  assert.equal(records[0].road, 'E4');
+  assert.equal(records[0].facingDeg, 90);
+  camera.setPose(eyeAt(500_000));
+  assert.deepEqual(layer.getAnalystRecords(), [], 'beyond 400 km nothing');
+  camera.setPose(eyeAt(2_000));
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+  layer.destroy();
+});
+
 test('switching the layer off drops the last failure', async (t) => {
   const { layer, feed } = harness(t);
   layer.enable();

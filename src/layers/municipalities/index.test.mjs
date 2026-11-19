@@ -363,3 +363,26 @@ test('a municipality is selected by its code and flown over', async (t) => {
     },
   ]);
 });
+
+test('the areas whose borders show are records at their label points', async (t) => {
+  const { layer } = harness(t);
+  layer.enable();
+  await layer.update();
+  assert.deepEqual(
+    layer
+      .getAnalystRecords()
+      .map(({ id, name, lat, lon, kind }) => [id, name, lat, lon, kind]),
+    [
+      ['0180', 'Väst', 59.35, 18.05, 'municipality'],
+      ['0181', 'Öst', 59.35, 18.15, 'municipality'],
+      ['01', 'Stockholms län', 59.36, 18.1, 'county'],
+    ],
+  );
+  assert.equal(layer.getAnalystRecords()[0].population, 100_000);
+  // Counties hidden: only the municipalities.
+  chip(layer, 'boundary-county').onClick();
+  assert.equal(layer.getAnalystRecords().length, 2);
+  assert.equal(layer.getAnalystRecords(1).length, 1);
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+});

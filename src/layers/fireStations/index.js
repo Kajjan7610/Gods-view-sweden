@@ -1,11 +1,13 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { analystRows } from '../analystRows.js';
 import { READINESS_CLASSES, UNKNOWN_COLOR, readinessColor } from './records.js';
 import {
   FIRE_STATIONS_OVERLAY_SOURCE_ID,
+  TITLE_PLACE_WITHIN_KM,
   buildFireStationCard,
   readinessLabel,
 } from './cards.js';
@@ -69,6 +71,7 @@ export function createFireStationsLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
+  let _offLocale = null;
   let _stations = [];
   const _stationById = new Map();
 
@@ -207,6 +210,10 @@ export function createFireStationsLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -277,6 +284,8 @@ export function createFireStationsLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _ground.clear();
       _stationById.clear();
@@ -319,6 +328,26 @@ export function createFireStationsLayer({
               : item,
           ),
       };
+    },
+
+    /**
+     * The stations, as the analyst reads them: named as on their card, by
+     * their own name or the municipal seat they stand in.
+     */
+    getAnalystRecords(maxCount = 2000) {
+      if (!_enabled) return [];
+      return analystRows(_stations, maxCount, {
+        name: (row) =>
+          row.name ||
+          (row.near && row.near.km <= TITLE_PLACE_WITHIN_KM
+            ? row.near.name
+            : t('FIRE STATION')),
+        extra: (row) => ({
+          readiness: readinessLabel(row.readiness),
+          nearestSeat: row.near?.name ?? null,
+          nearestSeatKm: row.near?.km ?? null,
+        }),
+      });
     },
 
     getStats() {

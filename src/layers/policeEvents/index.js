@@ -1,9 +1,10 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { cssColor } from '../../render/color.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { analystRows } from '../analystRows.js';
 import {
   EVENT_CATEGORIES,
   categoryColor,
@@ -97,6 +98,7 @@ export function createPolisenEventsLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
+  let _offLocale = null;
   let _selectedCardId = null;
   let _events = [];
   let _window = 'day';
@@ -289,6 +291,10 @@ export function createPolisenEventsLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -366,6 +372,8 @@ export function createPolisenEventsLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _ground.clear();
       _eventById.clear();
@@ -434,6 +442,23 @@ export function createPolisenEventsLayer({
             : item,
         ),
       };
+    },
+
+    /**
+     * The notices shown, at the place each names (not the spread dot), with
+     * only what their cards show.
+     */
+    getAnalystRecords(maxCount = 500) {
+      if (!_enabled) return [];
+      return analystRows(visibleEvents(), maxCount, {
+        name: (row) => [row.type, row.place].filter(Boolean).join(' · '),
+        extra: (row) => ({
+          type: row.type,
+          place: row.place,
+          time: new Date(row.time).toISOString(),
+          summary: row.summary || null,
+        }),
+      });
     },
 
     getStats() {

@@ -412,6 +412,20 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-19 (kvarvarande luckor)
+- Kontextpanelens "N i vyn" var 0 för de svenska lagren, och analytikern såg
+  inte deras punkter. Nu lämnar 25 lager det de faktiskt visar (med samma
+  filter som kartan): namn, plats och några fält som kortet redan visar.
+  Ytor och linjer står i sin mitt. Riktningar är upstreams och lagrar bara
+  användarens egen rutt, så det lagret står utanför.
+- Ett öppet kort i de 26 svenska lagren ritas om när språket byts, och
+  kontextkortet läses om direkt i det nya språket.
+- Mellan 721 och 1100 px bred täckte ikonraden överst titeln. Titeln krymper
+  nu och ikonraden står i luckan mellan titeln och STORIES; mellan 721 och
+  860 px visas bara loggan (namnet finns kvar för skärmläsare). Spegelvänt
+  för arabiska och hebreiska.
+- Granskat av en fristående kodgranskare 2026-11-19; dess fynd är rättade.
+
 ### 2026-11-19 (tjäldjup och rastplatser)
 - Nytt lager **Tjäldjup (Sverige)** (delningstoken `12`) under Events.
   Trafikverkets tjälstavar sitter i den plogade vägbanan och mäter

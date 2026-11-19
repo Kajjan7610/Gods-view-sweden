@@ -153,6 +153,29 @@ test('the shelters are one set of dots, shown only while the layer is on', async
   assert.equal(h.dots(), undefined, 'the set is disposed');
 });
 
+test('the analyst reads the shelters drawn, and nothing while the layer is off', async () => {
+  const h = harness({
+    getSnapshot: async () =>
+      snapshot([shelter('1', 18.1, 59.4, 0), shelter('2', 18.12, 59.41, 900)]),
+  });
+  h.layer.enable();
+  await h.layer.update();
+  const records = h.layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map(({ lat, lon }) => ({ lat, lon })),
+    [
+      { lat: 59.4, lon: 18.1 },
+      { lat: 59.41, lon: 18.12 },
+    ],
+  );
+  assert.match(records[0].name, /10001-7/, 'named by its shelter number');
+  assert.equal(records[1].places, 60);
+  assert.equal(records[1].distanceFromCentreM, 900);
+  h.layer.disable();
+  assert.deepEqual(h.layer.getAnalystRecords(), []);
+  h.layer.destroy();
+});
+
 test('a dot is sized by its places and coloured by its state, the nearest drawn last', async () => {
   const h = harness({
     getSnapshot: async () =>
@@ -270,6 +293,7 @@ test('above the height limit nothing is asked, and the row says to zoom in', asy
   assert.equal(await h.layer.update(), true);
   assert.deepEqual(queries, []);
   assert.equal(h.items().length, 0);
+  assert.deepEqual(h.layer.getAnalystRecords(), [], 'none drawn, none read');
   assert.match(h.layer.getRowControls().info, /Zoom in/);
   h.layer.destroy();
 });

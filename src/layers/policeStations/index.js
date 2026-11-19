@@ -1,8 +1,9 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { analystRows } from '../analystRows.js';
 import { DESK_CLASSES, deskClass, deskColor } from './records.js';
 import {
   POLICE_STATIONS_OVERLAY_SOURCE_ID,
@@ -66,6 +67,7 @@ export function createPoliceStationsLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
+  let _offLocale = null;
   let _selectedCardId = null;
   let _stations = [];
   const _stationById = new Map();
@@ -227,6 +229,10 @@ export function createPoliceStationsLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -304,6 +310,8 @@ export function createPoliceStationsLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _ground.clear();
       _stationById.clear();
@@ -341,6 +349,18 @@ export function createPoliceStationsLayer({
               : item,
           ),
       };
+    },
+
+    /** The stations, with their address and what their desk offers. */
+    getAnalystRecords(maxCount = 1000) {
+      if (!_enabled) return [];
+      return analystRows(_stations, maxCount, {
+        extra: (row) => ({
+          address: row.address || null,
+          desk: deskClass(row),
+          services: row.services.join(', '),
+        }),
+      });
     },
 
     getStats() {

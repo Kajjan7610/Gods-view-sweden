@@ -1,9 +1,10 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { cssColor } from '../../render/color.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { analystRows } from '../analystRows.js';
 import { queueColor, queueRank } from './records.js';
 import {
   QUEUE_STATUS_LABELS,
@@ -11,6 +12,7 @@ import {
   buildPointCard,
   buildRouteCard,
   directionOf,
+  duration,
 } from './cards.js';
 export * from './records.js';
 export * from './cards.js';
@@ -85,6 +87,7 @@ export function createRoadQueuesLayer({
   let _stale = false;
   /** {kind: 'r'|'p', id} of the selected row, or null. */
   let _selected = null;
+  let _offLocale = null;
   let _routes = [];
   let _points = [];
   const _routeById = new Map();
@@ -95,6 +98,22 @@ export function createRoadQueuesLayer({
   const requestRender = () =>
     _viewer && findFrame(_viewer)?.requestRender(ROAD_QUEUES_LAYER_ID);
   const shown = (status) => !_show.onlyQueues || queueRank(status) > 0;
+
+  /** The stretch's middle: the middle point of its first line. */
+  const routeMiddle = (route) => {
+    const line = route.lines[0];
+    return line ? line[Math.floor(line.length / 2)] : null;
+  };
+  const routeName = (route) => t('Travel time · {name}', { name: route.name });
+  const pointName = (point) => {
+    const direction = directionOf(point.side);
+    return direction
+      ? t('Measuring point · {direction}', { direction })
+      : t('Measuring point');
+  };
+  const statusLabel = (status) =>
+    t(QUEUE_STATUS_LABELS[status] ?? QUEUE_STATUS_LABELS.unknown);
+  const kmh = (speed) => (Number.isFinite(speed) ? Math.round(speed) : null);
 
   const placeOf = (point) =>
     fromDegrees(point.point[0], point.point[1], _ground.heightOf(point.id));
@@ -287,6 +306,10 @@ export function createRoadQueuesLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selected) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -376,6 +399,8 @@ export function createRoadQueuesLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _ground.clear();
       _routeById.clear();
@@ -444,23 +469,48 @@ export function createRoadQueuesLayer({
       if (!hit) return null;
       if (hit.kind === 'r') {
         const route = _routeById.get(hit.id);
-        const line = route.lines[0];
-        const [lon, lat] = line[Math.floor(line.length / 2)];
-        return {
-          name: t('Travel time · {name}', { name: route.name }),
-          latitude: lat,
-          longitude: lon,
-        };
+        const [lon, lat] = routeMiddle(route);
+        return { name: routeName(route), latitude: lat, longitude: lon };
       }
       const point = _pointById.get(hit.id);
-      const direction = directionOf(point.side);
       return {
-        name: direction
-          ? t('Measuring point · {direction}', { direction })
-          : t('Measuring point'),
+        name: pointName(point),
         latitude: point.point[1],
         longitude: point.point[0],
       };
+    },
+
+    /**
+     * The stretches and measuring points shown, named as findByQuery names
+     * them: a stretch at its middle, a point where it measures.
+     */
+    getAnalystRecords(maxCount = 3000) {
+      if (!_enabled) return [];
+      const routes = analystRows(
+        _routes.filter((route) => shown(route.status)),
+        maxCount,
+        {
+          place: routeMiddle,
+          name: routeName,
+          extra: (route) => ({
+            status: statusLabel(route.status),
+            travelTime: duration(route.travelTimeS),
+            normalTravelTime: duration(route.normalS),
+            speedKmh: kmh(route.speedKmh),
+          }),
+        },
+      );
+      if (routes.length >= maxCount) return routes;
+      const points = analystRows(shownPoints(), maxCount - routes.length, {
+        name: pointName,
+        extra: (point) => ({
+          status: statusLabel(point.status),
+          speedKmh: kmh(point.speed),
+          normalSpeedKmh: kmh(point.normalSpeed),
+          vehiclesPerHour: Number.isFinite(point.flow) ? point.flow : null,
+        }),
+      });
+      return [...routes, ...points];
     },
 
     getStats() {

@@ -236,3 +236,32 @@ test("a click on another layer's card or dot leaves the open card alone", async 
   }
   layer.destroy();
 });
+
+test('the routes are records with their status and next departure', async (t) => {
+  const { layer } = harness(t, [
+    route('a', { messages: ['Inställd tur'] }),
+    route('c', { status: 'idle', departures: [] }),
+  ]);
+  layer.enable();
+  await layer.update();
+  const records = layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map(({ id, name, lat, lon, status }) => [
+      id,
+      name,
+      lat,
+      lon,
+      status,
+    ]),
+    [
+      ['a', 'Route a', 58.0, 11.7, 'running'],
+      ['c', 'Route c', 58.0, 11.7, 'idle'],
+    ],
+  );
+  assert.equal(records[0].nextDeparture, '12:20');
+  assert.equal(records[0].message, 'Inställd tur');
+  assert.equal(records[1].nextDeparture, null);
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+  layer.destroy();
+});

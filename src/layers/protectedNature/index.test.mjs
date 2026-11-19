@@ -270,3 +270,27 @@ test('an area is selected by its id while shown', async (t) => {
   );
   assert.equal(layer.setParams({ nvrid: 'nope' }), false);
 });
+
+test('the areas shown are records at their boxes’ middles', async (t) => {
+  const { layer } = harness(t);
+  layer.enable();
+  await layer.update();
+  const records = layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map(({ id, name }) => [id, name]),
+    [
+      ['2000001', 'Area 2000001'],
+      ['2000002', 'Area 2000002'],
+      ['2000003', 'Area 2000003'],
+    ],
+  );
+  const [park] = records;
+  assert.ok(Math.abs(park.lon - 18.255) < 1e-9);
+  assert.ok(Math.abs(park.lat - 59.185) < 1e-9);
+  assert.equal(park.kind, 'National park');
+  assert.equal(park.municipality, 'Haninge');
+  assert.equal(park.hectares, 1962);
+  assert.equal(layer.getAnalystRecords(2).length, 2);
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+});

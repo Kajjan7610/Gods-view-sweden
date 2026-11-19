@@ -391,3 +391,35 @@ test('the time of the last update follows the injected clock', async (t) => {
   assert.equal(layer.getStats().stale, true);
   layer.destroy();
 });
+
+test('the analyst reads the strokes of the hour, and nothing while off', async (t) => {
+  const h = harness(t, [
+    stroke('a', 1),
+    stroke('b', 20, { kind: 'cloud', amp: null }),
+    stroke('c', 50),
+  ]);
+  h.layer.enable();
+  await h.layer.update();
+  const records = h.layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map((r) => [r.id, r.name, r.lat, r.lon]),
+    [
+      ['a', 'LIGHTNING STRIKE', 58.4, 15.5],
+      ['b', 'LIGHTNING · IN CLOUD', 58.4, 15.5],
+      ['c', 'LIGHTNING STRIKE', 58.4, 15.5],
+    ],
+  );
+  assert.equal(records[0].kind, 'Cloud to ground, negative');
+  assert.equal(records[0].peakCurrentKa, -12.3);
+  assert.equal(records[0].minutesAgo, 1);
+  assert.equal(records[1].peakCurrentKa, null);
+  // A stroke that passes the hour leaves with its dot.
+  h.clock.now = NOW + 15 * MINUTE;
+  assert.deepEqual(
+    h.layer.getAnalystRecords().map((r) => r.id),
+    ['a', 'b'],
+  );
+  h.layer.disable();
+  assert.deepEqual(h.layer.getAnalystRecords(), []);
+  h.layer.destroy();
+});

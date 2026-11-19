@@ -1,8 +1,9 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
-import { COMPANIES, storeColor, tidyStores } from './records.js';
+import { analystRows } from '../analystRows.js';
+import { COMPANIES, companyById, storeColor, tidyStores } from './records.js';
 import { COMPANY_STORES_OVERLAY_SOURCE_ID, buildStoreCard } from './cards.js';
 export * from './records.js';
 export * from './cards.js';
@@ -70,6 +71,7 @@ export function createCompanyStoresLayer({
   let _lastUpdate = null;
   let _lastError = null;
   let _selectedId = null;
+  let _offLocale = null;
   let _selectedCardId = null;
   let _stores = [];
   let _facts = {};
@@ -212,6 +214,10 @@ export function createCompanyStoresLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -270,6 +276,8 @@ export function createCompanyStoresLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _storeById.clear();
       _stores = [];
@@ -343,6 +351,18 @@ export function createCompanyStoresLayer({
             : item,
         ),
       };
+    },
+
+    /** The stores of the shown companies, as the analyst reads them. */
+    getAnalystRecords(maxCount = 2000) {
+      if (!_enabled) return [];
+      return analystRows(visible(), maxCount, {
+        extra: (row) => ({
+          company: companyById(row.company)?.name ?? row.company,
+          brand: row.brand ?? null,
+          address: row.address ?? null,
+        }),
+      });
     },
 
     getStats() {

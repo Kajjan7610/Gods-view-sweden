@@ -1,4 +1,4 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees, toLonLatH } from '../../geo/ellipsoid.js';
 import {
   canvasOf,
@@ -8,6 +8,7 @@ import {
   findQuery,
 } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
+import { analystRows } from '../analystRows.js';
 import {
   ED_BANDS,
   ED_METRICS,
@@ -87,6 +88,7 @@ export function createHospitalsLayer({
   let _lastUpdate = null;
   let _lastError = null;
   let _selectedId = null;
+  let _offLocale = null;
   let _hospitals = [];
   // The snapshot's statistics: their year, Sweden's medians, when published.
   let _statistics = {};
@@ -266,6 +268,10 @@ export function createHospitalsLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -360,6 +366,8 @@ export function createHospitalsLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _hospitalById.clear();
       _hospitals = [];
@@ -497,6 +505,23 @@ export function createHospitalsLayer({
           })),
         },
       };
+    },
+
+    /**
+     * The hospitals, as the analyst reads them: an emergency department's
+     * yearly medians for adults in minutes, not a live wait.
+     */
+    getAnalystRecords(maxCount = 1000) {
+      if (!_enabled) return [];
+      return analystRows(_hospitals, maxCount, {
+        extra: (row) => ({
+          operator: row.operator ?? null,
+          emergencyDepartment: Boolean(row.ed),
+          medianMinutesToPhysician: edMinutes(row, 'ttl', _statistics),
+          medianMinutesTotalStay: edMinutes(row, 'tvt', _statistics),
+          statisticsYear: row.ed ? (_statistics.year ?? null) : null,
+        }),
+      });
     },
 
     getStats() {

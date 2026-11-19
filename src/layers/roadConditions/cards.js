@@ -58,13 +58,17 @@ export function buildConditionCard(row) {
   };
 }
 
+/** What an incident is, as its card heads it. */
+export function incidentHeadline(row) {
+  // "Trafikmeddelande" says nothing; its code ("Vägen avstängd") is the news.
+  return /trafikmeddelande/i.test(row.type || '') && row.code
+    ? row.code
+    : row.type || t('Incident');
+}
+
 /** Card for one incident; linked cards open Trafikverket's page on click. */
 export function buildIncidentCard(row, { linkable = false } = {}) {
-  // "Trafikmeddelande" says nothing; its code ("Vägen avstängd") is the news.
-  const headline =
-    /trafikmeddelande/i.test(row.type || '') && row.code
-      ? row.code
-      : row.type || t('Incident');
+  const headline = incidentHeadline(row);
   const details = [];
   if (row.header && row.header !== row.code && row.header !== headline)
     details.push(row.header);

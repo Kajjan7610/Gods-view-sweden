@@ -1,4 +1,4 @@
-import { formatNumber, msg, t, tn } from '../../i18n/index.js';
+import { formatNumber, msg, onLocaleChange, t, tn } from '../../i18n/index.js';
 import { fromDegrees, toLonLatH } from '../../geo/ellipsoid.js';
 import {
   canvasOf,
@@ -9,6 +9,7 @@ import {
 } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { analystRows } from '../analystRows.js';
 import {
   ASSESSMENT,
   ASSESSMENTS,
@@ -91,6 +92,7 @@ export function createHeritageRemainsLayer({
   let _capped = false;
   let _total = null;
   let _selectedId = null;
+  let _offLocale = null;
   let _selectedCardId = null;
   let _shown = [];
   const _byId = new Map();
@@ -359,6 +361,10 @@ export function createHeritageRemainsLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -403,6 +409,8 @@ export function createHeritageRemainsLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _ground.clear();
       _dots?.dispose();
@@ -461,6 +469,23 @@ export function createHeritageRemainsLayer({
             Math.abs(point[1] - lat) < 0.0003,
         ) ?? null
       );
+    },
+
+    /** The shown remains, as the analyst reads them, named as on the card. */
+    getAnalystRecords(maxCount = 2000) {
+      if (!_enabled) return [];
+      return analystRows(_shown, maxCount, {
+        name: (row) => row.name || row.type || t('Remain'),
+        extra: (row) => ({
+          type: row.type ?? null,
+          assessment: t(
+            ASSESSMENT_LABELS[row.assessment] ?? ASSESSMENT_LABELS.none,
+          ),
+          number: row.number || row.raa || null,
+          municipality: row.municipality ?? null,
+          confirmed: Boolean(row.confirmed),
+        }),
+      });
     },
 
     getStats() {

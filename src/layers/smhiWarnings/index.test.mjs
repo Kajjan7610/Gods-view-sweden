@@ -176,6 +176,37 @@ test('the warnings are three sets, shown only while the layer is on', async (t) 
   for (const id of SETS) assert.equal(setOf(id), undefined, `${id} disposed`);
 });
 
+test('the analyst reads the areas and messages drawn, and nothing while the layer is off', async (t) => {
+  const { layer, chip } = harness(
+    t,
+    [area('1:1'), area('2:1', { level: 'MESSAGE' })],
+    { crisis: [crisis('v', 'vma')] },
+  );
+  layer.enable();
+  await layer.update();
+  const records = layer.getAnalystRecords();
+  // The message area is hidden by default; the area sits at its ring's middle.
+  assert.deepEqual(
+    records.map(({ id, lat, lon }) => ({ id, lat, lon })),
+    [
+      { id: '1:1', lat: (67 + 67 + 68) / 3, lon: (18 + 19 + 19) / 3 },
+      { id: 'v', lat: 60, lon: 16 },
+    ],
+  );
+  assert.match(records[0].name, /Wind/);
+  assert.equal(records[0].level, 'YELLOW');
+  assert.match(records[1].name, /^VMA · Notice v$/);
+  chip('crisis');
+  assert.deepEqual(
+    layer.getAnalystRecords().map((record) => record.id),
+    ['1:1'],
+    'only what is shown',
+  );
+  layer.disable();
+  assert.deepEqual(layer.getAnalystRecords(), []);
+  layer.destroy();
+});
+
 test('the areas lie on every surface; the dots clamp to terrain only once they have ground heights', (t) => {
   const plain = harness(t);
   for (const id of SETS) assert.equal(plain.setOf(id).spec.clampTo, 'both');

@@ -1,9 +1,10 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { distance } from '../../geo/vector.js';
 import { drawOf, findCamera, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { analystRows } from '../analystRows.js';
 import {
   CAMERA_COLOR,
   SPEED_CAMERAS_OVERLAY_SOURCE_ID,
@@ -115,6 +116,7 @@ export function createSpeedCamerasLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
+  let _offLocale = null;
   let _cameras = [];
   let _withoutDirection = 0;
   const _cameraById = new Map();
@@ -278,6 +280,10 @@ export function createSpeedCamerasLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -373,6 +379,8 @@ export function createSpeedCamerasLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _ground.clear();
       _cameraById.clear();
@@ -418,6 +426,25 @@ export function createSpeedCamerasLayer({
             : []),
         ],
       };
+    },
+
+    /**
+     * The sites whose markers show (within reach of the eye), as the context
+     * panel counts and the analyst reads them.
+     */
+    getAnalystRecords(maxCount = 2000) {
+      if (!_enabled) return [];
+      const eye = _viewer && findCamera(_viewer)?.pose()?.position;
+      const shown = eye
+        ? _cameras.filter((row) => distance(eye, ecefOf(row)) <= SHOW_WITHIN_M)
+        : _cameras;
+      return analystRows(shown, maxCount, {
+        extra: (row) => ({
+          road: row.road,
+          county: row.county,
+          facingDeg: row.bearing,
+        }),
+      });
     },
 
     getStats() {

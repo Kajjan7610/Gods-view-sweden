@@ -145,3 +145,32 @@ test("a click on another layer's card or dot leaves the open card alone", async 
     picking.unregisterPickOwner('hospitals');
   }
 });
+
+test('the analyst reads the stations named as on their card, and nothing while off', async () => {
+  const h = harness({
+    snapshots: [
+      snapshot([
+        station('a', 'full-time', { name: 'Brandstation Arvika' }),
+        station('b', 'retained', { near: { name: 'Eda', km: 2 } }),
+        station('c', null, { near: { name: 'Eda', km: 30 } }),
+      ]),
+    ],
+  });
+  h.layer.enable();
+  await h.layer.update();
+  const records = h.layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map((r) => [r.id, r.name, r.lat, r.lon]),
+    [
+      ['a', 'Brandstation Arvika', 59.39, 13.19],
+      ['b', 'Eda', 59.39, 13.19],
+      ['c', 'FIRE STATION', 59.39, 13.19],
+    ],
+  );
+  assert.equal(records[0].readiness, 'Full-time crew');
+  assert.equal(records[2].nearestSeatKm, 30);
+  assert.equal(h.layer.getAnalystRecords(2).length, 2);
+  h.layer.disable();
+  assert.deepEqual(h.layer.getAnalystRecords(), []);
+  h.layer.destroy();
+});

@@ -277,3 +277,23 @@ test('readings over three hours old mark the layer stale', async (t) => {
   assert.equal(h.layer.getStats().stale, true);
   h.layer.destroy();
 });
+
+test('the stations are records with their flow and river', async (t) => {
+  const h = harness(t, [station('1'), station('2', { river: null })]);
+  h.layer.enable();
+  await h.layer.update();
+  const records = h.layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map(({ id, name, lat, lon }) => [id, name, lat, lon]),
+    [
+      ['1', 'Station 1', 60.67, 17.14],
+      ['2', 'Station 2', 60.67, 17.14],
+    ],
+  );
+  assert.equal(records[0].flow, '12.5 m³/s');
+  assert.equal(records[0].river, 'Kalixälven');
+  assert.equal(records[1].river, null);
+  assert.equal(records[0].measured, new Date(NOW - HOUR).toISOString());
+  h.layer.disable();
+  assert.deepEqual(h.layer.getAnalystRecords(), []);
+});

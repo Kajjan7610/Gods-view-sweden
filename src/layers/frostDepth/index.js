@@ -1,4 +1,4 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
@@ -83,6 +83,7 @@ export function createFrostDepthLayer({
   let _points = [];
   let _silent = 0;
   let _depths = true;
+  let _offLocale = null;
   const _pointById = new Map();
 
   const canSelect = () => overlayHost && picking;
@@ -251,6 +252,10 @@ export function createFrostDepthLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -333,6 +338,8 @@ export function createFrostDepthLayer({
 
     destroy() {
       layer.disable();
+      _offLocale?.();
+      _offLocale = null;
       _ground.clear();
       _pointById.clear();
       _points = [];

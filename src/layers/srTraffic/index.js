@@ -1,8 +1,9 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
+import { analystRows } from '../analystRows.js';
 import { SR_PRIORITIES, priorityColor } from './records.js';
 import {
   PRIORITY_LABELS,
@@ -65,6 +66,7 @@ export function createSrTrafficLayer({
   let _lastError = null;
   let _stale = false;
   let _selectedId = null;
+  let _offLocale = null;
   let _selectedCardId = null;
   let _messages = [];
   const _show = { road: true, transit: true, planned: false, other: true };
@@ -233,6 +235,10 @@ export function createSrTrafficLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -315,6 +321,8 @@ export function createSrTrafficLayer({
     },
 
     destroy() {
+      _offLocale?.();
+      _offLocale = null;
       layer.disable();
       _ground.clear();
       _messageById.clear();
@@ -373,6 +381,23 @@ export function createSrTrafficLayer({
             : item,
         ),
       };
+    },
+
+    /** The messages drawn, as the context panel counts and the analyst reads them. */
+    getAnalystRecords(maxCount = 1000) {
+      if (!_enabled) return [];
+      return analystRows(visibleMessages(), maxCount, {
+        // Named as its card is: the kind of event and SR's own title.
+        name: (row) => [row.kind, row.title].filter(Boolean).join(' · '),
+        extra: (row) => ({
+          location: row.location,
+          priority: row.priority,
+          category: row.category,
+          created: Number.isFinite(row.created)
+            ? new Date(row.created).toISOString()
+            : null,
+        }),
+      });
     },
 
     getStats() {

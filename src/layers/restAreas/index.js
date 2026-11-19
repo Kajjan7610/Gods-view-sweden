@@ -1,4 +1,4 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
@@ -66,6 +66,7 @@ export function createRestAreasLayer({
   let _areas = [];
   /** Only the areas with lorry spaces, for drivers of heavy vehicles. */
   let _lorriesOnly = false;
+  let _offLocale = null;
   const _areaById = new Map();
 
   const canSelect = () => overlayHost && picking;
@@ -205,6 +206,10 @@ export function createRestAreasLayer({
         horizonCull: true,
         show: false,
       });
+      // An open card follows the reader's language.
+      _offLocale = onLocaleChange(() => {
+        if (_selectedId) publishSelectedCard();
+      });
     },
 
     enable() {
@@ -293,6 +298,8 @@ export function createRestAreasLayer({
 
     destroy() {
       layer.disable();
+      _offLocale?.();
+      _offLocale = null;
       _ground.clear();
       _areaById.clear();
       _areas = [];

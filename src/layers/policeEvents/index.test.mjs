@@ -277,3 +277,18 @@ test('ground heights move the dots drawn, and only those', async (t) => {
   assert.equal(h.markers()[0].pixelSize, 10, 'it looks as it was drawn');
   h.layer.destroy();
 });
+
+test('the notices shown are records at the place each names', async (t) => {
+  const h = harness(t, [notice('a', 1), notice('b', 30)]);
+  h.layer.enable();
+  await h.layer.update();
+  // The 24-hour window: only the fresh one.
+  const records = h.layer.getAnalystRecords();
+  assert.deepEqual(
+    records.map(({ id, name, lat, lon }) => [id, name, lat, lon]),
+    [['a', 'Trafikolycka · Göteborg', 57.7075, 11.9675]],
+  );
+  assert.equal(records[0].time, new Date(NOW - HOUR).toISOString());
+  h.layer.disable();
+  assert.deepEqual(h.layer.getAnalystRecords(), []);
+});
