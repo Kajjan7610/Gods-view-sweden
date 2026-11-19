@@ -405,6 +405,26 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-19 (nya siffror i stadskortet)
+- Fliken BEFOLKNING visar födda, döda och flyttnetto den senaste månaden
+  (SCB, TAB6473).
+- Fliken SAMHÄLLE visar villornas snittpris och hur många som såldes
+  (permanentbostad, TAB1169), påbörjade bostäder de senaste fyra kvartalen
+  (TAB4572), andelen nya bilar som är elbilar de senaste tolv månaderna
+  (TAB3277) och pendlingen in och ut med det största flödet åt varje håll
+  (TAB1830). Bilarnas antal är Trafikanalys officiella statistik och
+  krediteras Trafikanalys; andelen räknar appen själv och det står, eftersom
+  Trafikanalys inte vill stå som källa för bearbetade siffror.
+- Fliken STATISTIK har en ny grupp Räddningstjänst ur Kolada: tid från
+  112-samtalet till första enhet på plats (median), larmbehandlingstid
+  (median) och byggnadsbränder som spred sig från startobjektet. Siffrorna
+  visas mot Sverige men utan placering bland kommunerna, med en rad om att
+  avstånden styr insatstiderna i glesbygd.
+- SCB anger två olika gränser (30 och 10 anrop per 10 sekunder per adress);
+  uppslagen håller sig till den strängare och läser en tabell i taget.
+- Licenserna kontrollerades av en fristående agent 2026-11-19: SCB CC0
+  (Trafikanalys för TAB3277), Kolada fritt med "Källa: Kolada".
+
 ### 2026-11-19 (trafiken runt orter utan kömätning)
 - Trafikverket mäter köer bara runt Stockholm och Göteborg (och två
   sträckor vid Malmö). I andra orter visar stadskortets flik Nu i stället

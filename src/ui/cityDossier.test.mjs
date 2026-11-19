@@ -542,6 +542,113 @@ test("a sight's picture names its Wikimedia Commons page too", async () => {
   );
 });
 
+test('the rescue service is shown against Sweden, never ranked among the towns', async (t) => {
+  const { state, visit } = harness(t);
+  state.bodies['/api/city-dossier/stats'] = {
+    code: '1984',
+    stats: [
+      {
+        key: 'rescueResponse',
+        year: 2025,
+        value: 9.88,
+        sweden: 11.2,
+        rank: 254,
+        count: 290,
+      },
+      {
+        key: 'spreadingFires',
+        year: 2024,
+        value: 0.195,
+        sweden: 0.28,
+        rank: 260,
+        count: 290,
+      },
+    ],
+  };
+  await visit(TOWNS.arboga);
+  state.actions.setTab('stats');
+  await settle();
+  const group = state.view.stats.groups.find(
+    (g) => g.title === 'Rescue service',
+  );
+  assert.deepEqual(
+    group.rows.map((row) => [row.value, row.detail]),
+    [
+      ['9.9 min', '2025 · Sweden 11.2 min'],
+      ['0.2', '2024 · Sweden 0.3'],
+    ],
+  );
+  assert.match(group.note, /sparsely populated/);
+});
+
+test('SCB figures: births and moves, houses, building, new cars and commuting', async (t) => {
+  const { state, visit } = harness(t);
+  Object.defineProperty(state.bodies, '/api/city-dossier', {
+    enumerable: true,
+    get: () => ({
+      city: state.town,
+      town: { population: 10807 },
+      figures: {
+        changes: {
+          year: 2026,
+          month: 9,
+          births: 153,
+          deaths: 90,
+          netMoves: -49,
+        },
+        houses: { year: 2025, sold: 784, meanPrice: 4182000 },
+        starts: { from: '2025K3', to: '2026K2', started: 361 },
+        cars: {
+          from: { year: 2025, month: 11 },
+          to: { year: 2026, month: 10 },
+          total: 3970,
+          electric: 1414,
+          share: 35.6,
+        },
+        commuting: {
+          year: 2024,
+          local: 64291,
+          out: 14830,
+          in: 17621,
+          topOut: { name: 'Stockholm', count: 2996 },
+          topIn: { name: 'Hallstahammar', count: 2983 },
+        },
+      },
+    }),
+  });
+  await visit(TOWNS.arboga);
+  state.actions.setTab('people');
+  await settle();
+  const people = Object.fromEntries(
+    state.view.people.rows.map((row) => [row.label, row.value]),
+  );
+  assert.equal(people['Born / died'], '153 / 90');
+  assert.equal(people['Net moves'], '-49');
+  state.actions.setTab('society');
+  await settle();
+  const society = Object.fromEntries(
+    state.view.society.rows.map((row) => [row.label, [row.value, row.detail]]),
+  );
+  assert.deepEqual(society['Detached house, mean price'], [
+    '4.2 million kr',
+    '784 sold · 2025',
+  ]);
+  assert.deepEqual(society['Dwellings started, last four quarters'], [
+    '361',
+    'Q3 2025–Q2 2026',
+  ]);
+  assert.equal(society['New cars that are electric'][0], '35.6 %');
+  assert.match(
+    society['New cars that are electric'][1],
+    /^1,414 of 3,970 \(Trafikanalys\) · Nov 2025–Oct 2026 · share computed by the app$/,
+  );
+  assert.deepEqual(society['Commute in / out'], ['17,621 / 14,830', '2024']);
+  assert.deepEqual(society['Most commute to'], [
+    'Stockholm',
+    '2,996 people · 2024',
+  ]);
+});
+
 test('the STATISTICS tab reads the town once, with year, Sweden and place', async (t) => {
   const { state, asked, visit } = harness(t);
   state.bodies['/api/city-dossier/stats'] = {

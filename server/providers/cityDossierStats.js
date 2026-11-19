@@ -18,6 +18,12 @@ export const STAT_KPIS = Object.freeze([
   ['pupilsPerTeacher', 'N15033'],
   ['reportedCrimes', 'N07540'],
   ['violentCrimes', 'N07403'],
+  // The rescue service: the median minutes from the 112 call to the first
+  // unit on site and of the alarm handling, and building fires that spread
+  // beyond where they started (MCF's register via Kolada).
+  ['rescueResponse', 'U07442'],
+  ['alarmHandling', 'U07440'],
+  ['spreadingFires', 'N07415'],
   ['lifeWomen', 'N00925'],
   ['lifeMen', 'N00923'],
   ['sickDays', 'N00938'],

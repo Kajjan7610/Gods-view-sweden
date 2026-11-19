@@ -121,6 +121,20 @@ const STAT_FIGURES = Object.freeze({
     msg('Reported violent crimes per 100,000 inhabitants'),
     (v) => whole(v),
   ],
+  rescueResponse: [
+    msg('Rescue service on site after the 112 call, median'),
+    (v) => t('{value} min', { value: oneDecimal(v) }),
+  ],
+  alarmHandling: [
+    msg('Alarm handling for the rescue service, median'),
+    (v) => t('{value} min', { value: oneDecimal(v) }),
+  ],
+  spreadingFires: [
+    msg(
+      'Building fires that spread beyond where they started, per 1,000 inhabitants',
+    ),
+    (v) => oneDecimal(v),
+  ],
   lifeWomen: [
     msg('Life expectancy, women'),
     (v) => t('{value} years', { value: oneDecimal(v) }),
@@ -154,6 +168,14 @@ const STAT_FIGURES = Object.freeze({
 const STAT_GROUPS = Object.freeze([
   [msg('School'), ['meritValue', 'pupilsPerTeacher']],
   [msg('Safety'), ['reportedCrimes', 'violentCrimes']],
+  [
+    msg('Rescue service'),
+    ['rescueResponse', 'alarmHandling', 'spreadingFires'],
+    // Distance sets the times: a sparse municipality is not a slow one.
+    msg(
+      'Response times follow the distances: in a sparsely populated municipality the rescue service has further to go. Compare with Sweden, not with other towns.',
+    ),
+  ],
   [msg('Health'), ['lifeWomen', 'lifeMen', 'sickDays']],
   [msg('Economy'), ['debtors', 'newFirms']],
   [
@@ -161,6 +183,8 @@ const STAT_GROUPS = Object.freeze([
     ['emissions', 'protectedNature', 'guestNights'],
   ],
 ]);
+/** Figures shown without a place among the municipalities. */
+const UNRANKED = new Set(['rescueResponse', 'alarmHandling', 'spreadingFires']);
 const CHALLENGE_LABELS = Object.freeze({
   seats: msg('All 21 county seats'),
   counties: msg('A town in every county'),
@@ -239,6 +263,20 @@ const clock = (ms) =>
 const day = (ms) =>
   new Date(ms).toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
 const whole = (value) => formatNumber(Math.round(value));
+/** "sep. 2026" in the page's language. */
+const monthLabel = ({ year, month }) =>
+  new Intl.DateTimeFormat(getLocale(), {
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(Date.UTC(year, month - 1, 15));
+/** "2025K3" as "Q3 2025". */
+const quarterLabel = (period) => {
+  const match = /^(\d{4})K(\d)$/.exec(String(period ?? ''));
+  return match
+    ? t('Q{quarter} {year}', { quarter: match[2], year: match[1] })
+    : String(period ?? '');
+};
 const oneDecimal = (value) =>
   formatNumber(value, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const bilingual = (value) =>
@@ -742,8 +780,9 @@ export function createCityDossier({
     if (stats.status === 'error')
       return { status: t('Statistics unavailable right now'), groups: [] };
     const byKey = new Map(stats.stats.map((row) => [row.key, row]));
-    const groups = STAT_GROUPS.map(([title, keys]) => ({
+    const groups = STAT_GROUPS.map(([title, keys, note]) => ({
       title: t(title),
+      note: note ? t(note) : '',
       rows: keys
         .filter((key) => byKey.has(key))
         .map((key) => {
@@ -757,10 +796,12 @@ export function createCityDossier({
               Number.isFinite(row.sweden)
                 ? t('Sweden {value}', { value: read(row.sweden) })
                 : null,
-              t('Place {rank} of {count}', {
-                rank: row.rank,
-                count: row.count,
-              }),
+              UNRANKED.has(key)
+                ? null
+                : t('Place {rank} of {count}', {
+                    rank: row.rank,
+                    count: row.count,
+                  }),
             ]
               .filter(Boolean)
               .join(' · '),
@@ -1003,6 +1044,20 @@ export function createCityDossier({
         }),
         detail: String(municipality.meanAge.year),
       });
+    // SCB's births, deaths and moves in the latest month.
+    const changes = facts?.figures?.changes;
+    if (changes && Number.isFinite(changes.births))
+      rows.push({
+        label: t('Born / died'),
+        value: `${whole(changes.births)} / ${whole(changes.deaths ?? 0)}`,
+        detail: monthLabel(changes),
+      });
+    if (changes && Number.isFinite(changes.netMoves))
+      rows.push({
+        label: t('Net moves'),
+        value: formatNumber(changes.netMoves, { signDisplay: 'exceptZero' }),
+        detail: monthLabel(changes),
+      });
     const history = municipality?.populationHistory || [];
     const change = populationChange(history);
     return {
@@ -1055,6 +1110,68 @@ export function createCityDossier({
         value: `${oneDecimal(m.turnout.value)} %`,
         detail: m.turnout.year ? String(m.turnout.year) : '',
       });
+    // SCB: houses, building, new cars and commuting.
+    const figures = facts?.figures ?? {};
+    if (figures.houses)
+      rows.push({
+        label: t('Detached house, mean price'),
+        value: t('{value} million kr', {
+          value: formatNumber(figures.houses.meanPrice / 1e6, {
+            maximumFractionDigits: 1,
+          }),
+        }),
+        detail: t('{count} sold · {year}', {
+          count: whole(figures.houses.sold ?? 0),
+          year: figures.houses.year,
+        }),
+      });
+    if (figures.starts)
+      rows.push({
+        label: t('Dwellings started, last four quarters'),
+        value: whole(figures.starts.started),
+        detail: `${quarterLabel(figures.starts.from)}–${quarterLabel(figures.starts.to)}`,
+      });
+    if (figures.cars)
+      rows.push({
+        label: t('New cars that are electric'),
+        value: `${oneDecimal(figures.cars.share)} %`,
+        // The counts are Trafikanalys's; the share is the app's own sum.
+        detail: t(
+          '{electric} of {total} (Trafikanalys) · {from}–{to} · share computed by the app',
+          {
+            electric: whole(figures.cars.electric),
+            total: whole(figures.cars.total),
+            from: monthLabel(figures.cars.from),
+            to: monthLabel(figures.cars.to),
+          },
+        ),
+      });
+    if (figures.commuting) {
+      const c = figures.commuting;
+      rows.push({
+        label: t('Commute in / out'),
+        value: `${whole(c.in)} / ${whole(c.out)}`,
+        detail: String(c.year),
+      });
+      if (c.topOut)
+        rows.push({
+          label: t('Most commute to'),
+          value: c.topOut.name,
+          detail: t('{count} people · {year}', {
+            count: whole(c.topOut.count),
+            year: c.year,
+          }),
+        });
+      if (c.topIn)
+        rows.push({
+          label: t('Most commute in from'),
+          value: c.topIn.name,
+          detail: t('{count} people · {year}', {
+            count: whole(c.topIn.count),
+            year: c.year,
+          }),
+        });
+    }
     const parties = m?.election?.parties || [];
     const top = Math.max(1, ...parties.map((row) => row.share));
     return {
@@ -1623,6 +1740,7 @@ export function createCityDossier({
       // Provider names; the live transport ones only once they show.
       source: [
         'SCB · Kolada · Valmyndigheten · Wikidata · Wikipedia · SMHI · Polisen', // i18n-ignore: provider names
+        facts?.figures?.cars ? 'Trafikanalys' : null, // i18n-ignore: provider name
         live?.transit?.trains?.station ||
         Number.isFinite(live?.transit?.queues?.routes) ||
         Number.isFinite(live?.transit?.incidents?.count)

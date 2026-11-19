@@ -341,7 +341,7 @@ export function cityDossierProxy({
     ];
     const value = (result) =>
       result.status === 'fulfilled' ? result.value : null;
-    const [kolada, wikidata, scbTown, scbMonthly, latestElection] =
+    const [kolada, wikidata, scbTown, scbMonthly, latestElection, scbFigures] =
       await Promise.allSettled([
         getJson(
           `${KOLADA_URL}/${kpis.join(',')}/municipality/${seat.code}/year/${years.join(',')}`,
@@ -355,6 +355,8 @@ export function cityDossierProxy({
         population.townPopulation(seat.code, townNames(seat)),
         population.municipalityPopulation(seat.code),
         results.forMunicipality(seat.code),
+        // Births and moves, house prices, building, new cars, commuting.
+        population.municipalityFigures?.(seat.code) ?? null,
       ]);
     // Each source may fail alone; say which, so a quiet gap is explained.
     for (const [label, result] of [
@@ -363,6 +365,7 @@ export function cityDossierProxy({
       ['scb town', scbTown],
       ['scb month', scbMonthly],
       ['election', latestElection],
+      ['scb figures', scbFigures],
     ])
       if (result.status === 'rejected')
         console.warn(
@@ -420,11 +423,19 @@ export function cityDossierProxy({
       scbMonthly,
       latestElection,
     ].some((result) => result.status === 'rejected');
+    const figures = value(scbFigures);
+    for (const failure of figures?.failed ?? [])
+      console.warn(`[city-dossier] ${seat.locality} scb ${failure}`);
     return {
       municipality,
       town: townFacts,
       wikipedia,
-      partial: partial || wikipediaFailed || creditsFailed,
+      figures: figures?.figures ?? null,
+      partial:
+        partial ||
+        wikipediaFailed ||
+        creditsFailed ||
+        Boolean(figures?.failed?.length),
       fetchedAt: now(),
     };
   }

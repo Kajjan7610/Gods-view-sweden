@@ -86,6 +86,7 @@ watch(
               <dl class="city-dossier-rows city-dossier-stats">
                 <div v-for="row in group.rows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd><small>{{ row.detail }}</small></div>
               </dl>
+              <p v-if="group.note" class="city-dossier-note">{{ group.note }}</p>
             </div>
             <p class="city-dossier-note">{{ d.stats.rank }} {{ d.stats.note }}</p>
             <p class="city-dossier-note">{{ d.stats.credit }}</p>
