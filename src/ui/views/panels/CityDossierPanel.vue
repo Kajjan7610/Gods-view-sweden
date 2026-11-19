@@ -58,6 +58,7 @@ watch(
           <dl class="city-dossier-rows">
             <div v-for="row in d.people.rows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }} <small v-if="row.detail">{{ row.detail }}</small></dd></div>
           </dl>
+          <p v-if="d.people.loading" class="city-dossier-note">{{ d.people.loading }}</p>
           <figure v-if="d.people.spark" class="city-dossier-spark" :class="{ falling: !d.people.spark.rising }">
             <svg viewBox="0 0 220 44" preserveAspectRatio="none" aria-hidden="true" focusable="false"><polyline :points="d.people.spark.points" fill="none" /></svg>
             <figcaption><span>{{ d.people.spark.from }}</span><strong>{{ d.people.spark.text }}</strong><span>{{ d.people.spark.to }}</span></figcaption>
@@ -68,6 +69,7 @@ watch(
           <dl class="city-dossier-rows">
             <div v-for="row in d.society.rows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }} <small v-if="row.detail">{{ row.detail }}</small></dd></div>
           </dl>
+          <p v-if="d.society.loading" class="city-dossier-note">{{ d.society.loading }}</p>
           <div v-if="d.society.election" class="city-dossier-election">
             <strong>{{ d.society.election.title }}</strong>
             <div v-for="row in d.society.election.parties" :key="row.party" class="city-dossier-party">
@@ -108,6 +110,10 @@ watch(
             <div v-if="d.now.aurora" class="city-dossier-aurora" :data-level="d.now.aurora.level">
               <strong><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span>{{ d.now.aurora.title }}</strong>
               <small v-if="d.now.aurora.detail">{{ d.now.aurora.detail }}</small>
+              <figure v-if="d.now.aurora.camera" class="city-dossier-allsky">
+                <a :href="d.now.aurora.camera.sourceUrl" target="_blank" rel="noopener noreferrer"><img :src="d.now.aurora.camera.src" :alt="d.now.aurora.camera.title" loading="lazy" decoding="async" width="240" height="240" /></a>
+                <figcaption><strong>{{ d.now.aurora.camera.title }}</strong> {{ d.now.aurora.camera.credit }} <a :href="d.now.aurora.camera.licenseUrl" target="_blank" rel="noopener noreferrer">{{ d.now.aurora.camera.licenseText }}</a>.</figcaption>
+              </figure>
               <button v-if="!d.now.aurora.layerOn" type="button" @click="store.act('showAurora')">{{ t('Show the aurora oval on the map') }}</button>
             </div>
             <div v-if="d.now.kris" class="city-dossier-kris">

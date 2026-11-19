@@ -5139,7 +5139,7 @@
   "Trafikverket measures no queues here; its incidents within {km} km:": "Trafikverket mäter inga köer här; dess händelser inom {km} km:",
   "No incidents right now": "Inga händelser just nu",
   "{count} more on the Road Conditions layer": "{count} till i lagret Väglag",
-  "Rescue service on site after the 112 call, median": "Responstid, räddningstjänst (112-samtal till första enhet på plats), median",
+  "Rescue service on site after the 112 call, median": "Från 112-samtal till första enhet på plats, median",
   "{value} min": "{value} min",
   "Alarm handling for the rescue service, median": "Larmbehandling för räddningstjänsten, median",
   "Building fires that spread beyond where they started, per 1,000 inhabitants": "Byggnadsbränder som spred sig från startobjektet, per 1 000 invånare",
@@ -5171,5 +5171,6 @@
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Prov {date}. Varje trend jämför det senaste provet med de två före vid samma reningsverk. Ett enskilt prov kan variera mycket; det här räknar inte hur många som är sjuka, och orter jämförs inte. Laboratoriets metod utvecklas fortfarande.",
   "trends computed by the app": "trenderna räknade av appen",
   "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "Jordbävningarna kommer från U.S. Geological Surveys realtidsflöde, och de små i Norden från EMSC.",
-  "Nordic earthquakes (CC BY 4.0)": "Jordbävningar i Norden (CC BY 4.0)"
+  "Nordic earthquakes (CC BY 4.0)": "Jordbävningar i Norden (CC BY 4.0)",
+  "The sky over Kiruna now (all-sky camera)": "Himlen över Kiruna nu (allhimmelskamera)"
 }

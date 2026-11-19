@@ -17,6 +17,7 @@ import {
 import { normalizeSmhiReadings } from '../layers/airQuality/model.js';
 import { weatherCodeLabel } from '../data/regionalModel.js';
 import { wastewaterFor } from '../data/wastewater.js';
+import { solarElevation } from '../auroraModel.js';
 import {
   electionYear,
   nearestReading,
@@ -79,6 +80,24 @@ const WASTEWATER_VIRUSES = Object.freeze([
 ]);
 const WASTEWATER_CREDIT =
   'SLU · SEEC (Székely et al. 2026) · SciLifeLab Pathogens Portal · CC BY 4.0'; // i18n-ignore: source credit
+/** IRF's all-sky camera at Kiruna, shared by towns under the same sky. */
+const KIRUNA_CAMERA = Object.freeze({ lat: 67.8408, lon: 20.4108 });
+const CAMERA_RADIUS_KM = 300;
+/** Below this solar elevation the camera's sky is dark enough to show. */
+const CAMERA_DARK_ELEVATION = -6;
+/** The IRF's credit, in the words its licence page asks for. */
+const CAMERA_CREDIT =
+  'Data from Kiruna allsky camera provided by Kiruna Atmospheric and Geophysical Observatory at Swedish Institute of Space Physics under'; // i18n-ignore: required credit
+/** Great-circle kilometres between two [lat, lon] points. */
+const kmBetween = (aLat, aLon, bLat, bLon) => {
+  const rad = Math.PI / 180;
+  const h =
+    Math.sin(((bLat - aLat) * rad) / 2) ** 2 +
+    Math.cos(aLat * rad) *
+      Math.cos(bLat * rad) *
+      Math.sin(((bLon - aLon) * rad) / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+};
 /** Each trend as an arrow and the words it stands for. */
 const WASTEWATER_TRENDS = Object.freeze({
   rising: ['↑', msg('rising')],
@@ -795,6 +814,8 @@ export function createCityDossier({
     figuresRequest?.abort();
     const controller = new AbortController();
     figuresRequest = controller;
+    // SCB can take seconds for a town it has not seen: said below the rows.
+    render();
     try {
       const body = await getJson(
         `/api/city-dossier/figures?code=${encodeURIComponent(forCity.code)}`,
@@ -802,13 +823,14 @@ export function createCityDossier({
       );
       if (destroyed || facts !== forFacts) return;
       facts = { ...facts, figures: body?.figures ?? null };
-      render();
     } catch (error) {
-      if (error?.name !== 'AbortError' && figuresCode === forCity.code)
-        figuresCode = null;
+      if (error?.name === 'AbortError') return;
+      if (figuresCode === forCity.code) figuresCode = null;
     } finally {
       if (figuresRequest === controller) figuresRequest = null;
     }
+    // Drawn once the read is over, so "Fetching…" goes with it.
+    if (!destroyed) render();
   }
 
   // ---- statistics ----------------------------------------------------------
@@ -1070,6 +1092,10 @@ export function createCityDossier({
     };
   }
 
+  /** "Fetching statistics…" while SCB's figures for the card are on the way. */
+  const figuresLoading = () =>
+    figuresRequest ? t('Fetching statistics…') : '';
+
   function peopleView() {
     const municipality = facts?.municipality;
     const town = facts?.town;
@@ -1138,6 +1164,7 @@ export function createCityDossier({
     const change = populationChange(history);
     return {
       rows,
+      loading: figuresLoading(),
       spark: change
         ? {
             points: sparklinePoints(history, 220, 44),
@@ -1256,6 +1283,7 @@ export function createCityDossier({
     const top = Math.max(1, ...parties.map((row) => row.share));
     return {
       rows,
+      loading: figuresLoading(),
       election: parties.length
         ? {
             // Valmyndigheten names its election; Kolada's figures are dated
@@ -1662,6 +1690,35 @@ export function createCityDossier({
         .filter(Boolean)
         .join(' · '),
       layerOn: Boolean(dataManager?.isEnabled?.('aurora')),
+      camera: cameraView(),
+    };
+  }
+
+  /**
+   * The newest picture from the Kiruna all-sky camera for a town under the
+   * same sky, while it is dark there; null otherwise. Asked once a minute.
+   */
+  function cameraView() {
+    if (!city) return null;
+    const [lon, lat] = city.point;
+    if (
+      kmBetween(lat, lon, KIRUNA_CAMERA.lat, KIRUNA_CAMERA.lon) >
+      CAMERA_RADIUS_KM
+    )
+      return null;
+    const at = now();
+    if (
+      solarElevation(KIRUNA_CAMERA.lat, KIRUNA_CAMERA.lon, at) >=
+      CAMERA_DARK_ELEVATION
+    )
+      return null;
+    return {
+      src: `/api/kiruna-allsky?minute=${Math.floor(at / 60_000)}`,
+      title: t('The sky over Kiruna now (all-sky camera)'),
+      credit: CAMERA_CREDIT,
+      licenseText: 'this license', // i18n-ignore: required credit
+      licenseUrl: 'https://creativecommons.org/licenses/by/4.0/',
+      sourceUrl: 'https://www.irf.se/alis/allsky/krn/',
     };
   }
 
@@ -1743,10 +1800,12 @@ export function createCityDossier({
     const several = plants.length > 1;
     // The plants may be a week apart: "Nov 2–9" then.
     const dates = plants.map((plant) => plant.latest).sort();
+    // The month in full: an abbreviation's own full stop would double the
+    // note's.
     const dayOf = (date) =>
       new Intl.DateTimeFormat(getLocale(), {
         day: 'numeric',
-        month: 'short',
+        month: 'long',
         timeZone: 'UTC',
       }).format(Date.parse(date));
     const sampled =

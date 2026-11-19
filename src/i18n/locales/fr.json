@@ -5281,5 +5281,6 @@
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Prélèvement {date}. Chaque tendance compare le dernier prélèvement aux deux précédents de la même station. Un seul prélèvement peut beaucoup varier ; ce n’est pas un décompte des malades, et les villes ne sont pas comparées. La méthode du laboratoire est encore en développement.",
   "trends computed by the app": "tendances calculées par l’app",
   "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "Les séismes proviennent du flux en direct de l’U.S. Geological Survey, et les petits des pays nordiques, de l’EMSC.",
-  "Nordic earthquakes (CC BY 4.0)": "Séismes nordiques (CC BY 4.0)"
+  "Nordic earthquakes (CC BY 4.0)": "Séismes nordiques (CC BY 4.0)",
+  "The sky over Kiruna now (all-sky camera)": "Le ciel au-dessus de Kiruna maintenant (caméra all-sky)"
 }

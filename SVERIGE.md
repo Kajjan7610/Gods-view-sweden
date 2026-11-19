@@ -76,6 +76,7 @@ Två nivåer gäller:
 | Stadsdossierns flikar Sevärt (slott, kyrkor, museer m.m. utpekade på kartan), besökspass, tåg från stadens station, bussar, spårvagnar, tunnelbana och båtar från stadens mest trafikerade hållplats, VMA-banner och norrsken i natt | Wikidata (CC0), Trafikverket, Trafiklab Realtime (CC BY 4.0), Krisinformation.se, NOAA SWPC | Panelen STAD |
 | Virus i avloppsvattnet: om covid-19, influensa A och B och RSV stiger, är stabila, sjunker, påvisas nu eller inte påvisas i det senaste veckoprovet, för orter med ett reningsverk i mätningen (Stockholmsområdets fyra verk som kolumner) | SLU och SEEC via SciLifeLab Pathogens Portal (CC BY 4.0, DOI 10.17044/scilifelab.14256317), ingen nyckel | Panelen STAD, fliken NU |
 | Små jordskalv i Norden: EMSC:s jordbävningar det senaste dygnet i Norden, även de små, i stället för USGS:s från M2.5 där; resten av världen är som förut USGS | EMSC FDSN (CC BY 4.0, ingen nyckel) | Earthquakes (24h) / Jordbävningar (24 h), under Events |
+| Himlen över Kiruna: den senaste bilden från IRF:s allhimmelskamera i stadskortets norrskensrad, för orter inom 300 km från Kiruna och bara när det är mörkt där | IRF, Kiruna Atmospheric and Geophysical Observatory (CC BY 4.0), ingen nyckel | Panelen STAD, fliken NU |
 | Flygtavla: Swedavias tio flygplatser, hela dagens avgångar och ankomster, köerna i säkerhetskontrollen över terminalerna, följ planet i luften och dagens rutter på globen | Swedavia FlightInfo och WaitTime (gratisnycklar) | Kortet över en Swedavia-flygplats och tavlans egen panel |
 | Flygväder: METAR och TAF för flygplatserna | NOAA Aviation Weather Center (ingen nyckel) | Flygtavlan och cockpit |
 | Cockpit: knapp vid kartan och C-tangenten när ett plan, fartyg eller en satellit är valt, Swedavias rader för planet, svensk lägesbild i genomgången (ort och län, SMHI:s väder, varningar och VMA) | Swedavia, SMHI, Krisinformation.se, NOAA (METAR/TAF) | Cockpit |
@@ -406,6 +407,19 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-19 (himlen över Kiruna)
+- Stadskortets norrskensrad (fliken NU) visar den senaste bilden från
+  Institutet för rymdfysiks allhimmelskamera i Kiruna, för orter inom 300 km
+  från kameran och bara när solen står mer än 6° under horisonten där.
+- Kameran tar en bild i minuten. Servern hämtar den högst en gång i minuten
+  hur många som än tittar, och lämnar aldrig ut en bild äldre än tio minuter.
+- CC BY 4.0. Krediteringen står med IRF:s egna ord under bilden, och bilden
+  länkar till kamerans sida.
+- Granskarnas UI-fynd för stadskortet är rättade samtidigt: långa rader i
+  SAMHÄLLE trängde ihop etiketten, länken i avloppsraden gick inte att läsa,
+  datumet gav dubbel punkt på svenska, och siffrorna från SCB säger nu
+  "Hämtar statistik…" medan de laddas.
 
 ### 2026-11-19 (små jordskalv i Norden)
 - Lagret Jordbävningar (24 h) visade bara USGS:s skalv från M2.5, vilket

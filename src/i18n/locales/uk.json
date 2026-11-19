@@ -5391,5 +5391,6 @@
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Проба {date}. Кожна тенденція порівнює останню пробу з двома попередніми на тій самій станції. Одна проба може сильно коливатися; це не кількість хворих, і міста не порівнюються. Метод лабораторії ще розробляється.",
   "trends computed by the app": "тенденції розраховано застосунком",
   "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "Землетруси — зі стрічки Геологічної служби США в реальному часі, а слабкі в Північних країнах — від EMSC.",
-  "Nordic earthquakes (CC BY 4.0)": "Землетруси в Північних країнах (CC BY 4.0)"
+  "Nordic earthquakes (CC BY 4.0)": "Землетруси в Північних країнах (CC BY 4.0)",
+  "The sky over Kiruna now (all-sky camera)": "Небо над Кіруною зараз (камера всього неба)"
 }

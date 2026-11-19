@@ -167,7 +167,8 @@
 }
 .city-dossier-rows > div {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  /* A long detail wraps under its value instead of squeezing the label. */
+  grid-template-columns: minmax(40%, 1fr) minmax(0, auto);
   gap: 8px;
   padding: 5px 7px;
   background: rgba(0, 7, 12, 0.76);
@@ -185,6 +186,10 @@
   color: #fff;
   font-size: 11px;
   text-align: right;
+  overflow-wrap: anywhere;
+}
+.city-dossier-rows dd small {
+  display: block;
 }
 .city-dossier-rows small,
 .city-dossier-note,
@@ -532,6 +537,33 @@
 .city-dossier-aurora[data-level='high'] strong {
   color: #69f0ae;
 }
+.city-dossier-allsky {
+  display: grid;
+  gap: 3px;
+  margin: 3px 0 0;
+}
+.city-dossier-allsky img {
+  display: block;
+  width: min(240px, 100%);
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #000;
+}
+.city-dossier-allsky figcaption {
+  color: rgba(220, 238, 255, 0.6);
+  font-size: 8.5px;
+  line-height: 1.35;
+}
+.city-dossier-allsky figcaption strong {
+  display: block;
+  color: rgba(244, 251, 255, 0.85);
+  font-size: 9.5px;
+  font-weight: 500;
+}
+.city-dossier-allsky a {
+  color: inherit;
+}
 .city-dossier-aurora button {
   justify-self: start;
   margin-top: 2px;
@@ -595,11 +627,14 @@
   color: #ffb300;
 }
 .city-dossier-wastewater td[data-trend='falling'] {
-  color: #69f0ae;
+  color: rgba(244, 251, 255, 0.85);
 }
 .city-dossier-wastewater small {
   color: rgba(220, 238, 255, 0.6);
   font-size: 9px;
+}
+.city-dossier-wastewater a {
+  color: inherit;
 }
 .city-dossier-kris {
   display: grid;

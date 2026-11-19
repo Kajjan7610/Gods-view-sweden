@@ -625,6 +625,7 @@ test('SCB figures: births and moves, houses, building, new cars and commuting', 
     state.view.people.rows.map((row) => [row.label, row.value]),
   );
   assert.equal(people['Born / died'], '153 / 90');
+  assert.equal(state.view.people.loading, '', 'no "Fetching" once read');
   assert.equal(people['Net moves'], '-49');
   state.actions.setTab('society');
   await settle();
@@ -838,7 +839,7 @@ test("wastewater: each virus's trend at the town's plants, one column per plant"
   );
   assert.match(
     view.note,
-    /^Sample Nov 9\. .* towns are not compared\. .* still being developed\.$/,
+    /^Sample November 9\. .* towns are not compared\. .* still being developed\.$/,
   );
   assert.match(
     view.credit,
@@ -869,4 +870,36 @@ test('back in a town, its figures are read again for the new card', async (t) =>
   await settle();
   assert.deepEqual(asked(), ['/api/city-dossier/figures']);
   assert.ok(state.view.people.rows.some((row) => row.label === 'Born / died'));
+});
+
+test("Kiruna's all-sky camera: near Kiruna and only while its sky is dark", async (t) => {
+  const { state, visit } = harness(t);
+  const KIRUNA = {
+    code: '2584',
+    name: 'Kiruna',
+    municipality: 'Kiruna',
+    county: 'Norrbottens län',
+    point: [20.2253, 67.8558],
+  };
+  state.bodies['/api/aurora-outlook'] = { level: 'possible', maxKp: 3 };
+  state.panelOpen = true;
+  state.now = Date.parse('2026-11-05T20:00:00Z');
+  await visit(KIRUNA);
+  state.actions.setTab('now');
+  await settle();
+  const camera = state.view.now.aurora.camera;
+  assert.match(camera.src, /^\/api\/kiruna-allsky\?minute=\d+$/);
+  assert.match(camera.credit, /^Data from Kiruna allsky camera provided by/);
+  assert.equal(camera.licenseText, 'this license');
+  // Far from Kiruna: the camera's sky is not the town's.
+  await visit(TOWNS.arboga);
+  state.actions.setTab('now');
+  await settle();
+  assert.equal(state.view.now.aurora.camera, null);
+  // In Kiruna by day: nothing to see.
+  state.now = Date.parse('2026-11-05T10:30:00Z');
+  await visit(KIRUNA);
+  state.actions.setTab('now');
+  await settle();
+  assert.equal(state.view.now.aurora.camera, null);
 });
