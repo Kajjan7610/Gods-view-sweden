@@ -418,6 +418,10 @@ git merge origin/main
 - Rösten är fortfarande gjord med ElevenLabs gratisplan
   (icke-kommersiellt) och krediteras med "elevenlabs.io" i titlar och
   beskrivningar.
+- Den längre filmen i projektets inlägg på LinkedIn och Facebook (1:47,
+  egen musik) har också en röst från ElevenLabs gratisplan; inläggen
+  krediterar nu "elevenlabs.io". DATA_SOURCES.md har ett nytt avsnitt om
+  berättarrösterna: berättelsernas ljudfiler, trailrarna och inläggen.
 
 ### 2026-11-18 (TomTom frågas aldrig inom Sverige)
 - Originalets trafiklager (Gatutrafik) frågar inte längre TomTom om

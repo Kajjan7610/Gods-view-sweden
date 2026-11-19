@@ -750,6 +750,15 @@ NOAA density imagery with the raw GLM product.
 
 ---
 
+## Narration voices (ElevenLabs)
+
+The Swedish narration is generated speech from [ElevenLabs](https://elevenlabs.io) on its free plan, which allows non-commercial use only and asks for the credit "elevenlabs.io" wherever the voice is published. No music from ElevenLabs is used: the trailer music is our own synthesised track.
+
+| Where | Files | Credit |
+| --- | --- | --- |
+| The built-in stories "Natten över Sverige" and "Elens resa" (Swedish only) | `public/stories/natten-over-sverige.sv.mp3`, `public/stories/elens-resa.sv.mp3` (bundled) | "elevenlabs.io" among each story's sources and on the narration button |
+| The trailers on YouTube and in README.md, and the film in the project's LinkedIn and Facebook posts | Not in this repo | "elevenlabs.io" in the video titles, descriptions and posts, and in the README heading |
+
 ## In-app attribution
 
 The required Google Maps / Cesium credit renders on the on-globe credit line (`#cesium-credits`, bottom-left) and must stay visible — including in clean-view and recording modes (the whole line, logo + "Google Maps" + the "Data attribution" link, stays on screen; only the GEV panels/HUD fade). The layer-specific credits (adsb.lol, adsbdb, Planespotters.net, Open Vessel Photos, TeleGeography, OSM datacenters/dams/roads, NASA FIRMS, CelesTrak, USGS, City of Austin, Fintraffic, GBFS, Radio Browser, OpenSky, AISStream) are registered into the expandable **"Data attribution"** popover on that credit line via `viewer.creditDisplay.addStaticCredit(new Cesium.Credit(html, /* showOnScreen */ false))` — see `src/data/dataCredits.js`. When you add a new data source, add its license and attribution to this file **and** append an entry to `DATA_CREDITS` in `src/data/dataCredits.js` so it surfaces in the app.
