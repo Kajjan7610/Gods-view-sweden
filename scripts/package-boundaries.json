@@ -4136,6 +4136,7 @@
       "src/ui/cityDossier.js",
       "src/ui/cityDossierRadio.js",
       "src/ui/cityDossierModel.js",
+      "src/data/wastewater.js",
       "src/ui/stores/cityDossier.js",
       "src/ui/stores/powerDay.js",
       "src/render/stub/viewRectangle.js",

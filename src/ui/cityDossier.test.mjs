@@ -41,6 +41,7 @@ const LIVE_ROUTES = [
   '/api/aurora-outlook',
   '/api/speed-cameras',
   '/api/krisinformation',
+  '/api/wastewater-se',
 ];
 const route = (url) => String(url).split('?')[0];
 /** Let the fetches that were started, and what follows them, run. */
@@ -195,7 +196,7 @@ test('the live picture is fetched only while the panel shows the NOW tab', async
   state.panelChanged();
   await settle();
   assert.deepEqual(asked(), []);
-  // The NOW tab: the seven parts, once.
+  // The NOW tab: the eight parts, once.
   state.actions.setTab('now');
   await settle();
   assert.deepEqual(asked(), LIVE_ROUTES);
@@ -794,4 +795,52 @@ test('a settled camera is a visit; a sight chosen is flown to from the south', a
   // Away from the tab: the markers go.
   state.actions.setTab('about');
   assert.equal(state.sightsShown.at(-1), null);
+});
+
+test("wastewater: each virus's trend at the town's plants, one column per plant", async (t) => {
+  const { state, visit } = harness(t);
+  const plant = (city, place, name, trends) => ({
+    city,
+    key: city.toLowerCase(),
+    place,
+    plant: name,
+    latest: '2026-11-09',
+    outOfDate: false,
+    viruses: Object.entries(trends).map(([virus, trend]) => ({
+      virus,
+      trend,
+      date: '2026-11-09',
+    })),
+  });
+  state.bodies['/api/wastewater-se'] = {
+    latestWeek: '2026-11-09',
+    plants: [
+      plant('Orebro', 'Örebro', null, { covid: 'steady', fluA: 'rising' }),
+      plant('Stockholm-Bromma', 'Stockholm', 'Bromma', { covid: 'rising' }),
+    ],
+  };
+  state.panelOpen = true;
+  await visit(TOWNS.orebro);
+  state.actions.setTab('now');
+  await settle();
+  const view = state.view.now.wastewater;
+  // One plant: no columns, the trend in words.
+  assert.deepEqual(view.columns, []);
+  assert.equal(view.legend, '', 'the words stand in the cells');
+  assert.deepEqual(
+    view.rows.map((row) => [row.label, row.cells[0].text]),
+    [
+      ['COVID-19', 'steady'],
+      ['Influenza A', 'rising'],
+      ['Influenza B', '—'],
+      ['RSV', '—'],
+    ],
+  );
+  assert.match(view.note, /^Sample Nov 9\. .* not compared between towns\.$/);
+  assert.match(view.credit, /SciLifeLab Pathogens Portal \(CC BY 4\.0\)/);
+  // A town without a plant: no block.
+  await visit(TOWNS.arboga);
+  state.actions.setTab('now');
+  await settle();
+  assert.equal(state.view.now.wastewater, null);
 });

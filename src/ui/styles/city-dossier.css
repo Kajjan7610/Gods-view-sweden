@@ -544,6 +544,63 @@
   text-transform: uppercase;
   cursor: pointer;
 }
+.city-dossier-wastewater {
+  display: grid;
+  gap: 4px;
+}
+.city-dossier-wastewater strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(220, 238, 255, 0.75);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.city-dossier-wastewater .material-symbols-outlined {
+  font-size: 14px;
+}
+.city-dossier-wastewater table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+.city-dossier-wastewater th,
+.city-dossier-wastewater td {
+  padding: 2px 4px;
+  text-align: start;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.city-dossier-wastewater thead th {
+  color: rgba(220, 238, 255, 0.6);
+  font-size: 9px;
+  text-align: center;
+}
+.city-dossier-wastewater tbody th {
+  color: rgba(244, 251, 255, 0.85);
+  padding-inline-start: 0;
+}
+.city-dossier-wastewater td {
+  color: rgba(220, 238, 255, 0.75);
+}
+.city-dossier-wastewater thead + tbody td {
+  text-align: center;
+}
+.city-dossier-wastewater td[data-trend='none'] {
+  color: rgba(220, 238, 255, 0.4);
+}
+.city-dossier-wastewater td[data-trend='rising'],
+.city-dossier-wastewater td[data-trend='detected'] {
+  color: #ffb300;
+}
+.city-dossier-wastewater td[data-trend='falling'] {
+  color: #69f0ae;
+}
+.city-dossier-wastewater small {
+  color: rgba(220, 238, 255, 0.6);
+  font-size: 9px;
+}
 .city-dossier-kris {
   display: grid;
   gap: 4px;

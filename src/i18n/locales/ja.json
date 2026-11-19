@@ -5050,5 +5050,14 @@
   "Newly registered cars that are fully electric": "新規登録車のうち完全電気自動車",
   "{electric} of {total} · {from}–{to} · computed by the app from Trafikanalys statistics": "{total}台中{electric}台 · {from}–{to} · Trafikanalysの統計からアプリで計算",
   "latest quarters preliminary": "直近の四半期は速報値",
-  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "時間はSOS Alarmによるもので、表示年の6月までの12か月間です。火災はMCFの記録によるもので、5年間を対象とします。"
+  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "時間はSOS Alarmによるもので、表示年の6月までの12か月間です。火災はMCFの記録によるもので、5年間を対象とします。",
+  "Viruses in wastewater": "下水中のウイルス",
+  "Influenza A": "インフルエンザA",
+  "Influenza B": "インフルエンザB",
+  "not detected": "未検出",
+  "newly detected": "再検出",
+  "rising": "上昇",
+  "steady": "横ばい",
+  "falling": "低下",
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "採取 {date}。各傾向は同じ処理場の直近の検体をその前の2回と比べたもので、町どうしの値は比較しません。"
 }

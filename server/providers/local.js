@@ -32,6 +32,7 @@ import { trafikverketRoadsProxy } from './trafikverketRoads.js';
 import { trafikverketWeatherProxy } from './trafikverketWeather.js';
 import { trafikverketFerriesProxy } from './trafikverketFerries.js';
 import { trafikverketQueuesProxy } from './trafikverketQueues.js';
+import { wastewaterProxy } from './wastewater.js';
 import { smhiWarningsProxy } from './smhiWarnings.js';
 import { polisenEventsProxy } from './polisenEvents.js';
 import { electricityPricesProxy } from './electricityPrices.js';
@@ -94,6 +95,8 @@ function localProviderPlugins({
   const queues = trafikverketQueuesProxy();
   // The road conditions layer's snapshot, shared with the city dossier too.
   const roads = trafikverketRoadsProxy();
+  // Respiratory viruses in wastewater, for the city dossier.
+  const wastewater = wastewaterProxy();
   return [
     openSkyProxy(),
     celestrakProxy(),
@@ -129,6 +132,7 @@ function localProviderPlugins({
     trafikverketWeatherProxy(),
     trafikverketFerriesProxy(),
     queues,
+    wastewater,
     smhiWarningsProxy(),
     polisenEventsProxy(),
     electricityPricesProxy(),

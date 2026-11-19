@@ -120,6 +120,21 @@ watch(
               <p v-if="d.now.kris.empty" class="city-dossier-note">{{ d.now.kris.empty }}</p>
               <a v-for="item in d.now.kris.news" :key="item.key" :href="item.url || undefined" target="_blank" rel="noopener noreferrer"><small>{{ item.meta }}</small> {{ item.headline }}</a>
             </div>
+            <div v-if="d.now.wastewater" class="city-dossier-wastewater">
+              <strong><span class="material-symbols-outlined" aria-hidden="true">water_drop</span>{{ d.now.wastewater.title }}</strong>
+              <table>
+                <thead v-if="d.now.wastewater.columns.length"><tr><td></td><th v-for="col in d.now.wastewater.columns" :key="col.key" scope="col">{{ col.name }}</th></tr></thead>
+                <tbody>
+                  <tr v-for="row in d.now.wastewater.rows" :key="row.key">
+                    <th scope="row">{{ row.label }}</th>
+                    <td v-for="cell in row.cells" :key="cell.key" :data-trend="cell.trend" :title="cell.text" :aria-label="cell.short ? cell.text : undefined"><span aria-hidden="true">{{ cell.symbol }}</span><template v-if="!cell.short"> {{ cell.text }}</template></td>
+                  </tr>
+                </tbody>
+              </table>
+              <small v-if="d.now.wastewater.legend">{{ d.now.wastewater.legend }}</small>
+              <small>{{ d.now.wastewater.note }}</small>
+              <small>{{ d.now.wastewater.credit }}</small>
+            </div>
             <div v-if="d.now.cameras" class="city-dossier-trains city-dossier-cameras">
               <strong><span class="material-symbols-outlined" aria-hidden="true">speed_camera</span>{{ d.now.cameras.title }}</strong>
               <button v-for="row in d.now.cameras.items" :key="row.key" type="button" class="city-dossier-camera" :title="t('Show on the map')" @click="store.act('showCamera', row.key)">

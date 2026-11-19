@@ -5160,5 +5160,14 @@
   "Newly registered cars that are fully electric": "Neu zugelassene Pkw, rein elektrisch",
   "{electric} of {total} · {from}–{to} · computed by the app from Trafikanalys statistics": "{electric} von {total} · {from}–{to} · von der App aus Statistiken von Trafikanalys berechnet",
   "latest quarters preliminary": "letzte Quartale vorläufig",
-  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "Die Zeiten stammen von SOS Alarm und umfassen die zwölf Monate bis Juni des angezeigten Jahres; die Brände stammen aus dem Register der MCF und umfassen fünf Jahre."
+  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "Die Zeiten stammen von SOS Alarm und umfassen die zwölf Monate bis Juni des angezeigten Jahres; die Brände stammen aus dem Register der MCF und umfassen fünf Jahre.",
+  "Viruses in wastewater": "Viren im Abwasser",
+  "not detected": "nicht nachgewiesen",
+  "newly detected": "neu nachgewiesen",
+  "rising": "steigend",
+  "steady": "gleichbleibend",
+  "falling": "fallend",
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "Probe {date}. Jeder Trend vergleicht die neueste Probe mit den zwei vorherigen derselben Kläranlage; Werte werden nicht zwischen Orten verglichen.",
+  "Influenza A": "Influenza A",
+  "Influenza B": "Influenza B"
 }

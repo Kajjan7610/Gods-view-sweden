@@ -5050,5 +5050,14 @@
   "Newly registered cars that are fully electric": "新注册汽车中的纯电动车",
   "{electric} of {total} · {from}–{to} · computed by the app from Trafikanalys statistics": "{total}辆中{electric}辆 · {from}–{to} · 由应用根据 Trafikanalys 统计计算",
   "latest quarters preliminary": "最近几个季度为初步数据",
-  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "时间来自 SOS Alarm,涵盖截至所示年份六月的十二个月;火灾数据来自 MCF 的登记,涵盖五年。"
+  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "时间来自 SOS Alarm,涵盖截至所示年份六月的十二个月;火灾数据来自 MCF 的登记,涵盖五年。",
+  "Viruses in wastewater": "污水中的病毒",
+  "Influenza A": "甲型流感",
+  "Influenza B": "乙型流感",
+  "not detected": "未检出",
+  "newly detected": "再次检出",
+  "rising": "上升",
+  "steady": "持平",
+  "falling": "下降",
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "采样 {date}。每个趋势将同一处理厂的最新样本与之前两次比较;不同城镇之间的水平不作比较。"
 }

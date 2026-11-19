@@ -5270,5 +5270,14 @@
   "Newly registered cars that are fully electric": "מכוניות חדשות שנרשמו, חשמליות לגמרי",
   "{electric} of {total} · {from}–{to} · computed by the app from Trafikanalys statistics": "{electric} מתוך {total} · {from}–{to} · חושב על ידי האפליקציה מנתוני Trafikanalys",
   "latest quarters preliminary": "הרבעונים האחרונים ראשוניים",
-  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "הזמנים מ-SOS Alarm ומכסים את שנים-עשר החודשים עד יוני של השנה המוצגת; השריפות ממרשם MCF ומכסות חמש שנים."
+  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "הזמנים מ-SOS Alarm ומכסים את שנים-עשר החודשים עד יוני של השנה המוצגת; השריפות ממרשם MCF ומכסות חמש שנים.",
+  "Viruses in wastewater": "נגיפים במי השפכים",
+  "Influenza A": "שפעת A",
+  "Influenza B": "שפעת B",
+  "not detected": "לא זוהה",
+  "newly detected": "זוהה שוב",
+  "rising": "עולה",
+  "steady": "יציב",
+  "falling": "יורד",
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "דגימה {date}. כל מגמה משווה את הדגימה האחרונה לשתיים שלפניה באותו מתקן; הרמות אינן מושוות בין ערים."
 }

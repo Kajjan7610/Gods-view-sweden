@@ -340,7 +340,9 @@
     "KT",
     "{minutes} min {seconds} s",
     "{speed} km/h",
-    "{value} min"
+    "{value} min",
+    "Influenza A",
+    "Influenza B"
   ],
   "es": [
     "1090 MHz",
@@ -1153,7 +1155,9 @@
     "KT",
     "{minutes} min {seconds} s",
     "{speed} km/h",
-    "{value} min"
+    "{value} min",
+    "Influenza A",
+    "Influenza B"
   ],
   "ja": [
     "1090 MHz",

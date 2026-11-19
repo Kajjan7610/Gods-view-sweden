@@ -16,6 +16,7 @@ import {
 } from '../i18n/index.js';
 import { normalizeSmhiReadings } from '../layers/airQuality/model.js';
 import { weatherCodeLabel } from '../data/regionalModel.js';
+import { wastewaterFor } from '../data/wastewater.js';
 import {
   electionYear,
   nearestReading,
@@ -67,7 +68,23 @@ const LIVE_PARTS = Object.freeze([
   ['aurora', msg('Aurora Forecast')],
   ['cameras', msg('Speed cameras')],
   ['kris', msg('Crisis information')],
+  ['wastewater', msg('Viruses in wastewater')],
 ]);
+/** The wastewater viruses in the order shown. */
+const WASTEWATER_VIRUSES = Object.freeze([
+  ['covid', 'COVID-19'], // i18n-ignore: disease name
+  ['fluA', msg('Influenza A')],
+  ['fluB', msg('Influenza B')],
+  ['rsv', 'RSV'], // i18n-ignore: virus name
+]);
+/** Each trend as an arrow and the words it stands for. */
+const WASTEWATER_TRENDS = Object.freeze({
+  rising: ['↑', msg('rising')],
+  steady: ['→', msg('steady')],
+  falling: ['↓', msg('falling')],
+  detected: ['•', msg('newly detected')],
+  none: ['–', msg('not detected')],
+});
 /** Trafiklab's local transport modes, as a departure row names them. */
 const LOCAL_MODES = Object.freeze({
   BUS: msg('Bus {line}'),
@@ -472,7 +489,8 @@ export function createCityDossier({
       kris: null,
       aurora: null,
       cameras: null,
-      pending: 7,
+      wastewater: null,
+      pending: 8,
       failed: [],
     };
     render();
@@ -519,6 +537,10 @@ export function createCityDossier({
           municipality: forCity.municipality,
           county: forCity.county,
         }),
+      ),
+      // SLU's weekly wastewater samples, for the town's own plants.
+      part('/api/wastewater-se', 'wastewater', (value) =>
+        wastewaterFor(value, forCity),
       ),
     ]);
     if (current()) {
@@ -1369,6 +1391,7 @@ export function createCityDossier({
       kris: krisView(live.kris),
       aurora: auroraView(live.aurora),
       cameras: camerasView(live.cameras),
+      wastewater: wastewaterView(live.wastewater),
       radio: radioView(),
     };
   }
@@ -1710,6 +1733,63 @@ export function createCityDossier({
    * Krisinformation.se for the town: its active alerts (VMA) and the newest
    * news for it, its county or the whole country; null until read.
    */
+  /**
+   * Each virus's trend at the town's treatment plants: one column per plant
+   * (Stockholm has four), never a level to compare with other towns.
+   */
+  function wastewaterView(plants) {
+    if (!plants?.length) return null;
+    const several = plants.length > 1;
+    // The plants may be a week apart: "Nov 2–9" then.
+    const dates = plants.map((plant) => plant.latest).sort();
+    const dayOf = (date) =>
+      new Intl.DateTimeFormat(getLocale(), {
+        day: 'numeric',
+        month: 'short',
+        timeZone: 'UTC',
+      }).format(Date.parse(date));
+    const sampled =
+      dates[0] === dates.at(-1)
+        ? dayOf(dates[0])
+        : `${dayOf(dates[0])}–${dayOf(dates.at(-1))}`;
+    return {
+      title: t('Viruses in wastewater'),
+      columns: several
+        ? plants.map((plant) => ({
+            key: plant.key,
+            name: plant.plant ?? plant.place,
+          }))
+        : [],
+      rows: WASTEWATER_VIRUSES.map(([virus, label]) => ({
+        key: virus,
+        label: virus === 'covid' || virus === 'rsv' ? label : t(label),
+        cells: plants.map((plant) => {
+          const trend =
+            plant.viruses.find((row) => row.virus === virus)?.trend ?? null;
+          const [symbol, words] = WASTEWATER_TRENDS[trend] ?? ['', ''];
+          return {
+            key: plant.key,
+            trend,
+            symbol,
+            text: words ? t(words) : '—',
+            short: several,
+          };
+        }),
+      })),
+      note: t(
+        'Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.',
+        { date: sampled },
+      ),
+      // Arrows alone in several columns: what each stands for.
+      legend: several
+        ? Object.values(WASTEWATER_TRENDS)
+            .map(([symbol, words]) => `${symbol} ${t(words)}`)
+            .join(' · ')
+        : '',
+      credit: 'SLU · SEEC · SciLifeLab Pathogens Portal (CC BY 4.0)', // i18n-ignore: source credit
+    };
+  }
+
   function krisView(kris) {
     if (!kris) return null;
     const when = (ms) =>

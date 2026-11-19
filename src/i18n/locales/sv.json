@@ -5160,5 +5160,14 @@
   "Newly registered cars that are fully electric": "Andel elbilar bland nyregistrerade bilar",
   "{electric} of {total} · {from}–{to} · computed by the app from Trafikanalys statistics": "{electric} av {total} · {from}–{to} · räknat av appen ur Trafikanalys statistik",
   "latest quarters preliminary": "senaste kvartalen preliminära",
-  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "Tiderna kommer från SOS Alarm och gäller tolv månader fram till juni det år som visas; bränderna kommer från MCF:s register och gäller fem år."
+  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "Tiderna kommer från SOS Alarm och gäller tolv månader fram till juni det år som visas; bränderna kommer från MCF:s register och gäller fem år.",
+  "Viruses in wastewater": "Virus i avloppsvattnet",
+  "Influenza A": "Influensa A",
+  "Influenza B": "Influensa B",
+  "not detected": "ej påvisat",
+  "newly detected": "påvisat igen",
+  "rising": "stiger",
+  "steady": "oförändrat",
+  "falling": "sjunker",
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "Prov {date}. Varje trend jämför det senaste provet med de två före vid samma reningsverk; nivåerna jämförs inte mellan orter."
 }

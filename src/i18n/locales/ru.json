@@ -5380,5 +5380,14 @@
   "Newly registered cars that are fully electric": "Впервые зарегистрированные полностью электрические автомобили",
   "{electric} of {total} · {from}–{to} · computed by the app from Trafikanalys statistics": "{electric} из {total} · {from}–{to} · рассчитано приложением по статистике Trafikanalys",
   "latest quarters preliminary": "последние кварталы предварительные",
-  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "Время — по данным SOS Alarm за двенадцать месяцев до июня указанного года; пожары — из реестра MCF за пять лет."
+  "The times are from SOS Alarm and cover the twelve months to June of the year shown; the fires are from MCF’s register and cover five years.": "Время — по данным SOS Alarm за двенадцать месяцев до июня указанного года; пожары — из реестра MCF за пять лет.",
+  "Viruses in wastewater": "Вирусы в сточных водах",
+  "Influenza A": "Грипп A",
+  "Influenza B": "Грипп B",
+  "not detected": "не обнаружен",
+  "newly detected": "снова обнаружен",
+  "rising": "растёт",
+  "steady": "без изменений",
+  "falling": "снижается",
+  "Sample {date}. Each trend compares the newest sample with the two before at the same plant; levels are not compared between towns.": "Проба {date}. Каждая тенденция сравнивает последнюю пробу с двумя предыдущими на той же станции; уровни между городами не сравниваются."
 }
