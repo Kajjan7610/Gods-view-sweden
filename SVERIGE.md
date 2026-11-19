@@ -405,6 +405,20 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-19 (trailrarna med egen musik)
+- Trailermusiken var gjord med Eleven Music på ElevenLabs gratisplan,
+  som inte tillåter att musik laddas ner (kontot har aldrig haft en betald
+  plan). Musiken är därför utbytt mot vår egen syntetiserade musik; bild
+  och berättarröst är desamma.
+- README-filmen är utbytt och YouTube-länkarna pekar på de nya
+  uppladdningarna: live-filmen https://youtu.be/cEchnLCtbl8,
+  kulturarvsfilmen https://youtu.be/b-geEkgsc-Q, Shorts
+  https://youtube.com/shorts/jM3USWHju-0 och
+  https://youtube.com/shorts/j63oMbhnIP4. De fyra gamla är privata.
+- Rösten är fortfarande gjord med ElevenLabs gratisplan
+  (icke-kommersiellt) och krediteras med "elevenlabs.io" i titlar och
+  beskrivningar.
+
 ### 2026-11-18 (TomTom frågas aldrig inom Sverige)
 - Originalets trafiklager (Gatutrafik) frågar inte längre TomTom om
   kartrutor som berör Sverige, även om `TOMTOM_API_KEY` är satt. Proxyn

@@ -12,13 +12,13 @@
 
 </div>
 
-### ▶ Se filmen (röst: elevenlabs.io · musik: Eleven Music)
+### ▶ Se filmen (röst: elevenlabs.io)
 
-https://github.com/user-attachments/assets/623694ab-79d8-40cf-9997-c6c95ce91400
+https://github.com/user-attachments/assets/3c0c9eac-8139-45bc-be9b-ebba84d24391
 
-_28 sekunder med berättarröst: varje flyg över Sverige och Stockholm i rörelse just nu, och varje stad i siffror. For promotional purposes only. Alla källor står i slutskylten. Berättarrösten är gjord med elevenlabs.io och musiken med Eleven Music (created in collaboration with ElevenLabs)._
+_28 sekunder med berättarröst: varje flyg över Sverige och Stockholm i rörelse just nu, och varje stad i siffror. For promotional purposes only. Alla källor står i slutskylten. Berättarrösten är gjord med elevenlabs.io; musiken är vår egen, syntetiserad för filmen._
 
-**På YouTube:** [Live-filmen](https://youtu.be/VSx6TzB1fAY) (varje flyg och tåg i realtid, varje stad i siffror) · [Kulturarvsfilmen](https://youtu.be/WdYw6DMweik) (fornlämningar, flyg och tåg på en karta) · Shorts: [Flyget just nu](https://youtube.com/shorts/9TbymCYQKmc) · [Kulturarv](https://youtube.com/shorts/GIBvBGJ2tKI)
+**På YouTube:** [Live-filmen](https://youtu.be/cEchnLCtbl8) (varje flyg och tåg i realtid, varje stad i siffror) · [Kulturarvsfilmen](https://youtu.be/b-geEkgsc-Q) (fornlämningar, flyg och tåg på en karta) · Shorts: [Flyget just nu](https://youtube.com/shorts/jM3USWHju-0) · [Kulturarv](https://youtube.com/shorts/j63oMbhnIP4)
 
 Ett digitalt jordklot med hela världen live: flyg, satelliter, fartyg, jordbävningar och bränder från över 110 datakällor. Ovanpå det ligger Sveriges öppna data: **24 svenska API:er och dataset och 33 datatyper från 14 myndigheter och tjänster**, med hela gränssnittet på svenska.
 
