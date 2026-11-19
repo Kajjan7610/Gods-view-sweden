@@ -158,8 +158,7 @@ export function createFrostDepthLayer({
         requestRender();
         return;
       }
-      if (pickId && picking.isOwnedByOtherLayer(FROST_DEPTH_LAYER_ID, pickId))
-        return;
+      // Another layer's item, or the bare ground: one card at a time.
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
@@ -359,7 +358,7 @@ export function createFrostDepthLayer({
       })).filter((item) => item.count > 0);
       const blurb = [
         t(
-          'Dots are Trafikverket’s frost depth points by the roads, coloured by how deep the ground is frozen: where a string of sensors finds it crossing 0 °C. Click a point for the ground’s temperature by depth.',
+          'Dots are Trafikverket’s frost rods in the road, coloured by how deep the road is frozen: where a string of sensors finds the temperature crossing 0 °C. Click a point for the temperature by depth.',
         ),
         _silent
           ? t('Left out, no report for two days: {count}.', {
@@ -383,10 +382,30 @@ export function createFrostDepthLayer({
             },
           },
         ],
-        legend: legend.map((item, index) =>
-          index === 0 ? { ...item, blurb } : item,
-        ),
+        // With no point reporting (out of season), one row still says why.
+        legend: (legend.length
+          ? legend
+          : [
+              {
+                label: t('No point is reporting'),
+                color: FROST_CLASSES[0].color,
+                count: 0,
+              },
+            ]
+        ).map((item, index) => (index === 0 ? { ...item, blurb } : item)),
       };
+    },
+
+    /** The points, for the context panel's count in view and the analyst. */
+    getAnalystRecords(maxCount = 500) {
+      if (!_enabled) return [];
+      return _points.slice(0, Math.max(1, maxCount)).map((row) => ({
+        id: row.id,
+        name: t('Frost depth · {name}', { name: row.name }),
+        lat: row.point[1],
+        lon: row.point[0],
+        frostDepthCm: row.frost ? row.frost.bottom : 0,
+      }));
     },
 
     /** What a picked point is called, and where it is. */

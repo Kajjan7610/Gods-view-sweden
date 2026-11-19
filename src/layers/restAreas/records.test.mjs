@@ -71,12 +71,15 @@ test('the card lists spaces, equipment and the note, never free spaces now', () 
   );
   const card = buildRestAreaCard(areas[0]);
   assert.equal(card.title, 'REST AREA · NORRA MELBY');
+  // Long lines wrap between words, so the card stays narrow on a phone.
   assert.deepEqual(card.details, [
     '8 car spaces · 4 lorry spaces',
-    'toilet (accessible), picnic tables, waste bins',
+    'toilet (accessible), picnic tables',
+    'waste bins',
     'Free of charge',
-    'Belysning.',
-    'Spaces in all, not free spaces now · Trafikverket',
+    'Note from Trafikverket: Belysning.',
+    'Spaces in all, not free spaces now ·',
+    'Trafikverket',
   ]);
   assert.equal(spacesLine({ car: 0, lorry: 0 }), '');
 });

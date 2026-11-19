@@ -49,8 +49,8 @@ Två nivåer gäller:
 | Nederbördsradar, Europa inkl. Norge, Finland, Danmark och Baltikum (var 5:e minut) | EUMETNET OPERA, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Europe) |
 | Vägfärjor: Trafikverkets ca 40 färjeleder med nästa avgångar de kommande tre timmarna och nästa avgångstid bredvid varje led; gula där Trafikverket har ett meddelande för leden (inställda turer, nedsatt kapacitet, planerade avstängningar) | Trafikverket, objekt `FerryRoute`, `FerryAnnouncement` och färjemeddelanden i `Situation` (befintlig nyckel) | Road ferries (Sweden) / Vägfärjor, under Movement |
 | Köer och restider: Trafikverkets ca 200 restidssträckor, färgade efter Trafikverkets egen bedömning (fritt, trög trafik, kö, stillastående), och ca 1 200 mätpunkter där hastigheten nu jämförs med det normala för timmen (röd under hälften, gul klart under). Stockholm och Göteborg, några runt Malmö. Klick ger restid nu och normalt, hastighet och flöde | Trafikverket, objekt `TravelTimeRoute` 1.6 och `TrafficFlow` 1.6 med `BaselineTraffic` (befintlig nyckel) | Queues and travel times (Sweden) / Köer och restider, under Movement |
-| Tjäldjup: Trafikverkets tjäldjupsmätare vid vägarna (ett 50-tal rapporterar), färgade efter hur djupt marken är frusen, där sensorernas temperaturprofil passerar 0 °C, med djupet bredvid varje punkt; klick ger markens temperatur på olika djup | Trafikverket, objekt `FrostDepthMeasurepoint` (befintlig nyckel) | Frost depth (Sweden) / Tjäldjup, under Events |
-| Rastplatser: Trafikverkets ca 320 rastplatser längs de statliga vägarna, gula där lastbilar har platser, med ett filter för bara dem; klick ger platser för bil och lastbil, toalett, picknickbord, lekplats och latrintömning. Antalet platser, inte hur många som är lediga | Trafikverket, objekt `Parking` (befintlig nyckel) | Rest areas (Sweden) / Rastplatser, under Movement |
+| Tjäldjup: Trafikverkets tjälstavar i den plogade vägbanan (ett 50-tal rapporterar), färgade efter hur djupt vägen är frusen, där givarnas temperaturprofil passerar 0 °C, med djupet bredvid varje punkt (ett spann där stavens översta givare sitter djupt); klick ger temperaturen på olika djup | Trafikverket, objekt `FrostDepthMeasurepoint` (befintlig nyckel) | Frost depth (Sweden) / Tjäldjup, under Events |
+| Rastplatser: de 317 rastplatserna i Trafikverkets data, gula där lastbilar har platser, med ett filter för bara dem; klick ger platser för bil och lastbil, toalett, picknickbord, lekplats, latrintömning och Trafikverkets anteckning. Antalet platser, inte hur många som är lediga | Trafikverket, objekt `Parking` (befintlig nyckel) | Rest areas (Sweden) / Rastplatser, under Movement |
 | Vägväder: ca 830 väderstationer längs vägarna (vägbanans och luftens temperatur, daggpunkt, vind, sikt, nederbörd; halkrisk markeras) | Trafikverket, objekt `WeatherMeasurepoint` | Road Weather (Sweden), under Events |
 | Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk), samt VMA och krisnyheter som punkter | SMHI, IBWW-varningar (CC BY 4.0) och Krisinformation.se (MSB); ingen nyckel | Weather Warnings (Sweden), under Weather |
 | Polisens händelser (de 500 senaste notiserna, ca 10 dagar), placerade vid kommunens centralort | Polismyndigheten, `polisen.se/api/events` (öppna data, ange källan) | Police Events (Sweden), under Events |
@@ -121,8 +121,8 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Väglag (Sverige) | Trafikverket | Väglag och aktuella händelser i hela Sverige | Var 3:e minut | CC0 1.0 |
 | SE | Vägväder (Sverige) | Trafikverket | Cirka 830 vägväderstationer | Var 5:e minut | CC0 1.0 |
 | SE | Vägfärjor (Sverige) | Trafikverket | Omkring 40 färjeleder, avgångar de kommande tre timmarna | Varannan minut | CC0 1.0 |
-| SE | Tjäldjup (Sverige) | Trafikverket | Cirka 50 tjälmätpunkter vid vägarna, Sverige | Med några timmars mellanrum | CC0 1.0 |
-| SE | Rastplatser (Sverige) | Trafikverket | Cirka 320 rastplatser längs de statliga vägarna, Sverige | När en rastplats ändras | CC0 1.0 |
+| SE | Tjäldjup (Sverige) | Trafikverket | Cirka 50 rapporterande tjälstavar i vägbanan, Sverige | Med några timmars mellanrum | CC0 1.0 |
+| SE | Rastplatser (Sverige) | Trafikverket | Cirka 320 rastplatser i Trafikverkets data, Sverige | När en rastplats ändras | CC0 1.0 |
 | SE | Köer och restider (Sverige) | Trafikverket | Cirka 200 restidssträckor och 1 200 mätpunkter, Stockholm och Göteborg | Varje minut | CC0 1.0 |
 | SE | Polishändelser (Sverige) | Polismyndigheten | De 500 senaste notiserna, cirka tio dagar, hela Sverige | Var 5:e minut | Öppna data, källan anges |
 | SE | Kollektivtrafikstörningar (Sverige) | Trafiklab (Samtrafiken) | Störningar vid hållplatserna hos 16 regionala trafikbolag | Var 15:e minut | CC0 1.0 |
@@ -414,22 +414,31 @@ git merge origin/main
 
 ### 2026-11-19 (tjäldjup och rastplatser)
 - Nytt lager **Tjäldjup (Sverige)** (delningstoken `12`) under Events.
-  Trafikverkets tjäldjupsmätare vid vägarna mäter markens temperatur ner till
-  ungefär två meter. Appen läser tjäldjupet där profilen passerar 0 °C under
-  det frusna lagret och säger när marken har tinat överst. Punkterna färgas
+  Trafikverkets tjälstavar sitter i den plogade vägbanan och mäter
+  temperaturen ner till ungefär två meter, flera gånger per dygn. Appen läser
+  tjäldjupet där profilen passerar 0 °C under det frusna lagret (API:et ger
+  bara djup och temperatur) och säger när vägen har tinat överst. Där stavens
+  översta givare sitter djupare än 30 cm (fyra stavar börjar på 78 cm) visas
+  ett spann, till exempel "78–126 cm", inte ett djup från ytan. Kortet säger
+  att tjälen går djupare under en plogad väg än i öppen mark, och tiden är
+  Trafikverkets rapporttid. Punkterna färgas
   efter djupet (ingen tjäle, till 30 cm, 30–80, 80–150, djupare) och djupet
   står bredvid; klick ger temperaturen på olika djup. Punkter som inte har
   rapporterat på två dygn (ett 20-tal i november 2026) visas inte men räknas
   i förklaringen. Cache 30 minuter.
 - Nytt lager **Rastplatser (Sverige)** (delningstoken `13`) under Movement.
-  Trafikverkets ca 320 rastplatser med platser för bil och lastbil,
+  De 317 rastplatserna i Trafikverkets data (Trafikverkets egna sidor talar om
+  ett 270-tal) med platser för bil och lastbil,
   utrustning (toalett och om den är tillgänglighetsanpassad, picknickbord,
   lekplats, latrintömning, sopkärl), om de är avgiftsfria, öppna eller delvis
   stängda och Trafikverkets egen anteckning. Chipet LASTBILSPLATSER visar
   bara de med lastbilsplatser. Det finns ingen beläggning i datan: kortet
   säger att det är antalet platser, inte lediga platser. Cache sex timmar.
 - Båda från Trafikverkets öppna API (CC0) med den befintliga nyckeln. Inga
-  uppgifter om personer eller fordon.
+  uppgifter om personer eller fordon. Kod-, sannings- och UI-granskare gick
+  igenom lagren 2026-11-19; deras fynd är rättade (vägbanan i stället för
+  "vid vägarna", spannet för djupa stavar, smala kort på mobil, ett kort i
+  taget, räkningen i vyn och reservkopian när Trafikverket är nere).
 
 ### 2026-11-19 (himlen över Kiruna)
 - Stadskortets norrskensrad (fliken NU) visar den senaste bilden från

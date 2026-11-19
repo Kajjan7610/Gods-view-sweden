@@ -3,9 +3,9 @@
  * and the layer. No Cesium, no Node built-ins.
  *
  * Parking (Road.Infrastructure 1.4) of Trafikverket's open API (CC0 1.0):
- * the some 320 rest areas along the state roads, with their spaces for cars
- * and lorries, their equipment (toilet, picnic tables, play area, a station
- * for emptying caravan toilets) and whether they are open. No occupancy: the
+ * the some 320 rest areas in its data, with their spaces for cars and
+ * lorries, their equipment (toilet, picnic tables, play area, a point for
+ * emptying portable toilets) and whether they are open. No occupancy: the
  * spaces are how many there are, not how many are free.
  */
 
@@ -44,12 +44,13 @@ export function pointOf(wkt) {
 }
 
 /**
- * How the area stands: 'closed', 'limited' (open, partly closed),
- * 'lorry' (open with lorry spaces) or 'open'.
+ * How the area stands: 'closed', 'limited' (open, partly closed, or in any
+ * state Trafikverket names other than in operation), 'lorry' (open with
+ * lorry spaces) or 'open'.
  */
 export function areaStatus(area) {
   if (area.open === 'closed') return 'closed';
-  if (area.operation === 'limitedOperation') return 'limited';
+  if (area.operation && area.operation !== 'inOperation') return 'limited';
   return area.spaces.lorry > 0 ? 'lorry' : 'open';
 }
 
@@ -81,18 +82,15 @@ export function normalizeRestAreaSnapshot(response) {
       if (row?.VehicleType in spaces && Number.isFinite(count) && count > 0)
         spaces[row.VehicleType] += count;
     }
-    const kinds = new Set(
-      (Array.isArray(item?.Equipment) ? item.Equipment : []).map(
-        (row) => row?.Type,
-      ),
-    );
+    const equipment = Array.isArray(item?.Equipment) ? item.Equipment : [];
+    const kinds = new Set(equipment.map((row) => row?.Type));
     const area = {
       id,
       name: text(item?.Name, 80) ?? id,
       point,
       spaces,
       equipment: EQUIPMENT.filter((kind) => kinds.has(kind)),
-      accessibleToilet: (item?.Equipment ?? []).some(
+      accessibleToilet: equipment.some(
         (row) =>
           row?.Type === 'toilet' &&
           row?.Accessibility === 'handicappedAccessible',

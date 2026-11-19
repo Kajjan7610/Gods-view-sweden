@@ -3,12 +3,15 @@
  * proxy and the layer. No Cesium, no Node built-ins.
  *
  * FrostDepthMeasurepoint (Road.WeatherInfo 1.0) of Trafikverket's open API
- * (CC0 1.0): some 70 points by the roads where a string of sensors measures
- * the ground's temperature down to about two metres, every few hours. Where
- * the ground is at or below 0 °C it is frozen; the app reads the frost depth
- * as the point where the profile crosses 0 °C below the frozen layer.
+ * (CC0 1.0): some 70 frost rods set in the ploughed road, each a string of
+ * sensors measuring the temperature down to about two metres, several times
+ * a day. Where it is at or below 0 °C the road is frozen; the app reads the
+ * frost depth as the point where the profile crosses 0 °C below the frozen
+ * layer. Frost goes deeper under a ploughed road than in open ground.
  */
 
+/** A string whose top sensor is deeper than this says nothing of the top. */
+const TOP_SENSOR_MAX_CM = 30;
 /** A point whose newest sample is older than this is not reporting. */
 export const MAX_SAMPLE_AGE_MS = 2 * 24 * 60 * 60_000;
 export const MAX_POINTS = 500;
@@ -38,7 +41,8 @@ export function pointOf(wkt) {
  * The frozen layer of a profile ([{depth cm, value °C}], any order):
  * `{ top, bottom, belowSensors }` in cm, or null where nothing is frozen.
  * `top` is where the frost begins (0 unless the surface has thawed above
- * it), `bottom` where the profile crosses 0 °C below the deepest frozen
+ * it; null when the string starts too deep to tell, its top sensor already
+ * frozen), `bottom` where the profile crosses 0 °C below the deepest frozen
  * sensor, and `belowSensors` says the frost reaches past the deepest one.
  */
 export function frozenLayer(profile) {
@@ -55,7 +59,11 @@ export function frozenLayer(profile) {
   const below = rows[deepest + 1];
   const above = rows[shallowest - 1];
   return {
-    top: above ? Math.round(crossing(above, rows[shallowest])) : 0,
+    top: above
+      ? Math.round(crossing(above, rows[shallowest]))
+      : rows[0].depth > TOP_SENSOR_MAX_CM
+        ? null
+        : 0,
     bottom: below
       ? Math.round(crossing(rows[deepest], below))
       : rows[deepest].depth,
@@ -110,7 +118,11 @@ export function normalizeFrostDepthSnapshot(response, nowMs = Date.now()) {
       }))
       .filter((row) => Number.isFinite(row.depth) && Number.isFinite(row.value))
       .sort((a, b) => a.depth - b.depth);
-    if (!profile.length) continue;
+    // A point without a sensor value reports nothing either.
+    if (!profile.length) {
+      silent += 1;
+      continue;
+    }
     // The depth from the sensors' own values; the card shows them rounded.
     const frost = frozenLayer(profile);
     points.push({

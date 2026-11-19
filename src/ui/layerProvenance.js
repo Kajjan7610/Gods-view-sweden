@@ -180,13 +180,13 @@ export const LAYER_PROVENANCE = Object.freeze({
   }),
   'frost-depth': own({
     source: 'Trafikverket',
-    coverage: msg('About 50 frost depth points by the roads, Sweden'),
+    coverage: msg('About 50 frost rods reporting in the roads, Sweden'),
     updates: msg('Every few hours'),
     licence: CC0,
   }),
   'rest-areas': own({
     source: 'Trafikverket',
-    coverage: msg('About 320 rest areas along the state roads, Sweden'),
+    coverage: msg('About 320 rest areas in Trafikverket’s data, Sweden'),
     updates: msg('When an area changes'),
     licence: CC0,
   }),

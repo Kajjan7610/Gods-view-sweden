@@ -7,7 +7,12 @@ import {
   frozenLayer,
   normalizeFrostDepthSnapshot,
 } from './records.js';
-import { buildFrostDepthCard, frostLabel, profileLine } from './cards.js';
+import {
+  buildFrostDepthCard,
+  frostLabel,
+  profileLines,
+  wrapLine,
+} from './cards.js';
 
 const profile = (pairs) => pairs.map(([depth, value]) => ({ depth, value }));
 
@@ -120,7 +125,12 @@ test('only points that reported within two days are kept; the rest are counted',
   const card = buildFrostDepthCard(alfta);
   assert.equal(card.title, 'FROST DEPTH · ALFTA');
   assert.equal(card.details[0], 'Frozen to 36 cm');
-  assert.equal(card.details[2], '10 cm −1.1° · 35 cm −0.1° · 60 cm 1.3°');
+  assert.match(card.details[1], /^In the ploughed road/);
+  assert.ok(card.details.includes('10 cm −1.1° · 35 cm −0.1°'));
+  assert.ok(card.details.includes('60 cm 1.3°'));
+  assert.ok(card.details.some((line) => /^Reported /.test(line)));
+  // Every line short enough for a phone.
+  assert.ok(card.details.every((line) => line.length <= 38));
   assert.throws(() => normalizeFrostDepthSnapshot({}), /malformed/);
 });
 
@@ -128,5 +138,44 @@ test('a dense sensor string is listed every few sensors', () => {
   const dense = profile(
     Array.from({ length: 41 }, (_, i) => [i * 5, i < 20 ? -1 : 1]),
   );
-  assert.equal(profileLine(dense).split(' · ').length, 9);
+  const lines = profileLines(dense);
+  assert.equal(lines.length, 5);
+  assert.equal(lines.join(' · ').split(' · ').length, 9);
+  assert.deepEqual(wrapLine('one two three', 7), ['one two', 'three']);
+});
+
+test('a string starting deep says what it measures, not a depth from the surface', () => {
+  // Bunkris and its neighbours: the top sensor at 78 cm, already frozen.
+  const deep = profile([
+    [78, -2.9],
+    [102, -1.1],
+    [128, 0.1],
+    [152, 1.1],
+  ]);
+  const frost = frozenLayer(deep);
+  assert.equal(frost.top, null);
+  assert.equal(frost.bottom, 126);
+  const row = {
+    id: 'b',
+    name: 'Bunkris',
+    profile: deep,
+    frost,
+    depth: 126,
+    sampledAt: 0,
+  };
+  assert.equal(frostLabel(row), '78–126 cm');
+  assert.equal(
+    buildFrostDepthCard(row).details.slice(0, 2).join(' '),
+    'Frozen at 78–126 cm; no sensors above 78 cm',
+  );
+  // A top sensor at 30 cm or less still speaks for the surface.
+  assert.equal(
+    frozenLayer(
+      profile([
+        [30, -1],
+        [60, 1],
+      ]),
+    ).top,
+    0,
+  );
 });

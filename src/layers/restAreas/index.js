@@ -144,8 +144,7 @@ export function createRestAreasLayer({
         requestRender();
         return;
       }
-      if (pickId && picking.isOwnedByOtherLayer(REST_AREAS_LAYER_ID, pickId))
-        return;
+      // Another layer's item, or the bare ground: one card at a time.
       if (_selectedId) {
         _selectedId = null;
         publishSelectedCard();
@@ -244,7 +243,16 @@ export function createRestAreasLayer({
             : now();
         _lastError = null;
         const signature = JSON.stringify(
-          snapshot.areas.map((row) => [row.id, row.status, row.spaces]),
+          snapshot.areas.map((row) => [
+            row.id,
+            row.name,
+            row.status,
+            row.spaces,
+            row.equipment,
+            row.accessibleToilet,
+            row.free,
+            row.note,
+          ]),
         );
         if (signature !== _signature) {
           // Not trusted until drawn: a drawing that fails is made again.
@@ -328,12 +336,27 @@ export function createRestAreasLayer({
             ? {
                 ...item,
                 blurb: t(
-                  'Dots are Trafikverket’s rest areas along the state roads, with their spaces and equipment. The spaces are how many there are, not how many are free now. Click an area for its card.',
+                  'Dots are Trafikverket’s rest areas, with their spaces and equipment. The spaces are how many there are, not how many are free now. Click an area for its card.',
                 ),
               }
             : item,
         ),
       };
+    },
+
+    /** The areas shown, for the context panel's count in view and the analyst. */
+    getAnalystRecords(maxCount = 2000) {
+      if (!_enabled) return [];
+      return shown()
+        .slice(0, Math.max(1, maxCount))
+        .map((row) => ({
+          id: row.id,
+          name: t('Rest area · {name}', { name: row.name }),
+          lat: row.point[1],
+          lon: row.point[0],
+          carSpaces: row.spaces.car,
+          lorrySpaces: row.spaces.lorry,
+        }));
     },
 
     /** What a picked rest area is called, and where it is. */

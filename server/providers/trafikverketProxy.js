@@ -94,9 +94,14 @@ export function trafikverketProxy({
     }
   }
 
-  /** The last snapshot marked stale, or null once it is too old to show. */
+  /**
+   * The last snapshot marked stale, or null once it is too old to show. A
+   * route kept longer than an hour (the rest areas, six hours) may serve its
+   * snapshot stale for twice its own time.
+   */
+  const staleMax = Math.max(STALE_MAX_MS, 2 * ttlMs);
   const lastKnown = () =>
-    cached && now() - cached.savedAt <= STALE_MAX_MS
+    cached && now() - cached.savedAt <= staleMax
       ? { ...cached.value, stale: true }
       : null;
 
