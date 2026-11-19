@@ -5334,5 +5334,7 @@
   "Note from Trafikverket: {note}": "Nota da Trafikverket: {note}",
   "Dots are Trafikverket’s rest areas, with their spaces and equipment. The spaces are how many there are, not how many are free now. Click an area for its card.": "Os pontos são as áreas de descanso da Trafikverket, com os seus lugares e equipamentos. Os lugares indicam quantos existem, não quantos estão livres agora. Clique numa área para ver a sua ficha.",
   "About 50 frost rods reporting in the roads, Sweden": "Cerca de 50 hastes de gelo ativas nas estradas, Suécia",
-  "About 320 rest areas in Trafikverket’s data, Sweden": "Cerca de 320 áreas de descanso nos dados da Trafikverket, Suécia"
+  "About 320 rest areas in Trafikverket’s data, Sweden": "Cerca de 320 áreas de descanso nos dados da Trafikverket, Suécia",
+  "Rising or newly found: {viruses}": "A subir ou detetado agora: {viruses}",
+  "Nothing rising": "Nada a subir"
 }

@@ -5664,5 +5664,7 @@
   "Note from Trafikverket: {note}": "ملاحظة من Trafikverket: {note}",
   "Dots are Trafikverket’s rest areas, with their spaces and equipment. The spaces are how many there are, not how many are free now. Click an area for its card.": "النقاط هي استراحات Trafikverket بأماكنها ومرافقها. تشير الأماكن إلى عددها، لا إلى عدد الشاغر منها الآن. انقر على استراحة لعرض بطاقتها.",
   "About 50 frost rods reporting in the roads, Sweden": "نحو 50 قضيب قياس تجمد نشطًا في الطرق، السويد",
-  "About 320 rest areas in Trafikverket’s data, Sweden": "نحو 320 استراحة في بيانات Trafikverket، السويد"
+  "About 320 rest areas in Trafikverket’s data, Sweden": "نحو 320 استراحة في بيانات Trafikverket، السويد",
+  "Rising or newly found: {viruses}": "في ارتفاع أو اكتُشف الآن: {viruses}",
+  "Nothing rising": "لا شيء في ارتفاع"
 }

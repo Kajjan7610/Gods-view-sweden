@@ -1820,8 +1820,23 @@ export function createCityDossier({
       dates[0] === dates.at(-1)
         ? dayOf(dates[0])
         : `${dayOf(dates[0])}–${dayOf(dates.at(-1))}`;
+    // The folded block's one line: what rises at any of the town's plants.
+    const rising = WASTEWATER_VIRUSES.filter(([virus]) =>
+      plants.some((plant) =>
+        plant.viruses.some(
+          (row) =>
+            row.virus === virus &&
+            (row.trend === 'rising' || row.trend === 'detected'),
+        ),
+      ),
+    ).map(([virus, label]) =>
+      virus === 'covid' || virus === 'rsv' ? label : t(label),
+    );
     return {
       title: t('Viruses in wastewater'),
+      summary: rising.length
+        ? t('Rising or newly found: {viruses}', { viruses: rising.join(', ') })
+        : t('Nothing rising'),
       columns: several
         ? plants.map((plant) => ({
             key: plant.key,

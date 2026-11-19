@@ -580,6 +580,23 @@
   display: grid;
   gap: 4px;
 }
+.city-dossier-wastewater summary {
+  display: grid;
+  gap: 2px;
+  cursor: pointer;
+  list-style: none;
+}
+.city-dossier-wastewater summary::-webkit-details-marker {
+  display: none;
+}
+.city-dossier-wastewater summary strong::after {
+  content: '▸';
+  margin-inline-start: auto;
+  color: rgba(220, 238, 255, 0.6);
+}
+.city-dossier-wastewater[open] summary strong::after {
+  content: '▾';
+}
 .city-dossier-wastewater strong {
   display: flex;
   align-items: center;

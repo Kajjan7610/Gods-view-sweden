@@ -828,6 +828,8 @@ test("wastewater: each virus's trend at the town's plants, one column per plant"
   // One plant: no columns, the trend in words.
   assert.deepEqual(view.columns, []);
   assert.equal(view.legend, '', 'the words stand in the cells');
+  // Folded, the block says in one line what rises.
+  assert.equal(view.summary, 'Rising or newly found: Influenza A');
   assert.deepEqual(
     view.rows.map((row) => [row.label, row.cells[0].text]),
     [

@@ -5334,5 +5334,7 @@
   "Note from Trafikverket: {note}": "הערה מ-Trafikverket: {note}",
   "Dots are Trafikverket’s rest areas, with their spaces and equipment. The spaces are how many there are, not how many are free now. Click an area for its card.": "הנקודות הן אזורי המנוחה של Trafikverket, עם המקומות והציוד שלהם. המקומות מציינים כמה יש, לא כמה פנויים כעת. לחצו על אזור לכרטיס שלו.",
   "About 50 frost rods reporting in the roads, Sweden": "כ-50 מוטות קיפאון מדווחים בכבישים, שוודיה",
-  "About 320 rest areas in Trafikverket’s data, Sweden": "כ-320 אזורי מנוחה בנתוני Trafikverket, שוודיה"
+  "About 320 rest areas in Trafikverket’s data, Sweden": "כ-320 אזורי מנוחה בנתוני Trafikverket, שוודיה",
+  "Rising or newly found: {viruses}": "עולה או זוהה כעת: {viruses}",
+  "Nothing rising": "שום דבר אינו עולה"
 }

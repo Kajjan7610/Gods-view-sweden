@@ -132,8 +132,9 @@ watch(
               <p v-if="d.now.kris.empty" class="city-dossier-note">{{ d.now.kris.empty }}</p>
               <a v-for="item in d.now.kris.news" :key="item.key" :href="item.url || undefined" target="_blank" rel="noopener noreferrer"><small>{{ item.meta }}</small> {{ item.headline }}</a>
             </div>
-            <div v-if="d.now.wastewater" class="city-dossier-wastewater">
-              <strong><span class="material-symbols-outlined" aria-hidden="true">water_drop</span>{{ d.now.wastewater.title }}</strong>
+            <!-- Folded by default: the NOW tab stays short; one line says what rises. -->
+            <details v-if="d.now.wastewater" class="city-dossier-wastewater">
+              <summary><strong><span class="material-symbols-outlined" aria-hidden="true">water_drop</span>{{ d.now.wastewater.title }}</strong><small>{{ d.now.wastewater.summary }}</small></summary>
               <table>
                 <thead v-if="d.now.wastewater.columns.length"><tr><td></td><th v-for="col in d.now.wastewater.columns" :key="col.key" scope="col">{{ col.name }}</th></tr></thead>
                 <tbody>
@@ -146,7 +147,7 @@ watch(
               <small v-if="d.now.wastewater.legend">{{ d.now.wastewater.legend }}</small>
               <small>{{ d.now.wastewater.note }}</small>
               <small><a :href="d.now.wastewater.creditUrl" target="_blank" rel="noopener noreferrer">{{ d.now.wastewater.credit }}</a></small>
-            </div>
+            </details>
             <div v-if="d.now.cameras" class="city-dossier-trains city-dossier-cameras">
               <strong><span class="material-symbols-outlined" aria-hidden="true">speed_camera</span>{{ d.now.cameras.title }}</strong>
               <button v-for="row in d.now.cameras.items" :key="row.key" type="button" class="city-dossier-camera" :title="t('Show on the map')" @click="store.act('showCamera', row.key)">

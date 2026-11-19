@@ -5114,5 +5114,7 @@
   "Note from Trafikverket: {note}": "Trafikverket 備註:{note}",
   "Dots are Trafikverket’s rest areas, with their spaces and equipment. The spaces are how many there are, not how many are free now. Click an area for its card.": "圓點是 Trafikverket 的休息區及其車位和設施。車位為總數,不是目前空位數。點擊休息區查看其卡片。",
   "About 50 frost rods reporting in the roads, Sweden": "約 50 根路面內在報告的凍土測桿,瑞典",
-  "About 320 rest areas in Trafikverket’s data, Sweden": "Trafikverket 資料中約 320 個休息區,瑞典"
+  "About 320 rest areas in Trafikverket’s data, Sweden": "Trafikverket 資料中約 320 個休息區,瑞典",
+  "Rising or newly found: {viruses}": "上升或本次檢出:{viruses}",
+  "Nothing rising": "無上升"
 }

@@ -5444,5 +5444,7 @@
   "Note from Trafikverket: {note}": "Примечание Trafikverket: {note}",
   "Dots are Trafikverket’s rest areas, with their spaces and equipment. The spaces are how many there are, not how many are free now. Click an area for its card.": "Точки — зоны отдыха Trafikverket с местами и оборудованием. Указано, сколько мест есть, а не сколько свободно сейчас. Нажмите на зону, чтобы открыть её карточку.",
   "About 50 frost rods reporting in the roads, Sweden": "Около 50 действующих мерзлотных зондов в дорогах, Швеция",
-  "About 320 rest areas in Trafikverket’s data, Sweden": "Около 320 зон отдыха в данных Trafikverket, Швеция"
+  "About 320 rest areas in Trafikverket’s data, Sweden": "Около 320 зон отдыха в данных Trafikverket, Швеция",
+  "Rising or newly found: {viruses}": "Растёт или обнаружен сейчас: {viruses}",
+  "Nothing rising": "Ничего не растёт"
 }

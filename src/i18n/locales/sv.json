@@ -5224,5 +5224,7 @@
   "Note from Trafikverket: {note}": "Trafikverkets anteckning: {note}",
   "Dots are Trafikverket’s rest areas, with their spaces and equipment. The spaces are how many there are, not how many are free now. Click an area for its card.": "Prickarna är Trafikverkets rastplatser med deras platser och utrustning. Platserna anger hur många det finns, inte hur många som är lediga just nu. Klicka på en rastplats för att se dess kort.",
   "About 50 frost rods reporting in the roads, Sweden": "Cirka 50 rapporterande tjälstavar i vägbanan, Sverige",
-  "About 320 rest areas in Trafikverket’s data, Sweden": "Cirka 320 rastplatser i Trafikverkets data, Sverige"
+  "About 320 rest areas in Trafikverket’s data, Sweden": "Cirka 320 rastplatser i Trafikverkets data, Sverige",
+  "Rising or newly found: {viruses}": "Stiger eller påvisat nu: {viruses}",
+  "Nothing rising": "Inget stiger"
 }

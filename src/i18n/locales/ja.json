@@ -5114,5 +5114,7 @@
   "Note from Trafikverket: {note}": "Trafikverket のメモ:{note}",
   "Dots are Trafikverket’s rest areas, with their spaces and equipment. The spaces are how many there are, not how many are free now. Click an area for its card.": "点は Trafikverket の休憩所で、駐車枠と設備を示します。枠数は総数で、現在の空き数ではありません。休憩所をクリックするとカードを表示します。",
   "About 50 frost rods reporting in the roads, Sweden": "道路内で報告中の凍結深度計 約50か所、スウェーデン",
-  "About 320 rest areas in Trafikverket’s data, Sweden": "Trafikverket のデータにある休憩所 約320か所、スウェーデン"
+  "About 320 rest areas in Trafikverket’s data, Sweden": "Trafikverket のデータにある休憩所 約320か所、スウェーデン",
+  "Rising or newly found: {viruses}": "上昇中または今回検出:{viruses}",
+  "Nothing rising": "上昇なし"
 }
