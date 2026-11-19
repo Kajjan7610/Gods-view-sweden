@@ -3899,7 +3899,6 @@
   "Aircraft positions come from ADS-B: the OpenSky Network’s worldwide snapshot, with adsb.lol where OpenSky has none.": "Las posiciones de los aviones vienen de ADS-B: la instantánea mundial de OpenSky Network, con adsb.lol donde OpenSky no tiene datos.",
   "Live-flight fallback (ODbL 1.0)": "Respaldo de vuelos en vivo (ODbL 1.0)",
   "Satellite orbits are propagated from CelesTrak’s current element sets.": "Las órbitas de los satélites se calculan con los elementos orbitales actuales de CelesTrak.",
-  "Earthquakes come from the U.S. Geological Survey’s live feed.": "Los terremotos vienen del feed en vivo del Servicio Geológico de EE. UU.",
   "Traffic": "Tráfico",
   "Road traffic; live congestion needs your own TomTom key.": "Tráfico vial; la congestión en vivo requiere tu propia clave de TomTom.",
   "Live traffic flow, with your own key": "Flujo de tráfico en vivo, con tu propia clave",
@@ -5280,5 +5279,7 @@
   "steady": "estable",
   "falling": "en descenso",
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Muestra {date}. Cada tendencia compara la muestra más reciente con las dos anteriores de la misma planta. Una sola muestra puede variar mucho; esto no cuenta a las personas enfermas y no se comparan localidades. El método del laboratorio aún está en desarrollo.",
-  "trends computed by the app": "tendencias calculadas por la app"
+  "trends computed by the app": "tendencias calculadas por la app",
+  "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "Los terremotos proceden del feed en directo del Servicio Geológico de EE. UU., y los pequeños de los países nórdicos, del EMSC.",
+  "Nordic earthquakes (CC BY 4.0)": "Terremotos nórdicos (CC BY 4.0)"
 }

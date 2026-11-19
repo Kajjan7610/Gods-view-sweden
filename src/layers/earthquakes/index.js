@@ -65,7 +65,7 @@ export function createEarthquakesLayer({ source, overlayHost } = {}) {
     id: 'earthquakes',
     name: 'Earthquakes (24h)',
     icon: '🌋',
-    source: 'USGS',
+    source: 'USGS · EMSC', // Swedish fork: the EMSC's Nordic quakes
     updateInterval: 60000,
 
     init(viewer) {

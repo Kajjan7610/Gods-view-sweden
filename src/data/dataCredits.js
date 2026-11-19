@@ -191,6 +191,13 @@ export const DATA_CREDITS = [
     html: 'Earthquakes: Data courtesy of the U.S. Geological Survey',
   },
   {
+    // Swedish fork: the small Nordic quakes.
+    key: 'emsc',
+    html:
+      'Earthquakes in the Nordic countries: ' +
+      '<a href="https://www.seismicportal.eu/" target="_blank" rel="noopener">EMSC</a> (CC BY 4.0)',
+  },
+  {
     key: 'openseamap',
     html:
       'Sea marks overlay: ' +

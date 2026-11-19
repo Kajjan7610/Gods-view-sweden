@@ -3799,7 +3799,6 @@
   "Aircraft positions come from ADS-B: the OpenSky Network’s worldwide snapshot, with adsb.lol where OpenSky has none.": "Flygplanspositioner kommer från ADS-B: OpenSky Networks världsomfattande ögonblicksbild, med adsb.lol där OpenSky saknar data.",
   "Live-flight fallback (ODbL 1.0)": "Reservkälla för flyg i realtid (ODbL 1.0)",
   "Satellite orbits are propagated from CelesTrak’s current element sets.": "Satellitbanorna beräknas från CelesTraks aktuella banelement.",
-  "Earthquakes come from the U.S. Geological Survey’s live feed.": "Jordbävningarna kommer från U.S. Geological Surveys realtidsflöde.",
   "Traffic": "Trafik",
   "Road traffic; live congestion needs your own TomTom key.": "Vägtrafik; köer i realtid kräver en egen TomTom-nyckel.",
   "Live traffic flow, with your own key": "Trafikflöde i realtid, med egen nyckel",
@@ -5170,5 +5169,7 @@
   "steady": "stabilt",
   "falling": "sjunker",
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Prov {date}. Varje trend jämför det senaste provet med de två före vid samma reningsverk. Ett enskilt prov kan variera mycket; det här räknar inte hur många som är sjuka, och orter jämförs inte. Laboratoriets metod utvecklas fortfarande.",
-  "trends computed by the app": "trenderna räknade av appen"
+  "trends computed by the app": "trenderna räknade av appen",
+  "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "Jordbävningarna kommer från U.S. Geological Surveys realtidsflöde, och de små i Norden från EMSC.",
+  "Nordic earthquakes (CC BY 4.0)": "Jordbävningar i Norden (CC BY 4.0)"
 }

@@ -3799,7 +3799,6 @@
   "Aircraft positions come from ADS-B: the OpenSky Network’s worldwide snapshot, with adsb.lol where OpenSky has none.": "Flugzeugpositionen stammen aus ADS-B: dem weltweiten Snapshot des OpenSky Network, ergänzt durch adsb.lol, wo OpenSky keine Daten hat.",
   "Live-flight fallback (ODbL 1.0)": "Live-Flug-Ersatzquelle (ODbL 1.0)",
   "Satellite orbits are propagated from CelesTrak’s current element sets.": "Satellitenbahnen werden aus den aktuellen Bahnelementen von CelesTrak berechnet.",
-  "Earthquakes come from the U.S. Geological Survey’s live feed.": "Erdbeben stammen aus dem Live-Feed des U.S. Geological Survey.",
   "Traffic": "Verkehr",
   "Road traffic; live congestion needs your own TomTom key.": "Straßenverkehr; Live-Staudaten brauchen einen eigenen TomTom-Schlüssel.",
   "Live traffic flow, with your own key": "Live-Verkehrsfluss, mit eigenem Schlüssel",
@@ -5170,5 +5169,7 @@
   "Influenza A": "Influenza A",
   "Influenza B": "Influenza B",
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Probe {date}. Jeder Trend vergleicht die neueste Probe mit den zwei vorherigen derselben Kläranlage. Eine einzelne Probe kann stark schwanken; das ist keine Zahl der Erkrankten, und Orte werden nicht verglichen. Die Methode des Labors wird noch entwickelt.",
-  "trends computed by the app": "Trends von der App berechnet"
+  "trends computed by the app": "Trends von der App berechnet",
+  "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "Erdbeben stammen aus dem Live-Feed des U.S. Geological Survey, die kleinen in den nordischen Ländern vom EMSC.",
+  "Nordic earthquakes (CC BY 4.0)": "Erdbeben in Nordeuropa (CC BY 4.0)"
 }

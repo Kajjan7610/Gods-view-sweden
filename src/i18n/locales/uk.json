@@ -3999,7 +3999,6 @@
   "Aircraft positions come from ADS-B: the OpenSky Network’s worldwide snapshot, with adsb.lol where OpenSky has none.": "Позиції літаків отримано з ADS-B: світовий знімок OpenSky Network, а там, де в OpenSky немає даних, — adsb.lol.",
   "Live-flight fallback (ODbL 1.0)": "Резервне джерело рейсів (ODbL 1.0)",
   "Satellite orbits are propagated from CelesTrak’s current element sets.": "Орбіти супутників розраховуються за поточними елементами орбіт CelesTrak.",
-  "Earthquakes come from the U.S. Geological Survey’s live feed.": "Землетруси надходять із живої стрічки Геологічної служби США (USGS).",
   "Traffic": "Дорожній рух",
   "Road traffic; live congestion needs your own TomTom key.": "Дорожній рух; для заторів у реальному часі потрібен власний ключ TomTom.",
   "Live traffic flow, with your own key": "Потік руху в реальному часі, з власним ключем",
@@ -5390,5 +5389,7 @@
   "steady": "без змін",
   "falling": "знижується",
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "Проба {date}. Кожна тенденція порівнює останню пробу з двома попередніми на тій самій станції. Одна проба може сильно коливатися; це не кількість хворих, і міста не порівнюються. Метод лабораторії ще розробляється.",
-  "trends computed by the app": "тенденції розраховано застосунком"
+  "trends computed by the app": "тенденції розраховано застосунком",
+  "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "Землетруси — зі стрічки Геологічної служби США в реальному часі, а слабкі в Північних країнах — від EMSC.",
+  "Nordic earthquakes (CC BY 4.0)": "Землетруси в Північних країнах (CC BY 4.0)"
 }

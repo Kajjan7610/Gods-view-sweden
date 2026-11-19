@@ -4199,7 +4199,6 @@
   "Aircraft positions come from ADS-B: the OpenSky Network’s worldwide snapshot, with adsb.lol where OpenSky has none.": "تأتي مواقع الطائرات من ADS-B: لقطة OpenSky Network العالمية، مع adsb.lol حيث لا تتوفر بيانات لدى OpenSky.",
   "Live-flight fallback (ODbL 1.0)": "مصدر احتياطي للرحلات المباشرة (ODbL 1.0)",
   "Satellite orbits are propagated from CelesTrak’s current element sets.": "تُحسب مدارات الأقمار الصناعية من العناصر المدارية الحالية لدى CelesTrak.",
-  "Earthquakes come from the U.S. Geological Survey’s live feed.": "تأتي الزلازل من البث المباشر لهيئة المسح الجيولوجي الأمريكية.",
   "Traffic": "المرور",
   "Road traffic; live congestion needs your own TomTom key.": "حركة مرور الطرق؛ يتطلب الازدحام المباشر مفتاح TomTom خاصًا بك.",
   "Live traffic flow, with your own key": "تدفق حركة المرور المباشر، بمفتاحك الخاص",
@@ -5610,5 +5609,7 @@
   "steady": "مستقر",
   "falling": "في انخفاض",
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "عينة {date}. يقارن كل اتجاه أحدث عينة بالعينتين السابقتين في المحطة نفسها. قد تتفاوت العينة الواحدة كثيرًا؛ وهذا ليس عددًا للمرضى، ولا تُقارن المدن. ولا تزال طريقة المختبر قيد التطوير.",
-  "trends computed by the app": "الاتجاهات من حساب التطبيق"
+  "trends computed by the app": "الاتجاهات من حساب التطبيق",
+  "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "تأتي الزلازل من البث المباشر لهيئة المسح الجيولوجي الأمريكية، والصغيرة منها في بلدان الشمال الأوروبي من EMSC.",
+  "Nordic earthquakes (CC BY 4.0)": "زلازل بلدان الشمال (CC BY 4.0)"
 }

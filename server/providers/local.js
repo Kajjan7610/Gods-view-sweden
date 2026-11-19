@@ -33,6 +33,7 @@ import { trafikverketWeatherProxy } from './trafikverketWeather.js';
 import { trafikverketFerriesProxy } from './trafikverketFerries.js';
 import { trafikverketQueuesProxy } from './trafikverketQueues.js';
 import { wastewaterProxy } from './wastewater.js';
+import { emscNordicProxy } from './emscNordic.js';
 import { smhiWarningsProxy } from './smhiWarnings.js';
 import { polisenEventsProxy } from './polisenEvents.js';
 import { electricityPricesProxy } from './electricityPrices.js';
@@ -133,6 +134,7 @@ function localProviderPlugins({
     trafikverketFerriesProxy(),
     queues,
     wastewater,
+    emscNordicProxy(),
     smhiWarningsProxy(),
     polisenEventsProxy(),
     electricityPricesProxy(),

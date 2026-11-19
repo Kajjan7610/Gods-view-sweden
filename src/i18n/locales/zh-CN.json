@@ -3699,7 +3699,6 @@
   "Aircraft positions come from ADS-B: the OpenSky Network’s worldwide snapshot, with adsb.lol where OpenSky has none.": "飞机位置来自 ADS-B：OpenSky Network 的全球快照，OpenSky 没有数据的地方由 adsb.lol 补充。",
   "Live-flight fallback (ODbL 1.0)": "实时航班备用来源 (ODbL 1.0)",
   "Satellite orbits are propagated from CelesTrak’s current element sets.": "卫星轨道根据 CelesTrak 当前的轨道根数推算。",
-  "Earthquakes come from the U.S. Geological Survey’s live feed.": "地震数据来自美国地质调查局 (USGS) 的实时数据流。",
   "Traffic": "交通",
   "Road traffic; live congestion needs your own TomTom key.": "道路交通；实时拥堵需要你自己的 TomTom 密钥。",
   "Live traffic flow, with your own key": "实时交通流量，需使用你自己的密钥",
@@ -5060,5 +5059,7 @@
   "steady": "持平",
   "falling": "下降",
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "采样 {date}。每个趋势将同一处理厂的最新样本与之前两次比较。单个样本可能波动很大;这不是患病人数,也不比较各城镇。实验室的方法仍在开发中。",
-  "trends computed by the app": "趋势由应用计算"
+  "trends computed by the app": "趋势由应用计算",
+  "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "地震数据来自美国地质调查局的实时数据,北欧的小地震来自 EMSC。",
+  "Nordic earthquakes (CC BY 4.0)": "北欧地震 (CC BY 4.0)"
 }

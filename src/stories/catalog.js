@@ -51,12 +51,19 @@ const LAYER_FACTS = {
   },
   earthquakes: {
     label: msg('Earthquakes'),
-    about: msg('Earthquakes come from the U.S. Geological Survey’s live feed.'),
+    about: msg(
+      'Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.',
+    ),
     sources: [
       [
         'USGS',
         msg('Earthquake feed (U.S. public domain)'),
         'https://earthquake.usgs.gov/',
+      ],
+      [
+        'EMSC',
+        msg('Nordic earthquakes (CC BY 4.0)'),
+        'https://www.seismicportal.eu/',
       ],
     ],
   },

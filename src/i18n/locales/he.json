@@ -3899,7 +3899,6 @@
   "Aircraft positions come from ADS-B: the OpenSky Network’s worldwide snapshot, with adsb.lol where OpenSky has none.": "מיקומי המטוסים מגיעים מ-ADS-B: תמונת המצב העולמית של OpenSky Network, ו-adsb.lol היכן שאין ל-OpenSky נתונים.",
   "Live-flight fallback (ODbL 1.0)": "מקור גיבוי לטיסות חיות (ODbL 1.0)",
   "Satellite orbits are propagated from CelesTrak’s current element sets.": "מסלולי הלוויינים מחושבים מרכיבי המסלול העדכניים של CelesTrak.",
-  "Earthquakes come from the U.S. Geological Survey’s live feed.": "רעידות האדמה מגיעות מהפיד החי של הסקר הגאולוגי של ארה״ב.",
   "Traffic": "תנועה",
   "Road traffic; live congestion needs your own TomTom key.": "תנועה בכבישים; עומסי תנועה חיים דורשים מפתח TomTom משלך.",
   "Live traffic flow, with your own key": "זרימת תנועה חיה, עם מפתח משלך",
@@ -5280,5 +5279,7 @@
   "steady": "יציב",
   "falling": "יורד",
   "Sample {date}. Each trend compares the newest sample with the two before at the same plant. A single sample can vary a lot; this is no count of people who are ill, and towns are not compared. The laboratory’s method is still being developed.": "דגימה {date}. כל מגמה משווה את הדגימה האחרונה לשתיים שלפניה באותו מתקן. דגימה בודדת יכולה להשתנות מאוד; זו אינה ספירה של חולים, וערים אינן מושוות. שיטת המעבדה עדיין בפיתוח.",
-  "trends computed by the app": "המגמות חושבו על ידי האפליקציה"
+  "trends computed by the app": "המגמות חושבו על ידי האפליקציה",
+  "Earthquakes come from the U.S. Geological Survey’s live feed, and the small ones in the Nordic countries from the EMSC.": "רעידות האדמה מגיעות מהזנה החיה של הסקר הגאולוגי של ארה״ב, והקטנות בארצות הנורדיות מ-EMSC.",
+  "Nordic earthquakes (CC BY 4.0)": "רעידות אדמה בארצות הנורדיות (CC BY 4.0)"
 }
