@@ -32,6 +32,8 @@ import { trafikverketRoadsProxy } from './trafikverketRoads.js';
 import { trafikverketWeatherProxy } from './trafikverketWeather.js';
 import { trafikverketFerriesProxy } from './trafikverketFerries.js';
 import { trafikverketQueuesProxy } from './trafikverketQueues.js';
+import { trafikverketFrostDepthProxy } from './trafikverketFrostDepth.js';
+import { trafikverketRestAreasProxy } from './trafikverketRestAreas.js';
 import { wastewaterProxy } from './wastewater.js';
 import { emscNordicProxy } from './emscNordic.js';
 import { kirunaAllskyProxy } from './kirunaAllsky.js';
@@ -134,6 +136,8 @@ function localProviderPlugins({
     trafikverketWeatherProxy(),
     trafikverketFerriesProxy(),
     queues,
+    trafikverketFrostDepthProxy(),
+    trafikverketRestAreasProxy(),
     wastewater,
     emscNordicProxy(),
     kirunaAllskyProxy(),

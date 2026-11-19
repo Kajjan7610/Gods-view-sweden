@@ -30,6 +30,7 @@ test('panel presentation places Transit and Rail between Street Traffic and Bike
       'road-queues',
       'transit',
       'road-ferries',
+      'rest-areas',
       'rail',
       'bikeshare',
     ],

@@ -72,6 +72,8 @@ export const CATALOG_SOURCE_CONTRACTS = Object.freeze({
   'gamma-radiation': contract(['gamma-radiation'], ['getSnapshot']),
   'road-ferries': contract(['road-ferries'], ['getSnapshot']),
   'road-queues': contract(['road-queues'], ['getSnapshot']),
+  'frost-depth': contract(['frost-depth'], ['getSnapshot']),
+  'rest-areas': contract(['rest-areas'], ['getSnapshot']),
   aurora: contract(['aurora'], ['getSnapshot']),
   'smhi-weather': contract(['smhi-weather'], ['getSnapshot', 'getForecast']),
   's2-ghostmaps': contract(['s2-ghostmaps'], ['getCatalog', 'getFile']),

@@ -44,6 +44,8 @@ test('reference factories retain compatibility without starting acquisition or s
     'gamma-radiation',
     'road-ferries',
     'road-queues',
+    'frost-depth',
+    'rest-areas',
     'aurora',
     'smhi-weather',
   ]);

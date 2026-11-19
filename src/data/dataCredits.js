@@ -585,6 +585,18 @@ export const DATA_CREDITS = [
       '<a href="https://www.trafikverket.se/farjerederiet/" target="_blank" rel="noopener">Trafikverket</a> (open API, CC0 1.0)',
   },
   {
+    key: 'frost-depth',
+    html:
+      'Frost depth (Sweden): ' +
+      '<a href="https://data.trafikverket.se/" target="_blank" rel="noopener">Trafikverket</a> (open API, CC0 1.0)',
+  },
+  {
+    key: 'rest-areas',
+    html:
+      'Rest areas (Sweden): ' +
+      '<a href="https://data.trafikverket.se/" target="_blank" rel="noopener">Trafikverket</a> (open API, CC0 1.0)',
+  },
+  {
     key: 'road-queues',
     html:
       'Queues and travel times (Sweden): ' +

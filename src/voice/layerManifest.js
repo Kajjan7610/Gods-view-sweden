@@ -512,6 +512,8 @@ export const VOICE_OFF_LAYERS = Object.freeze({
     'Swedish road ferry routes and departures; no room in the prompt budget',
   'road-queues':
     'Swedish queues and travel times; no room in the prompt budget',
+  'frost-depth': 'Swedish frost depth points; no room in the prompt budget',
+  'rest-areas': 'Swedish rest areas; no room in the prompt budget',
   aurora: 'aurora forecast; no room in the prompt budget',
   'smhi-weather': 'Swedish weather stations; no room in the prompt budget',
   'power-grid': 'Swedish power flows; no room in the prompt budget',

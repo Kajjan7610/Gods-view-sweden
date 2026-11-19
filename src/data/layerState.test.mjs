@@ -203,8 +203,8 @@ function encode(state) {
 
 test('production registry is exact, canonical, and rejects incomplete contracts', async () => {
   assert.equal(validateLayerStateRegistry(), true);
-  assert.equal(REGISTERED_LAYER_IDS.length, 65);
-  assert.equal(new Set(REGISTERED_LAYER_IDS).size, 65);
+  assert.equal(REGISTERED_LAYER_IDS.length, 67);
+  assert.equal(new Set(REGISTERED_LAYER_IDS).size, 67);
   assert.ok(REGISTERED_LAYER_IDS.includes('transit'));
   assert.deepEqual(REGISTERED_LAYER_IDS, [...REGISTERED_LAYER_IDS].sort());
   assert.deepEqual(LEGACY_LAYER_STATE_TOKENS, {
@@ -279,9 +279,9 @@ test('production registry is exact, canonical, and rejects incomplete contracts'
         ]),
       ),
     }),
-    // 10 is the road ferries', 11 the road queues' (the fork continues
-    // after 0z).
-    '12',
+    // 10 is the road ferries', 11 the road queues', 12 the frost depth's
+    // and 13 the rest areas' (the fork continues after 0z).
+    '14',
   );
   assert.throws(
     () =>

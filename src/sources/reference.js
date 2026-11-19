@@ -32,6 +32,8 @@ import { createRiverFlowSource } from '../layers/riverFlow/source.js';
 import { createGammaRadiationSource } from '../layers/gammaRadiation/source.js';
 import { createRoadFerriesSource } from '../layers/roadFerries/source.js';
 import { createRoadQueuesSource } from '../layers/roadQueues/source.js';
+import { createFrostDepthSource } from '../layers/frostDepth/source.js';
+import { createRestAreasSource } from '../layers/restAreas/source.js';
 import { createAuroraSource } from '../layers/aurora/source.js';
 import { createSmhiWeatherSource } from '../layers/smhiWeather/source.js';
 import { createWildlifeSightingsSource } from '../layers/wildlifeSightings/source.js';
@@ -78,6 +80,8 @@ export function createReferenceSources() {
     'gamma-radiation': createGammaRadiationSource(),
     'road-ferries': createRoadFerriesSource(),
     'road-queues': createRoadQueuesSource(),
+    'frost-depth': createFrostDepthSource(),
+    'rest-areas': createRestAreasSource(),
     aurora: createAuroraSource(),
     'smhi-weather': createSmhiWeatherSource(),
   };

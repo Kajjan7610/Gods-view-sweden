@@ -714,6 +714,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     optionOwner: 'flights',
   }),
   Object.freeze({
+    id: 'frost-depth',
+    token: '12',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'gamma-radiation',
     token: '0p',
     disposition: 'enabled-only',
@@ -809,6 +814,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     token: '1',
     disposition: 'enabled+options',
     optionOwner: 'recent-imagery',
+  }),
+  Object.freeze({
+    id: 'rest-areas',
+    token: '13',
+    disposition: 'enabled-only',
   }),
   Object.freeze({
     id: 'river-flow',
