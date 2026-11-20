@@ -543,14 +543,28 @@ export const DATA_CREDITS = [
   {
     key: 'heritage-remains',
     html:
-      'Ancient monuments (Sweden): ' +
-      '<a href="https://app.raa.se/open/fornsok/" target="_blank" rel="noopener">Riksantikvarieämbetet</a>, Kulturmiljöregistret (public domain; read daily for the view)',
+      'Ancient monuments, World Heritage and protected buildings (Sweden): ' +
+      '<a href="https://app.raa.se/open/fornsok/" target="_blank" rel="noopener">Riksantikvarieämbetet</a>, Kulturmiljöregistret and Världsarv i Sverige (public domain) and ' +
+      '<a href="https://app.raa.se/open/bebyggelse/" target="_blank" rel="noopener">Bebyggelseregistret</a> (CC0; read for the view)',
   },
   {
     key: 'protected-nature',
     html:
-      'Protected nature (Sweden): national parks, nature reserves and culture reserves from ' +
+      'Protected nature (Sweden): national parks, nature reserves and culture reserves, Natura 2000 areas and the access bans in protected areas (most for birds and seals) from ' +
       '<a href="https://skyddadnatur.naturvardsverket.se/" target="_blank" rel="noopener">Naturvårdsverket</a>, Naturvårdsregistret (CC0)',
+  },
+  {
+    key: 'outdoor-trails',
+    html:
+      'Trails and outdoor facilities (Sweden): ' +
+      '<a href="https://geodata.naturvardsverket.se/nedladdning/friluftsliv/" target="_blank" rel="noopener">Naturvårdsverket</a>, Leder och friluftsanordningar (CC0; Naturvårdsverket welcomes a reference, “Källa: Naturvårdsverket”; a snapshot)',
+  },
+  {
+    key: 'population-grid',
+    html:
+      'Population per km² (Sweden): ' +
+      '<a href="https://www.scb.se/vara-tjanster/oppna-data/oppna-geodata/statistik-pa-rutor/" target="_blank" rel="noopener">SCB</a>, ' +
+      'population per 1 km square 2025 (CC0; "Källa: SCB"); the 5, 10 and 25 km squares are processed SCB data',
   },
   {
     key: 'municipalities',

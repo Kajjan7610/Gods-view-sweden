@@ -69,8 +69,10 @@ Två nivåer gäller:
 | Sjukhus och akuter: cirka 120 sjukhus, där de 62 akutmottagningarna i Socialstyrelsens statistik för 2025 färgas efter mediantid till läkare eller total vistelsetid jämfört med rikets (61 min respektive 4 h 16 min); raden listar de fem närmaste akutmottagningarna eller de med kortast median i vyn, klickbart; kortet visar medianerna 2025 och 2024, besök och förändring, och "ring 112 / 1177". Årsmedianer för vuxna, inte aktuell väntetid (öppna livetider finns inte i Sverige). | Socialstyrelsen, Patientregistret (faktablad 2026-6-10339), och OpenStreetMap (ODbL) som ögonblicksbild i repot | Hospitals & Emergency (Sweden) / Sjukhus och akuter, under Infrastructure |
 | Kommuner och län: gränserna för alla 290 kommuner och 21 län som linjer på marken (länsgränser gula och tjockare, gränser till havs utelämnade), namnen följer vyn (län på hög höjd, kommuner närmare), kartans mitt i raden med kommun, län och folkmängd; klick på en kommun markerar den och visar län, folkmängd med förändring på ett år och kommunkod | OpenStreetMap (ODbL) som ögonblicksbild i repot; folkmängd per månad från SCB (TAB6473, CC0) | Municipalities & Counties (Sweden) / Kommuner och län, under Infrastructure |
 | Valdistrikt 2026: riksdagsvalet i alla 6 312 valdistrikt som ytor på marken, färgade efter största parti eller valdeltagande; klick på ett distrikt visar kommun, räknade röster, valdeltagande och alla partiers andelar | Valmyndigheten (öppna data, källan anges) som ögonblicksbild i repot | Election Districts 2026 (Sweden) / Valdistrikt 2026, under Infrastructure |
-| Skyddad natur: Sveriges 31 nationalparker, cirka 6 000 gällande naturreservat och 52 kulturreservat som ytor på marken, färgade efter skyddsform; på hög höjd bara nationalparkerna, närmare in reservaten i vyn (högst 1 500 närmast mitten); klick ger kommun, areal och år för beslutet, klick på kortet öppnar området i Naturvårdsverkets Skyddad natur | Naturvårdsverket, Naturvårdsregistret (CC0, "Källa: Naturvårdsverket") som ögonblicksbild i repot | Protected Nature (Sweden) / Skyddad natur, under Infrastructure |
-| Fornlämningar: Riksantikvarieämbetets registrerade fornlämningar och övriga kulturhistoriska lämningar (cirka 840 000 i hela landet) som prickar på marken när man zoomat in under 12 km, de 1 500 närmast kartans mitt, färgade efter antikvarisk bedömning; klick ger typ, bedömning, lämnings- och RAÄ-nummer och kommun, klick på kortet öppnar lämningen hos RAÄ. Bara det som identifierar lämningen visas, inte beskrivning eller vägbeskrivning | Riksantikvarieämbetet, Kulturmiljöregistret via INSPIRE OGC API Features (public domain, ingen nyckel, inga åtkomstbegränsningar; källa och datum anges) | Ancient Monuments (Sweden) / Fornlämningar, under Infrastructure |
+| Skyddad natur: Sveriges 31 nationalparker, cirka 6 000 gällande naturreservat och 52 kulturreservat, 4 136 Natura 2000-områden och 1 543 gällande tillträdesförbud i skyddade områden, de flesta för fågel- och sälskydd, som ytor på marken, färgade efter skyddsform (Natura 2000 blått och ljust under reservaten, tillträdesförbuden orange överst). Natura 2000 och tillträdesförbuden slås av och på var för sig med knappar på raden. På hög höjd visas bara nationalparkerna. Närmare in (vyn högst 3 grader) visas reservaten, och ännu närmare (högst 2 grader) även Natura 2000-områdena och tillträdesförbuden, högst 1 500 områden närmast mitten. Ett klick visar kommun, areal och år. För Natura 2000 visas direktiv och områdeskod, för ett tillträdesförbud skälet (fågelskydd, sälskydd) och perioden. Ett klick på kortet öppnar området i Naturvårdsverkets Skyddad natur (ett tillträdesförbud öppnar sitt skyddsområde, Natura 2000 har ingen sådan länk) | Naturvårdsverket, Naturvårdsregistret (CC0, "Källa: Naturvårdsverket") som tre ögonblicksbilder i repot | Protected Nature (Sweden) / Skyddad natur, under Infrastructure |
+| Befolkning per km²: SCB:s befolkning per 1 km-ruta i slutet av 2025 som platta färgade rutor på marken, ljusa till mörka efter invånare per km² (1–4, 5–19, 20–99, 100–499, 500–1 999, 2 000+); längre ut 5, 10 och 25 km-rutor summerade från 1 km-rutorna (högst 3 000 rutor närmast mitten). Klick på en summerad ruta ger avrundat antal invånare och invånare per km². 1 km-rutor har inget kort och färre än 5 personer visas bara som 1–4 | SCB, Befolkning 1 km-rutor 2025 (CC0, "Källa: SCB"; summorna är bearbetning av SCB-data) som ögonblicksbild i repot | Population per km² (Sweden) / Befolkning per km², under Infrastructure |
+| Fornlämningar, världsarv och skyddad bebyggelse: tre delar med var sin knapp. **Lämningar**: Riksantikvarieämbetets registrerade fornlämningar och övriga kulturhistoriska lämningar (cirka 840 000 i hela landet) som prickar på marken när man zoomat in under 12 km, de 1 500 närmast kartans mitt, färgade efter antikvarisk bedömning; klick ger typ, bedömning, lämnings- och RAÄ-nummer och kommun, klick på kortet öppnar lämningen hos RAÄ. **Världsarv**: Sveriges världsarv enligt UNESCO som blå ytor och prickar på alla höjder; klick ger namn och år, kortet öppnar UNESCO:s sida (buffertzoner ingår inte, Struves meridianbåge är schematisk). **Skyddad bebyggelse**: byggnadsminnen, statliga byggnadsminnen och kyrkliga kulturminnen ur Bebyggelseregistret som prickar under 12 km, byggnadsminnenas skyddsområden som linjer; klick ger skydd, beslutsår, byggnadsår, ändamål och kommun, kortet öppnar objektet i Bebyggelseregistret. Övrig inventerad bebyggelse (mest privata bostäder) visas aldrig, och inga uppgifter om fastighet eller ägare | Riksantikvarieämbetet: Kulturmiljöregistret, Världsarv i Sverige och Bebyggelseregistret via INSPIRE OGC API Features (lämningar och världsarv public domain, bebyggelse CC0 utom foton; ingen nyckel; källa anges) | Ancient Monuments (Sweden) / Fornlämningar, under Infrastructure |
+| Leder och friluftsanordningar: 3 688 leder som linjer (vandringsleder, natur- och kulturstigar, skidleder, skoterleder, kanotleder, cykel- och ridleder; 492 av dem statliga leder i fjällen) och 21 672 anordningar som prickar (vindskydd och stugor, eldstäder, rastplatser och tältplatser, dass och vatten, utsiktsplatser och information, parkering, bryggor och bad, broar och spångar) när man zoomat in under 30 km; klick ger namn, typ, en kortad beskrivning, det skyddade området och för leder markering och längd. Bara skyddade områden vars förvaltare publicerat sina anordningar, plus de statliga lederna i fjällen; mycket saknas. Reservatsföreskrifter och tillträdesförbud gäller. Anordningstypen "Bostad" visas aldrig | Naturvårdsverket, Leder och friluftsanordningar (CC0, "Källa: Naturvårdsverket", ingen nyckel) som ögonblicksbild i repot, byggd för hand ur Naturvårdsverkets nattliga filer | Trails and outdoor facilities (Sweden) / Leder och friluftsanordningar, under Infrastructure |
 | Blixtnedslag: varje urladdning den senaste timmen som punkt, färgad efter ålder (vit = senaste 5 min), stora för nedslag i marken och små för blixtar i molnet; klick ger tid, typ och toppström | DMI:s blixtdata (CC BY 4.0, ingen nyckel; DMI:s sensornät och grannländernas sensorer) | Lightning Strikes (Sweden) / Blixtnedslag, under Weather |
 | Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
@@ -115,8 +117,10 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Sjukhus och akuter (Sverige) | Socialstyrelsen · OpenStreetMap | Cirka 120 sjukhus; väntetidsmedianer för de 62 akutmottagningarna i statistiken | Årlig statistik; ögonblicksbild i appen, byggs om för hand | Statistiken fri att använda med källa (Socialstyrelsen) · ODbL (OpenStreetMap) |
 | SE | Kommuner och län (Sverige) | OpenStreetMap · SCB | Alla 290 kommuner och 21 län, med folkmängd per månad | Ögonblicksbild i appen, byggs om för hand | ODbL (OpenStreetMap) · CC0 1.0 (SCB) |
 | SE | Valdistrikt 2026 (Sverige) | Valmyndigheten | Riksdagsvalet 2026 i alla 6 312 valdistrikt, slutlig rösträkning | Ögonblicksbild i appen, byggs om för hand | Öppna data, fria att använda med Valmyndigheten angiven som källa |
-| SE | Fornlämningar (Sverige) | Riksantikvarieämbetet | Alla registrerade fornlämningar och övriga kulturhistoriska lämningar, för vyn | Dagligen hos RAÄ; läses för vyn och sparas ett halvt dygn | Allmän egendom (public domain); källa och datum anges |
-| SE | Skyddad natur (Sverige) | Naturvårdsverket | Alla nationalparker, gällande naturreservat och kulturreservat | Ögonblicksbild i appen, byggs om för hand | CC0 1.0 |
+| SE | Fornlämningar (Sverige) | Riksantikvarieämbetet | Alla registrerade fornlämningar och övriga kulturhistoriska lämningar för vyn, Sveriges världsarv och skyddad bebyggelse | Dagligen hos RAÄ; lämningar och bebyggelse läses för vyn och sparas ett halvt dygn, världsarven en vecka | Allmän egendom och CC0; källa anges |
+| SE | Befolkning per km² (Sverige) | SCB | Invånare per 1 km-ruta i hela Sverige, slutet av 2025, med summor för 5, 10 och 25 km | Ögonblicksbild i appen, byggs om för hand | CC0 1.0 |
+| SE | Leder och friluftsanordningar (Sverige) | Naturvårdsverket | Leder och anordningar i skyddade områden vars förvaltare publicerar dem, plus de statliga lederna i fjällen; ofullständigt | Ögonblicksbild i appen, byggs om för hand | CC0 1.0 |
+| SE | Skyddad natur (Sverige) | Naturvårdsverket | Alla nationalparker, gällande naturreservat och kulturreservat, Natura 2000-områden och gällande tillträdesförbud i skyddade områden, de flesta för fåglar och sälar | Ögonblicksbild i appen, byggs om för hand | CC0 1.0 |
 | SE | Butikskedjor (Sverige) | OpenStreetMap · Wikidata · SCB | Nio kedjors butiker och apotek i hela Sverige; kartlagda av frivilliga | Ögonblicksbild i appen, byggs om för hand | ODbL (OpenStreetMap) · CC0 1.0 (Wikidata, SCB) |
 | SE | Väglag (Sverige) | Trafikverket | Väglag och aktuella händelser i hela Sverige | Var 3:e minut | CC0 1.0 |
 | SE | Vägväder (Sverige) | Trafikverket | Cirka 830 vägväderstationer | Var 5:e minut | CC0 1.0 |
@@ -411,6 +415,110 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-19 (världsarv och skyddad bebyggelse i Fornlämningar)
+- Lagret **Fornlämningar (Sverige)** har fått två nya delar, var och en med
+  egen knapp i lagerraden (Lämningar, Världsarv, Skyddad bebyggelse; alla på
+  från början). Det som är avslaget hämtas inte.
+- **Världsarv**: Sveriges världsarv (ett femtontal) från RAÄ:s tjänst
+  Världsarv i Sverige, som blå ytor och en prick mitt i den största ytan,
+  synliga på alla höjder. Klick ger svenskt och engelskt namn och året det
+  blev världsarv; kortet öppnar platsen hos UNESCO. Buffertzoner ingår inte,
+  och Struves meridianbåge är ritad schematiskt (kortet säger det). Hela
+  listan läses en gång och sparas en vecka på servern. Public domain,
+  RAÄ anges som källa.
+- **Skyddad bebyggelse**: från Bebyggelseregistret (CC0, foton undantagna),
+  två samlingar: den kulturhistoriskt inventerade bebyggelsen, men **bara**
+  skyddstyperna Byggnadsminne, Statligt byggnadsminne och Kyrkligt
+  kulturminne, som prickar; och byggnadsminnenas skyddsområden som linjer
+  (upphävda skydd, `havt_skydd`, tas bort). Under 12 km, en fråga per
+  samling för vyns ruta på 0,02 grader, högst 4 000 rader per fråga,
+  sparas ett halvt dygn, två minuters paus efter ett fel – samma regler som
+  lämningarna.
+- Integritet: inventeringen är till största delen vanliga privata bostäder
+  utan skydd ("Identifierat kulturvärde"). Frågan till RAÄ filtrerar på de
+  tre skyddstyperna (CQL2), och servern filtrerar en gång till på svaret,
+  så att inget annat kan nå appen även om filtret skulle ignoreras.
+  "Förstört kulturvärde" och "Anmälningsplikt" visas inte heller. Kortet
+  visar bara namn, skydd, beslutsår, byggnadsår, ändamål, kommun och länk
+  till registret – aldrig fastighet, registerbyggnad, klassificering eller
+  ägare. Värdena för skyddstyp är hämtade ur RAÄ:s tekniska beskrivning
+  "Bebyggelse, kulturhistoriskt inventerad, wms" (v1.0, 2025-04-14).
+- Sammanvägning: kartan visar nu lämningar, världsarv och lagskyddade
+  byggnader tillsammans; alla tre är offentliga register som RAÄ själv
+  publicerar på karta (Fornsök, Bebyggelseregistret). Byggnadsminnen kan
+  vara privata hem; de är offentliga beslut som RAÄ själv visar på karta.
+
+### 2026-11-19 (skyddad natur: Natura 2000 och tillträdesförbud)
+- **Skyddad natur (Sverige)** har fått två nya slag av områden, och var och ett slås av och på med en egen knapp på raden. Det första är alla 4 136 Natura 2000-områden: 107 enbart enligt fågeldirektivet (SPA), 3 578 enbart enligt art- och habitatdirektivet (SCI) och 451 enligt båda. De ritas blå och ljusa under reservaten. Det andra är de 1 543 gällande tillträdesförbuden i skyddade områden, de flesta för fågel- och sälskydd: 1 387 för fågelskydd, 57 för sälskydd, 76 för båda och 23 övriga. De 17 förbud med skälet "övrigt" som är mindre än 5 hektar lämnas ute, de flesta små boplatser. De ritas orange överst. Ett klick på ett tillträdesförbud visar skälet och perioden (till exempel "Tillträdesförbud 1 april–31 juli"), länet och arealen, och kortet öppnar skyddsområdet i Skyddad natur. Ett Natura 2000-kort visar kommun, areal, året området kom med i Natura 2000, direktiv och områdeskod.
+- Källan är Naturvårdsverkets Naturvårdsregistret, nedladdat som öppna data (CC0, "Källa: Naturvårdsverket"): `SPA_Rikstackande.zip`, `SCI_Rikstackande.zip` och `TILLTRADESFORBUD.zip`. Ett område som finns i båda Natura 2000-filerna slås ihop på områdeskoden. Bara tillträdesförbud med status "Gällande" tas med. Det här ändrar beslutet från 2026-11-12, då tillträdesförbuden lämnades utanför bland de små skyddsformerna: Kaj valde 2026-11-19 punkt 10 i källsonderingen, fågelskyddsområden med tillträdesförbud under häckningen. Förbuden är offentliga enligt lag och skyltade på plats för att kunna följas, och arterna lämnas ute (se nedan).
+- Integritet: arter, naturtyper, områdesbeskrivningar och förbudstexter (`ARTER`, `NATURTYPER`, `KARAKTAR`, `KVALITET`, `BESKRIVN`) tas aldrig med. Tillsammans med en liten förbudsyta skulle de peka ut sällsynta häckningsplatser. Kvar finns bara namn, slag, skäl, period, areal, kommun eller län och år.
+- Prestanda: Natura 2000 ligger i en egen fil, `natura2000.json`, på 2,5 MB. Den förenklas hårdare (15–120 m) och får högst 8 000 punkter per område, eftersom Torne och Kalix älvsystem annars ensamt skulle ha haft cirka 68 000. Tillträdesförbuden ligger i `access-bans.json` på 0,6 MB. Servern läser filerna först när en nära vy ber om dem, och aldrig för ett slag som är avslaget. Natura 2000 och tillträdesförbuden visas bara när vyn är högst 2 grader. Den tätaste sådana vyn (Stockholm eller Skåne) har då ungefär lika många punkter (cirka 45 000) som en vy på 3 grader med bara reservaten hade förut. Taket på 1 500 områden per vy gäller som förut.
+- `scripts/build-protected-nature.mjs` bygger nu tre filer. Den läser zipfiler med flera shapefiler (SCI-filen har älvsystemen i Norrbotten och Västerbotten för sig), läser teckentabellen ISO 8859-1 och gör om ett litet område med 1 m tolerans när förenklingen annars hade tagit bort det.
+
+### 2026-11-19 (leder och friluftsanordningar)
+- Nytt lager **Leder och friluftsanordningar (Sverige)** (delningstoken `14`)
+  under Infrastructure, efter Fornlämningar. Naturvårdsverkets 3 688 leder
+  som linjer, färgade efter typ (vandringsled, natur- och kulturstig,
+  skidled, skoterled, kanotled, cykel- och ridled), och 21 672
+  friluftsanordningar som prickar i sex klasser av de cirka 60 typerna
+  (vindskydd och stugor; eldstäder, rastplatser och tältplatser;
+  dass/vatten/sophantering; utsikt och information; parkering/bryggor/bad;
+  broar/spångar/stättor). Klick ger namn, typ, Naturvårdsverkets beskrivning
+  kortad till 180 tecken, det skyddade området, och för leder markering och
+  längd; den valda leden ritas bredare. Ett kort i taget, och kortet byter
+  språk med appen. Lagret visas under 30 km höjd.
+- Täckning: bara skyddade områden vars förvaltare publicerat leder och
+  anordningar, plus de statliga lederna i fjällen. Mycket av Sveriges
+  friluftsnät saknas, och förklaringen säger det, liksom att
+  reservatsföreskrifter och tillträdesförbud gäller.
+- Licens och sammanställning: CC0, Naturvårdsverket ser gärna "Källa:
+  Naturvårdsverket", som står på varje kort och i källförteckningen.
+  Meningar med telefonnummer, e-postadresser eller namngivna kontaktpersoner
+  tas bort ur beskrivningarna i bygget, så inga kontaktuppgifter följer med. Anordningstypen "Bostad" (18 bostadshus i reservaten) tas
+  bort redan i bygget: det är någons hem, och kartan ska inte peka ut det.
+  Geometrikvalitet, objekt-id och registernummer sparas inte. Ihop med de
+  andra lagren visar kartan bara det besökare redan ser på skyltar och i
+  reservatens egna kartor.
+- Ögonblicksbild, inte direktfrågor: Naturvårdsverkets WFS gav olika svar på
+  samma ruta från gång till gång (provat 2026-11-19), så appen frågar aldrig
+  Naturvårdsverket. `scripts/build-outdoor-trails.mjs` hämtar de nattliga
+  filerna Anordningar.geojson (13 MB) och Leder.geojson (49 MB; de statliga
+  lederna finns redan där, så Statliga_Leder.geojson behövs inte), slår ihop
+  ledernas 12 060 delsträckor till en led per id, räknar om till grader,
+  förenklar på 6 m och deltakodar. Resultatet är cirka 5 MB i repot
+  (anordningar 2,8 MB, leder 2,2 MB; 902 565 punkter blev 185 366). Servern
+  läser filerna en gång och svarar per vy: de 1 500 anordningar som ligger
+  närmast kartans mitt och högst 400 leder och 30 000 punkter, klippta och
+  förenklade för vyn. Byggs om för hand då och då.
+
+### 2026-11-19 (befolkning per km²)
+- Nytt lager **Befolkning per km² (Sverige)** (delningstoken `15`) under
+  Infrastructure. SCB:s befolkning per kvadratkilometer med referensdatum
+  31 december 2025 (`stat:befolkning_1km_2025`, det nyaste året på SCB:s
+  öppna WFS): 103 464 befolkade 1 km-rutor med 10 578 118 invånare. Bara
+  totalen per ruta hämtas, aldrig ålder eller kön. Rutor som bara har 0 i
+  SCB:s data (11 654 st) visas inte.
+- På nära håll visas 1 km-rutorna, längre ut 5, 10 och 25 km-rutor
+  summerade från dem (vyns längsta sida upp till 60, 250 och 600 km, därefter
+  25 km), högst 3 000 rutor närmast mitten. Rutorna är platta, färgade fält på
+  marken med sina riktiga hörn omräknade från SWEREF 99 TM, utan konturer
+  eller etiketter, så en hel vy kostar några få markbatcher. Servern läser
+  filen en gång och svarar på någon millisekund.
+- Integritet: en 1 km-ruta lämnar servern bara som sin färgklass (färre än 5
+  personer blir "1–4", aldrig ett tal), har inget kort, tas aldrig med i
+  analytikerns poster och aldrig i delningslänkar (bara att lagret är på).
+  En summerad ruta visar antalet avrundat till tiotal (hundratal från
+  10 000) och "färre än 5 personer" när det är färre. SCB skyddar själv små
+  tal med en statistisk metod.
+- Licens CC0. 1 km-rutorna krediteras "Källa: SCB"; 5-, 10- och 25 km-rutorna
+  är bearbetning av SCB-data och krediteras så, eftersom SCB ber att inte
+  anges som källa för bearbetade uppgifter. Ögonblicksbilden (0,51 MB) byggs
+  om för hand med `scripts/build-population-grid.mjs`. Den sparar 1 km-rutorna
+  bara som färgklass, aldrig som exakta antal; de större rutorna summeras
+  först och sparas som antal.
+- Vad kartan tillsammans visar: var människor bor, i grova klasser; samma
+  uppgifter som SCB redan publicerar öppet per ruta, här grövre för små tal.
 
 ### 2026-11-19 (kvarvarande luckor)
 - Kontextpanelens "N i vyn" var 0 för de svenska lagren, och analytikern såg

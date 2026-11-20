@@ -136,15 +136,33 @@ export const LAYER_PROVENANCE = Object.freeze({
   'heritage-remains': own({
     source: 'Riksantikvarieämbetet',
     coverage: msg(
-      'Every registered ancient monument and other cultural-historical remain, for the view',
+      'Every registered ancient monument and other remain for the view, Sweden’s World Heritage sites and protected buildings',
     ),
-    updates: msg('Daily at RAÄ; read for the view, kept half a day'),
-    licence: msg('Public domain; source and date credited'),
+    updates: msg(
+      'Daily at RAÄ; remains and buildings read for the view and kept half a day, World Heritage kept a week',
+    ),
+    licence: msg('Public domain and CC0; source credited'),
+  }),
+  'population-grid': own({
+    source: 'SCB',
+    coverage: msg(
+      'People per 1 km square in all of Sweden, end of 2025, with 5, 10 and 25 km sums',
+    ),
+    updates: msg('Snapshot in the app, rebuilt by hand'),
+    licence: CC0,
+  }),
+  'outdoor-trails': own({
+    source: 'Naturvårdsverket',
+    coverage: msg(
+      'Trails and facilities in protected areas whose managers publish them, plus the state mountain trails; incomplete',
+    ),
+    updates: msg('Snapshot in the app, rebuilt by hand'),
+    licence: CC0,
   }),
   'protected-nature': own({
     source: 'Naturvårdsverket',
     coverage: msg(
-      'All national parks, nature reserves in force and culture reserves',
+      'All national parks, nature reserves in force and culture reserves, Natura 2000 areas and access bans in force in protected areas, most of them for birds and seals',
     ),
     updates: msg('Snapshot in the app, rebuilt by hand'),
     licence: CC0,

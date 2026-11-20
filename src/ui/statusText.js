@@ -27,6 +27,16 @@ const FEED_ERRORS = new Set([
   msg('OpenSky auth invalid'),
   msg('OpenSky auth failed'),
 ]);
+/** Names in the Swedish fork's "<name> unavailable (HTTP n)" errors. */
+const SWEDISH_FEED_NAMES = Object.freeze({
+  'Population grid': msg('Population grid'),
+  Trails: msg('Trails'),
+  'Protected nature': msg('Protected nature'),
+  Remains: msg('Remains'),
+  'Protected buildings': msg('Protected buildings'),
+  'World Heritage': msg('World Heritage'),
+});
+
 const FEED_ERROR_PATTERNS = [
   // Street Level provider errors (providers/{kartaview,panoramax}/source.js),
   // ahead of the generic "<source> HTTP <status>".
@@ -59,6 +69,15 @@ const FEED_ERROR_PATTERNS = [
   // Layer statuses with a number or a feed name in them: GNSS
   // (gnss/source.js), CelesTrak groups (satellites/ingestion.js) and transit
   // feeds (transit/ingestion.js).
+  // Swedish fork: the bundled-snapshot and RAÄ layers' proxy failures.
+  [
+    /^(Population grid|Trails|Protected nature|Remains|Protected buildings|World Heritage) unavailable \(HTTP (\d{3})\)$/,
+    ([, what, status]) =>
+      t('{what} unavailable (HTTP {status})', {
+        what: t(SWEDISH_FEED_NAMES[what]),
+        status,
+      }),
+  ],
   [
     /^GNSS feed unavailable \(HTTP (\d{3})\)$/,
     ([, status]) => t('GNSS feed unavailable (HTTP {status})', { status }),
