@@ -423,6 +423,12 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-20 (tre nya filmer)
+- README länkar till tre nya filmer på 29 sekunder, var och en som video
+  och som Short: Stockholm i rusningstid (inspelad fredag kl. 16), Sverige
+  just nu och Här bor vi. Berättarrösten är från elevenlabs.io och musiken
+  är egen.
+
 ### 2026-11-20 (rättelser i dokumentationen)
 - README: bilderna från originalets README, som originalet tog bort ur sitt
   repo i november 2026, är borttagna tillsammans med bildtexterna, och
