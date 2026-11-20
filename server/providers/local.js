@@ -46,6 +46,8 @@ import { municipalitiesProxy } from './municipalities.js';
 import { electionDistrictsProxy } from './electionDistricts.js';
 import { protectedNatureProxy } from './protectedNature.js';
 import { heritageRemainsProxy } from './heritageRemains.js';
+import { naturvardsverketTrailsProxy } from './naturvardsverketTrails.js';
+import { populationGridProxy } from './populationGrid.js';
 import { hospitalsProxy } from './hospitals.js';
 import { policeStationsProxy } from './policeStations.js';
 import { sheltersProxy } from './shelters.js';
@@ -150,6 +152,8 @@ function localProviderPlugins({
     electionDistrictsProxy(),
     protectedNatureProxy(),
     heritageRemainsProxy(),
+    naturvardsverketTrailsProxy(),
+    populationGridProxy(),
     hospitalsProxy(),
     policeStationsProxy(),
     sheltersProxy(),

@@ -38,6 +38,7 @@ test('reference factories retain compatibility without starting acquisition or s
     'municipalities',
     'election-districts',
     'protected-nature',
+    'population-grid',
     'heritage-remains',
     'speed-cameras',
     'river-flow',
@@ -46,6 +47,7 @@ test('reference factories retain compatibility without starting acquisition or s
     'road-queues',
     'frost-depth',
     'rest-areas',
+    'outdoor-trails',
     'aurora',
     'smhi-weather',
   ]);

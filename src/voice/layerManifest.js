@@ -496,6 +496,10 @@ export const VOICE_OFF_LAYERS = Object.freeze({
     'Swedish national parks, nature reserves and culture reserves; no room in the prompt budget',
   'heritage-remains':
     'Swedish ancient monuments and other cultural-heritage remains; no room in the prompt budget',
+  'outdoor-trails':
+    'Swedish trails and outdoor facilities in protected areas; no room in the prompt budget',
+  'population-grid':
+    'Swedish population per square kilometre; no room in the prompt budget',
   hospitals:
     'Swedish hospitals and emergency-department statistics; no room in the prompt budget',
   shelters: 'Swedish civil-defence shelters; no room in the prompt budget',

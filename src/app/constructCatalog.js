@@ -58,6 +58,8 @@ import { createApplicationRoadFerries } from './layers/roadFerries.js';
 import { createApplicationRoadQueues } from './layers/roadQueues.js';
 import { createApplicationFrostDepth } from './layers/frostDepth.js';
 import { createApplicationRestAreas } from './layers/restAreas.js';
+import { createApplicationOutdoorTrails } from './layers/outdoorTrails.js';
+import { createApplicationPopulationGrid } from './layers/populationGrid.js';
 import { createApplicationAurora } from './layers/aurora.js';
 import { createApplicationSmhiWeather } from './layers/smhiWeather.js';
 import { createApplicationGhostMaps } from './layers/ghostMaps.js';
@@ -234,6 +236,9 @@ export function createApplicationCatalog({
         createApplicationProtectedNature({
           source: sources['protected-nature'],
         }),
+        createApplicationPopulationGrid({
+          source: sources['population-grid'],
+        }),
         createApplicationHeritageRemains({
           source: sources['heritage-remains'],
           terrain: surface.terrain,
@@ -274,6 +279,10 @@ export function createApplicationCatalog({
         }),
         createApplicationRestAreas({
           source: sources['rest-areas'],
+          terrain: surface.terrain,
+        }),
+        createApplicationOutdoorTrails({
+          source: sources['outdoor-trails'],
           terrain: surface.terrain,
         }),
         createApplicationAurora({

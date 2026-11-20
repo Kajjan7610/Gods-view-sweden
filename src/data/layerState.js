@@ -778,6 +778,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
   }),
   Object.freeze({ id: 'news', token: '00', disposition: 'enabled-only' }),
   Object.freeze({
+    id: 'outdoor-trails',
+    token: '14',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'police-stations',
     token: '0i',
     disposition: 'enabled-only',
@@ -785,6 +790,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
   Object.freeze({
     id: 'polisen-events',
     token: '0x',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
+    id: 'population-grid',
+    token: '15',
     disposition: 'enabled-only',
   }),
   Object.freeze({
