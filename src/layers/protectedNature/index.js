@@ -4,15 +4,21 @@ import { cssColor } from '../../render/color.js';
 import { drawOf, findCamera, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { cableClassificationTypeForScene } from '../submarineCables/surface.js';
-import { analystRows } from '../analystRows.js';
+import { analystRows, yearText } from '../analystRows.js';
 import {
   AREA_KINDS,
+  EXTRA_KINDS,
   KIND,
+  areaLink,
   decodeLine,
+  isWideView,
   polygonsContain,
-  skyddadNaturUrl,
 } from './records.js';
-import { PROTECTED_NATURE_OVERLAY_SOURCE_ID, buildAreaCard } from './cards.js';
+import {
+  PROTECTED_NATURE_OVERLAY_SOURCE_ID,
+  banPeriodText,
+  buildAreaCard,
+} from './cards.js';
 export * from './records.js';
 export * from './cards.js';
 export { createProtectedNatureSource } from './source.js';
@@ -22,6 +28,8 @@ const CARD_HOST_OPTIONS = Object.freeze({
   collisionCapacity: 1,
   moving: false,
 });
+/** A view no wider than this (degrees) reads the Natura 2000 areas and bans (server/providers/protectedNature.js). */
+const CLOSE_BELOW_DEG = 2;
 /** Above this camera height nothing is read: Sweden is a dot. */
 const MAX_SHOW_HEIGHT_M = 3_000_000;
 /** The view used when the camera sees the horizon: Sweden. */
@@ -30,6 +38,12 @@ const MOVE_SETTLE_MS = 500;
 /** The view box is widened by this much, so small pans need no new read. */
 const VIEW_PADDING = 0.25;
 const FILL_ALPHA = 0.4;
+/** Natura 2000 mostly lies over reserves: a lighter fill, its own edge. */
+const KIND_FILL_ALPHA = Object.freeze({ n2k: 0.2 });
+const KIND_EDGE_ALPHA = Object.freeze({ n2k: 0.9 });
+/** Natura 2000 drawn first, the small ban zones last, on top. */
+const DRAW_ORDER = Object.freeze({ n2k: 0, ban: 2 });
+const drawOrder = (area) => DRAW_ORDER[area.t] ?? 1;
 export const PROTECTED_NATURE_LAYER_ID = 'protected-nature';
 const PICK_PREFIX = 'protected-nature:';
 /** The selected outline's ids: not an area's, so a click on it is not one. */
@@ -48,14 +62,34 @@ const KIND_LABELS = Object.freeze({
   np: msg('National park'),
   nr: msg('Nature reserve'),
   kr: msg('Culture reserve'),
+  n2k: msg('Natura 2000 area'),
+  ban: msg('Access ban'),
 });
+/** The row's switches for the kinds kept apart. */
+const EXTRA_CHIPS = Object.freeze([
+  Object.freeze({
+    kind: 'n2k',
+    label: msg('NATURA 2000'),
+    title: msg(
+      'Show the Natura 2000 areas of the EU Birds and Habitats Directives',
+    ),
+  }),
+  Object.freeze({
+    kind: 'ban',
+    label: msg('ACCESS BANS'),
+    title: msg('Show the access bans in protected areas'),
+  }),
+]);
 
 /**
  * Own one display of Sweden's protected nature: the national parks, nature
- * reserves and culture reserves in the view as areas on the ground, and a
- * card for a clicked area that opens it in Naturvårdsverket's Skyddad natur.
- * A wide view shows the national parks alone; closer in, at most 1 500 areas
- * nearest the view's centre. Share links carry it as token 0d.
+ * reserves and culture reserves in the view as areas on the ground, with the
+ * Natura 2000 areas and the access bans in protected areas, most of them
+ * for bird and seal protection (each switched on and off on the row), and a card for a clicked area
+ * that opens it in Naturvårdsverket's Skyddad natur. A wide view shows the
+ * national parks alone; closer in, the reserves; closer still, the Natura
+ * 2000 areas and bans too; at most 1 500 areas nearest the view's centre.
+ * Share links carry it as token 0d.
  */
 export function createProtectedNatureLayer({
   source,
@@ -86,7 +120,10 @@ export function createProtectedNatureLayer({
   /** The box the shown areas were read for, padded, and whether it was wide. */
   let _readBox = null;
   let _wide = false;
+  let _close = false;
   let _capped = false;
+  /** The kinds kept apart that the reader switched off. */
+  const _hidden = new Set();
   let _areas = [];
   let _byId = new Map();
   /** Decoded polygons per area id, for drawing and clicks. */
@@ -108,11 +145,14 @@ export function createProtectedNatureLayer({
     const areas = [];
     const outlines = [];
     if (_enabled)
-      for (const area of _areas) {
-        const fill = withAlpha(
-          cssColor(KIND[area.t]?.color ?? KIND.nr.color),
-          FILL_ALPHA,
-        );
+      for (const area of [..._areas].sort(
+        (p, q) => drawOrder(p) - drawOrder(q),
+      )) {
+        const color = cssColor(KIND[area.t]?.color ?? KIND.nr.color);
+        const fill = withAlpha(color, KIND_FILL_ALPHA[area.t] ?? FILL_ALPHA);
+        const edge = KIND_EDGE_ALPHA[area.t]
+          ? withAlpha(color, KIND_EDGE_ALPHA[area.t])
+          : OUTLINE_COLOR;
         (_shapes.get(area.i) ?? []).forEach((rings, index) => {
           const id = `${PICK_PREFIX}${area.i}:${index}`;
           areas.push({
@@ -126,7 +166,7 @@ export function createProtectedNatureLayer({
             positions: closedRing(rings[0]),
             widthPx: OUTLINE_WIDTH,
             mode: 'draped',
-            style: { kind: 'solid', color: OUTLINE_COLOR },
+            style: { kind: 'solid', color: edge },
           });
         });
       }
@@ -167,12 +207,13 @@ export function createProtectedNatureLayer({
       return;
     }
     const area = _selected;
-    const card = buildAreaCard(area, { linkable: Boolean(openExternal) });
+    const link = openExternal ? areaLink(area) : null;
+    const card = buildAreaCard(area, { linkable: Boolean(link) });
     const [west, south, east, north] = area.b;
     card.position = fromDegrees((west + east) / 2, (south + north) / 2, 0);
-    if (openExternal)
+    if (link)
       card.activate = () => {
-        openExternal(skyddadNaturUrl(area.i));
+        openExternal(link);
         return true;
       };
     _selectedCardId = card.id;
@@ -188,6 +229,23 @@ export function createProtectedNatureLayer({
     _selected = area;
     drawSelection();
     _rowListener?.();
+  }
+
+  /**
+   * Switch a kind kept apart (Natura 2000, bans) on or off: off drops its
+   * areas at once; either way the view is read again for the cap's sake.
+   */
+  function toggleKind(kind) {
+    if (_hidden.has(kind)) _hidden.delete(kind);
+    else _hidden.add(kind);
+    _areas = _areas.filter((area) => !_hidden.has(area.t));
+    _byId = new Map(_areas.map((area) => [area.i, area]));
+    if (_selected && _hidden.has(_selected.t)) _selected = null;
+    _readBox = null;
+    draw();
+    drawSelection();
+    _rowListener?.();
+    void refresh();
   }
 
   /** The view as a padded box, or null when it is too high or unknown. */
@@ -231,19 +289,28 @@ export function createProtectedNatureLayer({
       e - (e - w) * inset,
       n - (n - s) * inset,
     ];
-    // Inside a box already read in full, nothing new can show.
-    if (!_capped && !_wide && within(unpadded, _readBox)) return true;
+    // Inside a box already read in full, nothing new can show; but a view
+    // gone close enough for the Natura 2000 areas and bans reads them.
+    const extrasWanted = EXTRA_KINDS.some((kind) => !_hidden.has(kind));
+    if (
+      !_capped &&
+      !_wide &&
+      (_close || !extrasWanted || isWideView(box, CLOSE_BELOW_DEG)) &&
+      within(unpadded, _readBox)
+    )
+      return true;
     _request?.abort();
     const request = new AbortController();
     _request = request;
     try {
       const answer = await source.getAreas({
         bbox: box,
+        skip: EXTRA_KINDS.filter((kind) => _hidden.has(kind)),
         signal: request.signal,
       });
       if (request.signal.aborted || _request !== request || !_enabled)
         return false;
-      _areas = answer.areas;
+      _areas = answer.areas.filter((area) => !_hidden.has(area.t));
       _byId = new Map(_areas.map((area) => [area.i, area]));
       _shapes = new Map(
         _areas.map((area) => [
@@ -252,6 +319,7 @@ export function createProtectedNatureLayer({
         ]),
       );
       _wide = answer.wide;
+      _close = answer.close === true;
       _capped = answer.capped;
       _readBox = box;
       _lastUpdate = answer.built ? Date.parse(answer.built) : null;
@@ -308,13 +376,13 @@ export function createProtectedNatureLayer({
       const at = click.screenPosition;
       const cardHit = overlayHost.hitTest?.(at?.x, at?.y);
       // A click on this layer's own card opens the area in Skyddad natur.
+      const link = _selected && openExternal ? areaLink(_selected) : null;
       if (
         cardHit?.sourceId === PROTECTED_NATURE_OVERLAY_SOURCE_ID &&
         cardHit.entryId === _selectedCardId &&
-        _selected &&
-        openExternal
+        link
       )
-        openExternal(skyddadNaturUrl(_selected.i));
+        openExternal(link);
       // A card under the click, this layer's or another's, is not the ground.
       if (cardHit) return;
       const picked = click.topHit;
@@ -402,6 +470,7 @@ export function createProtectedNatureLayer({
       _shapes = new Map();
       _readBox = null;
       _wide = false;
+      _close = false;
       _capped = false;
       draw();
       drawSelection();
@@ -443,19 +512,34 @@ export function createProtectedNatureLayer({
         count: _areas.filter((area) => area.t === kind.id).length,
       })).filter((item) => item.count > 0);
       const blurb = t(
-        'Naturvårdsverket’s national parks, nature reserves and culture reserves. Click an area for its size and age, and to open it in Skyddad natur.',
+        'Naturvårdsverket’s national parks, nature reserves, culture reserves, Natura 2000 areas and access bans in protected areas, most of them for bird and seal protection. Click an area for its details; most open in Skyddad natur.',
       );
+      const extrasWanted = EXTRA_KINDS.some((kind) => !_hidden.has(kind));
       return {
+        chips: EXTRA_CHIPS.map((chip) => ({
+          id: chip.kind,
+          label: t(chip.label),
+          title: t(chip.title),
+          color: KIND[chip.kind].color,
+          active: !_hidden.has(chip.kind),
+          onClick: () => toggleKind(chip.kind),
+        })),
         legend: legend.map((item, index) =>
           index === 0 ? { ...item, blurb } : item,
         ),
         info: _wide
-          ? t('Zoom in to see the nature reserves and culture reserves.')
-          : _capped
-            ? t('The {count} areas nearest the centre are shown.', {
-                count: _areas.length,
-              })
-            : '',
+          ? extrasWanted
+            ? t(
+                'Zoom in to see the nature reserves, culture reserves, Natura 2000 areas and access bans.',
+              )
+            : t('Zoom in to see the nature reserves and culture reserves.')
+          : !_close && extrasWanted
+            ? t('Zoom in further to see the Natura 2000 areas and access bans.')
+            : _capped
+              ? t('The {count} areas nearest the centre are shown.', {
+                  count: _areas.length,
+                })
+              : '',
       };
     },
 
@@ -478,6 +562,19 @@ export function createProtectedNatureLayer({
       return null;
     },
 
+    /** What a picked area is called, at its box's middle as in the records. */
+    findByQuery(pickId) {
+      if (!isOwnPick(pickId)) return null;
+      const area = _byId.get(pickId.slice(PICK_PREFIX.length).split(':')[0]);
+      if (!area) return null;
+      const [west, south, east, north] = area.b;
+      return {
+        name: area.n,
+        latitude: (south + north) / 2,
+        longitude: (west + east) / 2,
+      };
+    },
+
     /** The areas shown, each where its card stands: its box's middle. */
     getAnalystRecords(maxCount = 1500) {
       if (!_enabled) return [];
@@ -490,9 +587,19 @@ export function createProtectedNatureLayer({
         extra: (area) => ({
           id: area.i,
           kind: t(KIND_LABELS[area.t] ?? KIND_LABELS.nr),
-          municipality: area.k || null,
+          // A ban zone is registered by county, not municipality.
+          ...(area.t === 'ban'
+            ? {
+                county: area.k || null,
+                banPeriod: banPeriodText(area.p) || null,
+              }
+            : { municipality: area.k || null }),
           hectares: Number.isFinite(area.h) ? area.h : null,
-          protectedSince: Number.isFinite(area.y) ? area.y : null,
+          ...(area.t === 'ban'
+            ? {}
+            : area.t === 'n2k'
+              ? { inNatura2000Since: yearText(area.y) }
+              : { protectedSince: yearText(area.y) }),
         }),
       });
     },

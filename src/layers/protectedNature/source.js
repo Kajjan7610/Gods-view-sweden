@@ -10,15 +10,19 @@ export function createProtectedNatureSource({
 } = {}) {
   return {
     /**
-     * @param {{bbox: number[], signal?: AbortSignal}} options
-     * @returns {Promise<{areas: object[], wide: boolean, capped: boolean,
-     *   built: string|null}>}
+     * @param {{bbox: number[], skip?: string[], signal?: AbortSignal}} options
+     *   `skip`: the kinds kept apart (Natura 2000, bans) not wanted.
+     * @returns {Promise<{areas: object[], wide: boolean, close: boolean,
+     *   capped: boolean, built: string|null}>}
      */
-    async getAreas({ bbox, signal } = {}) {
+    async getAreas({ bbox, skip = [], signal } = {}) {
       signal?.throwIfAborted();
       const [west, south, east, north] = bbox.map((value) => value.toFixed(4));
+      const without = skip.length
+        ? `&skip=${skip.map(encodeURIComponent).join(',')}`
+        : '';
       const response = await fetchImpl(
-        `/api/protected-nature?west=${west}&south=${south}&east=${east}&north=${north}`,
+        `/api/protected-nature?west=${west}&south=${south}&east=${east}&north=${north}${without}`,
         { signal },
       );
       if (!response.ok) {
@@ -43,6 +47,7 @@ export function createProtectedNatureSource({
       return {
         areas: payload.areas,
         wide: payload.wide === true,
+        close: payload.close === true,
         capped: payload.capped === true,
         built: typeof payload.built === 'string' ? payload.built : null,
       };

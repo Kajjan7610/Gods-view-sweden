@@ -1,6 +1,7 @@
 // The protected nature layer's life: areas read for the view, drawn as one
 // batch of areas and one of outlines through the renderer's draw port, the
-// national parks alone when wide, and a card that opens the area.
+// national parks alone when wide, the Natura 2000 areas and bans only when
+// close and switched on, and a card that opens the area.
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { bindFakeDraw } from '../../testSupport/fakeDrawPort.mjs';
@@ -35,12 +36,20 @@ const area = (i, t, lon, lat) => ({
 
 function harness(
   t,
-  { height = 20_000, wide = false, capped = false, rect = undefined } = {},
+  {
+    height = 20_000,
+    wide = false,
+    close = !wide,
+    capped = false,
+    rect = undefined,
+    extras = [],
+  } = {},
 ) {
   t.mock.method(console, 'warn', () => {});
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const state = {
     reads: [],
+    skips: [],
     picked: null,
     click: null,
     hit: null,
@@ -63,15 +72,18 @@ function harness(
   const shown = new Map();
   const layer = createProtectedNatureLayer({
     source: {
-      getAreas: async ({ bbox }) => {
+      getAreas: async ({ bbox, skip }) => {
         state.reads.push(bbox);
+        state.skips.push(skip);
         return {
           areas: [
             area('2000001', 'np', 18.25, 59.18),
             area('2000002', 'nr', 18.2, 59.2),
             area('2000003', 'nr', 18.3, 59.15),
+            ...extras.filter((extra) => !skip?.includes(extra.t)),
           ],
           wide,
+          close,
           capped,
           source: 'Naturvårdsverket',
           built: '2026-11-12',
@@ -159,10 +171,137 @@ test('a wide view asks to zoom in for the reserves, and reads again', async (t) 
   await layer.update();
   assert.equal(
     layer.getRowControls().info,
-    'Zoom in to see the nature reserves and culture reserves.',
+    'Zoom in to see the nature reserves, culture reserves, Natura 2000 areas and access bans.',
   );
   await layer.update();
   assert.equal(state.reads.length, 2);
+  // With both switched off, the reserves alone are asked for.
+  for (const id of ['n2k', 'ban'])
+    layer
+      .getRowControls()
+      .chips.find((chip) => chip.id === id)
+      .onClick();
+  await layer.update();
+  assert.equal(
+    layer.getRowControls().info,
+    'Zoom in to see the nature reserves and culture reserves.',
+  );
+});
+
+test('a view not yet close asks to zoom in for the Natura 2000 areas, and reads them when close', async (t) => {
+  const { layer, state } = harness(t, { close: false });
+  layer.enable();
+  await layer.update();
+  assert.equal(
+    layer.getRowControls().info,
+    'Zoom in further to see the Natura 2000 areas and access bans.',
+  );
+  // The same view again is read again: a close one may have come.
+  await layer.update();
+  assert.equal(state.reads.length, 2);
+});
+
+const N2K = Object.assign(area('SE0110001', 'n2k', 18.21, 59.21), {
+  d: 'spa-sci',
+  y: 1996,
+});
+const BAN = Object.assign(area('tf1935789', 'ban', 18.26, 59.19), {
+  r: '2004016',
+  s: 'seal',
+  p: [1, 4, 31, 7],
+  k: 'Stockholms län',
+  h: 1.9,
+});
+
+test('Natura 2000 lies under the reserves in a light fill, the bans on top', async (t) => {
+  const { layer, items } = harness(t, { extras: [BAN, N2K] });
+  layer.enable();
+  await layer.update();
+  assert.deepEqual(
+    items('areas').map((item) => [item.id, item.fill]),
+    [
+      ['protected-nature:SE0110001:0', [...kindFill('n2k').slice(0, 3), 0.2]],
+      ['protected-nature:2000001:0', kindFill('np')],
+      ['protected-nature:2000002:0', kindFill('nr')],
+      ['protected-nature:2000003:0', kindFill('nr')],
+      ['protected-nature:tf1935789:0', kindFill('ban')],
+    ],
+  );
+  const [natura] = items('edges');
+  assert.deepEqual(natura.style.color, [...kindFill('n2k').slice(0, 3), 0.9]);
+  assert.deepEqual(legendLabels(layer), [
+    'National park 1',
+    'Nature reserve 2',
+    'Natura 2000 area 1',
+    'Access ban 1',
+  ]);
+});
+
+test('the Natura 2000 and ban switches drop their areas and ask without them', async (t) => {
+  const { layer, state, shown, items } = harness(t, { extras: [N2K, BAN] });
+  layer.enable();
+  await layer.update();
+  const chips = () => layer.getRowControls().chips;
+  assert.deepEqual(
+    chips().map(({ id, label, active, color }) => [id, label, active, color]),
+    [
+      ['n2k', 'NATURA 2000', true, '#1e88e5'],
+      ['ban', 'ACCESS BANS', true, '#f4511e'],
+    ],
+  );
+  assert.deepEqual(state.skips[0], []);
+  assert.equal(layer.setParams({ nvrid: 'tf1935789' }), true);
+  assert.equal(shown.get('protected-nature').length, 1);
+  chips()[1].onClick();
+  // At once: the bans gone, their card with them; then a new read.
+  assert.equal(chips()[1].active, false);
+  assert.ok(!items('areas').some(({ id }) => id.includes('tf1935789')));
+  assert.deepEqual(shown.get('protected-nature'), []);
+  await layer.update();
+  assert.deepEqual(state.skips.at(-1), ['ban']);
+  assert.ok(items('areas').some(({ id }) => id.includes('SE0110001')));
+  chips()[0].onClick();
+  await layer.update();
+  assert.deepEqual(state.skips.at(-1), ['n2k', 'ban']);
+  assert.equal(items('areas').length, 3);
+  chips()[1].onClick();
+  await layer.update();
+  assert.deepEqual(state.skips.at(-1), ['n2k']);
+  assert.ok(items('areas').some(({ id }) => id.includes('tf1935789')));
+});
+
+test('a ban card opens its protected area; a Natura 2000 card opens nothing', async (t) => {
+  const { layer, state, shown, opened } = harness(t, { extras: [N2K, BAN] });
+  layer.enable();
+  await layer.update();
+  layer.setParams({ nvrid: 'tf1935789' });
+  let [card] = shown.get('protected-nature');
+  assert.equal(card.title, 'ACCESS BAN · Area tf1935789');
+  assert.ok(
+    card.details.includes('Seal protection · No entry April 1 – July 31'),
+  );
+  state.hit = { sourceId: 'protected-nature', entryId: card.id };
+  state.click();
+  assert.deepEqual(opened, [
+    'https://skyddadnatur.naturvardsverket.se/sknat/?nvrid=2004016',
+  ]);
+  state.hit = null;
+  layer.setParams({ nvrid: 'SE0110001' });
+  [card] = shown.get('protected-nature');
+  assert.equal(card.title, 'NATURA 2000 · Area SE0110001');
+  assert.equal(card.activate, undefined);
+  assert.ok(!card.details.includes('Skyddad natur ↗ · click card to open'));
+  state.hit = { sourceId: 'protected-nature', entryId: card.id };
+  state.click();
+  assert.equal(opened.length, 1);
+  const records = layer.getAnalystRecords();
+  const ban = records.find(({ id }) => id === 'tf1935789');
+  assert.equal(ban.kind, 'Access ban');
+  assert.equal(ban.county, 'Stockholms län');
+  assert.equal(ban.banPeriod, 'No entry April 1 – July 31');
+  const natura = records.find(({ id }) => id === 'SE0110001');
+  assert.equal(natura.kind, 'Natura 2000 area');
+  assert.equal(natura.inNatura2000Since, '1996');
 });
 
 test('a view that sees the horizon reads Sweden', async (t) => {

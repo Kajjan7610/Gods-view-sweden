@@ -43,6 +43,13 @@ export function analystRows(
   return records;
 }
 
+/**
+ * A year as text, so a card shows "2019" and not a number with a thousands
+ * separator; null when it is not a whole year.
+ */
+export const yearText = (year) =>
+  Number.isInteger(year) ? String(year) : null;
+
 /** The middle of a ring or line ([[lon, lat], …]) as [lon, lat], or null. */
 export function middleOf(points) {
   if (!Array.isArray(points) || !points.length) return null;
