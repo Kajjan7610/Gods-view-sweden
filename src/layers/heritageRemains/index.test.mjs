@@ -36,6 +36,7 @@ function harness({
   answer = {},
   centre = [16.5448, 59.6105],
   terrain = null,
+  sourceExtra = {},
 } = {}) {
   const reads = [];
   const opened = [];
@@ -69,6 +70,7 @@ function harness({
           ...answer,
         };
       },
+      ...sourceExtra,
     },
     overlayHost: {
       setEntries(sourceId, entries) {
@@ -99,7 +101,7 @@ function harness({
   layer.init(viewer);
   const set = () => draw.find('heritage-remains');
   const drawn = () => [...(set()?.items.values() ?? [])];
-  return { layer, camera, state, reads, opened, drawn, set, picks };
+  return { layer, camera, state, reads, opened, drawn, set, picks, draw };
 }
 
 const labels = (layer) =>
@@ -192,7 +194,7 @@ test('a high view reads nothing and asks to zoom in', async () => {
   assert.equal(drawn().length, 0);
   assert.equal(
     layer.getRowControls().info,
-    'Zoom in to see the remains: they show below 12 km',
+    'Zoom in to see the remains and protected buildings: they show below 12 km',
   );
 });
 
@@ -323,5 +325,266 @@ test('the analyst reads the shown remains, named as on the card, and nothing whi
   assert.equal(layer.getAnalystRecords(1).length, 1);
   layer.disable();
   assert.deepEqual(layer.getAnalystRecords(), []);
+  layer.destroy();
+});
+
+// World Heritage sites and protected buildings: kinds of their own, each
+// with a chip, read only while shown.
+const SITE = {
+  id: 'se-1',
+  point: [16.55, 59.6],
+  rings: [
+    [
+      [16.5, 59.55],
+      [16.6, 59.55],
+      [16.6, 59.65],
+    ],
+  ],
+  nameSv: 'Engelsbergs bruk',
+  nameEn: 'Engelsberg Ironworks',
+  inscribed: 1993,
+  unesco: 'https://whc.unesco.org/en/list/556',
+  schematic: false,
+};
+const BUILDING = {
+  id: 'b0000000-0000-4000-8000-000000000001',
+  point: [16.546, 59.612],
+  name: 'Västerås domkyrka',
+  protection: 'kk',
+  decided: 1999,
+  built: { from: 1271, to: 1517 },
+  purpose: 'Kyrka',
+  municipality: 'Västerås',
+  page: 'https://pub.raa.se/visa/objekt/bebyggelse/b0000000-0000-4000-8000-000000000001',
+  distance: 120,
+};
+const AREA = {
+  id: 'a1',
+  point: [16.54, 59.61],
+  rings: [
+    [
+      [16.539, 59.609],
+      [16.541, 59.609],
+      [16.541, 59.611],
+    ],
+  ],
+  name: 'Slottet',
+  protection: 'sbm',
+  decided: 1935,
+  built: null,
+  purpose: null,
+  municipality: 'Västerås',
+  page: null,
+};
+
+function kindsHarness(options = {}) {
+  const calls = { world: 0, buildings: [] };
+  const h = harness({
+    ...options,
+    sourceExtra: {
+      getWorldHeritage: async () => {
+        calls.world += 1;
+        return { sites: [SITE], stale: false, fetchedAt: 1 };
+      },
+      getBuildings: async (query) => {
+        calls.buildings.push(query);
+        return {
+          buildings: [BUILDING],
+          areas: [AREA],
+          total: 1,
+          tooWide: false,
+          capped: false,
+          stale: false,
+          fetchedAt: 1,
+        };
+      },
+    },
+  });
+  return { ...h, calls };
+}
+
+test('each kind has a chip, all on at first', () => {
+  const { layer } = kindsHarness();
+  const chips = layer.getRowControls().chips;
+  assert.deepEqual(
+    chips.map(({ id, label, active }) => [id, label, active]),
+    [
+      ['kind-remains', 'Remains', true],
+      ['kind-world', 'World Heritage', true],
+      ['kind-buildings', 'Protected buildings', true],
+    ],
+  );
+  layer.destroy();
+});
+
+test('a low view reads remains and buildings once each, and the sites once', async () => {
+  const { layer, calls, reads, drawn, draw } = kindsHarness();
+  layer.enable();
+  await layer.update();
+  await layer.update();
+  assert.equal(reads.length, 2);
+  assert.equal(calls.buildings.length, 2);
+  assert.deepEqual(calls.buildings[0].bbox, reads[0].bbox, 'the same view');
+  assert.equal(calls.world, 1, 'the World Heritage list is read once');
+  const ids = drawn().map((item) => item.id);
+  assert.ok(ids.includes(`se-heritage-building:${BUILDING.id}`));
+  assert.equal(ids.at(-1), 'se-world-heritage:se-1', 'the sites draw on top');
+  assert.deepEqual(
+    [...draw.set('heritage-remains:protection-areas').items.keys()],
+    ['se-protection-area:a1:0'],
+  );
+  const outline = draw
+    .set('heritage-remains:world-heritage')
+    .items.get('se-world-heritage:se-1:0');
+  assert.equal(outline.positions.length, 4, 'the ring is closed');
+  assert.equal(outline.mode, 'draped');
+  const labels = layer.getRowControls().legend.map((item) => item.label);
+  assert.deepEqual(labels, [
+    'Ancient monument (protected)',
+    'Other cultural-historical remain',
+    'State listed building',
+    'Protected church heritage',
+    'World Heritage',
+  ]);
+  assert.equal(
+    layer.getRowControls().info,
+    '3 remains in view · 1 protected building in view',
+  );
+  assert.equal(layer.getStats().count, 3 + 1 + 1);
+  layer.destroy();
+});
+
+test('a high view reads no buildings but still shows the World Heritage sites', async () => {
+  const { layer, calls, reads, drawn } = kindsHarness({ height: 900_000 });
+  layer.enable();
+  await layer.update();
+  assert.equal(reads.length, 0);
+  assert.equal(calls.buildings.length, 0);
+  assert.equal(calls.world, 1);
+  assert.deepEqual(
+    drawn().map((item) => item.id),
+    ['se-world-heritage:se-1'],
+  );
+  assert.deepEqual(
+    layer.getRowControls().legend.map((item) => item.label),
+    ['World Heritage'],
+  );
+  layer.destroy();
+});
+
+test('a kind turned off is neither read nor drawn; on again, it is read at once', async () => {
+  const { layer, calls, reads, drawn, draw } = kindsHarness();
+  layer.enable();
+  await layer.update();
+  const chip = (id) =>
+    layer.getRowControls().chips.find((entry) => entry.id === id);
+  chip('kind-buildings').onClick();
+  chip('kind-remains').onClick();
+  assert.equal(chip('kind-buildings').active, false);
+  assert.deepEqual(
+    drawn().map((item) => item.id),
+    ['se-world-heritage:se-1'],
+  );
+  assert.equal(draw.set('heritage-remains:protection-areas').items.size, 0);
+  await layer.update();
+  assert.equal(calls.buildings.length, 1, 'no buildings read while off');
+  assert.equal(reads.length, 1, 'no remains read while off');
+  chip('kind-world').onClick();
+  assert.deepEqual(drawn(), []);
+  assert.equal(draw.set('heritage-remains:world-heritage').items.size, 0);
+  chip('kind-buildings').onClick();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(calls.buildings.length, 2);
+  assert.equal(reads.length, 1);
+  assert.equal(calls.world, 1);
+  layer.destroy();
+});
+
+test('a building card shows the protection only, and opens Bebyggelseregistret', async () => {
+  const { layer, state, opened } = kindsHarness();
+  layer.enable();
+  await layer.update();
+  state.picked = `se-heritage-building:${BUILDING.id}`;
+  state.click();
+  const card = state.cards[0];
+  assert.equal(card.title, 'PROTECTED BUILDING · Västerås domkyrka');
+  assert.deepEqual(card.details, [
+    'Protected church heritage',
+    'Protected since 1999',
+    'Built 1271–1517',
+    'Kyrka',
+    'Västerås',
+    '120 m from the map centre',
+    'RAÄ ↗ · click card to open',
+    'Source: Riksantikvarieämbetet',
+  ]);
+  assert.equal(card.activate(), true);
+  assert.deepEqual(opened, [BUILDING.page]);
+  // A protection area's outline picks its area; it has no page to open.
+  state.picked = 'se-protection-area:a1:0';
+  state.click();
+  assert.equal(state.cards[0].title, 'PROTECTION AREA · Slottet');
+  assert.equal(state.cards[0].activate, undefined);
+  layer.destroy();
+});
+
+test('a World Heritage card names the site and opens UNESCO', async () => {
+  const { layer, state, opened } = kindsHarness({ height: 900_000 });
+  layer.enable();
+  await layer.update();
+  state.picked = 'se-world-heritage:se-1:0';
+  state.click();
+  const card = state.cards[0];
+  assert.equal(card.title, 'WORLD HERITAGE · Engelsberg Ironworks');
+  assert.deepEqual(card.details, [
+    'Engelsbergs bruk',
+    'Inscribed 1993',
+    'UNESCO ↗ · click card to open',
+    'Source: Riksantikvarieämbetet',
+  ]);
+  card.activate();
+  assert.deepEqual(opened, ['https://whc.unesco.org/en/list/556']);
+  assert.deepEqual(
+    layer.getAnalystRecords().map((r) => [r.name, r.inscribed]),
+    [['Engelsberg Ironworks', '1993']],
+  );
+  layer.destroy();
+});
+
+test('a failed World Heritage read is not asked again at once', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  let asked = 0;
+  const { layer } = harness({
+    height: 900_000,
+    sourceExtra: {
+      getWorldHeritage: async () => {
+        asked += 1;
+        throw new Error('World Heritage unavailable (HTTP 502)');
+      },
+    },
+  });
+  layer.enable();
+  await layer.update();
+  await layer.update();
+  assert.equal(asked, 1);
+  assert.equal(layer.getStats().error, 'World Heritage unavailable (HTTP 502)');
+  layer.destroy();
+});
+
+test('a chip turned on reads its own kind only', async () => {
+  const { layer, calls, reads } = kindsHarness();
+  layer.enable();
+  await layer.update();
+  const chip = (id) =>
+    layer.getRowControls().chips.find((entry) => entry.id === id);
+  chip('kind-buildings').onClick();
+  chip('kind-buildings').onClick();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(calls.buildings.length, 2);
+  assert.equal(reads.length, 1, 'the remains are not read again');
+  chip('kind-world').onClick();
+  chip('kind-world').onClick();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(calls.world, 1, 'the list read before is kept');
   layer.destroy();
 });
