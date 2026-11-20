@@ -227,6 +227,9 @@ export function createBrowserViteConfig({
           // dependency's own dist/ (e.g. node_modules/vite/dist/client),
           // breaking /@vite/client and other dev-client assets.
           `${REPO_ROOT_GLOB}/dist/**`,
+          // Swedish fork: snapshots only the server may read (the population
+          // grid's exact 1 km counts leave it as classes alone).
+          `${REPO_ROOT_GLOB}/server/data/**`,
         ],
       },
       // These headers protect the document containing Provider Settings and
