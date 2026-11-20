@@ -171,6 +171,10 @@ const HIDDEN_FACTS = new Set([
   'routeId',
   'building',
   'key',
+  // Swedish fork: the dose rate already carries its unit, and a police
+  // station's service codes are not words (its desk fact sums them up).
+  'unit',
+  'services',
 ]);
 
 /** Facts that lead the list when a record has them, in this order. */
@@ -245,6 +249,7 @@ const FACT_LABELS = Object.freeze({
   navStatus: msg('Status'),
   magnitude: msg('Magnitude'),
   depthKm: msg('Depth'),
+  lengthKm: msg('Length'),
   timeMs: msg('Time'),
   place: msg('Place'),
   frp: msg('Fire power'),
@@ -293,6 +298,84 @@ const FACT_LABELS = Object.freeze({
   landuse: msg('Land use'),
   power: msg('Power'),
   telecom: msg('Telecom'),
+  // Swedish fork: the Swedish layers' record fields.
+  accessible: msg('Accessible'),
+  address: msg('Address'),
+  airTempC: msg('Air temperature'),
+  alerts: msg('Alerts'),
+  assessment: msg('Heritage assessment'),
+  banPeriod: msg('Ban period'),
+  brand: msg('Brand'),
+  built: msg('Built'),
+  company: msg('Company'),
+  condition: msg('Road condition'),
+  confirmed: msg('Confirmed in the field'),
+  county: msg('County'),
+  created: msg('Reported'),
+  decided: msg('Protection decided'),
+  densityClass: msg('Density class'),
+  desk: msg('Desk services'),
+  distanceFromCentreM: msg('Distance from map centre'),
+  doseRate: msg('Dose rate'),
+  emergencyDepartment: msg('Emergency department'),
+  ends: msg('Valid until'),
+  facingDeg: msg('Facing'),
+  // Only there when the square has under five people; it then reads 1–4.
+  fewerThan5: msg('People'),
+  firstAlert: msg('Most serious alert'),
+  flow: msg('Water flow'),
+  gustMs: msg('Gusts'),
+  hectares: msg('Surface area'),
+  iceRisk: msg('Ice risk'),
+  inNatura2000Since: msg('In Natura 2000 since'),
+  inscribed: msg('World Heritage since'),
+  location: msg('Location'),
+  measured: msg('Measured'),
+  medianMinutesToPhysician: msg('Median time to doctor'),
+  medianMinutesTotalStay: msg('Median total stay'),
+  minutesAgo: msg('Struck'),
+  mw: msg('Power flow'),
+  importMw: msg('Imports'),
+  exportMw: msg('Exports'),
+  nearestSeat: msg('Nearest municipal seat'),
+  nearestSeatKm: msg('Distance to municipal seat'),
+  nextDeparture: msg('Next departure'),
+  normalSpeedKmh: msg('Normal speed'),
+  normalTravelTime: msg('Normal travel time'),
+  number: msg('Register number'),
+  peakCurrentKa: msg('Peak current'),
+  people: msg('People'),
+  peoplePerKm2: msg('People per km²'),
+  places: msg('Shelter places'),
+  population: msg('Population'),
+  precipitationMmPerHour: msg('Precipitation'),
+  priority: msg('Priority'),
+  property: msg('Property'),
+  protectedArea: msg('Protected area'),
+  protectedSince: msg('Protected since'),
+  protection: msg('Protection'),
+  purpose: msg('Purpose'),
+  readiness: msg('Readiness'),
+  road: msg('Road'),
+  sekPerKwhNow: msg('Price now'),
+  sekPerKwhTodayMean: msg('Mean price today'),
+  sekPerKwhTomorrowMean: msg('Mean price tomorrow'),
+  sensors: msg('Sensors'),
+  speedKmh: msg('Traffic speed'),
+  squareKm: msg('Square size'),
+  starts: msg('Valid from'),
+  stateTrail: msg('State mountain trail'),
+  statisticsYear: msg('Statistics year'),
+  summary: msg('Summary'),
+  surfaceTempC: msg('Road surface temperature'),
+  travelTime: msg('Travel time'),
+  upcoming: msg('Upcoming'),
+  vehiclesPerHour: msg('Traffic flow'),
+  waterLevelCmMeanWater: msg('Water level against mean water'),
+  waterTempC: msg('Water temperature'),
+  waveHeightM: msg('Wave height'),
+  windMs: msg('Wind'),
+  worldHeritage: msg('World Heritage'),
 });
 
 /** OSM bookkeeping tags that say nothing about the place itself. */
@@ -444,7 +527,144 @@ const CODE_WORDS = Object.freeze({
     unknown: msg('Unknown'),
   },
   aircraftClass: AIRCRAFT_CLASS_LABELS,
+  // Swedish fork: what a police station's public desk offers.
+  desk: {
+    passport: msg('Passports and ID cards'),
+    desk: msg('Public desk, no passport applications'),
+    'no-desk': msg('No desk services listed'),
+  },
 });
+
+/**
+ * Swedish fork: the units of the Swedish layers' record fields, named field
+ * by field so no suffix rule reaches an upstream layer's field. Each is
+ * `[decimals, unit message, its English, fixed decimals]`.
+ */
+const SWEDISH_UNITS = Object.freeze({
+  airTempC: [1, msg('{n} °C'), '{n} °C', 1],
+  surfaceTempC: [1, msg('{n} °C'), '{n} °C', 1],
+  waterTempC: [1, msg('{n} °C'), '{n} °C', 1],
+  windMs: [1, msg('{n} m/s'), '{n} m/s', 1],
+  gustMs: [1, msg('{n} m/s'), '{n} m/s', 1],
+  precipitationMmPerHour: [1, msg('{n} mm/h'), '{n} mm/h'],
+  waveHeightM: [1, msg('{n} m'), '{n} m', 1],
+  waterLevelCmMeanWater: [0, msg('{n} cm'), '{n} cm'],
+  doseRate: [2, msg('{n} µSv/h'), '{n} µSv/h', 2],
+  sekPerKwhNow: [2, msg('{n} kr/kWh'), '{n} kr/kWh', 2],
+  sekPerKwhTodayMean: [2, msg('{n} kr/kWh'), '{n} kr/kWh', 2],
+  sekPerKwhTomorrowMean: [2, msg('{n} kr/kWh'), '{n} kr/kWh', 2],
+  // The sign is the stroke's polarity, which its kind already says.
+  peakCurrentKa: [1, msg('{n} kA'), '{n} kA'],
+  mw: [0, msg('{n} MW'), '{n} MW'],
+  importMw: [0, msg('{n} MW'), '{n} MW'],
+  exportMw: [0, msg('{n} MW'), '{n} MW'],
+  hectares: [1, msg('{n} ha'), '{n} ha'],
+  // The side of a population square.
+  squareKm: [0, msg('{n} km'), '{n} km'],
+  nearestSeatKm: [1, msg('{n} km'), '{n} km'],
+  facingDeg: [0, msg('{n}°'), '{n}°'],
+  speedKmh: [0, msg('{n} km/h'), '{n} km/h'],
+  normalSpeedKmh: [0, msg('{n} km/h'), '{n} km/h'],
+  vehiclesPerHour: [0, msg('{n} vehicles/h'), '{n} vehicles/h'],
+  medianMinutesToPhysician: [0, msg('{n} min'), '{n} min'],
+  medianMinutesTotalStay: [0, msg('{n} min'), '{n} min'],
+  minutesAgo: [0, msg('{n} min ago'), '{n} min ago'],
+});
+/** Swedish fork: fields that hold a year, shown without a thousands separator. */
+const SWEDISH_YEARS = new Set([
+  'statisticsYear',
+  'protectedSince',
+  'inNatura2000Since',
+  'inscribed',
+  'decided',
+]);
+/** Swedish fork: fields that hold a moment (ISO text or epoch ms). */
+const SWEDISH_MOMENTS = new Set(['starts', 'ends', 'created', 'measured']);
+/** Swedish fork: Sveriges Radio's traffic priorities, 1 most serious. */
+const SR_PRIORITY_WORDS = Object.freeze({
+  1: msg('Very serious'),
+  2: msg('Major incident'),
+  3: msg('Disruption'),
+  4: msg('Information'),
+  5: msg('Minor disruption'),
+});
+/** A moment's day and clock time as read in Sweden. */
+const SWEDISH_CLOCK = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Europe/Stockholm',
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+/**
+ * Swedish fork: a Swedish layer's fact as shown, or undefined when the field
+ * is not one of theirs (or its value is not of the expected kind).
+ */
+function swedishFact(field, value) {
+  if (field === 'fewerThan5') return value === true ? { value: '1–4' } : null;
+  const number =
+    typeof value === 'number' && Number.isFinite(value) ? value : null;
+  const unit = SWEDISH_UNITS[field];
+  if (unit && number !== null) {
+    const [digits, message, english, fixed] = unit;
+    const n = field === 'peakCurrentKa' ? Math.abs(number) : number;
+    // `|| 0` turns a rounded -0 into 0, so "-0.0 °C" never shows.
+    const shown = roundTo(n, digits) || 0;
+    return said(
+      english.replace(
+        '{n}',
+        shown.toLocaleString('en-US', {
+          minimumFractionDigits: fixed ?? 0,
+          maximumFractionDigits: digits,
+        }),
+      ),
+      message,
+      { n: shown },
+      fixed === undefined ? undefined : { fixed },
+    );
+  }
+  // Metres below a kilometre, as the shelter card shows the distance.
+  if (field === 'distanceFromCentreM' && number !== null)
+    return number < 995
+      ? said(`${Math.round(number / 10) * 10} m`, msg('{n} m'), {
+          n: Math.round(number / 10) * 10,
+        })
+      : said(
+          `${roundTo(number / 1000, 1).toLocaleString('en-US')} km`,
+          msg('{n} km'),
+          { n: roundTo(number / 1000, 1) },
+        );
+  if (SWEDISH_YEARS.has(field) && Number.isInteger(number))
+    return { value: String(number) };
+  if (field === 'priority' && SR_PRIORITY_WORDS[number]) {
+    const name = SR_PRIORITY_WORDS[number];
+    return said(name, name);
+  }
+  if (SWEDISH_MOMENTS.has(field)) {
+    const ms = number ?? Date.parse(text(value));
+    if (!isEpochMs(ms)) return undefined;
+    const parts = Object.fromEntries(
+      SWEDISH_CLOCK.formatToParts(ms).map(({ type, value }) => [type, value]),
+    );
+    // The Swedish day at UTC midnight, as the card shows dates in UTC.
+    const day = Date.UTC(+parts.year, +parts.month - 1, +parts.day);
+    const time = `${parts.hour}:${parts.minute}`;
+    const date = new Date(day).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    });
+    return said(`${date} ${time}`, msg('{date} {time}'), {
+      date: { date: day },
+      time,
+    });
+  }
+  return undefined;
+}
 /**
  * A feed code in English words (`classification` `HU` → `Hurricane`), for the
  * UI to show through t(); '' when the code has none.
@@ -511,6 +731,9 @@ export function formatFact(
     const name = shipTypeName(value);
     return said(name, name);
   }
+  // Swedish fork: the Swedish layers' fields, each with its own unit.
+  const swedish = swedishFact(field, value);
+  if (swedish !== undefined) return swedish;
   if (value === true) return said('Yes', msg('Yes'));
   if (value === false || value === null || value === undefined) return null;
   const number = typeof value === 'number' ? value : null;

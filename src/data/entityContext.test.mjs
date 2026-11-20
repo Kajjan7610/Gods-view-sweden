@@ -7,6 +7,7 @@ import {
   formatFact,
   layerBreakdown,
   nearbyEntities,
+  recordFacts,
   recordTitle,
   recordWarnings,
   searchEntities,
@@ -220,6 +221,96 @@ test('fact formatting follows the field suffix', () => {
     }).age,
     60_000,
   );
+});
+
+test('Swedish fork: the Swedish layers’ fields have labels and their own units', () => {
+  const labels = (record) =>
+    Object.fromEntries(
+      recordFacts(record).facts.map((fact) => [fact.field, fact.label]),
+    );
+  assert.deepEqual(
+    labels({
+      squareKm: 10,
+      people: 8660,
+      peoplePerKm2: 86.6,
+      protectedSince: '2019',
+      airTempC: 2.5,
+      worldHeritage: true,
+    }),
+    {
+      squareKm: 'Square size',
+      people: 'People',
+      peoplePerKm2: 'People per km²',
+      protectedSince: 'Protected since',
+      airTempC: 'Air temperature',
+      worldHeritage: 'World Heritage',
+    },
+  );
+  // Units by field, with the unit message the UI translates.
+  const air = formatFact('airTempC', -1.24);
+  assert.equal(air.value, '-1.2 °C');
+  assert.deepEqual(air.words, {
+    text: '{n} °C',
+    values: { n: -1.2 },
+    fixed: 1,
+  });
+  assert.equal(formatFact('surfaceTempC', -0.04).value, '0.0 °C');
+  assert.equal(formatFact('windMs', 3).value, '3.0 m/s');
+  assert.equal(formatFact('gustMs', 12.34).words.text, '{n} m/s');
+  assert.equal(formatFact('sekPerKwhNow', 1.2).value, '1.20 kr/kWh');
+  assert.equal(formatFact('sekPerKwhTodayMean', 0.456).value, '0.46 kr/kWh');
+  // A square's side, not its area.
+  assert.equal(formatFact('squareKm', 10).value, '10 km');
+  // The current's size; its sign is the stroke's kind.
+  assert.equal(formatFact('peakCurrentKa', -23.44).value, '23.4 kA');
+  assert.equal(formatFact('doseRate', 0.115).value, '0.12 µSv/h');
+  assert.equal(formatFact('waveHeightM', 0.84).value, '0.8 m');
+  assert.equal(formatFact('precipitationMmPerHour', 0.2).value, '0.2 mm/h');
+  assert.equal(formatFact('hectares', 1234).value, '1,234 ha');
+  assert.equal(formatFact('speedKmh', 47.6).value, '48 km/h');
+  assert.equal(formatFact('vehiclesPerHour', 1200).value, '1,200 vehicles/h');
+  assert.equal(formatFact('medianMinutesToPhysician', 62).value, '62 min');
+  assert.equal(formatFact('minutesAgo', 5).value, '5 min ago');
+  assert.equal(formatFact('distanceFromCentreM', 994).value, '990 m');
+  assert.equal(formatFact('distanceFromCentreM', 1234).value, '1.2 km');
+  // Years never take a thousands separator, as number or as text.
+  assert.deepEqual(formatFact('statisticsYear', 2025), { value: '2025' });
+  assert.equal(formatFact('inscribed', '1991').value, '1991');
+  // Booleans read Yes, or are left out.
+  assert.equal(formatFact('emergencyDepartment', true).value, 'Yes');
+  assert.equal(formatFact('iceRisk', false), null);
+  // A square with under five people reads 1–4 under People.
+  assert.deepEqual(
+    recordFacts({ squareKm: 5, people: null, fewerThan5: true }).facts.map(
+      ({ label, value }) => [label, value],
+    ),
+    [
+      ['Square size', '5 km'],
+      ['People', '1–4'],
+    ],
+  );
+  // Moments read as the Swedish day and clock.
+  const starts = formatFact('starts', '2026-11-20T23:30:00.000Z');
+  assert.equal(starts.value, '21 Nov 2026 00:30');
+  assert.deepEqual(starts.words, {
+    text: '{date} {time}',
+    values: { date: { date: Date.UTC(2026, 10, 21) }, time: '00:30' },
+  });
+  assert.equal(
+    formatFact('measured', Date.UTC(2026, 6, 1, 10, 5)).value,
+    '1 Jul 2026 12:05',
+  );
+  // Codes in words; the dose rate's unit and the desk's codes stay off the card.
+  assert.equal(formatFact('priority', 2).value, 'Major incident');
+  assert.equal(formatFact('desk', 'no-desk').value, 'No desk services listed');
+  assert.deepEqual(
+    recordFacts({ doseRate: 0.1, unit: 'µSv/h', services: 'report' }).facts.map(
+      (fact) => fact.field,
+    ),
+    ['doseRate'],
+  );
+  // An upstream field keeps its suffix rule.
+  assert.equal(formatFact('depthKm', 10).value, '10 km');
 });
 
 test('warnings lead with an emergency, then the squawk code, and stay out of the facts', () => {
