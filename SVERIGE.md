@@ -21,7 +21,7 @@ till en av tre grupper:
   kommer flyg som standard från adsb.lol (öppna data, ODbL), och
   `TOMTOM_API_KEY` lämnas tom så att trafiklagret kör sin simulering.
 
-Två nivåer gäller:
+Tre regler gäller:
 
 - **I appen** visas öppna data och källor utan publicerad licens, alltid
   med källan angiven. Licensen står i appens källtabell, och avsnittet
@@ -52,7 +52,7 @@ Två nivåer gäller:
 | Tjäldjup: Trafikverkets tjälstavar i den plogade vägbanan (ett 50-tal rapporterar), färgade efter hur djupt vägen är frusen, där givarnas temperaturprofil passerar 0 °C, med djupet bredvid varje punkt (ett spann där stavens översta givare sitter djupt); klick ger temperaturen på olika djup | Trafikverket, objekt `FrostDepthMeasurepoint` (befintlig nyckel) | Frost depth (Sweden) / Tjäldjup, under Events |
 | Rastplatser: de 317 rastplatserna i Trafikverkets data, gula där lastbilar har platser, med ett filter för bara dem; klick ger platser för bil och lastbil, toalett, picknickbord, lekplats, latrintömning och Trafikverkets anteckning. Antalet platser, inte hur många som är lediga | Trafikverket, objekt `Parking` (befintlig nyckel) | Rest areas (Sweden) / Rastplatser, under Movement |
 | Vägväder: ca 830 väderstationer längs vägarna (vägbanans och luftens temperatur, daggpunkt, vind, sikt, nederbörd; halkrisk markeras) | Trafikverket, objekt `WeatherMeasurepoint` | Road Weather (Sweden), under Events |
-| Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk), samt VMA och krisnyheter som punkter | SMHI, IBWW-varningar (CC BY 4.0) och Krisinformation.se (MSB); ingen nyckel | Weather Warnings (Sweden), under Weather |
+| Vädervarningar: gula, orange och röda varningar som områden, plus meddelanden (vattenbrist, höga flöden, brandrisk), samt VMA och krisnyheter som punkter | SMHI, IBWW-varningar (CC BY 4.0) och Krisinformation.se (MCF); ingen nyckel | Weather Warnings (Sweden), under Weather |
 | Polisens händelser (de 500 senaste notiserna, ca 10 dagar), placerade vid kommunens centralort | Polismyndigheten, `polisen.se/api/events` (öppna data, ange källan) | Police Events (Sweden), under Events |
 | Kollektivtrafikstörningar: de regionala trafikbolagens aktuella störningar vid de hållplatser de gäller (stängd/trafikeras inte, flyttad, övrigt) | Trafiklab GTFS Regional ServiceAlerts (befintlig nyckel `TRAFIKLAB_GTFS_RT_KEY`) | Transit Disruptions (Sweden) / Kollektivtrafikstörningar, under Events |
 | Sjöväder: ett 70-tal stationer längs kusten (vattenstånd mot medelvattenstånd, vattentemperatur, vågor) | SMHI:s havsobservationer (CC BY 4.0), ingen nyckel | Sea Weather (Sweden) / Sjöväder, under Weather |
@@ -60,7 +60,7 @@ Två nivåer gäller:
 | Väder nu: ca 185 SMHI-stationer (temperatur, vind, byar, nederbörd senaste timmen) och SMHI:s prognos för platsen vid klick | SMHI metobs och prognos snow1g (CC BY 4.0, ingen nyckel) | Weather Now (Sweden) / Väder nu, under Weather |
 | Luftkvalitet: ca 75 SMHI-mätstationer (NO2, PM10, PM2.5, O3) på europeiska EAQI-skalan, tillsammans med Kanadas stationer | SMHI Datavärdskap luft (CC BY 4.0, ingen nyckel) | Air quality / Luftkvalitet, under Weather |
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
-| Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (rörliga vinklar i flödesriktningen, MW), Sveriges import, export och netto totalt och per grannland, val av import/export/inrikes och en knapp per land som lyfter fram dess förbindelser, en KRAFT-panel i högerkanten med dygnet hittills eller senaste veckan per kvart (produktion per kraftslag, förbrukning och utbyte), import/export per elområde och Sveriges produktion per kraftslag och förbrukning | ENTSO-E Transparency Platform (CC BY 4.0, gratisnyckel `ENTSOE_SECURITY_TOKEN`) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
+| Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (rörliga vinklar i flödesriktningen, MW), Sveriges import, export och netto totalt och per grannland, val av import/export/inrikes och en knapp per land som lyfter fram dess förbindelser; klick på ett elområde ger dess import och export. Produktion per kraftslag och förbrukning visas inte: de ingår inte i ENTSO-E:s fria data | ENTSO-E Transparency Platform (CC BY 4.0, gratisnyckel `ENTSOE_SECURITY_TOKEN`) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, senast publicerade flöde i m³/s (kvartsvärden, publiceras med fördröjning) och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
 | Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp, City Gross), Lidls och Systembolagets butiker samt apoteken hos Apotek Hjärtat (ICA Gruppen), Apoteket, Kronans Apotek (med Apoteksgruppen) och DOZ Apotek, färgade efter företag och koncept, med en knapp per företag; klick ger adress, om butiken är öppen nu, kartlagd storlek, webbsida, telefon, rullstol och paketombud, hur många som bor inom 2 km, närmaste hållplats, närmaste andra kedjor och företaget (org.nr och huvudkontor); klick på kortet öppnar butikens webbsida. Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0), befolkning från SCB:s 1 km-rutor (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
 | Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
@@ -70,17 +70,17 @@ Två nivåer gäller:
 | Kommuner och län: gränserna för alla 290 kommuner och 21 län som linjer på marken (länsgränser gula och tjockare, gränser till havs utelämnade), namnen följer vyn (län på hög höjd, kommuner närmare), kartans mitt i raden med kommun, län och folkmängd; klick på en kommun markerar den och visar län, folkmängd med förändring på ett år och kommunkod | OpenStreetMap (ODbL) som ögonblicksbild i repot; folkmängd per månad från SCB (TAB6473, CC0) | Municipalities & Counties (Sweden) / Kommuner och län, under Infrastructure |
 | Valdistrikt 2026: riksdagsvalet i alla 6 312 valdistrikt som ytor på marken, färgade efter största parti eller valdeltagande; klick på ett distrikt visar kommun, räknade röster, valdeltagande och alla partiers andelar | Valmyndigheten (öppna data, källan anges) som ögonblicksbild i repot | Election Districts 2026 (Sweden) / Valdistrikt 2026, under Infrastructure |
 | Skyddad natur: Sveriges 31 nationalparker, cirka 6 000 gällande naturreservat och 52 kulturreservat, 4 136 Natura 2000-områden och 1 543 gällande tillträdesförbud i skyddade områden, de flesta för fågel- och sälskydd, som ytor på marken, färgade efter skyddsform (Natura 2000 blått och ljust under reservaten, tillträdesförbuden orange överst). Natura 2000 och tillträdesförbuden slås av och på var för sig med knappar på raden. På hög höjd visas bara nationalparkerna. Närmare in (vyn högst 3 grader) visas reservaten, och ännu närmare (högst 2 grader) även Natura 2000-områdena och tillträdesförbuden, högst 1 500 områden närmast mitten. Ett klick visar kommun, areal och år. För Natura 2000 visas direktiv och områdeskod, för ett tillträdesförbud skälet (fågelskydd, sälskydd) och perioden. Ett klick på kortet öppnar området i Naturvårdsverkets Skyddad natur (ett tillträdesförbud öppnar sitt skyddsområde, Natura 2000 har ingen sådan länk) | Naturvårdsverket, Naturvårdsregistret (CC0, "Källa: Naturvårdsverket") som tre ögonblicksbilder i repot | Protected Nature (Sweden) / Skyddad natur, under Infrastructure |
-| Befolkning per km²: SCB:s befolkning per 1 km-ruta i slutet av 2025 som platta färgade rutor på marken, ljusa till mörka efter invånare per km² (1–4, 5–19, 20–99, 100–499, 500–1 999, 2 000+); längre ut 5, 10 och 25 km-rutor summerade från 1 km-rutorna (högst 3 000 rutor närmast mitten). Klick på en summerad ruta ger avrundat antal invånare och invånare per km². 1 km-rutor har inget kort och färre än 5 personer visas bara som 1–4 | SCB, Befolkning 1 km-rutor 2025 (CC0, "Källa: SCB"; summorna är bearbetning av SCB-data) som ögonblicksbild i repot | Population per km² (Sweden) / Befolkning per km², under Infrastructure |
+| Befolkning per km²: SCB:s befolkning per 1 km-ruta i slutet av 2025 som platta färgade rutor på marken, ljusa till mörka efter invånare per km² (under 1 – bara i summerade rutor –, 1–4, 5–19, 20–99, 100–499, 500–1 999, 2 000+); längre ut 5, 10 och 25 km-rutor summerade från 1 km-rutorna (högst 3 000 rutor närmast mitten). Klick på en summerad ruta ger avrundat antal invånare och invånare per km². 1 km-rutor har inget kort och färre än 5 personer visas bara som 1–4 | SCB, Befolkning 1 km-rutor 2025 (CC0, "Källa: SCB"; summorna är bearbetning av SCB-data) som ögonblicksbild i repot | Population per km² (Sweden) / Befolkning per km², under Infrastructure |
 | Fornlämningar, världsarv och skyddad bebyggelse: tre delar med var sin knapp. **Lämningar**: Riksantikvarieämbetets registrerade fornlämningar och övriga kulturhistoriska lämningar (cirka 840 000 i hela landet) som prickar på marken när man zoomat in under 12 km, de 1 500 närmast kartans mitt, färgade efter antikvarisk bedömning; klick ger typ, bedömning, lämnings- och RAÄ-nummer och kommun, klick på kortet öppnar lämningen hos RAÄ. **Världsarv**: Sveriges världsarv enligt UNESCO som blå ytor och prickar på alla höjder; klick ger namn och år, kortet öppnar UNESCO:s sida (buffertzoner ingår inte, Struves meridianbåge är schematisk). **Skyddad bebyggelse**: byggnadsminnen, statliga byggnadsminnen och kyrkliga kulturminnen ur Bebyggelseregistret som prickar under 12 km, byggnadsminnenas skyddsområden som linjer; klick ger skydd, beslutsår, byggnadsår, ändamål och kommun, kortet öppnar objektet i Bebyggelseregistret. Övrig inventerad bebyggelse (mest privata bostäder) visas aldrig, och inga uppgifter om fastighet eller ägare | Riksantikvarieämbetet: Kulturmiljöregistret, Världsarv i Sverige och Bebyggelseregistret via INSPIRE OGC API Features (lämningar och världsarv public domain, bebyggelse CC0 utom foton; ingen nyckel; källa anges) | Ancient Monuments (Sweden) / Fornlämningar, under Infrastructure |
-| Leder och friluftsanordningar: 3 688 leder som linjer (vandringsleder, natur- och kulturstigar, skidleder, skoterleder, kanotleder, cykel- och ridleder; 492 av dem statliga leder i fjällen) och 21 672 anordningar som prickar (vindskydd och stugor, eldstäder, rastplatser och tältplatser, dass och vatten, utsiktsplatser och information, parkering, bryggor och bad, broar och spångar) när man zoomat in under 30 km; klick ger namn, typ, en kortad beskrivning, det skyddade området och för leder markering och längd. Bara skyddade områden vars förvaltare publicerat sina anordningar, plus de statliga lederna i fjällen; mycket saknas. Reservatsföreskrifter och tillträdesförbud gäller. Anordningstypen "Bostad" visas aldrig | Naturvårdsverket, Leder och friluftsanordningar (CC0, "Källa: Naturvårdsverket", ingen nyckel) som ögonblicksbild i repot, byggd för hand ur Naturvårdsverkets nattliga filer | Trails and outdoor facilities (Sweden) / Leder och friluftsanordningar, under Infrastructure |
+| Leder och friluftsanordningar: 3 688 leder som linjer (vandringsleder, natur- och kulturstigar, skidleder, skoterleder, kanotleder, cykel- och ridleder och övriga; 492 av dem statliga leder i fjällen) och 21 672 anordningar som prickar (vindskydd och stugor, eldstäder, rastplatser och tältplatser, dass och vatten, utsiktsplatser och information, parkering, bryggor och bad, broar och spångar, och övriga) när man zoomat in under 30 km; klick ger namn, typ, en kortad beskrivning, det skyddade området och för leder markering och längd. Bara skyddade områden vars förvaltare publicerat sina anordningar, plus de statliga lederna i fjällen; mycket saknas. Reservatsföreskrifter och tillträdesförbud gäller. Anordningstypen "Bostad" visas aldrig | Naturvårdsverket, Leder och friluftsanordningar (CC0, "Källa: Naturvårdsverket", ingen nyckel) som ögonblicksbild i repot, byggd för hand ur Naturvårdsverkets nattliga filer | Trails and outdoor facilities (Sweden) / Leder och friluftsanordningar, under Infrastructure |
 | Blixtnedslag: varje urladdning den senaste timmen som punkt, färgad efter ålder (vit = senaste 5 min), stora för nedslag i marken och små för blixtar i molnet; klick ger tid, typ och toppström | DMI:s blixtdata (CC BY 4.0, ingen nyckel; DMI:s sensornät och grannländernas sensorer) | Lightning Strikes (Sweden) / Blixtnedslag, under Weather |
 | Blixtar över Europa och Afrika var 5:e minut, sedda från EUMETSAT:s vädersatellit MTG | EUMETSAT EUMETView (ingen nyckel, ingen avgift) | Lightning density / Blixttäthet, under Weather (knapp Europa, standard) |
 | Strålning: Strålsäkerhetsmyndighetens gammastationer (ca 25 i drift) med senaste timmens dosrat i µSv/h på SSM:s egen färgskala | Strålsäkerhetsmyndighetens gammastationskarta (ingen nyckel, ingen angiven licens; SSM anges som källa) | Radiation (Sweden) / Strålning, under Infrastructure |
-| Stadsdossier: när vyn stannar lågt över en svensk ort visar panelen STAD i högerkanten stadsvapen, foto och inledning, tätortens och kommunens folkmängd med kurva, skattesats, inkomst, arbetslöshet och kommunvalet, tolv nyckeltal under STATISTIK (skola, trygghet, hälsa, ekonomi, miljö och besökare, med hela Sveriges värde och kommunens plats bland kommunerna), samt läget just nu (väder, luft, varningar, Polisen, sol) och en länk till ortens P4-kanal hos Sveriges Radio | Kolada (RKA), Wikidata (CC0), Wikipedia (CC BY-SA 4.0), SMHI, Polisen; ingen nyckel | Panelen STAD i högerkanten (dyker upp vid första besöket) |
+| Stadsdossier: när vyn stannar lågt över en svensk ort visar stadsdossiern (panelen STAD) i högerkanten stadsvapen, foto och inledning, tätortens och kommunens folkmängd med kurva, skattesats, inkomst, arbetslöshet och kommunvalet, SCB:s siffror under BEFOLKNING och SAMHÄLLE (födda, döda och flyttnetto, småhuspriser, påbörjade bostäder, elbilar och pendling), femton nyckeltal under STATISTIK (skola, trygghet, räddningstjänst, hälsa, ekonomi, miljö och besökare, med hela Sveriges värde och, utom för räddningstjänsten, kommunens plats bland kommunerna), samt läget just nu (väder, luft, varningar, Polisen, sol) och en länk till ortens P4-kanal hos Sveriges Radio | Kolada (RKA), SCB (CC0), Valmyndigheten, Wikidata (CC0), Wikipedia (CC BY-SA 4.0), SMHI, Polisen; ingen nyckel | Panelen STAD i högerkanten (dyker upp vid första besöket) |
 | Stadsdossierns flikar Sevärt (slott, kyrkor, museer m.m. utpekade på kartan), besökspass, tåg från stadens station, bussar, spårvagnar, tunnelbana och båtar från stadens mest trafikerade hållplats, VMA-banner och norrsken i natt | Wikidata (CC0), Trafikverket, Trafiklab Realtime (CC BY 4.0), Krisinformation.se, NOAA SWPC | Panelen STAD |
-| Virus i avloppsvattnet: om covid-19, influensa A och B och RSV stiger, är stabila, sjunker, påvisas nu eller inte påvisas i det senaste veckoprovet, för orter med ett reningsverk i mätningen (Stockholmsområdets fyra verk som kolumner) | SLU och SEEC via SciLifeLab Pathogens Portal (CC BY 4.0, DOI 10.17044/scilifelab.14256317), ingen nyckel | Panelen STAD, fliken NU |
+| Virus i avloppsvattnet, hopfällt från början med en rad om vad som stiger eller påvisas nu: om covid-19, influensa A och B och RSV stiger, är stabila, sjunker, påvisas nu eller inte påvisas i det senaste veckoprovet, för orter med ett reningsverk i mätningen (Stockholmsområdets fyra verk som kolumner) | SLU och SEEC via SciLifeLab Pathogens Portal (CC BY 4.0, DOI 10.17044/scilifelab.14256317), ingen nyckel | Panelen STAD, fliken NU |
 | Små jordskalv i norra Europa: EMSC:s jordbävningar det senaste dygnet i rutan 54–72° N, 4–33° Ö, även de små, tillsammans med USGS:s (samma skalv ritas en gång); resten av världen är som förut USGS | EMSC FDSN (CC BY 4.0, ingen nyckel) | Earthquakes (24h) / Jordbävningar (24 h), under Events |
-| Himlen över Kiruna: den senaste bilden från IRF:s firmamentkamera i stadskortets norrskensrad, för orter inom 300 km från Kiruna och bara när det är mörkt där | IRF, Kiruna Atmospheric and Geophysical Observatory (CC BY 4.0), ingen nyckel | Panelen STAD, fliken NU |
+| Himlen över Kiruna: den senaste bilden från IRF:s firmamentkamera i stadsdossierns norrskensrad, för orter inom 300 km från Kiruna och bara när det är mörkt där | IRF, Kiruna Atmospheric and Geophysical Observatory (CC BY 4.0), ingen nyckel | Panelen STAD, fliken NU |
 | Flygtavla: Swedavias tio flygplatser, hela dagens avgångar och ankomster, köerna i säkerhetskontrollen över terminalerna, följ planet i luften och dagens rutter på globen | Swedavia FlightInfo och WaitTime (gratisnycklar) | Kortet över en Swedavia-flygplats och tavlans egen panel |
 | Flygväder: METAR och TAF för flygplatserna | NOAA Aviation Weather Center (ingen nyckel) | Flygtavlan och cockpit |
 | Cockpit: knapp vid kartan och C-tangenten när ett plan, fartyg eller en satellit är valt, Swedavias rader för planet, svensk lägesbild i genomgången (ort och län, SMHI:s väder, varningar och VMA) | Swedavia, SMHI, Krisinformation.se, NOAA (METAR/TAF) | Cockpit |
@@ -88,10 +88,11 @@ Två nivåer gäller:
 | Sverige-turen "Sverige just nu" | Lagren ovan | Scener |
 | Berättelsen "Natten över Sverige": norrsken, chansen över Kiruna, molnen och vägen mot Abisko, med levande siffror i bildtexterna och svensk berättarröst | NOAA SWPC, SMHI, Trafikverket; rösten från elevenlabs.io | Berättelser (STORIES), och Scener |
 | Berättelsen "Elens resa": från älvarna i norr, söderut genom de fyra elområdena, till priset och grannländerna, med levande flöden och priser i bildtexterna och svensk berättarröst | ENTSO-E (CC BY 4.0), Elpriset just nu.se (Nord Pool via ENTSO-E), SMHI; rösten från elevenlabs.io | Berättelser (STORIES), och Scener |
+| Databiblioteket: sex granskade kartkällor, Mapterhorns terrängrelief (Sverige från Lantmäteriets Markhöjdmodell), JRC:s vattenytor 1984–2024 och Kartverkets topografiska karta, gråtonskarta, turkarta och sjökort (inte för navigering). Övriga källor i biblioteket erbjuds bara om operatören slår på dem med `GEV_LIBRARY_ENABLE` | Mapterhorn (öppna licenser per källa; Lantmäteriet CC0), EC JRC/Google (Copernicus, fri användning), Kartverket (CC BY 4.0); kartbitarna hämtas direkt av webbläsaren | Datalager, gruppen Bibliotek |
 | Sparläge: starta utan Google 3D Tiles | – | Knappen 3D/2D, eller `?globe=lite` |
-| Svenskt gränssnitt (alla ca 3 000 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
+| Svenskt gränssnitt (alla ca 5 100 texter) | Egen översättning, `src/i18n/locales/sv.json` | Språkknappen nere till höger, eller `?lang=sv` |
 
-Trafikverkets och Trafiklabs data är CC0 1.0; SMHI:s radar och varningar samt OPERA:s radar är CC BY 4.0 (källa: SMHI respektive EUMETNET OPERA). Källor, villkor och tekniska detaljer står i
+Trafikverkets data och Trafiklabs GTFS-data är CC0 1.0, Trafiklabs realtids-API CC BY 4.0; SMHI:s radar och varningar samt OPERA:s radar är CC BY 4.0 (källa: SMHI respektive EUMETNET OPERA). Källor, villkor och tekniska detaljer står i
 [DATA_SOURCES.md](DATA_SOURCES.md).
 
 ## Källor och omfattning per lager
@@ -130,6 +131,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Köer och restider (Sverige) | Trafikverket | Cirka 200 restidssträckor och 1 200 mätpunkter, Stockholm och Göteborg | Varje minut | CC0 1.0 |
 | SE | Polishändelser (Sverige) | Polismyndigheten | De 500 senaste notiserna, cirka tio dagar, hela Sverige | Var 5:e minut | Öppna data, källan anges |
 | SE | Kollektivtrafikstörningar (Sverige) | Trafiklab (Samtrafiken) | Störningar vid hållplatserna hos 16 regionala trafikbolag | Var 15:e minut | CC0 1.0 |
+| +SE | Jordbävningar (24 h) | EMSC | Jordbävningar i norra Europa (54–72° N, 4–33° Ö) det senaste dygnet, även små. Originalet: Jordbävningar i hela världen det senaste dygnet (USGS) | Var 5:e minut | CC BY 4.0 (EMSC) |
 | +SE | Luftkvalitet | SMHI | Cirka 75 mätstationer på den europeiska EAQI-skalan. Originalet: Kanadensiska stationer (ECCC AQHI) | Varje timme | CC BY 4.0 (SMHI); EAQI-indexet räknas fram av appen |
 | +SE | Regnradar | SMHI · EUMETNET OPERA | Nordisk radar från SMHI och europeisk radar från OPERA. Originalet: Radar över USA (NOAA) | Var 5:e minut | CC BY 4.0 (SMHI, OPERA) |
 | SE | Vädervarningar (Sverige) | SMHI · Krisinformation.se | Vädervarningar, VMA och krisnyheter i hela Sverige | Var 5:e minut | CC BY 4.0 (SMHI) |
@@ -182,15 +184,21 @@ de här gränserna, även för nya lager:
 
 ### Källor med oklara eller särskilda villkor
 
-Alla svenska källor är genomgångna (2026-11-10). De flesta har en öppen
-licens eller öppna data med källan angiven: Trafikverket, Trafiklab, SCB och
-Wikidata (CC0), SMHI, DMI och EUMETSAT (CC BY 4.0), MCF, Polisen,
-Socialstyrelsen, Krisinformation, NOAA och OpenStreetMap (ODbL). Följande har
+Alla svenska källor gicks igenom 2026-11-10, och varje ny källa sedan dess
+när den lades till. De flesta har en öppen licens: CC0 (Trafikverket,
+Trafiklabs GTFS-data, SCB, Naturvårdsverket, Wikidata och
+Riksantikvarieämbetets bebyggelseregister), CC BY 4.0 (SMHI, Trafiklabs
+realtids-API, DMI, EUMETSAT, EMSC, IRF, avloppsdatan från SLU och SEEC och
+ENTSO-E:s flöden), allmän egendom (Riksantikvarieämbetets lämningar och
+världsarv, NOAA) eller ODbL (OpenStreetMap, adsb.lol). MCF (brandstationer,
+skyddsrum och Krisinformation.se), Socialstyrelsen, Valmyndigheten och Kolada
+publicerar öppna data som får användas med källan angiven. Följande har
 oklara eller särskilda villkor. De visas med källan angiven, och de utan
 licens ska helst ersättas med en dokumenterad källa eller godkännas:
 
-- **Polisen (händelser och polisstationer):** ingen licens angiven, men
-  Polisens "Regler för öppna data" (granskade av Polisen 2026-09-24) gäller:
+- **Polisen (händelser och polisstationer):** öppna data utan namngiven
+  licens. I stället gäller Polisens "Regler för öppna data" (granskade av
+  Polisen 2026-09-24):
   varje anrop ska ha en User-Agent som namnger appen, det ska gå minst 10
   sekunder mellan anropen, högst 60 i timmen och 1 440 per dygn, och ett
   404-svar är permanent. Appen skickar `GodsEyeViewSverige/1.0` med en länk
@@ -202,11 +210,10 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   gränssnitt, med en gratis nyckel (se Nycklar). Flödena mellan elområdena
   och grannländerna är där fria att återanvända (CC BY 4.0), medan
   produktion per kraftslag och förbrukning inte står på ENTSO-E:s lista
-  över fri data och kräver Svenska kraftnäts godkännande. Lagret visar
-  därför bara flödena, med "ENTSO-E (CC BY 4.0)" som källa, och panelen
-  KRAFT med dygnskurvan visas inte; produktion och förbrukning läses bara
-  med `ENTSOE_PRODUCTION=on`, när Svenska kraftnät har godkänt det. Utan
-  nyckel ber lagret om den och visar inget. ENTSO-E publicerar senast en
+  över fri data. Lagret visar därför bara flödena, med "ENTSO-E (CC BY
+  4.0)" som källa, och panelen KRAFT med dygnskurvan visas inte;
+  produktion och förbrukning läses bara med `ENTSOE_PRODUCTION=on`, som
+  är avslaget. Utan nyckel ber lagret om den och visar inget. ENTSO-E publicerar senast en
   timme efter driftperioden, så lagret visar senaste publicerade kvarten,
   inte nuet. Svenska kraftnäts egen kontrollrumstjänst, samma som sidan
   svk.se/om-kraftsystemet/kontrollrummet använder, används inte: Svenska
@@ -286,7 +293,7 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   texten är CC BY-SA 4.0 och länkas. Bilderna har egna licenser, ofta CC BY
   eller CC BY-SA, som kräver att upphovsperson och licens anges vid bilden.
   Servern läser båda ur filens metadata hos Commons (eller svenska
-  Wikipedia, för en fil den har själv), och panelen, ortskortet och Sevärt
+  Wikipedia, för en fil den har själv), och stadsdossiern, ortskortet och Sevärt
   visar till exempel "Foto: Listz3 · CC BY-SA 4.0" med länk till filens
   sida. En bild utan licens att ange visas inte.
 - **OpenSky (flyg, originalets lager):** villkoren lästa 2026-11-11
@@ -373,17 +380,17 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 
 | Variabel | Används till | Var den skaffas |
 |---|---|---|
-| `TRAFIKVERKET_API_KEY` | kameror, tåg, väglag, händelser | data.trafikverket.se |
+| `TRAFIKVERKET_API_KEY` | vägkameror, tåg och störningar i tågtrafiken, väglag och händelser, vägväder, vägfärjor, köer och restider, tjäldjup, rastplatser, fartkameror, och i stadsdossiern tåg från stationen och trafiken runt staden | data.trafikverket.se |
 | `TRAFIKLAB_GTFS_RT_KEY` | bussar m.m. live | trafiklab.se → GTFS Regional Realtime |
 | `TRAFIKLAB_GTFS_STATIC_KEY` | linjenummer och fordonstyp | trafiklab.se → GTFS Regional Static |
 | `TRAFIKLAB_REALTIME_KEY` | lokaltrafikens avgångar i stadsdossiern | trafiklab.se → Trafiklab Realtime APIs |
 | `SWEDAVIA_FLIGHTINFO_KEY` | avgångar och ankomster i dossiern, tavlan och cockpit | apideveloper.swedavia.se → FlightInfo Free |
 | `SWEDAVIA_WAITTIME_KEY` | köerna i säkerhetskontrollen | apideveloper.swedavia.se → WaitTime Free |
 | `ADSBDB_ROUTES` | `on`: flygrutter från adsbdb, vars ruttdata inte får publiceras utan David J Taylors tillstånd; tom (standard): inga rutter | ingen nyckel |
-| `REGIONAL_NEWS_GOOGLE` | `on`: rubrikerna i stadspanelen och cockpit från Google News, vars villkor bara tillåter personligt, icke-kommersiellt bruk; tom (standard): inga rubriker över Sverige, GDELT utanför | ingen nyckel |
+| `REGIONAL_NEWS_GOOGLE` | `on`: rubrikerna i stadsdossiern och cockpit från Google News, vars villkor bara tillåter personligt, icke-kommersiellt bruk; tom (standard): inga rubriker över Sverige, GDELT utanför | ingen nyckel |
 | `FLIGHTS_SOURCE` | tom (standard): flyg från adsb.lol (ODbL) runt kartans mitt, OpenSky frågas aldrig; `opensky`: originalets OpenSky, som kräver deras skriftliga tillstånd | ingen nyckel |
 | `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` | flyg med större kvot än utan konto (originalets lager; OpenSkys villkor kräver skriftligt tillstånd för användning i en app som denna, se "Källor med oklara eller särskilda villkor") | opensky-network.org → konto → API client (under KOPPLA PÅ) |
-| `ENTSOE_PRODUCTION` | `on`: produktion, förbrukning och dygnskurva från ENTSO-E också; bara när Svenska kraftnät har godkänt det | ingen nyckel |
+| `ENTSOE_PRODUCTION` | `on`: produktion, förbrukning och dygnskurva från ENTSO-E också; tom (standard): bara flödena, eftersom produktion och förbrukning inte ingår i ENTSO-E:s fria data | ingen nyckel |
 | `ENTSOE_SECURITY_TOKEN` | kraftsystemets flöden från ENTSO-E (CC BY 4.0); behövs för lagret | transparency.entsoe.eu → registrera, mejla transparency@entsoe.eu "RESTful API access", sedan My Account → Generate token |
 | `CESIUM_ION_TOKEN` | fotorealistiska 3D-städer | ion.cesium.com |
 | `ARCGIS_API_KEY` | Esris satellitbild i 2D och sparläget; utan nyckel visas OpenStreetMap. Nyckeln syns i webbläsaren och ska begränsas hos Esri till appens adresser; den gäller högst ett år och behöver förnyas | location.arcgis.com → gratis Location Platform-konto (inte ett ArcGIS public account) → Developer credentials → API-nyckel, offentlig applikation, bara Baskartor, referenter `http://localhost:4173` och `http://127.0.0.1:4173` |
@@ -403,7 +410,7 @@ npm ci
 npm run dev
 ```
 
-Öppna http://localhost:4173. Kräver Node 24 eller 26.
+Öppna http://localhost:4173. Kräver Node 24 (24.14.0 eller senare) eller Node 26.
 
 ## Hålla jämna steg med originalet
 
@@ -415,6 +422,116 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-20 (rättelser i dokumentationen)
+- README: bilderna från originalets README, som originalet tog bort ur sitt
+  repo i november 2026, är borttagna tillsammans med bildtexterna, och
+  docs/media/README.md räknar upp originalets filer som de är nu. Tabellen
+  över lager har fått raderna Valdistrikt 2026, Skyddad natur och
+  Fornlämningar, EMSC:s skalv i Jordbävningar, de svenska lagrens namn som
+  appen skriver dem och rätt nyckelmärkning: Polishändelser behöver ingen
+  nyckel, medan Kraftsystemet, Kollektivtrafikstörningar och Fartkameror
+  behöver en gratisnyckel. Tabellen har 54 lager och kartkällor, varav 43
+  fungerar utan nyckel.
+- Siffrorna för de svenska källorna är omräknade på samma sätt som
+  2026-11-13: 29 API:er och dataset, 43 datatyper och 16 myndigheter och
+  tjänster. Summan av källornas märken är nu Trafikverket 1, SMHI 6,
+  Samtrafiken 3, Riksantikvarieämbetet 3, Swedavia 2, Polisen 2, MCF 2,
+  Naturvårdsverket 2 och övriga 1; datatyperna räknar Trafikverkets 15
+  objekttyper. Nytt sedan 2026-11-13: Naturvårdsverkets leder och
+  friluftsanordningar, Riksantikvarieämbetets världsarv och
+  Bebyggelseregistret, SLU:s och SEEC:s avloppsdata, IRF:s firmamentkamera
+  och Trafikverkets objekt `OperativeEvent`, `TravelTimeRoute`,
+  `TrafficFlow`, `FrostDepthMeasurepoint` och `Parking`.
+- Rättat i den här filen: Krisinformation.se drivs av MCF, Kraftsystemets
+  rad nämner inte längre KRAFT-panelen, stadsdossiern har femton nyckeltal
+  under STATISTIK, gränssnittet har ca 5 100 texter, Trafikverkets nyckel
+  räknar upp allt den används till, licenssammanfattningen säger vilken
+  licens varje källa har, och databiblioteket står bland tilläggen.
+  Källtabellen, och därmed ⓘ i Datalager, har fått Jordbävningar (+SE,
+  EMSC).
+- README har sex nya bilder: köerna på Essingeleden i fredagsrusningen,
+  befolkning per km² över Stockholm, skyddad natur i Stockholms skärgård,
+  världsarvet Visby, himlen över Kiruna och SMHI:s varningar med
+  regnradarn. Källkortet `kallor.webp` är omritat med de nya siffrorna.
+
+### 2026-11-20 (etiketter och enheter i kontextkorten)
+- Kontextkortets fakta tar sina etiketter från fältnamnen i lagrens poster.
+  76 fält i de svenska lagren saknade etikett och översättning, så ett
+  svenskt kort kunde visa "People per km2: 866" eller "Air temp c: 2.5", och
+  flera värden tappade sin enhet.
+- Varje sådant fält har nu en etikett på alla appens språk och, för tal,
+  sin egen enhet (°C, m/s, mm/h, µSv/h, kr/kWh, kA, ha, km/h …), satt fält
+  för fält så att inget av originalets fält formateras om. Årtal visas utan
+  mellanrum för tusental, giltighets- och mättider som datum och klockslag i
+  svensk tid, och polisreceptionernas koder i ord. Polisstationernas råa
+  tjänstekoder och gammastationernas separata enhet visas inte, eftersom
+  andra fakta redan säger samma sak.
+
+### 2026-11-19 (befolkning per km²)
+- Nytt lager **Befolkning per km² (Sverige)** (delningstoken `15`) under
+  Infrastructure. SCB:s befolkning per kvadratkilometer med referensdatum
+  31 december 2025 (`stat:befolkning_1km_2025`, det nyaste året på SCB:s
+  öppna WFS): 103 464 befolkade 1 km-rutor med 10 578 118 invånare. Bara
+  totalen per ruta hämtas, aldrig ålder eller kön. Rutor som bara har 0 i
+  SCB:s data (11 654 st) visas inte.
+- På nära håll visas 1 km-rutorna, längre ut 5, 10 och 25 km-rutor
+  summerade från dem (vyns längsta sida upp till 60, 250 och 600 km, därefter
+  25 km), högst 3 000 rutor närmast mitten. Rutorna är platta, färgade fält på
+  marken med sina riktiga hörn omräknade från SWEREF 99 TM, utan konturer
+  eller etiketter, så en hel vy kostar några få ritanrop. Servern läser
+  filen en gång och svarar på någon millisekund.
+- Integritet: en 1 km-ruta lämnar servern bara som sin färgklass (färre än 5
+  personer blir "1–4", aldrig ett tal), har inget kort, tas aldrig med i
+  analytikerns poster och aldrig i delningslänkar (bara att lagret är på).
+  En summerad ruta visar antalet avrundat till tiotal (hundratal från
+  10 000) och "färre än 5 personer" när det är färre. SCB skyddar själv små
+  tal med en statistisk metod.
+- Licens CC0. 1 km-rutorna krediteras "Källa: SCB"; 5-, 10- och 25 km-rutorna
+  är bearbetning av SCB-data och krediteras så, eftersom SCB ber att inte
+  anges som källa för bearbetade uppgifter. Ögonblicksbilden (0,51 MB) byggs
+  om för hand med `scripts/build-population-grid.mjs`. Den sparar 1 km-rutorna
+  bara som färgklass, aldrig som exakta antal; de större rutorna summeras
+  först och sparas som antal.
+- Vad kartan tillsammans visar: var människor bor, i grova klasser; samma
+  uppgifter som SCB redan publicerar öppet per ruta, här grövre för små tal.
+
+### 2026-11-19 (leder och friluftsanordningar)
+- Nytt lager **Leder och friluftsanordningar (Sverige)** (delningstoken `14`)
+  under Infrastructure, efter Fornlämningar. Naturvårdsverkets 3 688 leder
+  som linjer, färgade efter typ (vandringsled, natur- och kulturstig,
+  skidled, skoterled, kanotled, cykel- och ridled, övriga), och 21 672
+  friluftsanordningar som prickar i sex klasser och övrigt av de cirka 60
+  typerna
+  (vindskydd och stugor; eldstäder, rastplatser och tältplatser;
+  dass/vatten/sophantering; utsikt och information; parkering/bryggor/bad;
+  broar/spångar/stättor). Klick ger namn, typ, Naturvårdsverkets beskrivning
+  kortad till 180 tecken, det skyddade området, och för leder markering och
+  längd; den valda leden ritas bredare. Ett kort i taget, och kortet byter
+  språk med appen. Lagret visas under 30 km höjd.
+- Täckning: bara skyddade områden vars förvaltare publicerat leder och
+  anordningar, plus de statliga lederna i fjällen. Mycket av Sveriges
+  friluftsnät saknas, och förklaringen säger det, liksom att
+  reservatsföreskrifter och tillträdesförbud gäller.
+- Licens och sammanställning: CC0, Naturvårdsverket ser gärna "Källa:
+  Naturvårdsverket", som står på varje kort och i källförteckningen.
+  Meningar med telefonnummer, e-postadresser eller namngivna kontaktpersoner
+  tas bort ur beskrivningarna i bygget, så inga kontaktuppgifter följer med. Anordningstypen "Bostad" (18 bostadshus i reservaten) tas
+  bort redan i bygget: det är någons hem, och kartan ska inte peka ut det.
+  Geometrikvalitet, objekt-id och registernummer sparas inte. Ihop med de
+  andra lagren visar kartan bara det besökare redan ser på skyltar och i
+  reservatens egna kartor.
+- Ögonblicksbild, inte direktfrågor: Naturvårdsverkets WFS gav olika svar på
+  samma ruta från gång till gång (provat 2026-11-19), så appen frågar aldrig
+  Naturvårdsverket. `scripts/build-outdoor-trails.mjs` hämtar de nattliga
+  filerna Anordningar.geojson (13 MB) och Leder.geojson (49 MB; de statliga
+  lederna finns redan där, så Statliga_Leder.geojson behövs inte), slår ihop
+  ledernas 12 060 delsträckor till en led per id, räknar om till grader,
+  förenklar på 6 m och deltakodar. Resultatet är cirka 5 MB i repot
+  (anordningar 2,8 MB, leder 2,2 MB; 902 565 punkter blev 185 366). Servern
+  läser filerna en gång och svarar per vy: de 1 500 anordningar som ligger
+  närmast kartans mitt och högst 400 leder och 30 000 punkter, klippta och
+  förenklade för vyn. Byggs om för hand då och då.
 
 ### 2026-11-19 (världsarv och skyddad bebyggelse i Fornlämningar)
 - Lagret **Fornlämningar (Sverige)** har fått två nya delar, var och en med
@@ -451,80 +568,26 @@ git merge origin/main
 
 ### 2026-11-19 (skyddad natur: Natura 2000 och tillträdesförbud)
 - **Skyddad natur (Sverige)** har fått två nya slag av områden, och var och ett slås av och på med en egen knapp på raden. Det första är alla 4 136 Natura 2000-områden: 107 enbart enligt fågeldirektivet (SPA), 3 578 enbart enligt art- och habitatdirektivet (SCI) och 451 enligt båda. De ritas blå och ljusa under reservaten. Det andra är de 1 543 gällande tillträdesförbuden i skyddade områden, de flesta för fågel- och sälskydd: 1 387 för fågelskydd, 57 för sälskydd, 76 för båda och 23 övriga. De 17 förbud med skälet "övrigt" som är mindre än 5 hektar lämnas ute, de flesta små boplatser. De ritas orange överst. Ett klick på ett tillträdesförbud visar skälet och perioden (till exempel "Tillträdesförbud 1 april–31 juli"), länet och arealen, och kortet öppnar skyddsområdet i Skyddad natur. Ett Natura 2000-kort visar kommun, areal, året området kom med i Natura 2000, direktiv och områdeskod.
-- Källan är Naturvårdsverkets Naturvårdsregistret, nedladdat som öppna data (CC0, "Källa: Naturvårdsverket"): `SPA_Rikstackande.zip`, `SCI_Rikstackande.zip` och `TILLTRADESFORBUD.zip`. Ett område som finns i båda Natura 2000-filerna slås ihop på områdeskoden. Bara tillträdesförbud med status "Gällande" tas med. Det här ändrar beslutet från 2026-11-12, då tillträdesförbuden lämnades utanför bland de små skyddsformerna: Kaj valde 2026-11-19 punkt 10 i källsonderingen, fågelskyddsområden med tillträdesförbud under häckningen. Förbuden är offentliga enligt lag och skyltade på plats för att kunna följas, och arterna lämnas ute (se nedan).
+- Källan är Naturvårdsregistret hos Naturvårdsverket, nedladdat som öppna data (CC0, "Källa: Naturvårdsverket"): `SPA_Rikstackande.zip`, `SCI_Rikstackande.zip` och `TILLTRADESFORBUD.zip`. Ett område som finns i båda Natura 2000-filerna slås ihop på områdeskoden. Bara tillträdesförbud med status "Gällande" tas med. Det här ändrar beslutet från 2026-11-12, då tillträdesförbuden lämnades utanför bland de små skyddsformerna: Kaj valde 2026-11-19 punkt 10 i källsonderingen, fågelskyddsområden med tillträdesförbud under häckningen. Förbuden är offentliga enligt lag och skyltade på plats för att kunna följas, och arterna lämnas ute (se nedan).
 - Integritet: arter, naturtyper, områdesbeskrivningar och förbudstexter (`ARTER`, `NATURTYPER`, `KARAKTAR`, `KVALITET`, `BESKRIVN`) tas aldrig med. Tillsammans med en liten förbudsyta skulle de peka ut sällsynta häckningsplatser. Kvar finns bara namn, slag, skäl, period, areal, kommun eller län och år.
 - Prestanda: Natura 2000 ligger i en egen fil, `natura2000.json`, på 2,5 MB. Den förenklas hårdare (15–120 m) och får högst 8 000 punkter per område, eftersom Torne och Kalix älvsystem annars ensamt skulle ha haft cirka 68 000. Tillträdesförbuden ligger i `access-bans.json` på 0,6 MB. Servern läser filerna först när en nära vy ber om dem, och aldrig för ett slag som är avslaget. Natura 2000 och tillträdesförbuden visas bara när vyn är högst 2 grader. Den tätaste sådana vyn (Stockholm eller Skåne) har då ungefär lika många punkter (cirka 45 000) som en vy på 3 grader med bara reservaten hade förut. Taket på 1 500 områden per vy gäller som förut.
 - `scripts/build-protected-nature.mjs` bygger nu tre filer. Den läser zipfiler med flera shapefiler (SCI-filen har älvsystemen i Norrbotten och Västerbotten för sig), läser teckentabellen ISO 8859-1 och gör om ett litet område med 1 m tolerans när förenklingen annars hade tagit bort det.
 
-### 2026-11-19 (leder och friluftsanordningar)
-- Nytt lager **Leder och friluftsanordningar (Sverige)** (delningstoken `14`)
-  under Infrastructure, efter Fornlämningar. Naturvårdsverkets 3 688 leder
-  som linjer, färgade efter typ (vandringsled, natur- och kulturstig,
-  skidled, skoterled, kanotled, cykel- och ridled), och 21 672
-  friluftsanordningar som prickar i sex klasser av de cirka 60 typerna
-  (vindskydd och stugor; eldstäder, rastplatser och tältplatser;
-  dass/vatten/sophantering; utsikt och information; parkering/bryggor/bad;
-  broar/spångar/stättor). Klick ger namn, typ, Naturvårdsverkets beskrivning
-  kortad till 180 tecken, det skyddade området, och för leder markering och
-  längd; den valda leden ritas bredare. Ett kort i taget, och kortet byter
-  språk med appen. Lagret visas under 30 km höjd.
-- Täckning: bara skyddade områden vars förvaltare publicerat leder och
-  anordningar, plus de statliga lederna i fjällen. Mycket av Sveriges
-  friluftsnät saknas, och förklaringen säger det, liksom att
-  reservatsföreskrifter och tillträdesförbud gäller.
-- Licens och sammanställning: CC0, Naturvårdsverket ser gärna "Källa:
-  Naturvårdsverket", som står på varje kort och i källförteckningen.
-  Meningar med telefonnummer, e-postadresser eller namngivna kontaktpersoner
-  tas bort ur beskrivningarna i bygget, så inga kontaktuppgifter följer med. Anordningstypen "Bostad" (18 bostadshus i reservaten) tas
-  bort redan i bygget: det är någons hem, och kartan ska inte peka ut det.
-  Geometrikvalitet, objekt-id och registernummer sparas inte. Ihop med de
-  andra lagren visar kartan bara det besökare redan ser på skyltar och i
-  reservatens egna kartor.
-- Ögonblicksbild, inte direktfrågor: Naturvårdsverkets WFS gav olika svar på
-  samma ruta från gång till gång (provat 2026-11-19), så appen frågar aldrig
-  Naturvårdsverket. `scripts/build-outdoor-trails.mjs` hämtar de nattliga
-  filerna Anordningar.geojson (13 MB) och Leder.geojson (49 MB; de statliga
-  lederna finns redan där, så Statliga_Leder.geojson behövs inte), slår ihop
-  ledernas 12 060 delsträckor till en led per id, räknar om till grader,
-  förenklar på 6 m och deltakodar. Resultatet är cirka 5 MB i repot
-  (anordningar 2,8 MB, leder 2,2 MB; 902 565 punkter blev 185 366). Servern
-  läser filerna en gång och svarar per vy: de 1 500 anordningar som ligger
-  närmast kartans mitt och högst 400 leder och 30 000 punkter, klippta och
-  förenklade för vyn. Byggs om för hand då och då.
-
-### 2026-11-19 (befolkning per km²)
-- Nytt lager **Befolkning per km² (Sverige)** (delningstoken `15`) under
-  Infrastructure. SCB:s befolkning per kvadratkilometer med referensdatum
-  31 december 2025 (`stat:befolkning_1km_2025`, det nyaste året på SCB:s
-  öppna WFS): 103 464 befolkade 1 km-rutor med 10 578 118 invånare. Bara
-  totalen per ruta hämtas, aldrig ålder eller kön. Rutor som bara har 0 i
-  SCB:s data (11 654 st) visas inte.
-- På nära håll visas 1 km-rutorna, längre ut 5, 10 och 25 km-rutor
-  summerade från dem (vyns längsta sida upp till 60, 250 och 600 km, därefter
-  25 km), högst 3 000 rutor närmast mitten. Rutorna är platta, färgade fält på
-  marken med sina riktiga hörn omräknade från SWEREF 99 TM, utan konturer
-  eller etiketter, så en hel vy kostar några få markbatcher. Servern läser
-  filen en gång och svarar på någon millisekund.
-- Integritet: en 1 km-ruta lämnar servern bara som sin färgklass (färre än 5
-  personer blir "1–4", aldrig ett tal), har inget kort, tas aldrig med i
-  analytikerns poster och aldrig i delningslänkar (bara att lagret är på).
-  En summerad ruta visar antalet avrundat till tiotal (hundratal från
-  10 000) och "färre än 5 personer" när det är färre. SCB skyddar själv små
-  tal med en statistisk metod.
-- Licens CC0. 1 km-rutorna krediteras "Källa: SCB"; 5-, 10- och 25 km-rutorna
-  är bearbetning av SCB-data och krediteras så, eftersom SCB ber att inte
-  anges som källa för bearbetade uppgifter. Ögonblicksbilden (0,51 MB) byggs
-  om för hand med `scripts/build-population-grid.mjs`. Den sparar 1 km-rutorna
-  bara som färgklass, aldrig som exakta antal; de större rutorna summeras
-  först och sparas som antal.
-- Vad kartan tillsammans visar: var människor bor, i grova klasser; samma
-  uppgifter som SCB redan publicerar öppet per ruta, här grövre för små tal.
+### 2026-11-19 (avloppsvattnet hopfällt i stadsdossiern)
+- Fliken NU blev lång med tabellen över virus i avloppsvattnet. Blocket är
+  nu hopfällt från början, och dess enda rad säger vad som stiger eller
+  påvisas nu vid något av ortens reningsverk ("Stiger eller påvisat nu:
+  Influensa A"), eller "Inget stiger". Ett klick visar tabellen,
+  förklaringen, noten och krediteringen som förut.
+- Rättat 2026-11-20: i det utfällda blocket står varje rad under tabellen
+  för sig (förklaringen gick förut rakt in i provdatumen), och pilen är
+  större.
 
 ### 2026-11-19 (kvarvarande luckor)
-- Kontextpanelens "N i vyn" var 0 för de svenska lagren, och analytikern såg
+- "N i vyn" i kontextpanelen var 0 för de svenska lagren, och analytikern såg
   inte deras punkter. Nu lämnar 25 lager det de faktiskt visar (med samma
   filter som kartan): namn, plats och några fält som kortet redan visar.
-  Ytor och linjer står i sin mitt. Riktningar är upstreams och lagrar bara
+  Ytor och linjer står i sin mitt. Vägbeskrivning är originalets lager och sparar bara
   användarens egen rutt, så det lagret står utanför.
 - Ett öppet kort i de 26 svenska lagren ritas om när språket byts, och
   kontextkortet läses om direkt i det nya språket.
@@ -553,7 +616,7 @@ git merge origin/main
   ett 270-tal) med platser för bil och lastbil,
   utrustning (toalett och om den är tillgänglighetsanpassad, picknickbord,
   lekplats, latrintömning, sopkärl), om de är avgiftsfria, öppna eller delvis
-  stängda och Trafikverkets egen anteckning. Chipet LASTBILSPLATSER visar
+  stängda och Trafikverkets egen anteckning. Knappen LASTBILSPLATSER visar
   bara de med lastbilsplatser. Det finns ingen beläggning i datan: kortet
   säger att det är antalet platser, inte lediga platser. Cache sex timmar.
 - Båda från Trafikverkets öppna API (CC0) med den befintliga nyckeln. Inga
@@ -563,7 +626,7 @@ git merge origin/main
   taget, räkningen i vyn och reservkopian när Trafikverket är nere).
 
 ### 2026-11-19 (himlen över Kiruna)
-- Stadskortets norrskensrad (fliken NU) visar den senaste bilden från
+- Stadsdossierns norrskensrad (fliken NU) visar den senaste bilden från
   Institutet för rymdfysiks allhimmelskamera i Kiruna, för orter inom 300 km
   från kameran och bara när solen står mer än 6° under horisonten där.
 - Kameran tar en bild i minuten. Servern hämtar den högst en gång i minuten
@@ -574,7 +637,7 @@ git merge origin/main
   Kiruna ligger, så att ingen tror att bilden visar den egna orten.
 - CC BY 4.0. Krediteringen står med IRF:s egna ord och tre länkar under
   bilden. Svensk rubrik: "firmamentkamera", IRF:s eget ord.
-- Granskarnas UI-fynd för stadskortet är rättade samtidigt: långa rader i
+- Granskarnas UI-fynd för stadsdossiern är rättade samtidigt: långa rader i
   SAMHÄLLE trängde ihop etiketten, länken i avloppsraden gick inte att läsa,
   datumet gav dubbel punkt på svenska, och siffrorna från SCB säger nu
   "Hämtar statistik…" medan de laddas.
@@ -599,7 +662,7 @@ git merge origin/main
   är ofta tomt där under ett dygn.
 
 ### 2026-11-19 (virus i avloppsvattnet)
-- Stadskortets flik NU visar virus i avloppsvattnet för de orter där SLU
+- Stadsdossierns flik NU visar virus i avloppsvattnet för de orter där SLU
   och SEEC tar veckoprov, 16 orter i november 2026. Stockholmsområdets fyra
   reningsverk visas som kolumner; Käppala tar också emot avloppsvatten från
   kommunerna norr och öster om staden. Covid-19, influensa A, influensa B
@@ -613,17 +676,17 @@ git merge origin/main
   är inte ackrediterad).
 - Bara prov från vecka 36 2026 läses, eftersom laboratoriet bytte metod då.
   Ett verk vars senaste prov ligger tre veckor efter de andra visas inte.
-- Datafilen byter namn varje vecka, så servern läser först dashboardsidan
+- Datafilen byter namn varje vecka, så servern läser först översiktssidan
   efter länken, högst var sjätte timme. CC BY 4.0, krediteras "SLU · SEEC
   (Székely et al. 2026) · SciLifeLab Pathogens Portal · CC BY 4.0 ·
-  trenderna räknade av appen" med länk till dashboarden, och med DOI i
+  trenderna räknade av appen" med länk till översiktssidan, och med DOI i
   DATA_SOURCES.md. CC BY 4.0 kräver att ändringar anges, därav "räknade av
   appen".
 - Licensen och påståendena kontrollerades av fristående agenter 2026-11-19;
   deras fynd (kreditering, Stockholmsområdets verk, ordval och tolkningen
   av CSV-filen) är rättade.
 
-### 2026-11-19 (nya siffror i stadskortet)
+### 2026-11-19 (nya siffror i stadsdossiern)
 - Fliken BEFOLKNING visar födda, döda och flyttnetto den senaste månaden
   (SCB, TAB6473).
 - Fliken SAMHÄLLE visar småhusens medelpris och hur många som såldes
@@ -636,7 +699,7 @@ git merge origin/main
   Trafikanalys statistik" och Trafikanalys anges inte som källa, eftersom de
   inte vill stå som källa för bearbetade siffror.
 - Siffrorna från SCB hämtas för sig när fliken BEFOLKNING eller SAMHÄLLE
-  öppnas, så stadskortet väntar aldrig på dem. Ortens befolkning går före i
+  öppnas, så stadsdossiern väntar aldrig på dem. Ortens befolkning går före i
   SCB-kön; de övriga siffrorna står i en kort kö som ger upp direkt när den
   är full, och en tabell som SCB inte längre listar söks igen först efter en
   halvtimme. Summeringar hoppar över kategorier som "totalt" och "riket".
@@ -655,7 +718,7 @@ git merge origin/main
 
 ### 2026-11-19 (trafiken runt orter utan kömätning)
 - Trafikverket mäter köer bara runt Stockholm och Göteborg (och två
-  sträckor vid Malmö). I andra orter visar stadskortets flik Nu i stället
+  sträckor vid Malmö). I andra orter visar stadsdossierns flik NU i stället
   "Trafiken runt staden": Trafikverkets aktuella händelser inom 15 km,
   allvarligast först (avstängd väg, olycka, hinder, viktig
   trafikinformation, restriktion, vägarbete, trafikmeddelande), med väg,
@@ -718,7 +781,7 @@ git merge origin/main
   (193 i Stockholms län, 5 i Västra Götaland, 2 i Skåne) och 3 214
   körfält i Stockholms och Västra Götalands län, som blir ca 1 200
   mätpunkter. 98 % av körfälten hade redan normalvärden.
-- Stadsdossierns "Köer runt staden" är tillbaka i fliken Nu, nu från
+- Stadsdossierns "Köer runt staden" är tillbaka i fliken NU, nu från
   Trafikverket: sträckor som inte flyter fritt inom 15 km, värst först,
   med fördröjning, hastighet och längd, och hur många sträckor och
   mätpunkter som finns nära orten. Avsnittet visas bara där Trafikverket
@@ -748,8 +811,8 @@ git merge origin/main
   "elevenlabs.io", som står bland berättelsens källor).
 - En replik som berättelsens klocka hinner ikapp först efter att den är
   uppläst startas inte om (gäller båda berättelserna).
-- Berättelsen säger inget om produktion per kraftslag, som inte visas utan
-  Svenska kraftnäts godkännande. Inga nya dataanrop: den läser lagren som
+- Berättelsen säger inget om produktion per kraftslag, som inte visas (den
+  ingår inte i ENTSO-E:s fria data). Inga nya dataanrop: den läser lagren som
   redan finns.
 
 ### 2026-11-17 (berättelsen "Natten över Sverige")
@@ -783,8 +846,8 @@ git merge origin/main
   trafikpåverkan väntas upphöra eller när nästa prognos kommer), eller när
   störningen började om prognos saknas. Kortet visar de två nyaste
   störningarna och räknar resten. Långa texter kortas vid ett ord med
-  "…", eftersom ett kort som är högre än skärmen inte ritas alls. Context-
-  panelen namnger punkten ("Rail disruption · Helsingborg C"). Inget läggs
+  "…", eftersom ett kort som är högre än skärmen inte ritas alls.
+  Kontextpanelen namnger punkten ("Rail disruption · Helsingborg C"). Inget läggs
   till eller gissas.
 - Källan är objektet `OperativeEvent` (som ersatte `TrainMessage` 2025),
   bara pågående händelser som har börjat och inte avslutats. Störningen
@@ -839,13 +902,20 @@ git merge origin/main
 - Tåglagret räknar nu 31 flöden: originalets 30 och Trafikverkets. Den
   svenska versionen hämtar 27 av dem; 24 fungerar utan nyckel.
 
+### 2026-11-17 (originalets pluralformer och sammanhang)
+- Originalets ändring #1700 är sammanslagen: texter med ett antal har fått
+  pluralformer, och texter som läses olika i olika sammanhang är delade, på
+  alla språk. Där originalet ändrat en översättning som forken behållit
+  gäller originalets lydelse. De två svenska texterna om ålder i GhostMaps
+  behåller forkens kortare lydelse, nu i den pluralform koden ber om.
+
 ### 2026-11-17 (svenska lagren på originalets ritport)
 - De svenska lagren ritar nu genom originalets ritport och tar emot klick
   via originalets gemensamma dispatcher, som originalets egna lager gör.
-  Detsamma gäller stadspanelen och flygplatspanelerna (tavlan, köerna
+  Detsamma gäller stadsdossiern och flygplatspanelerna (tavlan, köerna
   och rutterna). Data, färger, kort, förklaringar och statistik är som
   förut. Markhöjderna ligger kvar, så punkterna klistras fortfarande bara
-  mot terrängen och inte mot 3D-tiles.
+  mot terrängen och inte mot 3D-rutorna.
 - Uppmätt i appen: lika snabbt som förut. Originalets Cesium-del slår nu
   också ihop streckade linjer på marken som ser likadana ut, så att
   vägincidenternas linjer blir ett tiotal ritobjekt i stället för ett per
@@ -937,7 +1007,7 @@ git merge origin/main
 ### 2026-11-13 (Krisinformation och SMHI:s varningar hämtas en gång)
 - Krisinformation.se och SMHI:s varningsfil läses nu av en gemensam läsare
   på servern (`server/providers/swedishAlertFeeds.js`) i stället för av tre
-  delar var för sig: VMA-bannern och stadspanelen, vädervarningslagret och
+  delar var för sig: VMA-bannern och stadsdossiern, vädervarningslagret och
   cockpit-genomgången. Krisinformation läses högst varannan minut, SMHI:s
   varningar högst var femte; när alla tre delarna används blir det ungefär
   en tredjedel färre anrop, och lagret och cockpit får VMA:erna färskare än
@@ -1103,8 +1173,7 @@ git merge origin/main
   sekunder och inget alls en minut efter ett 429-svar.
   `REGIONAL_NEWS_GOOGLE=on` tar tillbaka Google News för eget bruk.
 - S2 GhostMaps (originalets lager) visas inte längre: licensen är bara
-  icke-kommersiell och lagret är en militär lägesbild, som de militära lager
-  forken redan tagit bort.
+  icke-kommersiell.
 - Sjöväder läser som standard SMHI:s havsobservationer (CC BY 4.0).
   Sjöfartsverkets ViVa läses bara med `SEA_WEATHER_SOURCE=viva` tills
   Sjöfartsverket har svarat.
@@ -1199,7 +1268,7 @@ git merge origin/main
   närmast mitten. Klick på ett område visar kommun, areal och året beslutet
   vann laga kraft; klick på kortet öppnar området i Naturvårdsverkets
   kartjänst Skyddad natur.
-- Källan är Naturvårdsverkets Naturvårdsregistret, nedladdat som öppna data
+- Källan är Naturvårdsregistret hos Naturvårdsverket, nedladdat som öppna data
   (CC0 enligt "Naturvårdsregistret – Beskrivning av öppna data", utgåva 1.2;
   Naturvårdsverket ber om "Källa: Naturvårdsverket", som kortet och
   källförteckningen anger). Bara beslut med status "Gällande" tas med:
@@ -1311,7 +1380,7 @@ git merge origin/main
   kontrollrumstjänst används bara med `POWER_GRID_SOURCE=svk`.
 - Lagret visar bara flödena mellan elområdena och grannländerna, som
   ENTSO-E släpper fritt (CC BY 4.0). Produktion och förbrukning hämtas inte
-  alls; de kräver Svenska kraftnäts godkännande och slås på med
+  alls; de ingår inte i ENTSO-E:s fria data och läses bara med
   `ENTSOE_PRODUCTION=on`. Det sparar också åtta av de 36 anropen per
   uppdatering. Panelen KRAFT med dygnskurvan visas bara när produktionen
   får visas.
@@ -1414,7 +1483,7 @@ git merge origin/main
 - TomToms villkor är lästa och sammanfattade under "Källor med oklara eller
   särskilda villkor", med det appen inte uppfyller.
 
-### 2026-11-11 (kraftsystemet: rättningar efter andra kodgranskningen)
+### 2026-11-11 (kraftsystemet: rättelser efter andra kodgranskningen)
 - Servern slutar fråga Svenska kraftnäts kontrollrum när ingen har frågat på
   en halvtimme. Förut fortsatte den spara dygnet var 15:e minut tills
   dev-servern stängdes, även med lagret avstängt. Veckodiagrammet får då
@@ -1432,14 +1501,14 @@ git merge origin/main
   enskilt kraftslag, överlappande serier och att källan ska anges som
   ENTSO-E i reservläget.
 
-### 2026-11-11 (stadsdossierns panel: rättningar efter kodgranskning)
+### 2026-11-11 (stadsdossierns panel: rättelser efter kodgranskning)
 - En transportkälla som inte svarade visas inte som tom: när TomTom inte
   svarar står det inte längre "Inga köer just nu", utan trafiken nämns bland
   det som saknar svar, och ett nytt försök görs efter en minut.
 - En vald sevärdhets bild länkar till sin sida på Wikimedia Commons, där
   upphovsperson och licens står.
 
-### 2026-11-11 (flygplatsköer och VMA-banner: rättningar efter kodgranskning)
+### 2026-11-11 (flygplatsköer och VMA-banner: rättelser efter kodgranskning)
 - Kötiderna i säkerhetskontrollen hämtas bara när flygplatsens terminaler
   ryms i bild. Förut räckte det att vyn låg inom 20 km från en flygplats,
   så varje vy över centrala Stockholm drog ett Swedavia-anrop var tredje
@@ -1467,7 +1536,7 @@ git merge origin/main
 - Villkoren för TomTom, Valmyndigheten och Wikimedia Commons står under
   "Källor med oklara eller särskilda villkor".
 
-### 2026-11-10 (stadsdossierns serverdelar: rättningar efter kodgranskning)
+### 2026-11-10 (stadsdossierns serverdelar: rättelser efter kodgranskning)
 - Försenade tåg försvinner inte längre tio minuter efter sin annonserade
   tid: frågan till Trafikverket tar med tåg som fortfarande väntas, och
   hoppar över dem som redan har gått.
@@ -1494,7 +1563,7 @@ git merge origin/main
   hela tiden bakom kortet.
 - Kortet ligger kvar tills man stänger det, trycker på knappen eller lämnar
   orten (förut 12 sekunder). Inget rör sig förrän knappen trycks; då glider
-  kameran in, STAD-panelen öppnas och kortet lämnar plats.
+  kameran in, stadsdossiern öppnas och kortet lämnar plats.
 - Kortets rörelser stängs av för den som har bett om minskad rörelse i
   systemet. Inställningen "Filmisk ankomst" styr om kortet visas.
 
@@ -1502,11 +1571,11 @@ git merge origin/main
 - Första besöket i en ort flyger inte längre in av sig självt. Namnskylten
   visas med knappen "Flyg in och läs mer"; först när den trycks glider
   kameran in till en långsam cirkel runt orten (i stället för det tidigare
-  hårda klippet) och STAD-panelen öppnas. Skylten ligger kvar i 12 sekunder.
+  hårda klippet) och stadsdossiern öppnas. Skylten ligger kvar i 12 sekunder.
   Inställningen "Filmisk ankomst" styr nu om skylten visas. Det här är en
   första version; utseendet är inte bestämt.
 - Nuläget (väder, luft, polis, trafik, norrsken, fartkameror och
-  krisinformation) hämtas bara när STAD-panelen är öppen på fliken NU.
+  krisinformation) hämtas bara när stadsdossiern är öppen på fliken NU.
   Förut hämtades alla sju flödena för varje ort kameran stannade över, även
   med panelen stängd, vilket också gav anrop mot TomTom, Swedavia och
   Trafikverket.
@@ -1514,7 +1583,7 @@ git merge origin/main
   Krisinformation") i stället för att bara saknas, och ett nytt försök görs
   efter en minut.
 
-### 2026-11-10 (norrsken: rättningar efter kodgranskning)
+### 2026-11-10 (norrsken: rättelser efter kodgranskning)
 - Lagerraden visar vilken tid prognosen gäller ("Prognos för 23:11", med
   datum när den inte är från i dag), och lagret märks som inaktuellt när
   prognostiden ligger mer än en timme bakåt. Förut kunde en gammal oval
@@ -1529,7 +1598,7 @@ git merge origin/main
   svarar under tiden med den senaste prognosen, märkt X-Data-Stale (eller
   502 om ingen finns). Loggraden och cachen skrivs en gång per hämtning.
 
-### 2026-11-10 (luftkvalitet: rättningar efter kodgranskning)
+### 2026-11-10 (luftkvalitet: rättelser efter kodgranskning)
 - EAQI räknas med de gränser EEA anger i dag (airindex.eea.europa.eu, läst
   2026-11-10), i µg/m³: PM2.5 5/15/50/90/140, PM10 15/45/120/195/270, NO2
   10/25/60/100/150 och O3 60/100/120/160/180. Koden hade de äldre gränserna,
@@ -1549,7 +1618,7 @@ git merge origin/main
   kartläggning hos SMHI.
 - Kortet skriver mätvärdena med appens talformat ("PM10 109,2 µg/m³").
 
-### 2026-11-10 (sjöväder: rättningar efter kodgranskning; SMHI-hämtning)
+### 2026-11-10 (sjöväder: rättelser efter kodgranskning; SMHI-hämtning)
 - Vattenstånd jämförs bara när nollpunkten är densamma. ViVa anger tre
   referenser: medelvattenyta (58 stationer vid kontrollen), sjökortsnivå
   (10) och RH 2000 (6). Kortet skrev förut "mot medelvattenstånd" för alla,
@@ -1573,7 +1642,7 @@ git merge origin/main
   laddar bara ner när det är nytt (dock minst en gång i timmen), enligt
   SMHI:s riktlinje att inte hämta samma data flera gånger.
 
-### 2026-11-10 (vattenföring: rättningar efter kodgranskning)
+### 2026-11-10 (vattenföring: rättelser efter kodgranskning)
 - Ett prov utan värde eller tid räknas inte längre som 0 m³/s. Förut gav
   ett saknat sista värde "0 m³/s, sjunker 12,5 m³/s". SMHI skriver null när
   en station saknar data.
@@ -1602,7 +1671,7 @@ git merge origin/main
   för kvartsvärden; realtidsfilerna med tim- och dygnsvärden är en
   avgiftsbelagd tjänst och används inte.
 
-### 2026-11-10 (strålning: rättningar efter kodgranskning)
+### 2026-11-10 (strålning: rättelser efter kodgranskning)
 - Kortet visar datum och klockslag när en station inte har mätt i dag, i
   stället för bara klockslag. En station i service som senast mätte för
   68 timmar sedan såg förut ut att ha mätt i dag.
@@ -1617,7 +1686,7 @@ git merge origin/main
 - En station helt utan mätvärde räknas som i service, i stället för att
   visas med 0,00 µSv/h.
 
-### 2026-11-10 (elpris: rättningar efter kodgranskning)
+### 2026-11-10 (elpris: rättelser efter kodgranskning)
 - Ett elområde vars dagsfil inte går att hämta behåller de priser det hade,
   medan de andra uppdateras. Förut fällde en enda misslyckad fil av åtta
   hela svaret. Ett svar där någon fil saknades frågas om efter 5 minuter i
@@ -1635,7 +1704,7 @@ git merge origin/main
   Ett avstängt lager bär inte kvar sitt senaste fel. Priset "nu", färgen
   och kortet följer lagrets egen klocka.
 
-### 2026-11-10 (kollektivtrafikstörningar: rättningar efter kodgranskning)
+### 2026-11-10 (kollektivtrafikstörningar: rättelser efter kodgranskning)
 - Störningar som hämtats medan en operatörs hållplatslista laddas ned
   sparas och placeras ut när listan finns, utan att Trafiklab tillfrågas
   igen. Förut frågades alla 16 operatörer varje minut tills listan fanns,
@@ -1688,8 +1757,8 @@ git merge origin/main
 ### 2026-11-10 (kraftsystemet: reserv från ENTSO-E)
 - Kraftsystemets adresser (`/api/power-grid`, `/day`, `/week`) kan läsas
   från ENTSO-E:s transparensplattform i stället för Svenska kraftnäts
-  kontrollrum. Det är avstängt från början: kontrollrummet är kvar tills
-  Svenska kraftnät svarat på frågan om villkor. Reserven slås på med
+  kontrollrum. Det är avstängt från början, och kontrollrummet är kvar som
+  standard. Reserven slås på med
   `POWER_GRID_SOURCE=entsoe` och en gratis nyckel i `ENTSOE_SECURITY_TOKEN`
   (stöds bara via `.env` än så länge, inte under KOPPLA PÅ).
 - Svaren har samma form som kontrollrummets, så lagret och KRAFT-panelen
@@ -1705,13 +1774,13 @@ git merge origin/main
 ### 2026-11-10 (avgränsningar och säkerhet)
 - Nytt avsnitt **Avgränsningar och säkerhet** överst i den här filen. Det
   samlar gränserna som tidigare låg utspridda i loggen (inga personer, inga
-  polisfordon, bara butiker, ingen insamling från webbsidor, nycklar),
-  nämner de två svenska källorna utan publicerad licens (Svenska kraftnät
-  och Strålsäkerhetsmyndigheten) med nästa steg.
+  polisfordon, bara butiker, ingen insamling från webbsidor, nycklar) och
+  nämner de två svenska källor som då saknade publicerad licens (Svenska
+  kraftnäts kontrollrum och Strålsäkerhetsmyndigheten).
 - Skälet är frågan om vad en sammanställning av öppna källor blir, som
   kom upp i en kommentar på LinkedIn.
 
-### 2026-11-10 (SR trafik: rättningar efter kodgranskning)
+### 2026-11-10 (SR trafik: rättelser efter kodgranskning)
 - Kortet läser alltid den senaste texten från SR. Förut bytte lagret ut
   sina rader bara när ett meddelandes id, prioritet eller skapandetid
   ändrades, så en omskriven rubrik, beskrivning eller plats visades
@@ -1724,7 +1793,7 @@ git merge origin/main
   om vid nästa uppdatering. Ett avstängt lager bär inte kvar sitt senaste
   fel. Tiden för senaste uppdatering följer lagrets egen klocka.
 
-### 2026-11-10 (väglag: rättningar efter kodgranskning)
+### 2026-11-10 (väglag: rättelser efter kodgranskning)
 - Kartan ändras på plats i stället för att alla linjer och prickar tas
   bort och ritas om så fort något ändras: nya rader läggs till, de som
   försvunnit tas bort, och en rad ritas om bara om dess typ, allvarlighet
@@ -1747,7 +1816,7 @@ git merge origin/main
   sitt senaste fel. Tiden för senaste uppdatering följer lagrets egen
   klocka. Kommentaren om lagrets delningskod är rättad (0j, inte 9).
 
-### 2026-11-10 (vägväder och Trafikverkets proxy: rättningar efter kodgranskning)
+### 2026-11-10 (vägväder och Trafikverkets proxy: rättelser efter kodgranskning)
 - Den gemensamma proxyn för Trafikverket (vägväder och väglag) lämnar
   Trafikverket i fred i 1 minut efter en misslyckad hämtning och svarar
   under tiden med den senaste ögonblicksbilden, märkt `X-Data-Stale`
@@ -1762,7 +1831,7 @@ git merge origin/main
   fel. Blekningen och tiden för senaste uppdatering följer lagrets egen
   klocka.
 
-### 2026-11-10 (SMHI-varningar och krisinformation: rättningar efter kodgranskning)
+### 2026-11-10 (SMHI-varningar och krisinformation: rättelser efter kodgranskning)
 - Bara en nyhet som Krisinformation märkt med Sverige ritas som "Gäller
   hela Sverige". En nyhet om utlandet, om ett område som ortsregistret
   inte känner, eller helt utan område ritas fortfarande mitt i landet,
@@ -1782,7 +1851,7 @@ git merge origin/main
   om vid nästa uppdatering. Ett avstängt lager bär inte kvar sitt senaste
   fel. Tiden för senaste uppdatering följer lagrets egen klocka.
 
-### 2026-11-10 (SMHI-väder: rättningar efter kodgranskning)
+### 2026-11-10 (SMHI-väder: rättelser efter kodgranskning)
 - Lagret ritar om när en stations vind, byar eller nederbörd ändras, inte
   bara temperaturen eller mättiden. Förut kunde vind som kom tillbaka efter
   en misslyckad hämtning saknas i upp till en timme (grå prickar i
@@ -1801,7 +1870,7 @@ git merge origin/main
 - Prognosen sammanfattas med en enda datumformaterare i stället för en ny
   per tidssteg (cirka 100 per prognos).
 
-### 2026-11-10 (polishändelser: rättningar efter kodgranskning; dev-servern)
+### 2026-11-10 (polishändelser: rättelser efter kodgranskning; dev-servern)
 - Kategorierna läser "rån" som ett eget ord: "Trafikolycka, smitning
   från" är trafik och "Olaga intrång" stöld och skadegörelse, inte våld
   och hot (8 av 500 notiser i dagens lista hade fel färg). "Mordbrand"
@@ -1823,7 +1892,7 @@ git merge origin/main
   höll låst i projektmappen fick bevakningen att krascha med EBUSY och
   stängde servern; provat med en låst fil efter rättningen.
 
-### 2026-11-10 (blixtnedslag: rättningar efter kodgranskning)
+### 2026-11-10 (blixtnedslag: rättelser efter kodgranskning)
 - Prickarna ändras på plats varje minut i stället för att alla tas bort
   och ritas om: nya nedslag läggs till, de som passerat en timme tas
   bort, och bara de som bytt åldersklass får ny färg. Mätt i
@@ -1847,7 +1916,7 @@ git merge origin/main
   "1 sensor" i stället för "1 sensorer", på alla 12 språk. Tiden för
   senaste uppdatering följer samma klocka som resten av lagret.
 
-### 2026-11-10 (fartkameror: rättningar efter kodgranskning)
+### 2026-11-10 (fartkameror: rättelser efter kodgranskning)
 - En kameraplats utan känd riktning ritas som en prick utan pil, och
   kortet säger ingenting om riktning. Det gäller både platser som saknar
   riktning och platser där Trafikverket anger 0 grader, vilket oftast står
@@ -1879,7 +1948,7 @@ git merge origin/main
   läsningen misslyckades. Ett avstängt lager bär inte kvar sitt senaste
   fel.
 
-### 2026-11-10 (brandstationer: rättningar efter kodgranskning)
+### 2026-11-10 (brandstationer: rättelser efter kodgranskning)
 - Ett klick på ett kort är aldrig ett klick på marken. Förut räknades
   bara kort som ledde till en sida som klickbara, och bara lagrets egna:
   ett klick på brandstationens kort avmarkerade stationen, och ett klick
@@ -1901,7 +1970,7 @@ git merge origin/main
   finns kvar. Förut kunde en station sex mil från Kiruna heta
   BRANDSTATION · KIRUNA.
 
-### 2026-11-10 (markhöjder: rättningar efter kodgranskning)
+### 2026-11-10 (markhöjder: rättelser efter kodgranskning)
 - Höjderna syns efter varje svar, inte först när hela omgången är klar.
   De punkter som fått höjd (64 platser per fråga) flyttas på plats med den
   gemensamma hjälpen `src/layers/liftEntities.js`; lagret ritas inte om.
@@ -1949,7 +2018,7 @@ git merge origin/main
   kvartar. Då står båda tiderna ("flöden 10:45 · produktion 10:30") i
   stället för en tid som daterar den ena fel.
 
-### 2026-11-10 (kraftsystemet: rättningar efter kodgranskning)
+### 2026-11-10 (kraftsystemet: rättelser efter kodgranskning)
 - Ett klick på ett kort (lagrets eget eller ett annat lagers) räknas inte
   som ett klick på marken; elområdets kort är alltid träffbart.
 - Efter midnatt visas gårdagen inte längre som "hittills i dag": dygnet är
@@ -1981,7 +2050,7 @@ git merge origin/main
 - Tester för servern, posterna, källan, kartlagret, korten, diagrammet och
   panelen.
 
-### 2026-11-10 (butikskedjor: rättningar efter kodgranskning)
+### 2026-11-10 (butikskedjor: rättelser efter kodgranskning)
 - Ett klick på ett kort (lagrets eget eller ett annat lagers) räknas inte
   som ett klick på marken; butikens kort är alltid träffbart.
 - City Gross ligger under Axfood (helägt av Axfood sedan 1 november 2024)
@@ -2003,11 +2072,11 @@ git merge origin/main
   skriva över ögonblicksbilden om en kedja tappat över 20 % av butikerna
   (utom med `--force`), sparar inte längre webbplats och grundår, och
   huvudkontor bara när det ligger i Sverige. Skriptet har inte körts;
-  rättningarna görs när raderna läses, så Lidls rad (svenskt
+  rättelserna görs när raderna läses, så Lidls rad (svenskt
   organisationsnummer, tyskt huvudkontor) rättas först vid nästa handkörda
   bygge.
 
-### 2026-11-10 (polisstationer: rättningar efter kodgranskning)
+### 2026-11-10 (polisstationer: rättelser efter kodgranskning)
 - Ett klick på ett annat lagers kort räknades som ett klick på marken och
   släckte den valda stationen, eller valde stationen bakom kortet. Ett
   klick som hamnar på något kort räknas nu inte som ett klick på marken;
@@ -2027,7 +2096,7 @@ git merge origin/main
   listan som inaktuell (eller 502 om ingen finns).
 - Tester för klick, kort, omritning och pausen.
 
-### 2026-11-09 (skyddsrum: rättningar efter kodgranskning)
+### 2026-11-09 (skyddsrum: rättelser efter kodgranskning)
 - Lagret stängde av sig självt när kameran hann flytta sig innan förra
   svaret kommit: den avbrutna hämtningen räknades som ett fel. En hämtning
   som en nyare har gått om är nu inget fel; bara en som avbryts av att
@@ -2053,7 +2122,7 @@ git merge origin/main
   kommer medan en höjdfråga pågår frågas direkt när den är klar, i stället
   för att vänta på nästa kameraflytt.
 
-### 2026-11-09 (sjukhus och akuter: rättningar efter kodgranskning)
+### 2026-11-09 (sjukhus och akuter: rättelser efter kodgranskning)
 - Ett klick på det valda sjukhusets eget kort släcker inte längre
   markeringen: kortet är träffbart i etikettlagret, och ett klick som
   hamnar på något kort (lagrets eget eller ett annat lagers) räknas inte som
@@ -2082,7 +2151,7 @@ git merge origin/main
   Wikidata saknar statuskontroll och nya försök, och avståndet räknas på
   fyra ställen med var sin kopia av samma formel.
 
-### 2026-11-09 (kommuner och län: rättningar efter kodgranskning)
+### 2026-11-09 (kommuner och län: rättelser efter kodgranskning)
 - Ett klick på ett annat lagers objekt (ett sjukhus, en kamera) markerar
   inte längre kommunen under det. Bara kartan själv och lagrets egna linjer
   räknas som mark (`scenePick.isSurfacePick`), och klickpunkten tas från ytan
@@ -2096,7 +2165,7 @@ git merge origin/main
   höjder.
 - Knapparna och kartbytet bygger inte längre om linjerna. Varje sorts linjer
   ligger i en egen datakälla som bara tänds och släcks, och vid byte mellan
-  globen och 3D-tiles ändras bara linjernas yta, och bara medan lagret är på.
+  globen och 3D-rutorna ändras bara linjernas yta, och bara medan lagret är på.
 - Fem linjer som förenklingen krympt till en punkt ritas inte (1 787 + 411
   linjer i stället för 1 792 + 411).
 - `setParams` gör ingenting medan lagret är av, och radens kartmitt nollas
@@ -2122,7 +2191,7 @@ git merge origin/main
   delas av kommunerna på båda sidor, så grannar möts exakt; linjerna är
   förenklade med 25 m tolerans (cirka 56 000 punkter, 600 kB). Gränser till
   havs (`maritime=yes`) används för ytorna men ritas inte.
-- Linjerna ligger på marken (terrängen, eller 3D-tiles när globen är dold,
+- Linjerna ligger på marken (terrängen, eller 3D-rutorna när globen är dold,
   som undervattenskablarna) och ritas i en batch per färg; markeringen av en
   vald kommun ligger i en egen datakälla så att ett klick aldrig bygger om
   gränslinjerna. Namnen visas via appens etikettlager: länen på hög höjd,
@@ -2274,7 +2343,7 @@ git merge origin/main
   åtgärder, nytt lager **Wildlife Sightings** (iNaturalist; heter Djur-
   och naturobservationer på svenska), trafiklinjer som alternativ till
   prickar, åldersfilter i S2 GhostMaps, kameror från Island och fler
-  kamerakällor, samt rättningar i röst, chatt och sökning.
+  kamerakällor, samt rättelser i röst, chatt och sökning.
 - Cockpit: originalet kräver inte längre att Kontakter är på, bara att
   ämnets eget lager är på. Vår knapp vid kartan och C-tangenten går nu
   direkt in, och fungerar för flygplan, fartyg och satelliter. Vår väg
@@ -2338,29 +2407,29 @@ git merge origin/main
   90 anrop i minuten per klient och alla lager vid första laddningen
   behövde ungefär så många. Senare besök behöver inga höjdanrop.
 
-### 2026-11-09 (alla svenska lager på marken utan 3D-tiles-mätning)
-- De tio återstående svenska lagren med punkter fästa mot 3D-tiles får
+### 2026-11-09 (alla svenska lager på marken utan mätning mot 3D-rutorna)
+- De tio återstående svenska lagren med punkter fästa mot 3D-rutorna får
   samma markhöjd via appens höjdtjänst: elpriser, gammastrålning,
   kraftnät (elområden och grannländernas ändpunkter), vattenföring,
   vägförhållanden (händelsepunkterna), sjöväder, SMHI-varningar (VMA och
   krismeddelanden), SMHI-väder, Sveriges Radio trafik och
   kollektivtrafikstörningar. Vägarnas linjer och varningsområdena är kvar
   som förut: de ritas som markklassning på grafikkortet och mäter inte
-  höjd per tile. Med alla 15 svenska lagren påslagna och fotorealistiska
-  tiles: värsta bildrutan 21 ms. Upstreams egna lager är orörda.
+  höjd per ruta. Med alla 15 svenska lagren påslagna och fotorealistiska
+  3D-rutor: värsta bildrutan 21 ms. Originalets egna lager är orörda.
 
 ### 2026-11-09 (väderstationer, polishändelser och blixtnedslag)
-- Samma rättelse för de tre sista lagren som fäste punkterna mot 3D-tiles.
+- Samma rättelse för de tre sista lagren som fäste punkterna mot 3D-rutorna.
   Väderstationer vid väg (813, även temperaturetiketterna) och
   polishändelser (500, på kommunens höjd även när de sprids runt den) får
   markhöjd via appens höjdtjänst. Blixtnedslag (upp till 20 000 vid åska,
   byts varje minut) frågar inte Re:Earth alls: de ritas på geoidmodellens
   höjd, ungefär havsnivån, vilket räcker eftersom DMI anger 0,5–2 km
   osäkerhet i positionen. Med alla sex berörda lagren påslagna och
-  fotorealistiska tiles: värsta bildrutan 20 ms under samma rörelser.
+  fotorealistiska 3D-rutor: värsta bildrutan 20 ms under samma rörelser.
 
-### 2026-11-09 (brandstationer och fartkameror laggade)
-- Samma frysning som Butikskedjor hade, mätt med fotorealistiska tiles över
+### 2026-11-09 (brandstationer och fartkameror: rycken borta)
+- Samma frysning som Butikskedjor hade, mätt med fotorealistiska 3D-rutor över
   Stockholm: brandstationerna (841) gav ryck på upp till 937 ms när kartan
   rörde sig, och fartkamerorna (2 825) hör till samma sort. Ett avstängt
   lager fortsatte dessutom kosta tills sidan laddades om, eftersom
@@ -2374,15 +2443,15 @@ git merge origin/main
   riktig höjd kommer, så att den inte ser förskjuten ut i lutad vy i
   fjällen. Bara höjden påverkas; latitud och longitud ändras aldrig.
 
-### 2026-11-09 (butikskedjor laggade)
+### 2026-11-09 (butikskedjor: frysningen borta)
 - Appen frös i 2–3 sekunder per bildruta med Butikskedjor påslaget och
-  fotorealistiska 3D-tiles, tydligast när man klickade på en butik. Orsaken
+  fotorealistiska 3D-rutor, tydligast när man klickade på en butik. Orsaken
   var de 3 201 punkterna fästa vid marken (CLAMP_TO_GROUND): för varje ny
-  3D-tile mätte Cesium höjden igen för varje butik inom tilen och läste
-  tillbaka tilens geometri från grafikkortet (75 000 anrop på tre
+  3D-ruta mätte Cesium höjden igen för varje butik inom rutan och läste
+  tillbaka rutans geometri från grafikkortet (75 000 anrop på tre
   bildrutor). Varje butik har nu sin markhöjd i ögonblicksbilden (Re:Earth
   Terrain, CC BY 4.0, samma källa som appen redan använder) och fästs bara
-  mot jordglobens terräng, som är billig; med fotorealistiska tiles ligger
+  mot jordglobens terräng, som är billig; med fotorealistiska 3D-rutor ligger
   punkten kvar på sin egen höjd.
 
 ### 2026-11-09 (mer butiksdata)
@@ -2573,13 +2642,13 @@ git merge origin/main
   främst genom automatiska testkörningar.
 - Ny knapp **3D/2D** i hörnraden: med 3D på laddas Google 3D-staden som
   förut; i sparläge (2D, bärnstensfärgad) startar jordgloben på Esris
-  nyckelfria satellitbild och inga 3D-tiles hämtas, alltså ingen session.
+  nyckelfria satellitbild och inga 3D-rutor hämtas, alltså ingen session.
   Valet sparas i webbläsaren; ett byte laddar om sidan (vyn behålls i
   adressen).
 - `?globe=lite` tvingar sparläge för en laddning (alla automatiska
   kontroller använder det framöver), `?globe=3d` tvingar 3D.
 - Alternativ till ion: egen `GOOGLE_MAPS_API_KEY` med Map Tiles API
-  påslaget, så hämtas 3D-tiles direkt från Google.
+  påslaget, så hämtas 3D-rutorna direkt från Google.
 
 ### 2026-11-07 (dagens rutter på globen)
 - Flygplatstavlan har en globknapp, "Dagens rutter på kartan": tavlan
@@ -2639,7 +2708,7 @@ git merge origin/main
 - Telefon (alla storlekar): VISNING och RADIO flyttas från fart- och
   höjdsiffrorna upp under rollskalan, flygets metarad hålls på en rad och
   visionsväljaren visar pilar utan orden FÖRRA/NÄSTA.
-- STAD-panelen och flygplatstavlan har större grundtext (minst ~9 px).
+- Stadsdossiern och flygplatstavlan har större grundtext (minst ~9 px).
 - Allt i den egna filen `src/ui/styles/sverige-legibility.css` (laddas
   före Cyber-temat, som ska vara sist), så originalets stilfiler är
   orörda och kommande synkar inte krockar.
@@ -3146,7 +3215,7 @@ git merge origin/main
 - Hämtade 51 nya commits från bilawalsidhu/gods-eye-view: bl.a. lagret
   "Prohibited & Restricted Airspace" (FAA, drönarluftrum), kamerakällan Houston
   (TranStar, avstängd utan TxDOT:s tillstånd) och skriven AI-chatt.
-- Originalets drönarlager tog delningslänk-token 8, så "Road Conditions (Sweden)"
+- Originalets drönarlager tog delningstoken 8, så "Road Conditions (Sweden)"
   flyttade till token 9. Testernas låsta antal och token-fixturer följer med.
 
 ### 2026-11-04
@@ -3169,5 +3238,5 @@ git merge origin/main
 - Trafikverkets tåg och Trafiklabs regionala kollektivtrafik i kollektivtrafiklagret,
   med nycklar på serversidan och täckning i tre cirklar så att Oslo och Helsingfors
   inte hämtar svensk data.
-- Nytt lager "Road Conditions (Sweden)" (delningslänk-token 9; var 8 tills originalets drönarlager tog den), översatt till appens
+- Nytt lager "Road Conditions (Sweden)" (delningstoken 9; var 8 tills originalets drönarlager tog den), översatt till appens
   11 språk.

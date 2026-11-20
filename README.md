@@ -18,9 +18,9 @@ https://github.com/user-attachments/assets/3c0c9eac-8139-45bc-be9b-ebba84d24391
 
 _28 sekunder med berättarröst: varje flyg över Sverige och Stockholm i rörelse just nu, och varje stad i siffror. For promotional purposes only. Alla källor står i slutskylten. Berättarrösten är gjord med elevenlabs.io; musiken är vår egen, syntetiserad för filmen._
 
-**På YouTube:** [Live-filmen](https://youtu.be/cEchnLCtbl8) (varje flyg och tåg i realtid, varje stad i siffror) · [Kulturarvsfilmen](https://youtu.be/b-geEkgsc-Q) (fornlämningar, flyg och tåg på en karta) · Shorts: [Flyget just nu](https://youtube.com/shorts/jM3USWHju-0) · [Kulturarv](https://youtube.com/shorts/j63oMbhnIP4)
+**På YouTube** (röst: elevenlabs.io, egen musik): [Live-filmen](https://youtu.be/cEchnLCtbl8) (varje flyg och tåg i realtid, varje stad i siffror) · [Kulturarvsfilmen](https://youtu.be/b-geEkgsc-Q) (fornlämningar, flyg och tåg på en karta) · Shorts: [Flyget just nu](https://youtube.com/shorts/jM3USWHju-0) · [Kulturarv](https://youtube.com/shorts/j63oMbhnIP4)
 
-Ett digitalt jordklot med hela världen live: flyg, satelliter, fartyg, jordbävningar och bränder från över 110 datakällor. Ovanpå det ligger Sveriges öppna data: **24 svenska API:er och dataset och 33 datatyper från 14 myndigheter och tjänster**, med hela gränssnittet på svenska.
+Ett digitalt jordklot med hela världen live: flyg, satelliter, fartyg, jordbävningar och bränder från över 110 datakällor. Ovanpå det ligger Sveriges öppna data: **29 svenska API:er och dataset och 43 datatyper från 16 myndigheter och tjänster**, med hela gränssnittet på svenska.
 
 Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av Bilawal Sidhu och Sameh Khamis ([Halfpixel](https://halfpixel.ai)), öppen källkod under [MIT-licensen](LICENSE). Den här forken är ett fristående hobbyprojekt utan koppling till eller stöd från originalets upphovsmän. Fel i de svenska delarna rapporteras här, inte i originalet.
 
@@ -30,7 +30,7 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 
 **▶ Prova själv:** [Kom igång på 15 minuter](docs/KOM-IGANG.md). Gratis, körs på din egen dator, och de svenska nycklarna klistras in direkt i appen. Du skaffar egna nycklar, och varje källas villkor gäller dig; den svenska versionen bygger på öppna data och använder inte källor som kräver tillstånd, som OpenSky och TomTom; flyg kommer från adsb.lol (ODbL).
 
-![110+ datakällor, 24 svenska API:er och dataset, 33 datatyper från Trafikverket, SMHI, Swedavia, Samtrafiken, Polisen, MCF, Krisinformation.se, SCB, Kolada, Valmyndigheten, Socialstyrelsen, Naturvårdsverket, Riksantikvarieämbetet och Elpriset just nu](docs/media/sverige/kallor.webp)
+![110+ datakällor, 29 svenska API:er och dataset, 43 datatyper från Trafikverket, SMHI, Swedavia, Samtrafiken, Polisen, MCF, Krisinformation.se, SCB, Kolada, Valmyndigheten, Socialstyrelsen, Naturvårdsverket, Riksantikvarieämbetet, Elpriset just nu, SLU och SEEC samt IRF](docs/media/sverige/kallor.webp)
 
 ### Det här är tillagt
 
@@ -51,12 +51,27 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 <td><img src="docs/media/sverige/fartkameror.webp" alt="Fartkameror som pilar över Stockholm och listan i dossiern"><br><b>Fartkameror</b>: Trafikverkets cirka 2 800 platser, vridna åt det håll kameran pekar</td>
 <td><img src="docs/media/sverige/kraftsystemet.webp" alt="Pilar för elflödet mellan elområdena SE1–SE4 och grannländerna"><br><b>Kraftsystemet</b>: flödena mellan elområdena och grannländerna från ENTSO-E</td>
 </tr>
+<tr>
+<td><img src="docs/media/sverige/koer-essingeleden.webp" alt="Essingeleden i rött och gult i fredagsrusningen, med en vägkamera öppen"><br><b>Köer och vägkameror</b>: Trafikverkets restider och flöden färgade efter läget just nu, här Essingeleden i fredagsrusningen</td>
+<td><img src="docs/media/sverige/befolkning-km2.webp" alt="Stockholm täckt av rutor färgade efter hur många som bor där"><br><b>Befolkning per km²</b>: SCB:s 1 km-rutor, här Stockholm; längre ut summeras rutorna</td>
+</tr>
+<tr>
+<td><img src="docs/media/sverige/skyddad-natur.webp" alt="Naturreservat i grönt och tillträdesförbud i orange i Stockholms skärgård"><br><b>Skyddad natur</b>: reservat, Natura 2000 och tillträdesförbud för fågel- och sälskydd, här Stockholms skärgård</td>
+<td><img src="docs/media/sverige/visby-varldsarv.webp" alt="Visby innerstad med de skyddade byggnaderna markerade"><br><b>Världsarv och skyddad bebyggelse</b>: Riksantikvarieämbetets register, här Visby innerstad</td>
+</tr>
+<tr>
+<td><img src="docs/media/sverige/kiruna-himlen.webp" alt="Kiruna i 3D med bilden från IRF:s firmamentkamera i stadsdossiern"><br><b>Himlen över Kiruna</b>: IRF:s firmamentkamera i stadsdossiern när det är mörkt</td>
+<td><img src="docs/media/sverige/vadervarningar.webp" alt="Sverige med SMHI:s varningsområden och regnradarn"><br><b>Väder just nu</b>: SMHI:s varningar och regnradarn över Sverige</td>
+</tr>
 </table>
 
 - **Flyg:** följ ett plan i luften från tavlan, dagens rutter på globen, METAR och TAF, och en svensk lägesbild i cockpit.
-- **Varje stad:** panelen STAD för svenska orter med folkmängd, skatt, inkomst, val, läget just nu, tåg från stationen, bussar och spårvagnar från största hållplatsen, Sevärt och ett besökspass.
-- **Väg och trafik:** tåg i realtid färgade efter försening, bussar och spårvagnar från 16 regionala trafikbolag, väglag, vägväder, kollektivtrafikstörningar, störningar i tågtrafiken och Trafikverkets vägfärjor med nästa avgångar.
-- **Väder, kris och infrastruktur:** SMHI:s väder, varningar, radar, luftkvalitet och vattenföring, VMA och krisnyheter från Krisinformation.se, Polisens händelser, norrskensprognos, elpris per elområde, sjöväder och strålning.
+- **Varje stad:** stadsdossiern (panelen STAD) för svenska orter med folkmängd, skatt, inkomst, val, läget just nu, tåg från stationen, bussar och spårvagnar från största hållplatsen, Sevärt och ett besökspass. Fliken STATISTIK har Koladas nyckeltal, bland dem räddningstjänstens responstider; BEFOLKNING och SAMHÄLLE har siffror från SCB; NU visar virus i avloppsvattnet (SLU och SEEC, CC BY 4.0) och himlen över Kiruna från IRF:s firmamentkamera (CC BY 4.0).
+- **Väg och trafik:** tåg i realtid färgade efter försening, bussar och spårvagnar från 16 regionala trafikbolag, väglag, vägväder, köer och restider, rastplatser, tjäldjup, kollektivtrafikstörningar, störningar i tågtrafiken och Trafikverkets vägfärjor med nästa avgångar.
+- **Väder, kris och infrastruktur:** SMHI:s väder, varningar, radar, luftkvalitet och vattenföring, blixtnedslag från DMI, små jordskalv i norra Europa från EMSC, VMA och krisnyheter från Krisinformation.se, Polisens händelser, norrskensprognos, elpris per elområde, kraftsystemets flöden, sjöväder och strålning.
+- **Natur och kulturarv:** skyddad natur med nationalparker, reservat, Natura 2000 och tillträdesförbud, fornlämningar med världsarv och skyddad bebyggelse, och leder och friluftsanordningar.
+- **Befolkning och samhälle:** befolkning per km², kommuner och län, valdistrikten i riksdagsvalet 2026, brand- och polisstationer, skyddsrum, sjukhus och akuter samt butikskedjor.
+- **Berättelser:** "Natten över Sverige" och "Elens resa", med levande siffror i bildtexterna och svensk berättarröst (elevenlabs.io).
 - **Sparläge:** knappen 3D/2D, eller `?globe=lite`, startar utan Google 3D Tiles så att hemmabruk inte drar av Googles kvot.
 
 ### Kom igång
@@ -66,7 +81,7 @@ npm ci
 npm run dev
 ```
 
-Öppna http://localhost:4173/?lang=sv (kräver Node 24 eller 26). De flesta svenska källor behöver ingen nyckel. Kameror, tåg, kollektivtrafik och flygtavlorna kräver kostnadsfria nycklar från Trafikverket, Trafiklab och Swedavia, som läggs i `.env` (se `.env.example`) eller i appen. Esris satellitbild kräver en gratis ArcGIS-nyckel; utan den visas OpenStreetMap. Alla svenska tillägg, nycklarna och en logg över varje ändring finns i **[SVERIGE.md](SVERIGE.md)**. Källor och villkor finns i **[DATA_SOURCES.md](DATA_SOURCES.md)**.
+Öppna http://localhost:4173/?lang=sv (kräver Node 24, från 24.14.0, eller Node 26). De flesta svenska källor behöver ingen nyckel. Kostnadsfria nycklar behövs för några: Trafikverkets för vägkameror, tåg och störningar i tågtrafiken, väglag, vägväder, vägfärjor, köer och restider, tjäldjup, rastplatser och fartkameror; Trafiklabs för bussar och spårvagnar, kollektivtrafikstörningar och stadsdossierns lokaltrafik; Swedavias för flygtavlorna; och ENTSO-E:s för kraftsystemet. Nycklarna läggs i `.env` (se `.env.example`) eller i appen. Esris satellitbild kräver en gratis ArcGIS-nyckel; utan den visas OpenStreetMap. Alla svenska tillägg, nycklarna och en logg över varje ändring finns i **[SVERIGE.md](SVERIGE.md)**. Källor och villkor finns i **[DATA_SOURCES.md](DATA_SOURCES.md)**.
 
 ### Bygger du vidare?
 
@@ -102,12 +117,6 @@ Knappen **Cite this repository** i sidopanelen på GitHub ger en färdig källh�
 Photorealistic 3D globe. Live aircraft, ships, satellites, earthquakes, traffic, and public cameras. Hands-free voice control powered by a realtime AI agent.
 
 _No place left behind._
-
-![Orbital HUD, a tracked live globe, FLIR terrain — then OPEN SOURCED](docs/media/hero-open-source-reveal.gif)
-
-<a href="https://www.youtube.com/@bilawalsidhu">
-  <img src="docs/media/youtube-popular-videos.png" alt="The God's Eye View video series on YouTube" width="100%">
-</a>
 
 ▶️ **From the project behind the viral God's Eye View series** _(formerly WorldView)_ — [5M+ on YouTube](https://youtube.com/playlist?list=PL6qSg2I-7_koPbDnSMo0QeeHX_RknA2uv&si=nBGYMoHWQw41v93Q) · [25M+ across socials](https://www.google.com/search?q=god%27s+eye+view)
 
@@ -153,7 +162,7 @@ Start with the included data sources, then add your own. Each layer is a separat
 - **📡 Contacts:** A 250 km roster of everything near your target — step through live aircraft and drop into any cockpit.
 - **🎯 Click-to-track anything:** Camera locks on, draws a fading trail, surfaces full metadata — and a tracked fire or vessel hands you off to the nearest live camera in one click.
 - **🖊️ Voice whiteboard:** Speak annotations onto the world — real boundary polygons, marks, and routes.
-- **🛫 3D hangar:** Real per-class aircraft models — 787, ATR-72, Citation, Bell 206, MQ-9 — and a tracked contact swaps from glyph to 3D model as you close in.
+- **🛫 3D hangar:** Real per-class aircraft models — 787, ATR-72, Citation, Bell 206 — and a tracked contact swaps from glyph to 3D model as you close in.
 - **🎨 Reskin reality:** GLSL sensor looks over the normal globe — CRT, NVG, FLIR/thermal, Noir.
 - **🟩 Detection overlay:** Screen-space bounding boxes and IDs on everything in view.
 - **🖥️ Tactical HUD:** Heads-up display with live telemetry.
@@ -194,8 +203,8 @@ Google place search. Provider terms and quotas apply. Add keys through the
 app's **POWER UP** panel; [Keys & Costs](#-api-keys) explains the options.
 
 > **Already installed?** Update to the latest version. Older versions query
-> public OpenStreetMap Overpass servers, which now refuse them, so Traffic,
-> Mapped Installations and ALPR stay empty until you update.
+> public OpenStreetMap Overpass servers, which now refuse them, so Traffic
+> and ALPR stay empty until you update.
 
 ### Path 1 — One click, no terminal
 
@@ -408,29 +417,14 @@ and it carries the LAN-sharing rules alongside [Keys & Costs](#-api-keys).
 
 ## 🕐 The First Five Minutes
 
-Choose a first-run mission, or try these in order. The GIFs show Google Photorealistic 3D; your starting basemap depends on the keys you've added.
+Choose a first-run mission, or try these in order. Your starting basemap depends on the keys you've added.
 
 1. **Light up the sky.** Take the **Live Contacts** mission (or turn on **Flights** yourself) — thousands of live aircraft, gliding on real telemetry, detection mesh already reading the scene. Click one: the camera locks on, a trail draws behind it, and its live telemetry card comes up.
 2. **Take the controls.** Hit **COCKPIT** on your tracked plane and ride it down, switching sensors mid-flight: NVG into Ironbow FLIR.
-
-![Riding with a live aircraft in cockpit view while switching sensor modes](docs/media/06-cockpit-ar.gif)
-
 3. **Drop into a busy airport.** Search one and descend to the taxiways with **3D** aircraft on — grounded contacts, taxi trails, the whole apron working in real time.
-
-![Moving from a full airport overhead down to close taxiway inspection with 3D flight models](docs/media/start-here/airport-ground-traffic-google-3d.gif)
-
 4. **Look through a public camera.** Turn on **Cameras** over Austin, London, California, Finland, or Delaware (live video). The feeds aren't webcam embeds — they project _into_ the 3D city. Cycle coverage to **VIEWSHED** and every camera draws its estimated coverage volume — where it reaches, and where it goes blind.
-
-![Diving into an Austin intersection with a live public camera projected into the 3D scene](docs/media/03-austin-cctv.gif)
-
 5. **Track something in orbit.** Turn on **Satellites** and click the ISS — you ride along at orbital distance, orbit ring and all.
-
-![Tracking the ISS along its orbital path as it crosses over Ukraine](docs/media/14-iss-over-ukraine.gif)
-
 6. **Switch the optics.** Tap `1`–`6` — CRT, NVG, FLIR — and the whole live planet re-renders through a different sensor.
-
-![Cycling a dense live globe through CRT, FLIR, and NVG in one continuous view](docs/media/01-style-sweep.gif)
-
 7. **Talk to it** _(needs an OpenAI key)_: _"Take me to LAX and select the nearest airborne aircraft."_
 8. **Come home.** Hit **Reset Globe** — or just say _"zoom out to a globe view."_
 
@@ -443,8 +437,6 @@ Choose a first-run mission, or try these in order. The GIFs show Google Photorea
 > Every plane should let you do this.
 
 Real-time cockpit mode, built from live flight data: the camera rides your contact with real terrain holding underneath, all the way down — sensor styles come along for the ride, and **Contacts** keeps the 250 km roster one click away: jump plane to plane and fall straight into the next cockpit.
-
-![Jumping between live aircraft and falling straight into a cockpit view](docs/media/12-switch-aircraft-cockpit.gif)
 
 The cockpit even carries its own briefing strip: nearby live signals, regional headlines, and real local weather — with an opt-in **WX** mode that renders volumetric clouds from actual observations around your aircraft.
 
@@ -490,10 +482,6 @@ camera input stops rotation.
 
 **✍️ Or draw it yourself** — UTILITIES ▸ **Draw**: pick Area, Line or Pin and a colour, click the vertices on the real world, double-click to finish, then name, recolour, hide or fly to each shape from its row. Same whiteboard, same persistence, no microphone needed.
 
-![Zilker Park and Lady Bird Lake drawing onto the 3D city as persistent vector annotations, by voice](docs/media/01-voice-annotate-zilker.gif)
-
-![A spoken distance measurement spanning an airport, inspected from orbit](docs/media/04-airport-distance.gif)
-
 **🔎 Interrogate it** — analyst queries against the live layers:
 
 > 🗣️ _"How many flights are over Texas right now?"_ · _"Which ships are headed to Oakland?"_ · _"What is the biggest fire near Los Angeles?"_ · _"Is anything flying above forty thousand feet?"_ · _"When does the ISS pass over next?"_ · _"How many datacenters are in view?"_
@@ -506,17 +494,13 @@ camera input stops rotation.
 
 > 🗣️ _"Show me global infrastructure."_ (stages the layers and pulls back to the globe) · _"Play Orbital Watch."_ (a full cinematic scene) · _"Set detection density to fifty percent."_ · _"Next contact — helicopters only."_ (mid-cockpit) · _"Show me space missions."_ · _"Switch to OSM."_ · _"Sharpen the image a touch."_ · _"Switch to the tactical layout."_ · _"What's turned on right now?"_
 
-![The globe populating with the world's radio stations as another live layer](docs/media/15-global-radio-layer.gif)
-
-_Ask for radio near anywhere and the globe starts broadcasting — every station is a real place you can fly to._
-
 ---
 
 **💬 Or ask from Claude and Codex.** God's Eye View is also an MCP server: ask Claude Desktop, Codex or ChatGPT desktop to show a place, and the live globe opens right in the conversation. Setup takes a minute — see [docs/MCP_SETUP.md](docs/MCP_SETUP.md).
 
 ## 🛰️ What's on the Globe
 
-Twenty-three layers and map sources. **Twenty-one have a keyless path.** Some offer additional capabilities with a provider key. (🟢 no key · 🟡 free key · 🔴 metered.)
+Fifty-four layers and map sources. **Forty-three have a keyless path.** Some offer additional capabilities with a provider key. (🟢 no key · 🟡 free key · 🔴 metered.)
 
 | Layer                       | What you get                                                                                                                                                                                                                                                                                                                                                                        | Source                                  | Auth                                                                                                |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------- |
@@ -526,7 +510,7 @@ Twenty-three layers and map sources. **Twenty-one have a keyless path.** Some of
 | 🔥 **Fire Perimeters** | Incident boundaries and reported containment | WFIGS / NIFC | 🟢 |
 | 🚢 **Live Vessels**         | Thousands of ships worldwide                                                                                                                                                                                                                                                                                                                                                        | AISStream                               | 🟡                                                                                                  |
 | 🛰️ **Satellites**           | About 1,300 objects in six classes (Stations, Imaging, Telecom, Starlink, Probes, Debris) with a toggle and a live count each; Starlink loads its whole shell                                                                                                                                                                                                                       | CelesTrak                               | 🟢                                                                                                  |
-| 🌍 **Earthquakes**          | Global seismic activity, last 24h                                                                                                                                                                                                                                                                                                                                                   | USGS                                    | 🟢                                                                                                  |
+| 🌍 **Earthquakes**          | Global seismic activity, last 24h; the Swedish version adds EMSC's earthquakes in northern Europe (54–72° N, 4–33° E), small ones included; a quake both feeds list is drawn once | USGS · EMSC (CC BY 4.0)                 | 🟢                                                                                                  |
 | ◍ **Air quality**           | Live AQHI on the published 1–10+ health-risk scale, with a Weather-panel card showing the band legend and the highest readings in view. Canada (ECCC AQHI) and, in the Swedish fork, Sweden (SMHI on the European EAQI) | ECCC MSC GeoMet, SMHI Datavärdskap luft | 🟢                                                                                                  |
 | 🚗 **Traffic**              | Simulated vehicles on OSM roads. With TomTom, live flow speeds drive the simulation and congestion colors below ~8 km; individual vehicle positions are not live observations. The Swedish version leaves `TOMTOM_API_KEY` empty (TomTom's terms need permission for an app like this), so the layer runs its simulation; even with a key it never asks TomTom for a tile that touches Sweden, where Trafikverket's queues layer shows the measured traffic                                                                                                                                                                                                       | TomTom + OSM                            | 🟢 simulation · 🟡 live flow speeds                                                                 |
 | 📹 **CCTV Mesh**            | up to 7,350 camera locations (4,000 shared round-robin slots, plus room for 1,120 Québec and 2,230 World image cameras) projected _into_ the 3D space — Austin · Texas (TxDOT) · California (Caltrans) · London (TfL) · Ontario (511, free developer key) · Ottawa (City of Ottawa, free access certificate) · Finland (Fintraffic) · British Columbia (DriveBC) · Estonia (Tallinn, Tarktee) · Delaware (DelDOT live video) · New South Wales (Live Traffic NSW) · Calgary · Norway (Statens vegvesen) · Sweden (Trafikverket, free key) · Toronto · King County (WA) · Washington (WSDOT) · Catalonia (Servei Català de Trànsit) · Iceland (Vegagerðin) · Hong Kong (Transport Department) · Taiwan (Freeway Bureau, MOTC) · Québec (MTQ locations with Québec 511 links, Montréal locations, regional webcams) · Oregon (TripCheck) · Japan (MLIT river cameras) · Italy (A22 Brennero motorway), plus opt-in New York City (NYC DOT TMC, needs your own NYC DOT agreement), opt-in Lithuania (Via Lietuva / Eismoinfo, photo licence unconfirmed), opt-in Québec 511 in-browser video (embedding terms unconfirmed), opt-in Florida (FL511, individual personal use only; other use needs FDOT's written consent) and opt-in Houston (TranStar, enable only with TxDOT's written permission per TranStar's Content Usage terms). In the Swedish version Austin, Texas, California, Delaware, Tallinn, Tarktee, Warendorf and the A22 load only when switched on (`CCTV_…_ENABLED=1`): their terms are only a courtesy note. Positions are published or attributed; poses are estimated priors **you calibrate by dragging a gizmo on the camera itself** | City APIs                               | 🟢                                                                                                  |
@@ -537,7 +521,7 @@ Twenty-three layers and map sources. **Twenty-one have a keyless path.** Some of
 | 🚲 **Bikeshare**            | Live station availability                                                                                                                                                                                                                                                                                                                                                           | GBFS                                    | 🟢                                                                                                  |
 | 🚆 **Rail**                 | Live trains across Sweden, the US, Canada, Australia, Finland, Spain, Norway, Malaysia, Japan and France: the original lists 30 keyless operator feeds, and the Swedish version polls 27 feeds, 26 of the original’s (the four whose operators state no licence, Irish Rail among them, stay off) and Trafikverket’s trains in Sweden, which need the free Trafikverket key (`TRAFIKVERKET_API_KEY`) and share the Transit layer’s request. With the same key, Trafikverket’s current railway disruptions are red dots on the Swedish stations they affect, with a chip, a legend row and a card with what Trafikverket says. 24 are live out of the box, Sweden once the key is set, and Renfe long and medium distance and KTMB once their pack is built. No train is placed from a timetable. Opt-in packs (`node scripts/build-rail-paths.mjs --feed <id>` or `--all`) add the operator’s own route lines, stop names, next stops and trip-update delays. Coloured by service category (urban, local, regional, national, international) with a filter chip and legend for each; trains are drawn once when several feeds carry them, and open a card per train. Buses in mixed feeds are dropped by the server | Operator GTFS-Realtime feeds (static GTFS for opt-in packs); Trafikverket open API (CC0) in Sweden | 🟢 |
 | 🧭 **Directions**           | Click A and B on the globe for a street-following drive, walk or cycle route draped on the terrain with turn-by-turn steps — then FLY the camera along it. No key, no geocoder, no mic                                                                                                                                                                                              | OSRM on FOSSGIS servers (OpenStreetMap) | 🟢                                                                                                  |
-| ⌖ **OSM Places**           | Voice place search ("hospitals in Kathmandu") from OpenStreetMap, drawn as numbered points that follow-up questions can filter. Needs your own Overpass server (`OVERPASS_UPSTREAMS`); off otherwise                                                                                                                                                                                                                                                                                                                               |
+| ⌖ **OSM Places**           | Voice place search ("hospitals in Kathmandu") from OpenStreetMap, drawn as numbered points that follow-up questions can filter. Needs your own Overpass server (`OVERPASS_UPSTREAMS`); off otherwise | OpenStreetMap via your own Overpass server | 🟢 |
 | 🔥 **Active Fires**         | Live NASA FIRMS detections, trailing 24h                                                                                                                                                                                                                                                                                                                                            | NASA FIRMS                              | 🟡                                                                                                  |
 | 🚀 **Space Missions**       | Rolling 30-day launches with payload, stage, and recovery detail                                                                                                                                                                                                                                                                                                                    | Launch Library 2                        | 🟢 (🔴 optional paid token raises the allowance)                                                         |
 | 🚫 **Prohibited & Restricted Airspace** | FAA prohibited (P) and restricted (R) special-use airspace as ground polygons, with name, altitude range and times of use on select. Not the UAS Facility Map or UAS flight restrictions; informational only, not for flight planning | FAA SUA                                 | 🟢                                                                                                  |
@@ -547,18 +531,18 @@ Twenty-three layers and map sources. **Twenty-one have a keyless path.** Some of
 | 🛣️ **Road Conditions (Sweden)** | Winter road condition per stretch and live incidents — accidents, roadworks, obstacles, restrictions — from Trafikverket; click a line or dot for details | Trafikverket | 🟡 |
 | 🌡️ **Road Weather (Sweden)** | Some 830 Trafikverket road weather stations coloured by road-surface or air temperature, with a white ring where frost, precipitation on a frozen road or measured ice risks slipperiness; click a station for its readings | Trafikverket | 🟡 |
 | ⚠️ **Weather Warnings (Sweden)** | SMHI's impact-based weather warnings as areas coloured yellow, orange or red, paler until they start, with SMHI messages (water shortage, high flows, fire risk) behind a toggle; click an area for what happens and what to think about, in Swedish or English | SMHI | 🟢 |
-| 🚓 **Police Events (Sweden)** | Polisen's latest event notices (traffic, violence, fires and accidents, thefts …) as dots coloured by category, for the last 24 hours, three days or all ~10 days; Polisen names only the municipality, so dots sit around its seat; click a dot for the notice and a link to polisen.se | Polismyndigheten | 🟡 |
+| 🚓 **Police Events (Sweden)** | Polisen's latest event notices (traffic, violence, fires and accidents, thefts …) as dots coloured by category, for the last 24 hours, three days or all ~10 days; Polisen names only the municipality, so dots sit around its seat; click a dot for the notice and a link to polisen.se | Polismyndigheten | 🟢 |
 | ⚡ **Electricity Prices (Sweden)** | Spot price per bidding zone SE1–SE4 as coloured, labelled points: this quarter-hour, today's mean or tomorrow's mean; click a zone for the day's low, high and mean | Elpriset just nu.se | 🟢 |
-| 🔌 **Power Grid (Sweden)** | ENTSO-E's physical flows (with a free key): moving chevrons on every link to and between SE1–SE4, running the way the power flows, as thick and as fast as the flow, labelled 'Poland → SE4 · 459 MW'; the row sums Sweden's import, export and net, and per neighbouring country, with a switch for imports, exports or domestic flows and a chip per country that highlights its links. Production by type, consumption and the POWER panel need Svenska kraftnät's consent and stay off until then (see SVERIGE.md) | ENTSO-E (CC BY 4.0) | 🟢 |
-| 🚏 **Transit Disruptions (Sweden)** | The regional operators' active disruption notices (GTFS-RT ServiceAlerts) at the stops they touch, coloured closed/not served, moved or other; click a stop for the operator's message | Trafiklab GTFS Regional (key) | 🟢 |
+| 🔌 **Power Grid (Sweden)** | ENTSO-E's physical flows (with a free key): moving chevrons on every link to and between SE1–SE4, running the way the power flows, as thick and as fast as the flow, labelled 'Poland → SE4 · 459 MW'; the row sums Sweden's import, export and net, and per neighbouring country, with a switch for imports, exports or domestic flows and a chip per country that highlights its links. Production by type and consumption are not shown: they are not part of ENTSO-E's free data | ENTSO-E (CC BY 4.0) | 🟡 |
+| 🚏 **Transit Disruptions (Sweden)** | The regional operators' active disruption notices (GTFS-RT ServiceAlerts) at the stops they touch, coloured closed/not served, moved or other; click a stop for the operator's message | Trafiklab GTFS Regional | 🟡 |
 | 🌊 **Sea Weather (Sweden)** | SMHI's ocean stations along the coast coloured by water level, with water temperature and waves | SMHI (CC BY 4.0) | 🟢 |
 | 🏞️ **River Flow (Sweden)** | SMHI's discharge stations (some 150) sized and coloured by the latest 15-minute flow, with the largest rivers' values written out; click a station for its river, catchment and whether the flow is rising or falling | SMHI | 🟢 |
-| ⛴️ **Road Ferries (Sweden)** | Trafikverket's some 40 road ferry routes with their next departures in the coming three hours and the next departure time beside each; amber where Trafikverket has a message for the route (cancellations, reduced capacity, planned closures); click a route for its departures and messages | Trafikverket (CC0) | 🟡 |
+| ⛴️ **Road ferries (Sweden)** | Trafikverket's some 40 road ferry routes with their next departures in the coming three hours and the next departure time beside each; amber where Trafikverket has a message for the route (cancellations, reduced capacity, planned closures); click a route for its departures and messages | Trafikverket (CC0) | 🟡 |
 | 🚦 **Queues and travel times (Sweden)** | Trafikverket's some 200 travel-time stretches coloured by its own verdict (free flow, slow, queue, standstill) and some 1,200 detector points coloured by the speed now against Trafikverket's normal for the hour; Stockholm and Göteborg, a few around Malmö; click for travel time, speed and flow now and normally. The city dossier lists the queues around the town | Trafikverket (CC0) | 🟡 |
-| 🧊 **Frost Depth (Sweden)** | Trafikverket's frost rods in the ploughed road (some 50 reporting) coloured by how deep the road is frozen, read where the sensors' temperature profile crosses 0 °C, with the depth beside each (a span where a rod's top sensor sits deep); click a point for the temperature by depth | Trafikverket (CC0) | 🟡 |
-| 🅿️ **Rest Areas (Sweden)** | Trafikverket's 317 rest areas, amber where lorries have spaces, with a chip for those only; click an area for its car and lorry spaces, toilet, picnic tables, play area, emptying point for portable toilets and Trafikverket's note. The spaces are how many there are, not how many are free | Trafikverket (CC0) | 🟡 |
-| 🥾 **Trails and Outdoor Facilities (Sweden)** | Naturvårdsverket's 3,688 trails as lines (hiking, nature, ski, snowmobile, canoe, cycling and riding) and 21,672 facilities as dots (shelters, cabins, fireplaces, rest spots, toilets, towers, parking, jetties) below 30 km; click for name, type, a short description, the protected area, and marking and length for trails. Only protected areas that publish their facilities, plus the state mountain trails; reserve rules and access bans apply. A snapshot rebuilt by hand from Naturvårdsverket's nightly files | Naturvårdsverket (CC0) | 🟢 |
-| 📷 **Speed Cameras (Sweden)** | Trafikverket's fixed traffic safety camera sites (some 2,800) as amber arrows turned the way each camera faces, shown when the view is within about 400 km; click a site for its road, place, direction and county. The city dossier's NOW tab counts the sites within 15 km and lists the nearest, each pointed out on the map | Trafikverket (CC0) | 🟢 |
+| 🧊 **Frost depth (Sweden)** | Trafikverket's frost rods in the ploughed road (some 50 reporting) coloured by how deep the road is frozen, read where the sensors' temperature profile crosses 0 °C, with the depth beside each (a span where a rod's top sensor sits deep); click a point for the temperature by depth | Trafikverket (CC0) | 🟡 |
+| 🅿️ **Rest areas (Sweden)** | Trafikverket's 317 rest areas, amber where lorries have spaces, with a chip for those only; click an area for its car and lorry spaces, toilet, picnic tables, play area, emptying point for portable toilets and Trafikverket's note. The spaces are how many there are, not how many are free | Trafikverket (CC0) | 🟡 |
+| 🥾 **Trails and outdoor facilities (Sweden)** | Naturvårdsverket's 3,688 trails as lines (hiking, nature, ski, snowmobile, canoe, cycling and riding) and 21,672 facilities as dots (shelters, cabins, fireplaces, rest spots, toilets, towers, parking, jetties) below 30 km; click for name, type, a short description, the protected area, and marking and length for trails. Only protected areas that publish their facilities, plus the state mountain trails; reserve rules and access bans apply. A snapshot rebuilt by hand from Naturvårdsverket's nightly files | Naturvårdsverket (CC0) | 🟢 |
+| 📷 **Speed Cameras (Sweden)** | Trafikverket's fixed traffic safety camera sites (some 2,800) as amber arrows turned the way each camera faces, shown when the view is within about 400 km; click a site for its road, place, direction and county. The city dossier's NOW tab counts the sites within 15 km and lists the nearest, each pointed out on the map | Trafikverket (CC0) | 🟡 |
 | ☢️ **Radiation (Sweden)** | Strålsäkerhetsmyndigheten's gamma stations (the national early-warning network) coloured on SSM's own scale by the latest hourly ambient dose rate, with the value beside each; click a station for its reading against the normal background | Strålsäkerhetsmyndigheten | 🟢 |
 | ⚡ **Lightning Strikes (Sweden)** | DMI's located lightning strokes over Sweden and its neighbours in the last hour, coloured by age, ground strokes larger than in-cloud flashes; click a stroke for its time, type and peak current | DMI (CC BY 4.0) | 🟢 |
 | 🛒 **Retail Chains (Sweden)** | The stores of ICA, Coop, Axfood (Willys, Hemköp, City Gross), Lidl and Systembolaget and the pharmacies of Apotek Hjärtat (ICA Gruppen), Apoteket, Kronans Apotek (with Apoteksgruppen) and DOZ Apotek from an OpenStreetMap snapshot, coloured by company and store concept, with a chip per company; click a store for its address, whether it is open now, its mapped size, web page, phone, wheelchair access and parcel service, the people living within 2 km, the nearest stop, the nearest other chains and the company (organisation number and head office from Wikidata); a click on the card opens the store's web page. Stores only. | OpenStreetMap (ODbL), Wikidata, SCB (CC0) | 🟢 |
@@ -567,7 +551,10 @@ Twenty-three layers and map sources. **Twenty-one have a keyless path.** Some of
 | 🛡️ **Shelters (Sweden)** | MCF's register of about 63,000 civil-defence shelters with 6.8 million places, shown for the view once you zoom in (the 1,500 nearest the map centre), sized by places, with the five nearest listed and clickable; click one for its property, places and state | Myndigheten för civilt försvar (MCF) | 🟢 |
 | 🏥 **Hospitals & Emergency (Sweden)** | About 120 hospitals from OpenStreetMap; the 62 emergency departments in Socialstyrelsen's 2025 statistics are coloured by their median time to physician or total stay against Sweden's, with the five nearest (or the shortest in view) listed and clickable; the card gives the 2025 and 2024 medians, visits, and 112/1177. Yearly medians, not live waits (Sweden publishes none) | Socialstyrelsen, OpenStreetMap | 🟢 |
 | 🗺️ **Municipalities & Counties (Sweden)** | The borders of Sweden's 290 municipalities and 21 counties as lines on the ground, names that follow the view, the municipality at the map centre in the row, and a card with SCB's newest monthly population and its change over a year for a clicked municipality | OpenStreetMap, SCB | 🟢 |
+| 🗳️ **Election Districts 2026 (Sweden)** | The 2026 Riksdag election in all 6,312 election districts as areas on the ground, coloured by largest party or by turnout (up to 1,200 districts nearest the map centre); click a district for its municipality, counted votes, turnout and every party's share. A snapshot of the final count | Valmyndigheten (open data, source credited) | 🟢 |
 | 👥 **Population per km² (Sweden)** | SCB's people per square kilometre at the end of 2025 as flat coloured squares on the ground: 1 km squares close up, 5, 10 and 25 km squares summed from them farther out; click a summed square for its people (rounded) and people per km². Fewer than 5 people show as 1–4, and single 1 km squares have no card | SCB (CC0; sums processed from SCB data) | 🟢 |
+| 🌲 **Protected Nature (Sweden)** | Sweden's 31 national parks, about 6,000 nature reserves and 52 culture reserves in force, the 4,136 Natura 2000 areas and the 1,543 access bans in force in protected areas (most for birds and seals) as areas on the ground, coloured by kind, with a chip each for Natura 2000 and the access bans; only the national parks in a wide view, the reserves in a view up to 3° across and Natura 2000 and the bans up to 2°, at most 1,500 areas nearest the map centre; click for municipality, area and year, a Natura 2000 area's directive and site code, or a ban's reason and period. A snapshot | Naturvårdsverket, Naturvårdsregistret (CC0) | 🟢 |
+| 🏺 **Ancient Monuments (Sweden)** | Three parts, a chip each: Riksantikvarieämbetet's registered ancient monuments and other remains (some 840,000) as dots below 12 km, the 1,500 nearest the map centre, coloured by heritage assessment; Sweden's UNESCO World Heritage sites as areas at every height (no buffer zones); and listed buildings, state listed buildings and church monuments as dots below 12 km, with listed buildings' protection areas as outlines. Click for type, assessment or protection, year and municipality; the card opens the entry at RAÄ or UNESCO. No property or owner data | Riksantikvarieämbetet (public domain; buildings CC0) | 🟢 |
 | 🌌 **Aurora Forecast** | NOAA's OVATION chance of aurora overhead in the next half hour as a glowing band at aurora height, with the Kp index and the chance over nine Swedish towns | NOAA SWPC | 🟢 |
 | 🌡 **Weather Now (Sweden)** | SMHI's ~185 weather stations coloured by air temperature or wind, with the coldest (or windiest) values written out; click a station for the latest reading and SMHI's forecast for the spot | SMHI | 🟢 |
 | 🌀 **Cyclones**             | Advisory positions, forecast tracks and uncertainty cones for the Atlantic and eastern/central North Pacific                                                                                                                                                                                                                                                                        | NOAA NHC / CPHC                         | 🟢                                                                                                  |
@@ -583,10 +570,6 @@ In the app, **Data Layers** groups them as Movement, Cameras, Infrastructure, Ev
 | 🟢 Nothing                 | OpenStreetMap + keyless terrain, in 2D (Esri World Imagery with a free ArcGIS key in the Swedish version); if terrain is unavailable the globe continues without it |
 | 🟡 A free Cesium ion token | **Google Photorealistic 3D cities** and world terrain — eligible personal, non-commercial use; current ion terms and quotas apply                                            |
 | 🔴 A Google Maps key       | The same 3D direct from Google, plus Google place search — the billing-enabled, metered route                                                                                |
-
-![A reconstructed Falcon 9 ascent climbing and curving into its projected orbit](docs/media/08-falcon9-replay.gif)
-
-_The Space Missions layer replaying a Falcon 9 ascent — labeled `RECONSTRUCTED ESTIMATE`, scrubbable 0.25×–4×._
 
 **Also on the globe:** neighborhood overlays · an optional cockpit WX cloud effect. **Bundled static infrastructure:** Datacenters (4,352) and Dams (704). _The Swedish version does not ship the original's submarine cables (see SVERIGE.md)._
 
@@ -622,14 +605,6 @@ Once the basics click, run these:
 | **🏗️ Orbit Three Gorges**           | Sweep the dam and its terrain at a glance — then flip on the **Dams** layer and find 703 more.                                                                                                            |
 
 _🎙️ = voice missions — they need an OpenAI key._
-
-![Asking for a walking route and flying the generated path through the 3D city](docs/media/10-walking-route-flythrough.gif)
-
-_"Draw the walking route… now fly it" — banked turns, eased ends, the camera leading the path like a drone shot._
-
-![Descending from regional context into dense rows of retired aircraft at the boneyard](docs/media/08-boneyard.gif)
-
-_Walk the boneyard: rows of retired airframes, fully resolved in 3D._
 
 ---
 
@@ -691,10 +666,6 @@ Seven keys. Five have a free tier, and the two 🔴 ones are metered:
 | 🟡  | **NASA FIRMS**  | 🔥 Live active fires                                                                                                                                                                 | [firms.modaps.eosdis.nasa.gov](https://firms.modaps.eosdis.nasa.gov/api/map_key/) — free                                                                             |
 | 🟡  | **TomTom**      | 🚦 Live flow speeds and congestion colors for the simulated traffic layer. _Not used in the Swedish version: TomTom's terms need permission._                                                                                                            | [my.tomtom.com](https://my.tomtom.com/keys) — free tier available                                                                                                    |
 | 🟡  | **Mapillary**   | 📷 Street Level coverage and photos. A public client token by design (see SECURITY.md)                                                                                               | [mapillary.com/dashboard/developers](https://www.mapillary.com/dashboard/developers) — register an app, copy its Client Token                                        |
-
-![Diving from city-scale live congestion straight into an intersection's public camera](docs/media/05-traffic-to-cctv.gif)
-
-_What the TomTom key buys you: rush-hour density painted on the city — then dive from the jam straight into the camera watching it._
 
 ### Cherry on top
 
@@ -806,7 +777,7 @@ God's Eye View runs on **public data, clear sources, and local-first execution.*
 
 **Maintainers:** [Bilawal Sidhu](https://github.com/bilawalsidhu) and [Sameh Khamis](https://github.com/samehkhamis) at [Halfpixel](https://halfpixel.ai).
 
-<sub>Media note: the capture GIFs on this page show Google Photorealistic 3D Tiles and live data layers, used promotionally with in-frame attribution; they aren't licensed for standalone reuse. See [media provenance and permissions](docs/media/README.md); full source terms in [DATA_SOURCES.md](DATA_SOURCES.md).</sub>
+<sub>Media note: the images on this page are used promotionally; the Swedish captures show Google Photorealistic 3D Tiles and live data layers with in-frame attribution. They aren't licensed for standalone reuse. See [media provenance and permissions](docs/media/README.md); full source terms in [DATA_SOURCES.md](DATA_SOURCES.md).</sub>
 
 > [!IMPORTANT]
 > God's Eye View is an exploratory visualization of public and third-party data.
