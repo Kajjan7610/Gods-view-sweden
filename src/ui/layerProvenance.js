@@ -238,6 +238,16 @@ export const LAYER_PROVENANCE = Object.freeze({
     updates: msg('Every 15 minutes'),
     licence: CC0,
   }),
+  // Swedish fork: the EMSC's small quakes in northern Europe (emscNordic).
+  earthquakes: added({
+    source: 'EMSC',
+    sweden: msg(
+      'Earthquakes in northern Europe (54–72° N, 4–33° E) in the last 24 hours, small ones included',
+    ),
+    original: msg('Earthquakes worldwide in the last 24 hours (USGS)'),
+    updates: msg('Every 5 minutes'),
+    licence: `${CC_BY} (EMSC)`,
+  }),
   // Weather
   'air-quality': added({
     source: 'SMHI',

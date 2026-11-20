@@ -5416,5 +5416,7 @@
   "{n} kA": "{n} kA",
   "{n} ha": "{n} ha",
   "{n} vehicles/h": "{n} fordon/h",
-  "{date} {time}": "{date} {time}"
+  "{date} {time}": "{date} {time}",
+  "Earthquakes in northern Europe (54–72° N, 4–33° E) in the last 24 hours, small ones included": "Jordbävningar i norra Europa (54–72° N, 4–33° Ö) det senaste dygnet, även små",
+  "Earthquakes worldwide in the last 24 hours (USGS)": "Jordbävningar i hela världen det senaste dygnet (USGS)"
 }

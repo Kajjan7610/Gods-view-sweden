@@ -5638,5 +5638,7 @@
   "{n} kA": "{n} кА",
   "{n} ha": "{n} га",
   "{n} vehicles/h": "{n} авт./год",
-  "{date} {time}": "{date}, {time}"
+  "{date} {time}": "{date}, {time}",
+  "Earthquakes in northern Europe (54–72° N, 4–33° E) in the last 24 hours, small ones included": "Землетруси в Північній Європі (54–72° пн. ш., 4–33° сх. д.) за останні 24 години, зокрема слабкі",
+  "Earthquakes worldwide in the last 24 hours (USGS)": "Землетруси по всьому світу за останні 24 години (USGS)"
 }

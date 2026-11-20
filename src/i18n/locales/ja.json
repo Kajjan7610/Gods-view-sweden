@@ -5305,5 +5305,7 @@
   "{n} kA": "{n} kA",
   "{n} ha": "{n} ha",
   "{n} vehicles/h": "{n} 台/時",
-  "{date} {time}": "{date} {time}"
+  "{date} {time}": "{date} {time}",
+  "Earthquakes in northern Europe (54–72° N, 4–33° E) in the last 24 hours, small ones included": "北ヨーロッパ（北緯54–72°、東経4–33°）の直近24時間の地震（小さなものも含む）",
+  "Earthquakes worldwide in the last 24 hours (USGS)": "世界中の直近24時間の地震（USGS）"
 }

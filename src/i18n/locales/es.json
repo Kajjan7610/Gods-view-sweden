@@ -5527,5 +5527,7 @@
   "{n} kA": "{n} kA",
   "{n} ha": "{n} ha",
   "{n} vehicles/h": "{n} vehículos/h",
-  "{date} {time}": "{date}, {time}"
+  "{date} {time}": "{date}, {time}",
+  "Earthquakes in northern Europe (54–72° N, 4–33° E) in the last 24 hours, small ones included": "Terremotos en el norte de Europa (54–72° N, 4–33° E) en las últimas 24 horas, también los pequeños",
+  "Earthquakes worldwide in the last 24 hours (USGS)": "Terremotos en todo el mundo en las últimas 24 horas (USGS)"
 }

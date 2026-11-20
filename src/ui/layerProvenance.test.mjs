@@ -64,7 +64,7 @@ test('the Swedish filter keeps Swedish layers and any layer that is on', async (
     ['satellites', true],
     ['transit', false],
     ['police-stations', false],
-    ['earthquakes', false],
+    ['fire-perimeters', false],
   ].map(([id, enabled]) => ({
     id,
     name: id,

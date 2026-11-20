@@ -5527,5 +5527,7 @@
   "{n} kA": "{n} kA",
   "{n} ha": "{n} הקטאר",
   "{n} vehicles/h": "{n} כלי רכב לשעה",
-  "{date} {time}": "{date}, {time}"
+  "{date} {time}": "{date}, {time}",
+  "Earthquakes in northern Europe (54–72° N, 4–33° E) in the last 24 hours, small ones included": "רעידות אדמה בצפון אירופה (54–72° צפון, 4–33° מזרח) ב-24 השעות האחרונות, כולל קטנות",
+  "Earthquakes worldwide in the last 24 hours (USGS)": "רעידות אדמה ברחבי העולם ב-24 השעות האחרונות (USGS)"
 }

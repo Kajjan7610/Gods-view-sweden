@@ -5860,5 +5860,7 @@
   "{n} kA": "{n} كيلوأمبير",
   "{n} ha": "{n} هكتار",
   "{n} vehicles/h": "{n} مركبة/س",
-  "{date} {time}": "{date}، {time}"
+  "{date} {time}": "{date}، {time}",
+  "Earthquakes in northern Europe (54–72° N, 4–33° E) in the last 24 hours, small ones included": "الزلازل في شمال أوروبا (54–72° شمالًا، 4–33° شرقًا) خلال آخر 24 ساعة، بما فيها الصغيرة",
+  "Earthquakes worldwide in the last 24 hours (USGS)": "الزلازل في جميع أنحاء العالم خلال آخر 24 ساعة (USGS)"
 }

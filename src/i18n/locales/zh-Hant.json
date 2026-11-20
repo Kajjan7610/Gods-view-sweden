@@ -5305,5 +5305,7 @@
   "{n} kA": "{n} kA",
   "{n} ha": "{n} 公頃",
   "{n} vehicles/h": "{n} 輛/小時",
-  "{date} {time}": "{date} {time}"
+  "{date} {time}": "{date} {time}",
+  "Earthquakes in northern Europe (54–72° N, 4–33° E) in the last 24 hours, small ones included": "北歐（北緯54–72°，東經4–33°）過去24小時的地震，包括小地震",
+  "Earthquakes worldwide in the last 24 hours (USGS)": "全球過去24小時的地震（USGS）"
 }
