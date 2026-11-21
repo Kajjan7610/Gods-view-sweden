@@ -4,17 +4,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   LIVE_STREAMS,
+  ORIGINAL_LIVE_STREAMS,
   YOUTUBE_EMBED_HOST,
   liveStreamsFor,
   youtubeLivePlayerVars,
   youtubeWatchUrl,
 } from './liveStreams.js';
 
+// Swedish fork: the original's list is checked as ORIGINAL_LIVE_STREAMS.
 test('every listed stream is a complete YouTube entry with a distinct id', () => {
-  assert.ok(LIVE_STREAMS.length >= 2, 'the ISS has two streams');
-  const ids = new Set(LIVE_STREAMS.map((stream) => stream.id));
-  assert.equal(ids.size, LIVE_STREAMS.length);
-  for (const stream of LIVE_STREAMS) {
+  assert.ok(ORIGINAL_LIVE_STREAMS.length >= 2, 'the ISS has two streams');
+  const ids = new Set(ORIGINAL_LIVE_STREAMS.map((stream) => stream.id));
+  assert.equal(ids.size, ORIGINAL_LIVE_STREAMS.length);
+  for (const stream of ORIGINAL_LIVE_STREAMS) {
     assert.equal(stream.platform, 'youtube');
     assert.match(stream.videoId, /^[\w-]{11}$/, `${stream.id} video id`);
     assert.ok(stream.title.length > 0);
@@ -26,11 +28,16 @@ test('every listed stream is a complete YouTube entry with a distinct id', () =>
 });
 
 test('the ISS streams attach to the station key, in list order', () => {
-  const found = liveStreamsFor(['station:iss']);
+  const found = liveStreamsFor(['station:iss'], ORIGINAL_LIVE_STREAMS);
   assert.deepEqual(
     found.map((stream) => stream.id),
     ['iss-exterior', 'iss-crew'],
   );
+});
+
+test('the Swedish fork offers no stream, so the ISS has no LIVE section', () => {
+  assert.deepEqual(LIVE_STREAMS, []);
+  assert.deepEqual(liveStreamsFor(['station:iss']), []);
 });
 
 test('a key no stream names, or no keys at all, finds nothing', () => {

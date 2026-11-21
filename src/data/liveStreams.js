@@ -20,8 +20,12 @@ export const YOUTUBE_EMBED_HOST = 'https://www.youtube-nocookie.com';
  *   owner: string, ownerUrl: string, subjects: readonly string[],
  *   note: string}} LiveStream */
 
-/** @type {readonly LiveStream[]} */
-export const LIVE_STREAMS = Object.freeze([
+/**
+ * The original project's NASA broadcasts. Swedish fork: not offered (see
+ * LIVE_STREAMS below); kept so the list follows the original.
+ * @type {readonly LiveStream[]}
+ */
+export const ORIGINAL_LIVE_STREAMS = Object.freeze([
   Object.freeze({
     id: 'iss-exterior',
     platform: 'youtube',
@@ -43,6 +47,15 @@ export const LIVE_STREAMS = Object.freeze([
     note: msg('NASA video, via YouTube'),
   }),
 ]);
+
+/**
+ * Swedish fork: no stream is offered. The page's CSP (build/vite.js) leaves
+ * out YouTube's player hosts, and YouTube's API terms ask for a privacy
+ * policy the app does not have, so the LIVE section and the Cockpit's LIVE
+ * page stay hidden rather than report a broadcast as offline.
+ * @type {readonly LiveStream[]}
+ */
+export const LIVE_STREAMS = Object.freeze([]);
 
 /**
  * The streams attached to any of `subjectKeys`, in list order.

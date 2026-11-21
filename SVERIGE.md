@@ -428,6 +428,41 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-21 (originalet sammanslaget)
+- Originalprojektet är sammanslaget fram till 2026-11-21 (114 pull
+  requests sedan förra gången): originalets knapp- och ikonkomponenter i
+  alla vyer, 122 fordonsmodeller i verklig storlek inom 3 km, rymduppdrag i
+  en egen panel, JTWC:s cykloner i västra Stilla havet, Indiska oceanen och
+  på södra halvklotet, platsförslag medan man skriver, ortnamn från
+  Wikidata, trafik i Cairns, och originalets rättelser. Alla svenska lager,
+  källor och avgränsningar finns kvar.
+- De svenska panelerna (flygplatstavlan, stadsdossiern, VMA-bannern,
+  kraftpanelen, 3D- och textstorleksknapparna och lagerradernas
+  källknapp) använder nu originalets knappar och ikoner. De ser ut och
+  fungerar som förut.
+- Kameralagret öppnar på kameran närmast vyn, och ett klick på ett annat
+  lagers kort räknas aldrig som ett klick på marken. Originalet har nu
+  byggt båda, så den svenska versionens egna lösningar är ersatta av
+  originalets.
+- Rättat: Cockpitens svenska lägesbild kraschade när den uppdaterades
+  efter sammanslagningen. Den visar nu sidan som förut.
+- ISS livevideo visas inte. Den spelas i YouTubes spelare, som sidans
+  säkerhetsregler (CSP) inte släpper in, och YouTubes villkor kräver en
+  integritetspolicy som appen inte har. ISS-telemetrin är avstängd som
+  förut, eftersom inga villkor är publicerade.
+- JTWC: villkoren lästa 2026-11-21 ("Products and Services Notice"):
+  informationen är offentlig och får spridas och kopieras fritt.
+- Platsförslag medan man skriver: platsdelen av det man skriver skickas
+  från webbläsaren till komoots publika Photon-tjänst i Tyskland,
+  tillsammans med IP-adressen. E-post, långa nummer, koder och liknande
+  skickas aldrig. En tom `PHOTON_URL` stänger av både sökning och förslag.
+- Ortnamn från Wikidata (CC0): orter med 1 000–14 999 invånare, cirka
+  7 MB i 732 rutor som bara läses när de behövs.
+- Trafik i Cairns (TransLink, CC BY 4.0) är med. Adelaide Metro anger
+  ingen licens och hämtas fortfarande inte.
+- Traditionell kinesiska genereras nu från förenklad kinesiska, som i
+  originalet, även för de svenska tilläggen.
+
 ### 2026-11-21 (Då och nu: historiska flygfoton)
 - Nytt lager **Historiska flygfoton (Sverige)** (delningstoken `17`) under
   Cameras, efter Recent Imagery. Lantmäteriets historiska ortofoton

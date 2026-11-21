@@ -183,13 +183,7 @@ export const DATA_CREDITS = [
     key: 'nasa-iss-telemetry',
     html: 'ISS joint telemetry (where switched on): NASA ISSLive, via Lightstreamer',
   },
-  {
-    key: 'nasa-iss-live',
-    html:
-      'ISS live video (LIVE section): NASA, via YouTube ' +
-      '(<a href="https://www.youtube.com/watch?v=ROboUHfPUrU" target="_blank" rel="noopener">exterior cameras</a>, ' +
-      '<a href="https://www.youtube.com/watch?v=M3HKLzjvKPc" target="_blank" rel="noopener">live video and audio</a>)',
-  },
+  // Swedish fork: no ISS live video is offered (src/data/liveStreams.js).
   {
     key: 'ucs-satellite-database',
     html:
@@ -278,7 +272,9 @@ export const DATA_CREDITS = [
   },
   {
     key: 'photon-geocoder',
-    html: 'Keyless place search: <a href="https://photon.komoot.io" target="_blank" rel="noopener">Photon</a> (komoot)',
+    // Swedish fork: suggestions while typing come from the same service; its
+    // answers are OpenStreetMap data, credited by the one `openstreetmap` entry.
+    html: 'Keyless place search and suggestions: <a href="https://photon.komoot.io" target="_blank" rel="noopener">Photon</a> (komoot)',
   },
   {
     key: 'open-meteo',
