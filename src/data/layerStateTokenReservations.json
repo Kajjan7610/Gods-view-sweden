@@ -68,5 +68,6 @@
   ["weather-satellite", "o"],
   ["wildlife-sightings", "9"],
   ["wind", "k"],
-  ["wind-turbines", "16"]
+  ["wind-turbines", "16"],
+  ["historical-ortho", "17"]
 ]

@@ -157,7 +157,7 @@ test('reservation ledger is complete, pinned, and rejects duplicate or malformed
     { ...parseLayerStateTokenReservations(reservationRows) },
     { ...LAYER_STATE_TOKEN_RESERVATIONS },
   );
-  assert.equal(Object.keys(LAYER_STATE_TOKEN_RESERVATIONS).length, 70);
+  assert.equal(Object.keys(LAYER_STATE_TOKEN_RESERVATIONS).length, 71);
   assert.deepEqual(
     { ...LAYER_STATE_TOKEN_RESERVATIONS },
     {
@@ -189,6 +189,7 @@ test('reservation ledger is complete, pinned, and rejects duplicate or malformed
       'outdoor-trails': '14',
       'population-grid': '15',
       'wind-turbines': '16',
+      'historical-ortho': '17',
       'river-flow': '0o',
       'speed-cameras': '0n',
       'fire-stations': '0m',
@@ -353,7 +354,7 @@ test('PR B manually replaces provisional 9 with 00 after PR A publishes 9', () =
       );
       const corrected = runCheck();
       assert.equal(corrected.status, 0, corrected.stderr);
-      assert.match(corrected.stdout, /67 published, 1 new/);
+      assert.match(corrected.stdout, /68 published, 1 new/);
     },
   );
 });
@@ -429,6 +430,7 @@ test('allocation batches cross the last digit and base-36 pair boundaries in ord
   delete baseBefore10['outdoor-trails'];
   delete baseBefore10['population-grid'];
   delete baseBefore10['wind-turbines'];
+  delete baseBefore10['historical-ortho'];
   assert.equal(nextLayerStateToken(baseBefore10), '0z');
   assert.equal(
     validateLayerStateAllocations(baseBefore10, {
@@ -483,7 +485,7 @@ test('an isolated valid two-character fixture round-trips an l field beyond the 
     const params = new URLSearchParams([['v', '2']]);
     codec.encodeLayerStateParams(params, state);
     assert.ok(params.get('l').length > 64, 'fixture must cross the old cap');
-    assert.equal(params.get('l').length, 174);
+    assert.equal(params.get('l').length, 177);
     const restored = codec.decodeLayerStateParams(params);
     assert.deepEqual(restored?.enabledLayerIds, expectedLayerIds);
     assert.deepEqual(restored?.options, state.options);
@@ -501,7 +503,7 @@ test('checker reads a complete future base ledger and rejects retired-token reus
     },
     (cwd) => {
       const published = readPublishedLayerStateReservations('HEAD', cwd);
-      assert.equal(Object.keys(published).length, 71);
+      assert.equal(Object.keys(published).length, 72);
       assert.equal(published['retired-layer'], '03');
       assert.throws(
         () =>

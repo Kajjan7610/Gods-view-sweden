@@ -111,8 +111,12 @@ function canvasProvider(spec) {
 
 /**
  * The Cesium layer options a spec asks for: one hidden below its minimum
- * level is shown only from the globe level as fine as it (Cesium's globe
- * tiles are geographic, two Web Mercator tiles across a level's one).
+ * level is shown only from the globe level as fine as it. Cesium's globe
+ * tiles are geographic, two Web Mercator tiles across a level's one, so a
+ * 256 px Web Mercator level z matches globe level z − 1. Cesium picks the
+ * imagery level by texel spacing, and a 512 px tile has half the spacing
+ * of a 256 px tile of the same level: a 512 px level z matches globe level
+ * z, one finer.
  * @param {import('../contract/globe').ImagerySpec} spec
  * @returns {object|undefined}
  */
@@ -120,7 +124,8 @@ export function layerOptions(spec) {
   if (!spec.hiddenBelowMinLevel || !(spec.minLevel > 0)) return undefined;
   const tiling =
     spec.tiling ?? (spec.kind === 'canvas' ? 'geographic' : 'webMercator');
-  const shift = tiling === 'geographic' ? 0 : 1;
+  const shift =
+    (tiling === 'geographic' ? 0 : 1) - (spec.tileSize >= 512 ? 1 : 0);
   return { minimumTerrainLevel: Math.max(0, spec.minLevel - shift) };
 }
 
@@ -309,8 +314,15 @@ export function hookProvider(provider, spec, ctx) {
     }
   }
 
+  // A layer hidden below its minimum level fetches nothing coarser: when a
+  // tile fails, Cesium asks for its parents down to level 0, and each is
+  // answered missing here without a request or a tileError. Not in
+  // `admit`: a deferral there is asked again on every later frame.
+  const hiddenBelow =
+    spec.hiddenBelowMinLevel && spec.minLevel > 0 ? spec.minLevel : 0;
   return withTileRequestHook(provider, {
     requestImage({ x, y, level, request }, ask) {
+      if (level < hiddenBelow) return Promise.reject(new MissingTile());
       const tile = { x, y, level };
       // Deferred by the budget: the request in flight asks for a frame as
       // it settles, so none is asked for here.

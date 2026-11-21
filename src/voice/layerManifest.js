@@ -523,6 +523,8 @@ export const VOICE_OFF_LAYERS = Object.freeze({
   'power-grid': 'Swedish power flows; no room in the prompt budget',
   'wind-turbines':
     'Swedish wind turbines in the county boards’ register; no room in the prompt budget',
+  'historical-ortho':
+    'Lantmäteriet’s historical aerial photos, draped imagery with nothing to read aloud; no room in the prompt budget',
   'transit-alerts':
     'Swedish public-transport disruptions; no room in the prompt budget',
   // Same budget: a historical wreck archive waits for room too.

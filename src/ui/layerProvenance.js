@@ -55,6 +55,16 @@ export const LAYER_PROVENANCE = Object.freeze({
     updates: msg('Stills refresh while shown'),
     licence: `${CC0} (Trafikverket)`,
   }),
+  'historical-ortho': own({
+    source: 'Lantmäteriet',
+    coverage: msg(
+      'Aerial photos where Lantmäteriet flew them: the reference years 1960 and 1975, and each year 1993–2005 only the parts flown (colour from 2002, infrared from 2003); today’s map shows through where there is no photo',
+    ),
+    updates: msg(
+      'Historical photos that do not change; tiles kept on the server',
+    ),
+    licence: CC0,
+  }),
   // Infrastructure
   'speed-cameras': own({
     source: 'Trafikverket',

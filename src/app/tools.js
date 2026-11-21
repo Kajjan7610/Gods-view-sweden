@@ -206,6 +206,9 @@ export function createApplicationTools({
     if (window.__gevDataLibrary === libraryHandle)
       delete window.__gevDataLibrary;
   });
+  // DATA ▸ Historical aerial photos drape on the photoreal tileset too while
+  // the globe is hidden (Google 3D), as Recent Imagery does.
+  dataManager.layers.get('historical-ortho')?.module?.attachTileset?.(tileset);
   // DATA ▸ Recent Imagery: the box tool claims the pointer like Draw and the
   // panel lives on the right rail, so both belong to the application
   // lifetime. The tileset lets the layer drape while the globe is hidden.

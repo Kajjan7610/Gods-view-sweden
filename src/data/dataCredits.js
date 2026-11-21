@@ -650,6 +650,13 @@ export const DATA_CREDITS = [
       '(<a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a>; “Ange Länsstyrelsen som källa”; a snapshot, the data only)',
   },
   {
+    key: 'historical-ortho',
+    html:
+      'Historical aerial photos (Sweden): ' +
+      '<a href="https://www.lantmateriet.se/" target="_blank" rel="noopener">© Lantmäteriet</a>, Ortofoto historiska ' +
+      '(<a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a>; read through the owner’s free Geotorget account)',
+  },
+  {
     key: 'trafiklab-realtime',
     html:
       'City panel local traffic: data from ' +

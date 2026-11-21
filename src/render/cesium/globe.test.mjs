@@ -148,6 +148,86 @@ test('a layer hidden below its minimum level shows from the globe level as fine 
   // Web Mercator z14 is as fine as the geographic globe's level 13.
   assert.equal(scene.imageryLayers.get(0)._minimumTerrainLevel, 13);
   assert.equal(scene.imageryLayers.get(1)._minimumTerrainLevel, undefined);
+  // A 512 px Web Mercator level is as fine as the globe level of the same
+  // number.
+  port.imagery.add({
+    kind: 'xyz',
+    url: url('large'),
+    minLevel: 9,
+    tileSize: 512,
+    hiddenBelowMinLevel: true,
+  });
+  assert.equal(scene.imageryLayers.get(2)._minimumTerrainLevel, 9);
+});
+
+test('below its minimum level a hidden layer answers missing without a request or an error', async () => {
+  const asked = [];
+  const admitted = [];
+  const provider = {
+    tilingScheme: new Cesium.WebMercatorTilingScheme(),
+    requestImage: (x, y, level) => {
+      asked.push(level);
+      return Promise.resolve('image');
+    },
+  };
+  const counts = { started: 0, settled: 0, retries: 0 };
+  const ctx = {
+    started: () => (counts.started += 1),
+    settled: () => (counts.settled += 1),
+    retrySoon: () => (counts.retries += 1),
+    laterFrame: () => Promise.resolve(),
+    signals: new Set(),
+  };
+  const spec = {
+    kind: 'xyz',
+    url: url('a'),
+    minLevel: 9,
+    hiddenBelowMinLevel: true,
+    admit(tile, issue) {
+      admitted.push(tile.level);
+      return issue();
+    },
+  };
+  const hooked = hookProvider(provider, spec, ctx);
+  // A failed level-9 tile's parents, down to level 0.
+  for (let level = 8; level >= 0; level -= 1)
+    await assert.rejects(hooked.requestImage(0, 0, level), {
+      name: 'MissingTile',
+    });
+  assert.deepEqual(asked, [], 'no request below the minimum level');
+  assert.deepEqual(admitted, [], 'never put to admit, so never deferred');
+  assert.deepEqual(counts, { started: 0, settled: 0, retries: 0 });
+  assert.equal(await hooked.requestImage(0, 0, 9), 'image');
+  assert.deepEqual(asked, [9]);
+  // A layer that is not hidden below its minimum asks as before.
+  const plain = hookProvider(
+    provider,
+    { kind: 'xyz', url: url('b'), minLevel: 9 },
+    ctx,
+  );
+  assert.equal(await plain.requestImage(0, 0, 3), 'image');
+});
+
+test('a missing tile below the minimum level raises no tileError', async () => {
+  const { scene, port } = setup();
+  const layer = port.imagery.add({
+    kind: 'xyz',
+    url: url('a'),
+    minLevel: 9,
+    hiddenBelowMinLevel: true,
+  });
+  const errors = [];
+  layer.on('tileError', (error) => errors.push(error));
+  const provider = scene.imageryLayers.get(0).imageryProvider;
+  const answer = provider.requestImage(0, 0, 4);
+  await assert.rejects(answer, { name: 'MissingTile' });
+  provider.errorEvent.raiseEvent({
+    x: 0,
+    y: 0,
+    level: 4,
+    error: await answer.catch((error) => error),
+  });
+  assert.deepEqual(errors, []);
 });
 
 test('imagery drapes on the drawn base tileset while the globe is hidden', () => {

@@ -55,6 +55,10 @@ export const CATALOG_SOURCE_CONTRACTS = Object.freeze({
   'electricity-prices': contract(['electricity-prices'], ['getSnapshot']),
   'power-grid': contract(['power-grid'], ['getSnapshot']),
   'wind-turbines': contract(['wind-turbines'], ['getSnapshot']),
+  'historical-ortho': contract(
+    ['historical-ortho'],
+    ['getStatus', 'getTileTemplate'],
+  ),
   'transit-alerts': contract(['transit-alerts'], ['getSnapshot']),
   'sr-traffic': contract(['sr-traffic'], ['getSnapshot']),
   'sea-weather': contract(['sea-weather'], ['getSnapshot']),

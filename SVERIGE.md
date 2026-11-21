@@ -62,6 +62,7 @@ Tre regler gäller:
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (rörliga vinklar i flödesriktningen, MW), Sveriges import, export och netto totalt och per grannland, val av import/export/inrikes och en knapp per land som lyfter fram dess förbindelser; klick på ett elområde ger dess import och export. Produktion per kraftslag och förbrukning visas inte: de ingår inte i ENTSO-E:s fria data | ENTSO-E Transparency Platform (CC BY 4.0, gratisnyckel `ENTSOE_SECURITY_TOKEN`) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
 | Vindkraftverk: Vindbrukskollens 5 824 uppförda verk som prickar, färgade efter status och större ju högre verket är, de 1 500 närmast kartans mitt när man zoomat in under 250 km, med antalet i vyn och de uppförda verkens märkeffekt; knapparna PLANERAT (1 935 beviljade, under handläggning eller överklagade, ej byggda), NEDMONTERAT (217), AVSLAG (2 633) och EJ AKTUELLT (7 928 inte aktuella eller återkallade och 1 utan status) lägger till resten, alla avstängda från början. Statusen anges som registret anger den, utan skäl. Klick ger projektnamn, status, totalhöjd, navhöjd, rotordiameter, märkeffekt (MW), beräknad produktion (GWh/år), fabrikat och modell, byggår (uppförda och nedmonterade), kommun och län, elområde, verksamhetsutövare (bara när det tydligt är ett företag) och senaste uppdatering i registret | Länsstyrelserna, Vindbrukskollen (CC0 1.0, "Ange Länsstyrelsen som källa", ingen nyckel) som ögonblicksbild i repot, byggd för hand ur länsstyrelsernas shapefil; bara data: Energimyndighetens bakgrundskartor får bara användas i tillståndsprocessen och används inte | Wind turbines (Sweden) / Vindkraftverk (Sverige), under Infrastructure |
+| Historiska flygfoton ("Då och nu"): Lantmäteriets historiska ortofoton draperade över kartan, ett år i taget. Referensåren 1960 och 1975 är Lantmäteriets svartvita mosaiker (0,5 m), sammansatta av flygningar från flera år; knappen FLYGÅR lägger på bladen med det år då största delen av vart och ett flögs och skarvarna mellan fotona. Åren 1993–2005 är svartvita (1 m), med FÄRG 2002–2005 och IR 2003–2005 (0,5 m), och täcker bara de delar som flögs det året. Alla fotolager visar det Lantmäteriet har flugit; där det saknas foto syns dagens karta. Visas under 120 km höjd | Lantmäteriet, Ortofoto historiska Visning (CC0 1.0, avgift 0 kr; kräver ägarens eget gratis Geotorget-konto, `GEOTORGET_USERNAME` och `GEOTORGET_PASSWORD`) | Historical aerial photos (Sweden) / Historiska flygfoton (Sverige), under Cameras |
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, senast publicerade flöde i m³/s (kvartsvärden, publiceras med fördröjning) och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
 | Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp, City Gross), Lidls och Systembolagets butiker samt apoteken hos Apotek Hjärtat (ICA Gruppen), Apoteket, Kronans Apotek (med Apoteksgruppen) och DOZ Apotek, färgade efter företag och koncept, med en knapp per företag; klick ger adress, om butiken är öppen nu, kartlagd storlek, webbsida, telefon, rullstol och paketombud, hur många som bor inom 2 km, närmaste hållplats, närmaste andra kedjor och företaget (org.nr och huvudkontor); klick på kortet öppnar butikens webbsida. Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0), befolkning från SCB:s 1 km-rutor (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
 | Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
@@ -109,6 +110,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | +SE | Kollektivtrafik | Trafiklab (Samtrafiken) · Trafikverket | Bussar, tunnelbana, spårvagn och pendeltåg från 16 regionala trafikbolag, och tåg med förseningar. Originalet: Öppna GTFS-RT-flöden i USA, Kanada, Finland, Nederländerna, Norge, Australien och Brasilien | Var 15:e sekund | CC0 1.0 (Trafiklab, Trafikverket) |
 | +SE | Järnväg | Trafikverket | Tåg i hela Sverige efter trafikslag, med förseningar, och aktuella störningar i tågtrafiken. Originalet: Tåg i realtid i USA, Kanada, Australien, Finland, Spanien, Norge, Malaysia, Japan och Frankrike | Tåg var 15:e sekund, störningar varannan minut | CC0 1.0 (Trafikverket) |
 | +SE | Kameror | Trafikverket | Cirka 1 550 vägkameror med livebilder. Originalet: Offentliga trafikkameror i många länder | Bilderna uppdateras medan de visas | CC0 1.0 (Trafikverket) |
+| SE | Historiska flygfoton (Sverige) | Lantmäteriet | Flygfoton där Lantmäteriet har flugit: referensåren 1960 och 1975, och varje år 1993–2005 bara de delar som flögs (färg från 2002, IR från 2003); där det saknas foto syns dagens karta | Historiska foton som inte ändras; rutorna sparas på servern | CC0 1.0 |
 | SE | Fartkameror (Sverige) | Trafikverket | Cirka 2 800 fasta fartkameror i hela Sverige | Varje timme | CC0 1.0 |
 | SE | Elpris (Sverige) | elprisetjustnu.se · Nord Pool via ENTSO-E | Spotpris per kvart i elområdena SE1–SE4 | Var 15:e minut | Fri att använda enligt Elpriset just nu; priserna kommer från Nord Pool via ENTSO-E |
 | SE | Kraftsystemet (Sverige) | ENTSO-E | Sveriges förbindelser mellan elområdena och till grannländerna | Var 15:e minut | CC BY 4.0 |
@@ -394,6 +396,7 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 | `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` | flyg med större kvot än utan konto (originalets lager; OpenSkys villkor kräver skriftligt tillstånd för användning i en app som denna, se "Källor med oklara eller särskilda villkor") | opensky-network.org → konto → API client (under KOPPLA PÅ) |
 | `ENTSOE_PRODUCTION` | `on`: produktion, förbrukning och dygnskurva från ENTSO-E också; tom (standard): bara flödena, eftersom produktion och förbrukning inte ingår i ENTSO-E:s fria data | ingen nyckel |
 | `ENTSOE_SECURITY_TOKEN` | kraftsystemets flöden från ENTSO-E (CC BY 4.0); behövs för lagret | transparency.entsoe.eu → registrera, mejla transparency@entsoe.eu "RESTful API access", sedan My Account → Generate token |
+| `GEOTORGET_USERNAME`, `GEOTORGET_PASSWORD` | historiska flygfoton från Lantmäteriet (CC0); behövs för lagret. Inloggningen stannar i serverns proxy och når aldrig webbläsaren. Valfritt: `GEOTORGET_ENVIRONMENT=verification` för Lantmäteriets testmiljö, `HISTORICAL_ORTHO_DAILY_BUDGET` (standard 20 000 hämtningar per dygn) | geotorget.lantmateriet.se → gratis konto → beställ "Ortofoto historiska Visning" (0 kr) |
 | `CESIUM_ION_TOKEN` | fotorealistiska 3D-städer | ion.cesium.com |
 | `ARCGIS_API_KEY` | Esris satellitbild i 2D och sparläget; utan nyckel visas OpenStreetMap. Nyckeln syns i webbläsaren och ska begränsas hos Esri till appens adresser; den gäller högst ett år och behöver förnyas | location.arcgis.com → gratis Location Platform-konto (inte ett ArcGIS public account) → Developer credentials → API-nyckel, offentlig applikation, bara Baskartor, referenter `http://localhost:4173` och `http://127.0.0.1:4173` |
 
@@ -424,6 +427,55 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-21 (Då och nu: historiska flygfoton)
+- Nytt lager **Historiska flygfoton (Sverige)** (delningstoken `17`) under
+  Cameras, efter Recent Imagery. Lantmäteriets historiska ortofoton
+  (Ortofoto historiska Visning, CC0 1.0, avgift 0 kr) draperas på globen,
+  ett år i taget: knappar för 1960, 1975 och
+  1993–2005, från början 1960 i svartvitt. FÄRG (2002–2005) och IR
+  (2003–2005) går bara att välja de år Lantmäteriet har dem; annars är
+  knappen gråad och säger varför. FLYGÅR lägger på bladen med det år då
+  största delen av vart och ett flögs (orange) och skarvarna mellan fotona,
+  och finns bara för 1960 och 1975.
+- Ärliga etiketter: 1960 och 1975 kallas referensår, eftersom fotona är
+  sammansatta av flygningar från flera år ("Referensår 1960 · Lantmäteriet
+  (CC0) · flygåren varierar, slå på FLYGÅR"). Inga flygår gissas; bara
+  bladen visar dem. Åren 1993–2005 täcker bara de delar som flögs det året,
+  och raden säger det: där det saknas foto syns dagens karta.
+- Lagret kräver ägarens eget gratis Geotorget-konto som har beställt
+  produkten, med användarnamn och lösenord under **KOPPLA PÅ**
+  (`GEOTORGET_USERNAME`, `GEOTORGET_PASSWORD`). Inloggningen stannar i
+  serverns proxy `/api/historiska-ortofoton` och når aldrig webbläsaren.
+  Utan konto draperas ingenting och raden säger att ett gratis
+  Geotorget-konto behövs; godtar Lantmäteriet inte inloggningen säger raden
+  det.
+- Google 3D: så länge lagret är på byter kartan till Esri (samma lån av
+  kartan som Recent Imagery, ägare `historical-ortho`), så att 1960 års foto
+  inte läggs över dagens 3D-byggnader; när lagret slås av går kartan
+  tillbaka till Google 3D, om ingen annan har bytt den under tiden. Byter
+  man själv till Google 3D medan fotona visas tar lagret tillbaka Esri och
+  raden säger det; faller kartan tillbaka av sig själv (Esri gick inte att
+  få) försöker lagret inte igen. Går lånet inte att få (en annan scen har
+  det, eller Esri saknas) ligger fotona på 3D-rutorna, men bara under 25 km
+  och när kameran tittar nedåt (brantare än −35°), och raden säger att det
+  gamla fotot ligger över dagens 3D-byggnader. Utanför Sveriges ruta
+  draperas ingenting och raden säger det.
+- Prestanda: ingenting laddas förrän lagret slås på, och då läses proxyns
+  status en gång (ingen timer). Över 120 km höjd hämtas inga rutor alls och
+  raden säger "Zooma in för att se flygfotona"; rutorna (512 px) hämtas
+  bara inom Sveriges ruta och från nivå 9 (dolda under den), högst sex åt
+  gången, till nivå 16 för 0,5 m-fotona och 15 för 1 m-fotona och bladen.
+  Under nivå 9 svarar appen själv att rutan saknas, så en ruta som inte gick
+  att hämta får aldrig Cesium att fråga efter grövre föräldrarutor ända ner
+  till nivå 0.
+  Byter man till FLYGÅR behålls fotot och bara bladen läggs till. När
+  lagret slås av tas bildlagren bort. Proxyn hämtar varje ruta en gång,
+  sparar den på disk och slutar vid en dygnskvot hos Lantmäteriet; är
+  kvoten slut säger raden det, och redan hämtade foton visas fortfarande.
+- Källa och licens: "© Lantmäteriet" med CC0 står i globens källrad när
+  lagret visas och i källförteckningen; CC0 kräver ingen källangivelse men
+  vi ger den ändå. Lagret visar bara Lantmäteriets egna foton och blad.
 
 ### 2026-11-21 (vindkraftverk)
 - Nytt lager **Vindkraftverk (Sverige)** (delningstoken `16`) under
