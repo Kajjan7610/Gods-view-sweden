@@ -423,6 +423,15 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-21 (mindre rättelser)
+- DATA_SOURCES har fått raderna för Kraftsystemet (ENTSO-E:s flöden) och
+  Valdistrikt 2026 (Valmyndigheten), och beskrivningarna av originalets
+  borttagna funktioner är borta. Licensraderna för de OSM-data som följer
+  med repot står kvar, eftersom ODbL kräver dem.
+- `.env.example` räknar upp allt Trafikverkets nyckel används till.
+- Bilden av kraftsystemet i README är omtagen, så att SE4 och förbindelserna
+  till Danmark, Tyskland, Polen och Litauen syns ovanför verktygsraden.
+
 ### 2026-11-20 (tre nya filmer)
 - README länkar till tre nya filmer på 29 sekunder, var och en som video
   och som Short: Stockholm i rusningstid (inspelad fredag kl. 16), Sverige
