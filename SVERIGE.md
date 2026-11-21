@@ -446,6 +446,10 @@ git merge origin/main
   originalets.
 - Rättat: Cockpitens svenska lägesbild kraschade när den uppdaterades
   efter sammanslagningen. Den visar nu sidan som förut.
+- Sidhuvudet: under 1180 px flyttar originalet globknapparna ner till
+  HUD-raderna, där de täckte den svenska HUD-texten. De står kvar på
+  titelraden som förut (kontrollerat i bredderna 721–1280 px). På mobilen
+  slutar originalets sökfält före 3D-knappen i högerkanten.
 - ISS livevideo visas inte. Den spelas i YouTubes spelare, som sidans
   säkerhetsregler (CSP) inte släpper in, och YouTubes villkor kräver en
   integritetspolicy som appen inte har. ISS-telemetrin är avstängd som

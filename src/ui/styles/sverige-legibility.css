@@ -308,3 +308,10 @@
 #globe-saver-button.saver .globe-saver-label {
   color: #ffc94d;
 }
+
+/* On a phone the original's search field leaves 60 px at the right edge
+   for the language picker (Omnibar.vue); the 3D button below it is wider,
+   so the field stops short of it. `:root` outranks the component's rule. */
+:root body.mobile-shell:has(#globe-saver-button) #gev-omnibar {
+  inset-inline: 16px 74px;
+}
