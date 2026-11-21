@@ -44,7 +44,8 @@ const SURFACES = {
   // The card's face and the selected card's clear chip.
   'news/NewsCard.vue': [2, 0, 0],
   'rail/RailCard.vue': [1, 0, 0],
-  'layerPanel/LayerRows.vue': [1, 0, 0],
+  // Swedish fork: +1 button and +1 glyph, the source line's ⓘ.
+  'layerPanel/LayerRows.vue': [2, 0, 1],
   'credits/CreditsView.vue': [1, 1, 0],
   'cctv/CctvCalValue.vue': [1, 0, 0],
 };

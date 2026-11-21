@@ -8,6 +8,7 @@ import {
   readTextSize,
   saveTextSize,
 } from '../../textSize.js';
+import UiButton from '../../kit/UiButton.vue';
 import { useCornerActions } from './cornerActions.js';
 
 // The text size button (Swedish fork), beside the language picker in the
@@ -37,9 +38,9 @@ function step() {
 
 <template>
   <Teleport v-if="corner" :to="corner">
-    <button id="text-size-button" type="button" :aria-label="label" :title="label" @click="step">
+    <UiButton id="text-size-button" :aria-label="label" :title="label" @click="step">
       <span class="text-size-glyph" aria-hidden="true">A<small>A</small></span>
       <span class="text-size-level" aria-hidden="true"><i v-for="n in 3" :key="n" :class="{ on: n - 1 <= level }"></i></span>
-    </button>
+    </UiButton>
   </Teleport>
 </template>

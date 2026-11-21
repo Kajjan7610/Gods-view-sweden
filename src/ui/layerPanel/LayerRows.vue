@@ -8,6 +8,7 @@ import RowSlider from './RowSlider.vue';
 import RowSwitch from './RowSwitch.vue';
 import RowText from './RowText.vue';
 import UiButton from '../kit/UiButton.vue';
+import UiIcon from '../kit/UiIcon.vue';
 import { vClassToggle } from '../rail/classToggle.js';
 
 // The data layer rows under their group headings. LayerPanel presents every
@@ -73,17 +74,16 @@ const toggleSources = (id) => (open.has(id) ? open.delete(id) : open.add(id));
           ]"
           :title="item.mark.title"
           >{{ item.mark.text }}</span
-        ><RowText tag="div" class="data-toggle-meta" :text="item.meta" /><button
-          type="button"
+        ><RowText
+          tag="div"
+          class="data-toggle-meta"
+          :text="item.meta" /><UiButton
           class="data-provenance-btn"
           :aria-expanded="String(open.has(item.id))"
           :aria-label="t('Sources and coverage')"
           :title="t('Sources and coverage')"
           @click="toggleSources(item.id)"
-          ><span class="material-symbols-outlined" aria-hidden="true"
-            >info</span
-          ></button
-        ></div
+          ><UiIcon name="info" :size="null" /></UiButton></div
       ><RowText
         v-else
         tag="div"

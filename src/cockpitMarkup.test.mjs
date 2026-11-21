@@ -114,9 +114,22 @@ test('Cockpit has one reset action beside its bottom exit path', () => {
     /id="reset-globe-view"/,
     'map-only reset must stay outside Cockpit',
   );
-  assert.match(
-    viewSwitcher[0],
-    /id="cockpit-quick-entry"[^>]*aria-keyshortcuts="C"[^>]*title="Enter cockpit view"[^>]*hidden[\s\S]*?flight[\s\S]*?COCKPIT[\s\S]*?id="cockpit-reset-globe"/,
+  // Swedish fork: the quick entry's attributes, in whatever order the button
+  // renders them; it sits before Cockpit Reset.
+  const quickEntry = viewSwitcher[0].match(
+    /<button\b(?=[^>]*\sid="cockpit-quick-entry")([^>]*)>([\s\S]*?)<\/button>/,
+  );
+  assert.ok(
+    quickEntry,
+    'Cockpit quick entry is missing from the view switcher',
+  );
+  assert.match(quickEntry[1], /\saria-keyshortcuts="C"/);
+  assert.match(quickEntry[1], /\stitle="Enter cockpit view"/);
+  assert.match(quickEntry[1], /\shidden(?=[\s>=]|$)/);
+  assert.match(quickEntry[2], /flight[\s\S]*?COCKPIT/);
+  assert.ok(
+    viewSwitcher[0].indexOf('id="cockpit-reset-globe"') > quickEntry.index,
+    'the quick entry must sit before Cockpit Reset',
   );
   // The reset button's attributes, in whatever order the button renders them.
   const reset = viewSwitcher[0].match(

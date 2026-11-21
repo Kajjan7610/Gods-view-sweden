@@ -4,11 +4,16 @@ import { storeToRefs } from 'pinia';
 import { t } from '../../../i18n/index.js';
 import { useAirportBoardStore } from '../../stores/airportBoard.js';
 import { useAirportRoutesStore } from '../../stores/airportRoutes.js';
+import UiButton from '../../kit/UiButton.vue';
+import UiCloseButton from '../../kit/UiCloseButton.vue';
+import UiIcon from '../../kit/UiIcon.vue';
 import SplitFlapText from './SplitFlapText.vue';
 
 // The airport board (Swedish fork): a Swedavia airport's whole day, opened
 // from the city dossier or from the card offered over the airport. The
 // controller (src/ui/airportBoard.js) presents it and answers through act().
+// Today and Tomorrow are pressed toggles rather than a UiSegmented, whose
+// radio group would change their keys and their look.
 const store = useAirportBoardStore();
 const { view } = storeToRefs(store);
 const list = ref(null);
@@ -47,56 +52,50 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
   <Teleport to="body">
     <Transition name="airport-card">
       <div v-if="view.card" :key="view.card.iata" class="airport-card">
-        <button type="button" class="airport-card-open" @click="store.act('open', view.card.iata)">
-          <span class="material-symbols-outlined" aria-hidden="true">flight</span>
+        <UiButton class="airport-card-open" @click="store.act('open', view.card.iata)">
+          <UiIcon name="flight" :size="null" />
           <span><strong>{{ view.card.name }}</strong><small>{{ view.card.label }}</small></span>
-        </button>
-        <button type="button" class="airport-card-close" :aria-label="t('Close')" @click="store.act('dismissCard')">
-          <span class="material-symbols-outlined" aria-hidden="true">close</span>
-        </button>
+        </UiButton>
+        <UiCloseButton class="airport-card-close" glyph="icon" :label="t('Close')" @click="store.act('dismissCard')" />
       </div>
     </Transition>
     <Transition name="airport-card">
       <div v-if="routes" :key="routes.iata" class="airport-card airport-routes-chip">
-        <button type="button" class="airport-card-open" @click="routesStore.act('openBoard', routes.iata)">
-          <span class="material-symbols-outlined" aria-hidden="true">public</span>
+        <UiButton class="airport-card-open" @click="routesStore.act('openBoard', routes.iata)">
+          <UiIcon name="public" :size="null" />
           <span><strong>{{ routes.name }}</strong><small>{{ routes.label }}</small></span>
-        </button>
-        <button type="button" class="airport-card-close" :aria-label="t('Hide the routes')" :title="t('Hide the routes')" @click="routesStore.act('hide')">
-          <span class="material-symbols-outlined" aria-hidden="true">close</span>
-        </button>
+        </UiButton>
+        <UiCloseButton class="airport-card-close" glyph="icon" :label="t('Hide the routes')" :title="t('Hide the routes')" @click="routesStore.act('hide')" />
       </div>
     </Transition>
     <section v-if="view.board" class="airport-board" role="dialog" :aria-label="view.board.name">
       <header class="airport-board-head">
-        <span class="material-symbols-outlined airport-board-logo" aria-hidden="true">flight</span>
+        <UiIcon class="airport-board-logo" name="flight" :size="null" />
         <div class="airport-board-title">
           <strong>{{ view.board.name }}</strong>
           <small>{{ [view.board.dateLabel, view.board.updated].filter(Boolean).join(' · ') }}</small>
-          <button v-if="view.board.weather" type="button" class="airport-board-weather" :title="t('Weather')" @click="store.act('setTab', 'weather')">
+          <UiButton v-if="view.board.weather" class="airport-board-weather" :title="t('Weather')" @click="store.act('setTab', 'weather')">
             <b v-if="view.board.weather.category" :style="{ color: view.board.weather.color, borderColor: view.board.weather.color }">{{ view.board.weather.category }}</b>{{ view.board.weather.line }}
-          </button>
+          </UiButton>
         </div>
         <div class="airport-board-days" role="group" :aria-label="t('Day')">
-          <button type="button" :aria-pressed="String(view.board.date === 'today')" @click="store.act('setDate', 'today')">{{ t('Today') }}</button>
-          <button type="button" :aria-pressed="String(view.board.date === 'tomorrow')" @click="store.act('setDate', 'tomorrow')">{{ t('Tomorrow') }}</button>
+          <UiButton :pressed="view.board.date === 'today'" @click="store.act('setDate', 'today')">{{ t('Today') }}</UiButton>
+          <UiButton :pressed="view.board.date === 'tomorrow'" @click="store.act('setDate', 'tomorrow')">{{ t('Tomorrow') }}</UiButton>
         </div>
-        <button v-if="view.board.routes" type="button" class="airport-board-icon" :aria-label="t('Today’s routes on the map')" :title="t('Today’s routes on the map')" @click="store.act('showRoutes')">
-          <span class="material-symbols-outlined" aria-hidden="true">public</span>
-        </button>
-        <button type="button" class="airport-board-icon" :aria-label="t('Refresh')" @click="store.act('refresh')">
-          <span class="material-symbols-outlined" :class="{ spinning: view.board.loading }" aria-hidden="true">refresh</span>
-        </button>
-        <button type="button" class="airport-board-icon" :aria-label="t('Close')" @click="store.act('close')">
-          <span class="material-symbols-outlined" aria-hidden="true">close</span>
-        </button>
+        <UiButton v-if="view.board.routes" class="airport-board-icon" :aria-label="t('Today’s routes on the map')" :title="t('Today’s routes on the map')" @click="store.act('showRoutes')">
+          <UiIcon name="public" :size="null" />
+        </UiButton>
+        <UiButton class="airport-board-icon" :aria-label="t('Refresh')" @click="store.act('refresh')">
+          <UiIcon name="refresh" :class="{ spinning: view.board.loading }" :size="null" />
+        </UiButton>
+        <UiCloseButton class="airport-board-icon" glyph="icon" :label="t('Close')" @click="store.act('close')" />
       </header>
       <nav class="airport-board-tabs" role="tablist">
-        <button v-for="tab in view.board.tabs" :key="tab.id" type="button" role="tab" :aria-selected="String(tab.active)" :class="{ active: tab.active }" @click="store.act('setTab', tab.id)">
-          <span class="material-symbols-outlined" aria-hidden="true">{{ tab.icon }}</span>{{ tab.label }}
-        </button>
+        <UiButton v-for="tab in view.board.tabs" :key="tab.id" role="tab" :aria-selected="String(tab.active)" :class="{ active: tab.active }" @click="store.act('setTab', tab.id)">
+          <UiIcon :name="tab.icon" :size="null" />{{ tab.label }}
+        </UiButton>
         <label v-if="view.board.kind === 'departures' || view.board.kind === 'arrivals'" class="airport-board-search">
-          <span class="material-symbols-outlined" aria-hidden="true">search</span>
+          <UiIcon name="search" :size="null" />
           <input type="search" :value="view.board.query" :placeholder="t('Flight, city or airline')" :aria-label="t('Search flights')" @input="store.act('setQuery', $event.target.value)" />
         </label>
       </nav>
@@ -125,28 +124,28 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
               <span class="ab-flight">{{ row.flight }}<small>{{ [row.codeshares, row.airline].filter(Boolean).join(' · ') }}</small></span>
               <span class="ab-where">{{ row.where }}</span>
               <span class="ab-status">
-                <button v-if="row.live" type="button" class="ab-follow" :class="{ inbound: row.inbound }" :aria-label="row.inbound ? t('Follow the aircraft, still on its way in') : t('Follow the aircraft')" :title="row.inbound ? t('Follow the aircraft, still on its way in') : t('Follow the aircraft')" @click.stop="store.act('follow', row.key)">
-                  <span class="material-symbols-outlined" aria-hidden="true">flight</span>
-                </button>
+                <UiButton v-if="row.live" class="ab-follow" :class="{ inbound: row.inbound }" :aria-label="row.inbound ? t('Follow the aircraft, still on its way in') : t('Follow the aircraft')" :title="row.inbound ? t('Follow the aircraft, still on its way in') : t('Follow the aircraft')" @click.stop="store.act('follow', row.key)">
+                  <UiIcon name="flight" :size="null" />
+                </UiButton>
                 <SplitFlapText :text="row.status" />
               </span>
             </div>
             <dl v-if="row.details" class="airport-board-details">
               <div v-for="item in row.details" :key="item.label"><dt>{{ item.label }}</dt><dd>{{ item.value }}</dd></div>
-              <button v-if="row.live" type="button" class="airport-board-follow" @click="store.act('follow', row.key)">
-                <span class="material-symbols-outlined" aria-hidden="true">flight</span>{{ row.inbound ? t('Follow the aircraft, still on its way in') : t('Follow the aircraft') }}
-              </button>
+              <UiButton v-if="row.live" class="airport-board-follow" @click="store.act('follow', row.key)">
+                <UiIcon name="flight" :size="null" />{{ row.inbound ? t('Follow the aircraft, still on its way in') : t('Follow the aircraft') }}
+              </UiButton>
             </dl>
           </template>
         </template>
         <template v-else>
           <div v-for="row in view.board.rows" :key="row.key" class="airport-board-queue" :data-level="row.level" :class="{ fast: row.fastTrack }">
-            <span class="material-symbols-outlined" aria-hidden="true">security</span>
+            <UiIcon name="security" :size="null" />
             <span><strong>{{ row.name }}</strong><small>{{ row.lane }}</small></span>
             <b>{{ row.minutes }}</b>
-            <button v-if="row.mapped" type="button" class="airport-board-icon" :aria-label="t('Show on the map')" :title="t('Show on the map')" @click="store.act('showQueue', row.key)">
-              <span class="material-symbols-outlined" aria-hidden="true">my_location</span>
-            </button>
+            <UiButton v-if="row.mapped" class="airport-board-icon" :aria-label="t('Show on the map')" :title="t('Show on the map')" @click="store.act('showQueue', row.key)">
+              <UiIcon name="my_location" :size="null" />
+            </UiButton>
           </div>
           <p v-if="view.board.rows.length" class="airport-board-note">{{ t('The wait projected for someone joining the queue now.') }}</p>
         </template>
@@ -156,7 +155,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
         <span>{{ t('Source: Swedavia') }}</span>
         <span v-if="view.board.flightsOff && view.board.kind !== 'security'" class="airport-board-flights-off">
           {{ t('Turn on the flights layer to follow aircraft from the board') }}
-          <button type="button" @click="store.act('enableFlights')">{{ t('Turn on') }}</button>
+          <UiButton @click="store.act('enableFlights')">{{ t('Turn on') }}</UiButton>
         </span>
       </footer>
     </section>

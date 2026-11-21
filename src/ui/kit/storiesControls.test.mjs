@@ -41,7 +41,8 @@ const views = {
   // Context.
   'stories/StoryScreen.vue': { buttons: 6, svgs: 5 },
   // Play, the key moment pips and Expand map.
-  'stories/StoryTimeline.vue': { buttons: 3, svgs: 2 },
+  // Swedish fork: +1 each, the narration switch and its speaker glyph.
+  'stories/StoryTimeline.vue': { buttons: 4, svgs: 3 },
 };
 // A tag's attributes, read past quoted values so a handler's `=>` does not
 // end the tag early.

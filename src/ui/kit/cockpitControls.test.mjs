@@ -24,7 +24,8 @@ const views = {
   // view switcher's Reset and Exit; the speed and altitude rims' pointers,
   // the two vision chevrons, the reticle, the heading caret and the view
   // switcher's two glyphs.
-  'CockpitView.vue': { buttons: 6, icons: 8 },
+  // Swedish fork: +1 each, the view switcher's quick entry and its glyph.
+  'CockpitView.vue': { buttons: 7, icons: 9 },
   // Display's and Radio's collapse and launcher buttons, Radio's Enable,
   // Previous, Play and Next, and the desktop rail's two items and glyphs.
   'panels/CockpitUtilityControls.vue': { buttons: 10, icons: 2 },
@@ -49,6 +50,8 @@ const views = {
   // Readouts only.
   'panels/CockpitProgress.vue': { buttons: 0, icons: 0 },
   'panels/CockpitRollingValue.vue': { buttons: 0, icons: 0 },
+  // Swedish fork: the briefing's Swedavia card, readouts only.
+  'panels/CockpitFlightLeg.vue': { buttons: 0, icons: 0 },
 };
 // A tag's attributes, read past quoted values so a handler's `=>` does not
 // end the tag early.

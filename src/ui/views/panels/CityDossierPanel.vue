@@ -5,6 +5,9 @@ import { t } from '../../../i18n/index.js';
 import RailPanel from '../../rail/RailPanel.vue';
 import { useCityDossierStore } from '../../stores/cityDossier.js';
 import { useAirportBoardStore } from '../../stores/airportBoard.js';
+import UiButton from '../../kit/UiButton.vue';
+import UiCloseButton from '../../kit/UiCloseButton.vue';
+import UiIcon from '../../kit/UiIcon.vue';
 
 // The city dossier on the right rail. The dossier controller presents the
 // town the view is visiting (src/ui/cityDossier.js); the panel stays hidden
@@ -42,11 +45,11 @@ watch(
           <div>
             <strong class="city-dossier-name">{{ d.name }}</strong>
             <small class="city-dossier-sub">{{ d.subtitle }}</small>
-            <small v-if="d.visits" class="city-dossier-visits"><span class="material-symbols-outlined" aria-hidden="true">approval</span>{{ d.visits }}</small>
+            <small v-if="d.visits" class="city-dossier-visits"><UiIcon name="approval" :size="null" />{{ d.visits }}</small>
           </div>
         </header>
         <nav class="city-dossier-tabs" role="tablist" :aria-label="t('City dossier sections')">
-          <button v-for="tab in d.tabs" :key="tab.id" type="button" role="tab" :aria-selected="String(tab.active)" :class="{ active: tab.active }" @click="store.act('setTab', tab.id)">{{ tab.label }}</button>
+          <UiButton v-for="tab in d.tabs" :key="tab.id" role="tab" :aria-selected="String(tab.active)" :class="{ active: tab.active }" @click="store.act('setTab', tab.id)">{{ tab.label }}</UiButton>
         </nav>
         <p v-if="d.error" class="city-dossier-note">{{ d.error }}</p>
 
@@ -114,17 +117,17 @@ watch(
             </ul>
             <p v-else-if="d.now.alertsNote" class="city-dossier-note">{{ d.now.alertsNote }}</p>
             <div v-if="d.now.aurora" class="city-dossier-aurora" :data-level="d.now.aurora.level">
-              <strong><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span>{{ d.now.aurora.title }}</strong>
+              <strong><UiIcon name="auto_awesome" :size="null" />{{ d.now.aurora.title }}</strong>
               <small v-if="d.now.aurora.detail">{{ d.now.aurora.detail }}</small>
               <figure v-if="d.now.aurora.camera" v-show="!cameraFailed[d.now.aurora.camera.src]" class="city-dossier-allsky">
                 <img :src="d.now.aurora.camera.src" loading="lazy" decoding="async" width="240" height="240" @error="fail" :alt="d.now.aurora.camera.title" />
                 <figcaption><strong>{{ d.now.aurora.camera.title }}</strong> <template v-for="([text, url], index) in d.now.aurora.camera.credit" :key="index"><a v-if="url" :href="url" target="_blank" rel="noopener noreferrer">{{ text }}</a><template v-else>{{ text }}</template></template></figcaption>
               </figure>
-              <button v-if="!d.now.aurora.layerOn" type="button" @click="store.act('showAurora')">{{ t('Show the aurora oval on the map') }}</button>
+              <UiButton v-if="!d.now.aurora.layerOn" @click="store.act('showAurora')">{{ t('Show the aurora oval on the map') }}</UiButton>
             </div>
             <div v-if="d.now.kris" class="city-dossier-kris">
               <a v-for="vma in d.now.kris.vmas" :key="vma.key" class="city-dossier-vma" :href="vma.url || undefined" target="_blank" rel="noopener noreferrer">
-                <strong><span class="material-symbols-outlined" aria-hidden="true">campaign</span>{{ vma.headline }}</strong>
+                <strong><UiIcon name="campaign" :size="null" />{{ vma.headline }}</strong>
                 <span v-if="vma.text">{{ vma.text }}</span>
                 <small>{{ vma.meta }}</small>
               </a>
@@ -134,7 +137,7 @@ watch(
             </div>
             <!-- Folded by default: the NOW tab stays short; one line says what rises. -->
             <details v-if="d.now.wastewater" class="city-dossier-wastewater">
-              <summary><strong><span class="material-symbols-outlined" aria-hidden="true">water_drop</span>{{ d.now.wastewater.title }}</strong><small>{{ d.now.wastewater.summary }}</small></summary>
+              <summary><strong><UiIcon name="water_drop" :size="null" />{{ d.now.wastewater.title }}</strong><small>{{ d.now.wastewater.summary }}</small></summary>
               <table>
                 <thead v-if="d.now.wastewater.columns.length"><tr><td></td><th v-for="col in d.now.wastewater.columns" :key="col.key" scope="col">{{ col.name }}</th></tr></thead>
                 <tbody>
@@ -149,12 +152,12 @@ watch(
               <small><a :href="d.now.wastewater.creditUrl" target="_blank" rel="noopener noreferrer">{{ d.now.wastewater.credit }}</a></small>
             </details>
             <div v-if="d.now.cameras" class="city-dossier-trains city-dossier-cameras">
-              <strong><span class="material-symbols-outlined" aria-hidden="true">speed_camera</span>{{ d.now.cameras.title }}</strong>
-              <button v-for="row in d.now.cameras.items" :key="row.key" type="button" class="city-dossier-camera" :title="t('Show on the map')" @click="store.act('showCamera', row.key)">
+              <strong><UiIcon name="speed_camera" :size="null" />{{ d.now.cameras.title }}</strong>
+              <UiButton v-for="row in d.now.cameras.items" :key="row.key" class="city-dossier-camera" :title="t('Show on the map')" @click="store.act('showCamera', row.key)">
                 <span class="city-dossier-camera-road">{{ row.road }}</span>
                 <span class="city-dossier-dest">{{ row.name }}<small v-if="row.detail">{{ row.detail }}</small></span>
-                <span class="material-symbols-outlined" aria-hidden="true">my_location</span>
-              </button>
+                <UiIcon name="my_location" :size="null" />
+              </UiButton>
             </div>
             <div v-if="d.now.trains" class="city-dossier-trains">
               <strong>{{ d.now.trains.title }}</strong>
@@ -189,16 +192,16 @@ watch(
             <div v-for="airport in d.now.flights || []" :key="airport.key" class="city-dossier-trains city-dossier-flights">
               <div class="city-dossier-flights-head">
                 <strong>{{ airport.title }}</strong>
-                <button type="button" class="city-dossier-board-open" @click="airportBoard.act('open', airport.key)">
-                  <span class="material-symbols-outlined" aria-hidden="true">open_in_full</span>{{ t('Full board') }}
-                </button>
+                <UiButton class="city-dossier-board-open" @click="airportBoard.act('open', airport.key)">
+                  <UiIcon name="open_in_full" :size="null" />{{ t('Full board') }}
+                </UiButton>
               </div>
               <div v-if="airport.security.length" class="city-dossier-security">
-                <span class="city-dossier-board"><span class="material-symbols-outlined" aria-hidden="true">security</span>{{ t('Security queue') }}</span>
+                <span class="city-dossier-board"><UiIcon name="security" :size="null" />{{ t('Security queue') }}</span>
                 <span v-for="queue in airport.security" :key="queue.key" class="city-dossier-queue" :class="{ busy: queue.busy }"><small v-if="queue.label">{{ queue.label }}</small>{{ queue.value }}</span>
               </div>
               <template v-for="board in airport.boards" :key="board.key">
-                <span class="city-dossier-board"><span class="material-symbols-outlined" aria-hidden="true">{{ board.icon }}</span>{{ board.label }}</span>
+                <span class="city-dossier-board"><UiIcon :name="board.icon" :size="null" />{{ board.label }}</span>
                 <p v-if="!board.items.length" class="city-dossier-note">{{ board.empty }}</p>
                 <div v-for="row in board.items" :key="row.key" class="city-dossier-departure" :class="{ late: row.late }">
                   <span class="city-dossier-time">{{ row.time }}<small v-if="row.tomorrow">{{ row.tomorrow }}</small></span>
@@ -215,7 +218,7 @@ watch(
             <small v-if="d.now.pending" class="city-dossier-note">{{ d.now.pending }}</small>
             <small v-if="d.now.failed" class="city-dossier-note">{{ d.now.failed }}</small>
             <a v-if="d.now.radio" class="city-dossier-radio" :href="d.now.radio.url" target="_blank" rel="noopener noreferrer">
-              <span class="material-symbols-outlined" aria-hidden="true">radio</span>{{ d.now.radio.label }} ↗
+              <UiIcon name="radio" :size="null" />{{ d.now.radio.label }} ↗
             </a>
           </template>
         </section>
@@ -223,10 +226,10 @@ watch(
           <p v-if="d.sights.note" class="city-dossier-note">{{ d.sights.note }}</p>
           <ul class="city-dossier-sights">
             <li v-for="item in d.sights.items" :key="item.key" :class="{ chosen: item.chosen }" :data-sight="item.key">
-              <button type="button" :aria-pressed="String(item.chosen)" @click="store.act(item.chosen ? 'clearSight' : 'chooseSight', item.key)">
+              <UiButton :pressed="item.chosen" @click="store.act(item.chosen ? 'clearSight' : 'chooseSight', item.key)">
                 <i :style="{ background: item.color }" aria-hidden="true"></i>
                 <span><strong>{{ item.name }}</strong><small>{{ item.kind }} · {{ item.distance }}</small></span>
-              </button>
+              </UiButton>
               <div v-if="item.chosen && (item.image || item.article)" class="city-dossier-sight-more">
                 <img v-if="item.image" :src="item.image" alt="" loading="lazy" referrerpolicy="no-referrer" />
                 <a v-if="item.imageCredit" class="city-dossier-note" :href="item.imageCredit.url" target="_blank" rel="noopener noreferrer">{{ item.imageCredit.text }}</a>
@@ -242,8 +245,8 @@ watch(
             <i><b :style="{ width: row.width }"></b></i>
           </div>
           <div class="city-dossier-pass-toggles">
-            <button type="button" :aria-pressed="String(d.pass.showMap)" @click="store.act('togglePassMap')">{{ t('Show my journey on the map') }}</button>
-            <button type="button" :aria-pressed="String(d.pass.cinematic)" @click="store.act('toggleCinematic')">{{ t('Town card on a first visit') }}</button>
+            <UiButton :pressed="d.pass.showMap" @click="store.act('togglePassMap')">{{ t('Show my journey on the map') }}</UiButton>
+            <UiButton :pressed="d.pass.cinematic" @click="store.act('toggleCinematic')">{{ t('Town card on a first visit') }}</UiButton>
           </div>
           <template v-if="d.pass.most.length">
             <strong class="city-dossier-kris-title">{{ t('Most visited') }}</strong>
@@ -268,7 +271,7 @@ watch(
         <div class="city-arrival-hero" :class="{ plain: !d.arrival.image }">
           <img v-if="d.arrival.image" :src="d.arrival.image" alt="" loading="lazy" referrerpolicy="no-referrer" />
         </div>
-        <button type="button" class="city-arrival-close" :aria-label="t('Close')" :title="t('Close')" @click="store.act('dismissArrival')">×</button>
+        <UiCloseButton class="city-arrival-close" bare :label="t('Close')" :title="t('Close')" @click="store.act('dismissArrival')" />
         <div class="city-arrival-body">
           <img v-if="d.arrival.coatOfArms" class="city-arrival-arms" :src="d.arrival.coatOfArms" alt="" loading="lazy" referrerpolicy="no-referrer" />
           <small class="city-arrival-eyebrow">{{ t('New stamp in your passport') }}</small>
@@ -277,7 +280,7 @@ watch(
           <dl v-if="d.arrival.stats.length" class="city-arrival-stats">
             <div v-for="stat in d.arrival.stats" :key="stat.label"><dd>{{ stat.value }}</dd><dt>{{ stat.label }}</dt></div>
           </dl>
-          <button type="button" class="city-arrival-offer" @click="store.act('flyIn')">{{ t('Fly in and read more') }}<i aria-hidden="true">→</i></button>
+          <UiButton class="city-arrival-offer" @click="store.act('flyIn')">{{ t('Fly in and read more') }}<i aria-hidden="true">→</i></UiButton>
           <small v-if="d.arrival.imageCredit || d.arrival.coatOfArmsCredit" class="city-arrival-credit"><a v-if="d.arrival.imageCredit" :href="d.arrival.imageCredit.url" target="_blank" rel="noopener noreferrer">{{ d.arrival.imageCredit.text }}</a><a v-if="d.arrival.coatOfArmsCredit" :href="d.arrival.coatOfArmsCredit.url" target="_blank" rel="noopener noreferrer">{{ d.arrival.coatOfArmsCredit.text }}</a></small>
         </div>
       </aside>

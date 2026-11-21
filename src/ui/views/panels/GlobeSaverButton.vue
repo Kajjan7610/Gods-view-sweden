@@ -2,6 +2,8 @@
 import { computed, ref } from 'vue';
 import { t } from '../../../i18n/index.js';
 import { readGlobeSaver, saveGlobeSaver } from '../../../globeSaver.js';
+import UiButton from '../../kit/UiButton.vue';
+import UiIcon from '../../kit/UiIcon.vue';
 import { useCornerActions } from './cornerActions.js';
 
 // The 3D button (Swedish fork), in the bottom-right corner row: Google 3D
@@ -28,9 +30,9 @@ function toggle() {
 
 <template>
   <Teleport v-if="corner" :to="corner">
-    <button id="globe-saver-button" type="button" :class="{ saver }" :aria-pressed="String(!saver)" :aria-label="label" :title="label" @click="toggle">
-      <span class="material-symbols-outlined" aria-hidden="true">public</span>
+    <UiButton id="globe-saver-button" :class="{ saver }" :pressed="!saver" :aria-label="label" :title="label" @click="toggle">
+      <UiIcon name="public" :size="null" />
       <span class="globe-saver-label">{{ saver ? t('2D') : t('3D') }}</span>
-    </button>
+    </UiButton>
   </Teleport>
 </template>

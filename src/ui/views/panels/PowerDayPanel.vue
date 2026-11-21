@@ -4,13 +4,16 @@ import { storeToRefs } from 'pinia';
 import { t } from '../../../i18n/index.js';
 import RailPanel from '../../rail/RailPanel.vue';
 import { usePowerDayStore } from '../../stores/powerDay.js';
+import UiButton from '../../kit/UiButton.vue';
 
 // Sweden's power day (or week) on the right rail while the power grid layer
 // is on: the production stacked by type with the consumption over it, and the
 // exchange below, per quarter-hour. The layer presents it (src/layers/
 // powerGrid/dayPanel.js); pointing at the chart reads one quarter-hour.
 // Without a chart the panel says why: the load failed, it finished without
-// quarter-hours, or it is still on its way.
+// quarter-hours, or it is still on its way. The span choice is pressed
+// toggles rather than a UiSegmented, whose radio group would change its keys
+// and its look.
 const store = usePowerDayStore();
 const { view: d } = storeToRefs(store);
 const hover = ref(null);
@@ -41,14 +44,14 @@ const readout = computed(() =>
     <div id="power-panel-body" class="power-day ui-scroll" data-rail-scroller :aria-busy="d?.loading ? 'true' : undefined">
       <template v-if="d">
         <div class="power-day-choices" role="group" :aria-label="t('Time span')">
-          <button
+          <UiButton
             v-for="choice in d.spans"
             :key="choice.id"
-            type="button"
-            :class="['power-day-choice', { active: choice.id === d.span }]"
-            :aria-pressed="String(choice.id === d.span)"
+            class="power-day-choice"
+            :pressed="choice.id === d.span"
+            pressed-class="active"
             @click="store.act('show', choice.id)"
-          >{{ choice.label }}</button>
+          >{{ choice.label }}</UiButton>
         </div>
         <p v-if="!d.chart" class="power-day-note" role="status">{{ d.failed ? t('Power day unavailable') : d.empty || (d.loading ? t('Loading…') : '') }}</p>
         <template v-else>
