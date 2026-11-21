@@ -47,10 +47,12 @@ export const TILE_RENDER_REASON = 'historical-ortho-tiles';
  * Admit a tile request while the semaphore has room. A request that finds
  * it full is deferred and asks for no frame itself: the request holding the
  * slot asks for one as it settles. One the renderer itself defers frees its
- * slot at once, and the renderer asks again on a later frame. A request
- * that loads is told to `loaded`.
+ * slot at once, and the renderer asks again on a later frame. One
+ * function for every layer, so the port groups their waits as one
+ * (`ImagerySpec.admit`). When the last request in flight settles, `idle`
+ * is told.
  */
-function admitTileRequests(admission, requestRender, loaded) {
+function admitTileRequests(admission, requestRender, idle) {
   return (_tile, issue) => {
     if (admission.inFlight >= admission.limit) return undefined;
     admission.inFlight += 1;
@@ -68,20 +70,27 @@ function admitTileRequests(admission, requestRender, loaded) {
       release();
       return undefined;
     }
-    const settled = Promise.resolve(promise);
-    settled.then(
-      () => loaded(),
-      () => {},
-    );
-    return settled.finally(() => {
+    return Promise.resolve(promise).finally(() => {
       release();
       requestRender(TILE_RENDER_REASON);
+      if (admission.inFlight === 0) idle();
     });
   };
 }
 
-/** A tile layer as a comparable key. */
-const entryKey = (entry) => `${entry.layerId}@${entry.maxLevel}`;
+/** The draw order an entry asks for: its own, else its role's. */
+const zOrderOf = (entry) =>
+  Number.isFinite(entry.zOrder)
+    ? entry.zOrder
+    : (HISTORICAL_ORTHO_Z[entry.role] ?? HISTORICAL_ORTHO_Z.photo);
+
+/**
+ * A tile layer as a comparable key: its layer, finest level and draw order
+ * (a layer cannot change its order once added, so another order is
+ * another layer).
+ */
+const entryKey = (entry) =>
+  `${entry.layerId}@${entry.maxLevel}@${zOrderOf(entry)}`;
 
 /**
  * Create the renderer. The host it is bound to (`rebind`) carries the
@@ -102,14 +111,15 @@ export function createHistoricalOrthoRenderer({
   /** Who hears a failed tile: the layer, once it is built. */
   let tileErrorListener =
     typeof onTileError === 'function' ? onTileError : () => {};
-  /** Who hears a tile that loaded. */
+  /** Who hears a tile that loaded, and the semaphore going idle. */
   let tileLoadListener = () => {};
+  let idleListener = () => {};
   const admission = {
     limit: Math.max(1, Math.min(6, Math.floor(maxTileRequests) || 1)),
     inFlight: 0,
   };
   const admit = admitTileRequests(admission, requestRender, () =>
-    tileLoadListener(),
+    idleListener(),
   );
   /** The tile layers asked for, bottom to top. */
   let wanted = [];
@@ -125,6 +135,13 @@ export function createHistoricalOrthoRenderer({
   const applySplit = (record) => {
     record.layer.split = split;
   };
+  /** A layer's alpha: its entry's (the time-lapse fades them), else 1. */
+  const applyAlpha = (record) => {
+    const alpha = Number.isFinite(record.entry.alpha)
+      ? Math.max(0, Math.min(1, record.entry.alpha))
+      : 1;
+    if (record.layer.alpha !== alpha) record.layer.alpha = alpha;
+  };
 
   function specFor(entry) {
     const spec = {
@@ -137,10 +154,13 @@ export function createHistoricalOrthoRenderer({
       maxLevel: entry.maxLevel,
       rectangle: { ...SWEDEN_RECTANGLE },
       credit: { text: credit },
-      zOrder: HISTORICAL_ORTHO_Z[entry.role] ?? HISTORICAL_ORTHO_Z.photo,
+      zOrder: zOrderOf(entry),
+      // Each layer hears its own loads, with the entry it was added for
+      // (the time-lapse waits on one preload, not on a layer id).
+      onTileLoad: () => tileLoadListener(entry.layerId, entry.token ?? null),
     };
-    // A port without imageHooks refuses `admit`: the layers then split the
-    // budget between them.
+    // One semaphore for all (one `admit`); a port without imageHooks
+    // refuses `admit`, and the layers then split the budget between them.
     if (host.imageHooks !== false) spec.admit = admit;
     else
       spec.maxConcurrentRequests = Math.max(
@@ -171,6 +191,7 @@ export function createHistoricalOrthoRenderer({
     const layer = host.globe.imagery.add(specFor(entry));
     const record = { entry, layer, off: null };
     try {
+      applyAlpha(record);
       const off =
         typeof layer.on === 'function'
           ? layer.on('tileError', (error) =>
@@ -217,8 +238,11 @@ export function createHistoricalOrthoRenderer({
     try {
       for (const entry of wanted) {
         const record = kept.get(entryKey(entry));
-        if (record) next.push(record);
-        else {
+        if (record) {
+          record.entry = entry;
+          applyAlpha(record);
+          next.push(record);
+        } else {
           changed = true;
           next.push(mount(entry));
         }
@@ -294,12 +318,21 @@ export function createHistoricalOrthoRenderer({
     },
 
     /**
-     * Who hears a tile that loaded (only through the semaphore, so with
-     * `imageHooks`).
-     * @param {() => void} listener
+     * Who hears a tile that loaded, with its tile layer's id and the
+     * `token` of the entry the layer was added for (`onTileLoad`).
+     * @param {(layerId: string, token: unknown) => void} listener
      */
     setTileLoadListener(listener) {
       tileLoadListener = typeof listener === 'function' ? listener : () => {};
+    },
+
+    /**
+     * Who hears the semaphore go idle: the last tile request in flight
+     * settled (only with `imageHooks`).
+     * @param {() => void} listener
+     */
+    setIdleListener(listener) {
+      idleListener = typeof listener === 'function' ? listener : () => {};
     },
 
     /** Why the port refused the imagery, or null. */

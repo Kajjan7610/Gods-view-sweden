@@ -480,11 +480,35 @@ git merge origin/main
   Ingen timer och ingen ritslinga: en bildruta begärs bara när avdelaren
   flyttas. `swipe` och `split` (0–1) finns som parametrar för en framtida
   berättelse.
+- ▶ SPELA (under uppspelningen ■ STOPP) visar alla år i svartvitt, 1960,
+  1975 och 1993–2005, och slutar på dagens karta: varje år står i 1,8 s och
+  nästa tonas fram över det på 0,8 s; sista steget tonar bort fotona, och
+  raden säger "I dag". Nästa klick börjar om från 1960. Bara nästa år
+  förladdas (genomskinligt, ovanpå det som visas, så att det alltid tonas
+  fram över det gamla), så aldrig fler än två fotolager, och med appens
+  bildkrokar delar alla lager samma kö med högst sex rutor åt gången.
+  Övertoningen börjar när fyra av nästa års rutor har laddats, eller när kön
+  är tom sedan minst en av dem laddats, och senast efter 4 s. Under
+  övertoningen begärs en bildruta ungefär 30 gånger i sekunden, annars ingen;
+  med "minska rörelse" i systemet byts åren utan övertoning. Uppspelningen
+  stannar när lagret slås av, när kameran går över höjdgränsen eller lämnar
+  Sverige, när inloggningen inte längre godtas, när fliken döljs eller när man
+  klickar på ett år eller en variant; året som visas just då blir valt, som om
+  man hade klickat på det (stannar man när sista fotot nästan tonats bort
+  gäller dagens karta). Årsknappen som lyser följer året som visas. FLYGÅR
+  och DÅ | NU vilar under uppspelningen och kommer tillbaka efteråt. Raden
+  visar året med sin anmärkning ("1975 · flygåren varierar · Lantmäteriet
+  (CC0)", "1993 · delvis täckning · Lantmäteriet (CC0)") och till sist
+  dagens karta med namn ("I dag · Esri Satellite"). `playing` finns som
+  parameter, så att en berättelse kan starta uppspelningen; ber den om det
+  innan fotona kan visas (statusen läses ännu, eller för högt) startar
+  uppspelningen så snart de kan.
 - Prestanda: ingenting laddas förrän lagret slås på, och då läses proxyns
   status en gång (ingen timer). Över 120 km höjd hämtas inga rutor alls och
   raden säger "Zooma in för att se flygfotona"; rutorna (512 px) hämtas
   bara inom Sveriges ruta och från nivå 9 (dolda under den), högst sex åt
-  gången, till nivå 16 för 0,5 m-fotona och 15 för 1 m-fotona och bladen.
+  gången (med appens bildkrokar; utan dem två per lager), till nivå 16 för
+  0,5 m-fotona och 15 för 1 m-fotona och bladen.
   Under nivå 9 svarar appen själv att rutan saknas, så en ruta som inte gick
   att hämta får aldrig Cesium att fråga efter grövre föräldrarutor ända ner
   till nivå 0.

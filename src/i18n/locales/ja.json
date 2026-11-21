@@ -5411,5 +5411,11 @@
   "Then and now divider": "過去と現在の境界線",
   "Then {left} percent, now {right} percent": "過去 {left}%、現在 {right}%",
   "THEN | NOW": "過去 | 現在",
-  "A divider across the map: the historical photo on the left, today’s map on the right": "地図上の境界線: 左に歴史的写真、右に現在の地図"
+  "A divider across the map: the historical photo on the left, today’s map on the right": "地図上の境界線: 左に歴史的写真、右に現在の地図",
+  "Paused while the time-lapse plays": "タイムラプスの再生中は一時停止",
+  "■ STOP": "■ 停止",
+  "Stop on the year shown": "表示中の年で停止",
+  "{year} · flight years vary · Lantmäteriet (CC0)": "{year} · 撮影年はさまざま · Lantmäteriet (CC0)",
+  "{year} · partial coverage · Lantmäteriet (CC0)": "{year} · 部分的な範囲 · Lantmäteriet (CC0)",
+  "Play each year with photos, 1960 to 2005": "写真のある各年を再生、1960〜2005 年"
 }

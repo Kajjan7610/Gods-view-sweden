@@ -24,10 +24,13 @@ import {
   viewTouchesSweden,
 } from './model.js';
 import { COMPARISON_IN_USE, createComparisonLease } from './comparisonLease.js';
+import { createTimelapse } from './timelapse.js';
+import { HISTORICAL_ORTHO_Z } from './rendering.js';
 export * from './model.js';
 export * from './comparisonLease.js';
 export { createHistoricalOrthoSource } from './source.js';
 export { createHistoricalOrthoRenderer } from './rendering.js';
+export * from './timelapse.js';
 
 const ZOOM_IN = msg('Zoom in to see the aerial photos');
 const NO_LOGIN = msg('Geotorget account needed');
@@ -58,6 +61,14 @@ const SWIPE_NEEDS_GLOBE = msg('Swipe needs a globe map');
 /** Map stacks whose imagery is a mosaic of several dates. */
 const MOSAIC_STACK_KINDS = new Set(['esri-imagery', 'ion']);
 const DEFAULT_SPLIT = 0.5;
+const PAUSED_WHILE_PLAYING = msg('Paused while the time-lapse plays');
+/** Each time-lapse step draws this much above the one before it. */
+const TIMELAPSE_Z_STEP = 0.001;
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
+/** Whether the reader asked for less motion: the time-lapse cuts. */
+const prefersReducedMotion = () =>
+  globalThis.matchMedia?.(REDUCED_MOTION_QUERY)?.matches ?? false;
 /** Failed tiles (other than "outside Sweden") before the row says so. */
 const TILE_ERROR_LIMIT = 4;
 /** HTTP statuses of tiles that are no fault: a bad or outside tile. */
@@ -121,6 +132,11 @@ export function createHistoricalOrthoLayer({
   createSplit = null,
   splitTarget = null,
   requestRender = () => {},
+  // The time-lapse's clock, motion preference and the tab's visibility.
+  setTimeoutImpl = (fn, ms) => globalThis.setTimeout(fn, ms),
+  clearTimeoutImpl = (id) => globalThis.clearTimeout(id),
+  reducedMotion = prefersReducedMotion,
+  visibility = globalThis.document ?? null,
 } = {}) {
   if (typeof source?.getStatus !== 'function')
     throw new TypeError('Historical aerial photos need a status source');
@@ -157,6 +173,35 @@ export function createHistoricalOrthoLayer({
   let _splitSignature = '';
   /** The globe port the divider moves: a new port gets a new divider. */
   let _splitGlobe = null;
+  /** The time-lapse reached today's map: the photos stay off until asked. */
+  let _ended = false;
+  /** PLAY asked for while it could not start yet (a story, a link). */
+  let _playWish = false;
+  /** The step on screen as the row last showed it. */
+  let _shownKey = null;
+  let _offVisibility = null;
+  const timelapse = createTimelapse({
+    setTimeoutImpl,
+    clearTimeoutImpl,
+    reducedMotion: () => Boolean(reducedMotion()),
+    onStage: () => {
+      if (_enabled) sync();
+      // The row (chips, info) follows the year on screen, once per year.
+      const shown = timelapse.shown();
+      const key = shown?.today ? 'today' : (shown?.year ?? null);
+      if (key !== _shownKey) {
+        _shownKey = key;
+        notify();
+      }
+    },
+    onFrame: () => requestRender('historical-ortho-fade'),
+    onEnd: () => {
+      _ended = true;
+      unwatchVisibility();
+      sync();
+      notify();
+    },
+  });
 
   const notify = () => _rowListener?.();
   const loginWorks = () =>
@@ -259,9 +304,121 @@ export function createHistoricalOrthoLayer({
     if (wanted) lease.acquire();
     else if (lease.held()) lease.release();
     _reason = wanted ? hidden() : 'off';
-    if (_reason === null) renderer.show(drapedLayers(_selection));
+    // Off, zoomed out, outside Sweden or without a login: the time-lapse
+    // stops on the year it shows.
+    if (_reason !== null && timelapse.isPlaying()) stopTimelapse();
+    if (_reason === null && _playWish && !timelapse.isPlaying()) {
+      // start() draws its stage through sync() itself.
+      startTimelapse();
+      if (timelapse.isPlaying()) {
+        notify();
+        return;
+      }
+    }
+    if (_reason === null) renderer.show(shownLayers());
     else renderer.hide();
     syncSwipe();
+  }
+
+  /** The tile layers to drape: the time-lapse's, or the selection's. */
+  function shownLayers() {
+    if (_ended) return [];
+    if (!timelapse.isPlaying()) return drapedLayers(_selection);
+    const { current, next } = timelapse.stage();
+    return [current, next]
+      .filter(Boolean)
+      .map(({ layerId, maxLevel, alpha, order, token }) => ({
+        layerId,
+        role: 'photo',
+        maxLevel,
+        alpha,
+        // The incoming year always draws above the outgoing one.
+        zOrder: HISTORICAL_ORTHO_Z.photo + order * TIMELAPSE_Z_STEP,
+        token: token ?? null,
+      }));
+  }
+
+  function watchVisibility() {
+    if (_offVisibility || typeof visibility?.addEventListener !== 'function')
+      return;
+    const onChange = () => {
+      if (visibility.visibilityState !== 'hidden') return;
+      if (!timelapse.isPlaying()) return;
+      stopTimelapse();
+      sync();
+      notify();
+    };
+    visibility.addEventListener('visibilitychange', onChange);
+    _offVisibility = () =>
+      visibility.removeEventListener('visibilitychange', onChange);
+  }
+
+  function unwatchVisibility() {
+    _offVisibility?.();
+    _offVisibility = null;
+  }
+
+  /**
+   * Stop the time-lapse; the year it shows becomes the selection, as if
+   * its chip had been clicked. The caller redraws.
+   */
+  function stopTimelapse() {
+    unwatchVisibility();
+    _playWish = false;
+    _shownKey = null;
+    const onScreen = timelapse.stop();
+    if (onScreen?.today) _ended = true;
+    else if (onScreen)
+      _selection = normalizeSelection(
+        { year: onScreen.year, variant: 'bw' },
+        _selection,
+      );
+  }
+
+  /** Why the photos could not show now (`hidden()`), drawing nothing. */
+  const reasonNow = () => (_enabled && loginWorks() ? hidden() : 'off');
+
+  /** Start the time-lapse from 1960, or keep the wish until it can. */
+  function startTimelapse() {
+    _ended = false;
+    if (
+      reasonNow() !== null ||
+      visibility?.visibilityState === 'hidden' ||
+      !_enabled
+    ) {
+      _playWish = true;
+      return;
+    }
+    _playWish = false;
+    watchVisibility();
+    // The stage is drawn from the first step; the selection is never
+    // draped first, so no other year sits above 1960.
+    timelapse.start();
+  }
+
+  /** Whether the time-lapse could play now: photos showable, not playing. */
+  const canPlay = () => _reason === null;
+
+  /**
+   * Play from 1960 (again after today's map), or stop. Play while the photos
+   * cannot show yet (the status still loading, zoomed out) is kept as a
+   * wish and starts once they can; stop drops it. Returns true: the asked
+   * state holds, or will.
+   */
+  function togglePlay(play = !timelapse.isPlaying()) {
+    if (!play) {
+      _playWish = false;
+      if (!timelapse.isPlaying()) return true;
+      stopTimelapse();
+      sync();
+      notify();
+      return true;
+    }
+    if (timelapse.isPlaying()) return true;
+    startTimelapse();
+    if (!timelapse.isPlaying()) sync();
+    notify();
+    return true;
   }
 
   const swipeOffered = () =>
@@ -390,7 +547,7 @@ export function createHistoricalOrthoLayer({
       });
       _splitSignature = signature;
     }
-    const showing = _reason === null;
+    const showing = _reason === null && !timelapse.isPlaying() && !_ended;
     _split?.setVisible(showing);
     renderer.setSplit?.(showing ? 'left' : 'none');
   }
@@ -470,7 +627,8 @@ export function createHistoricalOrthoLayer({
   }
 
   /** A tile loaded: earlier failures no longer stand. */
-  function tileLoaded() {
+  function tileLoaded(_layerId, token) {
+    if (token !== null && token !== undefined) timelapse.tileLoaded(token);
     if (!_enabled || (_tileErrors === 0 && !_budgetSpent)) return;
     _tileErrors = 0;
     _budgetSpent = false;
@@ -486,6 +644,7 @@ export function createHistoricalOrthoLayer({
 
   renderer.setTileErrorListener?.(tileFailed);
   renderer.setTileLoadListener?.(tileLoaded);
+  renderer.setIdleListener?.(() => timelapse.idle());
 
   function onMove() {
     if (!_enabled) return;
@@ -507,7 +666,20 @@ export function createHistoricalOrthoLayer({
 
   /** Apply a choice of year, variant or flight years. */
   function choose(wanted) {
+    const wasPlaying = timelapse.isPlaying();
+    if (wasPlaying) stopTimelapse();
+    _playWish = false;
+    const wasEnded = _ended;
+    _ended = false;
     const next = normalizeSelection(wanted, _selection);
+    // After playback (or today's map) the layers must be redrawn even when
+    // the choice is the year already selected.
+    if (wasPlaying || wasEnded) {
+      _selection = next;
+      sync();
+      notify();
+      return true;
+    }
     if (
       next.year === _selection.year &&
       next.variant === _selection.variant &&
@@ -539,6 +711,15 @@ export function createHistoricalOrthoLayer({
     );
   }
 
+  /** The year on screen during playback, with its honest note. */
+  function playbackText() {
+    const shown = timelapse.shown();
+    const year = shown?.year ?? _selection.year;
+    return shown?.reference
+      ? t('{year} · flight years vary · Lantmäteriet (CC0)', { year })
+      : t('{year} · partial coverage · Lantmäteriet (CC0)', { year });
+  }
+
   /** What the row says beside the chips. */
   function infoText() {
     if (_statusError || renderer.failure?.()) return '';
@@ -563,8 +744,10 @@ export function createHistoricalOrthoLayer({
         parts.push(t(TILESET_ZOOM));
         break;
       default:
-        parts.push(selectionText());
-        if (onTiles()) parts.push(t(OVER_3D));
+        if (_ended || timelapse.shown()?.today) parts.push(nowSide().label);
+        else if (timelapse.isPlaying()) parts.push(playbackText());
+        else parts.push(selectionText());
+        if (onTiles() && !_ended) parts.push(t(OVER_3D));
     }
     // Why the photos are on the 3D tiles and not on Esri.
     if (onTiles() && lease.error()) parts.push(t(lease.error()));
@@ -620,6 +803,11 @@ export function createHistoricalOrthoLayer({
       _tileErrors = 0;
       _budgetSpent = false;
       _reason = 'off';
+      if (timelapse.isPlaying()) stopTimelapse();
+      unwatchVisibility();
+      _ended = false;
+      _playWish = false;
+      _shownKey = null;
       renderer.hide();
       renderer.setSplit?.('none');
       destroySplit();
@@ -692,6 +880,8 @@ export function createHistoricalOrthoLayer({
         return false;
       if (params.swipe != null && typeof params.swipe !== 'boolean')
         return false;
+      if (params.playing != null && typeof params.playing !== 'boolean')
+        return false;
       if (
         params.split != null &&
         !(
@@ -701,13 +891,28 @@ export function createHistoricalOrthoLayer({
         )
       )
         return false;
-      choose(params);
+      // A choice of year or variant is the operator's: it stops playback.
+      if (
+        params.year != null ||
+        params.variant != null ||
+        params.flightYears != null
+      )
+        choose(params);
       chooseSwipe(params);
+      if (typeof params.playing === 'boolean')
+        return togglePlay(params.playing);
       return true;
     },
 
     getParams() {
-      return { ..._selection, swipe: _swipe, split: _splitValue };
+      return {
+        ..._selection,
+        swipe: _swipe,
+        split: _splitValue,
+        // A captured scene that was playing plays again from 1960 when
+        // these params are set back (a story, a share link).
+        playing: timelapse.isPlaying(),
+      };
     },
 
     setRowControlsListener(listener) {
@@ -717,10 +922,13 @@ export function createHistoricalOrthoLayer({
     getRowControls() {
       if (!_enabled) return {};
       const { year, variant, flightYears } = _selection;
+      const playing = timelapse.isPlaying();
+      // During playback the lit year is the one on screen.
+      const litYear = playing ? timelapse.shownYear() : year;
       const chips = HISTORICAL_ORTHO_CATALOGUE.map((entry) => ({
         id: `year-${entry.year}`,
         label: String(entry.year),
-        active: entry.year === year,
+        active: entry.year === litYear,
         title: yearTitle(entry),
         onClick: () => choose({ year: entry.year }),
       }));
@@ -728,7 +936,7 @@ export function createHistoricalOrthoLayer({
       chips.push({
         id: 'variant-color',
         label: t('COLOUR'),
-        active: variant === 'color',
+        active: !playing && variant === 'color',
         disabled: !colour,
         title: colour
           ? t('Colour photos, 0.5 m, only the parts of Sweden flown that year')
@@ -743,7 +951,7 @@ export function createHistoricalOrthoLayer({
       chips.push({
         id: 'variant-ir',
         label: t('IR'),
-        active: variant === 'ir',
+        active: !playing && variant === 'ir',
         disabled: !infrared,
         title: infrared
           ? t(
@@ -760,12 +968,16 @@ export function createHistoricalOrthoLayer({
         id: 'flight-years',
         label: t('FLIGHT YEARS'),
         active: sheets && flightYears,
-        disabled: !sheets,
-        title: sheets
-          ? t(
-              'Show the photo sheets with the year each was mostly flown, and the seams between the photos',
-            )
-          : t('Flight years exist only for the reference years 1960 and 1975'),
+        disabled: !sheets || playing,
+        title: playing
+          ? t(PAUSED_WHILE_PLAYING)
+          : sheets
+            ? t(
+                'Show the photo sheets with the year each was mostly flown, and the seams between the photos',
+              )
+            : t(
+                'Flight years exist only for the reference years 1960 and 1975',
+              ),
         onClick: () => choose({ flightYears: !flightYears }),
       });
       if (swipeOffered()) {
@@ -777,11 +989,24 @@ export function createHistoricalOrthoLayer({
           // A wanted swipe can always be switched off; only switching it on
           // needs the globe.
           active: _swipe,
-          disabled: !possible && !_swipe,
-          title: swipeTitle(block),
+          disabled: playing || (!possible && !_swipe),
+          title: playing ? t(PAUSED_WHILE_PLAYING) : swipeTitle(block),
           onClick: () => chooseSwipe({ swipe: !_swipe }),
         });
       }
+      const playable = playing || canPlay();
+      chips.push({
+        id: 'play',
+        label: playing ? t('■ STOP') : t('▶ PLAY'),
+        active: playing,
+        disabled: !playable,
+        title: playing
+          ? t('Stop on the year shown')
+          : playable
+            ? t('Play each year with photos, 1960 to 2005')
+            : t(ZOOM_IN),
+        onClick: () => togglePlay(),
+      });
       return { chips, info: infoText() };
     },
 
@@ -796,23 +1021,29 @@ export function createHistoricalOrthoLayer({
      */
     getAnalystRecords() {
       if (!_enabled || renderer.ownedCount() === 0) return [];
-      const entry = catalogueYear(_selection.year);
-      const shown = selectedPhoto(_selection);
+      const playingYear = timelapse.isPlaying() ? timelapse.shownYear() : null;
+      // During playback: the year on screen, in black and white.
+      const selection = playingYear
+        ? { year: playingYear, variant: 'bw', flightYears: false }
+        : _selection;
+      const entry = catalogueYear(selection.year);
+      const shown = selectedPhoto(selection);
       return [
         {
           id: `${HISTORICAL_ORTHO_LAYER_ID}:${shown.layerId}`,
           name: t('Historical aerial photos {year}, {variant}', {
             year: entry.year,
-            variant: t(VARIANT_WORDS[_selection.variant]),
+            variant: t(VARIANT_WORDS[selection.variant]),
           }),
           lat: null,
           lon: null,
           year: entry.year,
           referenceYear: entry.reference,
-          variant: _selection.variant,
+          variant: selection.variant,
           coverage: entry.coverage,
           resolutionM: shown.resolutionM,
-          flightYears: entry.reference && _selection.flightYears,
+          flightYears: entry.reference && selection.flightYears,
+          timelapse: Boolean(playingYear),
           onGoogle3dTiles: onTiles(),
           thenNowDivider: Boolean(_split) && renderer.getSplit?.() === 'left',
           source: 'Lantmäteriet',
@@ -879,6 +1110,10 @@ export function createHistoricalOrthoLayer({
         swipe: _swipe,
         split: _splitValue,
         divider: Boolean(_split),
+        playing: timelapse.isPlaying(),
+        ended: _ended,
+        timelapse: timelapse.stage(),
+        timers: timelapse.armedTimers(),
       };
     },
   };

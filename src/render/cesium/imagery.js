@@ -346,6 +346,19 @@ export function hookProvider(provider, spec, ctx) {
         let result = Promise.resolve(started);
         if (spec.tileTransform)
           result = result.then((image) => transformTile(spec, tile, image));
+        // The layer's own word that one of its tiles loaded; a throw there
+        // is the hook's, never the tile's.
+        if (spec.onTileLoad)
+          result.then(
+            () => {
+              try {
+                spec.onTileLoad(tile);
+              } catch (error) {
+                console.warn('[Imagery] onTileLoad failed:', error);
+              }
+            },
+            () => {},
+          );
         return result.finally(() => {
           inFlight -= 1;
           if (request) ctx.requests?.delete(request);

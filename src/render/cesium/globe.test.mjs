@@ -160,6 +160,67 @@ test('a layer hidden below its minimum level shows from the globe level as fine 
   assert.equal(scene.imageryLayers.get(2)._minimumTerrainLevel, 9);
 });
 
+test('each layer hears its own loaded tiles through onTileLoad, sharing one admit', async () => {
+  const answers = [];
+  const provider = {
+    tilingScheme: new Cesium.WebMercatorTilingScheme(),
+    requestImage: () => new Promise((resolve, reject) => answers.push({ resolve, reject })),
+  };
+  const ctx = {
+    started() {},
+    settled() {},
+    retrySoon() {},
+    laterFrame: () => Promise.resolve(),
+    signals: new Set(),
+  };
+  const admit = (tile, issue) => issue();
+  const heard = [];
+  const a = hookProvider(
+    provider,
+    { kind: 'xyz', url: url('a'), admit, onTileLoad: (tile) => heard.push(['a', tile.x]) },
+    ctx,
+  );
+  const b = hookProvider(
+    provider,
+    { kind: 'xyz', url: url('b'), admit, onTileLoad: (tile) => heard.push(['b', tile.x]) },
+    ctx,
+  );
+  const first = a.requestImage(1, 0, 3);
+  const second = b.requestImage(2, 0, 3);
+  const third = b.requestImage(3, 0, 3);
+  answers[0].resolve('image');
+  answers[1].resolve('image');
+  answers[2].reject(new Error('502'));
+  await first;
+  await second;
+  await assert.rejects(third);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(heard, [
+    ['a', 1],
+    ['b', 2],
+  ]);
+  // A throw in the hook is the hook's: the tile still loads.
+  const c = hookProvider(
+    { ...provider, requestImage: () => Promise.resolve('image') },
+    {
+      kind: 'xyz',
+      url: url('c'),
+      onTileLoad() {
+        throw new Error('hook');
+      },
+    },
+    ctx,
+  );
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    assert.equal(await c.requestImage(0, 0, 3), 'image');
+    await new Promise((resolve) => setImmediate(resolve));
+  } finally {
+    console.warn = warn;
+  }
+});
+
 test('below its minimum level a hidden layer answers missing without a request or an error', async () => {
   const asked = [];
   const admitted = [];

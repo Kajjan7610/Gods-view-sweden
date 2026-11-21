@@ -5744,5 +5744,11 @@
   "Then and now divider": "Разделитель «тогда и сейчас»",
   "Then {left} percent, now {right} percent": "Тогда {left} процентов, сейчас {right} процентов",
   "THEN | NOW": "ТОГДА | СЕЙЧАС",
-  "A divider across the map: the historical photo on the left, today’s map on the right": "Разделитель поверх карты: исторический снимок слева, сегодняшняя карта справа"
+  "A divider across the map: the historical photo on the left, today’s map on the right": "Разделитель поверх карты: исторический снимок слева, сегодняшняя карта справа",
+  "Paused while the time-lapse plays": "Приостановлено, пока идёт покадровый показ",
+  "■ STOP": "■ СТОП",
+  "Stop on the year shown": "Остановиться на показанном году",
+  "{year} · flight years vary · Lantmäteriet (CC0)": "{year} · годы съёмки различаются · Lantmäteriet (CC0)",
+  "{year} · partial coverage · Lantmäteriet (CC0)": "{year} · частичное покрытие · Lantmäteriet (CC0)",
+  "Play each year with photos, 1960 to 2005": "Показать каждый год со снимками, с 1960 по 2005"
 }

@@ -120,6 +120,15 @@ export interface ImagerySpec {
     tile: TileRequest,
     issue: () => Promise<unknown> | undefined,
   ) => Promise<unknown> | undefined;
+  /**
+   * Told each time one of this layer's tile requests loads (after
+   * `tileTransform`), with its tile; never for a missing or failed tile.
+   * It changes nothing drawn, so it needs no `imageHooks`. Layers that
+   * share one `admit` (and so its waits) still each learn their own
+   * loads here. A renderer may leave it uncalled: it is a hint, not a
+   * guarantee.
+   */
+  onTileLoad?: (tile: TileRequest) => void;
   /** Draw order among imagery layers; higher draws on top. */
   zOrder?: number;
 }

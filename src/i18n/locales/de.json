@@ -5522,5 +5522,11 @@
   "Then and now divider": "Trennlinie zwischen damals und heute",
   "Then {left} percent, now {right} percent": "Damals {left} Prozent, heute {right} Prozent",
   "THEN | NOW": "DAMALS | HEUTE",
-  "A divider across the map: the historical photo on the left, today’s map on the right": "Eine Trennlinie über der Karte: links das historische Bild, rechts die heutige Karte"
+  "A divider across the map: the historical photo on the left, today’s map on the right": "Eine Trennlinie über der Karte: links das historische Bild, rechts die heutige Karte",
+  "Paused while the time-lapse plays": "Pausiert, solange der Zeitraffer läuft",
+  "■ STOP": "■ STOPP",
+  "Stop on the year shown": "Beim gezeigten Jahr anhalten",
+  "{year} · flight years vary · Lantmäteriet (CC0)": "{year} · Flugjahre variieren · Lantmäteriet (CC0)",
+  "{year} · partial coverage · Lantmäteriet (CC0)": "{year} · teilweise Abdeckung · Lantmäteriet (CC0)",
+  "Play each year with photos, 1960 to 2005": "Jedes Jahr mit Bildern abspielen, 1960 bis 2005"
 }

@@ -5411,5 +5411,11 @@
   "Then and now divider": "过去与现在分隔线",
   "Then {left} percent, now {right} percent": "过去 {left}%，现在 {right}%",
   "THEN | NOW": "过去 | 现在",
-  "A divider across the map: the historical photo on the left, today’s map on the right": "地图上的分隔线：左边是历史照片，右边是今天的地图"
+  "A divider across the map: the historical photo on the left, today’s map on the right": "地图上的分隔线：左边是历史照片，右边是今天的地图",
+  "Paused while the time-lapse plays": "延时播放期间暂停",
+  "■ STOP": "■ 停止",
+  "Stop on the year shown": "停在当前显示的年份",
+  "{year} · flight years vary · Lantmäteriet (CC0)": "{year} · 航拍年份各不相同 · Lantmäteriet (CC0)",
+  "{year} · partial coverage · Lantmäteriet (CC0)": "{year} · 部分覆盖 · Lantmäteriet (CC0)",
+  "Play each year with photos, 1960 to 2005": "播放有照片的每一年，1960 至 2005 年"
 }

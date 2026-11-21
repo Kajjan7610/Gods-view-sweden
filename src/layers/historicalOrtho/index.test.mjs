@@ -282,6 +282,7 @@ test('year chips choose one year; colour and infrared only where the year has th
     flightYears: false,
     swipe: false,
     split: 0.5,
+    playing: false,
   });
 });
 
@@ -604,6 +605,7 @@ test('params: an unknown year or variant, or a flightYears that is not a boolean
     flightYears: false,
     swipe: false,
     split: 0.5,
+    playing: false,
   });
   assert.equal(layer.setParams({ flightYears: true }), true);
   assert.equal(layer.getParams().flightYears, true);
@@ -925,4 +927,379 @@ test('without a divider factory the row offers no THEN | NOW', async () => {
     layer.getRowControls().chips.some((entry) => entry.id === 'swipe'),
     false,
   );
+});
+
+/** Timers on a clock the test moves (the time-lapse's). */
+function playClock() {
+  let now = 0;
+  let nextId = 1;
+  const pending = new Map();
+  return {
+    setTimeoutImpl(fn, ms) {
+      const id = nextId++;
+      pending.set(id, { fn, at: now + Math.max(0, ms) });
+      return id;
+    },
+    clearTimeoutImpl(id) {
+      pending.delete(id);
+    },
+    advance(ms) {
+      const until = now + ms;
+      for (;;) {
+        let due = null;
+        for (const [id, timer] of pending)
+          if (timer.at <= until && (!due || timer.at < due[1].at))
+            due = [id, timer];
+        if (!due) break;
+        pending.delete(due[0]);
+        now = due[1].at;
+        due[1].fn();
+      }
+      now = until;
+    },
+    armed: () => pending.size,
+  };
+}
+
+/** A document's visibility, as the layer listens to it. */
+function fakeVisibility() {
+  const listeners = new Set();
+  return {
+    visibilityState: 'visible',
+    addEventListener: (type, fn) => type === 'visibilitychange' && listeners.add(fn),
+    removeEventListener: (type, fn) => listeners.delete(fn),
+    hide() {
+      this.visibilityState = 'hidden';
+      for (const fn of [...listeners]) fn();
+    },
+    listenerCount: () => listeners.size,
+  };
+}
+
+async function playRig({ reducedMotion = false, ...options } = {}) {
+  const clock = playClock();
+  const visibility = fakeVisibility();
+  const frames = [];
+  const fixture = harness({
+    ...options,
+    extra: {
+      setTimeoutImpl: clock.setTimeoutImpl,
+      clearTimeoutImpl: clock.clearTimeoutImpl,
+      reducedMotion: () => reducedMotion,
+      visibility,
+      requestRender: (reason) => frames.push(reason),
+      ...(options.extra ?? {}),
+    },
+  });
+  fixture.layer.enable();
+  await settle();
+  const photoLayers = () =>
+    fixture.globe.layers.filter(
+      (imagery) => imagery.spec.zOrder >= 10.2 && imagery.spec.zOrder < 10.3,
+    );
+  /** The next year's tiles load, through the semaphore. */
+  const loadNext = async () => {
+    const next = fixture.layer.diagnostics().timelapse.next;
+    const imagery = fixture.globe.layers.find((entry) =>
+      entry.spec.url.includes(`/tile/${next.layerId}/`),
+    );
+    for (let i = 0; i < 4; i += 1)
+      await imagery.request({ x: i, y: 0, level: 10 }, () =>
+        Promise.resolve('tile'),
+      );
+  };
+  return { ...fixture, clock, visibility, frames, photoLayers, loadNext };
+}
+
+const HOLD = 1800;
+const FADE = 800;
+
+test('▶ PLAY crossfades the years over the map, two photo layers at most, and ends on today', async () => {
+  const { layer, chip, clock, photoLayers, loadNext, urls, globe } =
+    await playRig();
+  chip('flight-years').onClick();
+  assert.equal(chip('play').label, '▶ PLAY');
+  chip('play').onClick();
+  assert.equal(chip('play').label, '■ STOP');
+  assert.equal(layer.getParams().playing, true);
+  assert.deepEqual(urls(), ['1960', '1975'], 'the sheets wait; 1975 preloads');
+  assert.deepEqual(
+    photoLayers().map((imagery) => imagery.alpha),
+    [1, 0],
+  );
+  assert.equal(chip('flight-years').disabled, true);
+  assert.equal(chip('flight-years').title, 'Paused while the time-lapse plays');
+  assert.match(
+    layer.getRowControls().info,
+    /^1960 · flight years vary · Lantmäteriet \(CC0\)/,
+  );
+  const seen = new Set();
+  for (let guard = 0; guard < 40 && layer.getParams().playing; guard += 1) {
+    assert.ok(photoLayers().length <= 2, 'never more than two photos');
+    if (layer.diagnostics().timelapse.next) await loadNext();
+    clock.advance(HOLD + FADE + 100);
+    const year = layer.diagnostics().timelapse.current?.year;
+    if (year) seen.add(year);
+  }
+  assert.deepEqual([...seen], [1975, ...Array.from({ length: 13 }, (_, i) => 1993 + i)]);
+  // Today's map: the photos are gone, and the row says so.
+  assert.equal(globe.layers.length, 0);
+  assert.equal(layer.getRowControls().info, 'Today’s map');
+  assert.equal(chip('play').label, '▶ PLAY');
+  assert.equal(clock.armed(), 0);
+  // The next PLAY starts again from 1960.
+  chip('play').onClick();
+  assert.equal(layer.diagnostics().timelapse.current.year, 1960);
+  chip('play').onClick();
+  assert.equal(layer.getParams().year, 1960);
+  assert.equal(layer.getParams().flightYears, true, 'the sheets come back');
+  assert.deepEqual(urls(), ['1960', 'seams-1960', 'meta-1960']);
+});
+
+test('stopping keeps the year on screen selected, with nothing left behind', async () => {
+  const { layer, chip, clock, loadNext, photoLayers, visibility } =
+    await playRig();
+  chip('play').onClick();
+  await loadNext();
+  clock.advance(HOLD + FADE + 50);
+  await loadNext();
+  clock.advance(HOLD + FADE * 0.75);
+  chip('play').onClick();
+  assert.equal(layer.getParams().year, 1993, 'mostly faded in: 1993');
+  assert.equal(layer.getParams().variant, 'bw');
+  assert.equal(clock.armed(), 0, 'no timer left');
+  assert.equal(visibility.listenerCount(), 0);
+  assert.equal(photoLayers().length, 1);
+  assert.equal(photoLayers()[0].alpha, 1, 'no alpha left behind');
+  assert.match(layer.getRowControls().info, /^1993, black and white/);
+});
+
+test('fades ask for frames only while fading; reduced motion cuts', async () => {
+  const { chip, clock, frames, loadNext } = await playRig();
+  chip('play').onClick();
+  await loadNext();
+  frames.length = 0;
+  clock.advance(HOLD - 1);
+  assert.deepEqual(frames, [], 'none during the hold');
+  clock.advance(FADE + 60);
+  assert.ok(frames.length >= 20 && frames.length <= 26, `${frames.length}`);
+  assert.ok(frames.every((reason) => reason === 'historical-ortho-fade'));
+  const after = frames.length;
+  clock.advance(HOLD - 100);
+  assert.equal(frames.length, after);
+
+  const reduced = await playRig({ reducedMotion: true });
+  reduced.chip('play').onClick();
+  await reduced.loadNext();
+  reduced.clock.advance(HOLD);
+  assert.equal(reduced.frames.filter((r) => r === 'historical-ortho-fade').length, 1);
+  assert.equal(reduced.layer.diagnostics().timelapse.current.year, 1975);
+  assert.equal(reduced.photoLayers().find((imagery) => imagery.spec.url.includes('/1975/')).alpha, 1);
+});
+
+test('playback stops when the layer goes off, the camera leaves, the tab hides, the login fails or a year is chosen', async () => {
+  const stops = [
+    ['disable', (rig) => rig.layer.disable()],
+    [
+      'zoomed out',
+      (rig) => {
+        rig.camera.setPose({ height: 500_000 });
+        rig.camera.emit('moveEnd');
+      },
+    ],
+    [
+      'outside Sweden',
+      (rig) => {
+        rig.camera.setPose({ lon: 2.35, lat: 48.85 });
+        rig.camera.emit('moveEnd');
+      },
+    ],
+    ['tab hidden', (rig) => rig.visibility.hide()],
+    ['year chip', (rig) => rig.chip('year-1998').onClick()],
+    ['variant chip', (rig) => rig.chip('year-2004').onClick()],
+  ];
+  for (const [name, stopIt] of stops) {
+    const rig = await playRig();
+    rig.chip('play').onClick();
+    assert.equal(rig.layer.getParams().playing, true, name);
+    stopIt(rig);
+    assert.equal(rig.layer.getParams().playing, false, name);
+    assert.equal(rig.clock.armed(), 0, `${name}: no timer left`);
+    assert.equal(rig.visibility.listenerCount(), 0, `${name}: no listener`);
+    assert.ok(rig.photoLayers().length <= 1, `${name}: no preload left`);
+    assert.ok(
+      rig.photoLayers().every((imagery) => imagery.alpha === 1),
+      `${name}: no alpha left`,
+    );
+  }
+  // A login refused since: the re-read stops it.
+  const rig = await playRig({ status: [LOGIN, { ...LOGIN, authFailed: true }] });
+  rig.chip('play').onClick();
+  const [photo] = rig.photoLayers();
+  for (let i = 0; i < 4; i += 1) photo.fail({ status: 502 });
+  await settle();
+  assert.equal(rig.layer.getParams().playing, false);
+  assert.equal(rig.globe.layers.length, 0);
+  assert.equal(rig.clock.armed(), 0);
+});
+
+test('playing is a param: a story can start and stop it; zoomed out it waits', async () => {
+  const rig = await playRig();
+  assert.equal(rig.layer.setParams({ playing: 'yes' }), false);
+  assert.equal(rig.layer.setParams({ playing: true }), true);
+  assert.equal(rig.layer.getParams().playing, true);
+  assert.equal(rig.layer.setParams({ playing: false }), true);
+  assert.equal(rig.layer.getParams().playing, false);
+  rig.camera.setPose({ height: 500_000 });
+  rig.camera.emit('moveEnd');
+  assert.equal(rig.chip('play').disabled, true);
+  // Kept as a wish: true, and it plays once the photos can show.
+  assert.equal(rig.layer.setParams({ playing: true }), true);
+  assert.equal(rig.layer.getParams().playing, false);
+  assert.equal(rig.clock.armed(), 0);
+  rig.camera.setPose({ height: 20_000 });
+  rig.camera.emit('moveEnd');
+  assert.equal(rig.layer.getParams().playing, true);
+  // Stop drops a wish; so does disable.
+  rig.layer.setParams({ playing: false });
+  rig.camera.setPose({ height: 500_000 });
+  rig.camera.emit('moveEnd');
+  rig.layer.setParams({ playing: true });
+  rig.layer.setParams({ playing: false });
+  rig.camera.setPose({ height: 20_000 });
+  rig.camera.emit('moveEnd');
+  assert.equal(rig.layer.getParams().playing, false);
+  rig.camera.setPose({ height: 500_000 });
+  rig.camera.emit('moveEnd');
+  rig.layer.setParams({ playing: true });
+  rig.layer.disable();
+  rig.layer.enable();
+  await settle();
+  rig.camera.setPose({ height: 20_000 });
+  rig.camera.emit('moveEnd');
+  assert.equal(rig.layer.getParams().playing, false);
+});
+
+test('the divider waits while the time-lapse plays and comes back after', async () => {
+  const splits = fakeSplits();
+  const rig = await playRig({ extra: splits.extra });
+  rig.layer.setParams({ swipe: true });
+  const [split] = splits.live();
+  assert.equal(split.visible, true);
+  rig.chip('play').onClick();
+  assert.equal(split.visible, false);
+  assert.equal(rig.chip('swipe').disabled, true);
+  assert.ok(rig.globe.layers.every((imagery) => imagery.split === 'none'));
+  rig.chip('play').onClick();
+  assert.equal(split.visible, true);
+  assert.ok(rig.globe.layers.every((imagery) => imagery.split === 'left'));
+});
+
+test('clicking the year on screen (or the variant already chosen) stops playback and drops the preload', async () => {
+  const cases = [
+    ['the shown year', (rig) => rig.chip('year-1960').onClick()],
+    ['setParams year', (rig) => rig.layer.setParams({ year: 1960 })],
+  ];
+  for (const [name, click] of cases) {
+    const rig = await playRig();
+    rig.chip('play').onClick();
+    assert.equal(rig.photoLayers().length, 2, `${name}: preloading`);
+    click(rig);
+    assert.equal(rig.layer.getParams().playing, false, name);
+    assert.deepEqual(rig.urls(), ['1960'], `${name}: no preload left`);
+    assert.equal(rig.photoLayers()[0].alpha, 1, name);
+    assert.equal(rig.chip('play').label, '▶ PLAY', `${name}: the row repainted`);
+    assert.equal(rig.clock.armed(), 0, name);
+  }
+  // 2005 infrared chosen, PLAY, then IR again: back to 2005 infrared.
+  const rig = await playRig();
+  rig.layer.setParams({ year: 2005, variant: 'ir' });
+  rig.chip('play').onClick();
+  rig.chip('variant-ir').onClick();
+  assert.equal(rig.layer.getParams().playing, false);
+  assert.equal(rig.photoLayers().length, 1, 'no preload left');
+  assert.equal(rig.photoLayers()[0].alpha, 1);
+});
+
+test('the incoming year always draws above the outgoing one, from any selection', async () => {
+  for (const before of [1960, 1975]) {
+    const rig = await playRig();
+    rig.layer.setParams({ year: before });
+    rig.chip('play').onClick();
+    // Bottom to top: 1960 shown, 1975 preloaded above it.
+    assert.deepEqual(
+      rig.photoLayers().map((imagery) => [
+        imagery.spec.url.split('/')[4],
+        imagery.alpha,
+      ]),
+      [
+        ['1960', 1],
+        ['1975', 0],
+      ],
+      `from ${before}`,
+    );
+    await rig.loadNext();
+    rig.clock.advance(HOLD + FADE / 2);
+    const [below, above] = rig.photoLayers();
+    assert.match(above.spec.url, /\/1975\//, 'the fading year is on top');
+    assert.ok(above.alpha > 0 && above.alpha < 1);
+    assert.equal(below.alpha, 1);
+    assert.ok(above.spec.zOrder > below.spec.zOrder);
+    assert.ok(above.spec.zOrder < 10.3, 'still below the sheets');
+  }
+});
+
+test('every layer shares one admit: playback, preload and the sheets', async () => {
+  const rig = await playRig();
+  rig.chip('flight-years').onClick();
+  const admits = new Set(rig.globe.layers.map((imagery) => imagery.spec.admit));
+  rig.chip('play').onClick();
+  for (const imagery of rig.globe.layers) admits.add(imagery.spec.admit);
+  assert.equal(admits.size, 1, 'one admit identity');
+  assert.equal(typeof [...admits][0], 'function');
+});
+
+test('the row repaints once per year on screen, lights that year, and the analyst reads it', async () => {
+  const rig = await playRig();
+  let repaints = 0;
+  rig.layer.setRowControlsListener(() => (repaints += 1));
+  rig.chip('play').onClick();
+  repaints = 0;
+  await rig.loadNext();
+  rig.clock.advance(HOLD + FADE + 50);
+  assert.ok(repaints >= 1 && repaints <= 2, `${repaints} repaints for one step`);
+  assert.equal(rig.chip('year-1975').active, true);
+  assert.equal(rig.chip('year-1960').active, false);
+  assert.equal(rig.chip('variant-color').active, false);
+  assert.match(
+    rig.layer.getRowControls().info,
+    /^1975 · flight years vary · Lantmäteriet \(CC0\)/,
+  );
+  const [record] = rig.layer.getAnalystRecords();
+  assert.equal(record.year, 1975);
+  assert.equal(record.timelapse, true);
+  await rig.loadNext();
+  rig.clock.advance(HOLD + FADE + 50);
+  assert.match(
+    rig.layer.getRowControls().info,
+    /^1993 · partial coverage · Lantmäteriet \(CC0\)/,
+  );
+});
+
+test('a story may ask to play right after enable: it starts once the status is read', async () => {
+  const clock = playClock();
+  const fixture = harness({
+    extra: {
+      setTimeoutImpl: clock.setTimeoutImpl,
+      clearTimeoutImpl: clock.clearTimeoutImpl,
+      reducedMotion: () => false,
+      visibility: null,
+    },
+  });
+  fixture.layer.enable();
+  assert.equal(fixture.layer.setParams({ year: 1975, playing: true }), true);
+  assert.equal(fixture.layer.getParams().playing, false, 'not yet');
+  await settle();
+  assert.equal(fixture.layer.getParams().playing, true, 'once it can');
+  assert.equal(fixture.layer.diagnostics().timelapse.current.year, 1960);
 });

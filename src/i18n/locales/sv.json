@@ -5522,5 +5522,11 @@
   "Then and now divider": "Avdelare mellan då och nu",
   "Then {left} percent, now {right} percent": "Då {left} procent, nu {right} procent",
   "THEN | NOW": "DÅ | NU",
-  "A divider across the map: the historical photo on the left, today’s map on the right": "En avdelare över kartan: det historiska fotot till vänster, dagens karta till höger"
+  "A divider across the map: the historical photo on the left, today’s map on the right": "En avdelare över kartan: det historiska fotot till vänster, dagens karta till höger",
+  "Paused while the time-lapse plays": "Vilar medan tidsförloppet spelas",
+  "■ STOP": "■ STOPP",
+  "Stop on the year shown": "Stanna på året som visas",
+  "{year} · flight years vary · Lantmäteriet (CC0)": "{year} · flygåren varierar · Lantmäteriet (CC0)",
+  "{year} · partial coverage · Lantmäteriet (CC0)": "{year} · delvis täckning · Lantmäteriet (CC0)",
+  "Play each year with photos, 1960 to 2005": "Spela varje år med foton, 1960 till 2005"
 }

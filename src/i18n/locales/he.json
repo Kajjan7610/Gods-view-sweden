@@ -5633,5 +5633,11 @@
   "Then and now divider": "מפריד בין אז לעכשיו",
   "Then {left} percent, now {right} percent": "אז {left} אחוז, עכשיו {right} אחוז",
   "THEN | NOW": "אז | עכשיו",
-  "A divider across the map: the historical photo on the left, today’s map on the right": "מפריד לרוחב המפה: התצלום ההיסטורי משמאל, המפה של היום מימין"
+  "A divider across the map: the historical photo on the left, today’s map on the right": "מפריד לרוחב המפה: התצלום ההיסטורי משמאל, המפה של היום מימין",
+  "Paused while the time-lapse plays": "מושהה בזמן שהרצף מוצג",
+  "■ STOP": "■ עצור",
+  "Stop on the year shown": "עצור בשנה המוצגת",
+  "{year} · flight years vary · Lantmäteriet (CC0)": "{year} · שנות הצילום משתנות · Lantmäteriet (CC0)",
+  "{year} · partial coverage · Lantmäteriet (CC0)": "{year} · כיסוי חלקי · Lantmäteriet (CC0)",
+  "Play each year with photos, 1960 to 2005": "הצג כל שנה שיש בה תצלומים, 1960 עד 2005"
 }

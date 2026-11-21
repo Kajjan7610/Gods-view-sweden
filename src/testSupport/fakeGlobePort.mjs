@@ -59,10 +59,19 @@ export function fakeGlobePort({ settled = () => true } = {}) {
       request(tile, fetch) {
         const issue = () => {
           const started = fetch();
-          if (!started || !spec.tileTransform) return started;
-          return Promise.resolve(started).then((image) =>
-            spec.tileTransform(tile, image),
-          );
+          if (!started) return started;
+          const result = spec.tileTransform
+            ? Promise.resolve(started).then((image) =>
+                spec.tileTransform(tile, image),
+              )
+            : Promise.resolve(started);
+          // As the port does: the layer hears its own loads.
+          if (spec.onTileLoad)
+            result.then(
+              () => spec.onTileLoad(tile),
+              () => {},
+            );
+          return spec.tileTransform || spec.onTileLoad ? result : started;
         };
         return spec.admit ? spec.admit(tile, issue) : issue();
       },
