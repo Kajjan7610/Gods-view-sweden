@@ -1,6 +1,11 @@
-import { msg, t } from '../../i18n/index.js';
+import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { NO_IMAGERY_HOST, resolveImageryHost } from '../../maps/imageryHost.js';
-import { findCamera, findGlobe, rendererOf } from '../../render/rendererOf.js';
+import {
+  canvasOf,
+  findCamera,
+  findGlobe,
+  rendererOf,
+} from '../../render/rendererOf.js';
 import {
   DEFAULT_SELECTION,
   HISTORICAL_ORTHO_CATALOGUE,
@@ -18,7 +23,7 @@ import {
   selectedPhoto,
   viewTouchesSweden,
 } from './model.js';
-import { createComparisonLease } from './comparisonLease.js';
+import { COMPARISON_IN_USE, createComparisonLease } from './comparisonLease.js';
 export * from './model.js';
 export * from './comparisonLease.js';
 export { createHistoricalOrthoSource } from './source.js';
@@ -48,6 +53,11 @@ const TILESET_ZOOM = msg(
 );
 const OVER_3D = msg('The old photo lies over today’s 3D buildings');
 const WAITING_FOR_ESRI = msg('Switching to the Esri map for the photos…');
+// THEN | NOW: Recent Imagery's wording for a swipe off the globe.
+const SWIPE_NEEDS_GLOBE = msg('Swipe needs a globe map');
+/** Map stacks whose imagery is a mosaic of several dates. */
+const MOSAIC_STACK_KINDS = new Set(['esri-imagery', 'ion']);
+const DEFAULT_SPLIT = 0.5;
 /** Failed tiles (other than "outside Sweden") before the row says so. */
 const TILE_ERROR_LIMIT = 4;
 /** HTTP statuses of tiles that are no fault: a bad or outside tile. */
@@ -91,7 +101,13 @@ const capabilitiesOfViewer = (viewer) =>
  * Sweden's box or coarser than the minimum level, and the imagery layers
  * go when the layer is switched off. Share links carry it as token 17; the
  * year and variant are this session's choice.
- * @param {{ source: { getStatus: Function, getTileTemplate: Function }, renderer: object, host?: Function, globeOf?: Function, cameraOf?: Function, capabilitiesOf?: Function }} options
+ *
+ * THEN | NOW puts a divider across the map (`createSplit`, the app's
+ * imagery split, over the globe port's split): the historical photo, and
+ * the sheets when FLIGHT YEARS is on, left of it, today's map right. It
+ * works only on the globe; hidden, not torn down, while the photos are not
+ * shown, and torn down when switched off or with the layer.
+ * @param {{ source: { getStatus: Function, getTileTemplate: Function }, renderer: object, host?: Function, globeOf?: Function, cameraOf?: Function, capabilitiesOf?: Function, createSplit?: Function | null, splitTarget?: Function | null, requestRender?: (reason: string) => void }} options
  */
 export function createHistoricalOrthoLayer({
   source,
@@ -100,6 +116,11 @@ export function createHistoricalOrthoLayer({
   globeOf = findGlobe,
   cameraOf = findCamera,
   capabilitiesOf = capabilitiesOfViewer,
+  // The divider (src/ui/imagerySplit.js) and the split it moves; without
+  // them the row offers no THEN | NOW.
+  createSplit = null,
+  splitTarget = null,
+  requestRender = () => {},
 } = {}) {
   if (typeof source?.getStatus !== 'function')
     throw new TypeError('Historical aerial photos need a status source');
@@ -127,6 +148,15 @@ export function createHistoricalOrthoLayer({
   let _budgetSpent = false;
   /** The one status re-read failing tiles may ask for until tiles load. */
   let _rechecked = false;
+  let _mapStack = null;
+  /** THEN | NOW is wanted, and where its divider stands (0–1). */
+  let _swipe = false;
+  let _splitValue = DEFAULT_SPLIT;
+  /** The live divider, and the labels it was made with. */
+  let _split = null;
+  let _splitSignature = '';
+  /** The globe port the divider moves: a new port gets a new divider. */
+  let _splitGlobe = null;
 
   const notify = () => _rowListener?.();
   const loginWorks = () =>
@@ -231,6 +261,156 @@ export function createHistoricalOrthoLayer({
     _reason = wanted ? hidden() : 'off';
     if (_reason === null) renderer.show(drapedLayers(_selection));
     else renderer.hide();
+    syncSwipe();
+  }
+
+  const swipeOffered = () =>
+    typeof createSplit === 'function' && typeof splitTarget === 'function';
+
+  /**
+   * Why the divider cannot work now, or null when it can: `loading` (no
+   * status yet), `login` (none, or refused), `wait` (the lease is being
+   * taken or given back), `refused` (another scene holds the lease, or
+   * Esri failed) or `globe` (not on the globe). The globe's split is the
+   * lease holder's: as for Recent Imagery's swipe, only a lease that is
+   * ready, or a map with no lease to take, grants it.
+   */
+  function swipeBlock() {
+    if (!_enabled || !_status) return 'loading';
+    if (!loginWorks()) return 'login';
+    const state = lease.status();
+    if (state === 'unavailable') return 'refused';
+    if (state !== 'ready' && state !== 'unsupported') return 'wait';
+    if (_hostInfo.kind !== 'globe' || !can('splitSwipe')) return 'globe';
+    if (!splitTarget(globeOf(_viewer))) return 'globe';
+    return null;
+  }
+
+  /** The globe port's split, when the divider can work; else null. */
+  function swipeTarget() {
+    if (!swipeOffered() || swipeBlock()) return null;
+    return splitTarget(globeOf(_viewer)) ?? null;
+  }
+
+  /** The chip's title: what it does, or why it cannot. */
+  function swipeTitle(block) {
+    switch (block) {
+      case null:
+        return t(
+          'A divider across the map: the historical photo on the left, today’s map on the right',
+        );
+      case 'loading':
+        return t('Checking the Geotorget login…');
+      case 'login':
+        return t(_status?.authFailed ? LOGIN_REFUSED : NO_LOGIN);
+      case 'wait':
+        return t(WAITING_FOR_ESRI);
+      case 'refused':
+        return t(lease.error() || COMPARISON_IN_USE);
+      default:
+        return t(SWIPE_NEEDS_GLOBE);
+    }
+  }
+
+  /** The left side's label: the year, and the variant unless black and white. */
+  function thenLabel() {
+    const { year, variant } = _selection;
+    return variant === 'bw'
+      ? String(year)
+      : t('{year} {variant}', { year, variant: t(VARIANT_WORDS[variant]) });
+  }
+
+  /** Today's map by its name, where the map stack gives one. */
+  function nowSide() {
+    const stack = _mapStack?.getActiveStack?.() ?? null;
+    const name = typeof stack?.label === 'string' ? stack.label : '';
+    if (!name) return { label: t('Today’s map'), title: t('Today’s map') };
+    return {
+      label: t('Today · {map}', { map: name }),
+      title: MOSAIC_STACK_KINDS.has(stack.kind)
+        ? t('Today: {map}, dates vary', { map: name })
+        : t('Today: {map}', { map: name }),
+    };
+  }
+
+  function destroySplit() {
+    _split?.destroy();
+    _split = null;
+    _splitSignature = '';
+    _splitGlobe = null;
+  }
+
+  /**
+   * The divider follows the photos: made (or remade, keeping its value,
+   * when a label changes) while THEN | NOW is on over the globe, shown
+   * while the photos are, hidden otherwise; the layers draw left of it
+   * only while it shows.
+   */
+  function syncSwipe() {
+    const block = swipeOffered() ? swipeBlock() : 'offered';
+    const target = _enabled && _swipe && !block ? swipeTarget() : null;
+    if (!target) {
+      renderer.setSplit?.('none');
+      // Off the globe the lease is still ours, so the divider only hides;
+      // otherwise the split is not ours to hold (or nothing is shown).
+      if (_enabled && _swipe && block === 'globe') _split?.setVisible(false);
+      else destroySplit();
+      return;
+    }
+    const globe = globeOf(_viewer);
+    const then = thenLabel();
+    const now = nowSide();
+    const signature = `${then}|${now.label}|${now.title}`;
+    if (_split && (signature !== _splitSignature || globe !== _splitGlobe))
+      destroySplit();
+    if (!_split) {
+      _splitGlobe = globe;
+      _split = createSplit({
+        scene: target,
+        initialValue: _splitValue,
+        id: 'historical-ortho-split-line',
+        handleClass: 'historical-ortho-split-handle',
+        cssProperty: '--historical-ortho-split',
+        beforeLabel: then,
+        afterLabel: now.label,
+        beforeTitle: () =>
+          t('Lantmäteriet’s historical photo, {then}', { then: thenLabel() }),
+        afterTitle: () => nowSide().title,
+        ariaLabel: () => t('Then and now divider'),
+        formatValueText: (left, right) =>
+          t('Then {left} percent, now {right} percent', { left, right }),
+        getViewportWidth: () =>
+          Number(canvasOf(_viewer)?.clientWidth) ||
+          Number(globalThis.document?.documentElement?.clientWidth) ||
+          0,
+        onChange: (value) => {
+          _splitValue = value;
+        },
+        requestRender: () => requestRender('historical-ortho-split'),
+      });
+      _splitSignature = signature;
+    }
+    const showing = _reason === null;
+    _split?.setVisible(showing);
+    renderer.setSplit?.(showing ? 'left' : 'none');
+  }
+
+  /** Switch THEN | NOW, or move its divider. */
+  function chooseSwipe({ swipe, split }) {
+    let changed = false;
+    if (typeof split === 'number' && split !== _splitValue) {
+      _splitValue = split;
+      // The divider asks for its own frame when its value moves.
+      _split?.setValue(split);
+      changed = true;
+    }
+    if (typeof swipe === 'boolean' && swipe !== _swipe) {
+      _swipe = swipe;
+      changed = true;
+      syncSwipe();
+    }
+    if (changed) notify();
+    return changed;
   }
 
   async function readStatus() {
@@ -297,6 +477,12 @@ export function createHistoricalOrthoLayer({
     _rechecked = false;
     notify();
   }
+
+  // The divider's labels are worded when it is made: a new language
+  // rebuilds it (`syncSwipe` compares them).
+  const _offLocale = onLocaleChange(() => {
+    if (_enabled) syncSwipe();
+  });
 
   renderer.setTileErrorListener?.(tileFailed);
   renderer.setTileLoadListener?.(tileLoaded);
@@ -435,6 +621,8 @@ export function createHistoricalOrthoLayer({
       _budgetSpent = false;
       _reason = 'off';
       renderer.hide();
+      renderer.setSplit?.('none');
+      destroySplit();
       // Back to Google 3D when the lease moved the map.
       lease.release();
       notify();
@@ -450,6 +638,9 @@ export function createHistoricalOrthoLayer({
       _unsubscribeMap?.();
       _unsubscribeMap = null;
       lease.attach(null);
+      _mapStack = null;
+      _offLocale?.();
+      destroySplit();
       renderer.destroy();
       _rowListener = null;
       _viewer = null;
@@ -466,6 +657,7 @@ export function createHistoricalOrthoLayer({
       _unsubscribeMap?.();
       _unsubscribeMap = null;
       lease.attach(controller);
+      _mapStack = controller || null;
       const off = controller?.subscribe?.(followMap);
       _unsubscribeMap = typeof off === 'function' ? off : null;
     },
@@ -482,9 +674,10 @@ export function createHistoricalOrthoLayer({
     /**
      * Choose what is shown (tools and tests; the row's chips do the same):
      * `year`, `variant` ('bw', 'color', 'ir') and `flightYears` (a
-     * boolean). An unknown year or variant, or a flightYears that is not a
-     * boolean, changes nothing.
-     * @param {{year?: number, variant?: string, flightYears?: boolean}} params
+     * boolean), and THEN | NOW: `swipe` (a boolean) and `split`, where its
+     * divider stands (0–1). An unknown year or variant, a flightYears or
+     * swipe that is not a boolean, or a split outside 0–1, changes nothing.
+     * @param {{year?: number, variant?: string, flightYears?: boolean, swipe?: boolean, split?: number}} params
      * @returns {boolean}
      */
     setParams(params) {
@@ -497,12 +690,24 @@ export function createHistoricalOrthoLayer({
         return false;
       if (params.flightYears != null && typeof params.flightYears !== 'boolean')
         return false;
+      if (params.swipe != null && typeof params.swipe !== 'boolean')
+        return false;
+      if (
+        params.split != null &&
+        !(
+          typeof params.split === 'number' &&
+          params.split >= 0 &&
+          params.split <= 1
+        )
+      )
+        return false;
       choose(params);
+      chooseSwipe(params);
       return true;
     },
 
     getParams() {
-      return { ..._selection };
+      return { ..._selection, swipe: _swipe, split: _splitValue };
     },
 
     setRowControlsListener(listener) {
@@ -563,6 +768,20 @@ export function createHistoricalOrthoLayer({
           : t('Flight years exist only for the reference years 1960 and 1975'),
         onClick: () => choose({ flightYears: !flightYears }),
       });
+      if (swipeOffered()) {
+        const block = swipeBlock();
+        const possible = !block;
+        chips.push({
+          id: 'swipe',
+          label: t('THEN | NOW'),
+          // A wanted swipe can always be switched off; only switching it on
+          // needs the globe.
+          active: _swipe,
+          disabled: !possible && !_swipe,
+          title: swipeTitle(block),
+          onClick: () => chooseSwipe({ swipe: !_swipe }),
+        });
+      }
       return { chips, info: infoText() };
     },
 
@@ -595,6 +814,7 @@ export function createHistoricalOrthoLayer({
           resolutionM: shown.resolutionM,
           flightYears: entry.reference && _selection.flightYears,
           onGoogle3dTiles: onTiles(),
+          thenNowDivider: Boolean(_split) && renderer.getSplit?.() === 'left',
           source: 'Lantmäteriet',
           licence: 'CC0 1.0',
         },
@@ -656,6 +876,9 @@ export function createHistoricalOrthoLayer({
         status: _status ? { ..._status } : null,
         tileErrors: _tileErrors,
         selection: { ..._selection },
+        swipe: _swipe,
+        split: _splitValue,
+        divider: Boolean(_split),
       };
     },
   };

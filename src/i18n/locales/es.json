@@ -5623,5 +5623,15 @@
   "Outside Sweden: Lantmäteriet’s photos show only Sweden": "Fuera de Suecia: las fotos de Lantmäteriet solo muestran Suecia",
   "On Google 3D the photos show only below 25 km, looking down": "En Google 3D las fotos solo se ven por debajo de 25 km y mirando hacia abajo",
   "The old photo lies over today’s 3D buildings": "La foto antigua queda sobre los edificios 3D de hoy",
-  "Switching to the Esri map for the photos…": "Cambiando al mapa de Esri para las fotos…"
+  "Switching to the Esri map for the photos…": "Cambiando al mapa de Esri para las fotos…",
+  "{year} {variant}": "{year} {variant}",
+  "Today’s map": "Mapa actual",
+  "Today · {map}": "Hoy · {map}",
+  "Today: {map}, dates vary": "Hoy: {map}, las fechas varían",
+  "Today: {map}": "Hoy: {map}",
+  "Lantmäteriet’s historical photo, {then}": "Foto histórica de Lantmäteriet, {then}",
+  "Then and now divider": "Divisor entre antes y ahora",
+  "Then {left} percent, now {right} percent": "Antes {left} por ciento, ahora {right} por ciento",
+  "THEN | NOW": "ANTES | AHORA",
+  "A divider across the map: the historical photo on the left, today’s map on the right": "Un divisor sobre el mapa: la foto histórica a la izquierda, el mapa actual a la derecha"
 }

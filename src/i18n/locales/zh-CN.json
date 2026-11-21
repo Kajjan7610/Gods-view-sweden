@@ -5401,5 +5401,15 @@
   "Outside Sweden: Lantmäteriet’s photos show only Sweden": "瑞典境外：Lantmäteriet 的照片只显示瑞典",
   "On Google 3D the photos show only below 25 km, looking down": "在 Google 3D 上，照片只在 25 公里以下且向下看时显示",
   "The old photo lies over today’s 3D buildings": "旧照片覆盖在今天的 3D 建筑之上",
-  "Switching to the Esri map for the photos…": "正在为照片切换到 Esri 地图…"
+  "Switching to the Esri map for the photos…": "正在为照片切换到 Esri 地图…",
+  "{year} {variant}": "{year} {variant}",
+  "Today’s map": "今天的地图",
+  "Today · {map}": "今天 · {map}",
+  "Today: {map}, dates vary": "今天：{map}，日期不一",
+  "Today: {map}": "今天：{map}",
+  "Lantmäteriet’s historical photo, {then}": "Lantmäteriet 的历史照片，{then}",
+  "Then and now divider": "过去与现在分隔线",
+  "Then {left} percent, now {right} percent": "过去 {left}%，现在 {right}%",
+  "THEN | NOW": "过去 | 现在",
+  "A divider across the map: the historical photo on the left, today’s map on the right": "地图上的分隔线：左边是历史照片，右边是今天的地图"
 }

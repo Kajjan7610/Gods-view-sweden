@@ -1,5 +1,6 @@
 {
   "ar": [
+    "{year} {variant}",
     "1090 MHz",
     "978 MHz UAT",
     "AIS: --",
@@ -68,6 +69,7 @@
     "{speed} {direction}"
   ],
   "de": [
+    "{year} {variant}",
     "1090 MHz",
     "978 MHz UAT",
     "AIS: --",
@@ -356,6 +358,7 @@
     "Influenza B"
   ],
   "es": [
+    "{year} {variant}",
     "1090 MHz",
     "978 MHz UAT",
     "AIS: --",
@@ -594,6 +597,7 @@
     "{value} min"
   ],
   "fr": [
+    "{year} {variant}",
     "1090 MHz",
     "978 MHz UAT",
     "ALTITUDE",
@@ -914,6 +918,7 @@
     "{value} min"
   ],
   "it": [
+    "{year} {variant}",
     "1090 MHz",
     "978 MHz UAT",
     "AFRICA",
@@ -1201,6 +1206,7 @@
     "Influenza B"
   ],
   "ja": [
+    "{year} {variant}",
     "1090 MHz",
     "978 MHz UAT",
     "AIS: --",
@@ -1311,6 +1317,7 @@
     "KT"
   ],
   "pt": [
+    "{year} {variant}",
     "1090 MHz",
     "978 MHz UAT",
     "AIS: --",
@@ -1550,6 +1557,7 @@
     "{value} min"
   ],
   "ru": [
+    "{year} {variant}",
     "AIS: --",
     "AIS: {name}",
     "CCTV",
@@ -1604,6 +1612,7 @@
     "{kind} {name}"
   ],
   "sv": [
+    "{year} {variant}",
     "1090 MHz",
     "978 MHz UAT",
     "AIS: --",
@@ -1846,6 +1855,7 @@
     "{value} min"
   ],
   "uk": [
+    "{year} {variant}",
     "AIS: --",
     "AIS: {name}",
     "CCTV",
@@ -1894,6 +1904,7 @@
     "{kind} {name}"
   ],
   "zh-CN": [
+    "{year} {variant}",
     "1090 MHz",
     "978 MHz UAT",
     "AIS: --",
@@ -1996,6 +2007,7 @@
     "{n} hPa"
   ],
   "zh-Hant": [
+    "{year} {variant}",
     "1090 MHz",
     "978 MHz UAT",
     "AIS: --",
@@ -2098,6 +2110,7 @@
     "{n} hPa"
   ],
   "he": [
+    "{year} {variant}",
     "IR",
     "NATURA 2000",
     "{n} cm",

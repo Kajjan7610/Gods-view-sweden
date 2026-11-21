@@ -461,6 +461,25 @@ git merge origin/main
   och när kameran tittar nedåt (brantare än −35°), och raden säger att det
   gamla fotot ligger över dagens 3D-byggnader. Utanför Sveriges ruta
   draperas ingenting och raden säger det.
+- DÅ | NU: knappen lägger en avdelare över kartan (samma som Recent
+  Imagerys jämförelse mot baskartan), med det historiska fotot och, när
+  FLYGÅR är på, bladen till vänster och dagens karta till höger. Etiketterna
+  säger året och varianten ("1960", "2004 färg") och dagens karta med sitt
+  namn där kartan har ett ("I dag · Esri Satellite", med "datum varierar" i
+  rutan för Esris och Bings bilder), annars "Dagens karta". Avdelaren står
+  kvar där den var när man byter år. Den fungerar bara på globen och bara
+  med lagrets eget lån av kartan, så att två avdelare aldrig delar globen:
+  har en annan scen lånet (Recent Imagery, Bhote Koshi) är knappen gråad
+  med "Jämförelsen används av en annan scen", och utan inloggning eller
+  innan statusen är läst görs ingen avdelare. På 3D-rutorna (utan lånet av
+  Esri) är knappen gråad med "Svepjämförelse kräver en globkarta" när den
+  är av; är den på går den att slå av, och avdelaren är dold. Inzoomat för
+  högt eller utanför Sverige döljs avdelaren och kommer tillbaka med
+  fotona; när knappen eller lagret slås av tas den bort och globens delning
+  blir som förut. Etiketterna följer med när man byter språk.
+  Ingen timer och ingen ritslinga: en bildruta begärs bara när avdelaren
+  flyttas. `swipe` och `split` (0–1) finns som parametrar för en framtida
+  berättelse.
 - Prestanda: ingenting laddas förrän lagret slås på, och då läses proxyns
   status en gång (ingen timer). Över 120 km höjd hämtas inga rutor alls och
   raden säger "Zooma in för att se flygfotona"; rutorna (512 px) hämtas

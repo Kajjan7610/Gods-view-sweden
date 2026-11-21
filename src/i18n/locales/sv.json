@@ -5512,5 +5512,15 @@
   "Outside Sweden: Lantmäteriet’s photos show only Sweden": "Utanför Sverige: Lantmäteriets foton visar bara Sverige",
   "On Google 3D the photos show only below 25 km, looking down": "På Google 3D visas fotona bara under 25 km och när man tittar nedåt",
   "The old photo lies over today’s 3D buildings": "Det gamla fotot ligger över dagens 3D-byggnader",
-  "Switching to the Esri map for the photos…": "Byter till Esris karta för fotona…"
+  "Switching to the Esri map for the photos…": "Byter till Esris karta för fotona…",
+  "{year} {variant}": "{year} {variant}",
+  "Today’s map": "Dagens karta",
+  "Today · {map}": "I dag · {map}",
+  "Today: {map}, dates vary": "I dag: {map}, datum varierar",
+  "Today: {map}": "I dag: {map}",
+  "Lantmäteriet’s historical photo, {then}": "Lantmäteriets historiska foto, {then}",
+  "Then and now divider": "Avdelare mellan då och nu",
+  "Then {left} percent, now {right} percent": "Då {left} procent, nu {right} procent",
+  "THEN | NOW": "DÅ | NU",
+  "A divider across the map: the historical photo on the left, today’s map on the right": "En avdelare över kartan: det historiska fotot till vänster, dagens karta till höger"
 }

@@ -5734,5 +5734,15 @@
   "Outside Sweden: Lantmäteriet’s photos show only Sweden": "За пределами Швеции: снимки Lantmäteriet показывают только Швецию",
   "On Google 3D the photos show only below 25 km, looking down": "В Google 3D снимки видны только ниже 25 км и при взгляде вниз",
   "The old photo lies over today’s 3D buildings": "Старый снимок лежит поверх сегодняшних 3D-зданий",
-  "Switching to the Esri map for the photos…": "Переключение на карту Esri для снимков…"
+  "Switching to the Esri map for the photos…": "Переключение на карту Esri для снимков…",
+  "{year} {variant}": "{year} {variant}",
+  "Today’s map": "Сегодняшняя карта",
+  "Today · {map}": "Сегодня · {map}",
+  "Today: {map}, dates vary": "Сегодня: {map}, даты различаются",
+  "Today: {map}": "Сегодня: {map}",
+  "Lantmäteriet’s historical photo, {then}": "Исторический снимок Lantmäteriet, {then}",
+  "Then and now divider": "Разделитель «тогда и сейчас»",
+  "Then {left} percent, now {right} percent": "Тогда {left} процентов, сейчас {right} процентов",
+  "THEN | NOW": "ТОГДА | СЕЙЧАС",
+  "A divider across the map: the historical photo on the left, today’s map on the right": "Разделитель поверх карты: исторический снимок слева, сегодняшняя карта справа"
 }

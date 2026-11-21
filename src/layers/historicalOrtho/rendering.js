@@ -119,6 +119,12 @@ export function createHistoricalOrthoRenderer({
   let ownedHooks = true;
   /** Why the last draping failed, or null. */
   let failure = null;
+  /** Which side of the globe's split the layers draw on (THEN | NOW). */
+  let split = 'none';
+
+  const applySplit = (record) => {
+    record.layer.split = split;
+  };
 
   function specFor(entry) {
     const spec = {
@@ -172,6 +178,7 @@ export function createHistoricalOrthoRenderer({
             )
           : null;
       record.off = typeof off === 'function' ? off : null;
+      applySplit(record);
     } catch (error) {
       unmount(record);
       throw error;
@@ -298,6 +305,25 @@ export function createHistoricalOrthoRenderer({
     /** Why the port refused the imagery, or null. */
     failure() {
       return failure;
+    },
+
+    /**
+     * Draw the layers on one side of the globe's split: `left` for the
+     * THEN | NOW divider, `none` everywhere. Layers added later follow it.
+     * @param {'left'|'right'|'none'} direction
+     */
+    setSplit(direction) {
+      const next =
+        direction === 'left' || direction === 'right' ? direction : 'none';
+      if (next === split) return;
+      split = next;
+      for (const record of owned) applySplit(record);
+      if (owned.length) requestRender('historical-ortho-split');
+    },
+
+    /** The side the layers draw on. */
+    getSplit() {
+      return split;
     },
 
     /** Number of imagery layers this renderer owns (at most three). */

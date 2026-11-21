@@ -7,6 +7,7 @@ import test from 'node:test';
 import { fakeCameraPort } from '../../testSupport/fakeCameraPort.mjs';
 import { fakeGlobePort } from '../../testSupport/fakeGlobePort.mjs';
 import { acquireImageryComparison } from '../../maps/imageryComparison.js';
+import { setLocale } from '../../i18n/index.js';
 import {
   HISTORICAL_ORTHO_LAYER_ID,
   HISTORICAL_ORTHO_MAX_HEIGHT_M,
@@ -30,6 +31,7 @@ function harness({
   hostKind = 'globe',
   pose = {},
   capabilities = null,
+  extra = {},
 } = {}) {
   const reads = [];
   const answers = Array.isArray(status) ? [...status] : [status];
@@ -44,6 +46,7 @@ function harness({
       `/api/historiska-ortofoton/tile/${layerId}/{z}/{x}/{y}.png`,
   };
   const globe = fakeGlobePort();
+  let currentGlobe = globe;
   const camera = fakeCameraPort({
     pose: { lon: 18, lat: 59.3, height, ...pose },
   });
@@ -60,9 +63,10 @@ function harness({
       hostState.kind === 'none'
         ? { collection: null, kind: 'none' }
         : { collection: collections[hostState.kind], kind: hostState.kind },
-    globeOf: () => globe,
+    globeOf: () => currentGlobe,
     cameraOf: () => camera.port,
     capabilitiesOf: () => capabilities,
+    ...extra,
   });
   layer.init(viewer);
   const chip = (id) =>
@@ -78,6 +82,8 @@ function harness({
     urls,
     viewer,
     renderer,
+    /** The viewer's globe port is replaced (a renderer rebound). */
+    swapGlobe: (next) => (currentGlobe = next),
   };
 }
 
@@ -274,6 +280,8 @@ test('year chips choose one year; colour and infrared only where the year has th
     year: 1998,
     variant: 'bw',
     flightYears: false,
+    swipe: false,
+    split: 0.5,
   });
 });
 
@@ -594,7 +602,327 @@ test('params: an unknown year or variant, or a flightYears that is not a boolean
     year: 1975,
     variant: 'bw',
     flightYears: false,
+    swipe: false,
+    split: 0.5,
   });
   assert.equal(layer.setParams({ flightYears: true }), true);
   assert.equal(layer.getParams().flightYears, true);
+});
+
+/**
+ * THEN | NOW's divider double: what `createImagerySplit` is given, its
+ * value and visibility, and whether it was torn down; plus the split it
+ * moves and the frames it asks for.
+ */
+function fakeSplits() {
+  const made = [];
+  const frames = [];
+  const scene = { splitPosition: 0.5 };
+  const createSplit = (options) => {
+    const split = {
+      options,
+      value: options.initialValue,
+      visible: true,
+      destroyed: false,
+      getValue: () => split.value,
+      setValue(next) {
+        if (next === split.value) return false;
+        split.value = next;
+        options.scene.splitPosition = next;
+        options.requestRender?.();
+        return true;
+      },
+      setVisible(visible) {
+        split.visible = Boolean(visible);
+      },
+      destroy() {
+        split.destroyed = true;
+      },
+      /** The operator drags it. */
+      drag(next) {
+        split.value = next;
+        options.onChange?.(next);
+      },
+    };
+    made.push(split);
+    return split;
+  };
+  const live = () => made.filter((split) => !split.destroyed);
+  return {
+    made,
+    live,
+    frames,
+    extra: {
+      createSplit,
+      splitTarget: (globe) => (globe ? scene : null),
+      requestRender: (reason) => frames.push(reason),
+    },
+  };
+}
+
+test('THEN | NOW puts the photo left of a divider and today’s map right of it', async () => {
+  const splits = fakeSplits();
+  const { layer, globe, chip } = harness({ extra: splits.extra });
+  layer.attachMapStackController({
+    subscribe: () => () => {},
+    getActiveStack: () => ({ id: 'esri-imagery', label: 'Esri Satellite', kind: 'esri-imagery' }),
+  });
+  layer.enable();
+  await settle();
+  assert.equal(chip('swipe').label, 'THEN | NOW');
+  assert.equal(chip('swipe').active, false);
+  assert.equal(chip('swipe').disabled, false);
+  assert.equal(splits.made.length, 0, 'no divider until asked for');
+  chip('swipe').onClick();
+  assert.equal(chip('swipe').active, true);
+  const [split] = splits.live();
+  assert.equal(split.options.beforeLabel, '1960');
+  assert.equal(split.options.afterLabel, 'Today · Esri Satellite');
+  assert.equal(split.options.afterTitle(), 'Today: Esri Satellite, dates vary');
+  assert.equal(split.options.initialValue, 0.5);
+  assert.equal(split.visible, true);
+  assert.ok(globe.layers.every((imagery) => imagery.split === 'left'));
+  // The sheets added later draw left too.
+  chip('flight-years').onClick();
+  assert.equal(globe.layers.length, 3);
+  assert.ok(globe.layers.every((imagery) => imagery.split === 'left'));
+  // The operator drags it; a year switch keeps where it stands.
+  split.drag(0.3);
+  assert.equal(layer.getParams().split, 0.3);
+  chip('year-2004').onClick();
+  chip('variant-color').onClick();
+  const [next] = splits.live();
+  assert.notEqual(next, split, 'new labels, a new divider');
+  assert.equal(split.destroyed, true);
+  assert.equal(next.options.beforeLabel, '2004 colour');
+  assert.equal(next.options.initialValue, 0.3);
+  assert.equal(splits.live().length, 1);
+  // Off: the layers draw everywhere again and the divider goes.
+  chip('swipe').onClick();
+  assert.equal(next.destroyed, true);
+  assert.equal(splits.live().length, 0);
+  assert.ok(globe.layers.every((imagery) => imagery.split === 'none'));
+});
+
+test('without a map name the right side is today’s map', async () => {
+  const splits = fakeSplits();
+  const { layer } = harness({ extra: splits.extra });
+  layer.enable();
+  await settle();
+  layer.setParams({ swipe: true });
+  const [split] = splits.live();
+  assert.equal(split.options.afterLabel, 'Today’s map');
+});
+
+test('on the 3D tiles (no lease) THEN | NOW is disabled and says why', async () => {
+  const splits = fakeSplits();
+  const { layer, globe, chip } = harness({
+    hostKind: 'tileset',
+    extra: splits.extra,
+  });
+  layer.enable();
+  await settle();
+  assert.equal(globe.layers.length, 1, 'draped on the tiles');
+  assert.equal(chip('swipe').disabled, true);
+  assert.equal(chip('swipe').title, 'Swipe needs a globe map');
+  layer.setParams({ swipe: true });
+  assert.equal(splits.live().length, 0, 'no divider on the tiles');
+  assert.ok(globe.layers.every((imagery) => imagery.split === 'none'));
+});
+
+test('a wanted swipe stays switchable off when the host falls back to the 3D tiles', async () => {
+  const splits = fakeSplits();
+  const { layer, globe, chip, hostState } = harness({ extra: splits.extra });
+  const listeners = new Set();
+  layer.attachMapStackController({
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  });
+  layer.enable();
+  await settle();
+  chip('swipe').onClick();
+  const [split] = splits.live();
+  hostState.kind = 'tileset';
+  for (const listener of listeners) listener();
+  assert.equal(split.visible, false, 'hidden on the tiles');
+  assert.ok(globe.layers.every((imagery) => imagery.split === 'none'));
+  assert.equal(chip('swipe').active, true);
+  assert.equal(chip('swipe').disabled, false, 'it can still be turned off');
+  assert.equal(chip('swipe').title, 'Swipe needs a globe map');
+  chip('swipe').onClick();
+  assert.equal(layer.getParams().swipe, false);
+  assert.equal(split.destroyed, true);
+  assert.equal(chip('swipe').disabled, true, 'turning it on is not offered');
+  assert.equal(chip('swipe').active, false);
+});
+
+test('the divider hides while the photos do and comes back with them', async () => {
+  const splits = fakeSplits();
+  const { layer, globe, camera } = harness({ extra: splits.extra });
+  layer.enable();
+  await settle();
+  layer.setParams({ swipe: true, split: 0.7 });
+  const [split] = splits.live();
+  assert.equal(split.options.initialValue, 0.7);
+  camera.setPose({ height: 500_000 });
+  camera.emit('moveEnd');
+  assert.equal(split.visible, false, 'hidden when zoomed out');
+  assert.equal(split.destroyed, false, 'not torn down');
+  camera.setPose({ height: 20_000, lon: 2.35, lat: 48.85 });
+  camera.emit('moveEnd');
+  assert.equal(split.visible, false, 'hidden outside Sweden');
+  camera.setPose({ lon: 18, lat: 59.3 });
+  camera.emit('moveEnd');
+  assert.equal(split.visible, true);
+  assert.equal(splits.live().length, 1, 'the same divider');
+  assert.ok(globe.layers.every((imagery) => imagery.split === 'left'));
+});
+
+test('no divider before the status or without a login; disable and destroy tear it down', async () => {
+  const splits = fakeSplits();
+  const { layer, chip } = harness({
+    status: { ...LOGIN, hasLogin: false },
+    extra: splits.extra,
+  });
+  // Wanted before the layer is even on.
+  layer.setParams({ swipe: true });
+  layer.enable();
+  assert.equal(splits.made.length, 0, 'none while the status loads');
+  assert.equal(chip('swipe').title, 'Checking the Geotorget login…');
+  await settle();
+  assert.equal(splits.made.length, 0, 'none without a login');
+  assert.equal(chip('swipe').title, 'Geotorget account needed');
+  assert.equal(chip('swipe').disabled, false, 'a wanted swipe can go off');
+  layer.disable();
+  // With a login it is made; disable and destroy end it.
+  const second = fakeSplits();
+  const fresh = harness({ extra: second.extra });
+  fresh.layer.enable();
+  await settle();
+  fresh.layer.setParams({ swipe: true });
+  assert.equal(second.live().length, 1);
+  fresh.layer.disable();
+  assert.equal(second.made[0].destroyed, true);
+  fresh.layer.enable();
+  await settle();
+  assert.equal(second.live().length, 1, 'back with the layer');
+  fresh.layer.destroy();
+  assert.equal(second.live().length, 0);
+});
+
+test('no divider while another scene holds the comparison lease', async () => {
+  const controller = leasingController({ activeId: 'osm' });
+  const rival = controller.acquireImageryComparison({ owner: 'rival' });
+  const splits = fakeSplits();
+  const { layer, globe, chip } = onMap(controller, { extra: splits.extra });
+  layer.enable();
+  await settleMany();
+  assert.equal(globe.layers.length, 1, 'the photo shows on the globe');
+  assert.equal(layer.diagnostics().lease, 'unavailable');
+  assert.equal(chip('swipe').disabled, true);
+  assert.equal(chip('swipe').title, 'Comparison in use by another scene');
+  layer.setParams({ swipe: true });
+  assert.equal(splits.made.length, 0, 'the split is the rival’s');
+  assert.ok(globe.layers.every((imagery) => imagery.split === 'none'));
+  void rival.release();
+  layer.destroy();
+});
+
+test('on Google 3D the divider waits for the lease and comes once it is ready', async () => {
+  const controller = leasingController();
+  const splits = fakeSplits();
+  const { layer, globe, chip } = onMap(controller, { extra: splits.extra });
+  layer.setParams({ swipe: true, split: 0.4 });
+  layer.enable();
+  await settle();
+  assert.equal(layer.diagnostics().lease, 'acquiring');
+  assert.equal(splits.made.length, 0, 'not before the lease');
+  assert.equal(chip('swipe').title, 'Switching to the Esri map for the photos…');
+  await settleMany();
+  assert.equal(layer.diagnostics().lease, 'ready');
+  const [split] = splits.live();
+  assert.equal(split.options.initialValue, 0.4);
+  assert.equal(split.visible, true);
+  assert.ok(globe.layers.every((imagery) => imagery.split === 'left'));
+  assert.equal(typeof split.options.getViewportWidth, 'function');
+  layer.disable();
+  await settleMany();
+  assert.equal(split.destroyed, true);
+  assert.equal(controller.getActiveId(), 'photoreal');
+});
+
+test('a new globe port, or a new language, gets a new divider at the same place', async () => {
+  const splits = fakeSplits();
+  const { layer, camera, swapGlobe } = harness({ extra: splits.extra });
+  layer.enable();
+  await settle();
+  layer.setParams({ swipe: true, split: 0.35 });
+  const [first] = splits.live();
+  // Nothing changed: the same divider.
+  camera.emit('moveEnd');
+  assert.equal(splits.live()[0], first);
+  // A new port: rebuilt where it stood.
+  swapGlobe(fakeGlobePort());
+  camera.setPose({ height: 19_000 });
+  camera.emit('moveEnd');
+  const [second] = splits.live();
+  assert.notEqual(second, first);
+  assert.equal(first.destroyed, true);
+  assert.equal(second.options.initialValue, 0.35);
+  setLocale('sv');
+  try {
+    const [third] = splits.live();
+    assert.notEqual(third, second, 'rebuilt for the new language');
+    assert.equal(second.destroyed, true);
+    assert.equal(third.options.initialValue, 0.35);
+    assert.equal(third.options.afterLabel, 'Dagens karta');
+  } finally {
+    setLocale('en');
+  }
+  assert.equal(splits.live()[0].options.afterLabel, 'Today’s map');
+  layer.destroy();
+  setLocale('sv');
+  setLocale('en');
+  assert.equal(splits.live().length, 0, 'no listener after destroy');
+});
+
+test('THEN | NOW params round-trip and are validated; a move asks for one frame', async () => {
+  const splits = fakeSplits();
+  const { layer } = harness({ extra: splits.extra });
+  layer.enable();
+  await settle();
+  assert.equal(layer.setParams({ swipe: 'yes' }), false);
+  assert.equal(layer.setParams({ split: 1.5 }), false);
+  assert.equal(layer.setParams({ split: -0.1 }), false);
+  assert.equal(layer.setParams({ split: '0.4' }), false);
+  assert.equal(layer.getParams().swipe, false);
+  assert.equal(layer.setParams({ swipe: true, split: 0.25 }), true);
+  assert.deepEqual(
+    { swipe: layer.getParams().swipe, split: layer.getParams().split },
+    { swipe: true, split: 0.25 },
+  );
+  const [split] = splits.live();
+  assert.equal(split.value, 0.25);
+  splits.frames.length = 0;
+  layer.setParams({ split: 0.6 });
+  assert.equal(split.value, 0.6);
+  assert.deepEqual(splits.frames, ['historical-ortho-split']);
+  layer.setParams({ split: 0.6 });
+  assert.equal(splits.frames.length, 1, 'no frame for no change');
+  // A layer restored from params keeps them.
+  const again = harness({ extra: fakeSplits().extra });
+  again.layer.setParams(layer.getParams());
+  assert.deepEqual(again.layer.getParams(), layer.getParams());
+});
+
+test('without a divider factory the row offers no THEN | NOW', async () => {
+  const { layer } = harness();
+  layer.enable();
+  await settle();
+  assert.equal(
+    layer.getRowControls().chips.some((entry) => entry.id === 'swipe'),
+    false,
+  );
 });
