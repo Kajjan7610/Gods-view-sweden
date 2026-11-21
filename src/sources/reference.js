@@ -14,6 +14,7 @@ import { createSmhiWarningsSource } from '../layers/smhiWarnings/source.js';
 import { createPolisenEventsSource } from '../layers/policeEvents/source.js';
 import { createElectricityPricesSource } from '../layers/electricity/source.js';
 import { createPowerGridSource } from '../layers/powerGrid/source.js';
+import { createWindTurbinesSource } from '../layers/windTurbines/source.js';
 import { createTransitAlertsSource } from '../layers/transitAlerts/source.js';
 import { createEmptySrTrafficSource } from '../layers/srTraffic/source.js';
 import { createSeaWeatherSource } from '../layers/seaWeather/source.js';
@@ -64,6 +65,7 @@ export function createReferenceSources() {
     'polisen-events': createPolisenEventsSource(),
     'electricity-prices': createElectricityPricesSource(),
     'power-grid': createPowerGridSource(),
+    'wind-turbines': createWindTurbinesSource(),
     'transit-alerts': createTransitAlertsSource(),
     'sr-traffic': createEmptySrTrafficSource(),
     'sea-weather': createSeaWeatherSource(),

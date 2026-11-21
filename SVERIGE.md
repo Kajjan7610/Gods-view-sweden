@@ -61,6 +61,7 @@ Tre regler gäller:
 | Luftkvalitet: ca 75 SMHI-mätstationer (NO2, PM10, PM2.5, O3) på europeiska EAQI-skalan, tillsammans med Kanadas stationer | SMHI Datavärdskap luft (CC BY 4.0, ingen nyckel) | Air quality / Luftkvalitet, under Weather |
 | Elpris per elområde (SE1–SE4), spotpris per kvart idag och imorgon | elprisetjustnu.se (Nord Pool-priser, ingen nyckel) | Electricity Prices (Sweden), under Infrastructure |
 | Kraftsystemet: flöden på de 14 förbindelserna till och mellan elområdena (rörliga vinklar i flödesriktningen, MW), Sveriges import, export och netto totalt och per grannland, val av import/export/inrikes och en knapp per land som lyfter fram dess förbindelser; klick på ett elområde ger dess import och export. Produktion per kraftslag och förbrukning visas inte: de ingår inte i ENTSO-E:s fria data | ENTSO-E Transparency Platform (CC BY 4.0, gratisnyckel `ENTSOE_SECURITY_TOKEN`) | Power Grid (Sweden) / Kraftsystemet, under Infrastructure |
+| Vindkraftverk: Vindbrukskollens 5 824 uppförda verk som prickar, färgade efter status och större ju högre verket är, de 1 500 närmast kartans mitt när man zoomat in under 250 km, med antalet i vyn och de uppförda verkens märkeffekt; knapparna PLANERAT (1 935 beviljade, under handläggning eller överklagade, ej byggda), NEDMONTERAT (217), AVSLAG (2 633) och EJ AKTUELLT (7 928 inte aktuella eller återkallade och 1 utan status) lägger till resten, alla avstängda från början. Statusen anges som registret anger den, utan skäl. Klick ger projektnamn, status, totalhöjd, navhöjd, rotordiameter, märkeffekt (MW), beräknad produktion (GWh/år), fabrikat och modell, byggår (uppförda och nedmonterade), kommun och län, elområde, verksamhetsutövare (bara när det tydligt är ett företag) och senaste uppdatering i registret | Länsstyrelserna, Vindbrukskollen (CC0 1.0, "Ange Länsstyrelsen som källa", ingen nyckel) som ögonblicksbild i repot, byggd för hand ur länsstyrelsernas shapefil; bara data: Energimyndighetens bakgrundskartor får bara användas i tillståndsprocessen och används inte | Wind turbines (Sweden) / Vindkraftverk (Sverige), under Infrastructure |
 | Vattenföring: ca 150 SMHI-stationer i vattendragen, senast publicerade flöde i m³/s (kvartsvärden, publiceras med fördröjning) och om det stiger eller sjunker | SMHI hydrologiska observationer (CC BY 4.0, ingen nyckel) | River Flow (Sweden) / Vattenföring, under Weather |
 | Butikskedjor: ICA:s, Coops, Axfoods (Willys, Hemköp, City Gross), Lidls och Systembolagets butiker samt apoteken hos Apotek Hjärtat (ICA Gruppen), Apoteket, Kronans Apotek (med Apoteksgruppen) och DOZ Apotek, färgade efter företag och koncept, med en knapp per företag; klick ger adress, om butiken är öppen nu, kartlagd storlek, webbsida, telefon, rullstol och paketombud, hur många som bor inom 2 km, närmaste hållplats, närmaste andra kedjor och företaget (org.nr och huvudkontor); klick på kortet öppnar butikens webbsida. Bara butiker, inga lager eller kontor. | OpenStreetMap (ODbL) som ögonblicksbild i repot, företagsfakta från Wikidata (CC0), befolkning från SCB:s 1 km-rutor (CC0) | Retail Chains (Sweden) / Butikskedjor, under Infrastructure |
 | Brandstationer: räddningstjänstens 841 stationer, färgade efter högsta beredskapsform (heltid, deltid med eller utan första insatsperson, räddningsvärn) | Myndigheten för civilt försvar (MCF), INSPIRE-nedladdningstjänst (ingen nyckel; EU-värdefullt dataset, MCF anges som källa) | Fire Stations (Sweden) / Brandstationer, under Infrastructure |
@@ -111,6 +112,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Fartkameror (Sverige) | Trafikverket | Cirka 2 800 fasta fartkameror i hela Sverige | Varje timme | CC0 1.0 |
 | SE | Elpris (Sverige) | elprisetjustnu.se · Nord Pool via ENTSO-E | Spotpris per kvart i elområdena SE1–SE4 | Var 15:e minut | Fri att använda enligt Elpriset just nu; priserna kommer från Nord Pool via ENTSO-E |
 | SE | Kraftsystemet (Sverige) | ENTSO-E | Sveriges förbindelser mellan elområdena och till grannländerna | Var 15:e minut | CC BY 4.0 |
+| SE | Vindkraftverk (Sverige) | Länsstyrelserna, Vindbrukskollen | Uppförda, planerade, avslagna, återkallade och nedmonterade vindkraftverk i hela Sverige, så som länsstyrelserna registrerar dem | Ögonblicksbild i appen, byggs om för hand | CC0 1.0 |
 | SE | Strålning (Sverige) | Strålsäkerhetsmyndigheten (SSM) | Cirka 25 gammastationer | Var 10:e minut | Ingen angiven licens; källan anges |
 | SE | Brandstationer (Sverige) | Myndigheten för civilt försvar (MCF) | Räddningstjänsternas alla brandstationer | En gång per dygn | EU-värdefullt dataset, källan anges |
 | SE | Polisstationer (Sverige) | Polismyndigheten | Alla polisstationer, cirka 260 | En gång per dygn | Öppna data, källan anges |
@@ -422,6 +424,59 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-21 (vindkraftverk)
+- Nytt lager **Vindkraftverk (Sverige)** (delningstoken `16`) under
+  Infrastructure, efter Kraftsystemet. Verken i länsstyrelsernas register
+  Vindbrukskollen (CC0 1.0, "Ange Länsstyrelsen som källa", ingen nyckel)
+  som prickar, färgade efter status och större ju högre verket är.
+  Uppförda verk visas från början; knapparna PLANERAT (beviljat, handläggs,
+  överklagat), NEDMONTERAT, AVSLAG och EJ AKTUELLT (inte aktuellt eller
+  återkallat, och verk utan status) är avstängda från början.
+  Statusen står som registret anger den, t.ex. "Planerat – ej byggt
+  (beviljat)" och "Avslagen ansökan (enligt Vindbrukskollen)", och lagret
+  anger aldrig något skäl. Lagret visas under 250 km höjd, de 1 500 verk
+  närmast kartans mitt av de slag som är påslagna; raden säger hur många
+  verk som finns i vyn och de uppförda verkens sammanlagda märkeffekt.
+  Klick ger ett kort med projektnamn, status, höjder, rotordiameter,
+  märkeffekt, beräknad produktion, fabrikat och modell, byggår (bara för
+  uppförda och nedmonterade verk), kommun och län, elområde,
+  verksamhetsutövare, senaste uppdatering och källan med datum för
+  ögonblicksbilden. Kortet byter språk med appen; verken räknas i vyn och
+  analytikern läser dem.
+- Prestanda: en vy skickar bara det som behövs för prickarna och namnen (id,
+  läge, status, totalhöjd, märkeffekt, projektnamn, kommun) med korta
+  nycklar, omkring 140 kB för 1 500 verk; kortets övriga uppgifter hämtas
+  för det klickade verket från `/api/wind-turbines/turbine`.
+- Ögonblicksbild: `scripts/build-wind-turbines.mjs` hämtar länsstyrelsernas
+  zippade shapefil (ATOM-flödet `ATOM_lst.vbk_vindkraftverk.xml`, SWEREF 99
+  TM) en gång till `.gev-cache/vindbrukskollen/`; appen frågar aldrig
+  länsstyrelserna. Exporten 2026-11-20 har 23 937 rader för 23 898 verk: 13
+  verk står fyra gånger var (39 rader, likadana utom objekt-id). Ett verk
+  som står flera gånger behåller sin senaste rad, jämförd innan läget
+  läses; saknar den raden läge får verket läget från sin senaste rad med
+  läge, och ett verk helt utan läge (0, 0 – alla planerade eller avslutade
+  ärenden, 5 360 rader) tas bort. Kvar: 18 538 verk, varav 5 824 uppförda,
+  834 beviljade, 928 under handläggning, 173 överklagade, 2 633 avslag,
+  7 928 inte aktuella eller återkallade, 217 nedmonterade och 1 utan status.
+  Raderna packas med en gemensam strängtabell, 1,8 MB i repot.
+- Licens och sammanställning: CC0, och "Länsstyrelserna, Vindbrukskollen
+  (CC0)" står på varje kort och i källförteckningen. Bara data används:
+  Energimyndighetens bakgrundskartor får bara användas i tillståndsprocessen
+  och används inte. Organisationsnummer, placering (land/vatten),
+  handlingstyp, tillståndets tidsbegränsning och diarienummer sparas aldrig.
+  Verksamhetsutövarens namn sparas bara när det tydligt är ett företags:
+  organisationsnumret en juridisk persons (tredje siffran 2 eller mer) men
+  inte ett handels- eller kommanditbolags (första siffran 9; de bär ofta
+  delägarnas namn), inte registrets platshållare "Projektör ej registrerad"
+  (5 802 rader), inte en gård eller fastighet och utan personnamn. Är vi osäkra tas namnet
+  bort: kvar på 17 916 rader (826 namn), borttaget på 6 021 rader (70 namn).
+  15 projektnamn tas också bort (kortet visar då kommunen): de som läses som
+  en persons för- och efternamn, de med ett långt nummer (ett
+  anläggnings-id) och de med en fastighetsbeteckning ("Hagby 1:2"); ett
+  förnamn ensamt, som på en del gotländska verk, står kvar. Byggdatum
+  1900-01-01 betyder okänt och visas inte. Lagret visar bara uppgifter som
+  länsstyrelserna själva publicerar.
 
 ### 2026-11-21 (mindre rättelser)
 - DATA_SOURCES har fått raderna för Kraftsystemet (ENTSO-E:s flöden) och

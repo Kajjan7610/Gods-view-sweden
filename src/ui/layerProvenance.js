@@ -81,6 +81,14 @@ export const LAYER_PROVENANCE = Object.freeze({
     updates: msg('Every 15 minutes'),
     licence: CC_BY,
   }),
+  'wind-turbines': own({
+    source: 'Länsstyrelserna, Vindbrukskollen',
+    coverage: msg(
+      'Wind turbines built, planned, rejected, withdrawn and dismantled in all of Sweden, as the county boards register them',
+    ),
+    updates: msg('Snapshot in the app, rebuilt by hand'),
+    licence: CC0,
+  }),
   'gamma-radiation': own({
     source: 'Strålsäkerhetsmyndigheten (SSM)',
     coverage: msg('About 25 gamma stations'),

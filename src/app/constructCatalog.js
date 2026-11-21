@@ -38,6 +38,7 @@ import { createApplicationSmhiWarnings } from './layers/smhiWarnings.js';
 import { createApplicationPolisenEvents } from './layers/polisenEvents.js';
 import { createApplicationElectricityPrices } from './layers/electricityPrices.js';
 import { createApplicationPowerGrid } from './layers/powerGrid.js';
+import { createApplicationWindTurbines } from './layers/windTurbines.js';
 import { createApplicationTransitAlerts } from './layers/transitAlerts.js';
 import { createApplicationSrTraffic } from './layers/srTraffic.js';
 import { createApplicationSeaWeather } from './layers/seaWeather.js';
@@ -202,6 +203,10 @@ export function createApplicationCatalog({
         }),
         createApplicationPowerGrid({
           source: sources['power-grid'],
+          terrain: surface.terrain,
+        }),
+        createApplicationWindTurbines({
+          source: sources['wind-turbines'],
           terrain: surface.terrain,
         }),
         createApplicationSrTraffic({

@@ -26,6 +26,7 @@ test('reference factories retain compatibility without starting acquisition or s
     'polisen-events',
     'electricity-prices',
     'power-grid',
+    'wind-turbines',
     'transit-alerts',
     'sr-traffic',
     'sea-weather',

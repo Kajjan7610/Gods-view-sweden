@@ -962,6 +962,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     disposition: 'enabled+options',
     optionOwner: 'wind',
   }),
+  Object.freeze({
+    id: 'wind-turbines',
+    token: '16',
+    disposition: 'enabled-only',
+  }),
 ]);
 
 export const REGISTERED_LAYER_IDS = Object.freeze(

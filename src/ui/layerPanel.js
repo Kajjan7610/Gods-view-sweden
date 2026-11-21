@@ -82,6 +82,7 @@ const PANEL_GROUPS = [
       'local-dams',
       'electricity-prices',
       'power-grid',
+      'wind-turbines',
       'gamma-radiation',
       'fire-stations',
       'police-stations',
