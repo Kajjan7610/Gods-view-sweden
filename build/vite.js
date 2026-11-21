@@ -263,6 +263,12 @@ export function createBrowserViteConfig({
       // So is the ArcGIS basemap key; Esri restricts it to the app's address.
       'import.meta.env.ARCGIS_API_KEY': JSON.stringify(arcgisToken ?? ''),
     },
-    build: { chunkSizeWarningLimit: 1500 },
+    build: {
+      chunkSizeWarningLimit: 1500,
+      // The places pack's tiles stay files, read only when a lookup touches
+      // them; inlined, the small ones would all load with the first lookup.
+      assetsInlineLimit: (file) =>
+        file.includes('/wikidata_places/') ? false : undefined,
+    },
   };
 }

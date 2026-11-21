@@ -7,6 +7,7 @@ import RowRange from './RowRange.vue';
 import RowSlider from './RowSlider.vue';
 import RowSwitch from './RowSwitch.vue';
 import RowText from './RowText.vue';
+import UiButton from '../kit/UiButton.vue';
 import { vClassToggle } from '../rail/classToggle.js';
 
 // The data layer rows under their group headings. LayerPanel presents every
@@ -53,8 +54,7 @@ const toggleSources = (id) => (open.has(id) ? open.delete(id) : open.add(id));
             v-if="item.count"
             :class="['data-count', { 'data-count-empty': item.count.empty }]"
             :text="item.count.text"
-          /><button
-            type="button"
+          /><UiButton
             :class="['data-toggle-btn', item.toggle.classes]"
             :data-feed-state="item.toggle.feedState"
             :aria-disabled="String(item.toggle.ariaDisabled)"
@@ -62,7 +62,7 @@ const toggleSources = (id) => (open.has(id) ? open.delete(id) : open.add(id));
             :title="item.toggle.title"
             :aria-label="item.toggle.ariaLabel"
             @click="onToggle(item.id)"
-            >{{ item.toggle.text }}</button
+            >{{ item.toggle.text }}</UiButton
           ></div
         ></div
       ><div v-if="item.provenance" class="data-toggle-meta-line"

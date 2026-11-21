@@ -1,12 +1,18 @@
 import { catalogControlServices } from './catalog.js';
 import { StyleManager } from '../ui/composition.js';
-import { applyStartView, SWEDISH_START_VIEW } from '../camera.js';
+import { applyStartView, START_VIEW, SWEDISH_START_VIEW } from '../camera.js';
 import { initCockpitCloudEffects } from '../cockpitCloudEffects.js';
 import { createViewSky } from '../viewSky.js';
 import { findGlobe } from '../render/rendererOf.js';
 import { useDisplayStore } from '../ui/stores/display.js';
 import { applicationPinia } from '../ui/vueRuntime.js';
 import { t } from '../i18n/index.js';
+
+/**
+ * Upstream's whole-planet start view, for a host that wants it (the Swedish
+ * fork starts in Västerås unless a host gives a `startView`).
+ */
+export { START_VIEW };
 
 /**
  * Construct the existing controls and camera presentation. `initialShareCode`
@@ -16,6 +22,11 @@ import { t } from '../i18n/index.js';
  * the `./i18n` entry). `startView` is where the camera starts (Västerås in
  * the Swedish fork; a host may pass another place, or upstream's START_VIEW
  * for the whole planet); a shared view flies from there.
+ * `homeView` is where the title's logo goes back to (with the clock live): the
+ * start view unless given, for a host whose `startView` only carries a view
+ * across a rebuild.
+ * `startLayers` are the layer ids a bare address (one that carries no link)
+ * starts with: none by default; a host may pass `['flights', 'satellites']`.
  * `services.cockpitSubjects` adds the application's own first-person subjects
  * to the Cockpit (src/cockpitSubjectProviders.js).
  */
@@ -30,6 +41,8 @@ export function createApplicationControls({
   initialShareCode = null,
   localePicker = true,
   startView = SWEDISH_START_VIEW,
+  homeView = startView,
+  startLayers = [],
 }) {
   // Every boot starts from the same view, before share restoration flies on.
   applyStartView(viewer, startView);
@@ -52,6 +65,8 @@ export function createApplicationControls({
     // A share code to open at start-up instead of the page's address.
     initialShareCode,
     localePicker,
+    homeView,
+    startLayers,
   });
   defer(() => styleManager.orbitController.stop());
   defer(() => styleManager.hud.destroy());

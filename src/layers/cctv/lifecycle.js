@@ -1,6 +1,6 @@
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { distance, dot } from '../../geo/vector.js';
-import { canvasOf, findCamera } from '../../render/rendererOf.js';
+import { canvasOf, findCamera, findGlobe } from '../../render/rendererOf.js';
 import { viewshedColors, cameraHue } from '../../data/cctvViewshed.js';
 import { CCTV_OVERLAY_SOURCE_ID } from '../../data/cctvCards.js';
 import { GIZMO_ID_PREFIX } from '../../data/cctvGizmo.js';
@@ -15,8 +15,6 @@ import {
 } from './policy.js';
 
 const MIN_TURN_COS = Math.cos((VIEW_MOTION_MIN_TURN_DEG * Math.PI) / 180);
-/** How long a default camera pick follows the settling start view. */
-const DEFAULT_PICK_FOLLOW_MS = 30_000;
 
 export function createLifecycle({
   state: layerState,
@@ -25,8 +23,14 @@ export function createLifecycle({
   source,
 }) {
   const { activateCctvCameraFromWorldClick } = services.activation;
-  const { resolvePickId, registerPickOwner, unregisterPickOwner } =
-    services.picking;
+  const {
+    resolvePickId,
+    registerPickOwner,
+    unregisterPickOwner,
+    clickCard,
+    registerClickClaim,
+    unregisterClickClaim,
+  } = services.picking;
   const { onFocusTargetAppear } = services.focus;
   const { releaseContinuousRender } = services.render;
 
@@ -36,7 +40,6 @@ export function createLifecycle({
    * set changed since they were last told, including by motion passes.
    */
   function settleView() {
-    followViewWithDefaultPick();
     const changed = parts.rendering.refreshHorizonCulling();
     noteViewPose();
     parts.geometryQueue.enqueueViewGeometry();
@@ -106,6 +109,30 @@ export function createLifecycle({
    * listeners to its camera; one against the same viewer keeps them.
    */
   function attachViewListeners() {
+    const globe = findGlobe(layerState._viewer);
+    if (layerState._surfaceListenerGlobe !== globe) {
+      layerState._surfaceListener?.();
+      layerState._surfaceListener = null;
+      layerState._surfaceListenerGlobe = globe;
+    }
+    if (!layerState._surfaceListener && globe?.on) {
+      // Refresh drawn heights when terrain finishes loading or the surface changes.
+      let version = globe.surfaceVersion?.();
+      let terrainPending = globe.isSettled?.('terrain') === false ? 1 : 0;
+      layerState._surfaceListener = globe.on('progress', (progress) => {
+        const next = globe.surfaceVersion?.();
+        const loaded = progress?.terrainPending === 0 && terrainPending !== 0;
+        const swapped = next !== version;
+        version = next;
+        terrainPending = progress?.terrainPending ?? terrainPending;
+        if (
+          (loaded || swapped) &&
+          layerState._enabled &&
+          !layerState._cameraMoving
+        )
+          settleView();
+      });
+    }
     const viewCamera = findCamera(layerState._viewer);
     if (
       layerState._viewListenerCamera &&
@@ -143,6 +170,9 @@ export function createLifecycle({
 
   /** Drop the move listeners; nothing reports the end of a move after it. */
   function detachViewListeners() {
+    layerState._surfaceListener?.();
+    layerState._surfaceListener = null;
+    layerState._surfaceListenerGlobe = null;
     layerState._horizonCullListener?.();
     layerState._horizonCullListener = null;
     layerState._moveStartListener?.();
@@ -154,63 +184,9 @@ export function createLifecycle({
 
   /** Resets all module-scoped runtime state to initial values. */
 
-  /**
-   * Default the active camera to the one nearest the current view (the
-   * catalog's first camera only when the view is unknown), marked as an
-   * automatic pick so a later enable() can follow the view again. Any explicit
-   * activation clears the mark (selection.setActiveCamera).
-   */
-  function pickDefaultCamera() {
-    if (!layerState._records.length) return;
-    layerState._activeCameraId =
-      parts.navigation?.nearestCameraIdToViewer?.() ||
-      layerState._records[0].camera.id;
-    layerState._activeCameraAuto = true;
-    layerState._defaultPickUntil = Date.now() + DEFAULT_PICK_FOLLOW_MS;
-    // A share-link restore may move the camera without a moveEnd reaching
-    // this layer, so the window also polls once a second.
-    stopDefaultPickFollow();
-    layerState._defaultPickTimer = setInterval(() => {
-      if (
-        !layerState._activeCameraAuto ||
-        Date.now() > layerState._defaultPickUntil
-      ) {
-        stopDefaultPickFollow();
-        return;
-      }
-      followViewWithDefaultPick();
-    }, 1000);
-    // Never keep a Node process (tests, tooling) alive for the window.
-    layerState._defaultPickTimer.unref?.();
-  }
-
-  function stopDefaultPickFollow() {
-    clearInterval(layerState._defaultPickTimer);
-    layerState._defaultPickTimer = null;
-  }
-
-  /**
-   * The catalog and enable() can both run before the start view exists (the
-   * fly-in, a share-link restore), when the camera still hangs over Cesium's
-   * default view of North America. For a short window after a default pick,
-   * each settled view re-picks the nearest camera, through the full
-   * activation path; a camera the person chose ends the window at once.
-   */
-  function followViewWithDefaultPick() {
-    if (!layerState._enabled || !layerState._activeCameraAuto) return;
-    if (Date.now() > (layerState._defaultPickUntil || 0)) return;
-    const nearest = parts.navigation?.nearestCameraIdToViewer?.();
-    if (!nearest || nearest === layerState._activeCameraId) return;
-    parts.selection.setActiveCamera(nearest);
-    // Still the layer's own pick, so the window keeps following.
-    layerState._activeCameraAuto = true;
-    parts.presentation.notifyListeners();
-  }
-
   function clearRuntimeState() {
     parts.geometryQueue.stopGeometryLoadQueue();
     stopViewMotionTimer();
-    stopDefaultPickFollow();
     // Idempotent — also covers a re-init without a prior destroy().
     parts.cards.teardownAmbientCards();
     parts.projection.clearProjectionOverlay();
@@ -220,9 +196,11 @@ export function createLifecycle({
     layerState._records = [];
     layerState._recordById = new Map();
     layerState._viewRecords = [];
+    layerState._pickerRecords = [];
     layerState._cameraIndexCache = null;
     layerState._coverageVisibleIds = new Set();
     layerState._neighborCountCache = null;
+    layerState._coverageCohort = null;
     layerState._viewUnpublished = false;
     layerState._viewPose = null;
     layerState._viewMotionPass = null;
@@ -342,9 +320,8 @@ export function createLifecycle({
           coverageEntities: [],
           projection: null,
           // Task 5 (height-datum fix): regime-aware ground resolution state.
-          //   groundPrior     — { ellipsoid, source } from the Re:Earth batch
-          //     (null until a late batch lands). The prior applies in EVERY
-          //     regime and is the terrain-globe resolution outright.
+          //   groundPrior — { ellipsoid, source } from the Re:Earth batch, or
+          //     drawn-terrain with its read conditions for an unanswered camera.
           //   groundResolved  — PER-REGIME one-shot latch (regime key →
           //     boolean): true once this record's resolution completed for that
           //     regime; such records are excluded from the completion pass so
@@ -381,11 +358,8 @@ export function createLifecycle({
       }
 
       layerState._count = layerState._records.length;
-      if (layerState._records.length > 0) {
-        // Projection runtime + first frame fetch are deferred to enable() so
-        // initializing the catalog stays render-cheap.
-        pickDefaultCamera();
-      }
+      // No camera is picked here: enable() opens on the one nearest the
+      // viewer, unless restored params selected one first.
 
       // Task 5: if the prior batch lost init's bounded race, apply it post-hoc
       // when it lands (pure recomputes — applyLateGroundPriors guards against
@@ -446,11 +420,26 @@ export function createLifecycle({
       parts.rendering.refreshHorizonCulling();
 
       const input = inputFor(layerState._viewer);
+      layerState._clickSubscription?.();
       const unsubscribeClick = parts.selection.bindCctvWorldClickGesture(
         input,
         (event) => {
           if (!layerState._enabled) return;
           const picked = event.topHit;
+          // The card or label painted on top takes the click, read once per
+          // click so every layer agrees: a live card of ours acts whatever
+          // is drawn under it; another layer's is that layer's click.
+          const top = clickCard?.(event) ?? null;
+          if (top && top.sourceId !== CCTV_OVERLAY_SOURCE_ID) return;
+          if (top) {
+            // A card of ours that is going away is still not the scene.
+            if (layerState._recordById.has(top.entryId))
+              activateCctvCameraFromWorldClick(
+                top.entryId,
+                parts.selection.setActiveCamera,
+              );
+            return;
+          }
           const cameraId = parts.selection.extractPickedCameraId(
             event.drawHit ?? null,
           );
@@ -461,29 +450,11 @@ export function createLifecycle({
             );
             return;
           }
-          // Any identified scene object owns this click even if its layer does not
-          // register a shared pick predicate. This keeps selectable siblings ahead
-          // of an overlapping CCTV card while ID-less globe/terrain/tile surfaces
-          // remain eligible for true empty-space deselection.
-          const pickedId = resolvePickId(picked);
-          if (pickedId !== null) return;
-          // Item A (owner round 2): the scene pick found no camera — try the
-          // painted ambient cards. The cards canvas is pointer-events:none (this
-          // handler owns the events), so a click landing on a card's rect selects
-          // its camera exactly like a click on the icon. Click positions
-          // and the recorded rects are both CSS px — direct comparison.
-          const cardId = layerState._cctvOverlayHost.hitTest(
-            event.screenPosition.x,
-            event.screenPosition.y,
-            { sourceId: CCTV_OVERLAY_SOURCE_ID },
-          )?.entryId;
-          if (cardId && layerState._recordById.has(cardId)) {
-            activateCctvCameraFromWorldClick(
-              cardId,
-              parts.selection.setActiveCamera,
-            );
-            return;
-          }
+          // Any identified scene object owns this click even if its layer
+          // does not register a shared pick predicate. This keeps selectable
+          // siblings ahead of the CCTV selection while ID-less globe, terrain
+          // and tile surfaces remain eligible for empty-space deselection.
+          if (resolvePickId(picked) !== null) return;
           if (
             parts.selection.cctvEmptyClickDeselects(picked, {
               activeCameraId: layerState._activeCameraId,
@@ -545,13 +516,9 @@ export function createLifecycle({
           );
         return Boolean(coverage && layerState._recordById.has(coverage[1]));
       });
-      // An automatic pick follows the view to wherever the person is looking
-      // now; a camera they chose stays chosen.
-      if (
-        (!layerState._activeCameraId || layerState._activeCameraAuto) &&
-        layerState._records.length
-      ) {
-        pickDefaultCamera();
+      registerClickClaim?.('cctv', parts.selection.countClickCard);
+      if (!layerState._activeCameraId && layerState._records.length) {
+        layerState._activeCameraId = parts.navigation.openingCameraId();
         layerState._autoHopSuspended = false;
         layerState._openingCameraProvisional = true;
       }
@@ -585,8 +552,8 @@ export function createLifecycle({
     disable() {
       services.credits?.hideOsmCredit?.(layerState._viewer, 'cctv');
       layerState._enabled = false;
-      stopDefaultPickFollow();
       unregisterPickOwner('cctv');
+      unregisterClickClaim?.('cctv');
       // ADJUST mode does not survive a layer toggle — predictable re-entry.
       layerState._calibrationMode = false;
       releaseContinuousRender('cctv-adjust');
@@ -602,6 +569,7 @@ export function createLifecycle({
       parts.rendering.hideCctvVisuals();
       // Nothing is in view while the layer is off.
       layerState._viewRecords = [];
+      layerState._pickerRecords = [];
       layerState._cameraIndexCache = null;
       parts.presentation.notifyListeners();
     },
@@ -620,6 +588,7 @@ export function createLifecycle({
           parts.cards.handleVisibilityChange,
         );
       unregisterPickOwner('cctv');
+      unregisterClickClaim?.('cctv');
       if (layerState._mapStackListener && typeof window !== 'undefined') {
         window.removeEventListener(
           'gev:map-stack-changed',

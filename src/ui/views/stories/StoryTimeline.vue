@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { t } from '../../../i18n/index.js';
 import { useStoriesStore } from '../../stores/stories.js';
+import UiButton from '../../kit/UiButton.vue';
 import { chapterAt } from '../../../stories/format.js';
 import {
   chapterTitle,
@@ -318,10 +319,9 @@ defineExpose({ goChapter });
 
 <template>
   <div id="timeline" class="timeline">
-    <button
+    <UiButton
       id="tlPlay"
       class="tl-play"
-      type="button"
       :aria-label="playMode === 'pause' ? t('Pause') : t('Play')"
       @click="togglePlay"
     >
@@ -331,7 +331,7 @@ defineExpose({ goChapter });
         fill="currentColor"
         v-html="ICON[playMode]"
       ></svg>
-    </button>
+    </UiButton>
     <div
       id="tlTrack"
       ref="track"
@@ -377,10 +377,9 @@ defineExpose({ goChapter });
         <span id="tlHeadTime">{{ headTime }}</span>
       </div>
       <div id="tlPips" role="group" :aria-label="t('Key moments')">
-        <button
+        <UiButton
           v-for="(ev, i) in events"
           :key="i"
-          type="button"
           class="tl-pip"
           :class="{ snap: snap === -2 - i }"
           :data-e="i"
@@ -396,7 +395,7 @@ defineExpose({ goChapter });
           @keydown.enter.stop
         >
           <i :style="{ background: ev.color }"></i>
-        </button>
+        </UiButton>
       </div>
       <div
         v-if="tip"
@@ -440,16 +439,15 @@ defineExpose({ goChapter });
       <span class="tt-c">{{ headTime }}</span>
     </span>
     <!-- Swedish fork: a story that speaks in the page's language. -->
-    <button
+    <UiButton
       v-if="store.narration"
       id="stNarration"
       class="tl-vol"
-      type="button"
       :aria-label="
         store.narrationMuted ? t('Turn narration on') : t('Turn narration off')
       "
       :title="t('Narration voice: elevenlabs.io')"
-      :aria-pressed="!store.narrationMuted"
+      :pressed="!store.narrationMuted"
       @click="store.controller.setNarrationMuted(!store.narrationMuted)"
     >
       <svg
@@ -464,13 +462,12 @@ defineExpose({ goChapter });
         <path v-if="store.narrationMuted" d="M17 9.5l5 5M22 9.5l-5 5" />
         <path v-else d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
       </svg>
-    </button>
-    <button
+    </UiButton>
+    <UiButton
       id="stExpand"
       class="tl-vol"
-      type="button"
       :aria-label="expanded ? t('Exit expanded map') : t('Expand map')"
-      :aria-pressed="expanded"
+      :pressed="expanded"
       @click="toggleExpand"
     >
       <svg
@@ -483,6 +480,6 @@ defineExpose({ goChapter });
       >
         <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" />
       </svg>
-    </button>
+    </UiButton>
   </div>
 </template>
