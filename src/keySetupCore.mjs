@@ -114,6 +114,18 @@ export const KEY_SETUP_KEYS = Object.freeze([
     envVars: Object.freeze(['ENTSOE_SECURITY_TOKEN']),
     tier: 'free',
   }),
+  // Lantmäteriet asks for the Geotorget login itself (HTTP Basic); it stays
+  // in the server's proxy and never reaches the browser.
+  Object.freeze({
+    id: 'geotorget',
+    title: 'LANTMÄTERIET GEOTORGET', // i18n-ignore: provider product name
+    unlocks: msg(
+      'Historical aerial photos of Sweden, 1960 to 2005 (CC0): the username and password of a free Geotorget account that has ordered Ortofoto historiska Visning',
+    ),
+    getUrl: 'https://geotorget.lantmateriet.se',
+    envVars: Object.freeze(['GEOTORGET_USERNAME', 'GEOTORGET_PASSWORD']),
+    tier: 'free',
+  }),
   Object.freeze({
     id: 'openai',
     title: 'OPENAI', // i18n-ignore: provider product name

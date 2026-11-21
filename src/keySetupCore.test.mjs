@@ -406,3 +406,26 @@ test('ENTSO-E is set up in the key panel like the other Swedish keys', () => {
   // The panel may write the token to .env.
   assert.ok(knownKeySetupEnvVars().has('ENTSOE_SECURITY_TOKEN'));
 });
+
+test('Lantmäteriet Geotorget is one paired login in the key panel', () => {
+  const entry = KEY_SETUP_KEYS.find((key) => key.id === 'geotorget');
+  assert.ok(entry, 'Geotorget is listed');
+  assert.deepEqual(entry.envVars, ['GEOTORGET_USERNAME', 'GEOTORGET_PASSWORD']);
+  assert.equal(entry.tier, 'free');
+  assert.equal(entry.clientExposed, undefined, 'the login stays server-side');
+  assert.ok(knownKeySetupEnvVars().has('GEOTORGET_USERNAME'));
+  assert.ok(knownKeySetupEnvVars().has('GEOTORGET_PASSWORD'));
+  // Set only when both halves are there, and the status never echoes them.
+  const half = keySetupStatus({ GEOTORGET_USERNAME: 'fixture-user' });
+  assert.equal(half.keys.find((key) => key.id === 'geotorget').set, false);
+  const both = keySetupStatus({
+    GEOTORGET_USERNAME: 'fixture-user',
+    GEOTORGET_PASSWORD: 'fixture-pass',
+  });
+  assert.equal(both.keys.find((key) => key.id === 'geotorget').set, true);
+  assert.ok(!JSON.stringify(both).includes('fixture-pass'));
+  assert.equal(
+    keySetupRequirement('geotorget'),
+    'Needs GEOTORGET_USERNAME + GEOTORGET_PASSWORD — add it in Provider Settings',
+  );
+});

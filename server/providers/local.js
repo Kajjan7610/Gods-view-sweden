@@ -69,6 +69,8 @@ import { smhiAirQualityProxy } from './smhiAirQuality.js';
 // Sweden's power flows from ENTSO-E's Transparency Platform.
 import { powerGridEntsoeProxy } from './powerGridEntsoe.js';
 import { windTurbinesProxy } from './windTurbines.js';
+// Lantmäteriet's historical orthophotos (CC0) for the "Då och nu" layer.
+import { historicalOrthoProxy } from './historicalOrtho.js';
 import { transitAlertsProxy } from './transitAlerts.js';
 import { ghostMapsProxy } from './ghostMaps.js';
 import { shipwrecksProxy } from './shipwrecks.js';
@@ -175,6 +177,7 @@ function localProviderPlugins({
     smhiAirQualityProxy(),
     powerGridEntsoeProxy(),
     windTurbinesProxy(),
+    historicalOrthoProxy(),
     transitAlertsProxy(),
     libraryProxy(),
     ghostMapsProxy(),
