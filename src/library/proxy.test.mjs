@@ -132,6 +132,9 @@ test('a routed view-bounded entry needs a snapped box and queries only it', asyn
   const handle = createLibraryHandler({
     entries: [view],
     proxied: () => true,
+    // Swedish fork: catalog entries are offered only once the operator
+    // enables them.
+    env: { GEV_LIBRARY_ENABLE: 'fema-usa-structures' },
     fetchImpl: async (url) => {
       calls.push(new URL(url));
       return new Response(
@@ -218,6 +221,9 @@ test('a partitioned dataset reads its index from the given fetch, never builds o
     createLibraryHandler({
       entries: [epc],
       proxied: () => true,
+      // Swedish fork: catalog entries are offered only once the operator
+      // enables them.
+      env: { GEV_LIBRARY_ENABLE: 'epc-england-wales' },
       keep: false,
       fetchIndex,
       subrequestLimit,

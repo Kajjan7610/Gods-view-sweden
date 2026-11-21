@@ -382,56 +382,64 @@ const runtimeSeek = (scene, timeSec, durationSec, packs) =>
     (s, shot) => effectiveShotHoldSec(s, shot, packs),
   );
 
-test('shot timing follows Director runtime holds, not only the saved holdSec', () => {
-  // The Director's Mailung trim plays a 7.65 s hold although 15 s was saved.
-  const p = project([
-    {
-      id: 'mailung',
-      sourcePackId: 'bhote-koshi-nepal-evidence-pack',
-      durationSec: 4.2,
-      holdSec: 15,
-      camera: pose(),
-      layers: {
-        'bhote-koshi-2026': {
-          enabled: true,
-          params: { presentation: 'scene-beat', beatId: 'mailung-bazzar' },
+// Swedish fork: the Nepal scene is not offered, so its pack's runtime holds
+// do not apply (SVERIGE.md, 2026-11-13).
+test(
+  'shot timing follows Director runtime holds, not only the saved holdSec',
+  {
+    skip: 'Swedish fork: the Nepal scene is not offered (SVERIGE.md, 2026-11-13)',
+  },
+  () => {
+    // The Director's Mailung trim plays a 7.65 s hold although 15 s was saved.
+    const p = project([
+      {
+        id: 'mailung',
+        sourcePackId: 'bhote-koshi-nepal-evidence-pack',
+        durationSec: 4.2,
+        holdSec: 15,
+        camera: pose(),
+        layers: {
+          'bhote-koshi-2026': {
+            enabled: true,
+            params: { presentation: 'scene-beat', beatId: 'mailung-bazzar' },
+          },
         },
       },
-    },
-    { id: 'next', durationSec: 1, holdSec: 0, camera: pose({ heading: 90 }) },
-  ]);
-  const before = structuredClone(p);
-  const m = adapter.sampleSceneCameras(p, options());
-  const [first, second] = m.shots;
-  assert.equal(first.authoredHoldSec, 15);
-  assert.equal(first.runtimeHoldSec, 7.65);
-  assert.equal(second.startTimeSec, 4.2 + 7.65);
-  // Summing authored holds would start the next shot 7.35 s (220 frames) later.
-  assert.equal(second.frameStart, Math.ceil((4.2 + 7.65) * 30) + 1);
-  assert.equal(m.timeline.durationSec, 4.2 + 7.65 + 1);
-  const packs = createDefaultScenePacks();
-  p.scenes[0].shots.forEach((shot, i) =>
-    assert.equal(
-      m.shots[i].runtimeHoldSec,
-      effectiveShotHoldSec(p.scenes[0], shot, packs),
-    ),
-  );
-  for (const sample of m.frames) {
-    const state = runtimeSeek(
-      p.scenes[0],
-      sample.timeSec,
-      m.timeline.durationSec,
-      packs,
+      { id: 'next', durationSec: 1, holdSec: 0, camera: pose({ heading: 90 }) },
+    ]);
+    const before = structuredClone(p);
+    const m = adapter.sampleSceneCameras(p, options());
+    const [first, second] = m.shots;
+    assert.equal(first.authoredHoldSec, 15);
+    assert.equal(first.runtimeHoldSec, 7.65);
+    assert.equal(second.startTimeSec, 4.2 + 7.65);
+    // Summing authored holds would start the next shot 7.35 s (220 frames) later.
+    assert.equal(second.frameStart, Math.ceil((4.2 + 7.65) * 30) + 1);
+    assert.equal(m.timeline.durationSec, 4.2 + 7.65 + 1);
+    const packs = createDefaultScenePacks();
+    p.scenes[0].shots.forEach((shot, i) =>
+      assert.equal(
+        m.shots[i].runtimeHoldSec,
+        effectiveShotHoldSec(p.scenes[0], shot, packs),
+      ),
     );
-    assert.equal(sample.shotId, state.shot.id);
-    const expected = adapter.cameraPoseToEnu(state.camera, origin);
-    near(sample.position, expected.position);
-    sample.basisColumns.forEach((axis, i) =>
-      near(axis, expected.basisColumns[i]),
-    );
-  }
-  assert.deepEqual(p, before, 'export never rewrites saved shots');
-});
+    for (const sample of m.frames) {
+      const state = runtimeSeek(
+        p.scenes[0],
+        sample.timeSec,
+        m.timeline.durationSec,
+        packs,
+      );
+      assert.equal(sample.shotId, state.shot.id);
+      const expected = adapter.cameraPoseToEnu(state.camera, origin);
+      near(sample.position, expected.position);
+      sample.basisColumns.forEach((axis, i) =>
+        near(axis, expected.basisColumns[i]),
+      );
+    }
+    assert.deepEqual(p, before, 'export never rewrites saved shots');
+  },
+);
 
 test('registered minimum holds and evidence-sequence durations shift later shots', () => {
   const packs = createScenePackRegistry({

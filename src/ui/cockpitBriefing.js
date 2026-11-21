@@ -446,7 +446,7 @@ export function renderRegionalBrief(payload, info) {
         : '',
   };
   this.brief.regionalStatus = payload?.status || 'partial';
-  if (COCKPIT_BRIEF_PAGES[this.briefPageIndex]?.id === 'local')
+  if (briefPages.call(this)[this.briefPageIndex]?.id === 'local')
     this.showBriefPage(this.briefPageIndex);
   if (this.briefPageIndex === 1) this.brief.source = footer;
   this.publishBriefView();

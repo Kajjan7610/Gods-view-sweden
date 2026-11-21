@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { transitFeedCredit } from './dataCredits.js';
 import {
+  getRegisteredTransitFeed,
   getTransitFeed,
   publicTransitCatalog,
   transitFeedsInRange,
@@ -52,7 +53,10 @@ test('TransLink route ids resolve rail, light rail and ferries; buses stay a def
 });
 
 test('Adelaide Metro route ids resolve trains, trams and the SeaLink ferry', () => {
-  const adelaide = getTransitFeed('adelaide-metro');
+  // Swedish fork: Adelaide Metro states no licence, so it is registered but
+  // not polled; its route modes are still read from the registry.
+  assert.equal(getTransitFeed('adelaide-metro'), null);
+  const adelaide = getRegisteredTransitFeed('adelaide-metro');
   const cases = [
     ['BEL', 'rail'],
     ['GAWC', 'rail'],
