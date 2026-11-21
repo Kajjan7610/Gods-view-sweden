@@ -35,6 +35,7 @@ const SWEDISH_FEED_NAMES = Object.freeze({
   Remains: msg('Remains'),
   'Protected buildings': msg('Protected buildings'),
   'World Heritage': msg('World Heritage'),
+  'Wind turbines': msg('Wind turbines'),
 });
 
 const FEED_ERROR_PATTERNS = [
@@ -71,7 +72,7 @@ const FEED_ERROR_PATTERNS = [
   // feeds (transit/ingestion.js).
   // Swedish fork: the bundled-snapshot and RAÄ layers' proxy failures.
   [
-    /^(Population grid|Trails|Protected nature|Remains|Protected buildings|World Heritage) unavailable \(HTTP (\d{3})\)$/,
+    /^(Population grid|Trails|Protected nature|Remains|Protected buildings|World Heritage|Wind turbines) unavailable \(HTTP (\d{3})\)$/,
     ([, what, status]) =>
       t('{what} unavailable (HTTP {status})', {
         what: t(SWEDISH_FEED_NAMES[what]),

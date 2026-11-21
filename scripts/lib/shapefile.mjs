@@ -1,6 +1,6 @@
 /**
- * Just enough of ESRI's shapefile format for the snapshot builds: polygon
- * shapes from a .shp, attributes from a .dbf, both read out of a zip.
+ * Just enough of ESRI's shapefile format for the snapshot builds: polygon and
+ * point shapes from a .shp, attributes from a .dbf, both read out of a zip.
  * Node only; never part of the app.
  */
 
@@ -134,6 +134,45 @@ export function readShpPolygons(bytes) {
     shapes.push(polygons);
   }
   return shapes;
+}
+
+/**
+ * The point shapes of a .shp, in file order, each as [x, y]: Point, PointZ
+ * and PointM (the first point of a MultiPoint).
+ * @param {Uint8Array} bytes
+ * @returns {(number[]|null)[]} null for a null shape.
+ */
+export function readShpPoints(bytes) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (view.getInt32(0, false) !== 9994) throw new Error('not a shapefile');
+  const points = [];
+  let at = 100;
+  while (at + 8 <= bytes.length) {
+    const length = view.getInt32(at + 4, false) * 2;
+    const record = at + 8;
+    at = record + length;
+    const type = view.getInt32(record, true);
+    if (type === 0) {
+      points.push(null);
+      continue;
+    }
+    if (type === 1 || type === 11 || type === 21)
+      points.push([
+        view.getFloat64(record + 4, true),
+        view.getFloat64(record + 12, true),
+      ]);
+    else if (type === 8 || type === 18 || type === 28)
+      points.push(
+        view.getInt32(record + 36, true) > 0
+          ? [
+              view.getFloat64(record + 40, true),
+              view.getFloat64(record + 48, true),
+            ]
+          : null,
+      );
+    else throw new Error(`shape type ${type} is not a point`);
+  }
+  return points;
 }
 
 /**

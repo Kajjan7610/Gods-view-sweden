@@ -273,8 +273,15 @@ test('Swedish fork: the Swedish layers’ fields have labels and their own units
   assert.equal(formatFact('minutesAgo', 5).value, '5 min ago');
   assert.equal(formatFact('distanceFromCentreM', 994).value, '990 m');
   assert.equal(formatFact('distanceFromCentreM', 1234).value, '1.2 km');
+  // A wind turbine's measures.
+  assert.equal(formatFact('totalHeightM', 200).value, '200 m');
+  assert.equal(formatFact('rotorDiameterM', 162).value, '162 m');
+  assert.equal(formatFact('ratedPowerMW', 5.6).value, '5.6 MW');
+  assert.equal(formatFact('productionGWhYear', 17.25).value, '17.3 GWh/yr');
+  assert.equal(formatFact('productionGWhYear', 17).words.text, '{n} GWh/yr');
   // Years never take a thousands separator, as number or as text.
   assert.deepEqual(formatFact('statisticsYear', 2025), { value: '2025' });
+  assert.deepEqual(formatFact('builtYear', 2019), { value: '2019' });
   assert.equal(formatFact('inscribed', '1991').value, '1991');
   // Booleans read Yes, or are left out.
   assert.equal(formatFact('emergencyDepartment', true).value, 'Yes');
