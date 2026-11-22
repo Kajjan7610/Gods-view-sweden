@@ -1042,6 +1042,11 @@ export function createQueries({
         retryInSec,
         source: flightState.feed._lastSource,
         coverage: flightState.feed._lastCoverage,
+        // Swedish fork: adsb.lol is the chosen source, not a fallback. Without
+        // this boolean layerFeedState reads the adsb.lol name as one
+        // (src/data/feedState.js); OpenSky mode's real fallback still reads
+        // FALLBACK from its coverage text ("regional fallback").
+        fallback: false,
         // Following the world clock, the snapshot's age is told from its time.
         ...(followsClock(flightState) && { atMs: flightState.now() }),
       };

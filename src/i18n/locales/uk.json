@@ -6054,5 +6054,42 @@
   "JTWC warning ↗": "Попередження JTWC ↗",
   "Active cyclone advisories and warnings": "Чинні зведення та попередження про циклони",
   "Select a storm on the map, or choose a storm in the list to select it and move the camera. Click empty map space to clear the selection. NOAA NHC/CPHC advisories and JTWC warnings. The NHC cone describes forecast center-track uncertainty, not storm size or the full hazard area. The JTWC 34-knot wind danger area is where 34-knot winds may reach, widened by forecast track error; it is not a cone. Forecast point labels are source lead hours, not times computed from advisory issuance. Geometry follows the surface; height is not weather altitude. Consult the official advisory or the regional warning centre.": "Виберіть шторм на карті або у списку, щоб виділити його й перемістити камеру. Клацання по порожньому місцю карти знімає виділення. Зведення NOAA NHC/CPHC та попередження JTWC. Конус NHC показує невизначеність прогнозного треку центру, а не розмір шторму чи всю небезпечну зону. Небезпечна зона вітру 34 вузли JTWC — це область, куди може дійти вітер 34 вузли, розширена на похибку прогнозу треку; це не конус. Підписи прогнозних точок — завчасність джерела в годинах, а не час, обчислений від випуску. Геометрія повторює поверхню; висота не є метеорологічною висотою. Звіряйтеся з офіційним зведенням або регіональним центром попереджень.",
-  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · Попередження № {number} · випущено {time}"
+  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · Попередження № {number} · випущено {time}",
+  "adsb.lol · 250 nm around the map centre · {count} aircraft": {
+    "one": "adsb.lol · 250 мор. миль навколо центру · {count} літак",
+    "few": "adsb.lol · 250 мор. миль навколо центру · {count} літаки",
+    "many": "adsb.lol · 250 мор. миль навколо центру · {count} літаків",
+    "other": "adsb.lol · 250 мор. миль навколо центру · {count} літака"
+  },
+  "adsb.lol · 250 nm around your aircraft · {count} aircraft": {
+    "one": "adsb.lol · 250 мор. миль навколо вас · {count} літак",
+    "few": "adsb.lol · 250 мор. миль навколо вас · {count} літаки",
+    "many": "adsb.lol · 250 мор. миль навколо вас · {count} літаків",
+    "other": "adsb.lol · 250 мор. миль навколо вас · {count} літака"
+  },
+  "adsb.lol: today’s quota is used up, back at {time}": "adsb.lol: денну квоту вичерпано, знову з {time}",
+  "{used} of {limit} calls used in the last 24 hours.": "Використано {used} з {limit} запитів за останні 24 години.",
+  "With your adsb.lol key the app asks up to {limit} times a day.": "З вашим ключем adsb.lol застосунок робить до {limit} запитів на добу.",
+  "Without a key 500 calls a day; a free key under {panel} gives more.": "Без ключа 500 запитів на добу; безкоштовний ключ у розділі {panel} дає більше.",
+  "More flight updates per day (works without a key: 500/day)": "Більше оновлень рейсів на добу (працює й без ключа: 500/добу)",
+  "adsb.lol · older data from nearby · {count} aircraft": {
+    "one": "adsb.lol · попередні дані поблизу · {count} літак",
+    "few": "adsb.lol · попередні дані поблизу · {count} літаки",
+    "many": "adsb.lol · попередні дані поблизу · {count} літаків",
+    "other": "adsb.lol · попередні дані поблизу · {count} літака"
+  },
+  "Saving today’s quota: the same place is asked again only after a pause.": "Заощадження сьогоднішньої квоти: те саме місце запитується знову лише після паузи.",
+  "Read around a place {km} km away.": "Отримано навколо місця за {km} км звідси.",
+  "adsb.lol is not answering · older data · {count} aircraft": {
+    "one": "adsb.lol не відповідає · попередні дані · {count} літак",
+    "few": "adsb.lol не відповідає · попередні дані · {count} літаки",
+    "many": "adsb.lol не відповідає · попередні дані · {count} літаків",
+    "other": "adsb.lol не відповідає · попередні дані · {count} літака"
+  },
+  "adsb.lol is not answering · no aircraft shown": "adsb.lol не відповідає · літаки не показано",
+  "adsb.lol refused the key – check it under {panel}": "adsb.lol відхилив ключ – перевірте його в розділі {panel}",
+  "Nothing new came in; aircraft older than 30 minutes are taken off the map.": "Нових даних не надійшло; літаки, старші за 30 хвилин, прибираються з карти.",
+  "Meanwhile the app asks without a key (500 calls a day).": "Тим часом застосунок запитує без ключа (500 запитів на добу).",
+  "The aircraft shown were read {age}.": "Показані літаки отримано {age}.",
+  "Nothing new from adsb.lol just now; data already read nearby is shown.": "Поки нічого нового від adsb.lol; показано вже отримані дані поблизу."
 }

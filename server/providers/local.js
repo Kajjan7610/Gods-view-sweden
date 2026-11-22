@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { openSkyProxy } from './aircraft/opensky.js';
+import { sharedAdsbLolUpstream } from './aircraft/adsbLolUpstream.js';
 import { celestrakProxy, rocketLaunchesProxy } from './space.js';
 import { issTelemetryProxy } from './space/issTelemetry.js';
 import { tomtomProxy } from './traffic.js';
@@ -83,16 +84,26 @@ import { cycloneProxy } from './cyclones.js';
 import { windProxy } from './wind.js';
 import { libraryProxy } from './library.js';
 
+/** Where the shared adsb.lol transport keeps its daily count and lockout. */
+export const ADSBLOL_BUDGET_FILE = path.join(
+  defaultSourceRoot,
+  '.gev-cache',
+  'adsblol-budget.json',
+);
+
 /**
  * Construct the local provider plugins in their established order.
  * `realtime` configures OpenAI; `gemini` explicitly opts into Gemini Live.
  * `nominatimStorageDir` binds an owned absolute directory before construction;
  * omission retains the durable per-source cache and policy state.
+ * `adsbLolBudgetFile` is the file the adsb.lol callers' shared daily budget
+ * and lockout are kept in (Swedish fork).
  */
 function localProviderPlugins({
   realtime,
   gemini,
   nominatimStorageDir = NOMINATIM_CACHE_DIR,
+  adsbLolBudgetFile = ADSBLOL_BUDGET_FILE,
 } = {}) {
   if (
     typeof nominatimStorageDir !== 'string' ||
@@ -100,6 +111,15 @@ function localProviderPlugins({
     !path.isAbsolute(nominatimStorageDir)
   )
     throw new TypeError('nominatimStorageDir must be an absolute directory');
+  if (
+    typeof adsbLolBudgetFile !== 'string' ||
+    !path.isAbsolute(adsbLolBudgetFile)
+  )
+    throw new TypeError('adsbLolBudgetFile must be an absolute file path');
+  // Swedish fork: flights, GNSS integrity and /v2/mil spend one adsb.lol
+  // quota, so they share one transport: one key, lockout and daily budget,
+  // kept across a KOPPLA PÅ restart. Nothing is read before the first call.
+  const adsbLol = sharedAdsbLolUpstream({ statePath: adsbLolBudgetFile });
   // One snapshot of Trafikverket's measured traffic for the queues layer and
   // the city dossier.
   const queues = trafikverketQueuesProxy();
@@ -108,7 +128,7 @@ function localProviderPlugins({
   // Respiratory viruses in wastewater, for the city dossier.
   const wastewater = wastewaterProxy();
   return [
-    openSkyProxy(),
+    openSkyProxy({ adsbLol }),
     celestrakProxy(),
     issTelemetryProxy(),
     tomtomProxy(),
@@ -127,7 +147,7 @@ function localProviderPlugins({
     localReceiversProxy(),
     transitProxy(),
     railProxy(),
-    adsbLolProxy(),
+    adsbLolProxy({ adsbLol }),
     aisLiveProxy(),
     trackBackfillProxies(),
     openAiRealtimeProxy({ realtime }),
@@ -138,7 +158,7 @@ function localProviderPlugins({
     cycloneProxy(),
     mapillaryProxy(),
     firePerimetersProxy(),
-    gnssIntegrityProxy(),
+    gnssIntegrityProxy({ adsbLol }),
     roads,
     trafikverketWeatherProxy(),
     trafikverketFerriesProxy(),

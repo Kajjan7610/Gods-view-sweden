@@ -3,8 +3,13 @@ import assert from 'node:assert/strict';
 import {
   gnssIntegrityAnchor,
   gnssIntegrityProxy,
-  gnssRetryCooldownMs,
 } from '../../server/providers/gnssIntegrity.js';
+import { createAdsbLolUpstream } from '../../server/providers/aircraft/adsbLolUpstream.js';
+
+// Swedish fork: GNSS reads through the adsb.lol transport the flights share.
+// With the default budget, 450 a day, its own slice is 90 calls, paced at
+// 90 %: a degree already read is read again after a day over 81 calls.
+const GAP = (24 * 3_600_000) / 81;
 
 const snapshot = {
   now: 4_000_000_000_000,
@@ -28,7 +33,18 @@ const snapshot = {
 
 function install(options = {}, hook = 'configureServer') {
   let handler;
-  const plugin = gnssIntegrityProxy({ monotonicNow: options.now, ...options });
+  const plugin = gnssIntegrityProxy({
+    monotonicNow: options.now,
+    // Swedish fork: the route's own transport, on the default budget
+    // whatever this shell's environment says.
+    adsbLol: createAdsbLolUpstream({
+      fetchImpl: options.fetchImpl,
+      now: options.now,
+      env: {},
+      warn: () => {},
+    }),
+    ...options,
+  });
   assert.equal(plugin.name, 'gnss-integrity');
   plugin[hook]({
     middlewares: {
@@ -127,7 +143,15 @@ test('snapshots are cached per anchor and concurrent reads share one upstream ca
     59_000,
     'a cached answer reports its age on the server clock',
   );
+  // Swedish fork: past the minute, inside GNSS's pacing gap, the degree is
+  // still served from its cache, with its age and not marked stale…
   clock = 61_000;
+  const paced = await request();
+  assert.equal(calls, 1);
+  assert.equal(paced.body.ageMs, 61_000);
+  assert.equal(paced.body.stale, undefined);
+  // …and read again once the gap has passed.
+  clock = GAP + 1000;
   await request();
   assert.equal(calls, 2);
   await request('/?lat=10&lon=10');
@@ -144,7 +168,8 @@ test('an upstream failure serves the last snapshot as stale, else 502', async ()
   });
   await request();
   fail = true;
-  clock = 120_000;
+  // Swedish fork: past the pacing gap, when the degree is read again.
+  clock = GAP + 1000;
   const stale = await request();
   assert.equal(stale.status, 200);
   assert.equal(stale.body.stale, true);
@@ -153,7 +178,7 @@ test('an upstream failure serves the last snapshot as stale, else 502', async ()
     0,
     'a stale answer keeps the time it was observed',
   );
-  assert.equal(stale.body.ageMs, 120_000);
+  assert.equal(stale.body.ageMs, GAP + 1000);
   assert.equal(stale.headers['X-Data-Stale'], 'true');
   const missing = await request('/?lat=-10&lon=-10');
   assert.equal(missing.status, 502);
@@ -205,27 +230,39 @@ test('an upstream 429 starts a cooldown with no further upstream calls', async (
   assert.equal(calls, 2);
 });
 
-test('Retry-After accepts sane seconds or HTTP dates up to one hour', () => {
-  const nowMs = Date.parse('2026-09-29T12:00:00Z');
-  assert.equal(gnssRetryCooldownMs('30', nowMs), 30_000);
-  assert.equal(gnssRetryCooldownMs('1', nowMs), 5_000);
-  assert.equal(gnssRetryCooldownMs('3600', nowMs), 3_600_000);
-  assert.equal(
-    gnssRetryCooldownMs('Tue, 29 Sep 2026 13:00:00 GMT', nowMs),
-    3_600_000,
-  );
-  assert.equal(gnssRetryCooldownMs('1e309', nowMs), 60_000);
-  assert.equal(
-    gnssRetryCooldownMs('Tue, 29 Sep 2026 12:00:45 GMT', nowMs),
-    45_000,
-  );
-  // Garbage, a past date or no header fall back to the default minute.
-  assert.equal(gnssRetryCooldownMs('soon', nowMs), 60_000);
-  assert.equal(
-    gnssRetryCooldownMs('Tue, 29 Sep 2026 11:00:00 GMT', nowMs),
-    60_000,
-  );
-  assert.equal(gnssRetryCooldownMs(null, nowMs), 60_000);
+/** The Retry-After (s) the route gives after one upstream 429 carrying `raw`. */
+async function shutFor(raw) {
+  const request = install({
+    now: () => Date.parse('2026-09-29T12:00:00Z'),
+    monotonicNow: () => 0,
+    fetchImpl: async () =>
+      new Response('', {
+        status: 429,
+        headers: raw == null ? {} : { 'Retry-After': raw },
+      }),
+  });
+  const res = await request();
+  assert.equal(res.status, 429);
+  return Number(res.headers['Retry-After']);
+}
+
+// Swedish fork: the read goes through the adsb.lol transport the flights
+// share (server/providers/aircraft/adsbLolUpstream.js). A 429 there locks
+// every adsb.lol caller for its Retry-After, up to 25 h rather than GNSS's
+// own hour (adsb.lol's daily window can be most of a day away), and for
+// 15 min without a usable one, not one minute.
+test('Retry-After accepts sane seconds or HTTP dates up to 25 hours', async () => {
+  assert.equal(await shutFor('30'), 30);
+  assert.equal(await shutFor('1'), 5);
+  assert.equal(await shutFor('3600'), 3600);
+  assert.equal(await shutFor('7200'), 7200, 'no one-hour cap');
+  assert.equal(await shutFor('Tue, 29 Sep 2026 13:00:00 GMT'), 3600);
+  assert.equal(await shutFor('1e309'), 900);
+  assert.equal(await shutFor('Tue, 29 Sep 2026 12:00:45 GMT'), 45);
+  // Garbage, a past date or no header fall back to the default 15 minutes.
+  assert.equal(await shutFor('soon'), 900);
+  assert.equal(await shutFor('Tue, 29 Sep 2026 11:00:00 GMT'), 900);
+  assert.equal(await shutFor(null), 900);
 });
 
 test('overlapping 429s preserve the longest shared deadline', async () => {
@@ -271,7 +308,10 @@ test('a cached anchor keeps serving its last snapshot as stale during a cooldown
     fetchImpl: async () => {
       calls += 1;
       return limited
-        ? new Response('slow down', { status: 429 })
+        ? new Response('slow down', {
+            status: 429,
+            headers: { 'Retry-After': '3600' },
+          })
         : Response.json(snapshot);
     },
   });
@@ -280,8 +320,14 @@ test('a cached anchor keeps serving its last snapshot as stale during a cooldown
   clock = 61_000;
   // Another anchor trips the shared cooldown…
   assert.equal((await request('/?lat=5&lon=5')).status, 429);
-  clock = 62_000;
   // …and the cached anchor is answered from cache without an upstream call.
+  // Swedish fork: inside its pacing gap as a paced answer, not a stale one…
+  clock = 62_000;
+  const paced = await request();
+  assert.equal(paced.status, 200);
+  assert.equal(paced.body.stale, undefined);
+  // …and past the gap, the lock still on, as a stale one.
+  clock = GAP + 1000;
   const stale = await request();
   assert.equal(stale.status, 200);
   assert.equal(stale.body.stale, true);
@@ -317,18 +363,18 @@ test('the route rejects other methods, paths, bad anchors, a malformed feed and 
   assert.ok(limited > 0);
 });
 
-test('GERMAN: pathological retry deadlines are bounded', () => {
-  const at = Date.parse('2026-10-14T12:00:00Z');
-  assert.ok(gnssRetryCooldownMs('1e305', at) <= 3600000);
-  assert.equal(gnssRetryCooldownMs('9999999999999999999999', at), 3600000);
-  assert.equal(
-    gnssRetryCooldownMs('Wed, 14 Oct 2099 12:00:00 GMT', at),
-    3600000,
-  );
-  assert.equal(gnssRetryCooldownMs('0x10', at), 60000);
+test('GERMAN: pathological retry deadlines are bounded', async () => {
+  // Swedish fork: bounded by the shared transport's 25 h (90,000 s).
+  assert.ok((await shutFor('1e305')) <= 90_000);
+  assert.equal(await shutFor('9999999999999999999999'), 90_000);
+  assert.equal(await shutFor('Wed, 14 Oct 2099 12:00:00 GMT'), 90_000);
+  assert.equal(await shutFor('0x10'), 900);
 });
 
 test('GERMAN: 5xx, network timeouts and malformed JSON share a short cooldown', async () => {
+  // Swedish fork: every failed call, these three among them, holds this
+  // route back in the shared adsb.lol transport for 60 s (doubling when the
+  // next one fails too), rather than 15 s.
   for (const fail of [
     async () => new Response('', { status: 503 }),
     async () => {
@@ -345,13 +391,16 @@ test('GERMAN: 5xx, network timeouts and malformed JSON share a short cooldown', 
         return fail();
       },
     });
-    assert.equal((await request()).status, 502);
-    clock = 14000;
+    const first = await request();
+    assert.equal(first.status, 502);
+    assert.equal(first.headers['Retry-After'], '60');
+    clock = 59_000;
     assert.equal((await request('/?lat=1&lon=1')).status, 502);
     assert.equal(calls, 1);
-    clock = 15001;
-    await request('/?lat=2&lon=2');
+    clock = 60_001;
+    const again = await request('/?lat=2&lon=2');
     assert.equal(calls, 2);
+    assert.equal(again.headers['Retry-After'], '120', 'doubled');
   }
 });
 
@@ -378,15 +427,24 @@ test('GERMAN: cache age and cooldown remain stable across a wall-clock rollback'
   let wall = 1800000000000,
     mono = 0,
     calls = 0;
+  const fetchImpl = async () => {
+    calls++;
+    return calls === 1
+      ? Response.json({ ...snapshot, now: wall / 1000 })
+      : new Response('', { status: 429, headers: { 'Retry-After': '60' } });
+  };
   const request = install({
     now: () => wall,
     monotonicNow: () => mono,
-    fetchImpl: async () => {
-      calls++;
-      return calls === 1
-        ? Response.json({ ...snapshot, now: wall / 1000 })
-        : new Response('', { status: 429, headers: { 'Retry-After': '60' } });
-    },
+    fetchImpl,
+    // Swedish fork: a budget so large that the pacing gap is the minute's
+    // cache, so only the clocks are tested here.
+    adsbLol: createAdsbLolUpstream({
+      fetchImpl,
+      now: () => wall,
+      env: { ADSBLOL_DAILY_BUDGET: '1000000' },
+      warn: () => {},
+    }),
   });
   await request();
   wall -= 3600000;

@@ -73,6 +73,7 @@ export function createLifecycle({
       flightState.feed._lastSource =
         flightState.feed._source.label || 'Aircraft';
       flightState.feed._lastCoverage = 'worldwide upstream snapshot';
+      flightState.feed._lastQuota = null;
       flightState._trackedIcao = null;
       parts.tracking._resetTrackedSelectionState();
       flightState._trackedEntity = null;

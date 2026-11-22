@@ -145,7 +145,40 @@ export async function readResponse(
   return { response, payload };
 }
 
-export function httpError(response, source) {
+/** The longest wait a Retry-After is believed for: a day and an hour. */
+const RETRY_AFTER_MAX_MS = 25 * 60 * 60_000;
+
+/**
+ * Milliseconds a response's Retry-After asks for (delay-seconds or an HTTP
+ * date), at most RETRY_AFTER_MAX_MS, or null when it says nothing usable.
+ * @param {Response} response
+ * @param {number} [nowMs]
+ * @returns {number|null}
+ */
+export function retryAfterMs(response, nowMs = Date.now()) {
+  const raw = String(response?.headers?.get?.('retry-after') ?? '').trim();
+  if (!raw) return null;
+  if (/^\d+$/.test(raw))
+    return Math.min(Number(raw) * 1000, RETRY_AFTER_MAX_MS);
+  const at = /[a-z]/i.test(raw) ? Date.parse(raw) : NaN;
+  return Number.isFinite(at)
+    ? Math.min(Math.max(0, at - nowMs), RETRY_AFTER_MAX_MS)
+    : null;
+}
+
+/**
+ * The error a non-OK feed response is. With `honourRetryAfter`, a 429 or 503
+ * that names its wait is not asked again before it (the flights feed, whose
+ * server answers so while adsb.lol's daily quota is spent).
+ * @param {Response} response
+ * @param {string} source
+ * @param {{honourRetryAfter?: boolean, now?: number}} [options]
+ */
+export function httpError(
+  response,
+  source,
+  { honourRetryAfter = false, now = Date.now() } = {},
+) {
   const status = response.status;
   const code =
     status === 429
@@ -153,13 +186,18 @@ export function httpError(response, source) {
       : status === 401 || status === 403
         ? 'denied'
         : 'unavailable';
+  const fallbackMs = code === 'limited' || code === 'denied' ? 45000 : 20000;
+  const asked =
+    honourRetryAfter && (status === 429 || status === 503)
+      ? retryAfterMs(response, now)
+      : null;
   return new LiveSourceError(
     code,
     status === 429 ? `${source} rate limited` : `${source} HTTP ${status}`,
     {
       status,
       source,
-      retryAfterMs: code === 'limited' || code === 'denied' ? 45000 : 20000,
+      retryAfterMs: asked === null ? fallbackMs : Math.max(fallbackMs, asked),
     },
   );
 }

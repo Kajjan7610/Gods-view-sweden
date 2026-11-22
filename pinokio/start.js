@@ -26,6 +26,7 @@ module.exports = {
           ENTSOE_SECURITY_TOKEN: '{{env.ENTSOE_SECURITY_TOKEN || ""}}',
           GEOTORGET_USERNAME: '{{env.GEOTORGET_USERNAME || ""}}',
           GEOTORGET_PASSWORD: '{{env.GEOTORGET_PASSWORD || ""}}',
+          ADSBLOL_API_KEY: '{{env.ADSBLOL_API_KEY || ""}}',
           PINOKIO_SHARE_CLOUDFLARE: '{{env.PINOKIO_SHARE_CLOUDFLARE || "false"}}',
           PINOKIO_SHARE_LOCAL: '{{env.PINOKIO_SHARE_LOCAL || "false"}}',
           PINOKIO_SHARE_VAR: '{{env.PINOKIO_SHARE_VAR || "__gev_sharing_disabled__"}}',

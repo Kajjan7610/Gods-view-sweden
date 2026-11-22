@@ -6282,5 +6282,50 @@
   "JTWC warning ↗": "تحذير JTWC ↗",
   "Active cyclone advisories and warnings": "نشرات وتحذيرات الأعاصير النشطة",
   "Select a storm on the map, or choose a storm in the list to select it and move the camera. Click empty map space to clear the selection. NOAA NHC/CPHC advisories and JTWC warnings. The NHC cone describes forecast center-track uncertainty, not storm size or the full hazard area. The JTWC 34-knot wind danger area is where 34-knot winds may reach, widened by forecast track error; it is not a cone. Forecast point labels are source lead hours, not times computed from advisory issuance. Geometry follows the surface; height is not weather altitude. Consult the official advisory or the regional warning centre.": "اختر عاصفة على الخريطة، أو اختر عاصفة من القائمة لتحديدها وتحريك الكاميرا إليها. انقر على مكان فارغ من الخريطة لإلغاء التحديد. نشرات NOAA NHC/CPHC وتحذيرات JTWC. يصف مخروط NHC عدم اليقين في المسار المتوقع للمركز، لا حجم العاصفة ولا منطقة الخطر كاملة. منطقة خطر رياح 34 عقدة لدى JTWC هي حيث قد تصل رياح بسرعة 34 عقدة، موسّعةً بخطأ توقع المسار؛ وهي ليست مخروطًا. تسميات نقاط التوقع هي ساعات المهلة لدى المصدر، لا أوقات محسوبة من وقت الإصدار. تتبع الأشكال سطح الأرض؛ والارتفاع ليس ارتفاعًا جويًا. ارجع إلى النشرة الرسمية أو إلى مركز الإنذار الإقليمي.",
-  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · التحذير {number} · صدر {time}"
+  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · التحذير {number} · صدر {time}",
+  "adsb.lol · 250 nm around the map centre · {count} aircraft": {
+    "zero": "adsb.lol · 250 ميلًا بحريًا حول المركز · {count} طائرة",
+    "one": "adsb.lol · 250 ميلًا بحريًا حول المركز · طائرة واحدة ({count})",
+    "two": "adsb.lol · 250 ميلًا بحريًا حول المركز · طائرتان ({count})",
+    "few": "adsb.lol · 250 ميلًا بحريًا حول المركز · {count} طائرات",
+    "many": "adsb.lol · 250 ميلًا بحريًا حول المركز · {count} طائرة",
+    "other": "adsb.lol · 250 ميلًا بحريًا حول المركز · {count} طائرة"
+  },
+  "adsb.lol · 250 nm around your aircraft · {count} aircraft": {
+    "zero": "adsb.lol · 250 ميلًا بحريًا حولك · {count} طائرة",
+    "one": "adsb.lol · 250 ميلًا بحريًا حولك · طائرة واحدة ({count})",
+    "two": "adsb.lol · 250 ميلًا بحريًا حولك · طائرتان ({count})",
+    "few": "adsb.lol · 250 ميلًا بحريًا حولك · {count} طائرات",
+    "many": "adsb.lol · 250 ميلًا بحريًا حولك · {count} طائرة",
+    "other": "adsb.lol · 250 ميلًا بحريًا حولك · {count} طائرة"
+  },
+  "adsb.lol: today’s quota is used up, back at {time}": "adsb.lol: نفدت حصة اليوم، تعود في {time}",
+  "{used} of {limit} calls used in the last 24 hours.": "استُخدم {used} من {limit} طلبًا خلال آخر 24 ساعة.",
+  "With your adsb.lol key the app asks up to {limit} times a day.": "بمفتاح adsb.lol الخاص بك يرسل التطبيق حتى {limit} طلب يوميًا.",
+  "Without a key 500 calls a day; a free key under {panel} gives more.": "بدون مفتاح 500 طلب يوميًا؛ مفتاح مجاني في {panel} يمنح المزيد.",
+  "More flight updates per day (works without a key: 500/day)": "تحديثات أكثر للرحلات يوميًا (يعمل دون مفتاح: 500/يوم)",
+  "adsb.lol · older data from nearby · {count} aircraft": {
+    "zero": "adsb.lol · بيانات أقدم من الجوار · {count} طائرة",
+    "one": "adsb.lol · بيانات أقدم من الجوار · طائرة واحدة ({count})",
+    "two": "adsb.lol · بيانات أقدم من الجوار · طائرتان ({count})",
+    "few": "adsb.lol · بيانات أقدم من الجوار · {count} طائرات",
+    "many": "adsb.lol · بيانات أقدم من الجوار · {count} طائرة",
+    "other": "adsb.lol · بيانات أقدم من الجوار · {count} طائرة"
+  },
+  "Saving today’s quota: the same place is asked again only after a pause.": "توفيرًا لحصة اليوم: لا يُستعلم عن المكان نفسه مجددًا إلا بعد فترة.",
+  "Read around a place {km} km away.": "قُرئت حول مكان يبعد {km} كم.",
+  "adsb.lol is not answering · older data · {count} aircraft": {
+    "zero": "adsb.lol لا يستجيب · بيانات أقدم · {count} طائرة",
+    "one": "adsb.lol لا يستجيب · بيانات أقدم · طائرة واحدة ({count})",
+    "two": "adsb.lol لا يستجيب · بيانات أقدم · طائرتان ({count})",
+    "few": "adsb.lol لا يستجيب · بيانات أقدم · {count} طائرات",
+    "many": "adsb.lol لا يستجيب · بيانات أقدم · {count} طائرة",
+    "other": "adsb.lol لا يستجيب · بيانات أقدم · {count} طائرة"
+  },
+  "adsb.lol is not answering · no aircraft shown": "adsb.lol لا يستجيب · لا تُعرض طائرات",
+  "adsb.lol refused the key – check it under {panel}": "رفض adsb.lol المفتاح – تحقّق منه في {panel}",
+  "Nothing new came in; aircraft older than 30 minutes are taken off the map.": "لم يصل جديد؛ تُزال من الخريطة الطائرات الأقدم من 30 دقيقة.",
+  "Meanwhile the app asks without a key (500 calls a day).": "في الأثناء يستعلم التطبيق بدون مفتاح (500 طلب يوميًا).",
+  "The aircraft shown were read {age}.": "الطائرات المعروضة قُرئت {age}.",
+  "Nothing new from adsb.lol just now; data already read nearby is shown.": "لا جديد من adsb.lol الآن؛ تُعرض بيانات من الجوار قُرئت من قبل."
 }

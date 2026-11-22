@@ -5940,5 +5940,38 @@
   "JTWC warning ↗": "אזהרת JTWC ↗",
   "Active cyclone advisories and warnings": "עדכוני ציקלונים ואזהרות פעילים",
   "Select a storm on the map, or choose a storm in the list to select it and move the camera. Click empty map space to clear the selection. NOAA NHC/CPHC advisories and JTWC warnings. The NHC cone describes forecast center-track uncertainty, not storm size or the full hazard area. The JTWC 34-knot wind danger area is where 34-knot winds may reach, widened by forecast track error; it is not a cone. Forecast point labels are source lead hours, not times computed from advisory issuance. Geometry follows the surface; height is not weather altitude. Consult the official advisory or the regional warning centre.": "בחרו סופה במפה, או בחרו סופה ברשימה כדי לסמן אותה ולהזיז אליה את המצלמה. לחיצה על מקום ריק במפה מבטלת את הבחירה. עדכוני NOAA NHC/CPHC ואזהרות JTWC. החרוט של NHC מתאר את אי-הוודאות במסלול החזוי של המרכז, לא את גודל הסופה ולא את כל אזור הסכנה. אזור הסכנה של 34 קשר של JTWC הוא המקום שאליו עשויות להגיע רוחות של 34 קשר, מורחב בשגיאת תחזית המסלול; הוא אינו חרוט. התוויות של נקודות התחזית הן שעות התחזית של המקור, לא זמנים שחושבו ממועד הפרסום. הצורות עוקבות אחר פני השטח; הגובה אינו גובה מטאורולוגי. עיינו בעדכון הרשמי או במרכז ההתרעות האזורי.",
-  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · אזהרה {number} · פורסמה {time}"
+  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · אזהרה {number} · פורסמה {time}",
+  "adsb.lol · 250 nm around the map centre · {count} aircraft": {
+    "one": "adsb.lol · 250 מייל ימי סביב המרכז · {count} מטוס",
+    "two": "adsb.lol · 250 מייל ימי סביב המרכז · {count} מטוסים",
+    "other": "adsb.lol · 250 מייל ימי סביב המרכז · {count} מטוסים"
+  },
+  "adsb.lol · 250 nm around your aircraft · {count} aircraft": {
+    "one": "adsb.lol · 250 מייל ימי סביבך · {count} מטוס",
+    "two": "adsb.lol · 250 מייל ימי סביבך · {count} מטוסים",
+    "other": "adsb.lol · 250 מייל ימי סביבך · {count} מטוסים"
+  },
+  "adsb.lol: today’s quota is used up, back at {time}": "adsb.lol: המכסה היומית נוצלה, חוזר ב-{time}",
+  "{used} of {limit} calls used in the last 24 hours.": "נוצלו {used} מתוך {limit} קריאות ב-24 השעות האחרונות.",
+  "With your adsb.lol key the app asks up to {limit} times a day.": "עם מפתח adsb.lol שלך האפליקציה פונה עד {limit} פעמים ביום.",
+  "Without a key 500 calls a day; a free key under {panel} gives more.": "ללא מפתח 500 קריאות ביום; מפתח חינמי תחת {panel} נותן יותר.",
+  "More flight updates per day (works without a key: 500/day)": "יותר עדכוני טיסות ביום (עובד גם בלי מפתח: 500 ביום)",
+  "adsb.lol · older data from nearby · {count} aircraft": {
+    "one": "adsb.lol · נתונים ישנים מהסביבה · {count} מטוס",
+    "two": "adsb.lol · נתונים ישנים מהסביבה · {count} מטוסים",
+    "other": "adsb.lol · נתונים ישנים מהסביבה · {count} מטוסים"
+  },
+  "Saving today’s quota: the same place is asked again only after a pause.": "חיסכון במכסה היומית: אותו מקום נשאל שוב רק אחרי הפסקה.",
+  "Read around a place {km} km away.": "נקרא סביב מקום במרחק {km} ק״מ.",
+  "adsb.lol is not answering · older data · {count} aircraft": {
+    "one": "adsb.lol לא עונה · נתונים ישנים · {count} מטוס",
+    "two": "adsb.lol לא עונה · נתונים ישנים · {count} מטוסים",
+    "other": "adsb.lol לא עונה · נתונים ישנים · {count} מטוסים"
+  },
+  "adsb.lol is not answering · no aircraft shown": "adsb.lol לא עונה · לא מוצגים מטוסים",
+  "adsb.lol refused the key – check it under {panel}": "adsb.lol דחה את המפתח – בדקו אותו תחת {panel}",
+  "Nothing new came in; aircraft older than 30 minutes are taken off the map.": "לא הגיע מידע חדש; מטוסים ישנים מ-30 דקות מוסרים מהמפה.",
+  "Meanwhile the app asks without a key (500 calls a day).": "בינתיים האפליקציה פונה ללא מפתח (500 קריאות ביום).",
+  "The aircraft shown were read {age}.": "המטוסים המוצגים נקראו {age}.",
+  "Nothing new from adsb.lol just now; data already read nearby is shown.": "אין כרגע חדש מ-adsb.lol; מוצגים נתונים מהסביבה שכבר נקראו."
 }

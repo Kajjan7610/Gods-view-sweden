@@ -277,6 +277,8 @@ test('doctor describes the credential ladder without exposing values', () => {
     OPENSKY_CLIENT_SECRET: { configured: false },
     LL2_API_TOKEN: { configured: true, source: 'environment' },
     MAPILLARY_CLIENT_TOKEN: { configured: false },
+    // Swedish fork: the optional adsb.lol key is a listed provider too.
+    ADSBLOL_API_KEY: { configured: true, source: 'dotenv files' },
   };
   const capabilities = buildCapabilitySummary(credentials);
   assert.match(
@@ -309,6 +311,7 @@ test('doctor describes the credential ladder without exposing values', () => {
   assert.doesNotMatch(report, /configured-value/);
   assert.match(report, /Cesium ion \(environment\)/);
   assert.match(report, /Launch Library 2 \(environment\)/);
+  assert.match(report, /\[OK\] adsb\.lol flights .*\(dotenv files\)/);
 
   const pinokioReport = formatSetupReport(
     {
@@ -339,6 +342,8 @@ test('doctor sends Keychain-backed reports to dev-fresh and describes OpenSky as
       'OPENSKY_CLIENT_SECRET',
       'LL2_API_TOKEN',
       'MAPILLARY_CLIENT_TOKEN',
+      // Swedish fork: the optional adsb.lol key.
+      'ADSBLOL_API_KEY',
     ].map((name) => [name, { configured: false }]),
   );
   credentials.GOOGLE_MAPS_API_KEY = {
@@ -380,6 +385,8 @@ test('doctor never calls a dependency-missing setup ready', () => {
       'OPENSKY_CLIENT_SECRET',
       'LL2_API_TOKEN',
       'MAPILLARY_CLIENT_TOKEN',
+      // Swedish fork: the optional adsb.lol key.
+      'ADSBLOL_API_KEY',
     ].map((name) => [name, { configured: false }]),
   );
   const output = formatSetupReport({

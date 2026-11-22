@@ -6054,5 +6054,42 @@
   "JTWC warning ↗": "Предупреждение JTWC ↗",
   "Active cyclone advisories and warnings": "Действующие сводки и предупреждения о циклонах",
   "Select a storm on the map, or choose a storm in the list to select it and move the camera. Click empty map space to clear the selection. NOAA NHC/CPHC advisories and JTWC warnings. The NHC cone describes forecast center-track uncertainty, not storm size or the full hazard area. The JTWC 34-knot wind danger area is where 34-knot winds may reach, widened by forecast track error; it is not a cone. Forecast point labels are source lead hours, not times computed from advisory issuance. Geometry follows the surface; height is not weather altitude. Consult the official advisory or the regional warning centre.": "Выберите шторм на карте или в списке, чтобы выделить его и переместить камеру. Щелчок по пустому месту карты снимает выделение. Сводки NOAA NHC/CPHC и предупреждения JTWC. Конус NHC показывает неопределённость прогнозного трека центра, а не размер шторма или всю опасную зону. Опасная зона ветра 34 узла JTWC — это область, куда может дойти ветер 34 узла, расширенная на ошибку прогноза трека; это не конус. Подписи прогнозных точек — заблаговременность источника в часах, а не время, рассчитанное от выпуска. Геометрия следует поверхности; высота не является метеорологической высотой. Сверяйтесь с официальной сводкой или региональным центром предупреждений.",
-  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · Предупреждение № {number} · выпущено {time}"
+  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · Предупреждение № {number} · выпущено {time}",
+  "adsb.lol · 250 nm around the map centre · {count} aircraft": {
+    "one": "adsb.lol · 250 мор. миль вокруг центра · {count} самолёт",
+    "few": "adsb.lol · 250 мор. миль вокруг центра · {count} самолёта",
+    "many": "adsb.lol · 250 мор. миль вокруг центра · {count} самолётов",
+    "other": "adsb.lol · 250 мор. миль вокруг центра · {count} самолёта"
+  },
+  "adsb.lol · 250 nm around your aircraft · {count} aircraft": {
+    "one": "adsb.lol · 250 мор. миль вокруг вас · {count} самолёт",
+    "few": "adsb.lol · 250 мор. миль вокруг вас · {count} самолёта",
+    "many": "adsb.lol · 250 мор. миль вокруг вас · {count} самолётов",
+    "other": "adsb.lol · 250 мор. миль вокруг вас · {count} самолёта"
+  },
+  "adsb.lol: today’s quota is used up, back at {time}": "adsb.lol: дневная квота исчерпана, снова с {time}",
+  "{used} of {limit} calls used in the last 24 hours.": "Использовано {used} из {limit} запросов за последние 24 часа.",
+  "With your adsb.lol key the app asks up to {limit} times a day.": "С вашим ключом adsb.lol приложение делает до {limit} запросов в сутки.",
+  "Without a key 500 calls a day; a free key under {panel} gives more.": "Без ключа 500 запросов в сутки; бесплатный ключ в разделе {panel} даёт больше.",
+  "More flight updates per day (works without a key: 500/day)": "Больше обновлений рейсов в сутки (работает и без ключа: 500/сутки)",
+  "adsb.lol · older data from nearby · {count} aircraft": {
+    "one": "adsb.lol · прежние данные поблизости · {count} самолёт",
+    "few": "adsb.lol · прежние данные поблизости · {count} самолёта",
+    "many": "adsb.lol · прежние данные поблизости · {count} самолётов",
+    "other": "adsb.lol · прежние данные поблизости · {count} самолёта"
+  },
+  "Saving today’s quota: the same place is asked again only after a pause.": "Экономия сегодняшней квоты: то же место запрашивается снова только после паузы.",
+  "Read around a place {km} km away.": "Получено вокруг места в {km} км отсюда.",
+  "adsb.lol is not answering · older data · {count} aircraft": {
+    "one": "adsb.lol не отвечает · прежние данные · {count} самолёт",
+    "few": "adsb.lol не отвечает · прежние данные · {count} самолёта",
+    "many": "adsb.lol не отвечает · прежние данные · {count} самолётов",
+    "other": "adsb.lol не отвечает · прежние данные · {count} самолёта"
+  },
+  "adsb.lol is not answering · no aircraft shown": "adsb.lol не отвечает · самолёты не показаны",
+  "adsb.lol refused the key – check it under {panel}": "adsb.lol отклонил ключ – проверьте его в разделе {panel}",
+  "Nothing new came in; aircraft older than 30 minutes are taken off the map.": "Новых данных не поступило; самолёты старше 30 минут убираются с карты.",
+  "Meanwhile the app asks without a key (500 calls a day).": "Пока приложение запрашивает без ключа (500 запросов в сутки).",
+  "The aircraft shown were read {age}.": "Показанные самолёты получены {age}.",
+  "Nothing new from adsb.lol just now; data already read nearby is shown.": "Пока ничего нового от adsb.lol; показаны уже полученные данные поблизости."
 }

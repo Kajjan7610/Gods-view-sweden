@@ -106,9 +106,12 @@ test('a globe-wide rectangle uses the visible screen centre as the query anchor'
   assert.ok(Math.abs(anchor.longitude + 97) < 1e-8);
 });
 
-test('a line of sight that misses the globe falls back to the view rectangle, then the point under the eye', () => {
+// Swedish fork: a line of sight that misses the globe reads the ground under
+// its closest approach to the earth's centre, never the view rectangle,
+// whose middle can be anywhere (0°, 0° when it is the whole globe).
+test('a line of sight that misses the globe reads the ground under its closest approach, not the view rectangle', () => {
   const viewer = {};
-  // The eye over (10, 20), looking straight up.
+  // The eye over (10, 20), looking straight up: the eye itself is closest.
   const eye = fromDegrees(10, 20, 1e6);
   const length = Math.hypot(eye.x, eye.y, eye.z);
   const camera = fakeCameraPort({
@@ -119,13 +122,10 @@ test('a line of sight that misses the globe falls back to the view rectangle, th
       direction: { x: eye.x / length, y: eye.y / length, z: eye.z / length },
     },
   });
-  let rectangle = { west: 170, south: -10, east: -170, north: 10 };
-  camera.port.viewRectangle = () => rectangle;
+  camera.port.viewRectangle = () => {
+    throw new Error('a missed line of sight needs no rectangle');
+  };
   bindRenderer(viewer, { camera: camera.port });
-  const across = defaultGnssViewAnchor(viewer);
-  assert.ok(Math.abs(across.latitude) < 1e-8);
-  assert.ok(Math.abs(Math.abs(across.longitude) - 180) < 1e-8);
-  rectangle = null;
   const under = defaultGnssViewAnchor(viewer);
   assert.ok(Math.abs(under.latitude - 20) < 1e-8);
   assert.ok(Math.abs(under.longitude - 10) < 1e-8);
@@ -711,14 +711,11 @@ test('monotonic camera scheduling is unaffected by wall-clock rollback', async (
 test('view anchor falls back to rectangle, then nadir, then no camera', () => {
   assert.equal(defaultGnssViewAnchor({}), null);
   const viewer = { scene: {} };
-  // Looking away from the globe: the line of sight misses it.
+  // Swedish fork: only a port that reports no position goes by its view
+  // rectangle (see the closest-approach test above), and never by one that
+  // spans every longitude.
   const camera = fakeCameraPort({
-    pose: {
-      lon: 21,
-      lat: 41,
-      position: fromDegrees(21, 41, 1e7),
-      direction: { x: 0, y: 0, z: 1 },
-    },
+    pose: { lon: 21, lat: 41, position: null },
     viewRectangle: { west: 20, south: 40, east: 22, north: 42 },
   });
   bindRenderer(viewer, { camera: camera.port });
@@ -732,6 +729,17 @@ test('view anchor falls back to rectangle, then nadir, then no camera', () => {
   );
   camera.setViewRectangle({ west: 175, south: 40, east: -165, north: 42 });
   assert.ok(Math.abs(defaultGnssViewAnchor(viewer).longitude + 175) < 1e-10);
+  // The whole globe, or a pole in view: the point under the eye.
+  for (const rect of [
+    { west: -180, south: -90, east: 180, north: 90 },
+    { west: -180, south: 60, east: 180, north: 90 },
+  ]) {
+    camera.setViewRectangle(rect);
+    assert.deepEqual(defaultGnssViewAnchor(viewer), {
+      latitude: 41,
+      longitude: 21,
+    });
+  }
   camera.setViewRectangle(null);
   const nadirAnchor = defaultGnssViewAnchor(viewer);
   assert.ok(Math.abs(nadirAnchor.latitude - 41) < 1e-10);

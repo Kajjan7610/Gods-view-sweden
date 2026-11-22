@@ -4,6 +4,40 @@ import { ERROR_BACKOFF_INTERVAL } from './recordPolicy.js';
 // local: this module stays free of browser globals (package boundaries).
 const msg = (text) => text;
 
+/**
+ * Swedish fork: aircraft read from an adsb.lol disc are not shown once they
+ * are older than this, as the server serves no older disc
+ * (server/providers/aircraft/opensky.js, ADSBLOL_STALE_MAX_MS).
+ */
+const ADSBLOL_SHOWN_MAX_MS = 30 * 60_000;
+
+/** A query's point, or null without one. */
+function queryPoint(query) {
+  return Number.isFinite(query?.latitude) && Number.isFinite(query?.longitude)
+    ? { latitude: query.latitude, longitude: query.longitude }
+    : null;
+}
+
+/**
+ * What is said of adsb.lol's quota after a failed poll (Swedish fork): the
+ * budget, key and any lock the failing answer told (`told`, else the last
+ * word), and of the disc still shown its anchor and whether it was older data
+ * (a paced disc's reason is over), judged against the point this poll asked
+ * about. `failed` marks that nothing new was served.
+ */
+function quotaAfterFailure(last, told, query) {
+  if (!last && !told) return null;
+  return {
+    ...last,
+    ...told,
+    anchor: last?.anchor ?? null,
+    asked: queryPoint(query) ?? last?.asked ?? null,
+    cache: last?.cache === 'STALE' ? 'STALE' : null,
+    gapMs: null,
+    failed: true,
+  };
+}
+
 /** Own acquisition, cancellation, freshness and backoff independently of rendering. */
 export function createIngestion({
   feed,
@@ -13,6 +47,7 @@ export function createIngestion({
   applyPendingTrackingRestore,
   followsClock = () => false,
   timedAnswer = () => true,
+  clearContacts = () => {},
 }) {
   const methods = {
     async update(viewer, { signal = null } = {}) {
@@ -53,6 +88,20 @@ export function createIngestion({
     },
   };
 
+  /**
+   * Swedish fork: drop every contact drawn from an adsb.lol disc (the quota
+   * names where it was read) once it is older than ADSBLOL_SHOWN_MAX_MS.
+   */
+  function dropOutlived(nowMs) {
+    const quota = feed._lastQuota;
+    if (!quota?.anchor || !Number.isFinite(feed._lastUpdate)) return;
+    if (nowMs - feed._lastUpdate <= ADSBLOL_SHOWN_MAX_MS) return;
+    clearContacts();
+    feed._count = 0;
+    feed._lastUpdate = null;
+    feed._lastQuota = { ...quota, anchor: null, cache: null };
+  }
+
   async function acquire(
     viewer,
     { signal = null, atMs, replace = false, handover = false },
@@ -69,6 +118,8 @@ export function createIngestion({
     };
     if (!timed && feed._retryAt && nowMs < feed._retryAt) {
       feed._backoff = true;
+      // Waiting out a refusal, the aircraft shown still age.
+      dropOutlived(nowMs);
       return;
     }
 
@@ -77,9 +128,10 @@ export function createIngestion({
     const updateSignal = signal
       ? AbortSignal.any([signal, resourceController.signal])
       : resourceController.signal;
+    let query = null;
     try {
       updateSignal.throwIfAborted();
-      const query = timed ? { ...getQuery(viewer), atMs } : getQuery(viewer);
+      query = timed ? { ...getQuery(viewer), atMs } : getQuery(viewer);
       const snapshot = await feed._source.getSnapshot(query, {
         signal: updateSignal,
       });
@@ -100,16 +152,30 @@ export function createIngestion({
         : null;
       feed._lastSource = snapshot.source;
       feed._lastCoverage = snapshot.coverage;
+      // The server's word on its upstream's daily quota, when it has one.
+      feed._lastQuota = snapshot.quota ?? null;
       setSourceLabel(feed._lastSource);
-      const accepted = timed
-        ? applySnapshot(snapshot, viewer, { replace })
-        : handover
-          ? applySnapshot(snapshot, viewer, { handover: true })
-          : applySnapshot(snapshot, viewer);
+      // Swedish fork: an adsb.lol disc older than the cap is not drawn.
+      const outlived =
+        !timed &&
+        Boolean(snapshot.quota?.anchor) &&
+        Number.isFinite(sourceEpochMs) &&
+        Date.now() - sourceEpochMs > ADSBLOL_SHOWN_MAX_MS;
+      if (outlived) {
+        clearContacts();
+        feed._lastQuota = { ...snapshot.quota, anchor: null, cache: null };
+      }
+      const accepted = outlived
+        ? { count: 0, ids: new Set() }
+        : timed
+          ? applySnapshot(snapshot, viewer, { replace })
+          : handover
+            ? applySnapshot(snapshot, viewer, { handover: true })
+            : applySnapshot(snapshot, viewer);
       feed._count = accepted.count;
       // Freshness belongs to the source snapshot, not the moment this browser
       // received a cached 200 response.
-      feed._lastUpdate = sourceEpochMs;
+      feed._lastUpdate = outlived ? null : sourceEpochMs;
       feed._lastTrackingRefreshOutcome = {
         epoch: trackingRefreshEpoch,
         status: 'accepted',
@@ -132,6 +198,14 @@ export function createIngestion({
         feed._retryAt =
           Date.now() + (e?.retryAfterMs ?? ERROR_BACKOFF_INTERVAL);
       feed._lastStatus = e?.status ?? null;
+      // Nothing new was served: the disc shown stays, and with it where it
+      // was read, now judged against this poll's place (quotaAfterFailure).
+      feed._lastQuota = quotaAfterFailure(
+        feed._lastQuota,
+        e?.quota ?? null,
+        query,
+      );
+      if (!timed) dropOutlived(Date.now());
       if (e?.source) {
         feed._lastSource = e.source;
         setSourceLabel(feed._lastSource);
@@ -162,6 +236,7 @@ export function createFlightFeed(source) {
   feed._lastStatus = null;
   feed._lastSource = source?.label || 'Aircraft';
   feed._lastCoverage = 'worldwide upstream snapshot';
+  feed._lastQuota = null;
   feed._trackingRefreshEpoch = 0;
   feed._lastTrackingRefreshOutcome = {
     epoch: 0,

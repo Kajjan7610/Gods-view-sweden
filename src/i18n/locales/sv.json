@@ -5826,5 +5826,34 @@
   "JTWC warning ↗": "JTWC-varning ↗",
   "Active cyclone advisories and warnings": "Aktiva cyklonbulletiner och varningar",
   "Select a storm on the map, or choose a storm in the list to select it and move the camera. Click empty map space to clear the selection. NOAA NHC/CPHC advisories and JTWC warnings. The NHC cone describes forecast center-track uncertainty, not storm size or the full hazard area. The JTWC 34-knot wind danger area is where 34-knot winds may reach, widened by forecast track error; it is not a cone. Forecast point labels are source lead hours, not times computed from advisory issuance. Geometry follows the surface; height is not weather altitude. Consult the official advisory or the regional warning centre.": "Välj en storm på kartan, eller välj en storm i listan för att markera den och flytta kameran. Klicka på en tom plats på kartan för att rensa markeringen. Bulletiner från NOAA NHC/CPHC och varningar från JTWC. NHC:s kon beskriver osäkerheten i centrums prognosbana, inte stormens storlek eller hela riskområdet. JTWC:s riskområde för 34 knop är där vindar på 34 knop kan nå, vidgat med felet i banprognosen; det är ingen kon. Etiketterna på prognospunkterna är källans prognostimmar, inte tider räknade från utgivningen. Geometrin följer ytan; höjden är inte väderhöjd. Läs den officiella bulletinen eller den regionala varningscentralen.",
-  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · Varning {number} · utfärdad {time}"
+  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · Varning {number} · utfärdad {time}",
+  "adsb.lol · 250 nm around the map centre · {count} aircraft": {
+    "one": "adsb.lol · 250 NM runt kartans mitt · {count} plan",
+    "other": "adsb.lol · 250 NM runt kartans mitt · {count} plan"
+  },
+  "adsb.lol · 250 nm around your aircraft · {count} aircraft": {
+    "one": "adsb.lol · 250 NM runt ditt plan · {count} plan",
+    "other": "adsb.lol · 250 NM runt ditt plan · {count} plan"
+  },
+  "adsb.lol: today’s quota is used up, back at {time}": "adsb.lol: dagens kvot är slut, åter {time}",
+  "{used} of {limit} calls used in the last 24 hours.": "{used} av {limit} anrop använda det senaste dygnet.",
+  "With your adsb.lol key the app asks up to {limit} times a day.": "Med din adsb.lol-nyckel frågar appen upp till {limit} gånger per dygn.",
+  "Without a key 500 calls a day; a free key under {panel} gives more.": "Utan nyckel 500 anrop/dygn; en gratis nyckel under {panel} ger fler.",
+  "More flight updates per day (works without a key: 500/day)": "Fler flyguppdateringar per dygn (fungerar utan nyckel: 500/dygn)",
+  "adsb.lol · older data from nearby · {count} aircraft": {
+    "one": "adsb.lol · äldre data från närheten · {count} plan",
+    "other": "adsb.lol · äldre data från närheten · {count} plan"
+  },
+  "Saving today’s quota: the same place is asked again only after a pause.": "Sparar dagens kvot: samma plats frågas igen först efter en paus.",
+  "Read around a place {km} km away.": "Läst runt en plats {km} km bort.",
+  "adsb.lol is not answering · older data · {count} aircraft": {
+    "one": "adsb.lol svarar inte · äldre data · {count} plan",
+    "other": "adsb.lol svarar inte · äldre data · {count} plan"
+  },
+  "adsb.lol is not answering · no aircraft shown": "adsb.lol svarar inte · inga plan visas",
+  "adsb.lol refused the key – check it under {panel}": "adsb.lol nekade nyckeln – kontrollera den under {panel}",
+  "Nothing new came in; aircraft older than 30 minutes are taken off the map.": "Inget nytt kom in; plan äldre än 30 minuter tas bort från kartan.",
+  "Meanwhile the app asks without a key (500 calls a day).": "Till dess frågar appen utan nyckel (500 anrop/dygn).",
+  "The aircraft shown were read {age}.": "Planen som visas lästes {age}.",
+  "Nothing new from adsb.lol just now; data already read nearby is shown.": "Inget nytt från adsb.lol just nu; data som redan lästs i närheten visas."
 }

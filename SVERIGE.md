@@ -323,9 +323,14 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   API:et är gratis och all data adsb.lol publicerar har licensen ODbL 1.0,
   samma som OpenStreetMap: källan ska anges, och en sammanställd databas
   som görs offentlig ska delas under samma licens. Den som använder API:et
-  i produktion ombeds kontakta adsb.lol först, och en nyckel (som fås genom
-  att skicka in egen mottagardata) är planerad. Appen läser flygplanen
-  inom 250 sjömil från kartans mitt. Täckningen över Sverige var
+  i produktion ombeds kontakta adsb.lol först. Sedan november mäts anropen
+  (läst 2026-11-21): utan nyckel 500 per dygn och IP-adress, med en gratis
+  nyckel 1 000 och med en mottagarnyckel 7 200; appen håller sig under det
+  med en egen dygnsbudget (se loggen 2026-11-22). Appen läser flygplanen
+  inom 250 sjömil från kartans mitt, där blicken träffar marken, och i
+  cockpit runt planet man sitter i. Med en nyckel kan adsb.lol knyta de
+  områden appen frågar om (rutor på 0,25 grader, i Sverige omkring 28 × 14
+  km) till den som har nyckeln; utan nyckel bara till IP-adressen. Täckningen över Sverige var
   2026-11-11 i nivå med OpenSkys (137 mot 139 flygplan runt Malmö, 60 mot
   64 runt Stockholm, 12 mot 12 runt Kiruna). adsb.lol:s data är
   ofiltrerad, men appen tar bort flygplan vars ägare bett om att inte visas
@@ -393,6 +398,8 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 | `ADSBDB_ROUTES` | `on`: flygrutter från adsbdb, vars ruttdata inte får publiceras utan David J Taylors tillstånd; tom (standard): inga rutter | ingen nyckel |
 | `REGIONAL_NEWS_GOOGLE` | `on`: rubrikerna i stadsdossiern och cockpit från Google News, vars villkor bara tillåter personligt, icke-kommersiellt bruk; tom (standard): inga rubriker över Sverige, GDELT utanför | ingen nyckel |
 | `FLIGHTS_SOURCE` | tom (standard): flyg från adsb.lol (ODbL) runt kartans mitt, OpenSky frågas aldrig; `opensky`: originalets OpenSky, som kräver deras skriftliga tillstånd | ingen nyckel |
+| `ADSBLOL_API_KEY` | valfri: fler flyguppdateringar per dygn. Utan nyckel tillåter adsb.lol 500 anrop per dygn och IP-adress, med en gratis nyckel 1 000. Nyckeln stannar på servern och skickas bara till adsb.lol | www.adsb.lol/request (under KOPPLA PÅ) |
+| `ADSBLOL_DAILY_BUDGET` | högst så många anrop till adsb.lol under ett dygn; standard 450 utan nyckel, 950 med. GNSS-integriteten har 20 % för sig själv och flyget resten; militärflyget tar av flygets del och slutar vid 50 % | ingen nyckel |
 | `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` | flyg med större kvot än utan konto (originalets lager; OpenSkys villkor kräver skriftligt tillstånd för användning i en app som denna, se "Källor med oklara eller särskilda villkor") | opensky-network.org → konto → API client (under KOPPLA PÅ) |
 | `ENTSOE_PRODUCTION` | `on`: produktion, förbrukning och dygnskurva från ENTSO-E också; tom (standard): bara flödena, eftersom produktion och förbrukning inte ingår i ENTSO-E:s fria data | ingen nyckel |
 | `ENTSOE_SECURITY_TOKEN` | kraftsystemets flöden från ENTSO-E (CC BY 4.0); behövs för lagret | transparency.entsoe.eu → registrera, mejla transparency@entsoe.eu "RESTful API access", sedan My Account → Generate token |
@@ -427,6 +434,106 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-22 (flyget på adsb.lol:s dygnskvot)
+- adsb.lol mäter nu anropen till de ändpunkter appen använder (flygplanen
+  runt en punkt, `/v2/lat/…/lon/…/dist/…`, och `/v2/mil`): utan nyckel 500
+  anrop per dygn och IP-adress, med en gratis nyckel 1 000 och med en
+  mottagarnyckel 7 200 (läst 2026-11-21). Över kvoten svarar adsb.lol 429
+  med `Retry-After`. Flyglagret frågade förut var 30:e sekund och
+  GNSS-lagret en gång i minuten på samma kvot, som då tog slut på några
+  timmar; sedan stod flyglagret tomt till nästa dygn.
+- Alla anrop till adsb.lol (flyget, GNSS-integriteten och militärflyget)
+  går nu genom en gemensam transport,
+  `server/providers/aircraft/adsbLolUpstream.js`, med en dygnsbudget: högst
+  450 anrop under det senaste dygnet utan nyckel och 950 med
+  (`ADSBLOL_DAILY_BUDGET` ändrar det). GNSS-integriteten har 20 % för sig
+  själv och flyget resten; militärflyget, som appen inte använder, tar av
+  flygets del och slutar när halva dygnets budget är använd. Anrop utan och
+  med nyckel räknas var för sig, som adsb.lol räknar dem (per IP-adress och
+  per nyckel): tas nyckeln bort gäller adressens anrop från dygnet igen.
+- Ett 429, eller ett 403 som talar om kvot (de första 2 kB av svaret
+  läses), stoppar alla anrop till adsb.lol så länge `Retry-After` säger
+  (upp till 25 timmar), annars i 15 minuter, för det läge anropet skickades
+  i (utan eller med nyckel). Varje annat misslyckat anrop håller bara den
+  anroparen borta: 60 sekunder, dubbelt så länge för varje misslyckande i
+  rad upp till 15 minuter (ett serverfels längre `Retry-After` gäller,
+  högst en timme), och 15 minuter när ett anrop utan nyckel nekas. Nekar
+  adsb.lol nyckeln (401 eller 403) lämnas den utanför i 15 minuter: under
+  tiden frågar alla anropare utan nyckel, och räknas så, sedan prövas
+  nyckeln igen. En ny nyckel prövas direkt. Ett anrop som aldrig nådde
+  adsb.lol (inget namnsvar, ingen förbindelse upprättad) räknas inte; ett
+  avbrott efter att anropet gått iväg räknas. Räkningen och spärren, aldrig
+  nyckeln, sparas i `.gev-cache/adsblol-budget.json` när de ändras och
+  finns kvar efter en omstart från KOPPLA PÅ.
+- Samma plats frågas igen först efter en paus som sprider 90 % av
+  anroparens del jämnt över dygnet (resten är till för nya platser), och
+  längre när redan räknade anrop annars skulle lämna för lite kvar innan de
+  räknas bort: flyget utan nyckel drygt var fjärde minut (med nyckel ungefär
+  varannan), aldrig mer sällan än var tionde minut så länge budgeten
+  räcker; GNSS en gång per hel grad ungefär var artonde minut. Under tiden
+  visas den senaste skivan med sin ålder. Inom 50 km från en skiva som
+  lästs under pausen räknas som samma plats: den skivan visas, med var den
+  lästes. En ny plats frågas direkt så länge dygnets anrop håller pausen
+  inom dubbla den jämna (från ett tomt dygn ungefär 160 nya platser i
+  följd utan nyckel), och ett anrop som redan är på väg för platsen delas.
+  Därefter visas den närmaste skivan inom 250 sjömil som lästs under
+  pausen, och så länge något anrop gått iväg under pausen den närmaste
+  inom 250 sjömil över huvud taget, högst 30 minuter gammal; bara utan en
+  sådan frågas platsen. Då räcker flygets del ett helt dygn i cockpit och
+  vid ständig panorering (provkört mot simulerade svar i 36 timmar). Har adsb.lol spärrat,
+  eller är flygets del slut, visas den nyaste skivan inom 250 sjömil,
+  högst 30 minuter gammal; annars svarar servern 503 med när flyget är
+  tillbaka, och lagret frågar inte igen förrän då. Ett 502 efter ett fel
+  säger också när nästa försök görs.
+- Flyglagret frågar nu runt kartans mitt, där blicken träffar marken, som
+  GNSS-lagret, och i cockpit runt planet man sitter i. Går blicken förbi
+  jorden (från rymden, mot horisonten) gäller marken under den punkt där
+  siktlinjen kommer närmast jordens mitt, aldrig mitten av en vy som rymmer
+  hela jorden; är ögat under ellipsoiden, som på gatunivå där geoiden
+  ligger lägre, gäller punkten under ögat.
+- Raden i Datalager är en rad på högst 72 tecken på alla appens språk: vad
+  som visas ("adsb.lol · 250 NM runt kartans mitt · 137 plan"), åldern
+  avrundad till närmaste minut när den är minst en minut ("· för 14 min
+  sedan", i timmar efter den första timmen), "äldre data från närheten"
+  när skivan sparades medan adsb.lol inte frågas eller lästes mer än 50 km
+  bort (servern anger skivans mitt i `X-Flight-Anchor`), "adsb.lol svarar
+  inte · äldre data · 137 plan · för 6 min sedan" när den senaste
+  hämtningen misslyckades och den gamla skivan står kvar (avståndet räknas
+  då mot platsen hämtningen gällde, också i cockpit; efter 30 minuter
+  "adsb.lol svarar inte · inga plan visas"), "adsb.lol nekade
+  nyckeln – kontrollera den under KOPPLA PÅ" så länge nyckeln är nekad
+  (servern säger det i `X-ADSBLOL-Key-Refused`), och när kvoten är slut
+  ("adsb.lol: dagens kvot är slut, åter 14:05", i lokal tid). Att kvoten
+  är slut sägs när adsb.lol har spärrat, när budgeten räcker först om mer
+  än tio minuter och när servern svarar 503 för att budgeten är slut och
+  ingen skiva finns att visa. Varför står i verktygstipset ("Sparar dagens
+  kvot", bara när den senaste hämtningen lyckades; "Inget nytt från
+  adsb.lol just nu"; hur långt bort skivan lästes när det är mer än 20
+  km), liksom vad en gratis nyckel ger, att appen frågar utan nyckel medan
+  den är nekad, och hur mycket av budgeten som är använd.
+- En skiva som visas medan pausen pågår märks inte längre som inaktuell i
+  Datalager förrän den är äldre än pausen och en minut (servern anger
+  pausen i `X-ADSBLOL-Gap-Seconds`); andra svar som förut efter två
+  minuter.
+- Flygplan från adsb.lol som är äldre än 30 minuter tas bort från kartan:
+  när en hämtning misslyckas, när lagret väntar ut en spärr och när ett
+  svar är så gammalt. Servern visar aldrig en äldre skiva.
+- I originalets OpenSky-läge (`FLIGHTS_SOURCE=opensky`) ersätts en
+  inaktuell OpenSky-bild av adsb.lol bara när adsb.lol:s skiva är nyare än
+  bilden; annars visas OpenSkys bild som förut.
+- KOPPLA PÅ har en rad för adsb.lol (`ADSBLOL_API_KEY`, valfri, fås på
+  www.adsb.lol/request). Nyckeln stannar på servern och skickas bara till
+  adsb.lol, som `x-api-key`; med den kan adsb.lol knyta de rutor appen
+  frågar om till nyckelns innehavare (se villkoren ovan). En spärr gäller
+  bara det läge den kom i: att lägga till nyckeln häver en spärr från
+  tiden utan nyckel, och tvärtom.
+- Rättat: här stod tidigare (2026-11-11) att flyget lästes runt kartans
+  mitt, men det var punkten under kameran. Nu stämmer det.
+- Risk: adsb.lol:s GitHub-repo för API:et arkiverades 2026-11-19, och
+  tjänsten hade avbrott i november. När adsb.lol inte svarar står den
+  senaste skivan kvar i upp till 30 minuter, med raden "adsb.lol svarar
+  inte" och skivans ålder, och tas sedan bort från kartan.
 
 ### 2026-11-21 (originalet sammanslaget)
 - Originalprojektet är sammanslaget fram till 2026-11-21 (114 pull

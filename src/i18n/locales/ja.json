@@ -5712,5 +5712,30 @@
   "JTWC warning ↗": "JTWC警報 ↗",
   "Active cyclone advisories and warnings": "発表中のサイクロン情報と警報",
   "Select a storm on the map, or choose a storm in the list to select it and move the camera. Click empty map space to clear the selection. NOAA NHC/CPHC advisories and JTWC warnings. The NHC cone describes forecast center-track uncertainty, not storm size or the full hazard area. The JTWC 34-knot wind danger area is where 34-knot winds may reach, widened by forecast track error; it is not a cone. Forecast point labels are source lead hours, not times computed from advisory issuance. Geometry follows the surface; height is not weather altitude. Consult the official advisory or the regional warning centre.": "地図上の嵐を選ぶか、リストから嵐を選ぶと選択され、カメラが移動します。地図の何もない場所をクリックすると選択を解除します。NOAA NHC/CPHCの情報とJTWCの警報です。NHCの予報円は中心の予報進路の不確かさを表すもので、嵐の大きさや危険域全体ではありません。JTWCの34ノット風の危険域は、34ノットの風が及ぶおそれのある範囲を進路予報の誤差分だけ広げたもので、予報円ではありません。予報点のラベルは情報源の予報時間で、発表時刻から計算した時刻ではありません。形状は地表に沿って描かれ、高さは気象上の高度ではありません。公式の情報または地域の警報センターを確認してください。",
-  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · 第{number}号警報 · {time} 発表"
+  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · 第{number}号警報 · {time} 発表",
+  "adsb.lol · 250 nm around the map centre · {count} aircraft": {
+    "other": "adsb.lol · 地図の中心から半径250海里 · 航空機{count}機"
+  },
+  "adsb.lol · 250 nm around your aircraft · {count} aircraft": {
+    "other": "adsb.lol · あなたの機体から半径250海里 · 航空機{count}機"
+  },
+  "adsb.lol: today’s quota is used up, back at {time}": "adsb.lol: 本日の割り当てを使い切りました。再開 {time}",
+  "{used} of {limit} calls used in the last 24 hours.": "過去24時間で{limit}回中{used}回を使用。",
+  "With your adsb.lol key the app asks up to {limit} times a day.": "adsb.lol キーがあると、アプリは1日最大{limit}回問い合わせます。",
+  "Without a key 500 calls a day; a free key under {panel} gives more.": "キーなしは1日500回まで。{panel}で無料キーを追加すると増やせます。",
+  "More flight updates per day (works without a key: 500/day)": "1日あたりのフライト更新を増やす（キーなしでも可：1日500回）",
+  "adsb.lol · older data from nearby · {count} aircraft": {
+    "other": "adsb.lol · 近くの以前のデータ · 航空機{count}機"
+  },
+  "Saving today’s quota: the same place is asked again only after a pause.": "本日の割り当てを節約中：同じ場所は間隔を空けてから再度問い合わせます。",
+  "Read around a place {km} km away.": "{km} km離れた場所の周辺で取得。",
+  "adsb.lol is not answering · older data · {count} aircraft": {
+    "other": "adsb.lol 応答なし · 以前のデータ · 航空機{count}機"
+  },
+  "adsb.lol is not answering · no aircraft shown": "adsb.lol 応答なし · 航空機は表示されていません",
+  "adsb.lol refused the key – check it under {panel}": "adsb.lol がキーを拒否しました – {panel}で確認してください",
+  "Nothing new came in; aircraft older than 30 minutes are taken off the map.": "新しいデータは届いていません。30分より古い航空機は地図から消えます。",
+  "Meanwhile the app asks without a key (500 calls a day).": "その間はキーなしで問い合わせます（1日500回まで）。",
+  "The aircraft shown were read {age}.": "表示中の航空機の取得: {age}。",
+  "Nothing new from adsb.lol just now; data already read nearby is shown.": "現在 adsb.lol から新しいデータはありません。近くで取得済みのデータを表示しています。"
 }

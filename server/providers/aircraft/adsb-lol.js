@@ -3,6 +3,7 @@ import {
   readResponseTextCapped,
 } from '../common/http.js';
 import { visibleAdsbLolAircraft } from '../../../src/data/adsbLolFallback.js';
+import { createAdsbLolUpstream } from './adsbLolUpstream.js';
 
 /** The /v2/mil answer without aircraft whose owners asked not to be shown. */
 function withoutHiddenAircraft(body) {
@@ -23,58 +24,38 @@ function withoutHiddenAircraft(body) {
  *
  * Serves GET /api/military from https://api.adsb.lol/v2/mil. When upstream
  * fails — a thrown fetch OR a non-OK status such as 429 — the proxy serves its
- * cached body as STALE instead of relaying the failure, and it backs off from
- * upstream for the Retry-After period (bounded) so a rate limit is never
- * hammered mid-cooldown. A failure with nothing cached is relayed as-is.
+ * cached body as STALE instead of relaying the failure. Swedish fork: the
+ * call goes through the adsb.lol transport every adsb.lol caller shares
+ * (adsbLolUpstream.js), which keeps the backoff: a 429 locks every adsb.lol
+ * path for its Retry-After, any other failure holds this route back (60 s,
+ * doubling in a row), and /v2/mil, lowest priority, draws on the flights'
+ * part of the daily budget and stops once half of it is used. A failure with
+ * nothing cached is answered with its status.
  *
  * Why the non-OK case matters: the browser layer treats a relayed 429 as a
  * 45 s cooldown during which EVERY refresh (the 15 s poll and any tracking
  * resolve) reports "adsb.lol rate limited", which the global status chip
  * renders as LOAD FAILED while the map is still fully populated.
  *
+ * @param {{adsbLol?: ReturnType<typeof createAdsbLolUpstream>}} [options]
+ *   The shared transport; without one the proxy keeps its own.
  * @returns {import('vite').Plugin}
  */
-export function adsbLolProxy() {
+export function adsbLolProxy({ adsbLol = createAdsbLolUpstream() } = {}) {
   /** @type {string|null} Cached upstream JSON body. */
   let _cache = null;
   const inFlight = new Map();
   /** @type {number} Epoch-ms when the cache was populated. */
   let _cacheAt = 0;
-  /** @type {number} Epoch-ms until which upstream is not contacted. */
-  let _cooldownUntil = 0;
-  /** @type {number} Upstream status that started the current cooldown. */
-  let _cooldownStatus = 0;
   /** Response cache TTL (ms). */
   const CACHE_MS = 12000;
   /** Upstream deadline (ms); the fetch previously had none and could hang a poll. */
   const UPSTREAM_TIMEOUT_MS = 12000;
   /** /v2/mil measures ~67 KB; a relayed error page is bounded by the same cap. */
   const ADSBLOL_MIL_MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
-  /** Cooldown after a 429 when upstream sends no usable Retry-After (ms). */
-  const RATE_LIMIT_COOLDOWN_MS = 30000;
-  /** Cooldown after a 5xx (ms). */
-  const SERVER_ERROR_COOLDOWN_MS = 15000;
-  /** Bounds for an upstream-supplied Retry-After (ms). */
-  const COOLDOWN_MIN_MS = 5000;
-  const COOLDOWN_MAX_MS = 120000;
 
-  const clampCooldown = (ms) =>
-    Math.min(COOLDOWN_MAX_MS, Math.max(COOLDOWN_MIN_MS, ms));
-
-  /** Cooldown (ms) an upstream failure earns, honouring Retry-After when sane. */
-  function cooldownFor(upstream, now) {
-    const raw = upstream.headers?.get?.('retry-after');
-    if (raw) {
-      const seconds = Number(raw);
-      if (Number.isFinite(seconds) && seconds > 0)
-        return clampCooldown(seconds * 1000);
-      const at = Date.parse(raw);
-      if (Number.isFinite(at) && at > now) return clampCooldown(at - now);
-    }
-    return upstream.status === 429
-      ? RATE_LIMIT_COOLDOWN_MS
-      : SERVER_ERROR_COOLDOWN_MS;
-  }
+  /** Whole seconds of a wait, at least one. */
+  const seconds = (ms) => String(Math.max(1, Math.ceil(ms / 1000)));
 
   function serve(res, status, body, cacheStatus, extra = {}) {
     res.writeHead(status, {
@@ -112,20 +93,22 @@ export function adsbLolProxy() {
           serve(res, 200, _cache, 'HIT');
           return;
         }
-        if (now < _cooldownUntil) {
-          const retryAfter = String(
-            Math.ceil((_cooldownUntil - Date.now()) / 1000),
-          );
+        // Locked out, past this route's share of the day's budget, or held
+        // back after a failure: no upstream call until then. A call already
+        // on its way is joined first: it is spent already.
+        const held = inFlight.has('global') ? null : adsbLol.admit('mil', now);
+        if (held) {
+          const retryAfter = seconds(held.retryAfterMs);
           if (_cache) {
             serve(res, 200, _cache, 'STALE', {
-              'X-ADS-B-Upstream-Status': String(_cooldownStatus),
+              'X-ADS-B-Upstream-Status': String(held.status),
               'X-ADS-B-Retry-After-Seconds': retryAfter,
             });
             return;
           }
           serve(
             res,
-            _cooldownStatus || 503,
+            held.status || 503,
             JSON.stringify({ error: 'adsb.lol upstream cooling down' }),
             'NONE',
             { 'Retry-After': retryAfter },
@@ -139,59 +122,48 @@ export function adsbLolProxy() {
             cacheStatus,
             extra,
           });
-          const signal = AbortSignal.timeout(UPSTREAM_TIMEOUT_MS);
-          const upstream = await fetch('https://api.adsb.lol/v2/mil', {
-            headers: { 'User-Agent': 'gods-eye-view-adsblol-proxy/1.0' },
-            signal,
-          });
-          if (upstream.ok) {
-            const body = await readResponseTextCapped(
-              upstream,
-              ADSBLOL_MIL_MAX_RESPONSE_BYTES,
-              signal,
-            );
-            const visible = withoutHiddenAircraft(body);
-            _cache = visible;
-            _cacheAt = Date.now();
-            _cooldownUntil = 0;
-            _cooldownStatus = 0;
-            return result(200, visible, 'MISS');
-          }
-          if (upstream.status === 429 || upstream.status >= 500) {
-            const failedAt = Date.now();
-            _cooldownUntil = failedAt + cooldownFor(upstream, failedAt);
-            _cooldownStatus = upstream.status;
-            console.warn(
-              `[adsb.lol Proxy] upstream ${upstream.status}; cooling down ${Math.round((_cooldownUntil - Date.now()) / 1000)} s${_cache ? ', serving stale' : ''}`,
-            );
-            if (_cache) {
-              // Do not wait for a failing response body before serving usable data.
-              upstream.body?.cancel().catch(() => {});
-              return result(200, _cache, 'STALE', {
-                'X-ADS-B-Upstream-Status': String(upstream.status),
-                'X-ADS-B-Retry-After-Seconds': String(
-                  Math.ceil((_cooldownUntil - Date.now()) / 1000),
+          let body;
+          try {
+            body = await adsbLol.request('mil', '/v2/mil', {
+              userAgent: 'gods-eye-view-adsblol-proxy/1.0',
+              timeoutMs: UPSTREAM_TIMEOUT_MS,
+              read: (upstream, signal) =>
+                readResponseTextCapped(
+                  upstream,
+                  ADSBLOL_MIL_MAX_RESPONSE_BYTES,
+                  signal,
                 ),
+            });
+          } catch (error) {
+            // Any other failure is answered from the cache below.
+            if (error?.name !== 'AdsbLolRefusal') throw error;
+            const waiting = error.retryAfterMs > 0;
+            console.warn(
+              `[adsb.lol Proxy] ${error.message} (${error.status})${waiting ? `; cooling down ${seconds(error.retryAfterMs)} s` : ''}${_cache ? ', serving stale' : ''}`,
+            );
+            if (_cache)
+              return result(200, _cache, 'STALE', {
+                'X-ADS-B-Upstream-Status': String(error.status),
+                ...(waiting
+                  ? {
+                      'X-ADS-B-Retry-After-Seconds': seconds(
+                        error.retryAfterMs,
+                      ),
+                    }
+                  : {}),
               });
-            }
+            // The refused body was dropped unread; say what happened.
+            return result(
+              error.status || 502,
+              JSON.stringify({ error: 'adsb.lol upstream unavailable' }),
+              'MISS',
+              waiting ? { 'Retry-After': seconds(error.retryAfterMs) } : {},
+            );
           }
-          const body = await readResponseTextCapped(
-            upstream,
-            ADSBLOL_MIL_MAX_RESPONSE_BYTES,
-            signal,
-          );
-          return result(
-            upstream.status,
-            body,
-            'MISS',
-            _cooldownUntil > Date.now()
-              ? {
-                  'Retry-After': String(
-                    Math.ceil((_cooldownUntil - Date.now()) / 1000),
-                  ),
-                }
-              : {},
-          );
+          const visible = withoutHiddenAircraft(body);
+          _cache = visible;
+          _cacheAt = Date.now();
+          return result(200, visible, 'MISS');
         });
         const response = await refresh.promise;
         serve(

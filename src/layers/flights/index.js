@@ -12,6 +12,7 @@ import { createEvidence } from './evidence.js';
 import { createTesting } from './testing.js';
 import { createQueries } from './queries.js';
 import { createClockFollow } from './clockFollow.js';
+import { createControls } from './controls.js';
 import {
   createSnapshotTimeline,
   snapshotAnswer,
@@ -38,6 +39,7 @@ export function createCivilFlightLayer({
   parts.testing = createTesting(context);
   parts.queries = createQueries(context);
   parts.clockFollow = createClockFollow(context);
+  parts.controls = createControls(context);
   const applySnapshot = createFlightSnapshotRenderer({
     flightState,
     placement: services.placement ?? null,
@@ -69,6 +71,8 @@ export function createCivilFlightLayer({
     },
     followsClock: () => flightState.timeline.active(),
     timedAnswer: snapshotAnswer,
+    // Swedish fork: adsb.lol's aircraft past the age cap leave the map.
+    clearContacts: () => parts.clockFollow.clear(),
     setSourceLabel: (source) => {
       layer.source = source;
     },
@@ -92,6 +96,7 @@ export function createCivilFlightLayer({
     parts.queries.methods,
     parts.lifecycle.methods,
     parts.ingestion.methods,
+    parts.controls.methods,
   );
   Object.defineProperty(layer, 'testing', { value: parts.testing });
   return layer;

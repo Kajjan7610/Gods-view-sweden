@@ -206,6 +206,16 @@ export const KEY_SETUP_KEYS = Object.freeze([
     tier: 'free',
     clientExposed: true,
   }),
+  // Swedish fork: the flights' source. It works without a key (500 calls a
+  // day per IP); a free key gives more, and the server alone sends it.
+  Object.freeze({
+    id: 'adsblol',
+    title: 'adsb.lol', // i18n-ignore: provider product name
+    unlocks: msg('More flight updates per day (works without a key: 500/day)'),
+    getUrl: 'https://www.adsb.lol/request',
+    envVars: Object.freeze(['ADSBLOL_API_KEY']),
+    tier: 'free',
+  }),
   Object.freeze({
     id: 'opensky',
     title: 'OPENSKY', // i18n-ignore: provider product name

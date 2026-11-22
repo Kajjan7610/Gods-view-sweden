@@ -5712,5 +5712,30 @@
   "JTWC warning ↗": "JTWC 警報 ↗",
   "Active cyclone advisories and warnings": "生效的氣旋公告和警報",
   "Select a storm on the map, or choose a storm in the list to select it and move the camera. Click empty map space to clear the selection. NOAA NHC/CPHC advisories and JTWC warnings. The NHC cone describes forecast center-track uncertainty, not storm size or the full hazard area. The JTWC 34-knot wind danger area is where 34-knot winds may reach, widened by forecast track error; it is not a cone. Forecast point labels are source lead hours, not times computed from advisory issuance. Geometry follows the surface; height is not weather altitude. Consult the official advisory or the regional warning centre.": "在地圖上選擇風暴，或在列表中選擇風暴以選中它並移動鏡頭。點擊地圖空白處可取消選擇。NOAA NHC/CPHC 公告和 JTWC 警報。NHC 的預報不確定範圍表示中心預報路徑的不確定性，而不是風暴大小或整個危險區域。JTWC 的 34 節風危險區是 34 節風可能到達的範圍，並按路徑預報誤差加寬；它不是預報不確定範圍。預報點標籤是數據源的預報時效（小時），不是根據發布時間計算的時刻。幾何形狀貼合地表；高度不是氣象高度。請以官方公告或區域警報中心為準。",
-  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · 第 {number} 號警報 · 發布於 {time}"
+  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · 第 {number} 號警報 · 發布於 {time}",
+  "adsb.lol · 250 nm around the map centre · {count} aircraft": {
+    "other": "adsb.lol · 地圖中心周圍 250 海里 · {count} 架飛機"
+  },
+  "adsb.lol · 250 nm around your aircraft · {count} aircraft": {
+    "other": "adsb.lol · 你的飛機周圍 250 海里 · {count} 架飛機"
+  },
+  "adsb.lol: today’s quota is used up, back at {time}": "adsb.lol：今日配額已用完，{time} 恢復",
+  "{used} of {limit} calls used in the last 24 hours.": "過去 24 小時已使用 {used}/{limit} 次調用。",
+  "With your adsb.lol key the app asks up to {limit} times a day.": "使用你的 adsb.lol 密鑰，應用每天最多請求 {limit} 次。",
+  "Without a key 500 calls a day; a free key under {panel} gives more.": "無密鑰每天 500 次；在「{panel}」中添加免費密鑰可獲得更多。",
+  "More flight updates per day (works without a key: 500/day)": "每天更多次航班更新（無密鑰也可用：每天 500 次）",
+  "adsb.lol · older data from nearby · {count} aircraft": {
+    "other": "adsb.lol · 附近的較早數據 · {count} 架飛機"
+  },
+  "Saving today’s quota: the same place is asked again only after a pause.": "節省今日配額：同一地點要間隔一段時間才會再次請求。",
+  "Read around a place {km} km away.": "在 {km} 公里外的地點周圍讀取。",
+  "adsb.lol is not answering · older data · {count} aircraft": {
+    "other": "adsb.lol 無響應 · 較早數據 · {count} 架飛機"
+  },
+  "adsb.lol is not answering · no aircraft shown": "adsb.lol 無響應 · 未顯示飛機",
+  "adsb.lol refused the key – check it under {panel}": "adsb.lol 拒絕了密鑰——請在「{panel}」中檢查",
+  "Nothing new came in; aircraft older than 30 minutes are taken off the map.": "沒有收到新數據；超過 30 分鐘的飛機會從地圖上移除。",
+  "Meanwhile the app asks without a key (500 calls a day).": "在此期間，應用不使用密鑰請求（每天 500 次）。",
+  "The aircraft shown were read {age}.": "顯示的飛機數據讀取時間：{age}。",
+  "Nothing new from adsb.lol just now; data already read nearby is shown.": "目前沒有來自 adsb.lol 的新數據；顯示附近已讀取的數據。"
 }

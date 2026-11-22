@@ -11,6 +11,10 @@ import {
   readResponseTextCapped,
 } from '../common/http.js';
 import { requiredFiniteQueryNumber } from '../common/query.js';
+import {
+  ADSBLOL_FLIGHTS_MAX_GAP_MS,
+  createAdsbLolUpstream,
+} from './adsbLolUpstream.js';
 // ---------------------------------------------------------------------------
 // OpenSky OAuth2 token + response cache state
 // ---------------------------------------------------------------------------
@@ -181,6 +185,15 @@ const ADSBLOL_POINT_RADIUS_NM = 250;
 /** What the flights cover when adsb.lol is the source ("regional" tells tools). */
 const ADSBLOL_VIEW_COVERAGE = `${ADSBLOL_POINT_RADIUS_NM}nm regional feed around the view`;
 const ADSBLOL_POINT_MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
+// Swedish fork: while adsb.lol's quota is spent (or it fails), a request is
+// answered with the newest disc whose anchor lies within the disc's own
+// radius of it, and never with one older than this: an aircraft's position
+// half an hour old says little of where it is.
+const ADSBLOL_STALE_REACH_KM = ADSBLOL_POINT_RADIUS_NM * 1.852;
+const ADSBLOL_STALE_MAX_MS = 30 * 60_000;
+// A request this close to a disc read within the pacing gap is the same
+// place: that disc is served, paced, whichever cell it was read for.
+const ADSBLOL_SAME_PLACE_KM = 50;
 // A 200 response can still contain an old OpenSky snapshot. Past this point
 // the viewport-scoped adsb.lol source is more honest and keeps local motion
 // current instead of coasting a stale worldwide frame indefinitely.
@@ -388,7 +401,70 @@ export function adsbLolFallbackAnchor(req) {
   return { latitude, longitude };
 }
 
-async function fetchAdsbLolPointFallback(req) {
+/** Great-circle kilometres between two `{latitude, longitude}` points. */
+function distanceKm(a, b) {
+  const toRad = Math.PI / 180;
+  const dLat = (b.latitude - a.latitude) * toRad;
+  const dLon = (b.longitude - a.longitude) * toRad;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(a.latitude * toRad) *
+      Math.cos(b.latitude * toRad) *
+      Math.sin(dLon / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+/**
+ * The cached disc whose anchor lies within `withinKm` of the point and that
+ * is no older than `maxAgeMs` (younger than it when `younger`): the newest
+ * such, or the nearest; null when none is.
+ */
+function cachedAdsbLolDisc(
+  anchor,
+  now,
+  { withinKm, maxAgeMs, younger = false, nearest = false },
+) {
+  let best = null;
+  let bestKm = Infinity;
+  for (const record of _adsbLolPointCache.values()) {
+    const age = now - record.cachedAt;
+    if (younger ? age >= maxAgeMs : age > maxAgeMs) continue;
+    const km = distanceKm(anchor, record.anchor);
+    if (km > withinKm) continue;
+    if (best && (nearest ? km >= bestKm : record.cachedAt <= best.cachedAt))
+      continue;
+    best = record;
+    bestKm = km;
+  }
+  return best;
+}
+
+/** When the newest disc was read, any place's; 0 with none. */
+function newestAdsbLolDiscAt() {
+  let newest = 0;
+  for (const record of _adsbLolPointCache.values())
+    newest = Math.max(newest, record.cachedAt);
+  return newest;
+}
+
+/** The newest disc in reach of the point, for when none can be asked for. */
+function staleAdsbLolDisc(anchor, now) {
+  const newest = cachedAdsbLolDisc(anchor, now, {
+    withinKm: ADSBLOL_STALE_REACH_KM,
+    maxAgeMs: ADSBLOL_STALE_MAX_MS,
+  });
+  return newest ? { ...newest, cacheStatus: 'STALE' } : null;
+}
+
+/**
+ * The adsb.lol disc around the request's place, through the shared transport
+ * (adsbLolUpstream.js). Resolves null without a place; a disc to serve, with
+ * its `cacheStatus` (HIT from this cell's cache; PACED from the same place's,
+ * read within the pacing gap; MISS or INFLIGHT fresh; STALE from a disc in
+ * reach when none could, or should, be asked for); or `{refusal}`, why there
+ * is nothing to serve.
+ */
+async function fetchAdsbLolPointFallback(req, adsbLol) {
   const anchor = adsbLolFallbackAnchor(req);
   if (!anchor) return null;
   const roundedLat = Math.round(anchor.latitude * 4) / 4;
@@ -399,53 +475,91 @@ async function fetchAdsbLolPointFallback(req) {
   if (cached && now - cached.cachedAt < ADSBLOL_POINT_CACHE_MS) {
     return { ...cached, cacheStatus: 'HIT' };
   }
+  // A call already on its way for this cell is joined before any check of
+  // the budget: it is spent already.
+  if (!_adsbLolPointInFlight.has(cacheKey)) {
+    const held = adsbLol.admit('flights', now);
+    // Swedish fork: locked out by adsb.lol, the newest disc in reach is
+    // served as STALE, this cell's own included.
+    if (held?.reason === 'locked')
+      return staleAdsbLolDisc(anchor, now) ?? { refusal: held };
+    // The same place is asked again only after the pacing gap, so the day's
+    // quota lasts: within ADSBLOL_SAME_PLACE_KM of a disc read since, that
+    // disc is served, with its age and where it was read.
+    const gapMs = adsbLol.gapMs('flights', now);
+    const paced = cachedAdsbLolDisc(anchor, now, {
+      withinKm: ADSBLOL_SAME_PLACE_KM,
+      maxAgeMs: gapMs,
+      younger: true,
+    });
+    if (paced) return { ...paced, cacheStatus: 'PACED', gapMs };
+    if (held) return staleAdsbLolDisc(anchor, now) ?? { refusal: held };
+    // A new place (or the same one, its gap passed) is asked at once only
+    // while the budget keeps the pace's reserve (roomForNew). Past that, the
+    // nearest disc in reach read within the gap is served; and while any
+    // call went out within the gap, the nearest in reach up to 30 minutes
+    // old, so places far apart share one pace. With none, the place is
+    // asked, as a paced call.
+    if (!adsbLol.roomForNew('flights', now)) {
+      const reach = { withinKm: ADSBLOL_STALE_REACH_KM, nearest: true };
+      const nearby =
+        cachedAdsbLolDisc(anchor, now, {
+          ...reach,
+          maxAgeMs: gapMs,
+          younger: true,
+        }) ??
+        (newestAdsbLolDiscAt() > now - gapMs
+          ? cachedAdsbLolDisc(anchor, now, {
+              ...reach,
+              maxAgeMs: ADSBLOL_STALE_MAX_MS,
+            })
+          : null);
+      if (nearby) return { ...nearby, cacheStatus: 'STALE' };
+    }
+  }
 
   const request = coalesceProxyRequest(
     _adsbLolPointInFlight,
     cacheKey,
     async () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-      try {
-        const upstream = await fetch(
-          `https://api.adsb.lol/v2/lat/${roundedLat}/lon/${roundedLon}/dist/${ADSBLOL_POINT_RADIUS_NM}`,
-          {
-            headers: {
-              Accept: 'application/json',
-              'User-Agent': 'gods-eye-view-adsblol-regional-fallback/1.0',
-            },
-            signal: controller.signal,
-          },
-        );
-        if (!upstream.ok) throw new Error(`upstream HTTP ${upstream.status}`);
-        const payload = await readResponseJsonCapped(
-          upstream,
-          ADSBLOL_POINT_MAX_RESPONSE_BYTES,
-        );
-        const normalized = normalizeAdsbLolPointResponse(payload);
-        const body = JSON.stringify(normalized);
-        const record = {
-          body,
-          // Compressed once per entry; ADSBLOL_POINT_CACHE_MAX bounds the
-          // extra memory.
-          gzip: await gzipBody(body),
-          cachedAt: Date.now(),
-          count: normalized.states.length,
-          // Left out by the normalizer: owners who asked not to be shown,
-          // and military aircraft.
-          privacyHidden:
-            (Array.isArray(payload?.ac) ? payload.ac.length : 0) -
-            visibleAdsbLolAircraft(payload?.ac).length,
-        };
-        _adsbLolPointCache.delete(cacheKey);
-        _adsbLolPointCache.set(cacheKey, record);
-        while (_adsbLolPointCache.size > ADSBLOL_POINT_CACHE_MAX) {
-          _adsbLolPointCache.delete(_adsbLolPointCache.keys().next().value);
-        }
-        return record;
-      } finally {
-        clearTimeout(timeoutId);
+      const payload = await adsbLol.request(
+        'flights',
+        `/v2/lat/${roundedLat}/lon/${roundedLon}/dist/${ADSBLOL_POINT_RADIUS_NM}`,
+        {
+          userAgent: 'gods-eye-view-adsblol-regional-fallback/1.0',
+          timeoutMs: 10_000,
+          read: (upstream, signal) =>
+            readResponseJsonCapped(
+              upstream,
+              ADSBLOL_POINT_MAX_RESPONSE_BYTES,
+              signal,
+            ),
+        },
+      );
+      const normalized = normalizeAdsbLolPointResponse(payload);
+      const body = JSON.stringify(normalized);
+      const record = {
+        body,
+        // Compressed once per entry; ADSBLOL_POINT_CACHE_MAX bounds the
+        // extra memory.
+        gzip: await gzipBody(body),
+        cachedAt: Date.now(),
+        // When adsb.lol observed it, to weigh it against another frame.
+        observedAtMs: normalized.time * 1000,
+        anchor: { latitude: roundedLat, longitude: roundedLon },
+        count: normalized.states.length,
+        // Left out by the normalizer: owners who asked not to be shown,
+        // and military aircraft.
+        privacyHidden:
+          (Array.isArray(payload?.ac) ? payload.ac.length : 0) -
+          visibleAdsbLolAircraft(payload?.ac).length,
+      };
+      _adsbLolPointCache.delete(cacheKey);
+      _adsbLolPointCache.set(cacheKey, record);
+      while (_adsbLolPointCache.size > ADSBLOL_POINT_CACHE_MAX) {
+        _adsbLolPointCache.delete(_adsbLolPointCache.keys().next().value);
       }
+      return record;
     },
   );
   try {
@@ -453,22 +567,62 @@ async function fetchAdsbLolPointFallback(req) {
     return { ...record, cacheStatus: request.shared ? 'INFLIGHT' : 'MISS' };
   } catch (error) {
     if (!request.shared && error?.name !== 'AbortError') {
-      console.warn('[adsb.lol Flights Fallback]', error?.message || error);
+      console.warn(
+        '[adsb.lol Flights Fallback]',
+        `${error?.message || error}${error?.cause?.message ? `: ${error.cause.message}` : ''}`,
+      );
     }
-    return cached ? { ...cached, cacheStatus: 'STALE' } : null;
+    const failedAt = Date.now();
+    return (
+      staleAdsbLolDisc(anchor, failedAt) ?? {
+        refusal:
+          error?.name === 'AdsbLolRefusal'
+            ? error
+            : (adsbLol.admit('flights', failedAt) ?? {
+                reason: 'failed',
+                status: 502,
+                until: failedAt + 60_000,
+                retryAfterMs: 60_000,
+              }),
+      }
+    );
   }
 }
 
-async function serveAdsbLolPointFallback(
+/**
+ * What a flights answer says of adsb.lol's daily budget: calls used of the
+ * limit, whether calls go with a key, whether adsb.lol refused the key set
+ * (calls go without it meanwhile) and until when no flights call may be
+ * sent. A 200 says the last only for adsb.lol's own lock, or for a budget
+ * that frees later than the longest pacing gap (sooner, the flights refresh
+ * as paced); a refusal always says it. Never the key itself.
+ */
+function adsbLolBudgetHeaders(adsbLol, refusal = null) {
+  const { keyed, keyRefused, used, limit } = adsbLol.status();
+  const held = refusal ?? adsbLol.admit('flights');
+  const quota =
+    held?.reason === 'locked' ||
+    (held?.reason === 'budget' &&
+      (refusal !== null || held.retryAfterMs > ADSBLOL_FLIGHTS_MAX_GAP_MS));
+  return {
+    'X-ADSBLOL-Budget': `${used}/${limit}`,
+    'X-ADSBLOL-Keyed': keyed ? '1' : '0',
+    ...(keyRefused ? { 'X-ADSBLOL-Key-Refused': '1' } : {}),
+    ...(quota
+      ? { 'X-ADSBLOL-Locked-Until': new Date(held.until).toISOString() }
+      : {}),
+  };
+}
+
+/** Write one adsb.lol disc as a flights answer. */
+function writeAdsbLolPoint(
   req,
   res,
-  requestedMode,
-  reason,
-  coverage = `${ADSBLOL_POINT_RADIUS_NM}nm regional fallback`,
+  fallback,
+  { requestedMode, reason, coverage, adsbLol },
 ) {
-  const fallback = await fetchAdsbLolPointFallback(req);
-  if (!fallback) return false;
   const encoded = encodedBody(req, fallback.body, fallback.gzip);
+  const served = !['MISS', 'INFLIGHT'].includes(fallback.cacheStatus);
   res.writeHead(200, {
     ...buildOpenSkyHeaders({
       cacheStatus: fallback.cacheStatus,
@@ -480,9 +634,56 @@ async function serveAdsbLolPointFallback(
     'X-Flight-Coverage': coverage,
     'X-Flight-Count': String(fallback.count),
     'X-Flight-Privacy-Hidden': String(fallback.privacyHidden ?? 0),
+    // Where the disc was read: a STALE one can be another place's.
+    'X-Flight-Anchor': `${fallback.anchor.latitude.toFixed(2)},${fallback.anchor.longitude.toFixed(2)}`,
+    // A disc from the cache says how old it is.
+    ...(served
+      ? {
+          'X-Flight-Age-Seconds': String(
+            Math.max(0, Math.round((Date.now() - fallback.cachedAt) / 1000)),
+          ),
+        }
+      : {}),
+    // A paced disc is asked again after this gap: it is not stale before.
+    ...(fallback.cacheStatus === 'PACED' && Number.isFinite(fallback.gapMs)
+      ? { 'X-ADSBLOL-Gap-Seconds': String(Math.ceil(fallback.gapMs / 1000)) }
+      : {}),
+    ...adsbLolBudgetHeaders(adsbLol),
     ...encoded.headers,
   });
   res.end(encoded.body);
+}
+
+/**
+ * Serve the adsb.lol disc around the request's place in OpenSky mode, and
+ * resolve whether one was. With `newerThanMs`, the epoch of the OpenSky frame
+ * it would replace, a disc observed no later than that is not served: the
+ * frame is the newer word.
+ */
+async function serveAdsbLolPointFallback(
+  req,
+  res,
+  {
+    requestedMode,
+    reason,
+    coverage = `${ADSBLOL_POINT_RADIUS_NM}nm regional fallback`,
+    adsbLol,
+    newerThanMs = null,
+  },
+) {
+  const fallback = await fetchAdsbLolPointFallback(req, adsbLol);
+  if (!fallback?.body) return false;
+  if (
+    Number.isFinite(newerThanMs) &&
+    !((fallback.observedAtMs ?? fallback.cachedAt) > newerThanMs)
+  )
+    return false;
+  writeAdsbLolPoint(req, res, fallback, {
+    requestedMode,
+    reason,
+    coverage,
+    adsbLol,
+  });
   return true;
 }
 
@@ -517,9 +718,21 @@ function openSkySourceIsStale(sourceEpochMs, now = Date.now()) {
  * upstream failure the proxy serves a stale cached response if available, or
  * a bounded 250 nm adsb.lol point snapshot around the current view anchor.
  *
+ * `adsbLol` is the adsb.lol transport every adsb.lol caller shares (see
+ * adsbLolUpstream.js); without one the proxy keeps a transport of its own.
+ *
+ * @param {{adsbLol?: ReturnType<typeof createAdsbLolUpstream>}} [options]
  * @returns {import('vite').Plugin}
  */
-export function openSkyProxy() {
+export function openSkyProxy({ adsbLol = createAdsbLolUpstream() } = {}) {
+  // Swedish fork: a stale OpenSky frame gives way only to a newer disc.
+  const serveFallback = (req, res, requestedMode, reason, newerThanMs) =>
+    serveAdsbLolPointFallback(req, res, {
+      requestedMode,
+      reason,
+      adsbLol,
+      newerThanMs,
+    });
   const installMiddleware = (server) => {
     server.middlewares.use('/api/flights', async (req, res, next) => {
       try {
@@ -537,24 +750,25 @@ export function openSkyProxy() {
         }
         if (flightsFromAdsbLol()) {
           res.setHeader('X-Feed-Source', 'adsb.lol');
-          if (
-            await serveAdsbLolPointFallback(
-              req,
-              res,
-              'off',
-              'flights_source_adsblol',
-              ADSBLOL_VIEW_COVERAGE,
-            )
-          )
+          const fallback = await fetchAdsbLolPointFallback(req, adsbLol);
+          if (fallback?.body) {
+            writeAdsbLolPoint(req, res, fallback, {
+              requestedMode: 'off',
+              reason: 'flights_source_adsblol',
+              coverage: ADSBLOL_VIEW_COVERAGE,
+              adsbLol,
+            });
             return;
+          }
           // No place yet (the first poll before the camera settles): nothing
           // to read around, and no other source is asked.
-          if (adsbLolFallbackAnchor(req) === null) {
+          if (fallback === null) {
             res.writeHead(200, {
               'Content-Type': 'application/json',
               'Cache-Control': 'no-store',
               'X-Flight-Source': 'adsb.lol',
               'X-Flight-Coverage': ADSBLOL_VIEW_COVERAGE,
+              ...adsbLolBudgetHeaders(adsbLol),
             });
             res.end(
               JSON.stringify({
@@ -564,11 +778,29 @@ export function openSkyProxy() {
             );
             return;
           }
-          res.writeHead(502, {
+          // Nothing to serve. While the day's quota is spent the answer says
+          // so and until when (Retry-After), so the layer does not ask
+          // before then; a failure says when the next attempt is due.
+          const { refusal } = fallback;
+          const quota =
+            refusal.reason === 'locked' || refusal.reason === 'budget';
+          const waitMs = Math.max(0, refusal.retryAfterMs || 0);
+          res.writeHead(quota ? 503 : 502, {
             'Content-Type': 'application/json',
             'Cache-Control': 'no-store',
+            ...adsbLolBudgetHeaders(adsbLol, refusal),
+            'Retry-After': String(Math.max(1, Math.ceil(waitMs / 1000))),
           });
-          res.end(JSON.stringify({ error: 'adsb.lol unavailable' }));
+          res.end(
+            JSON.stringify(
+              quota
+                ? {
+                    error: 'adsb.lol quota',
+                    lockedUntil: new Date(refusal.until).toISOString(),
+                  }
+                : { error: 'adsb.lol unavailable' },
+            ),
+          );
           return;
         }
         res.setHeader('X-Feed-Source', 'OpenSky Network');
@@ -586,11 +818,12 @@ export function openSkyProxy() {
         ) {
           if (
             openSkySourceIsStale(_openskyCacheSourceEpochMs, now) &&
-            (await serveAdsbLolPointFallback(
+            (await serveFallback(
               req,
               res,
               requestedMode,
               'opensky_snapshot_stale_regional_fallback',
+              _openskyCacheSourceEpochMs,
             ))
           ) {
             return;
@@ -633,7 +866,7 @@ export function openSkyProxy() {
         // succeed and just burns goodwill.
         if (inCooldown) {
           if (
-            await serveAdsbLolPointFallback(
+            await serveFallback(
               req,
               res,
               requestedMode,
@@ -757,11 +990,12 @@ export function openSkyProxy() {
         if (
           upstream.ok &&
           openSkySourceIsStale(sourceEpochMs, now) &&
-          (await serveAdsbLolPointFallback(
+          (await serveFallback(
             req,
             res,
             requestedMode,
             'opensky_snapshot_stale_regional_fallback',
+            sourceEpochMs,
           ))
         ) {
           return;
@@ -799,7 +1033,7 @@ export function openSkyProxy() {
         }
 
         if (!upstream.ok && !_openskyCacheBody) {
-          const servedFallback = await serveAdsbLolPointFallback(
+          const servedFallback = await serveFallback(
             req,
             res,
             requestedMode,
@@ -884,7 +1118,7 @@ export function openSkyProxy() {
           process.env.OPENSKY_AUTH_MODE,
         );
         if (
-          await serveAdsbLolPointFallback(
+          await serveFallback(
             req,
             res,
             requestedMode,

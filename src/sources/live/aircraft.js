@@ -114,6 +114,8 @@ export function openSkySnapshot(
     coverage = 'worldwide upstream snapshot',
     now = Date.now(),
     stale = false,
+    // Swedish fork: a paced adsb.lol disc is meant to be older (standalone.js).
+    staleAfterMs = 120000,
   } = {},
 ) {
   const admitted = admitRecords(
@@ -145,11 +147,11 @@ export function openSkySnapshot(
     coverage,
     observedAtMs,
     ageMs,
-    stale: stale || (ageMs != null && ageMs > 120000),
+    stale: stale || (ageMs != null && ageMs > staleAfterMs),
     freshness:
       observedAtMs == null
         ? 'unknown'
-        : stale || ageMs > 120000
+        : stale || ageMs > staleAfterMs
           ? 'stale'
           : 'current',
   };

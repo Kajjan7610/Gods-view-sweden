@@ -11,6 +11,7 @@ import {
   readSnapshotTimeline,
   vesselSnapshot,
 } from './index.js';
+import { httpError, retryAfterMs } from './contract.js';
 
 const now = 1800000000000;
 const aircraft = [
@@ -654,4 +655,158 @@ test('a type sent alongside the state vectors becomes the record type code', () 
     openSkySnapshot({ states: [row('abc123')] }).records[0].typeCode,
     null,
   );
+});
+
+// Swedish fork: while adsb.lol's daily quota is spent the flights server
+// answers 503 with Retry-After (server/providers/aircraft/opensky.js), and
+// the layer must not ask again before then.
+test('a flights 429 or 503 that names its wait is not asked again before it', async () => {
+  const refused = async (status, headers = {}) => {
+    const source = createFlightSource({
+      now: () => now,
+      fetchImpl: async () =>
+        response({ error: 'adsb.lol quota' }, headers, status),
+    });
+    return source.getSnapshot().then(
+      () => assert.fail('a refusal'),
+      (error) => error,
+    );
+  };
+  assert.equal(
+    (await refused(503, { 'retry-after': '3600' })).retryAfterMs,
+    3_600_000,
+  );
+  assert.equal(
+    (
+      await refused(429, {
+        'retry-after': new Date(now + 2 * 3_600_000).toUTCString(),
+      })
+    ).retryAfterMs,
+    7_200_000,
+  );
+  // Never sooner than the usual backoff, and never past 25 hours.
+  assert.equal(
+    (await refused(503, { 'retry-after': '5' })).retryAfterMs,
+    20_000,
+  );
+  assert.equal(
+    (await refused(503, { 'retry-after': '999999' })).retryAfterMs,
+    25 * 3_600_000,
+  );
+  assert.equal((await refused(503)).retryAfterMs, 20_000);
+  assert.equal((await refused(429)).retryAfterMs, 45_000);
+  assert.equal(
+    (await refused(502, { 'retry-after': '3600' })).retryAfterMs,
+    20_000,
+    'only a 429 or 503 names a wait',
+  );
+  // Other feeds keep their usual backoff.
+  const vessels = httpError(
+    new Response('', { status: 503, headers: { 'retry-after': '3600' } }),
+    'Vessels',
+  );
+  assert.equal(vessels.retryAfterMs, 20_000);
+  assert.equal(
+    retryAfterMs(new Response('', { headers: { 'retry-after': 'soon' } })),
+    null,
+  );
+});
+
+test('a flights answer carries what the server says of adsb.lol’s daily quota', async () => {
+  const lockedUntil = new Date(now + 3_600_000).toISOString();
+  const answer = (headers, status = 200, payload) =>
+    createFlightSource({
+      now: () => now,
+      fetchImpl: async () =>
+        response(
+          payload ?? { time: now / 1000, states: [aircraft] },
+          headers,
+          status,
+        ),
+    });
+  const paced = await answer({
+    'x-flight-source': 'adsb.lol',
+    'x-adsblol-budget': '12/450',
+    'x-adsblol-keyed': '0',
+    'x-opensky-cache': 'paced',
+    'x-adsblol-gap-seconds': '267',
+    'x-flight-anchor': '59.25,18.00',
+  }).getSnapshot({ latitude: 59.33, longitude: 18.07 });
+  // Where the disc was read, and the point asked about (the row weighs the
+  // two, also after a failed poll).
+  assert.deepEqual(paced.quota, {
+    used: 12,
+    limit: 450,
+    keyed: false,
+    keyRefused: false,
+    lockedUntil: null,
+    cache: 'PACED',
+    gapMs: 267_000,
+    anchor: { latitude: 59.25, longitude: 18 },
+    asked: { latitude: 59.33, longitude: 18.07 },
+  });
+  const locked = await answer({
+    'x-adsblol-budget': '450/450',
+    'x-adsblol-keyed': '1',
+    'x-adsblol-key-refused': '1',
+    'x-adsblol-locked-until': lockedUntil,
+    'x-opensky-cache': 'STALE',
+    'x-flight-anchor': '57.70,11.97',
+  }).getSnapshot({ latitude: 59.33, longitude: 18.07 });
+  assert.equal(locked.quota.lockedUntil, now + 3_600_000);
+  assert.equal(locked.quota.keyed, true);
+  assert.equal(locked.quota.keyRefused, true);
+  assert.deepEqual(locked.quota.anchor, { latitude: 57.7, longitude: 11.97 });
+  const bare = (await answer({ 'x-adsblol-budget': '1/450' }).getSnapshot())
+    .quota;
+  assert.equal(bare.anchor, null, 'no anchor said');
+  assert.equal(bare.asked, null, 'no point asked about');
+  assert.equal(bare.gapMs, null);
+  // A refusal with nothing to serve says until when, in its body too.
+  const error = await answer(
+    { 'x-adsblol-budget': '450/450', 'retry-after': '3600' },
+    503,
+    { error: 'adsb.lol quota', lockedUntil },
+  )
+    .getSnapshot()
+    .then(
+      () => assert.fail('a refusal'),
+      (refusal) => refusal,
+    );
+  assert.equal(error.quota.lockedUntil, now + 3_600_000);
+  assert.equal(error.quota.used, 450);
+  // A feed that says nothing of a quota carries none.
+  const plain = await answer({}).getSnapshot();
+  assert.equal('quota' in plain, false);
+});
+
+test('a paced adsb.lol disc is stale only past its gap and a margin; any other answer past two minutes', async () => {
+  const at = (ageS, headers) =>
+    createFlightSource({
+      now: () => now,
+      fetchImpl: async () =>
+        response({ time: now / 1000 - ageS, states: [aircraft] }, headers),
+    }).getSnapshot();
+  const budget = {
+    'x-adsblol-budget': '12/450',
+    'x-flight-source': 'adsb.lol',
+  };
+  const paced = (gapS) => ({
+    ...budget,
+    'x-opensky-cache': 'PACED',
+    'x-adsblol-gap-seconds': String(gapS),
+  });
+  // Swedish fork: a disc paced every 267 s is 4 min old by design.
+  assert.equal((await at(260, paced(267))).stale, false);
+  assert.equal((await at(326, paced(267))).stale, false, 'within the margin');
+  assert.equal((await at(328, paced(267))).stale, true);
+  // A short gap never makes the usual two minutes shorter.
+  assert.equal((await at(100, paced(30))).stale, false);
+  assert.equal((await at(121, paced(30))).stale, true);
+  // Kept or fresh answers keep the usual rule.
+  for (const cache of ['STALE', 'MISS', 'HIT']) {
+    const said = { ...budget, 'x-opensky-cache': cache };
+    assert.equal((await at(119, said)).stale, false, cache);
+    assert.equal((await at(121, said)).stale, true, cache);
+  }
 });

@@ -1,17 +1,25 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { writeFile, rm } from 'node:fs/promises';
+import { readFile, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { build, createServer, preview } from 'vite';
+import { sharedAdsbLolUpstream } from '../../server/providers/aircraft/adsbLolUpstream.js';
 import { localProviderPlugins } from '../../server/providers/local.js';
 import { apiNotFoundPlugin } from '../../server/standalone/api-not-found.js';
 import { makeFixtureRoot } from './fixtureRoot.mjs';
 
 const nominatimStorageDir = await makeFixtureRoot('gev-preview-composition-');
 test.after(() => rm(nominatimStorageDir, { recursive: true, force: true }));
+// Swedish fork: the adsb.lol callers' shared daily count is written where the
+// served /api/military call is counted; keep it in the fixture, never in the
+// checkout's own .gev-cache.
+const adsbLolBudgetFile = path.join(nominatimStorageDir, 'adsblol-budget.json');
 
 test('data providers have both hooks; credential editing stays development-only', () => {
-  const plugins = localProviderPlugins({ nominatimStorageDir });
+  const plugins = localProviderPlugins({
+    nominatimStorageDir,
+    adsbLolBudgetFile,
+  });
   assert.ok(plugins.some(({ name }) => name === 'fire-perimeters'));
   assert.ok(plugins.some(({ name }) => name === 'gnss-integrity'));
   assert.ok(plugins.some(({ name }) => name === 'ghostmaps'));
@@ -96,7 +104,7 @@ test('real dev and built-preview servers serve provider JSON and terminate unkno
     const config = {
       ...base,
       plugins: [
-        ...localProviderPlugins({ nominatimStorageDir }),
+        ...localProviderPlugins({ nominatimStorageDir, adsbLolBudgetFile }),
         apiNotFoundPlugin(),
       ],
       server: { host: '127.0.0.1', port: 0, hmr: false },
@@ -185,4 +193,15 @@ test('real dev and built-preview servers serve provider JSON and terminate unkno
       await server.close();
     }
   }
+  // Swedish fork: each server's /api/military call went through the one
+  // shared adsb.lol transport and was counted in the fixture's file, in
+  // rows of [minute, flights, gnss, military] per key state.
+  await sharedAdsbLolUpstream({ statePath: adsbLolBudgetFile }).flush();
+  const saved = JSON.parse(await readFile(adsbLolBudgetFile, 'utf8'));
+  assert.equal(
+    Object.values(saved.calls)
+      .flat()
+      .reduce((sum, [, , , military]) => sum + military, 0),
+    2,
+  );
 });

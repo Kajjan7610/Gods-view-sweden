@@ -330,6 +330,7 @@ test('OpenSky does not retry a snapshot body over the cap', async (t) => {
 
 test('military aircraft route answers 502 to an oversized body without caching it', async (t) => {
   t.mock.method(console, 'error', () => {});
+  t.mock.method(console, 'warn', () => {});
   const bodies = [];
   t.mock.method(globalThis, 'fetch', async () => {
     const oversized = oversizedResponse('{"ac":[]}');
@@ -343,7 +344,11 @@ test('military aircraft route answers 502 to an oversized body without caching i
   assert.ok(bodies[0].pulled <= 9, 'reading stops at the 8 MiB cap');
   const again = await request('/api/military');
   assert.equal(again.statusCode, 502, 'nothing was cached');
-  assert.equal(bodies.length, 2);
+  // Swedish fork: an unreadable answer is a failed call, which holds the
+  // route back in the shared adsb.lol transport (60 s): nothing is
+  // downloaded again meanwhile.
+  assert.equal(bodies.length, 1);
+  assert.equal(again.headers['retry-after'], '60');
 });
 
 test('military aircraft route preserves fresh cache and stale response after upstream failure', async (t) => {
@@ -531,8 +536,11 @@ test('military fallback cancels a stalled 5xx body and starts cooldown at receip
   assert.equal(fallback.statusCode, 200);
   assert.equal(cancelled, true);
   assert.equal(fallback.headers['x-feed-age-ms'], '23000');
-  assert.equal(fallback.headers['x-ads-b-retry-after-seconds'], '20');
-  now += 19000;
+  // Swedish fork: a failed call holds the route back at least 60 s, and a
+  // server error's own Retry-After only when it asks for longer; this one
+  // asks for 20 s.
+  assert.equal(fallback.headers['x-ads-b-retry-after-seconds'], '60');
+  now += 59000;
   await request('/api/military');
   assert.equal(calls, 2);
   now += 2000;
@@ -544,8 +552,12 @@ test('military cooldown bounds untrusted Retry-After and defaults server errors'
   t.mock.method(console, 'warn', () => {});
   for (const [status, raw, seconds] of [
     [429, '1', 5],
-    [429, '99999', 120],
-    [503, 'invalid', 15],
+    // Swedish fork: a 429 locks every adsb.lol caller (the shared transport,
+    // aircraft/adsbLolUpstream.js) for its Retry-After, up to 25 h, since
+    // adsb.lol's daily window can be most of a day away …
+    [429, '99999', 25 * 3600],
+    // … and a server error holds back this route for 60 s.
+    [503, 'invalid', 60],
   ]) {
     t.mock.method(
       globalThis,
@@ -863,7 +875,9 @@ test('global aircraft snapshots coalesce cold and expired callers and clear reje
       );
     });
     for (const phase of ['cold', 'expired', 'failed', 'recovered']) {
-      now += 13000;
+      // Swedish fork: a failed adsb.lol call holds /api/military back for
+      // 60 s in the shared transport, so it recovers after that.
+      now += kind === 'military' && phase === 'recovered' ? 61000 : 13000;
       fail = phase === 'failed';
       blocked = new Promise((resolve) => {
         release = resolve;

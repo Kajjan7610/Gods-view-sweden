@@ -1,4 +1,5 @@
 import { findCamera } from '../../render/rendererOf.js';
+import { viewAnchor } from '../../render/camera/viewAnchor.js';
 
 export function createController({
   flightState,
@@ -13,9 +14,16 @@ export function createController({
     flightState.feed._activeUpdateControllers.clear();
   }
 
-  /** The feed query around the camera's ground point, or {} with none. */
+  /**
+   * The feed query, or {} with no place yet. Swedish fork: the flights are
+   * read around the look-at point, the map's centre, where the user looks;
+   * in Cockpit around the camera's ground point, the aircraft flown, whose
+   * line of sight runs to the horizon.
+   */
   function _flightQuery(viewer) {
-    const pose = viewer ? findCamera(viewer)?.pose() : null;
+    if (!viewer) return {};
+    if (!flightState._cockpitContactMode) return viewAnchor(viewer) ?? {};
+    const pose = findCamera(viewer)?.pose();
     // An eye at the earth's centre has no ground point: the pose gives NaN.
     return pose && Number.isFinite(pose.lat) && Number.isFinite(pose.lon)
       ? { latitude: pose.lat, longitude: pose.lon }

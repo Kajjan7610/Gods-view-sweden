@@ -5940,5 +5940,38 @@
   "JTWC warning ↗": "Aviso do JTWC ↗",
   "Active cyclone advisories and warnings": "Boletins e avisos de ciclones ativos",
   "Select a storm on the map, or choose a storm in the list to select it and move the camera. Click empty map space to clear the selection. NOAA NHC/CPHC advisories and JTWC warnings. The NHC cone describes forecast center-track uncertainty, not storm size or the full hazard area. The JTWC 34-knot wind danger area is where 34-knot winds may reach, widened by forecast track error; it is not a cone. Forecast point labels are source lead hours, not times computed from advisory issuance. Geometry follows the surface; height is not weather altitude. Consult the official advisory or the regional warning centre.": "Selecione uma tempestade no mapa ou escolha uma na lista para selecioná-la e mover a câmera. Clique em uma área vazia do mapa para limpar a seleção. Boletins da NOAA NHC/CPHC e avisos do JTWC. O cone do NHC descreve a incerteza da trajetória prevista do centro, não o tamanho da tempestade nem toda a área de perigo. A área de perigo de 34 nós do JTWC é onde ventos de 34 nós podem chegar, ampliada pelo erro da previsão de trajetória; não é um cone. Os rótulos dos pontos de previsão são horas de antecedência da fonte, não horários calculados a partir da emissão. A geometria acompanha a superfície; a altura não é altitude meteorológica. Consulte o boletim oficial ou o centro de alertas regional.",
-  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · Aviso {number} · emitido {time}"
+  "{name} · {classification} · Warning {number} · issued {time}": "{name} · {classification} · Aviso {number} · emitido {time}",
+  "adsb.lol · 250 nm around the map centre · {count} aircraft": {
+    "one": "adsb.lol · 250 NM em torno do centro · {count} aeronave",
+    "many": "adsb.lol · 250 NM em torno do centro · {count} de aeronaves",
+    "other": "adsb.lol · 250 NM em torno do centro · {count} aeronaves"
+  },
+  "adsb.lol · 250 nm around your aircraft · {count} aircraft": {
+    "one": "adsb.lol · 250 NM em torno de você · {count} aeronave",
+    "many": "adsb.lol · 250 NM em torno de você · {count} de aeronaves",
+    "other": "adsb.lol · 250 NM em torno de você · {count} aeronaves"
+  },
+  "adsb.lol: today’s quota is used up, back at {time}": "adsb.lol: cota de hoje esgotada, retorno: {time}",
+  "{used} of {limit} calls used in the last 24 hours.": "{used} de {limit} consultas usadas nas últimas 24 horas.",
+  "With your adsb.lol key the app asks up to {limit} times a day.": "Com a sua chave adsb.lol, o app consulta até {limit} vezes por dia.",
+  "Without a key 500 calls a day; a free key under {panel} gives more.": "Sem chave, 500 consultas por dia; uma chave gratuita em {panel} dá mais.",
+  "More flight updates per day (works without a key: 500/day)": "Mais atualizações de voos por dia (funciona sem chave: 500/dia)",
+  "adsb.lol · older data from nearby · {count} aircraft": {
+    "one": "adsb.lol · dados anteriores da região · {count} aeronave",
+    "many": "adsb.lol · dados anteriores da região · {count} de aeronaves",
+    "other": "adsb.lol · dados anteriores da região · {count} aeronaves"
+  },
+  "Saving today’s quota: the same place is asked again only after a pause.": "Poupa a cota de hoje: o mesmo lugar só é consultado de novo após uma pausa.",
+  "Read around a place {km} km away.": "Lido em torno de um lugar a {km} km.",
+  "adsb.lol is not answering · older data · {count} aircraft": {
+    "one": "adsb.lol não responde · dados anteriores · {count} aeronave",
+    "many": "adsb.lol não responde · dados anteriores · {count} de aeronaves",
+    "other": "adsb.lol não responde · dados anteriores · {count} aeronaves"
+  },
+  "adsb.lol is not answering · no aircraft shown": "adsb.lol não responde · nenhuma aeronave exibida",
+  "adsb.lol refused the key – check it under {panel}": "O adsb.lol recusou a chave – verifique-a em {panel}",
+  "Nothing new came in; aircraft older than 30 minutes are taken off the map.": "Nada de novo chegou; aeronaves com mais de 30 minutos são retiradas do mapa.",
+  "Meanwhile the app asks without a key (500 calls a day).": "Enquanto isso, o app consulta sem chave (500 consultas por dia).",
+  "The aircraft shown were read {age}.": "As aeronaves exibidas foram lidas {age}.",
+  "Nothing new from adsb.lol just now; data already read nearby is shown.": "Nada de novo do adsb.lol por agora; são exibidos dados da região já lidos."
 }

@@ -35,6 +35,8 @@ export const CREDENTIALS = Object.freeze([
   },
   { name: 'LL2_API_TOKEN', label: 'Launch Library 2', keychain: [] },
   { name: 'MAPILLARY_CLIENT_TOKEN', label: 'Mapillary street level', keychain: [['mapillary', 'client-token'], ['mapillary', 'token']] },
+  // Swedish fork: optional; flights work without it at 500 calls a day.
+  { name: 'ADSBLOL_API_KEY', label: 'adsb.lol flights (more updates a day)', keychain: [] },
 ]);
 
 export function isConfiguredValue(value) {

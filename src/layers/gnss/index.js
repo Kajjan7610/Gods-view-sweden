@@ -1,6 +1,4 @@
-import { rayEllipsoid, toLonLatH } from '../../geo/ellipsoid.js';
-import { rectangleCenter } from '../../geo/rectangle.js';
-import { toDegrees, toRadians } from '../../geo/vector.js';
+import { viewAnchor as lookAtAnchor } from '../../render/camera/viewAnchor.js';
 import { drawOf, findCamera } from '../../render/rendererOf.js';
 import { hexColor } from '../../render/color.js';
 import { formatNumber, msg, t } from '../../i18n/index.js';
@@ -32,45 +30,11 @@ const LEVEL_LABELS = Object.freeze({
   high: msg('Low-accuracy score > 10%'),
 });
 
-/** The middle of a degree rectangle, across the antimeridian too. */
-function degreesCentre(rect) {
-  const { lon, lat } = rectangleCenter({
-    west: toRadians(rect.west),
-    south: toRadians(rect.south),
-    east: toRadians(rect.east),
-    north: toRadians(rect.north),
-  });
-  return { lon: toDegrees(lon), lat: toDegrees(lat) };
-}
-
 /**
  * Degrees at the centre of the current view, or null before the camera
- * settles: where the eye's line of sight (the ray through the screen
- * centre) meets the ellipsoid, else the middle of the view rectangle, else
- * the point under the eye.
+ * settles (see viewAnchor, which the flights feed shares).
  */
-export function defaultGnssViewAnchor(viewer) {
-  const camera = findCamera(viewer);
-  if (!camera) return null;
-  const pose = camera.pose();
-  // At globe scale the visible rectangle can be the whole world, whose
-  // midpoint is unrelated to the place under the screen centre.
-  const centre = rayEllipsoid({
-    origin: pose.position,
-    direction: pose.direction,
-  });
-  const rectangle = !centre && camera.viewRectangle();
-  const at = centre
-    ? toLonLatH(centre)
-    : rectangle
-      ? degreesCentre(rectangle)
-      : pose;
-  const latitude = at?.lat;
-  const longitude = at?.lon;
-  return Number.isFinite(latitude) && Number.isFinite(longitude)
-    ? { latitude, longitude }
-    : null;
-}
+export const defaultGnssViewAnchor = lookAtAnchor;
 
 /**
  * Own one GNSS navigation-integrity display: rolling integrity observations

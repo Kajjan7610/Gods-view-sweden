@@ -75,8 +75,11 @@ export async function fetchOpenVesselPhoto(fetchImpl, mmsi, signal) {
   return parseOpenVesselPhoto(payload, id);
 }
 
-function openSkyError(response) {
-  const error = httpError(response, 'Flights');
+function openSkyError(response, nowMs) {
+  const error = httpError(response, 'Flights', {
+    honourRetryAfter: true,
+    now: nowMs,
+  });
   const mode = String(
     header(response, 'x-opensky-auth-mode-used') ||
       header(response, 'x-opensky-auth') ||
@@ -117,6 +120,58 @@ function feedSource(response, fallback) {
     : fallback;
 }
 
+/**
+ * What the server says of adsb.lol's daily quota with a flights answer
+ * (Swedish fork, server/providers/aircraft/adsbLolUpstream.js), or null
+ * without word of it: calls `used` of the `limit`, whether calls go with a
+ * key, whether adsb.lol refused the key set (`keyRefused`), until when no
+ * call may be sent (`lockedUntil`, epoch ms), how the disc was served
+ * (`cache`: MISS, HIT, PACED, STALE …), a paced disc's gap (`gapMs`), where
+ * it was read (`anchor`, from X-Flight-Anchor) and the point asked about
+ * (`asked`).
+ */
+function adsbLolQuota(response, payload, query) {
+  const budget = /^(\d+)\/(\d+)$/.exec(
+    String(header(response, 'x-adsblol-budget') ?? '').trim(),
+  );
+  const locked = Date.parse(
+    header(response, 'x-adsblol-locked-until') ||
+      (typeof payload?.lockedUntil === 'string' ? payload.lockedUntil : ''),
+  );
+  if (!budget && !Number.isFinite(locked)) return null;
+  const anchor = /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/.exec(
+    String(header(response, 'x-flight-anchor') ?? '').trim(),
+  );
+  const gap = /^\d+$/.exec(
+    String(header(response, 'x-adsblol-gap-seconds') ?? '').trim(),
+  );
+  const asked =
+    Number.isFinite(query?.latitude) && Number.isFinite(query?.longitude);
+  return {
+    used: budget ? Number(budget[1]) : null,
+    limit: budget ? Number(budget[2]) : null,
+    keyed: header(response, 'x-adsblol-keyed') === '1',
+    keyRefused: header(response, 'x-adsblol-key-refused') === '1',
+    lockedUntil: Number.isFinite(locked) ? locked : null,
+    cache:
+      String(header(response, 'x-opensky-cache') ?? '')
+        .trim()
+        .toUpperCase() || null,
+    gapMs: gap ? Number(gap[0]) * 1000 : null,
+    anchor: anchor
+      ? { latitude: Number(anchor[1]), longitude: Number(anchor[2]) }
+      : null,
+    asked: asked
+      ? { latitude: query.latitude, longitude: query.longitude }
+      : null,
+  };
+}
+
+/** A paced adsb.lol disc is no older than its gap; this margin covers transit. */
+const PACED_STALE_MARGIN_MS = 60_000;
+/** The live contract's own word on staleness, for every other answer. */
+const STALE_AFTER_MS = 120_000;
+
 /** The flights feed (/api/flights); no request starts during construction. */
 export function createFlightSource({
   fetchImpl = defaultFetch,
@@ -137,7 +192,12 @@ export function createFlightSource({
         { signal },
         'Flights',
       );
-      if (!response.ok) throw openSkyError(response);
+      const quota = adsbLolQuota(response, payload, query);
+      if (!response.ok) {
+        const error = openSkyError(response, now());
+        if (quota) error.quota = quota;
+        throw error;
+      }
       return {
         ...openSkySnapshot(payload, {
           // A fallback provider names itself in X-Flight-Source.
@@ -148,8 +208,14 @@ export function createFlightSource({
             header(response, 'x-flight-coverage') ||
             'worldwide upstream snapshot',
           now: now(),
+          // A paced adsb.lol disc is as old as the quota means it to be.
+          staleAfterMs:
+            quota?.cache === 'PACED' && quota.gapMs !== null
+              ? Math.max(STALE_AFTER_MS, quota.gapMs + PACED_STALE_MARGIN_MS)
+              : STALE_AFTER_MS,
         }),
         status: response.status,
+        ...(quota ? { quota } : {}),
       };
     },
     async getTrack(reference, { signal } = {}) {

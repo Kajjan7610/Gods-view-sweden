@@ -30,6 +30,7 @@ The golden rule: **secret-bearing API keys stay on the server side.** The dev/pr
 | ChatGPT sign-in through Codex (optional, experimental) | Codex's own `auth.json` (`CODEX_HOME`, default `~/.codex`); GEV reads it server-side and never writes or refreshes it | Only after **USE CHATGPT OAUTH** is selected in Provider Settings: the server mints the same ephemeral Realtime token with the ChatGPT access token, for loopback clients only |
 | `AISSTREAM_API_KEY` | Server only | Server holds the AISStream websocket; browser polls the same-origin `/api/vessels` cache |
 | OpenSky OAuth (`OPENSKY_CLIENT_ID/SECRET`) | Server only | Server mints + refreshes the token behind `/api/flights` |
+| `ADSBLOL_API_KEY` (optional, Swedish fork) | Server only | Server sends it as `x-api-key` to adsb.lol behind `/api/flights`, `/api/gnss-integrity` and `/api/military`; responses say only whether a key is set (`X-ADSBLOL-Keyed`), and the saved daily count (`.gev-cache/adsblol-budget.json`) never holds it |
 | `GOOGLE_MAPS_SERVER_API_KEY` (optional, #33) | Server only | Server calls Places (`/api/google/nearby-places`, `/api/google/text-search`), Geocoding (`/api/google/geocode`, `/api/google/reverse-geocode`) and the Street View fallback with this key; falls back to `GOOGLE_MAPS_API_KEY` when unset |
 
 ### Three deliberately client-side keys — restrict them
