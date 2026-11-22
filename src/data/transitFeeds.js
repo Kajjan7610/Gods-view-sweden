@@ -889,7 +889,7 @@ function transitFeed(fields) {
  *   defaultMode: string, routeMode?: (routeId: string|null) => string,
  *   routeCorrections?: Readonly<Record<string, string>>,
  *   speedUnit?: 'km/h', refreshMs?: number, sourceUrl?: string,
- *   creditDated?: boolean,
+ *   creditDated?: boolean, licensed?: false,
  * }>>}
  * `speedUnit` marks a feed that publishes km/h where the spec requires m/s;
  * the proxy converts it before the snapshot leaves the server. `refreshMs`
@@ -899,6 +899,9 @@ function transitFeed(fields) {
  * `routeCorrections` names the routes whose `route_type` the operator's own
  * routes.txt gets wrong, `route_id` to the mode they really are; a correction
  * outranks the route type, which would otherwise outrank the route hint.
+ * Swedish fork: `licensed: false` marks a feed whose operator states no
+ * licence for it although its `license` label does not say so; like a feed
+ * whose label starts "No licence", it stays registered and is not polled.
  */
 export const TRANSIT_FEED_REGISTRY = Object.freeze([
   Object.freeze({
@@ -953,6 +956,9 @@ export const TRANSIT_FEED_REGISTRY = Object.freeze([
     url: 'https://svc.metrotransit.org/mtgtfs/vehiclepositions.pb',
     license: 'Public Metro Transit vehicle position data',
     licenseUrl: 'https://svc.metrotransit.org/',
+    // Swedish fork: the developer page that publishes the realtime feed
+    // states no licence for it (read 2026-11-21), so it is not polled.
+    licensed: false,
     attribution: 'Metro Transit — Metropolitan Council',
     defaultEnabled: true,
     terms: Object.freeze({
@@ -1694,6 +1700,9 @@ export const TRANSIT_FEED_REGISTRY = Object.freeze([
     license: 'ACTV open-data catalogue',
     licenseUrl:
       'https://actv.avmspa.it/it/content/catalogo-dei-dati-metadati-e-banche-dati-actv',
+    // Swedish fork: the catalogue lists the GTFS-RT feed with no licence
+    // (read 2026-11-21), so it is not polled.
+    licensed: false,
     attribution: 'ACTV S.p.A.',
     terms: {
       note: 'ACTV lists this feed in its own open-data catalogue; that page would not render for a script, so its licence is not quoted. Same basis as Metro Transit and OVapi. Route ids append a two-letter network code (`_UM`, `_ES`, `_UN`).',
@@ -1712,6 +1721,8 @@ export const TRANSIT_FEED_REGISTRY = Object.freeze([
     license: 'ACTV open-data catalogue',
     licenseUrl:
       'https://actv.avmspa.it/it/content/catalogo-dei-dati-metadati-e-banche-dati-actv',
+    // Swedish fork: listed with no licence, as the bus feed; not polled.
+    licensed: false,
     attribution: 'ACTV S.p.A.',
     terms: { note: 'Same catalogue and basis as the ACTV bus feed.' },
     defaultMode: 'ferry',
@@ -1815,6 +1826,9 @@ export const TRANSIT_FEED_REGISTRY = Object.freeze([
     url: 'https://www.mpkrzeszow.pl/gtfs/rt/gtfsrt.pb',
     license: 'MPK Rzeszów open data',
     licenseUrl: 'https://www.mpkrzeszow.pl/otwartedane/',
+    // Swedish fork: the page names no licence and now redirects to
+    // kmrzeszow.live (read 2026-11-21), so the feed is not polled.
+    licensed: false,
     attribution: 'MPK Rzeszów',
     terms: {
       note: 'Listed on the operator’s open-data page, which names no licence. No bearing; heading comes from movement.',
@@ -1990,10 +2004,14 @@ export const TRANSIT_ENABLED_FEEDS = Object.freeze(
 
 /**
  * Swedish fork: a feed whose operator states no licence for it is not
- * polled, however it is credited.
+ * polled, however it is credited: its label says so ("No licence …"), or,
+ * where the label names a page or a catalogue, it is `licensed: false`.
  */
 function unlicensedFeed(feed) {
-  return /^No (separate )?licen[cs]e/i.test(feed.license ?? '');
+  return (
+    feed.licensed === false ||
+    /^No (separate )?licen[cs]e/i.test(feed.license ?? '')
+  );
 }
 
 const FEED_BY_ID = new Map(

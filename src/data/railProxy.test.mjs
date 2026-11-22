@@ -22,6 +22,10 @@ import {
   railFeedPositions,
 } from './railFeeds.js';
 
+// Swedish fork: Irish Rail publishes no licence for its positions, so it is
+// registered but never pollable (getRailFeed refuses it); the tests of its
+// XML read the registered feed.
+
 /** A minimal TripUpdates FeedMessage: `[tripId, routeId, delay]` rows. */
 function encodeTripUpdates(rows, { incrementality = null } = {}) {
   const writer = new PbfWriter();
@@ -240,7 +244,7 @@ test('upstream headers identify the rail proxy and let a feed override Accept', 
   const adelaide = railUpstreamHeaders(getRegisteredRailFeed('adelaide-metro'));
   assert.equal(adelaide.Accept, 'application/x-google-protobuf');
   assert.equal(
-    railUpstreamHeaders(getRailFeed('irish-rail')).Accept,
+    railUpstreamHeaders(getRegisteredRailFeed('irish-rail')).Accept,
     'text/xml, application/xml;q=0.9',
   );
 });
@@ -267,7 +271,7 @@ test('GTFS trains say their positions are GPS', () => {
 test('Irish Rail XML becomes classified, event-positioned trains', () => {
   const now = 1_794_000_000_000;
   const snapshot = buildRailSnapshot(
-    getRailFeed('irish-rail'),
+    getRegisteredRailFeed('irish-rail'),
     new TextEncoder().encode(IRISH_XML),
     now,
   );
@@ -286,7 +290,7 @@ test('Irish Rail XML becomes classified, event-positioned trains', () => {
   assert.throws(
     () =>
       buildRailSnapshot(
-        getRailFeed('irish-rail'),
+        getRegisteredRailFeed('irish-rail'),
         new TextEncoder().encode('<html>Service Unavailable</html>'),
       ),
     (error) =>
@@ -349,12 +353,21 @@ test('trip updates keep rail trips only, with category, and refuse differential 
 test('a train named by its number takes its run, never a timetable position', () => {
   const now = 1_794_000_000_000;
   const bytes = new TextEncoder().encode(IRISH_XML);
-  const plain = buildRailSnapshot(getRailFeed('irish-rail'), bytes, now);
-  const named = buildRailSnapshot(getRailFeed('irish-rail'), bytes, now, {
-    tripFor: (code) => (code === 'A118' ? 'pack-trip' : null),
-    routeFor: (tripId) =>
-      tripId === 'pack-trip' ? 'A~X~DUB-EUROPORT-I' : null,
-  });
+  const plain = buildRailSnapshot(
+    getRegisteredRailFeed('irish-rail'),
+    bytes,
+    now,
+  );
+  const named = buildRailSnapshot(
+    getRegisteredRailFeed('irish-rail'),
+    bytes,
+    now,
+    {
+      tripFor: (code) => (code === 'A118' ? 'pack-trip' : null),
+      routeFor: (tripId) =>
+        tripId === 'pack-trip' ? 'A~X~DUB-EUROPORT-I' : null,
+    },
+  );
 
   const at = (snapshot) =>
     Object.fromEntries(
@@ -401,7 +414,13 @@ test('trip update answers are capped in trips', () => {
 
 test('/updates resolves only for feeds that publish trip updates', () => {
   assert.equal(resolveRailRoute('/updates/mbta-rail')?.route, 'updates');
-  assert.equal(resolveRailRoute('/updates/marc')?.feed?.id, 'marc');
+  // Swedish fork: MARC publishes no licence, so RTD is the second feed with
+  // trip updates, and MARC's resolve to nothing.
+  assert.equal(
+    resolveRailRoute('/updates/rtd-denver-rail')?.feed?.id,
+    'rtd-denver-rail',
+  );
+  assert.equal(resolveRailRoute('/updates/marc'), null, 'no licence');
   assert.equal(resolveRailRoute('/updates/irish-rail'), null, 'no updates');
   assert.equal(resolveRailRoute('/updates/capmetro-rail'), null);
   assert.equal(resolveRailRoute('/updates/vre'), null, 'not registered');
@@ -411,10 +430,13 @@ test('/updates resolves only for feeds that publish trip updates', () => {
 test('feed windows: own interval when set, a floor, and per-route defaults', () => {
   assert.equal(railFeedTtlMs(getRailFeed('mbta-rail')), 15_000);
   assert.equal(railFeedTtlMs(getRailFeed('mbta-rail'), 'updates'), 30_000);
-  assert.equal(railFeedTtlMs(getRailFeed('irish-rail')), 30_000);
+  assert.equal(railFeedTtlMs(getRegisteredRailFeed('irish-rail')), 30_000);
   assert.equal(railFeedTtlMs(getRailFeed('adelaide-metro'), 'updates'), 60_000);
   assert.equal(railFeedTtlMs({ pollIntervalMs: 10 }), 5_000);
-  assert.equal(railMaxBodyBytes(getRailFeed('irish-rail')), 1024 * 1024);
+  assert.equal(
+    railMaxBodyBytes(getRegisteredRailFeed('irish-rail')),
+    1024 * 1024,
+  );
   assert.equal(railMaxBodyBytes(getRailFeed('mbta-rail')), 8 * 1024 * 1024);
   assert.equal(railCacheStateFor(null, 0), 'none');
   assert.equal(railCacheStateFor({ at: 0 }, 29_000, 30_000), 'fresh');
@@ -438,10 +460,13 @@ test('response headers follow the feed window', () => {
 
 test('/schedule resolves for every pollable feed', () => {
   assert.equal(resolveRailRoute('/schedule/ktmb')?.route, 'schedule');
+  // Swedish fork: Irish Rail is not pollable, so Renfe long distance is the
+  // second pack-routed feed, and Irish Rail's schedule resolves to nothing.
   assert.equal(
-    resolveRailRoute('/schedule/irish-rail')?.feed?.id,
-    'irish-rail',
+    resolveRailRoute('/schedule/renfe-larga-distancia')?.feed?.id,
+    'renfe-larga-distancia',
   );
+  assert.equal(resolveRailRoute('/schedule/irish-rail'), null, 'no licence');
   assert.equal(resolveRailRoute('/schedule/mbta-rail')?.route, 'schedule');
   assert.equal(resolveRailRoute('/schedule/vre'), null, 'not registered');
   assert.equal(resolveRailRoute('/schedule/ktmb/x'), null);

@@ -11,7 +11,7 @@ import transitLayer, {
   isStaleVehicleFix,
   transitVehicleKey,
 } from './transit.js';
-import { TRANSIT_MODES, getTransitFeed } from './transitFeeds.js';
+import { TRANSIT_MODES, getRegisteredTransitFeed } from './transitFeeds.js';
 import { LAYER_STATE_REGISTRY } from './layerState.js';
 import { SPRITE_LAYER_ORDER } from './spriteOrder.js';
 
@@ -119,7 +119,9 @@ test('fixes older than ten minutes are stale; feeds without timestamps are trust
 });
 
 test('selection copy reads like a transit card and never leaks nulls', () => {
-  const feed = getTransitFeed('metrotransit-msp');
+  // Swedish fork: Metro Transit states no licence, so it is registered, not
+  // polled; the card copy reads only its name and region.
+  const feed = getRegisteredTransitFeed('metrotransit-msp');
   const now = 1_788_936_960_000;
   const full = buildTransitSelectionCopy(
     feed,

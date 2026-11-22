@@ -340,6 +340,11 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 - **AISStream (fartyg, originalets lager):** inga villkor eller licens
   publicerade på aisstream.io (sökt 2026-11-11); tjänsten beskriver sig
   som gratis. Hör till gruppen utan publicerad licens.
+- **Kollektivtrafik och tåg (originalets lager):** ett flöde vars operatör
+  inte anger någon licens hämtas inte; i dag gäller det 17 trafikflöden och
+  5 tågflöden (se loggen 2026-11-22). Under granskning, och påslagna tills
+  vidare: SEPTA:s tåg och spårvagnar, TTC i Toronto, PID i Prag och
+  Edmonton Transit Service.
 - **NASA FIRMS (bränder, originalets lager):** öppna data. NASA uppmuntrar
   fri användning och publicering; källan anges som "NASA FIRMS"
   (earthdata.nasa.gov/data/tools/firms/faq, läst 2026-11-11).
@@ -434,6 +439,33 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-22 (trafik- och tågflöden utan angiven licens)
+- Fyra trafikflöden och ett tågflöde hämtas inte längre, eftersom deras
+  operatörer inte anger någon licens för dem. En granskning 2026-11-21
+  läste varje operatörs egen sida: Metro Transit i Minneapolis–Saint Paul
+  (sidan som publicerar realtidsflödet anger ingen licens), ACTV:s bussar
+  och vattenbussar i Venedig (katalogen listar GTFS-RT-flödet utan
+  licens), MPK Rzeszów (sidan anger ingen licens och leder nu vidare till
+  kmrzeszow.live) och tåget MARC mellan Baltimore och Washington
+  (publicerat med en ansvarsfriskrivning men utan licens).
+- Regeln fanns redan, men filtret läste bara etiketter som börjar med "No
+  licence", och de här fem har etiketter som namnger en sida, en katalog
+  eller en publikation. Nu är posterna märkta `licensed: false`, som samma
+  filter läser. Originalets etiketter och uppgifter står kvar, och
+  flödena finns kvar i registret och i DATA_SOURCES.md.
+- MARC hämtades av appen fram till nu. De fyra tågflöden som redan var
+  avstängda (Tri-Rail, METRO light rail, Charlotte LYNX och Irish Rail)
+  låg utanför appens lista, men frågade någon servern direkt (till exempel
+  `/api/rail/trains/tri-rail`) hämtade den ändå flödet; appen själv frågade
+  aldrig efter dem. Nu svarar servern 404 för alla fem på alla vägar (tåg,
+  förseningar, linjer och tidtabell) och kontaktar dem aldrig.
+  Kollektivtrafikens flöden var redan stängda på samma sätt.
+- Den svenska versionen hämtar nu 53 av 70 trafikflöden (de svenska när
+  nycklarna är satta) och 26 av 31 tågflöden, varav 23 fungerar direkt.
+  README och DATA_SOURCES.md säger samma sak.
+- Under granskning, och påslagna tills vidare: SEPTA:s tåg och
+  spårvagnar, TTC i Toronto, PID i Prag och Edmonton Transit Service.
 
 ### 2026-11-22 (CelesTrak enligt deras användarregler)
 - CelesTraks användarregler (celestrak.org/usage-policy.php, senast

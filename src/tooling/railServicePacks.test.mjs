@@ -10,6 +10,11 @@ import { Writable } from 'node:stream';
 import { PbfWriter } from 'pbf';
 import { createRailService } from '../sources/railService.js';
 import { railProxy } from '../../server/providers/rail.js';
+// Swedish fork: for the Irish Rail run test, read without the service.
+import { getRegisteredRailFeed } from '../data/railFeeds.js';
+import { buildRailSnapshot } from '../data/railProxy.js';
+import { liveDelaySec } from '../data/railSchedule.js';
+import { createRunIndex } from '../data/railScheduleIndex.js';
 
 /** 2027-01-15T08:00:00Z. */
 const NOW = 1_800_000_000_000;
@@ -206,30 +211,71 @@ const IRISH_PACK = JSON.stringify({
   },
 });
 
-test('a late Irish Rail train keeps its run past its timetabled end', async (t) => {
+// Swedish fork: the service refuses Irish Rail, whose positions publish no
+// licence, so the test after this one reads the same pack and report
+// through the parts the service joins.
+test(
+  'a late Irish Rail train keeps its run past its timetabled end',
+  { skip: 'Swedish fork: feeds without a stated licence are not polled' },
+  async (t) => {
+    // Now is 15 minutes after the run's timetabled end, past the 10 minutes
+    // a run is looked for around its times.
+    const tripOf = async (minutesLate) => {
+      const service = createRailService({
+        now: () => NOW,
+        fetchImpl: async () =>
+          new Response(irishXml(minutesLate), { status: 200 }),
+        readSchedulePack: async () => IRISH_PACK,
+      });
+      try {
+        const body = await (
+          await service.handle(request('/api/rail/trains/irish-rail'))
+        ).json();
+        return body.trains[0];
+      } finally {
+        service.close();
+      }
+    };
+    const late = await tripOf(16);
+    assert.equal(late.tripId, '6024_8435', '16 minutes late: still on its run');
+    assert.equal(late.trainNumber, 'A610');
+    assert.equal(late.delaySec, 960);
+    const onTime = await tripOf(0);
+    assert.equal(onTime.tripId, 'A610', 'on time: that run is over');
+    assert.equal(onTime.trainNumber, undefined);
+  },
+);
+
+test('a late train named by its number keeps its run past its timetabled end', () => {
+  // Swedish fork: what the service does for a feed whose positions name
+  // trains by number (railService.js: the pack's routes and runs, and the
+  // report's delay), read with the registered Irish Rail feed.
+  const irish = getRegisteredRailFeed('irish-rail');
+  const pack = JSON.parse(IRISH_PACK);
+  const routes = new Map(
+    Object.entries(pack.trips).map(([tripId, trip]) => [tripId, trip.route]),
+  );
+  const runs = createRunIndex(pack);
+  const trainOf = (minutesLate) =>
+    buildRailSnapshot(
+      irish,
+      new TextEncoder().encode(irishXml(minutesLate)),
+      NOW,
+      {
+        routeFor: (tripId) => routes.get(tripId) ?? null,
+        tripFor: (number, record) =>
+          runs.activeTrip(number, NOW, {
+            delayMs: (liveDelaySec(record) ?? 0) * 1000,
+          })?.tripId ?? null,
+      },
+    ).trains[0];
   // Now is 15 minutes after the run's timetabled end, past the 10 minutes
   // a run is looked for around its times.
-  const tripOf = async (minutesLate) => {
-    const service = createRailService({
-      now: () => NOW,
-      fetchImpl: async () =>
-        new Response(irishXml(minutesLate), { status: 200 }),
-      readSchedulePack: async () => IRISH_PACK,
-    });
-    try {
-      const body = await (
-        await service.handle(request('/api/rail/trains/irish-rail'))
-      ).json();
-      return body.trains[0];
-    } finally {
-      service.close();
-    }
-  };
-  const late = await tripOf(16);
+  const late = trainOf(16);
   assert.equal(late.tripId, '6024_8435', '16 minutes late: still on its run');
   assert.equal(late.trainNumber, 'A610');
   assert.equal(late.delaySec, 960);
-  const onTime = await tripOf(0);
+  const onTime = trainOf(0);
   assert.equal(onTime.tripId, 'A610', 'on time: that run is over');
   assert.equal(onTime.trainNumber, undefined);
 });

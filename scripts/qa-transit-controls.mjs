@@ -19,15 +19,8 @@ const LIVE_CITIES = [
     heading: 340,
     zone: 'America/Chicago',
   },
-  {
-    id: 'minneapolis',
-    feedId: 'metrotransit-msp',
-    label: 'Minneapolis (Metro Transit)',
-    lat: 44.9778,
-    lon: -93.265,
-    heading: 0,
-    zone: 'America/Chicago',
-  },
+  // Swedish fork: no Minneapolis; Metro Transit states no licence, so its
+  // feed is not polled.
   {
     id: 'helsinki',
     feedId: 'hsl-helsinki',

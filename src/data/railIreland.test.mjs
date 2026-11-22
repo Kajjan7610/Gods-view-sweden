@@ -19,7 +19,9 @@ const irish = getRegisteredRailFeed('irish-rail');
 test('Irish Rail keeps its XML positions and gains a timetable', () => {
   assert.equal(irish.format, 'irish-rail-xml');
   assert.equal(irish.positions, 'event');
-  assert.ok(getRailFeed('irish-rail'));
+  // Swedish fork: registered, never pollable: its positions publish no
+  // licence.
+  assert.equal(getRailFeed('irish-rail'), null);
   assert.match(irish.staticGtfsUrl, /\/transitData\/Data\/GTFS_Realtime\.zip$/);
   assert.deepEqual(irish.staticRouteTypes, [2]);
   assert.equal(irish.positionsByTrainNumber, true);

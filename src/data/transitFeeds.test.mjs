@@ -21,6 +21,11 @@ import {
 } from './transitFeeds.js';
 import { RIO_ROUTE_NAMES } from './rioRouteNames.js';
 
+// Swedish fork: a feed that states no licence (its label says so, or its
+// entry is `licensed: false`) is registered but not polled.
+const statesNoLicence = (feed) =>
+  feed.licensed === false || /^No (separate )?licen[cs]e/i.test(feed.license);
+
 test('every registered feed is keyless, https, licensed, and uniquely identified', () => {
   const ids = new Set();
   for (const feed of TRANSIT_FEED_REGISTRY) {
@@ -127,7 +132,9 @@ test('route hints refine a feed default and never escape the known modes', () =>
   assert.equal(transitModeFor(hsl, '31M1'), 'subway');
   assert.equal(transitModeFor(hsl, '1006'), 'tram');
   assert.equal(transitModeFor(hsl, '9982'), 'bus');
-  const msp = getTransitFeed('metrotransit-msp');
+  // Swedish fork: Metro Transit states no licence, so it is registered, not
+  // polled.
+  const msp = getRegisteredTransitFeed('metrotransit-msp');
   assert.equal(transitModeFor(msp, '901'), 'tram');
   assert.equal(transitModeFor(msp, '17'), 'bus');
   const entur = getTransitFeed('entur-norway');
@@ -159,9 +166,7 @@ test('the enabled set is a gate on the registry, not a copy of it', () => {
     TRANSIT_ENABLED_FEEDS.map((feed) => feed.id),
     // Swedish fork: less the feeds that state no licence.
     TRANSIT_FEED_REGISTRY.filter(
-      (feed) =>
-        feed.defaultEnabled === true &&
-        !/^No (separate )?licen[cs]e/i.test(feed.license),
+      (feed) => feed.defaultEnabled === true && !statesNoLicence(feed),
     ).map((feed) => feed.id),
   );
   for (const feed of TRANSIT_FEED_REGISTRY) {
@@ -173,7 +178,7 @@ test('the enabled set is a gate on the registry, not a copy of it', () => {
     assert.equal(
       Boolean(getTransitFeed(feed.id)),
       // Swedish fork: less the feeds that state no licence.
-      feed.defaultEnabled && !/^No (separate )?licen[cs]e/i.test(feed.license),
+      feed.defaultEnabled && !statesNoLicence(feed),
       `${feed.id} is routable exactly when it is enabled`,
     );
     assert.ok(getRegisteredTransitFeed(feed.id), `${feed.id} stays documented`);
@@ -692,9 +697,7 @@ const NEW_CITY_LANDMARKS = {
 test('every city in the 2026-11 batch is live, licensed and covers its own centre', () => {
   for (const [id, [lat, lon]] of Object.entries(NEW_CITY_LANDMARKS)) {
     // Swedish fork: a feed that states no licence is not polled.
-    if (
-      /^No (separate )?licen[cs]e/i.test(getRegisteredTransitFeed(id).license)
-    ) {
+    if (statesNoLicence(getRegisteredTransitFeed(id))) {
       assert.equal(getTransitFeed(id), null, `${id} is not routable`);
       continue;
     }
@@ -726,6 +729,39 @@ test('feeds with no stated licence say so and name the basis they ship on', () =
       `${feed.id} names its basis`,
     );
   }
+});
+
+test('feeds that state no licence are registered, credited and never polled', () => {
+  // Swedish fork: 13 labels say so; four more name a page or a catalogue
+  // that states no licence (read 2026-11-21) and are `licensed: false`.
+  const off = TRANSIT_FEED_REGISTRY.filter((feed) => statesNoLicence(feed));
+  assert.deepEqual(
+    off.filter((feed) => feed.licensed === false).map((feed) => feed.id),
+    [
+      'metrotransit-msp',
+      'actv-venezia-bus',
+      'actv-venezia-waterbus',
+      'mpk-rzeszow',
+    ],
+  );
+  assert.equal(TRANSIT_FEED_REGISTRY.length, 70);
+  assert.equal(off.length, 17);
+  assert.equal(TRANSIT_ENABLED_FEEDS.length, 53, 'the other 53 are polled');
+  const offered = new Set(publicTransitCatalog().map((entry) => entry.id));
+  for (const feed of off) {
+    assert.equal(getTransitFeed(feed.id), null, `${feed.id} is not routable`);
+    assert.ok(!offered.has(feed.id), `${feed.id} is not offered`);
+    assert.ok(
+      !transitFeedsInRange(feed.center.lat, feed.center.lon).some(
+        (entry) => entry.id === feed.id,
+      ),
+      `${feed.id} is never in range`,
+    );
+    assert.ok(feed.attribution && feed.licenseUrl, `${feed.id} is credited`);
+  }
+  // A label is not a licence: `licensed` is only ever false.
+  for (const feed of TRANSIT_FEED_REGISTRY)
+    if ('licensed' in feed) assert.equal(feed.licensed, false, feed.id);
 });
 
 test('route ids in the 2026-11 batch read as the line on the vehicle', () => {

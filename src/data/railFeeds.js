@@ -600,6 +600,9 @@ function swedenTrain(routeId, context) {
  * (the feed is offered only when it is set), and `coverage` lists circles
  * that replace the single `center`/`loadRadiusKm` circle when choosing feeds
  * in range (a long, thin country), as in src/data/transitFeeds.js.
+ * `licensed: false` marks a feed whose operator publishes no licence for it
+ * although its `license` label does not say so; like a feed whose label
+ * starts "No licence", it stays registered and is not polled.
  * @type {ReadonlyArray<Readonly<{
  *   id: string, name: string, operator: string, region: string,
  *   center: {lat: number, lon: number}, loadRadiusKm: number,
@@ -621,7 +624,8 @@ function swedenTrain(routeId, context) {
  *   staticRouteRename?: (route: object, helpers: object) => string|null,
  *   staticTripRename?: (trip: object, routeId: string,
  *     context?: {ends: object|null}) => string|null,
- *   license: string, licenseUrl: string, attribution: string,
+ *   license: string, licenseUrl: string, licensed?: false,
+ *   attribution: string,
  *   defaultEnabled: boolean, terms: {quote: string, note?: string},
  *   classify: (routeId: string|null, context?: {tripId?: string|null})
  *     => ({category: string, mode: string, tourist?: boolean}|null),
@@ -774,6 +778,9 @@ export const RAIL_FEED_REGISTRY = Object.freeze([
     staticGtfsUrl: 'https://feeds.mta.maryland.gov/gtfs/marc',
     license: 'MDOT MTA developer feeds (no endorsement implied)',
     licenseUrl: 'https://www.mta.maryland.gov/developer-resources',
+    // Swedish fork: published with a disclaimer and no licence (the note
+    // below), so it is not polled.
+    licensed: false,
     attribution: 'Maryland Transit Administration',
     defaultEnabled: true,
     terms: Object.freeze({
@@ -1593,20 +1600,23 @@ function irishRailPackTrain(route) {
 /**
  * The feeds this build polls: every registered feed that is switched on. A
  * registered feed that is switched off is inert everywhere: it resolves to no
- * route and is never offered to the browser.
+ * route and is never offered to the browser. Swedish fork: so is a feed that
+ * states no licence; the list and the door (getRailFeed) share one test.
  */
 export const RAIL_ENABLED_FEEDS = Object.freeze(
-  RAIL_FEED_REGISTRY.filter(
-    (feed) => feed.defaultEnabled === true && !unlicensedFeed(feed),
-  ),
+  RAIL_FEED_REGISTRY.filter(isRailFeedPollable),
 );
 
 /**
  * Swedish fork: a feed whose operator publishes no licence for its positions
- * is not polled, however it is credited.
+ * is not polled, however it is credited: its label says so ("No licence …"),
+ * or, where the label names a publication, it is `licensed: false`.
  */
 function unlicensedFeed(feed) {
-  return /^No (separate )?licen[cs]e/i.test(feed.license ?? '');
+  return (
+    feed.licensed === false ||
+    /^No (separate )?licen[cs]e/i.test(feed.license ?? '')
+  );
 }
 
 const ANY_FEED_BY_ID = new Map(
@@ -1626,12 +1636,13 @@ export function railFeedHasTripUpdates(feed) {
 }
 
 /**
- * Whether a registered feed may be polled: switched on.
+ * Whether a registered feed may be polled: switched on. Swedish fork: and not
+ * a feed that states no licence (unlicensedFeed), which no request reaches.
  * @param {object} feed
  * @returns {boolean}
  */
 export function isRailFeedPollable(feed) {
-  return feed?.defaultEnabled === true;
+  return feed?.defaultEnabled === true && !unlicensedFeed(feed);
 }
 
 /**
@@ -1645,7 +1656,8 @@ export function railEnabledFeeds() {
 /**
  * Look up a POLLABLE feed by id. Unknown ids, malformed ids and feeds that
  * are registered but switched off return null: this is the only door from a
- * request path to an upstream URL.
+ * request path to an upstream URL. Swedish fork: so do feeds that state no
+ * licence (isRailFeedPollable).
  * @param {string} id
  * @returns {object|null}
  */

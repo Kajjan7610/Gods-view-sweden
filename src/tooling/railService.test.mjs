@@ -6,7 +6,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { Writable } from 'node:stream';
 import { createRailService } from '../sources/railService.js';
-import { railEnabledFeeds } from '../data/railFeeds.js';
+import {
+  RAIL_ENABLED_FEEDS,
+  RAIL_FEED_REGISTRY,
+  railEnabledFeeds,
+} from '../data/railFeeds.js';
 
 import {
   RAIL_PATH_PACK_MAX_BYTES,
@@ -88,6 +92,68 @@ test('the service confines requests to registered feeds and GET', async (t) => {
   assert.equal(calls, 0);
   service.close();
   assert.equal((await service.handle(request('/api/rail/feeds'))).status, 503);
+});
+
+test('a feed that states no licence is refused on every route and never fetched', async (t) => {
+  // Swedish fork: the feeds the fork does not poll stay registered, but no
+  // request reaches their operator or their packs.
+  const dropped = RAIL_FEED_REGISTRY.filter(
+    (feed) => !RAIL_ENABLED_FEEDS.includes(feed),
+  ).map((feed) => feed.id);
+  assert.deepEqual(dropped, [
+    'marc',
+    'tri-rail',
+    'metrotransit-rail',
+    'charlotte-lynx',
+    'irish-rail',
+  ]);
+  let calls = 0;
+  const packReads = [];
+  const service = createRailService({
+    fetchImpl: async () => {
+      calls++;
+      throw new Error('unexpected');
+    },
+    readPathPack: async (feedId) => {
+      packReads.push(feedId);
+      return '{"paths":1}';
+    },
+    readSchedulePack: async (feedId) => {
+      packReads.push(feedId);
+      return '{"version":1}';
+    },
+    hasSchedulePack: async (feedId) => {
+      packReads.push(feedId);
+      return true;
+    },
+  });
+  t.after(service.close);
+  const paths = dropped.flatMap((id) =>
+    ['trains', 'updates', 'paths', 'schedule'].map(
+      (route) => `/api/rail/${route}/${id}`,
+    ),
+  );
+  // The same ids spelled another way.
+  paths.push(
+    '/api/rail/trains/marc/',
+    '/api/rail/trains/marc?fresh=1',
+    '/api/rail/trains/%6Darc',
+    '/api/rail/updates/tri%2Drail',
+  );
+  for (const path of paths) {
+    const response = await service.handle(request(path));
+    assert.equal(response.status, 404, path);
+    assert.equal((await response.json()).error, 'Unknown rail feed', path);
+  }
+  assert.equal(calls, 0, 'no upstream fetch');
+  assert.deepEqual(packReads, [], 'no pack read');
+  const { feeds } = await (
+    await service.handle(request('/api/rail/feeds'))
+  ).json();
+  for (const id of dropped)
+    assert.ok(!feeds.some((feed) => feed.id === id), `${id} is not listed`);
+  assert.ok(!packReads.some((id) => dropped.includes(id)));
+  assert.equal(calls, 0);
 });
 
 test('a snapshot carries trains only and is served from cache while fresh', async (t) => {
@@ -496,8 +562,15 @@ test('every train answer comes from the operator, never from a timetable', async
   );
 });
 
-test('Irish Rail is fetched as XML and served as event-positioned trains', async (t) => {
-  const xml = `<?xml version="1.0" encoding="utf-8"?>
+// Swedish fork: the service refuses Irish Rail, whose positions publish no
+// licence (the test of every route, above). Its XML is still read as the
+// original reads it: railProxy.test.mjs (Accept, event positions, 30 s
+// window), irishRail.test.mjs (status and stops) and railIreland.test.mjs.
+test(
+  'Irish Rail is fetched as XML and served as event-positioned trains',
+  { skip: 'Swedish fork: feeds without a stated licence are not polled' },
+  async (t) => {
+    const xml = `<?xml version="1.0" encoding="utf-8"?>
 <ArrayOfObjTrainPositions xmlns="http://api.irishrail.ie/realtime/">
   <objTrainPositions>
     <TrainStatus>R</TrainStatus>
@@ -509,53 +582,65 @@ test('Irish Rail is fetched as XML and served as event-positioned trains', async
     <Direction>To Cork</Direction>
   </objTrainPositions>
 </ArrayOfObjTrainPositions>`;
-  const seen = [];
-  const service = createRailService({
-    fetchImpl: async (url, init) => {
-      seen.push([url, init.headers.Accept]);
-      return new Response(xml, {
-        status: 200,
-        headers: { 'content-type': 'text/xml; charset=utf-8' },
-      });
-    },
-  });
-  t.after(service.close);
-  const response = await service.handle(request('/api/rail/trains/irish-rail'));
-  assert.equal(response.status, 200);
-  assert.equal(response.headers.get('cache-control'), 'public, max-age=30');
-  const body = await response.json();
-  assert.equal(body.positions, 'event');
-  assert.equal(body.trains[0].id, 'A216');
-  assert.equal(body.trains[0].category, 'national');
-  assert.equal(body.trains[0].positionSource, 'event');
-  // The message's next stop decides the status; it does not leave the server.
-  assert.equal(body.trains[0].status, 'IN_TRANSIT_TO');
-  assert.equal(body.trains[0].nextStop, undefined);
-  // No schedule pack here: the train code alone classifies the train.
-  assert.equal(body.count, 1);
-  assert.deepEqual(seen, [
-    [
-      'https://api.irishrail.ie/realtime/realtime.asmx/getCurrentTrainsXML',
-      'text/xml, application/xml;q=0.9',
-    ],
-  ]);
-});
+    const seen = [];
+    const service = createRailService({
+      fetchImpl: async (url, init) => {
+        seen.push([url, init.headers.Accept]);
+        return new Response(xml, {
+          status: 200,
+          headers: { 'content-type': 'text/xml; charset=utf-8' },
+        });
+      },
+    });
+    t.after(service.close);
+    const response = await service.handle(
+      request('/api/rail/trains/irish-rail'),
+    );
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('cache-control'), 'public, max-age=30');
+    const body = await response.json();
+    assert.equal(body.positions, 'event');
+    assert.equal(body.trains[0].id, 'A216');
+    assert.equal(body.trains[0].category, 'national');
+    assert.equal(body.trains[0].positionSource, 'event');
+    // The message's next stop decides the status; it does not leave the server.
+    assert.equal(body.trains[0].status, 'IN_TRANSIT_TO');
+    assert.equal(body.trains[0].nextStop, undefined);
+    // No schedule pack here: the train code alone classifies the train.
+    assert.equal(body.count, 1);
+    assert.deepEqual(seen, [
+      [
+        'https://api.irishrail.ie/realtime/realtime.asmx/getCurrentTrainsXML',
+        'text/xml, application/xml;q=0.9',
+      ],
+    ]);
+  },
+);
 
-test('an unreadable Irish Rail document is a 502 with backoff, not a crash', async (t) => {
-  const warn = console.warn;
-  console.warn = () => {};
-  t.after(() => {
-    console.warn = warn;
-  });
-  const service = createRailService({
-    fetchImpl: async () => new Response('<html>busy</html>', { status: 200 }),
-  });
-  t.after(service.close);
-  const response = await service.handle(request('/api/rail/trains/irish-rail'));
-  assert.equal(response.status, 502);
-  const again = await service.handle(request('/api/rail/trains/irish-rail'));
-  assert.equal(again.headers.get('X-Rail-Backoff'), 'cooldown');
-});
+// Swedish fork: as above. An unreadable Irish Rail document still throws
+// UPSTREAM_UNREADABLE (railProxy.test.mjs); the 502 and the cooldown after
+// it are covered for MBTA here and in railServiceFaults.test.mjs.
+test(
+  'an unreadable Irish Rail document is a 502 with backoff, not a crash',
+  { skip: 'Swedish fork: feeds without a stated licence are not polled' },
+  async (t) => {
+    const warn = console.warn;
+    console.warn = () => {};
+    t.after(() => {
+      console.warn = warn;
+    });
+    const service = createRailService({
+      fetchImpl: async () => new Response('<html>busy</html>', { status: 200 }),
+    });
+    t.after(service.close);
+    const response = await service.handle(
+      request('/api/rail/trains/irish-rail'),
+    );
+    assert.equal(response.status, 502);
+    const again = await service.handle(request('/api/rail/trains/irish-rail'));
+    assert.equal(again.headers.get('X-Rail-Backoff'), 'cooldown');
+  },
+);
 
 test('an answer names its upstream host, and a failed fetch is a logged 504', async (t) => {
   const warnings = [];
@@ -625,7 +710,9 @@ test('schedule packs are served from the injected reader', async (t) => {
     },
   });
   t.after(service.close);
-  for (const id of ['ktmb', 'irish-rail']) {
+  // Swedish fork: Renfe long distance in place of Irish Rail, which the
+  // service refuses; both read their routes from the pack.
+  for (const id of ['ktmb', 'renfe-larga-distancia']) {
     const response = await service.handle(request(`/api/rail/schedule/${id}`));
     assert.equal(response.status, 200, id);
     assert.equal(response.headers.get('cache-control'), 'no-cache');
@@ -642,7 +729,7 @@ test('schedule packs are served from the injected reader', async (t) => {
     assert.equal((await service.handle(request(blocked))).status, 404, blocked);
   assert.deepEqual(asked, [
     ['ktmb', RAIL_PATH_PACK_MAX_BYTES],
-    ['irish-rail', RAIL_PATH_PACK_MAX_BYTES],
+    ['renfe-larga-distancia', RAIL_PATH_PACK_MAX_BYTES],
     ['mbta-rail', RAIL_PATH_PACK_MAX_BYTES],
   ]);
   // No reader: 404; an oversized pack: 503, as for path packs.

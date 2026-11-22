@@ -98,6 +98,9 @@ const REGISTRY_FIELDS = new Set([
   // coverage circles; only that feed may carry them (test below).
   'requiresKey',
   'coverage',
+  // Swedish fork: `licensed: false`, a feed whose operator states no
+  // licence although its label does not say so (test below).
+  'licensed',
 ]);
 
 test('every feed reports live positions: GPS or signalling events', () => {
@@ -192,12 +195,24 @@ test('every feed is on, credited with its licence and terms, and fetched as publ
     getRegisteredRailFeed('trafikverket-trains').requiresKey,
     'TRAFIKVERKET_API_KEY',
   );
-  // Swedish fork: all but the feeds that state no licence.
+  // Swedish fork: all but the feeds that state no licence, by their label
+  // or, where the label names a publication, by `licensed: false`.
   assert.deepEqual(
     RAIL_ENABLED_FEEDS.map((feed) => feed.id),
     RAIL_FEED_REGISTRY.filter(
-      (feed) => !/^No (separate )?licen[cs]e/i.test(feed.license),
+      (feed) =>
+        feed.licensed !== false &&
+        !/^No (separate )?licen[cs]e/i.test(feed.license),
     ).map((feed) => feed.id),
+  );
+  // Swedish fork: `licensed` is only ever false, and MARC is the one whose
+  // label names its publication (read 2026-11-21).
+  assert.deepEqual(
+    RAIL_FEED_REGISTRY.filter((feed) => 'licensed' in feed).map((feed) => [
+      feed.id,
+      feed.licensed,
+    ]),
+    [['marc', false]],
   );
 });
 
@@ -210,8 +225,9 @@ test('a feed is switched on only when its terms were read and quoted', () => {
   }
   // Tri-Rail states no licence; it is used without one by project owner
   // decision, and the terms say so.
-  const triRail = getRailFeed('tri-rail');
-  assert.ok(triRail, 'tri-rail is pollable');
+  // Swedish fork: it stays registered with those terms, and is not pollable.
+  const triRail = getRegisteredRailFeed('tri-rail');
+  assert.equal(getRailFeed('tri-rail'), null, 'tri-rail is not pollable');
   assert.ok(
     triRail.terms.note.startsWith(
       'Used without a published licence (project owner decision, 2026-11-10)',
@@ -230,6 +246,26 @@ test('only enabled, well-formed ids resolve to a pollable feed', () => {
   assert.deepEqual(
     railEnabledFeeds().map((entry) => entry.id),
     RAIL_ENABLED_FEEDS.map((entry) => entry.id),
+  );
+  // Swedish fork: a feed that states no licence, by its label or by
+  // `licensed: false`, is not pollable either, and the door refuses exactly
+  // the feeds the enabled list leaves out.
+  assert.equal(isRailFeedPollable({ ...mbta, licensed: false }), false);
+  assert.equal(
+    isRailFeedPollable({ ...mbta, license: 'No licence published' }),
+    false,
+  );
+  for (const feed of RAIL_FEED_REGISTRY)
+    assert.equal(
+      getRailFeed(feed.id) === feed,
+      RAIL_ENABLED_FEEDS.includes(feed),
+      feed.id,
+    );
+  assert.deepEqual(
+    RAIL_FEED_REGISTRY.filter((feed) => !getRailFeed(feed.id)).map(
+      (feed) => feed.id,
+    ),
+    ['marc', 'tri-rail', 'metrotransit-rail', 'charlotte-lynx', 'irish-rail'],
   );
 });
 
@@ -359,8 +395,10 @@ test('the public catalog exposes coverage and credit but never upstream URLs', (
     assert.equal(typeof entry.tripUpdates, 'boolean');
   }
   const byId = new Map(catalog.map((entry) => [entry.id, entry]));
-  // Swedish fork: Irish Rail publishes no licence for its positions.
+  // Swedish fork: Irish Rail publishes no licence for its positions, nor
+  // MARC for its feeds.
   assert.equal(byId.has('irish-rail'), false);
+  assert.equal(byId.has('marc'), false);
   assert.equal(byId.get('mbta-rail').positions, 'gps');
   assert.equal(byId.get('mbta-rail').tripUpdates, true);
   // No upstream URL reaches the browser, by any field but the licence link
