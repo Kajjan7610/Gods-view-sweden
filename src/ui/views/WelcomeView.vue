@@ -2,7 +2,7 @@
 import { storeToRefs } from 'pinia';
 import { nextTick, ref, watch } from 'vue';
 import { msg, t } from '../../i18n/index.js';
-import { FIRST_RUN_LINKS, environmentalLabel } from '../../firstRunCopy.js';
+import { FIRST_RUN_LINKS } from '../../firstRunCopy.js';
 import UiButton from '../kit/UiButton.vue';
 import UiCheckbox from '../kit/UiCheckbox.vue';
 import UiIcon from '../kit/UiIcon.vue';
@@ -11,13 +11,9 @@ import { useStoriesStore } from '../stores/stories.js';
 
 // The launcher initFirstRunExperience presents, and the controls it connects.
 const { launcher, controls } = storeToRefs(useFirstRunStore());
-// The card stays hidden until it is initialized; these show in the markup.
-const ENVIRONMENTAL_SUB = msg(
-  'Live earthquakes and active fires, from USGS and NASA',
-);
 
-// Where the visitor starts: a tile selects it, ENTER GOD MODE runs it. A clean
-// globe unless they pick a mission.
+// Where the visitor starts: a tile selects it, GET STARTED runs it. A clean
+// map unless they pick one of the Swedish starts (Swedish fork).
 const start = ref('explore');
 const settling = ref(false);
 function selectStart(choice) {
@@ -25,12 +21,13 @@ function selectStart(choice) {
   start.value = choice;
 }
 
-// Three short steps instead of one dense card: mode, where to start, then the
-// three things worth knowing. Back and Next move between them; Skip closes.
+// Short steps instead of one dense card. Swedish fork: two, where to start
+// and then the three things worth knowing; the original's mode step (God or
+// Analyst) is not offered. Back and Next move between them; Skip closes.
 // The suppress box's hook, as one object, so the box is not rendered again
 // with every render of the welcome.
 const suppressBoxAttrs = { 'data-first-run-suppress': '' };
-const STEPS = 3;
+const STEPS = 2;
 const step = ref(1);
 const direction = ref('forward');
 function go(next, event) {
@@ -104,16 +101,23 @@ watch(step, async () => {
     ?.querySelector('#first-run-launcher [data-first-run-primary]')
     ?.focus?.({ preventScroll: true });
 });
+// Swedish fork: the first step's heading is the line from the owner's films,
+// the product name first; the name is never translated (translate="no").
+const PRODUCT_NAME = 'God\'s Eye View Sverige';
 const TITLES = [
-  msg('Welcome to God\'s Eye View'),
-  msg('Where do you want to start?'),
+  msg('a Swedish version, developed further by Kaj Obst'),
   msg('Three things to know'),
 ];
 const LEADS = [
-  msg('It feels like a forbidden cockpit—then you realize the sources are public and the data is real.'),
-  msg('Pick one to begin with. You can change everything later.'),
+  msg('Open data about Sweden, much of it in real time: traffic, weather, nature, society and infrastructure from public agencies and open sources. Everything here is public, and every layer shows its source.'),
   msg('That is all you need to get going.'),
 ];
+// Swedish fork: the credit names the original's maintainers. The message holds
+// the original's name as {product}, and the markup puts the name in its own
+// translate="no" span, so no translation, by hand or by a browser, changes it.
+const CREDIT = msg('Built on {product} by Bilawal Sidhu and Sameh Khamis (MIT licence)');
+const ORIGINAL_NAME = 'God\'s Eye View';
+const creditParts = () => t(CREDIT).split('{product}');
 
 // A callout opens from the chip's start edge unless that would run past the
 // scrolling list, which clips it; then it opens from the end edge, and where
@@ -160,7 +164,9 @@ function onSuppress(event) {
   <aside v-if="!launcher?.removed" id="first-run-launcher" role="dialog" aria-labelledby="first-run-title" aria-describedby="first-run-description" :class="{ visible: launcher?.visible }" :hidden="!launcher?.shown" :aria-hidden="launcher?.closing ? 'true' : undefined" :aria-busy="launcher?.busy ?? undefined" :data-state="launcher?.state ?? undefined">
     <div class="first-run-scanline" aria-hidden="true"></div>
     <header class="first-run-header">
-      <span class="first-run-kicker">{{ t('MISSION CONTROL · FIRST LAUNCH') }}</span>
+      <!-- Swedish fork: a neutral label. The card returns every session until
+           "Don't show this again", so it does not say "first launch". -->
+      <span class="first-run-kicker">{{ t('WELCOME · QUICK START') }}</span>
       <ol role="img" class="first-run-dots" :aria-label="t('Step {step} of {total}', { step, total: STEPS })">
         <li v-for="n in STEPS" :key="n" :class="{ on: n === step, done: n < step }" aria-hidden="true"></li>
       </ol>
@@ -172,64 +178,39 @@ function onSuppress(event) {
         <span class="first-run-dismiss-touch">{{ t('SKIP') }}</span>
       </UiButton>
     </header>
-    <h2 id="first-run-title">{{ t(TITLES[step - 1]) }}</h2>
-    <p class="first-run-step-announcement" role="status" aria-live="polite" aria-atomic="true">{{ t(TITLES[step - 1]) }}</p>
+    <!-- Swedish fork: the first step opens with the product line from the
+         owner's films; the product name stays as it is in every language. -->
+    <h2 id="first-run-title"><template v-if="step === 1"><span translate="no">{{ PRODUCT_NAME }}</span> – </template>{{ t(TITLES[step - 1]) }}</h2>
+    <p class="first-run-step-announcement" role="status" aria-live="polite" aria-atomic="true"><template v-if="step === 1"><span translate="no">{{ PRODUCT_NAME }}</span> – </template>{{ t(TITLES[step - 1]) }}</p>
     <p id="first-run-description">{{ t(LEADS[step - 1]) }}</p>
     <div class="first-run-choices ui-scroll" :data-scrollable="launcher?.scrollable ?? undefined">
      <Transition :name="`first-run-step-${direction}`" mode="out-in" @before-enter="beforeStepEnter" @after-enter="afterStepEnter">
       <div v-if="step === 1" key="1" class="first-run-step">
-      <section class="first-run-section" aria-labelledby="first-run-mode-heading">
-        <h3 id="first-run-mode-heading" class="first-run-section-title">{{ t('Choose your mode') }}</h3>
-        <div class="first-run-modes" role="list" aria-labelledby="first-run-mode-heading">
-          <div class="first-run-mode" role="listitem" data-first-run-mode="god">
-            <div class="first-run-preview first-run-preview--god" aria-hidden="true"><i><svg class="first-run-globe" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1"><circle cx="32" cy="32" r="26" /><path d="M6 32h52M10 19h44M10 45h44" /><g class="first-run-meridians"><ellipse cx="32" cy="32" rx="26" ry="26" style="--m: 0" /><ellipse cx="32" cy="32" rx="26" ry="26" style="--m: 0.38" /><ellipse cx="32" cy="32" rx="26" ry="26" style="--m: 0.71" /><ellipse cx="32" cy="32" rx="26" ry="26" style="--m: 0.92" /></g></svg></i><svg class="first-run-callouts" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1"><path class="first-run-brackets" d="M8 18V8h10M102 8h10v10M112 102v10h-10M18 112H8v-10" /><circle class="first-run-orbit" cx="60" cy="60" r="34" /><g class="first-run-callout first-run-callout--a"><circle class="first-run-blip" cx="69" cy="50" r="1.6" /><circle class="first-run-ping" cx="69" cy="50" r="1.6" /><polyline class="first-run-leader" points="69,50 86,33 108,33" pathLength="1" /><path class="first-run-label" d="M88 29h18M88 37h11" /></g><g class="first-run-callout first-run-callout--b"><circle class="first-run-blip" cx="50" cy="71" r="1.6" /><circle class="first-run-ping" cx="50" cy="71" r="1.6" /><polyline class="first-run-leader" points="50,71 33,88 12,88" pathLength="1" /><path class="first-run-label" d="M14 84h18M14 92h11" /></g><g class="first-run-time"><line class="first-run-time-track" x1="26" y1="106" x2="94" y2="106" /><path class="first-run-time-ticks" d="M26 104v4 M34.5 105v2 M43 104v4 M51.5 105v2 M60 104v4 M68.5 105v2 M77 104v4 M85.5 105v2 M94 104v4" /><line class="first-run-time-played" x1="26" y1="106" x2="94" y2="106" /><g class="first-run-time-head"><line x1="26" y1="101" x2="26" y2="111" /><path d="M24 100h4l-2 2.5z" /></g></g></svg></div>
-            <div class="first-run-mode-body">
-              <p class="first-run-mode-title"><strong>{{ t('God') }}</strong> <span class="first-run-tag">{{ t('FUN') }}</span></p>
-              <p class="first-run-mode-copy">{{ t('The spy-satellite keyhole: circular viewport, tactical HUD, cinematic camera. For exploring.') }}</p>
-              <ul class="first-run-mode-points">
-                <li>{{ t('Keyhole HUD') }}</li>
-                <li>{{ t('Visual presets') }}</li>
-              </ul>
-            </div>
-            <span class="first-run-radio" aria-hidden="true"></span>
-          </div>
-          <div class="first-run-mode" role="listitem" data-first-run-mode="analyst">
-            <div class="first-run-preview first-run-preview--analyst" aria-hidden="true"><i></i></div>
-            <div class="first-run-mode-body">
-              <p class="first-run-mode-title"><strong>{{ t('Analyst') }}</strong> <span class="first-run-tag first-run-tag--soon">{{ t('COMING SOON') }}</span></p>
-              <p class="first-run-mode-copy">{{ t('A cleaner, readable view where every value shows its source. For research and reporting.') }}</p>
-            </div>
-            <span class="first-run-radio" aria-hidden="true"></span>
-          </div>
-        </div>
-      </section>
-
-      </div>
-      <div v-else-if="step === 2" key="2" class="first-run-step">
+      <!-- Swedish fork: no mode step (God or Analyst); the card opens on where
+           to start, with Swedish starts in place of SPACE MISSIONS and
+           ENVIRONMENTAL. Their layers are in FIRST_RUN_MISSIONS. -->
       <section class="first-run-section" aria-labelledby="first-run-start-heading">
         <h3 id="first-run-start-heading" class="first-run-section-title">{{ t('Start with') }}</h3>
         <div class="first-run-missions first-run-missions--tiles" role="group" aria-labelledby="first-run-start-heading">
-          <UiButton data-first-run-start="space-missions" :pressed="start === 'space-missions'" :aria-disabled="String(settling || launcher?.busy === 'true')" @click="selectStart('space-missions')">
-            <UiIcon name="rocket_launch" :size="null" />
-            <span><strong>{{ t('SPACE MISSIONS') }}</strong><small>{{ t('Launches, spacecraft and orbital context') }}</small></span>
+          <UiButton data-first-run-start="sweden-now" :pressed="start === 'sweden-now'" :aria-disabled="String(settling || launcher?.busy === 'true')" @click="selectStart('sweden-now')">
+            <UiIcon name="schedule" :size="null" />
+            <!-- Trafikverket's roads need its key, so the tile says so; without
+                 one the layer still switches on and its row explains. -->
+            <span><strong>{{ t('SWEDEN RIGHT NOW') }}</strong><small>{{ t('Weather warnings and weather from SMHI, road conditions from Trafikverket (key required)') }}</small></span>
           </UiButton>
-          <UiButton data-first-run-start="environmental" :pressed="start === 'environmental'" :aria-disabled="String(settling || launcher?.busy === 'true')" @click="selectStart('environmental')">
-            <UiIcon name="local_fire_department" :size="null" />
-            <!-- The title is ENVIRONMENTAL_LABEL_CHOICE's label once initialized. -->
-            <!-- Subcopy names BOTH feeds this tile turns on, because the launcher
-                 optimizes for the fully configured experience (owner ruling,
-                 2026-08-23) — see the mission table in src/firstRunExperience.js. -->
-            <span><strong data-first-run-environmental-title>{{ launcher?.environmentalTitle ?? environmentalLabel().title }}</strong><small>{{ launcher?.environmentalSub ?? t(ENVIRONMENTAL_SUB) }}</small></span>
+          <UiButton data-first-run-start="nature-weather" :pressed="start === 'nature-weather'" :aria-disabled="String(settling || launcher?.busy === 'true')" @click="selectStart('nature-weather')">
+            <UiIcon name="eco" :size="null" />
+            <span><strong>{{ t('NATURE AND WEATHER') }}</strong><small>{{ t('Protected nature from Naturvårdsverket, river flow from SMHI and the aurora forecast from NOAA') }}</small></span>
           </UiButton>
           <UiButton data-first-run-start="explore" :pressed="start === 'explore'" :aria-disabled="String(settling || launcher?.busy === 'true')" @click="selectStart('explore')">
             <UiIcon name="public" :size="null" />
-            <span><strong>{{ t('EXPLORE MANUALLY') }}</strong><small>{{ t('Begin with a clean globe') }}</small></span>
+            <span><strong>{{ t('EXPLORE ON YOUR OWN') }}</strong><small>{{ t('Begin with a clean map') }}</small></span>
           </UiButton>
         </div>
       </section>
 
       </div>
-      <div v-else key="3" class="first-run-step">
+      <div v-else key="2" class="first-run-step">
       <ul class="first-run-tips">
         <li class="first-run-tip first-run-tip--search">
           <span class="first-run-tip-art" aria-hidden="true"><UiIcon name="search" :size="null" /><i class="first-run-tip-caret"></i></span>
@@ -260,36 +241,23 @@ function onSuppress(event) {
       </section>
 
 
+      <!-- Swedish fork: one line crediting the original, in place of More from
+           Halfpixel and its social links, and the Swedish version's own
+           repository. A grid rather than the chip row, so the long credit
+           wraps on a phone instead of running past the card. -->
       <section class="first-run-section" aria-labelledby="first-run-more-heading">
-        <h3 id="first-run-more-heading" class="first-run-section-title">{{ t('More from Halfpixel') }}</h3>
-        <div class="first-run-link-row first-run-link-row--chips" @pointerover="alignCallout" @focusin="alignCallout">
-          <a class="first-run-link-card first-run-link-card--quiet" :href="FIRST_RUN_LINKS.youtube" :data-callout="t('Bilawal on YouTube')" target="_blank" rel="noopener noreferrer">
-            <span class="first-run-link-badge" aria-hidden="true">▶</span>
-            <span class="first-run-link-body"><strong translate="no">YouTube</strong></span>
-          </a>
-          <a class="first-run-link-card first-run-link-card--quiet" :href="FIRST_RUN_LINKS.x" :data-callout="t('Bilawal on {site}', { site: 'X' })" target="_blank" rel="noopener noreferrer">
-            <span class="first-run-link-badge" aria-hidden="true">X</span>
-            <span class="first-run-link-body"><strong translate="no">X</strong></span>
-          </a>
-          <a class="first-run-link-card first-run-link-card--quiet" :href="FIRST_RUN_LINKS.instagram" :data-callout="t('Bilawal on {site}', { site: 'Instagram' })" target="_blank" rel="noopener noreferrer">
-            <span class="first-run-link-badge" aria-hidden="true">IG</span>
-            <span class="first-run-link-body"><strong translate="no">Instagram</strong></span>
-          </a>
-          <a class="first-run-link-card first-run-link-card--quiet" :href="FIRST_RUN_LINKS.linkedin" :data-callout="t('Bilawal on {site}', { site: 'LinkedIn' })" target="_blank" rel="noopener noreferrer">
-            <span class="first-run-link-badge" aria-hidden="true">in</span>
-            <span class="first-run-link-body"><strong translate="no">LinkedIn</strong></span>
-          </a>
-          <a class="first-run-link-card first-run-link-card--quiet" :href="FIRST_RUN_LINKS.website" :data-callout="t('Bilawal\'s website')" target="_blank" rel="noopener noreferrer">
-            <span class="first-run-link-badge" aria-hidden="true">B</span>
-            <span class="first-run-link-body"><strong translate="no">bilawal.ai</strong></span>
-          </a>
-          <a class="first-run-link-card first-run-link-card--quiet" :href="FIRST_RUN_LINKS.halfpixel" :data-callout="t('The studio behind GEV')" target="_blank" rel="noopener noreferrer">
-            <span class="first-run-link-badge" aria-hidden="true">HP</span>
-            <span class="first-run-link-body"><strong translate="no">halfpixel.ai</strong></span>
-          </a>
-          <a class="first-run-link-card first-run-link-card--quiet" :href="FIRST_RUN_LINKS.source" target="_blank" rel="noopener noreferrer" :data-callout="t('Open source. Self-host, fork, add a layer.')">
+        <h3 id="first-run-more-heading" class="first-run-section-title">{{ t('Source code') }}</h3>
+        <div class="first-run-link-row" @pointerover="alignCallout" @focusin="alignCallout">
+          <!-- The callout is visual only; the chip's hidden <small> gives the
+               same words to the link's accessible name, so it says where it
+               goes (first-run.css hides a quiet chip's <small>). -->
+          <a class="first-run-link-card first-run-link-card--quiet" :href="FIRST_RUN_LINKS.source" :data-callout="t('The original\'s source code on GitHub')" target="_blank" rel="noopener noreferrer">
             <span class="first-run-link-badge" aria-hidden="true">&lt;/&gt;</span>
-            <span class="first-run-link-body"><strong translate="no">GitHub</strong></span>
+            <span class="first-run-link-body"><strong>{{ creditParts()[0] }}<span translate="no">{{ ORIGINAL_NAME }}</span>{{ creditParts()[1] }}</strong> <small>{{ t('The original\'s source code on GitHub') }}</small></span>
+          </a>
+          <a class="first-run-link-card first-run-link-card--quiet" :href="FIRST_RUN_LINKS.fork" :data-callout="t('Open source. Self-host, fork, add a layer.')" target="_blank" rel="noopener noreferrer">
+            <span class="first-run-link-badge" aria-hidden="true">SE</span>
+            <span class="first-run-link-body"><strong>{{ t('The Swedish version on GitHub') }}</strong></span>
           </a>
         </div>
       </section>
@@ -304,11 +272,11 @@ function onSuppress(event) {
            error. It sits in the footer row, so it never changes the card's
            height. -->
       <p class="first-run-note" data-first-run-status role="status" aria-live="polite">{{ launcher?.status ?? '' }}</p>
-      <!-- The card's main action: God mode, starting where the selected tile
-           says (a clean globe by default). -->
+      <!-- The card's main action: GET STARTED (Swedish fork), starting where
+           the selected tile says (a clean map by default). -->
       <UiButton v-if="step > 1" class="first-run-back" :aria-disabled="String(settling || launcher?.busy === 'true')" @click="go(step - 1, $event)">{{ t('BACK') }}</UiButton>
       <UiButton class="first-run-enter" :data-first-run-choice="step === STEPS ? start : undefined" :data-first-run-next="step < STEPS ? '' : undefined" data-first-run-primary aria-describedby="first-run-title first-run-description" @pointerdown="onPrimaryDown" @keydown.enter="onPrimaryKeydown" :aria-disabled="String(settling || launcher?.busy === 'true')" @click="onPrimary">
-        {{ step < STEPS ? t('NEXT') : t('ENTER GOD MODE') }} <UiIcon name="arrow_forward" :size="null" />
+        {{ step < STEPS ? t('NEXT') : t('GET STARTED') }} <UiIcon name="arrow_forward" :size="null" />
       </UiButton>
     </div>
 

@@ -274,16 +274,19 @@ const MUTATIONS = [
     from: "layerIds: Object.freeze(['earthquakes', 'local-firms']),",
     to: "layerIds: Object.freeze(['earthquakes']),",
   },
+  // Swedish fork: the welcome shows no ENVIRONMENTAL tile, so the tile whose
+  // copy makes a promise is Sverige just nu, which says its roads need a key.
   {
-    defect: 'the tile stops promising the fires it actually turns on',
-    file: 'module',
-    from: "  'Live earthquakes and active fires, from USGS and NASA',",
-    to: "  'Live earthquakes worldwide, straight from USGS',",
+    defect: 'the road tile stops saying Trafikverket needs a key',
+    file: 'html',
+    from: "road conditions from Trafikverket (key required)') }}",
+    to: "road conditions from Trafikverket') }}",
   },
+  // Swedish fork: the owner's line about the Swedish version.
   {
     defect: 'the maintainer-authored first-run line is quietly rewritten',
     file: 'html',
-    from: 'It feels like a forbidden cockpit—then you realize the sources are public and the data is real.',
+    from: 'Open data about Sweden, much of it in real time: traffic, weather, nature, society and infrastructure from public agencies and open sources. Everything here is public, and every layer shows its source.',
     to: 'A live 3D globe of public data. Pick a view to begin.',
   },
   {
@@ -441,17 +444,18 @@ const MUTATIONS = [
   },
 
   // ── Markup and startup ordering ───────────────────────────────────────────
+  // Swedish fork: the fork's tiles, Sverige just nu and Natur och väder.
   {
     defect: 'a mission tile is dropped from the menu',
     file: 'html',
-    from: '          <UiButton data-first-run-start="space-missions"',
-    to: '      <UiButton data-first-run-start-disabled="space-missions"',
+    from: '          <UiButton data-first-run-start="sweden-now"',
+    to: '      <UiButton data-first-run-start-disabled="sweden-now"',
   },
   {
     defect: "the menu order stops matching the owner's",
     file: 'html',
-    from: '<UiButton data-first-run-start="environmental"',
-    to: '<UiButton data-first-run-start="zzz-environmental"',
+    from: '<UiButton data-first-run-start="nature-weather"',
+    to: '<UiButton data-first-run-start="zzz-nature-weather"',
   },
   {
     defect: 'the "don\'t show again" checkbox loses its hook',

@@ -11,6 +11,9 @@ import {
   FIRST_RUN_STORAGE_KEY,
   initFirstRunExperience,
 } from './firstRunExperience.js';
+// Swedish fork: the welcome's links, and Swedish as well as English.
+import { FIRST_RUN_LINKS } from './firstRunCopy.js';
+import { setLocale } from './i18n/index.js';
 import { useFirstRunStore } from './ui/stores/firstRun.js';
 import { useStoriesStore } from './ui/stores/stories.js';
 import WelcomeView from './ui/views/WelcomeView.vue';
@@ -123,23 +126,22 @@ test('the card is hidden until initialized, then revealed with its copy', async 
   assert.ok(
     document.activeElement === root.querySelector('[data-first-run-primary]'),
   );
-  await move(root, frames);
+  // Swedish fork: the starts are on the first step, the Swedish two first.
   assert.deepEqual(
     [...root.querySelectorAll('[data-first-run-start]')].map(
       (node) => node.dataset.firstRunStart,
     ),
-    ['space-missions', 'environmental', 'explore'],
+    ['sweden-now', 'nature-weather', 'explore'],
   );
-  const environmental = root.querySelector(
-    '[data-first-run-start="environmental"]',
-  );
+  const swedenNow = root.querySelector('[data-first-run-start="sweden-now"]');
   assert.equal(
-    environmental.querySelector('strong').textContent,
-    'ENVIRONMENTAL',
+    swedenNow.querySelector('strong').textContent,
+    'SWEDEN RIGHT NOW',
   );
+  // Trafikverket's roads need its key, and the tile says so.
   assert.match(
-    environmental.querySelector('small').textContent,
-    /earthquakes.*fires/i,
+    swedenNow.querySelector('small').textContent,
+    /road conditions from Trafikverket \(key required\)$/,
   );
   assert.equal(
     root
@@ -147,6 +149,7 @@ test('the card is hidden until initialized, then revealed with its copy', async 
       .getAttribute('aria-pressed'),
     'true',
   );
+  await move(root, frames);
   assert.ok(
     document.activeElement === root.querySelector('[data-first-run-primary]'),
   );
@@ -167,10 +170,9 @@ test('a quick second click on NEXT moves on, and never launches', async (t) => {
     primary.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     primary.dispatchEvent(new MouseEvent('click', { bubbles: true, detail }));
   };
-  press(1);
-  await settle(frames);
-  assert.ok(root.querySelector('[data-first-run-start]'), 'on the second step');
-  // The second click of a double click, after the step settled, moves on.
+  // Swedish fork: two steps, so the starts are on the first and the second
+  // click of a double click on its NEXT, after the step settled, moves on.
+  assert.ok(root.querySelector('[data-first-run-start]'), 'on the first step');
   press(2);
   await settle(frames);
   assert.equal(primary.dataset.firstRunChoice, 'explore', 'on the last step');
@@ -184,18 +186,23 @@ test('a quick second click on NEXT moves on, and never launches', async (t) => {
 });
 
 test('a busy mission marks the choices aria-disabled, never disabled', async (t) => {
-  let finish;
+  // Swedish fork: the start switches on three layers, so every request is
+  // held and all of them are answered together.
+  const pending = [];
+  const finish = (value) => {
+    for (const resolve of pending.splice(0)) resolve(value);
+  };
   let calls = 0;
   const { root, frames } = await launch(t, {
     dataManager: {
       setEnabled: () => {
         calls++;
-        return new Promise((resolve) => (finish = resolve));
+        return new Promise((resolve) => pending.push(resolve));
       },
     },
   });
-  await move(root, frames);
-  root.querySelector('[data-first-run-start="space-missions"]').click();
+  // Swedish fork: the starts are on the first step.
+  root.querySelector('[data-first-run-start="sweden-now"]').click();
   await nextTick();
   const primary = root.querySelector('[data-first-run-next]');
   primary.click();
@@ -206,7 +213,7 @@ test('a busy mission marks the choices aria-disabled, never disabled', async (t)
     primary,
     'one persistent button keeps native click counting and focus',
   );
-  assert.equal(enter.dataset.firstRunChoice, 'space-missions');
+  assert.equal(enter.dataset.firstRunChoice, 'sweden-now');
   enter.click();
   assert.equal(
     calls,
@@ -248,7 +255,7 @@ test('a busy mission marks the choices aria-disabled, never disabled', async (t)
   assert.equal(repeated.defaultPrevented, true);
   // A fresh keyboard/assistive click has detail 0 and remains supported.
   enter.click();
-  assert.equal(calls, 1);
+  assert.equal(calls, 3, 'one start asks for its three layers');
   await nextTick();
   assert.equal(root.dataset.state, 'loading');
   assert.equal(root.getAttribute('aria-busy'), 'true');
@@ -257,7 +264,7 @@ test('a busy mission marks the choices aria-disabled, never disabled', async (t)
   assert.ok(document.activeElement === enter, 'focus stays on the action');
   assert.equal(
     root.querySelector('[data-first-run-status]').textContent,
-    'Opening space missions…',
+    'Turning on warnings, weather and road conditions…',
   );
   root.querySelector('.first-run-back').click();
   await nextTick();
@@ -267,26 +274,28 @@ test('a busy mission marks the choices aria-disabled, never disabled', async (t)
     'Back is inert while busy',
   );
   enter.click();
-  assert.equal(calls, 1, 'a busy action cannot start a second request');
+  assert.equal(calls, 3, 'a busy action cannot start a second request');
   // A failed mission says so and stays on the card.
   finish(false);
   await new Promise((resolve) => setTimeout(resolve));
   await nextTick();
   assert.equal(root.dataset.state, 'ready');
   assert.equal(enter.getAttribute('aria-disabled'), 'false');
+  // Swedish fork: worded for starts that turn layers on.
   assert.match(
     root.querySelector('[data-first-run-status]').textContent,
-    /^Could not open that mission/,
+    /^Could not turn on all the layers/,
   );
+  // Swedish fork: one step back is the first, which has the starts and no
+  // Back.
+  root.querySelector('.first-run-back').focus();
   await move(root, frames, '.first-run-back');
   assert.equal(
     root
-      .querySelector('[data-first-run-start="space-missions"]')
+      .querySelector('[data-first-run-start="sweden-now"]')
       .getAttribute('aria-pressed'),
     'true',
   );
-  root.querySelector('.first-run-back').focus();
-  await move(root, frames, '.first-run-back');
   assert.equal(root.querySelector('.first-run-back'), null);
   assert.ok(
     document.activeElement === root.querySelector('[data-first-run-primary]'),
@@ -348,7 +357,7 @@ test('BROWSE STORIES closes the card and opens Stories in place', async (t) => {
       return new Promise((resolve) => (finishLoading = resolve));
     },
   });
-  await move(root, frames);
+  // Swedish fork: two steps, so one move reaches the last.
   await move(root, frames);
   const button = root.querySelector('[data-first-run-stories]');
   assert.ok(button, 'the Stories card offers its button on the last step');
@@ -380,7 +389,7 @@ test('BROWSE STORIES keeps the welcome up when Stories refuses to open', async (
   const { root, pinia, frames, sessionStorageRef } = await launch(t);
   const stories = useStoriesStore(pinia);
   stories.connect({ open: () => false });
-  await move(root, frames);
+  // Swedish fork: two steps, so one move reaches the last.
   await move(root, frames);
   root.querySelector('[data-first-run-stories]').click();
   await nextTick();
@@ -396,7 +405,7 @@ test('the Stories card is left out where Stories is not offered', async (t) => {
   const { root, pinia, frames } = await launch(t);
   const stories = useStoriesStore(pinia);
   stories.available = false;
-  await move(root, frames);
+  // Swedish fork: two steps, so one move reaches the last.
   await move(root, frames);
   assert.equal(root.querySelector('.first-run-stories'), null);
   assert.equal(root.querySelector('[data-first-run-stories]'), null);
@@ -433,4 +442,180 @@ test('ESC closes the card, returns focus, and removes it without a transition', 
   t.mock.timers.tick(400);
   await nextTick();
   assert.equal(document.getElementById('first-run-launcher') === null, true);
+});
+
+// ── Swedish fork: what the welcome says ─────────────────────────────────────
+
+test('Swedish fork: the welcome opens with the owner’s line and credits the original', async (t) => {
+  setLocale('sv');
+  t.after(() => setLocale('en'));
+  const { root, frames } = await launch(t);
+  assert.equal(
+    root.querySelector('.first-run-kicker').textContent,
+    'VÄLKOMMEN · SNABBSTART',
+  );
+  // The line from the owner's films; the product name is never translated.
+  const title = root.querySelector('#first-run-title');
+  assert.equal(
+    title.textContent,
+    "God's Eye View Sverige – en vidareutvecklad svensk version av Kaj Obst",
+  );
+  assert.equal(
+    title.querySelector('[translate="no"]').textContent,
+    "God's Eye View Sverige",
+  );
+  assert.equal(
+    root.querySelector('.first-run-step-announcement').textContent,
+    title.textContent,
+  );
+  assert.equal(
+    root.querySelector('#first-run-description').textContent,
+    'Öppna data om Sverige, mycket av det i realtid: trafik, väder, natur, samhälle och infrastruktur från myndigheter och öppna källor. Allt här är offentligt, och varje lager visar sin källa.',
+  );
+  assert.deepEqual(
+    [...root.querySelectorAll('[data-first-run-start] strong')].map(
+      (node) => node.textContent,
+    ),
+    ['SVERIGE JUST NU', 'NATUR OCH VÄDER', 'UTFORSKA SJÄLV'],
+  );
+  assert.match(
+    root.querySelector('[data-first-run-start="sweden-now"] small').textContent,
+    /väglag från Trafikverket \(nyckel krävs\)$/,
+  );
+  await move(root, frames);
+  assert.match(
+    root.querySelector('[data-first-run-primary]').textContent,
+    /^\s*KOM IGÅNG\s/,
+  );
+  // One credit line, naming both of the original's maintainers, in place of
+  // Halfpixel's social links, and the fork's own repository.
+  const links = [...root.querySelectorAll('a')];
+  assert.deepEqual(
+    links.map((link) => [
+      link.getAttribute('href'),
+      link.querySelector('strong').textContent,
+    ]),
+    [
+      [
+        FIRST_RUN_LINKS.source,
+        "Bygger på God's Eye View av Bilawal Sidhu och Sameh Khamis (MIT-licens)",
+      ],
+      [FIRST_RUN_LINKS.fork, 'Den svenska versionen på GitHub'],
+    ],
+  );
+  // The original's name is never translated, and the credit link's name says
+  // where it goes: its text without the hidden badge, as a reader hears it.
+  const [credit] = links;
+  assert.equal(
+    credit.querySelector('strong [translate="no"]').textContent,
+    "God's Eye View",
+  );
+  const heard = credit.cloneNode(true);
+  for (const hidden of heard.querySelectorAll('[aria-hidden="true"]'))
+    hidden.remove();
+  assert.equal(
+    heard.textContent.replace(/\s+/g, ' ').trim(),
+    "Bygger på God's Eye View av Bilawal Sidhu och Sameh Khamis (MIT-licens) Originalets källkod på GitHub",
+  );
+});
+
+/** The attributes whose text a reader sees or hears. */
+const TEXT_ATTRIBUTES = Object.freeze([
+  'aria-label',
+  'aria-description',
+  'aria-roledescription',
+  'aria-valuetext',
+  'aria-placeholder',
+  'aria-braillelabel',
+  'aria-brailleroledescription',
+  'title',
+  'alt',
+  'placeholder',
+  'data-callout',
+]);
+
+/**
+ * Every word the card shows or speaks: its text, and the text-bearing
+ * attributes of the card itself and of everything in it.
+ */
+function shownText(root) {
+  const parts = [root.textContent];
+  for (const node of [root, ...root.querySelectorAll('*')]) {
+    for (const name of TEXT_ATTRIBUTES) {
+      if (node.hasAttribute(name)) parts.push(node.getAttribute(name));
+    }
+  }
+  return parts.join('\n');
+}
+
+// The fork's design rule (only true things; no spy, classified or military
+// styling), as stems that must never come back into the welcome, however
+// they are spelt or joined: "god mode", "god-mode" and "godmode" alike.
+const FORBIDDEN = Object.freeze([
+  /spion/,
+  /spy/,
+  /guds?[\s­​_-]*läge/,
+  /god[\s­​_-]*mode/,
+  /taktisk/,
+  /tactic/,
+  /förbjud/,
+  /forbid/,
+  /uppdragsledning/,
+  /mission[\s­​_-]*control/,
+  /nyckel[\s­​_-]*hål/,
+  /key[\s­​_-]*hole/,
+  /milit[aä]r/,
+]);
+
+test('Swedish fork: no spy, god-mode or military words in the welcome, in Swedish or English', async (t) => {
+  t.after(() => setLocale('en'));
+  // Read on the way: text, an attribute-only label, a start's progress line
+  // and the line a refused layer leaves.
+  const READ = {
+    sv: ['kom igång', 'steg 1 av 2', 'slår på', 'det gick inte att slå på'],
+    en: ['get started', 'step 1 of 2', 'turning on', 'could not turn on'],
+  };
+  for (const locale of ['sv', 'en']) {
+    setLocale(locale);
+    const pending = [];
+    const { root, frames } = await launch(t, {
+      dataManager: {
+        setEnabled: () => new Promise((resolve) => pending.push(resolve)),
+      },
+    });
+    const shown = [shownText(root)];
+    const starts = [...root.querySelectorAll('[data-first-run-start]')].map(
+      (node) => node.dataset.firstRunStart,
+    );
+    await move(root, frames);
+    shown.push(shownText(root));
+    // Each start's progress line, and the line a refused layer leaves; Explore
+    // last, since it closes the card.
+    for (const start of starts) {
+      await move(root, frames, '.first-run-back');
+      root.querySelector(`[data-first-run-start="${start}"]`).click();
+      await move(root, frames);
+      root.querySelector('[data-first-run-primary]').click();
+      await nextTick();
+      shown.push(shownText(root));
+      for (const resolve of pending.splice(0)) resolve(false);
+      await new Promise((resolve) => setTimeout(resolve));
+      await nextTick();
+      shown.push(shownText(root));
+    }
+    // Composed, so a decomposed "ä" cannot slip past a stem.
+    const text = shown.join('\n').normalize('NFC').toLowerCase();
+    // Not vacuous: both steps and every start's lines were read.
+    assert.match(text, /god's eye view sverige/);
+    for (const phrase of READ[locale]) {
+      assert.ok(text.includes(phrase), `${locale}: read "${phrase}"`);
+    }
+    for (const stem of FORBIDDEN) {
+      assert.doesNotMatch(
+        text,
+        stem,
+        `${locale}: ${stem} is back in the welcome`,
+      );
+    }
+  }
 });

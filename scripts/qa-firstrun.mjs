@@ -10,6 +10,11 @@
  *
  * It also captures the owner's taste-pass screenshots into qa-shots/firstrun/.
  *
+ * Swedish fork: the welcome has two steps, the starts on the first (Sverige
+ * just nu, Natur och väder, Explore) and NEXT to the tips; both Swedish starts
+ * keep the camera where it is. The original's Space Missions and
+ * Environmental sections became one section per Swedish start.
+ *
  * Usage:
  *   node scripts/qa-firstrun.mjs --url http://localhost:4278
  *   node scripts/qa-firstrun.mjs --url http://localhost:4278 --teeth
@@ -116,11 +121,15 @@ const appState = (page) => page.evaluate(() => {
   for (const id of [
     'local-datacenters', 'local-dams', 'telegeography-submarine-cables',
     'local-firms', 'earthquakes', 'flights', 'military', 'rocket-launches', 'satellites',
+    // Swedish fork: the layers the Swedish starts turn on.
+    'smhi-warnings', 'trafikverket-roads', 'smhi-weather',
+    'protected-nature', 'river-flow', 'aurora',
   ]) {
     layers[id] = !!dm?.isEnabled?.(id);
     counts[id] = all.find((entry) => entry.id === id)?.stats?.count ?? null;
   }
   const firms = all.find((entry) => entry.id === 'local-firms');
+  const roads = all.find((entry) => entry.id === 'trafikverket-roads');
   return {
     heightKm: carto ? Math.round(carto.height / 1000) : null,
     layers,
@@ -128,6 +137,7 @@ const appState = (page) => page.evaluate(() => {
     contextMode: sm?.getContextModeState?.().mode ?? null,
     firmsError: firms?.stats?.error ?? null,
     firmsCount: firms?.stats?.count ?? null,
+    roadsError: roads?.stats?.error ?? null,
     detectionOverridden: sm?._detectionUserOverridden ?? null,
     durable: localStorage.getItem('gev:first-run-mission:v1'),
     session: sessionStorage.getItem('gev:first-run-mission-session:v1'),
@@ -182,7 +192,8 @@ async function nextStep(page, readySelector) {
 }
 
 async function pick(page, choice, { timeout = 40000, settle = [] } = {}) {
-  await nextStep(page, '[data-first-run-start]');
+  // Swedish fork: the tiles are on the first step, then NEXT to the last.
+  await page.waitForSelector(`[data-first-run-start="${choice}"]`, { visible: true });
   await page.click(`[data-first-run-start="${choice}"]`);
   await nextStep(page, '[data-first-run-choice]');
   await page.click('[data-first-run-choice]');
@@ -204,7 +215,9 @@ async function pick(page, choice, { timeout = 40000, settle = [] } = {}) {
 /** Every section the run is expected to reach; the teeth verdict requires all. */
 const EXPECTED_SECTIONS = [
   'show-policy', 'esc-arbitration',
-  'mission-environmental', 'mission-space', 'mission-explore',
+  // Swedish fork: one section per Swedish start, in place of Environmental and
+  // Space Missions.
+  'mission-sweden-now', 'mission-nature-weather', 'mission-explore',
   'stories-card', 'viewports', 'console',
 ];
 
@@ -514,11 +527,12 @@ async function main() {
       record('the hidden attribute still hides the flex card', hiddenHonored === 'none',
         `computed display while hidden = ${hiddenHonored}`);
 
-      await nextStep(page, '[data-first-run-start]');
+      // Swedish fork: the tiles are on the first step.
+      await page.waitForSelector('[data-first-run-start]', { visible: true });
       const tiles = await page.$$eval('[data-first-run-start]', (nodes) => nodes.map((n) => n.dataset.firstRunStart));
       record(
         'three tiles in the owner\'s order',
-        JSON.stringify(tiles) === JSON.stringify(['space-missions', 'environmental', 'explore']),
+        JSON.stringify(tiles) === JSON.stringify(['sweden-now', 'nature-weather', 'explore']),
         tiles.join(' · '),
       );
 
@@ -577,75 +591,73 @@ async function main() {
     // tally reports "reached" for assertions that never ran.
     let state;
     let before;
-    await section('mission-environmental', async () => {
+    // Swedish fork: one section per Swedish start, in place of Environmental
+    // and Space Missions. Both are layer choices over Sweden, so the camera is
+    // set first and must not move.
+    const overSweden = () => page.evaluate(() => {
+      const camera = window.__godsEyeView.viewer.camera;
+      camera.cancelFlight();
+      camera.setView({ destination: camera.position.constructor.fromDegrees(16.5448, 59.6099, 100000) });
+    });
+    await section('mission-sweden-now', async () => {
     // Full clear, not just the session: layer enables are DURABLE, so without it
-    // an earlier mission's layers ride along and this stops measuring
-    // Environmental alone (and its screenshot stops showing it alone).
+    // an earlier start's layers ride along and this stops measuring this start
+    // alone (and its screenshot stops showing it alone).
     await open(page, { query: "?welcome=1", errorSink: consoleErrors });
+    await overSweden();
     before = await appState(page);
     await watchLoadingChip(page);
-    await pick(page, 'environmental', { settle: ['earthquakes', 'local-firms'] });
+    await pick(page, 'sweden-now', { settle: ['smhi-warnings', 'trafikverket-roads', 'smhi-weather'] });
     state = await appState(page);
-    record('ENVIRONMENTAL leaves the detection override untouched',
+    record('SWEDEN RIGHT NOW leaves the detection override untouched',
       state.detectionOverridden === false, `_detectionUserOverridden=${state.detectionOverridden}`);
     record('a mission never auto-suppresses itself', state.durable === null, `durable=${state.durable}`);
     record('a mission never writes the detection-allocation pref',
       state.allocation === before.allocation, `${before.allocation} → ${state.allocation}`);
-    record('ENVIRONMENTAL enables BOTH of its feeds', state.layers.earthquakes && state.layers['local-firms'],
-      `quakes=${state.layers.earthquakes} fires=${state.layers['local-firms']}`);
-    record('ENVIRONMENTAL loads real quake records', (state.counts.earthquakes ?? 0) > 0,
-      `${state.counts.earthquakes} quakes`);
-    record('ENVIRONMENTAL reaches the full-earth camera', state.heightKm !== null && state.heightKm > 12000,
-      `${state.heightKm} km`);
+    record('SWEDEN RIGHT NOW enables all three of its layers',
+      state.layers['smhi-warnings'] && state.layers['trafikverket-roads'] && state.layers['smhi-weather'],
+      `warnings=${state.layers['smhi-warnings']} roads=${state.layers['trafikverket-roads']} weather=${state.layers['smhi-weather']}`);
+    record('SWEDEN RIGHT NOW keeps the camera where it is',
+      before.heightKm === 100 && state.heightKm === before.heightKm,
+      `${before.heightKm} → ${state.heightKm} km (expected 100 → 100 km)`);
+    record('SWEDEN RIGHT NOW switches its layers on without a Context mode',
+      state.contextMode == null, `contextMode=${state.contextMode}`);
 
     /*
-     * The tile optimizes for the FULLY CONFIGURED app, so the assertion splits
-     * on what this server actually has rather than pretending one answer fits
-     * both. The branch is reported, so a green run always says which one it was.
+     * The tile says Trafikverket's roads need a key, so the assertion splits on
+     * what this server has, and the branch is reported, so a green run always
+     * says which one it was.
      *
-     *   KEYED   — both datasets must actually arrive, and a failure banner in
-     *             that state is a real defect, so the chip IS asserted.
-     *   KEYLESS — the LAYER ROW reports KEY REQUIRED, and the GLOBAL chip
-     *             never says LOAD FAILED: a missing key ends the batch
-     *             KEY REQUIRED (`src/loadingFeedback.js`).
+     *   KEYED   — Trafikverket's rows must actually arrive, and a failure
+     *             banner in that state is a real defect, so the chip IS
+     *             asserted.
+     *   KEYLESS — the road row says the key is not configured. The global chip
+     *             is not asserted here: it reports the road layer like any
+     *             other failed feed (known, left as is).
      */
-    const keyless = state.firmsError === 'KEY REQUIRED';
-    console.log(`  \x1b[2m   FIRMS key state: ${keyless ? 'KEYLESS' : 'KEYED'} `
-      + `(row="${state.firmsError ?? 'none'}", count=${state.firmsCount})\x1b[0m`);
+    const keyless = /TRAFIKVERKET_API_KEY/.test(state.roadsError ?? '');
+    console.log(`  \x1b[2m   Trafikverket key state: ${keyless ? 'KEYLESS' : 'KEYED'} `
+      + `(row="${state.roadsError ?? 'none'}", count=${state.counts['trafikverket-roads']})\x1b[0m`);
     if (keyless) {
       record(
-        'KEYLESS: the FIRMS row tells the visitor the truth (KEY REQUIRED)',
-        state.firmsError === 'KEY REQUIRED',
-        `layer row reports "${state.firmsError}"`,
-      );
-      record(
-        'KEYLESS: the quakes half of the tile still delivers in full',
-        (state.counts.earthquakes ?? 0) > 0,
-        `${state.counts.earthquakes} quakes`,
-      );
-      const keylessChip = await readLoadingChip(page);
-      record(
-        'KEYLESS: the global chip never says LOAD FAILED for a missing key',
-        !keylessChip.some((entry) => /LOAD FAILED/i.test(entry)),
-        keylessChip.join(' → ') || 'no chip',
+        'KEYLESS: the road row tells the visitor the key is missing',
+        /not configured/i.test(state.roadsError),
+        `layer row reports "${state.roadsError}"`,
       );
     } else {
       record(
-        'KEYED: both datasets actually arrive',
-        (state.counts.earthquakes ?? 0) > 0 && (state.firmsCount ?? 0) > 0,
-        `${state.counts.earthquakes} quakes · ${state.firmsCount} fire detections`,
+        'KEYED: Trafikverket road rows actually arrive',
+        state.roadsError === null && (state.counts['trafikverket-roads'] ?? 0) > 0,
+        `row="${state.roadsError ?? 'none'}", ${state.counts['trafikverket-roads']} stretches and incidents`,
       );
       const chip = await readLoadingChip(page);
       const failed = chip.filter((entry) => /LOAD FAILED/i.test(entry));
-      // A STALE served-from-cache FIRMS payload is degraded, not failed, and it
-      // still carries data — so the failure test is the banner, not any
-      // non-empty error string.
       record(
-        'KEYED: no unexpected global failure while the mission runs',
+        'KEYED: no unexpected global failure while the start runs',
         failed.length === 0,
         failed.length
           ? `chip showed: ${failed.join(' | ')}`
-          : `firms row="${state.firmsError ?? 'none'}"; chip states seen: ${chip.join(' → ') || 'none'}`,
+          : `chip states seen: ${chip.join(' → ') || 'none'}`,
       );
     }
     record(
@@ -654,28 +666,26 @@ async function main() {
         && !state.layers['telegeography-submarine-cables'],
       'the removed tile left nothing enabling ~5,700 entities at globe scale',
     );
-    shots.push(await shoot(page, 'mission-environmental'));
+    shots.push(await shoot(page, 'mission-sweden-now'));
     });
 
-    await section('mission-space', async () => {
+    await section('mission-nature-weather', async () => {
     await open(page, { query: "?welcome=1", errorSink: consoleErrors });
-    await pick(page, 'space-missions');
+    await overSweden();
+    before = await appState(page);
+    await pick(page, 'nature-weather', { settle: ['protected-nature', 'river-flow', 'aurora'] });
     state = await appState(page);
-    const missions = await page.evaluate(() => {
-      const panel = document.getElementById('space-missions-panel');
-      return {
-        layerOn: window.__godsEyeView.dataManager.isEffectivelyEnabled('rocket-launches'),
-        panelOpen: !!panel && !panel.hidden && !panel.classList.contains('collapsed'),
-      };
-    });
-    record('SPACE MISSIONS switches its layer on without a Context mode',
-      missions.layerOn && state.contextMode == null,
-      `layerOn=${missions.layerOn} contextMode=${state.contextMode}`);
-    record('SPACE MISSIONS opens its own panel', missions.panelOpen,
-      `panelOpen=${missions.panelOpen}`);
-    record('SPACE MISSIONS still leaves the detection override untouched',
+    record('NATURE AND WEATHER enables all three of its layers',
+      state.layers['protected-nature'] && state.layers['river-flow'] && state.layers.aurora,
+      `nature=${state.layers['protected-nature']} rivers=${state.layers['river-flow']} aurora=${state.layers.aurora}`);
+    record('NATURE AND WEATHER keeps the camera where it is',
+      before.heightKm === 100 && state.heightKm === before.heightKm,
+      `${before.heightKm} → ${state.heightKm} km (expected 100 → 100 km)`);
+    record('NATURE AND WEATHER switches its layers on without a Context mode',
+      state.contextMode == null, `contextMode=${state.contextMode}`);
+    record('NATURE AND WEATHER still leaves the detection override untouched',
       state.detectionOverridden === false, `_detectionUserOverridden=${state.detectionOverridden}`);
-    shots.push(await shoot(page, 'mission-space-missions'));
+    shots.push(await shoot(page, 'mission-nature-weather'));
     });
 
     await section('mission-explore', async () => {
@@ -689,10 +699,11 @@ async function main() {
     const beforeExplore = await appState(page);
     await pick(page, 'explore');
     state = await appState(page);
-    record('EXPLORE MANUALLY enables no layer and no context mode',
+    // Swedish fork: the tile reads EXPLORE ON YOUR OWN.
+    record('EXPLORE ON YOUR OWN enables no layer and no context mode',
       Object.values(state.layers).every((on) => !on) && state.contextMode === null,
       Object.entries(state.layers).filter(([, on]) => on).map(([id]) => id).join(', ') || 'nothing enabled');
-    record('EXPLORE MANUALLY never commandeers the camera',
+    record('EXPLORE ON YOUR OWN never commandeers the camera',
       beforeExplore.heightKm === 100 && state.heightKm === beforeExplore.heightKm,
       `${beforeExplore.heightKm} → ${state.heightKm} km (expected 100 → 100 km)`);
     shots.push(await shoot(page, 'mission-explore'));
@@ -714,7 +725,8 @@ async function main() {
       !!backdrop && backdrop.filter === 'none' && backdrop.background !== 'rgba(0, 0, 0, 0)'
         && backdrop.pointerEvents === 'none',
       JSON.stringify(backdrop));
-    await nextStep(page, '[data-first-run-start]');
+    // Swedish fork: two steps, so one NEXT reaches the Stories card.
+    await page.waitForSelector('[data-first-run-start]', { visible: true });
     await nextStep(page, '[data-first-run-choice]');
     const button = await page.evaluate(() => {
       const el = document.querySelector('#first-run-launcher [data-first-run-stories]');
@@ -756,8 +768,10 @@ async function main() {
     for (const vp of VIEWPORTS) {
       await page.setViewport({ width: vp.width, height: vp.height, deviceScaleFactor: vp.dpr });
       await open(page, { query: "?welcome=1", errorSink: consoleErrors });
-      for (let step = 1; step <= 3; step++) {
-      if (step > 1) await nextStep(page, step === 2 ? '[data-first-run-start]' : '[data-first-run-choice]');
+      // Swedish fork: two steps, the tiles on the first.
+      for (let step = 1; step <= 2; step++) {
+      if (step > 1) await nextStep(page, '[data-first-run-choice]');
+      else await page.waitForSelector('[data-first-run-start]', { visible: true });
       const box = await page.evaluate((sel) => {
         const node = document.querySelector(sel);
         if (!node) return null;
@@ -788,7 +802,8 @@ async function main() {
       // Discoverability: if the list scrolls, the LAST tile must still peek
       // above the fold. A fold that lands exactly between tiles looks like a
       // complete list, and the last mission is simply never found.
-      if (step === 2) {
+      // Swedish fork: the tiles are on the first step.
+      if (step === 1) {
       const peek = await page.evaluate((sel) => {
         const node = document.querySelector(sel);
         const list = node?.querySelector('.first-run-choices');

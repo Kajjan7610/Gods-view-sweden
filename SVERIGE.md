@@ -435,6 +435,49 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-22 (välkomstrutan på svenska)
+- Originalets välkomstruta, som kom med sammanslagningen 2026-11-21, var
+  skriven i spion- och militärstil ("förbjuden cockpit", "taktisk HUD",
+  "UPPDRAGSLEDNING", "STARTA GUDLÄGE") och länkade till Halfpixels sociala
+  medier. Den svenska versionen har nu en egen välkomst, på appens alla
+  13 språk.
+- Rubriken är raden från filmerna, "God's Eye View Sverige – en
+  vidareutvecklad svensk version av Kaj Obst", där produktnamnet aldrig
+  översätts. Under den står "Öppna data om Sverige, mycket av det i
+  realtid: trafik, väder, natur, samhälle och infrastruktur från
+  myndigheter och öppna källor. Allt här är offentligt, och varje lager
+  visar sin källa." (inte allt är i realtid: skyddad natur, befolkning och
+  liknande är ögonblicksbilder).
+  Etiketten överst är "VÄLKOMMEN · SNABBSTART": rutan kommer tillbaka
+  varje session tills man kryssar i "Visa inte igen", så den säger inte
+  "första starten".
+- Två steg i stället för tre; valet mellan lägena Gud och Analytiker är
+  borta. Första steget har tre startval: **Sverige just nu**
+  (Vädervarningar, Väder nu och Väglag), **Natur och väder** (Skyddad
+  natur, Vattenföring och Norrskensprognos) och **Utforska själv** (en ren
+  karta, förvalt). Väglaget kräver Trafikverkets nyckel och rutan säger
+  det; utan nyckel slås lagret ändå på och raden i Datalager förklarar.
+  De andra fem lagren behöver ingen nyckel. Ett val slår på lagren som ett
+  klick på deras rader och låter kameran stå kvar över Sverige; rutan gör
+  inga egna anrop. Går ett lager inte att slå på står det "Det gick inte
+  att slå på alla lager (…). Försök igen eller välj UTFORSKA SJÄLV." Andra
+  steget har de tre tipsen, GEV Stories och knappen KOM IGÅNG.
+- I stället för "Mer från Halfpixel" och de sociala länkarna står
+  "Bygger på God's Eye View av Bilawal Sidhu och Sameh Khamis
+  (MIT-licens)", originalets två ansvariga som i dess README, med en länk
+  till originalets repo, och "Den svenska versionen på GitHub"
+  (github.com/Kajjan7610/Gods-view-sweden). Originalets namn översätts
+  aldrig, och länkens namn för skärmläsare säger att den leder till
+  originalets källkod på GitHub.
+- Ett test går rött om spion, spy, gudläge, god mode, taktisk, tactical,
+  förbjuden, forbidden, uppdragsledning, mission control, nyckelhål,
+  keyhole, militär eller military kommer tillbaka i rutan, också böjt
+  eller ihopskrivet ("förbjudna", "god-mode"), på svenska eller engelska,
+  i text, verktygstips, statusrader eller texter för skärmläsare.
+- Originalets startval finns kvar i koden, så att uppdateringar från
+  originalet går att slå ihop, men visas inte. De 24 texter som ingen kod
+  längre använder är borttagna ur språkfilerna.
+
 ### 2026-11-22 (flyget på adsb.lol:s dygnskvot)
 - adsb.lol mäter nu anropen till de ändpunkter appen använder (flygplanen
   runt en punkt, `/v2/lat/…/lon/…/dist/…`, och `/v2/mil`): utan nyckel 500

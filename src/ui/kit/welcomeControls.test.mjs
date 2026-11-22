@@ -1,7 +1,8 @@
 // The welcome card's buttons and Material glyphs are the kit's: its template
 // hand-writes no <button> and no Material Symbols span, and its one box is a
 // UiCheckbox. Its two inline SVGs (God mode's globe and its callouts) are
-// drawings, not glyphs, and its outbound links stay links.
+// drawings, not glyphs, and its outbound links stay links. Swedish fork: the
+// welcome has no mode step, so neither drawing.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -29,9 +30,9 @@ test('the welcome card hand-writes no Material glyph; each is a UiIcon', () => {
   for (const icon of icons) assert.match(icon, /:size="null"/);
 });
 
-test('the only inline SVGs are God mode preview drawings', () => {
+// Swedish fork: the God mode previews were the only inline SVGs, and they went
+// with the mode step.
+test('the welcome draws no inline SVG', () => {
   const svgs = [...template.matchAll(/<svg\b[^>]*>/g)].map((m) => m[0]);
-  assert.equal(svgs.length, 2);
-  assert.match(svgs[0], /class="first-run-globe"/);
-  assert.match(svgs[1], /class="first-run-callouts"/);
+  assert.deepEqual(svgs, []);
 });

@@ -5,6 +5,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
+// Swedish fork: the welcome's links, the layer registry and the layers voice
+// leaves out.
+import { FIRST_RUN_LINKS } from './firstRunCopy.js';
+import { REGISTERED_LAYER_IDS } from './data/layerState.js';
+import { VOICE_OFF_LAYERS } from './voice/layerManifest.js';
 import {
   ENVIRONMENTAL_LABEL_CHOICE,
   EXCLUSIVE_SURFACE_CLASSES,
@@ -556,17 +561,23 @@ function missionSpy({
   };
 }
 
-test('the menu is the three owner-ordered missions', () => {
+// Swedish fork: titled for the table it now holds.
+test('the mission table holds the original’s three missions, then the fork’s two starts', () => {
   // INFRASTRUCTURE was removed after the owner playtested it: enabling all
   // three bundled layers at once put ~5,700 entities on a full-earth view and
   // tanked the frame rate. The layers stay reachable by hand and by voice; what
   // went is the one-click globe-scale dump. Restoring the tile needs the
   // globe-LOD declutter first. Live Contacts was dropped from the product, so
   // it is not offered as a starting mission either.
+  // Swedish fork: the original's three stay in the table, so it follows the
+  // original; the fork's welcome offers its two Swedish starts and Explore
+  // (firstRunLauncherView.test.mjs).
   assert.deepEqual(Object.keys(FIRST_RUN_MISSIONS), [
     'space-missions',
     'environmental',
     'explore',
+    'sweden-now',
+    'nature-weather',
   ]);
   assert.equal(
     FIRST_RUN_MISSIONS.infrastructure,
@@ -601,7 +612,8 @@ test('Environmental enables BOTH its feeds and pulls out to the globe', async ()
   assert.equal(spy.calls.globeFlights, 1);
 });
 
-test('the tile is the FULLY CONFIGURED experience: quakes and fires together', () => {
+// Swedish fork: the fork's welcome shows no Environmental tile; the mission stays.
+test('the original Environmental mission is the FULLY CONFIGURED experience: quakes and fires together', () => {
   // Owner ruling, 2026-08-23: the launcher optimizes for the configured app, so
   // ENVIRONMENTAL means live USGS earthquakes AND NASA FIRMS active fires.
   const environmental = FIRST_RUN_MISSIONS.environmental;
@@ -622,7 +634,7 @@ test('the tile is the FULLY CONFIGURED experience: quakes and fires together', (
   assert.match(table, /global status chip\s+\/\/\s+ends KEY REQUIRED/);
 });
 
-test('every visitor gets the same tile — there is no degraded keyless variant', async () => {
+test('every visitor gets the same mission — there is no degraded keyless variant', async () => {
   // The mission does not branch on configuration: it asks for both layers for
   // everyone, and a keyless FIRMS reports its own state at its own row rather
   // than changing what the tile does.
@@ -660,7 +672,8 @@ test('a refused layer fails the mission by name, and a stalled flight never does
   );
 });
 
-test('Explore manually touches nothing at all, and an unknown choice is inert', async () => {
+// Swedish fork: the tile reads EXPLORE ON YOUR OWN.
+test('Explore on your own touches nothing at all, and an unknown choice is inert', async () => {
   const spy = missionSpy();
   assert.equal((await runFirstRunChoice('explore', spy.deps)).ok, true);
   assert.deepEqual(spy.calls, { layerIds: [], globeFlights: 0 });
@@ -668,7 +681,7 @@ test('Explore manually touches nothing at all, and an unknown choice is inert', 
   assert.deepEqual(spy.calls, { layerIds: [], globeFlights: 0 });
 });
 
-test('the fires/quakes tile name is switchable from one constant', () => {
+test('the original fires/quakes tile name is still switchable from one constant', () => {
   assert.equal(environmentalLabel('ENVIRONMENTAL').title, 'ENVIRONMENTAL');
   assert.equal(environmentalLabel('EARTH_WATCH').title, 'EARTH WATCH');
   assert.equal(environmentalLabel('ACTIVE_EVENTS').title, 'ACTIVE EVENTS');
@@ -677,6 +690,51 @@ test('the fires/quakes tile name is switchable from one constant', () => {
     environmentalLabel().title,
     environmentalLabel(ENVIRONMENTAL_LABEL_CHOICE).title,
   );
+});
+
+// ── Swedish fork: the starts the welcome offers ─────────────────────────────
+
+test('Swedish fork: Sverige just nu switches on warnings, roads and weather, without a flight', async () => {
+  const spy = missionSpy();
+  const outcome = await runFirstRunChoice('sweden-now', spy.deps);
+  assert.equal(outcome.ok, true);
+  assert.deepEqual(spy.calls.layerIds, [
+    'smhi-warnings',
+    'trafikverket-roads',
+    'smhi-weather',
+  ]);
+  assert.equal(spy.calls.globeFlights, 0, 'the camera stays over Sweden');
+  assert.equal(FIRST_RUN_MISSIONS['sweden-now'].kind, 'layer');
+});
+
+test('Swedish fork: Natur och väder switches on nature, river flow and the aurora, without a flight', async () => {
+  const spy = missionSpy();
+  const outcome = await runFirstRunChoice('nature-weather', spy.deps);
+  assert.equal(outcome.ok, true);
+  assert.deepEqual(spy.calls.layerIds, [
+    'protected-nature',
+    'river-flow',
+    'aurora',
+  ]);
+  assert.equal(spy.calls.globeFlights, 0, 'the camera stays over Sweden');
+  // A refused layer is named, as for the original's missions.
+  const refused = missionSpy({ layerResult: (id) => id !== 'river-flow' });
+  const failed = await runFirstRunChoice('nature-weather', refused.deps);
+  assert.equal(failed.ok, false);
+  assert.deepEqual(failed.failedLayerIds, ['river-flow']);
+});
+
+test('Swedish fork: every layer a start switches on is a registered layer', () => {
+  // DataManager.setEnabled resolves for an id it does not know, and a start
+  // counts that as done: a misspelt id would close the card with nothing on.
+  for (const [choice, mission] of Object.entries(FIRST_RUN_MISSIONS)) {
+    for (const layerId of mission.layerIds || []) {
+      assert.ok(
+        REGISTERED_LAYER_IDS.includes(layerId),
+        `${choice}: ${layerId} is not a registered layer`,
+      );
+    }
+  }
 });
 
 // ── Defaults interplay: what a mission is allowed to persist ─────────────────
@@ -758,9 +816,10 @@ test('markup, startup ordering and accessibility remain pinned', async () => {
   );
   assert.equal((html.match(/data-first-run-choice=/g) || []).length, 0);
   assert.match(html, /data-first-run-next/);
+  // Swedish fork: the owner's line about the Swedish version, verbatim.
   assert.ok(
     html.includes(
-      '<p id="first-run-description">It feels like a forbidden cockpit—then you realize the sources are public and the data is real.</p>',
+      '<p id="first-run-description">Open data about Sweden, much of it in real time: traffic, weather, nature, society and infrastructure from public agencies and open sources. Everything here is public, and every layer shows its source.</p>',
     ),
     'the maintainer-authored first-run line stays verbatim',
   );
@@ -905,7 +964,19 @@ test('every outbound first-run link opens without opener or referrer', () => {
     'utf8',
   );
   const links = view.match(/<a [^>]*target="_blank"[^>]*>/g) || [];
-  assert.ok(links.length >= 7, 'the source and Halfpixel chips are outbound');
+  // Swedish fork: the credit to the original and the Swedish version's own
+  // repository, in place of the source and Halfpixel chips.
+  assert.equal(links.length, 2, 'the two repositories are outbound');
+  assert.match(links[0], /:href="FIRST_RUN_LINKS\.source"/);
+  assert.match(links[1], /:href="FIRST_RUN_LINKS\.fork"/);
+  assert.equal(
+    FIRST_RUN_LINKS.source,
+    'https://github.com/bilawalsidhu/gods-eye-view',
+  );
+  assert.equal(
+    FIRST_RUN_LINKS.fork,
+    'https://github.com/Kajjan7610/Gods-view-sweden',
+  );
   for (const link of links) {
     assert.match(link, /rel="noopener noreferrer"/, link);
   }
@@ -1150,7 +1221,7 @@ test('the voice TOOL SCHEMA matches the pinned contract — the mission mapping 
   assert.ok(paragraph.includes('set_layer_visibility'));
 });
 
-test('every layer a mission drives is already in the shipped set_layer_visibility enum', () => {
+test('every layer a mission drives is in the shipped set_layer_visibility enum, or kept out of voice on purpose', () => {
   const tool = GEV_REALTIME_TOOLS.find(
     (tool) => tool.name === 'set_layer_visibility',
   );
@@ -1160,8 +1231,12 @@ test('every layer a mission drives is already in the shipped set_layer_visibilit
   );
   assert.ok(missionLayerIds.length > 0);
   for (const layerId of missionLayerIds) {
+    // Swedish fork: the Swedish starts' layers are outside voice on purpose
+    // (VOICE_OFF_LAYERS, no room in the prompt budget), so the welcome
+    // reaches them and voice does not; the schema stays as it is.
     assert.ok(
-      allowedLayers.includes(layerId),
+      allowedLayers.includes(layerId) ||
+        Object.hasOwn(VOICE_OFF_LAYERS, layerId),
       `${layerId} must already be an allowed enum value`,
     );
   }

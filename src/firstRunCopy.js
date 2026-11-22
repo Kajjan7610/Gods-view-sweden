@@ -39,4 +39,9 @@ export const FIRST_RUN_LINKS = Object.freeze({
   linkedin: 'https://www.linkedin.com/in/bilawalsidhu',
   website: 'https://bilawal.ai',
   halfpixel: 'https://halfpixel.ai',
+  /**
+   * Swedish fork: the Swedish version's repository. The fork's welcome links
+   * to it and to `source`, in place of the chips above.
+   */
+  fork: 'https://github.com/Kajjan7610/Gods-view-sweden',
 });

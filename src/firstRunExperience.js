@@ -102,6 +102,28 @@ export const FIRST_RUN_MISSIONS = Object.freeze({
     busyKey: msg('Scanning active events…'),
   }),
   explore: Object.freeze({ kind: 'none' }),
+  // Swedish fork: the welcome offers these two starts and Explore
+  // (WelcomeView.vue); the original's missions above stay, so the table
+  // follows the original. Both are layer choices over Sweden, where the fork
+  // starts, so the camera stays where it is.
+  'sweden-now': Object.freeze({
+    kind: 'layer',
+    // Keyless, Trafikverket's road layer still switches on and its row says
+    // the key is not configured; the tile says the key is needed.
+    layerIds: Object.freeze([
+      'smhi-warnings',
+      'trafikverket-roads',
+      'smhi-weather',
+    ]),
+    busyKey: msg('Turning on warnings, weather and road conditions…'),
+  }),
+  'nature-weather': Object.freeze({
+    kind: 'layer',
+    layerIds: Object.freeze(['protected-nature', 'river-flow', 'aurora']),
+    busyKey: msg(
+      'Turning on protected nature, river flow and the aurora forecast…',
+    ),
+  }),
 });
 
 /*
@@ -480,8 +502,10 @@ export function initFirstRunExperience({
       Array.isArray(failed) && failed.length ? ` (${failed.join(', ')})` : '';
     stickyStatus = true;
     present({
+      // Swedish fork: worded for the fork's starts, which turn layers on, and
+      // naming the tile that turns nothing on as the tile reads.
       status: t(
-        'Could not open that mission{detail}. Retry or explore manually.',
+        'Could not turn on all the layers{detail}. Try again, or choose EXPLORE ON YOUR OWN.',
         { detail },
       ),
     });
