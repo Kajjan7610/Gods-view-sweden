@@ -5965,5 +5965,11 @@
   "Turning on protected nature, river flow and the aurora forecast…": "Attivazione di aree protette, portata dei fiumi e previsione delle aurore…",
   "Open data about Sweden, much of it in real time: traffic, weather, nature, society and infrastructure from public agencies and open sources. Everything here is public, and every layer shows its source.": "Dati aperti sulla Svezia, in buona parte in tempo reale: traffico, meteo, natura, società e infrastrutture da enti pubblici e fonti aperte. Tutto qui è pubblico, e ogni livello mostra la sua fonte.",
   "Built on {product} by Bilawal Sidhu and Sameh Khamis (MIT licence)": "Basato su {product} di Bilawal Sidhu e Sameh Khamis (licenza MIT)",
-  "Could not turn on all the layers{detail}. Try again, or choose EXPLORE ON YOUR OWN.": "Non è stato possibile attivare tutti i livelli{detail}. Riprova o scegli ESPLORA LIBERAMENTE."
+  "Could not turn on all the layers{detail}. Try again, or choose EXPLORE ON YOUR OWN.": "Non è stato possibile attivare tutti i livelli{detail}. Riprova o scegli ESPLORA LIBERAMENTE.",
+  "CelesTrak paused until {time} (its usage policy)": "CelesTrak in pausa fino a {time} (le sue regole d'uso)",
+  "{count} CelesTrak groups missing (CelesTrak answered 404)": {
+    "one": "{count} gruppo CelesTrak mancante (CelesTrak ha risposto 404)",
+    "many": "{count} di gruppi CelesTrak mancanti (CelesTrak ha risposto 404)",
+    "other": "{count} gruppi CelesTrak mancanti (CelesTrak ha risposto 404)"
+  }
 }

@@ -4,9 +4,8 @@ import {
   celestrakSatcatUrl,
   celestrakTleUrl,
 } from '../../../src/data/spaceProviderRequests.js';
-import { providerCooldownMs } from './cooldown.js';
+import { createCelestrakUpstream } from './celestrakUpstream.js';
 import { admitSameSiteKeyless } from '../common/same-site.js';
-import { readResponseTextCapped } from '../common/http.js';
 
 /**
  * Vite plugin: CelesTrak TLE proxy.
@@ -29,12 +28,23 @@ import { readResponseTextCapped } from '../common/http.js';
  * The same plugin serves CelesTrak SATCAT records for the satellites layer's
  * groups at `/api/celestrak-satcat/<group>` (object type, operational status
  * and owner, which file each object under a class). The catalog changes
- * slowly, so SATCAT is cached for a day. CelesTrak throttles the client, not
- * the endpoint, so a 403 or 429 holds both routes off; any other failure
- * holds off only the route that failed, so a bad SATCAT answer never stops
- * TLE refreshes.
+ * slowly, so SATCAT is cached for a day.
+ *
+ * Swedish fork: every call to CelesTrak goes through `upstream`
+ * (celestrakUpstream.js), which follows CelesTrak's usage policy: one call
+ * at a time, any failure pausing both routes, a 404's URL left out and each
+ * URL asked at most once in 2 h. While a pause keeps a group from being
+ * refreshed, its last copy is served whatever its age (502 without one),
+ * with `Retry-After` and `X-CelesTrak-Held-Until`; a group CelesTrak
+ * answered 404 for is marked `X-CelesTrak-Gone: 404`. A refresh that waits
+ * its turn behind other calls is answered from the last copy at once
+ * (`STALE`) and lands in the cache for the next poll. The composition passes
+ * the shared transport (server/providers/local.js); without one, a factory
+ * call makes its own.
+ *
+ * @param {{upstream?: ReturnType<typeof createCelestrakUpstream>}} [options]
  */
-export function celestrakProxy() {
+export function celestrakProxy({ upstream = createCelestrakUpstream() } = {}) {
   const TLE_TTL_MS = 6 * 3600_000;
   const SATCAT_TTL_MS = 24 * 3600_000;
   const CACHE_DIR = path.join(process.cwd(), '.gev-cache');
@@ -60,6 +70,9 @@ export function celestrakProxy() {
       cachedAtHeader: 'X-TLE-Cached-At',
       diskName: (group) => `celestrak-${group}.json`,
       upstreamUrl: celestrakTleUrl,
+      // The layer cannot do without the TLEs: they go first in the queue.
+      priority: 0,
+      label: 'GP group',
       groups: new Set([
         ...coreGroups,
         'starlink',
@@ -77,23 +90,20 @@ export function celestrakProxy() {
       cachedAtHeader: 'X-SATCAT-Cached-At',
       diskName: (group) => `celestrak-satcat-${group}.json`,
       upstreamUrl: celestrakSatcatUrl,
+      // SATCAT only refines the classes.
+      priority: 1,
+      label: 'SATCAT group',
       groups: new Set(coreGroups),
       // A real answer, even for an empty group, starts with the CSV header.
       validate: (body) => /^OBJECT_NAME,/.test(body),
       invalid: 'no SATCAT header in response',
     },
   ];
-  // CelesTrak throttling (403/429) is per client, so it holds every feed
-  // off; any other failure holds off only the feed that failed, so a bad
-  // SATCAT answer never blocks the TLEs the layer cannot do without.
-  let hostCooldownUntil = 0;
 
   /** The largest group (`active`) measures ~2.7 MB; this bounds a runaway body. */
   const CELESTRAK_MAX_RESPONSE_BYTES = 16 * 1024 * 1024;
 
   function createFeedHandler(feed) {
-    let feedCooldownUntil = 0;
-    const cooldownUntil = () => Math.max(hostCooldownUntil, feedCooldownUntil);
     const mem = new Map(); // group -> { at: epochMs, body: string }
     const inflight = new Map(); // group -> Promise<{at, body}|null>
     const diskPath = (group) => path.join(CACHE_DIR, feed.diskName(group));
@@ -118,37 +128,6 @@ export function celestrakProxy() {
       }
     }
 
-    async function fetchUpstream(group) {
-      const url = feed.upstreamUrl(group);
-      const signal = AbortSignal.timeout(20000);
-      const res = await fetch(url.toString(), {
-        signal,
-        // CelesTrak 403s bulk groups (e.g. `active`) unless the request carries a
-        // descriptive User-Agent with a contact point.
-        headers: {
-          'User-Agent':
-            'gods-eye-view-celestrak-proxy/1.0 (+https://github.com/Kajjan7610/Gods-view-sweden)',
-        },
-      });
-      if (!res.ok) {
-        // Group refreshes run in parallel: a later failure without Retry-After
-        // must never shorten a longer deadline an earlier one already set.
-        const until = Date.now() + providerCooldownMs(res);
-        if (res.status === 403 || res.status === 429)
-          hostCooldownUntil = Math.max(hostCooldownUntil, until);
-        else feedCooldownUntil = Math.max(feedCooldownUntil, until);
-        void res.body?.cancel().catch(() => {});
-        throw new Error(`HTTP ${res.status}`);
-      }
-      const body = await readResponseTextCapped(
-        res,
-        CELESTRAK_MAX_RESPONSE_BYTES,
-        signal,
-      );
-      if (!feed.validate(body)) throw new Error(feed.invalid);
-      return { at: Date.now(), body };
-    }
-
     return async (req, res) => {
       const group = String(req.url || '')
         .replace(/^\//, '')
@@ -166,11 +145,15 @@ export function celestrakProxy() {
         res.end('invalid group');
         return;
       }
-      const send = (status, body, cacheStatus, entry) => {
+      /** `held` is why the group was not refreshed (upstream.admit). */
+      const send = (status, body, cacheStatus, entry, held = null) => {
         // Guard against a double-send (e.g. a throw AFTER a response already
         // went out routing into the catch's send): writeHead after headersSent
         // throws "Cannot set headers after they are sent".
         if (res.headersSent) return;
+        // A pause with an end; a 404's URL has none.
+        const until = Number.isFinite(held?.until) ? held.until : 0;
+        const at = until ? Date.now() : 0;
         res.writeHead(status, {
           'Content-Type': 'text/plain',
           [feed.cacheHeader]: cacheStatus,
@@ -178,15 +161,32 @@ export function celestrakProxy() {
           ...(entry
             ? { [feed.cachedAtHeader]: new Date(entry.at).toISOString() }
             : {}),
-          ...(cooldownUntil() > 0 && Date.now() < cooldownUntil()
+          ...(until > at
             ? {
-                'Retry-After': String(
-                  Math.ceil((cooldownUntil() - Date.now()) / 1000),
-                ),
+                'Retry-After': String(Math.ceil((until - at) / 1000)),
+                'X-CelesTrak-Held-Until': new Date(until).toISOString(),
               }
+            : {}),
+          // CelesTrak answered 404 for it: the proxy no longer asks.
+          ...(held?.reason === 'gone'
+            ? { 'X-CelesTrak-Gone': String(held.status) }
             : {}),
         });
         res.end(body);
+      };
+      /** The last copy, whatever its age (stale beats empty), else 502. */
+      const sendLast = (entry, held) => {
+        if (entry) send(200, entry.body, 'STALE-ERROR', entry, held);
+        else
+          send(
+            502,
+            Number.isFinite(held?.until)
+              ? 'celestrak upstream cooling down'
+              : 'celestrak fetch failed and no cache available',
+            'NONE',
+            null,
+            held,
+          );
       };
       try {
         const now = Date.now();
@@ -199,44 +199,46 @@ export function celestrakProxy() {
           send(200, entry.body, 'HIT', entry);
           return;
         }
-        if (Date.now() < cooldownUntil()) {
-          send(
-            entry ? 200 : 502,
-            entry?.body || 'celestrak upstream cooling down',
-            entry ? 'STALE-ERROR' : 'NONE',
-            entry,
-          );
-          return;
-        }
-        // Stale or missing → refresh, single-flight per group.
+        const url = feed.upstreamUrl(group).toString();
+        // Stale or missing → refresh, single-flight per group (and per URL in
+        // the transport, which checks the pause again right before the call
+        // goes out); while CelesTrak is not to be asked, the last copy.
         if (!inflight.has(group)) {
+          const held = upstream.admit(url);
+          if (held) {
+            sendLast(entry, held);
+            return;
+          }
           inflight.set(
             group,
-            fetchUpstream(group)
+            upstream
+              .request(url, {
+                label: `${feed.label} ${group}`,
+                priority: feed.priority,
+                validate: feed.validate,
+                invalid: feed.invalid,
+                maxBytes: CELESTRAK_MAX_RESPONSE_BYTES,
+              })
               .then(async (fresh) => {
                 mem.set(group, fresh);
                 await writeDisk(group, fresh);
                 return fresh;
               })
-              .catch((err) => {
-                if (Date.now() >= feedCooldownUntil)
-                  feedCooldownUntil = Date.now() + 60000;
-                console.warn(
-                  '[celestrak-proxy] refresh failed — serving cache if any',
-                );
-                return null;
-              })
+              // The transport has said why, once; the cache answers.
+              .catch(() => null)
               .finally(() => inflight.delete(group)),
           );
         }
-        const fresh = await inflight.get(group);
-        if (fresh) {
-          send(200, fresh.body, 'MISS', fresh);
-        } else if (entry) {
-          send(200, entry.body, 'STALE-ERROR', entry); // upstream down — stale beats empty
-        } else {
-          send(502, 'celestrak fetch failed and no cache available', 'NONE');
+        // Swedish fork: a refresh waiting its turn behind other CelesTrak
+        // calls does not hold the browser's connection. The last copy answers
+        // now; the refresh lands in the cache for the next poll.
+        if (entry && upstream.waiting(url)) {
+          send(200, entry.body, 'STALE', entry);
+          return;
         }
+        const fresh = await inflight.get(group);
+        if (fresh) send(200, fresh.body, 'MISS', fresh);
+        else sendLast(entry, upstream.admit(url)); // upstream down — stale beats empty
       } catch (err) {
         console.error('[celestrak-proxy] request failed');
         send(500, 'celestrak proxy error', 'ERROR');

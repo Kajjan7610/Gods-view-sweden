@@ -2,6 +2,7 @@ import path from 'node:path';
 import { openSkyProxy } from './aircraft/opensky.js';
 import { sharedAdsbLolUpstream } from './aircraft/adsbLolUpstream.js';
 import { celestrakProxy, rocketLaunchesProxy } from './space.js';
+import { sharedCelestrakUpstream } from './space/celestrakUpstream.js';
 import { issTelemetryProxy } from './space/issTelemetry.js';
 import { tomtomProxy } from './traffic.js';
 import { firmsProxy } from './firms.js';
@@ -92,18 +93,30 @@ export const ADSBLOL_BUDGET_FILE = path.join(
 );
 
 /**
+ * Where the shared CelesTrak transport keeps its pause, error count, the URLs
+ * that answered 404 and when each URL was last asked (Swedish fork).
+ */
+export const CELESTRAK_POLICY_FILE = path.join(
+  defaultSourceRoot,
+  '.gev-cache',
+  'celestrak-policy.json',
+);
+
+/**
  * Construct the local provider plugins in their established order.
  * `realtime` configures OpenAI; `gemini` explicitly opts into Gemini Live.
  * `nominatimStorageDir` binds an owned absolute directory before construction;
  * omission retains the durable per-source cache and policy state.
  * `adsbLolBudgetFile` is the file the adsb.lol callers' shared daily budget
- * and lockout are kept in (Swedish fork).
+ * and lockout are kept in, and `celestrakPolicyFile` the one CelesTrak's
+ * pause, error count and 404s are kept in (Swedish fork).
  */
 function localProviderPlugins({
   realtime,
   gemini,
   nominatimStorageDir = NOMINATIM_CACHE_DIR,
   adsbLolBudgetFile = ADSBLOL_BUDGET_FILE,
+  celestrakPolicyFile = CELESTRAK_POLICY_FILE,
 } = {}) {
   if (
     typeof nominatimStorageDir !== 'string' ||
@@ -116,6 +129,11 @@ function localProviderPlugins({
     !path.isAbsolute(adsbLolBudgetFile)
   )
     throw new TypeError('adsbLolBudgetFile must be an absolute file path');
+  if (
+    typeof celestrakPolicyFile !== 'string' ||
+    !path.isAbsolute(celestrakPolicyFile)
+  )
+    throw new TypeError('celestrakPolicyFile must be an absolute file path');
   // Swedish fork: flights, GNSS integrity and /v2/mil spend one adsb.lol
   // quota, so they share one transport: one key, lockout and daily budget,
   // kept across a KOPPLA PÅ restart. Nothing is read before the first call.
@@ -129,7 +147,12 @@ function localProviderPlugins({
   const wastewater = wastewaterProxy();
   return [
     openSkyProxy({ adsbLol }),
-    celestrakProxy(),
+    // Swedish fork: CelesTrak's usage policy is followed across a KOPPLA PÅ
+    // restart too: one transport, its pause and counts kept on globalThis
+    // and in its file. Nothing is read before the first call.
+    celestrakProxy({
+      upstream: sharedCelestrakUpstream({ statePath: celestrakPolicyFile }),
+    }),
     issTelemetryProxy(),
     tomtomProxy(),
     firmsProxy(),

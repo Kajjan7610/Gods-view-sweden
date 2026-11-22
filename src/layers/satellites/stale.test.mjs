@@ -19,7 +19,7 @@ import { fakeDrawPort } from '../../testSupport/fakeDrawPort.mjs';
 import { createCatalog } from './catalog.js';
 import { createLifecycle } from './lifecycle.js';
 import { createInteraction } from './interaction.js';
-import { createIngestion } from './ingestion.js';
+import { CELESTRAK_READS_AT_ONCE, createIngestion } from './ingestion.js';
 import { layerFeedState } from '../../data/feedState.js';
 
 const GROUPS = [
@@ -220,7 +220,9 @@ test('failed and aborted core refreshes keep provenance of retained records', as
   f.policy.hold = true;
   const controller = new AbortController();
   const work = f.update({ signal: controller.signal });
-  await f.waitHeld(CORE.length);
+  // Swedish fork: the groups are read two at a time (the proxy asks
+  // CelesTrak one call at a time), so two are held, not all.
+  await f.waitHeld(CELESTRAK_READS_AT_ONCE);
   controller.abort();
   await assert.rejects(work, { name: 'AbortError' });
   assert.equal(f.stats().count, CORE.length);
@@ -296,7 +298,8 @@ test('destroy aborts an in-flight response and initialization starts with new ow
   await f.update();
   f.policy.hold = true;
   const work = f.update();
-  await f.waitHeld(CORE.length);
+  // Swedish fork: two at a time, as above.
+  await f.waitHeld(CELESTRAK_READS_AT_ONCE);
   const rejected = assert.rejects(work, { name: 'AbortError' });
   f.parts.lifecycle.methods.destroy(f.viewer);
   assert.equal(f.stats().count, 0);

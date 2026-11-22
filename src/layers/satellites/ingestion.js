@@ -20,6 +20,84 @@ export const SATCAT_WAIT_MS = 3000;
  */
 export const SATCAT_KEEP_MS = 6 * 60 * 60 * 1000;
 
+/**
+ * How many CelesTrak reads (the TLE groups, then SATCAT) run at once
+ * (Swedish fork). The proxy asks CelesTrak one call at a time, so more at
+ * once would only hold the browser's connections (six per origin over
+ * HTTP/1.1) from the other layers.
+ */
+export const CELESTRAK_READS_AT_ONCE = 2;
+
+/**
+ * How long a catalog rebuild waits for the TLE groups, ms (Swedish fork). On
+ * an empty cache the proxy fetches them one at a time, so a slow CelesTrak
+ * could hold the rebuild, and with it Space Missions' wait for this layer
+ * (SATELLITE_SETTLE_TIMEOUT_MS, 30 s), for minutes. A group not in by then
+ * is told as unavailable; one already asked for lands in the proxy's cache
+ * for the next update.
+ */
+export const TLE_WAIT_MS = 20_000;
+
+/** `read` each of `items`, at most `limit` at a time, in their order. */
+async function readInTurn(items, limit, read) {
+  const results = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await read(items[index]);
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, worker),
+  );
+  return results;
+}
+
+/**
+ * The row's status while CelesTrak's usage policy keeps the proxy from
+ * asking (Swedish fork, server/providers/space/celestrakUpstream.js): English
+ * data like the other CelesTrak statuses; the panel shows it in the UI
+ * language, its end in local time (ui/statusText.js).
+ * @param {number} untilMs When the first paused group may be asked again.
+ */
+export function celestrakPausedError(untilMs) {
+  // i18n-ignore: English data; the panel shows it through FEED_ERROR_PATTERNS (ui/statusText.js)
+  return `CelesTrak paused until ${new Date(untilMs).toISOString()} (its usage policy)`;
+}
+
+/**
+ * What the row says of the core groups' last read (Swedish fork). Paused,
+ * with the end of the first pause, only while every group still asked for
+ * is held by CelesTrak's usage policy; 0 otherwise. Else, English data:
+ * groups CelesTrak answered 404 for, counted even when their last copy is
+ * shown; groups unavailable; CelesTrak unreachable when no group came and
+ * none was paused or answered 404; or null when every group came.
+ * @param {Array<{ok: boolean, heldUntil?: number, gone?: boolean}>} results
+ * @param {number} nowMs
+ * @returns {{pausedUntil: number, error: string|null}}
+ */
+export function celestrakGroupsStatus(results, nowMs) {
+  const asked = results.filter((r) => !r.gone);
+  const held = asked.filter((r) => r.heldUntil > nowMs);
+  const pausedUntil =
+    asked.length > 0 && held.length === asked.length
+      ? Math.min(...held.map((r) => r.heldUntil))
+      : 0;
+  const missing = results.filter((r) => !r.ok || r.gone).length;
+  const gone = results.length - asked.length;
+  // i18n-ignore: English data; the panel shows it through FEED_ERROR_PATTERNS (ui/statusText.js)
+  const groups = (n) => `${n} CelesTrak group${n === 1 ? '' : 's'}`;
+  const error = !missing
+    ? null
+    : gone === missing
+      ? `${groups(gone)} missing (CelesTrak answered 404)`
+      : missing === results.length && !held.length && !gone
+        ? msg('CelesTrak unreachable')
+        : `${groups(missing)} unavailable`;
+  return { pausedUntil, error };
+}
+
 export function createIngestion({
   state: layerState,
   services,
@@ -74,20 +152,19 @@ export function createIngestion({
       Date.now() - layerState._satcatReadAtMs < SATCAT_KEEP_MS
     )
       return Promise.resolve([]);
-    return Promise.all(
-      CATALOG_GROUPS.map((groupDef) =>
-        source
-          .readSatcat(groupDef.path, { signal })
-          .then((res) =>
-            res?.ok
-              ? { records: parseSatcatCsv(res.text), stale: Boolean(res.stale) }
-              : null,
-          )
-          .catch((error) => {
-            if (signal.aborted || error?.name === 'AbortError') throw error;
-            return null;
-          }),
-      ),
+    // Swedish fork: two at a time, as the TLE groups (CELESTRAK_READS_AT_ONCE).
+    return readInTurn(CATALOG_GROUPS, CELESTRAK_READS_AT_ONCE, (groupDef) =>
+      source
+        .readSatcat(groupDef.path, { signal })
+        .then((res) =>
+          res?.ok
+            ? { records: parseSatcatCsv(res.text), stale: Boolean(res.stale) }
+            : null,
+        )
+        .catch((error) => {
+          if (signal.aborted || error?.name === 'AbortError') throw error;
+          return null;
+        }),
     );
   }
 
@@ -193,34 +270,69 @@ export function createIngestion({
         : resourceController.signal;
       try {
         updateSignal.throwIfAborted();
-        // Load all core groups in parallel; a failed/empty group degrades
-        // gracefully (parseTLE of an upstream error body yields []).
+        // Load all core groups; a failed/empty group degrades gracefully
+        // (parseTLE of an upstream error body yields []).
         const localEvidence = _readLocalEvidence();
+        // Swedish fork: the proxy asks CelesTrak one call at a time, so the
+        // groups are read two at a time (the browser's other connections
+        // stay free for the other layers), within TLE_WAIT_MS, and SATCAT,
+        // which only refines the classes, once they are in.
+        const late = new AbortController();
+        const lateTimer = setTimeout(() => late.abort(), TLE_WAIT_MS);
+        const readSignal = AbortSignal.any([updateSignal, late.signal]);
+        let results;
+        try {
+          results = await readInTurn(
+            CATALOG_GROUPS,
+            CELESTRAK_READS_AT_ONCE,
+            async (groupDef) => {
+              // Not reached in time: not asked for in this update.
+              if (late.signal.aborted)
+                return { ...groupDef, entries: [], ok: false };
+              try {
+                const res = await source.readGroup(groupDef.path, {
+                  signal: readSignal,
+                });
+                // While CelesTrak's usage policy pauses the proxy, until
+                // when; and whether it no longer asks (CelesTrak said 404).
+                const heldUntil = Number.isFinite(res.heldUntil)
+                  ? res.heldUntil
+                  : 0;
+                const gone = res.gone === true;
+                if (!res.ok)
+                  return {
+                    ...groupDef,
+                    entries: [],
+                    ok: false,
+                    heldUntil,
+                    gone,
+                  };
+                const entries = parts.orbits.parseTLE(res.text);
+                updateSignal.throwIfAborted();
+                return {
+                  ...groupDef,
+                  entries,
+                  ok: entries.length > 0,
+                  stale: Boolean(res.stale),
+                  heldUntil,
+                  gone,
+                };
+              } catch (error) {
+                if (updateSignal.aborted) throw error;
+                // Still on its way when the wait ran out.
+                if (late.signal.aborted)
+                  return { ...groupDef, entries: [], ok: false };
+                if (error?.name === 'AbortError') throw error;
+                return { ...groupDef, entries: [], ok: false };
+              }
+            },
+          );
+        } finally {
+          clearTimeout(lateTimer);
+        }
         const satcat = _readSatcat(updateSignal);
-        // An abort can reject this before the groups settle and it is awaited.
+        // An abort can reject this before it is awaited.
         satcat.catch(() => {});
-        const results = await Promise.all(
-          CATALOG_GROUPS.map(async (groupDef) => {
-            try {
-              const res = await source.readGroup(groupDef.path, {
-                signal: updateSignal,
-              });
-              if (!res.ok) return { ...groupDef, entries: [], ok: false };
-              const entries = parts.orbits.parseTLE(res.text);
-              updateSignal.throwIfAborted();
-              return {
-                ...groupDef,
-                entries,
-                ok: entries.length > 0,
-                stale: Boolean(res.stale),
-              };
-            } catch (error) {
-              if (updateSignal.aborted || error?.name === 'AbortError')
-                throw error;
-              return { ...groupDef, entries: [], ok: false };
-            }
-          }),
-        );
         await localEvidence;
         // SATCAT only refines classes: wait a moment for it, then classify
         // with what is held and let a late answer reclassify in place.
@@ -249,13 +361,21 @@ export function createIngestion({
           `[Data:Satellites] Loaded ${results.map((r) => `${r.tag}:${r.entries.length}`).join(' ')}`,
         );
 
+        // Swedish fork: while CelesTrak's usage policy holds every group still
+        // asked for, the row says until when (getStats, as it is drawn), not
+        // that CelesTrak is down; meanwhile and after it, which groups are
+        // missing or unavailable (celestrakGroupsStatus).
+        const groupsStatus = celestrakGroupsStatus(results, Date.now());
+        layerState._pausedUntil = groupsStatus.pausedUntil;
+
         // CelesTrak outage guard (H3): if EVERY group failed, bail BEFORE clearing.
         // Wiping the collection + catalog here would blank every satellite while
         // the chip still read "just now". Keep the existing (stale) catalog on
         // screen and surface the outage instead — do NOT stamp _lastUpdate.
         if (results.every((r) => !r.ok)) {
           // English data (stats reach the voice tools); the panel translates it.
-          layerState._lastError = msg('CelesTrak unreachable');
+          layerState._lastError = groupsStatus.error;
+          layerState._coreUnavailable = true;
           console.warn(
             '[Data:Satellites] All CelesTrak groups failed — keeping existing catalog, surfacing outage',
           );
@@ -266,10 +386,8 @@ export function createIngestion({
         // At least one group loaded — proceed with a fresh rebuild, but keep the
         // partial outage visible at the layer control instead of presenting the
         // reduced catalog as a fully healthy refresh.
-        // i18n-ignore: English data; the panel shows it through FEED_ERROR_PATTERNS (ui/statusText.js)
-        layerState._lastError = failed.length
-          ? `${failed.length} CelesTrak group${failed.length === 1 ? '' : 's'} unavailable`
-          : null;
+        layerState._lastError = groupsStatus.error;
+        layerState._coreUnavailable = false;
 
         // Clear existing
         parts.rendering._clearPoints();

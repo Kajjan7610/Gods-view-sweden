@@ -6083,5 +6083,12 @@
   "Turning on protected nature, river flow and the aurora forecast…": "Включение охраняемой природы, расхода воды в реках и прогноза полярных сияний…",
   "Open data about Sweden, much of it in real time: traffic, weather, nature, society and infrastructure from public agencies and open sources. Everything here is public, and every layer shows its source.": "Открытые данные о Швеции, многие — в реальном времени: транспорт, погода, природа, общество и инфраструктура от государственных ведомств и из открытых источников. Всё здесь общедоступно, и у каждого слоя указан источник.",
   "Built on {product} by Bilawal Sidhu and Sameh Khamis (MIT licence)": "Основано на {product} от Bilawal Sidhu и Sameh Khamis (лицензия MIT)",
-  "Could not turn on all the layers{detail}. Try again, or choose EXPLORE ON YOUR OWN.": "Не удалось включить все слои{detail}. Попробуйте ещё раз или выберите «ИЗУЧИТЬ САМОСТОЯТЕЛЬНО»."
+  "Could not turn on all the layers{detail}. Try again, or choose EXPLORE ON YOUR OWN.": "Не удалось включить все слои{detail}. Попробуйте ещё раз или выберите «ИЗУЧИТЬ САМОСТОЯТЕЛЬНО».",
+  "CelesTrak paused until {time} (its usage policy)": "CelesTrak на паузе до {time} (его правила использования)",
+  "{count} CelesTrak groups missing (CelesTrak answered 404)": {
+    "one": "{count} группа CelesTrak отсутствует (CelesTrak ответил 404)",
+    "few": "{count} группы CelesTrak отсутствуют (CelesTrak ответил 404)",
+    "many": "{count} групп CelesTrak отсутствуют (CelesTrak ответил 404)",
+    "other": "{count} группы CelesTrak отсутствуют (CelesTrak ответил 404)"
+  }
 }

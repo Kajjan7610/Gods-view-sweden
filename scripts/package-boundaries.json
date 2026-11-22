@@ -488,6 +488,7 @@
     "modules": [
       "server/providers/space.js",
       "server/providers/space/celestrak.js",
+      "server/providers/space/celestrakUpstream.js",
       "server/providers/common/same-site.js",
       "src/localRequestGate.mjs",
       "server/providers/space/cooldown.js",
@@ -2947,7 +2948,9 @@
       "src/layers/satellites/tiangongModel.js",
       "src/layers/satellites/tiangongStation.js",
       "src/layers/satellites/tiangongJoints.js",
-      "src/layers/satellites/tiangongArticulation.js"
+      "src/layers/satellites/tiangongArticulation.js",
+      "src/ui/statusText.js",
+      "src/ui/layerNames.js"
     ],
     "external": ["cesium", "satellite.js", "kdbush"]
   },

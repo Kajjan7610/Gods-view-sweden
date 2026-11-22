@@ -5729,5 +5729,9 @@
   "Turning on protected nature, river flow and the aurora forecast…": "正在开启受保护自然、河流流量和极光预报…",
   "Open data about Sweden, much of it in real time: traffic, weather, nature, society and infrastructure from public agencies and open sources. Everything here is public, and every layer shows its source.": "关于瑞典的开放数据，其中很多是实时的：交通、天气、自然、社会和基础设施，来自政府机构和开放来源。这里的一切都是公开的，每个图层都会显示其来源。",
   "Built on {product} by Bilawal Sidhu and Sameh Khamis (MIT licence)": "基于 Bilawal Sidhu 和 Sameh Khamis 的 {product}（MIT 许可证）",
-  "Could not turn on all the layers{detail}. Try again, or choose EXPLORE ON YOUR OWN.": "无法开启所有图层{detail}。请重试，或选择“自行探索”。"
+  "Could not turn on all the layers{detail}. Try again, or choose EXPLORE ON YOUR OWN.": "无法开启所有图层{detail}。请重试，或选择“自行探索”。",
+  "CelesTrak paused until {time} (its usage policy)": "CelesTrak 暂停至 {time}（依其使用政策）",
+  "{count} CelesTrak groups missing (CelesTrak answered 404)": {
+    "other": "缺少 {count} 个 CelesTrak 分组（CelesTrak 返回 404）"
+  }
 }

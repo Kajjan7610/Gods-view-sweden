@@ -165,6 +165,54 @@ test('satellite pass prediction methods report no-tle on cold catalog and coerce
   );
 });
 
+// Swedish fork: the proxy says until when CelesTrak's usage policy keeps it
+// from asking (server/providers/space/celestrak.js).
+test('a TLE read says until when the proxy holds off CelesTrak', async () => {
+  let heldUntil = '2026-11-22T13:05:00.000Z';
+  const source = createSatelliteSource({
+    fetchImpl: async (url) => {
+      assert.equal(url, '/api/celestrak/stations');
+      const headers = {
+        'x-tle-cache': 'STALE-ERROR',
+        'x-celestrak-held-until': heldUntil,
+      };
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: (name) => headers[name] ?? null },
+        text: async () => 'ISS\n1 25544U fixture\n2 25544 fixture',
+      };
+    },
+  });
+  const held = await source.readGroup('stations');
+  assert.equal(held.stale, true);
+  assert.equal(held.heldUntil, Date.parse(heldUntil));
+  assert.equal(held.gone, false);
+  heldUntil = null;
+  assert.equal((await source.readGroup('stations')).heldUntil, null);
+});
+
+test('a TLE read says when the proxy answered from its copy while the refresh waits, and when CelesTrak said 404', async () => {
+  let headers = { 'x-tle-cache': 'STALE' };
+  const source = createSatelliteSource({
+    fetchImpl: async () => ({
+      ok: true,
+      status: 200,
+      headers: { get: (name) => headers[name] ?? null },
+      text: async () => 'ISS\n1 25544U fixture\n2 25544 fixture',
+    }),
+  });
+  assert.equal((await source.readGroup('stations')).stale, true);
+  headers = { 'x-tle-cache': 'STALE-ERROR', 'x-celestrak-gone': '404' };
+  const gone = await source.readGroup('stations');
+  assert.equal(gone.stale, true);
+  assert.equal(gone.gone, true);
+  headers = { 'x-tle-cache': 'HIT' };
+  const fresh = await source.readGroup('stations');
+  assert.equal(fresh.stale, false);
+  assert.equal(fresh.gone, false);
+});
+
 test('a SATCAT read says when the proxy served its last copy', async () => {
   const headers = (cache) => ({
     get: (name) => (name === 'x-satcat-cache' ? cache : null),

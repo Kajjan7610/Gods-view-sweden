@@ -43,6 +43,11 @@ export function createState({ services }) {
 
   state._lastError = null;
 
+  // Swedish fork: the last update got no core group at all, and until when
+  // CelesTrak's usage policy held every group still asked for (0: none).
+  state._coreUnavailable = false;
+  state._pausedUntil = 0;
+
   // Cache provenance belongs to admitted core and dense records separately.
   state._coreStale = false;
   // How current the SATCAT records behind the classes are: null before any

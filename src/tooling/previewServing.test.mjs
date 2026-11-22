@@ -14,11 +14,18 @@ test.after(() => rm(nominatimStorageDir, { recursive: true, force: true }));
 // served /api/military call is counted; keep it in the fixture, never in the
 // checkout's own .gev-cache.
 const adsbLolBudgetFile = path.join(nominatimStorageDir, 'adsblol-budget.json');
+// Swedish fork: likewise CelesTrak's pause and counts, so no test can save a
+// pause into the checkout.
+const celestrakPolicyFile = path.join(
+  nominatimStorageDir,
+  'celestrak-policy.json',
+);
 
 test('data providers have both hooks; credential editing stays development-only', () => {
   const plugins = localProviderPlugins({
     nominatimStorageDir,
     adsbLolBudgetFile,
+    celestrakPolicyFile,
   });
   assert.ok(plugins.some(({ name }) => name === 'fire-perimeters'));
   assert.ok(plugins.some(({ name }) => name === 'gnss-integrity'));
@@ -104,7 +111,11 @@ test('real dev and built-preview servers serve provider JSON and terminate unkno
     const config = {
       ...base,
       plugins: [
-        ...localProviderPlugins({ nominatimStorageDir, adsbLolBudgetFile }),
+        ...localProviderPlugins({
+          nominatimStorageDir,
+          adsbLolBudgetFile,
+          celestrakPolicyFile,
+        }),
         apiNotFoundPlugin(),
       ],
       server: { host: '127.0.0.1', port: 0, hmr: false },

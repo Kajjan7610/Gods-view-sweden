@@ -204,6 +204,8 @@ export function createLifecycle({
       layerState._coreStale = false;
       layerState._denseStale = false;
       layerState._lastError = null;
+      layerState._coreUnavailable = false;
+      layerState._pausedUntil = 0;
       layerState._lastFocusUpdate = 0;
       layerState._activeFocusCount = 0;
       layerState._trackingRefreshEpoch += 1;

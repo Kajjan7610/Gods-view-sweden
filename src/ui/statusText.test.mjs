@@ -3,11 +3,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { setLocale, t } from '../i18n/index.js';
+import { celestrakPausedError } from '../layers/satellites/ingestion.js';
 import {
   translateFeedError,
   translateStatusLine,
   translateStatusMessage,
 } from './statusText.js';
+
+// Swedish fork: a CelesTrak pause ends at a local time; read it as a Swedish
+// user would.
+process.env.TZ = 'Europe/Stockholm';
 
 function inLocale(locale, run) {
   setLocale(locale);
@@ -131,3 +136,107 @@ for (const locale of ['es', 'ru', 'ja']) {
     });
   });
 }
+
+// Swedish fork: while CelesTrak's usage policy keeps the proxy from asking,
+// the satellites row says until when (satellites/ingestion.js).
+const PAUSE_NOW = Date.parse('2026-11-22T12:00:00Z'); // Sunday 13:00 in Stockholm
+const PAUSED_TODAY = celestrakPausedError(Date.parse('2026-11-22T13:05:00Z'));
+const PAUSED_TOMORROW = celestrakPausedError(
+  Date.parse('2026-11-23T12:00:00Z'),
+);
+
+test('sv: a CelesTrak pause ends in local time, with the weekday when not today', (t) => {
+  t.mock.method(Date, 'now', () => PAUSE_NOW);
+  inLocale('sv', () => {
+    assert.equal(
+      translateFeedError(PAUSED_TODAY),
+      'CelesTrak pausad till 14:05 (deras användarregler)',
+    );
+    assert.equal(
+      translateFeedError(PAUSED_TOMORROW),
+      'CelesTrak pausad till mån 13:00 (deras användarregler)',
+    );
+  });
+});
+
+test('a CelesTrak pause is told in every language, in at most 72 characters', (t) => {
+  t.mock.method(Date, 'now', () => PAUSE_NOW);
+  for (const locale of [
+    'en',
+    'sv',
+    'ar',
+    'de',
+    'es',
+    'fr',
+    'he',
+    'it',
+    'ja',
+    'pt',
+    'ru',
+    'uk',
+    'zh-CN',
+    'zh-Hant',
+  ])
+    inLocale(locale, () => {
+      for (const text of [PAUSED_TODAY, PAUSED_TOMORROW]) {
+        const shown = translateFeedError(text);
+        assert.ok(shown.length <= 72, `${locale}: ${shown.length} ${shown}`);
+        assert.match(shown, /CelesTrak/, `${locale}: ${shown}`);
+        assert.doesNotMatch(shown, /2026|T\d\d:/, `${locale}: ${shown}`);
+        if (locale !== 'en')
+          assert.doesNotMatch(
+            shown,
+            /paused until|usage policy/,
+            `${locale}: ${shown}`,
+          );
+      }
+    });
+});
+
+// Swedish fork: groups the proxy no longer asks CelesTrak for, CelesTrak
+// having answered 404 (satellites/ingestion.js).
+const missing = (n) =>
+  `${n} CelesTrak group${n === 1 ? '' : 's'} missing (CelesTrak answered 404)`;
+
+test('sv: groups CelesTrak answered 404 for are told as missing', () => {
+  inLocale('sv', () => {
+    assert.equal(
+      translateFeedError(missing(1)),
+      '1 CelesTrak-grupp saknas (CelesTrak svarade 404)',
+    );
+    assert.equal(
+      translateFeedError(missing(11)),
+      '11 CelesTrak-grupper saknas (CelesTrak svarade 404)',
+    );
+  });
+});
+
+test('missing groups are told in every language, every plural form, in at most 72 characters', () => {
+  for (const locale of [
+    'en',
+    'sv',
+    'ar',
+    'de',
+    'es',
+    'fr',
+    'he',
+    'it',
+    'ja',
+    'pt',
+    'ru',
+    'uk',
+    'zh-CN',
+    'zh-Hant',
+  ])
+    inLocale(locale, () => {
+      // 0, 1, 2, few, many and other in the languages that tell them apart.
+      for (const n of [0, 1, 2, 3, 5, 11, 21, 100, 1_000_000]) {
+        const shown = translateFeedError(missing(n));
+        assert.ok(shown.length <= 72, `${locale}: ${shown.length} ${shown}`);
+        assert.match(shown, /CelesTrak/, `${locale}: ${shown}`);
+        assert.match(shown, /404/, `${locale}: ${shown}`);
+        if (locale !== 'en')
+          assert.doesNotMatch(shown, /missing|answered/, `${locale}: ${shown}`);
+      }
+    });
+});

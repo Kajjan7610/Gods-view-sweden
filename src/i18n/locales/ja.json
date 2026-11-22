@@ -5729,5 +5729,9 @@
   "Turning on protected nature, river flow and the aurora forecast…": "保護自然、河川流量、オーロラ予報をオンにしています…",
   "Open data about Sweden, much of it in real time: traffic, weather, nature, society and infrastructure from public agencies and open sources. Everything here is public, and every layer shows its source.": "スウェーデンのオープンデータ（多くはリアルタイム）：交通、天気、自然、社会、インフラを、公的機関とオープンな情報源から。ここにあるものはすべて公開情報で、各レイヤーに出典が表示されます。",
   "Built on {product} by Bilawal Sidhu and Sameh Khamis (MIT licence)": "Bilawal Sidhu と Sameh Khamis の {product} をベースにしています（MIT ライセンス）",
-  "Could not turn on all the layers{detail}. Try again, or choose EXPLORE ON YOUR OWN.": "すべてのレイヤーをオンにできませんでした{detail}。もう一度お試しいただくか、［自由に探索］を選んでください。"
+  "Could not turn on all the layers{detail}. Try again, or choose EXPLORE ON YOUR OWN.": "すべてのレイヤーをオンにできませんでした{detail}。もう一度お試しいただくか、［自由に探索］を選んでください。",
+  "CelesTrak paused until {time} (its usage policy)": "CelesTrakは{time}まで一時停止中（利用ポリシーによる）",
+  "{count} CelesTrak groups missing (CelesTrak answered 404)": {
+    "other": "CelesTrakの{count}グループがありません（CelesTrakが404を返答）"
+  }
 }

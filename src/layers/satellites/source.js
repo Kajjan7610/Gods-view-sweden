@@ -26,6 +26,12 @@ async function loadBundledSensors() {
   return loadImagingSensors();
 }
 
+/**
+ * Whether the proxy answered with its last copy: STALE-ERROR when CelesTrak
+ * is down, and (Swedish fork) STALE while the refresh waits its turn.
+ */
+const lastCopy = (cache) => cache === 'STALE-ERROR' || cache === 'STALE';
+
 /** Read catalog text from the existing group endpoint using a supplied transport. */
 export function createSatelliteSource({
   fetchImpl = (...args) => globalThis.fetch(...args),
@@ -41,8 +47,21 @@ export function createSatelliteSource({
       signal?.throwIfAborted();
       // The proxy serves its last copy, marked STALE-ERROR, when CelesTrak
       // is down.
-      const stale = response.headers?.get?.('x-tle-cache') === 'STALE-ERROR';
-      return { ok: response.ok, status: response.status, text, stale };
+      const stale = lastCopy(response.headers?.get?.('x-tle-cache'));
+      // Swedish fork: and says until when, while CelesTrak's usage policy
+      // keeps it from asking (server/providers/space/celestrakUpstream.js),
+      // and when it no longer asks, CelesTrak having answered 404.
+      const heldUntil = Date.parse(
+        response.headers?.get?.('x-celestrak-held-until') ?? '',
+      );
+      return {
+        ok: response.ok,
+        status: response.status,
+        text,
+        stale,
+        heldUntil: Number.isFinite(heldUntil) ? heldUntil : null,
+        gone: /^\d{3}$/.test(response.headers?.get?.('x-celestrak-gone') ?? ''),
+      };
     },
 
     /**
@@ -59,7 +78,7 @@ export function createSatelliteSource({
       signal?.throwIfAborted();
       // The proxy serves its last copy, marked STALE-ERROR, when CelesTrak
       // is down.
-      const stale = response.headers?.get?.('x-satcat-cache') === 'STALE-ERROR';
+      const stale = lastCopy(response.headers?.get?.('x-satcat-cache'));
       return { ok: response.ok, status: response.status, text, stale };
     },
 

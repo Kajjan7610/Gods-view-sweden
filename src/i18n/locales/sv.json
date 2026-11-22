@@ -5847,5 +5847,10 @@
   "Turning on protected nature, river flow and the aurora forecast…": "Slår på skyddad natur, vattenföring och norrskensprognos …",
   "Open data about Sweden, much of it in real time: traffic, weather, nature, society and infrastructure from public agencies and open sources. Everything here is public, and every layer shows its source.": "Öppna data om Sverige, mycket av det i realtid: trafik, väder, natur, samhälle och infrastruktur från myndigheter och öppna källor. Allt här är offentligt, och varje lager visar sin källa.",
   "Built on {product} by Bilawal Sidhu and Sameh Khamis (MIT licence)": "Bygger på {product} av Bilawal Sidhu och Sameh Khamis (MIT-licens)",
-  "Could not turn on all the layers{detail}. Try again, or choose EXPLORE ON YOUR OWN.": "Det gick inte att slå på alla lager{detail}. Försök igen eller välj UTFORSKA SJÄLV."
+  "Could not turn on all the layers{detail}. Try again, or choose EXPLORE ON YOUR OWN.": "Det gick inte att slå på alla lager{detail}. Försök igen eller välj UTFORSKA SJÄLV.",
+  "CelesTrak paused until {time} (its usage policy)": "CelesTrak pausad till {time} (deras användarregler)",
+  "{count} CelesTrak groups missing (CelesTrak answered 404)": {
+    "one": "{count} CelesTrak-grupp saknas (CelesTrak svarade 404)",
+    "other": "{count} CelesTrak-grupper saknas (CelesTrak svarade 404)"
+  }
 }

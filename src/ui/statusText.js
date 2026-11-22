@@ -10,9 +10,27 @@
  * @module ui/statusText
  */
 import { sourceLabel } from './layerNames.js';
-import { formatNumber, msg, t, tn, translateKnown } from '../i18n/index.js';
+import {
+  formatDate,
+  formatNumber,
+  msg,
+  t,
+  tn,
+  translateKnown,
+} from '../i18n/index.js';
 
 const STATUS_SEPARATOR = ' · ';
+
+/** A pause's end as local time, with the weekday when it is not today. */
+function untilText(untilMs, nowMs = Date.now()) {
+  const sameDay =
+    new Date(untilMs).toDateString() === new Date(nowMs).toDateString();
+  return formatDate(untilMs, {
+    ...(sameDay ? {} : { weekday: 'short' }),
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
 // Live-source failures arrive as English data (src/sources/live/contract.js,
 // standalone.js, flights and military ingestion), some with a source name or a
@@ -92,6 +110,27 @@ const FEED_ERROR_PATTERNS = [
         '{count} CelesTrak groups unavailable',
         { count: formatNumber(Number(groups)) },
       ),
+  ],
+  // Swedish fork: groups the proxy no longer asks CelesTrak for, CelesTrak
+  // having answered 404 (satellites/ingestion.js).
+  [
+    /^(\d+) CelesTrak groups? missing \(CelesTrak answered 404\)$/,
+    ([, groups]) =>
+      tn(
+        Number(groups),
+        '{count} CelesTrak group missing (CelesTrak answered 404)',
+        '{count} CelesTrak groups missing (CelesTrak answered 404)',
+        { count: formatNumber(Number(groups)) },
+      ),
+  ],
+  // Swedish fork: the proxy not asking CelesTrak, by its usage policy
+  // (satellites/ingestion.js); the end shows in local time.
+  [
+    /^CelesTrak paused until (\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z) \(its usage policy\)$/,
+    ([, until]) =>
+      t('CelesTrak paused until {time} (its usage policy)', {
+        time: untilText(Date.parse(until)),
+      }),
   ],
   [
     /^(.+) feed unavailable$/,

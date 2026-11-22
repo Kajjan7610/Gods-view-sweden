@@ -435,6 +435,78 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-22 (CelesTrak enligt deras användarregler)
+- CelesTraks användarregler (celestrak.org/usage-policy.php, senast
+  ändrade 2026-11-16, lästa 2026-11-22) säger att program som hämtar på
+  egen hand ska sluta fråga direkt vid alla andra svar än HTTP 200 och låta
+  en människa se efter, att alla anrop ska vänta minst 15 minuter efter ett
+  500 eller 503, och att den som fortsätter efter 403 till slut hamnar i
+  deras brandvägg. Förut väntade appen 60 sekunder efter de flesta fel
+  (`Retry-After` gällde, från 5 sekunder till 30 minuter), och utom vid 403
+  och 429 bara på det flöde som felade; satellitlagret kunde skicka elva
+  TLE- och elva SATCAT-anrop samtidigt.
+- Alla anrop till CelesTrak (TLE och SATCAT, som satellitlagret,
+  Rymduppdrag och röststyrningen läser) går nu genom en gemensam transport,
+  `server/providers/space/celestrakUpstream.js`:
+  - Varje fel pausar alla anrop: ett 5xx, en tidsgräns, ett nätverksfel, ett
+    svar utan TLE-rader eller SATCAT-rubrik och varje annat svar än 200 i
+    minst 15 minuter (ett längre `Retry-After` gäller, upp till 6 timmar);
+    ett 403, ett 429, en omdirigering (som aldrig följs) och andra 4xx i
+    minst 2 timmar (ett längre `Retry-After` upp till ett dygn). Pausen står
+    en gång i loggen, utan adress, till exempel "CelesTrak refused (403):
+    requests paused until …; check the usage policy"; är ett 403 också det
+    20:e felet står båda raderna.
+  - Ett 404 gäller bara sin adress: den frågas inte igen så länge processen
+    lever, och inte heller under ett dygn efter en omstart. Andra adresser
+    fortsätter. Servern märker svaren för en sådan adress med
+    `X-CelesTrak-Gone: 404`.
+  - HTTP-fel (3xx och 4xx) räknas under de senaste två timmarna, och det
+    20:e pausar alla anrop i 2 timmar. CelesTraks GP-sidor sägs tillåta 50
+    innan brandväggen (inte kontrollerat här).
+  - Samma adress frågas högst en gång på två timmar, vad den än svarade,
+    också efter en omstart: Active och Starlink sägs ge en hämtning per
+    uppdatering, som kommer varannan timme. Ett anrop som aldrig nådde fram
+    (inget namnsvar, ingen förbindelse) räknas inte.
+  - Anropen går ett i taget, TLE före SATCAT, och pausen prövas igen precis
+    innan varje anrop går iväg, så det första felet stoppar resten. Måste
+    ett anrop vänta på sin tur bakom andra och det finns en kopia, svarar
+    servern direkt med kopian (`STALE`, med `X-TLE-Cached-At`), och den nya
+    hämtningen hamnar i cachen till nästa uppdatering.
+  - Pausen, felräkningen, 404-adresserna och när varje adress senast
+    frågades sparas i `.gev-cache/celestrak-policy.json` när de ändras och
+    finns kvar efter en omstart från KOPPLA PÅ. Filen kan anges
+    (`celestrakPolicyFile`, som `adsbLolBudgetFile`), så att inget test
+    skriver en paus i utcheckningens cache.
+- Under en paus visar servern den senaste kopian, hur gammal den än är
+  (`X-TLE-Cached-At` säger när den hämtades), annars 502, och svarar med
+  `Retry-After` och `X-CelesTrak-Held-Until`. Raden för Satelliter i
+  Datalager säger "CelesTrak pausad till 14:05 (deras användarregler)", i
+  lokal tid och med veckodag när det inte är i dag, på högst 72 tecken på
+  alla appens språk, i stället för "CelesTrak går inte att nå". Den säger
+  det bara medan pausen håller alla grupper som fortfarande frågas efter,
+  med slutet för den paus som släpper först (inte en enskild grupps två
+  timmar), och slutar säga det när den tiden har passerat, också mellan
+  två uppdateringar. Saknas grupper under pausen står det på radens
+  infolinje, till exempel "1 CelesTrak-grupp otillgänglig".
+- Grupper som CelesTrak svarat 404 för räknas som saknade, också när
+  kopian visas: "2 CelesTrak-grupper saknas (CelesTrak svarade 404)", på
+  högst 72 tecken på alla appens språk. Med tom cache och 404 för alla
+  grupper står det, aldrig "går inte att nå".
+- Rymduppdrag har ingen statusrad för CelesTrak: banorna matchas mot den
+  senaste kopian när det finns en, och svarshuvudena och loggen säger
+  resten.
+- Satellitlagret läser TLE-grupperna två i taget, så att webbläsarens
+  övriga anslutningar (sex per adress) står fria för de andra lagren, och
+  SATCAT, också två i taget, först när TLE-grupperna är inne. En grupp som
+  inte kommit inom 20 sekunder räknas som otillgänglig, så att lagret blir
+  klart i tid för Rymduppdrag, som väntar högst 30 sekunder på det; det som
+  redan begärts hamnar i serverns cache till nästa uppdatering.
+- Node:s fetch ber redan om komprimerade svar (`br, gzip, deflate`); nu
+  säger appen det uttryckligen.
+- Kvar till nästa steg: appen läser CelesTrak i TLE-format, som saknar
+  objekt med katalognummer 100000 och uppåt (alla som katalogiserats på
+  senare tid). De saknas tills appen går över till CSV eller OMM.
+
 ### 2026-11-22 (välkomstrutan på svenska)
 - Originalets välkomstruta, som kom med sammanslagningen 2026-11-21, var
   skriven i spion- och militärstil ("förbjuden cockpit", "taktisk HUD",

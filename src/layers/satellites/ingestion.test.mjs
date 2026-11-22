@@ -2,12 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseTleText, tleLineLaunchYear } from '../../sources/tle.js';
 import {
+  CELESTRAK_READS_AT_ONCE,
   SATCAT_KEEP_MS,
   SATCAT_WAIT_MS,
+  TLE_WAIT_MS,
+  celestrakGroupsStatus,
+  celestrakPausedError,
   createIngestion,
 } from './ingestion.js';
+import { CATALOG_GROUPS } from './policy.js';
 import { createOrbits } from './orbits.js';
 import { createControls } from './controls.js';
+import { setLocale } from '../../i18n/index.js';
 
 // The ISS set (1 January 2024) with its catalog field swapped per satellite.
 const ISS_LINE1 =
@@ -306,6 +312,319 @@ test('a current SATCAT read is kept between updates; a failed one is asked again
   assert.equal(state._satcatState, 'unavailable');
   await update();
   assert.equal(reads, 3 * perUpdate, 'a failed read is asked again');
+});
+
+/** The layer's row controls over an ingestion state (controls.js). */
+function controlsOf(state) {
+  return createControls({
+    state: {
+      ...state,
+      _params: { ...state._params, showPoints: true },
+      _classTallyCache: {},
+    },
+    services: { layerState: { isExplicitLayerStateOrigin: () => false } },
+    parts: {},
+    source: {},
+  }).methods;
+}
+
+/** One satellite per group path, its own catalog number. */
+const groupIds = new Map();
+function tleFor(path) {
+  if (!groupIds.has(path)) groupIds.set(path, String(40200 + groupIds.size));
+  return tleSet(`SAT ${path}`, groupIds.get(path));
+}
+
+/** Each core group's read, as `answer(path)` says. */
+const groupsAnswering = (answer) =>
+  CATALOG_GROUPS.map(({ path }) => ({ path, ...answer(path) }));
+
+// Swedish fork: what the row says of the groups while CelesTrak's usage
+// policy keeps the proxy from asking (server/providers/space/celestrak.js).
+test('the row says CelesTrak is paused only while every group still asked for is held, until the first may be asked', () => {
+  const now = Date.parse('2026-11-22T12:00:00Z');
+  const soon = now + 15 * 60_000;
+  const later = now + 2 * 60 * 60_000;
+  // Every group held, the one that failed for its own 2 h: the pause ends
+  // with the others'.
+  assert.deepEqual(
+    celestrakGroupsStatus(
+      groupsAnswering((path) => ({
+        ok: true,
+        stale: true,
+        heldUntil: path === 'visual' ? later : soon,
+      })),
+      now,
+    ),
+    { pausedUntil: soon, error: null },
+  );
+  // One stray group still held, the others refreshed: no pause.
+  assert.deepEqual(
+    celestrakGroupsStatus(
+      groupsAnswering((path) =>
+        path === 'visual'
+          ? { ok: true, stale: true, heldUntil: later }
+          : {
+              ok: true,
+            },
+      ),
+      now,
+    ),
+    { pausedUntil: 0, error: null },
+  );
+  assert.deepEqual(
+    celestrakGroupsStatus(
+      groupsAnswering((path) =>
+        path === 'visual' ? { ok: false, heldUntil: later } : { ok: true },
+      ),
+      now,
+    ),
+    { pausedUntil: 0, error: '1 CelesTrak group unavailable' },
+  );
+  // Every group held without a copy: paused, and every group unavailable
+  // meanwhile, never "unreachable".
+  assert.deepEqual(
+    celestrakGroupsStatus(
+      groupsAnswering(() => ({ ok: false, heldUntil: soon })),
+      now,
+    ),
+    { pausedUntil: soon, error: '11 CelesTrak groups unavailable' },
+  );
+  // Nothing held and nothing came: unreachable.
+  assert.deepEqual(
+    celestrakGroupsStatus(
+      groupsAnswering(() => ({ ok: false })),
+      now,
+    ),
+    { pausedUntil: 0, error: 'CelesTrak unreachable' },
+  );
+});
+
+test('groups CelesTrak answered 404 for are missing, even shown from their last copy', () => {
+  const now = Date.parse('2026-11-22T12:00:00Z');
+  const soon = now + 15 * 60_000;
+  assert.deepEqual(
+    celestrakGroupsStatus(
+      groupsAnswering((path) =>
+        path === 'geo' ? { ok: true, stale: true, gone: true } : { ok: true },
+      ),
+      now,
+    ),
+    {
+      pausedUntil: 0,
+      error: '1 CelesTrak group missing (CelesTrak answered 404)',
+    },
+  );
+  // An empty cache and a 404 for every group: missing, not unreachable.
+  assert.deepEqual(
+    celestrakGroupsStatus(
+      groupsAnswering(() => ({ ok: false, gone: true })),
+      now,
+    ),
+    {
+      pausedUntil: 0,
+      error: '11 CelesTrak groups missing (CelesTrak answered 404)',
+    },
+  );
+  // A 404 among other failures: all of them unavailable.
+  assert.deepEqual(
+    celestrakGroupsStatus(
+      groupsAnswering((path) =>
+        path === 'geo'
+          ? { ok: false, gone: true }
+          : path === 'sar'
+            ? { ok: false }
+            : { ok: true },
+      ),
+      now,
+    ),
+    { pausedUntil: 0, error: '2 CelesTrak groups unavailable' },
+  );
+  // Paused, with a group missing: the pause holds every group still asked
+  // for, and the missing one is said beside it.
+  assert.deepEqual(
+    celestrakGroupsStatus(
+      groupsAnswering((path) =>
+        path === 'geo'
+          ? { ok: false, gone: true }
+          : { ok: true, stale: true, heldUntil: soon },
+      ),
+      now,
+    ),
+    {
+      pausedUntil: soon,
+      error: '1 CelesTrak group missing (CelesTrak answered 404)',
+    },
+  );
+});
+
+test('the pause is told until its end as the row is drawn, the missing groups on the info line meanwhile', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  let now = Date.parse('2026-11-22T12:00:00Z');
+  t.mock.method(Date, 'now', () => now);
+  const soon = now + 15 * 60_000;
+  const { state, update } = ingestionFor('', {
+    source: {
+      readGroup: async (path) =>
+        path === 'geo'
+          ? { ok: false, status: 502, text: '', heldUntil: soon }
+          : {
+              ok: true,
+              status: 200,
+              text: tleFor(path),
+              stale: true,
+              heldUntil: soon,
+            },
+    },
+  });
+  await update();
+  const row = controlsOf(state);
+  assert.equal(row.getStats().error, celestrakPausedError(soon));
+  assert.equal(
+    row.getStats().error,
+    'CelesTrak paused until 2026-11-22T12:15:00.000Z (its usage policy)',
+  );
+  assert.equal(row.getStats().status, 'degraded');
+  assert.equal(row.getRowControls().info, '1 CelesTrak group unavailable');
+  // The end passes before the next update: what holds without the pause.
+  now = soon;
+  assert.equal(row.getStats().error, '1 CelesTrak group unavailable');
+  assert.equal(row.getRowControls().info, '');
+  // No group at all is unavailable, whatever the text.
+  const cold = ingestionFor('', {
+    source: {
+      readGroup: async () => ({
+        ok: false,
+        status: 502,
+        text: '',
+        heldUntil: now + 60_000,
+      }),
+    },
+  });
+  await cold.update();
+  assert.equal(controlsOf(cold.state).getStats().status, 'unavailable');
+});
+
+test('the groups are read two at a time, and SATCAT, two at a time too, only once they are in', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  const asked = [];
+  const reading = { tle: 0, satcat: 0 };
+  const most = { tle: 0, satcat: 0 };
+  const read = async (kind, path, answer) => {
+    asked.push(`${kind} ${path}`);
+    reading[kind]++;
+    most[kind] = Math.max(most[kind], reading[kind]);
+    await new Promise(setImmediate);
+    reading[kind]--;
+    return answer;
+  };
+  const { update } = ingestionFor('', {
+    source: {
+      readGroup: (path) => read('tle', path, { ok: true, text: tleFor(path) }),
+      readSatcat: (path) => {
+        assert.equal(reading.tle, 0, 'every TLE read is in');
+        return read('satcat', path, { ok: false, text: '' });
+      },
+    },
+  });
+  await update();
+  assert.deepEqual(most, {
+    tle: CELESTRAK_READS_AT_ONCE,
+    satcat: CELESTRAK_READS_AT_ONCE,
+  });
+  assert.deepEqual(asked, [
+    ...CATALOG_GROUPS.map(({ path }) => `tle ${path}`),
+    ...CATALOG_GROUPS.map(({ path }) => `satcat ${path}`),
+  ]);
+});
+
+test('while paused, the info line keeps to 72 characters in every language, a SATCAT notice that does not fit in its tooltip', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  const heldUntil = Date.now() + 60 * 60_000;
+  const { state, update } = ingestionFor('', {
+    source: {
+      readGroup: async (path) =>
+        path === 'geo'
+          ? { ok: false, status: 502, text: '', heldUntil }
+          : { ok: true, text: tleFor(path), stale: true, heldUntil },
+      readSatcat: async () => ({ ok: false, text: '' }),
+    },
+  });
+  await update();
+  assert.equal(state._satcatState, 'unavailable');
+  t.after(() => setLocale('en'));
+  for (const locale of [
+    'en',
+    'sv',
+    'ar',
+    'de',
+    'es',
+    'fr',
+    'he',
+    'it',
+    'ja',
+    'pt',
+    'ru',
+    'uk',
+    'zh-CN',
+    'zh-Hant',
+  ]) {
+    setLocale(locale);
+    const { info, infoTitle } = controlsOf(state).getRowControls();
+    const satcat = controlsOf({ ...state, _pausedUntil: 0 }).getRowControls();
+    assert.ok(info.length <= 72, `${locale}: ${info.length} ${info}`);
+    // The unavailable group is on the line, in the language.
+    assert.match(info, /CelesTrak/, `${locale}: ${info}`);
+    assert.doesNotMatch(
+      info,
+      locale === 'en' ? /paused/ : /unavailable|paused/,
+      `${locale}: ${info}`,
+    );
+    // The SATCAT notice is on the line, or first in the tooltip.
+    assert.ok(
+      info.endsWith(satcat.info) || infoTitle.startsWith(satcat.info),
+      `${locale}: ${info} | ${infoTitle}`,
+    );
+  }
+});
+
+test('a group not in within TLE_WAIT_MS is told as unavailable, so the layer still settles', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const asked = [];
+  const { state, update } = ingestionFor('', {
+    source: {
+      readGroup: (path, { signal }) => {
+        asked.push(path);
+        if (path === 'stations')
+          return Promise.resolve({ ok: true, text: tleFor(path) });
+        // The others hang, as a slow CelesTrak behind the proxy's queue.
+        return new Promise((resolve, reject) =>
+          signal.addEventListener('abort', () => reject(signal.reason), {
+            once: true,
+          }),
+        );
+      },
+    },
+  });
+  let settled = false;
+  const rebuilt = update().then(() => {
+    settled = true;
+  });
+  for (let turn = 0; turn < 20; turn += 1)
+    await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(settled, false, 'still waiting');
+  t.mock.timers.tick(TLE_WAIT_MS);
+  await rebuilt;
+  // Two at a time: stations came, visual and gps-ops were given up, and
+  // the rest were not asked for in this update.
+  assert.deepEqual(asked, ['stations', 'visual', 'gps-ops']);
+  assert.equal(state._count, 1);
+  assert.equal(state._lastError, '10 CelesTrak groups unavailable');
 });
 
 test('a failed imaging-sensor pack is warned about, as the UCS pack is', async (t) => {

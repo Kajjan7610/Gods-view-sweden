@@ -5965,5 +5965,11 @@
   "Turning on protected nature, river flow and the aurora forecast…": "מפעיל טבע מוגן, זרימת נהרות ותחזית זוהר הקוטב…",
   "Open data about Sweden, much of it in real time: traffic, weather, nature, society and infrastructure from public agencies and open sources. Everything here is public, and every layer shows its source.": "נתונים פתוחים על שוודיה, רבים מהם בזמן אמת: תנועה, מזג אוויר, טבע, חברה ותשתיות מרשויות ציבוריות וממקורות פתוחים. כל מה שכאן ציבורי, וכל שכבה מציגה את המקור שלה.",
   "Built on {product} by Bilawal Sidhu and Sameh Khamis (MIT licence)": "מבוסס על {product} מאת Bilawal Sidhu ו־Sameh Khamis (רישיון MIT)",
-  "Could not turn on all the layers{detail}. Try again, or choose EXPLORE ON YOUR OWN.": "לא ניתן היה להפעיל את כל השכבות{detail}. נסה שוב או בחר בגלישה חופשית במפה."
+  "Could not turn on all the layers{detail}. Try again, or choose EXPLORE ON YOUR OWN.": "לא ניתן היה להפעיל את כל השכבות{detail}. נסה שוב או בחר בגלישה חופשית במפה.",
+  "CelesTrak paused until {time} (its usage policy)": "CelesTrak מושהה עד {time} (לפי מדיניות השימוש שלו)",
+  "{count} CelesTrak groups missing (CelesTrak answered 404)": {
+    "one": "{count} קבוצת CelesTrak חסרה (CelesTrak השיב 404)",
+    "two": "{count} קבוצות CelesTrak חסרות (CelesTrak השיב 404)",
+    "other": "{count} קבוצות CelesTrak חסרות (CelesTrak השיב 404)"
+  }
 }

@@ -2,12 +2,14 @@ import { satelliteClassText } from '../../data/satelliteClass.js';
 import { decodeSatelliteClassMask } from '../../data/satelliteClassMask.js';
 import { fromDegrees, toLonLatH } from '../../geo/ellipsoid.js';
 import { t } from '../../i18n/index.js';
+import { translateFeedError } from '../../ui/statusText.js';
 import {
   DEFAULT_SATELLITE_CLASSES,
   SATELLITE_CLASS_DISPLAY,
   SATELLITE_CLASS_IDS,
   mergeClassVisibility,
 } from './classes.js';
+import { celestrakPausedError } from './ingestion.js';
 import { ISS_NORAD, POINT_STYLES, classPointStyle } from './policy.js';
 import { modelFor, trackedStation } from './stationModels.js';
 
@@ -103,6 +105,38 @@ export function createControls({ state: layerState, services, parts, source }) {
         "CelesTrak SATCAT gives each object's type and status. Without a current copy the classes rest on the UCS database, names and CelesTrak groups, so a satellite that has died since may still show as working.",
       ),
     };
+  }
+
+  /**
+   * Whether CelesTrak's usage policy still holds every group asked for,
+   * compared with now as the row is drawn (Swedish fork).
+   */
+  const paused = () => layerState._pausedUntil > Date.now();
+
+  /**
+   * The row's info line: while the status line says CelesTrak is paused,
+   * the groups missing or unavailable meanwhile (Swedish fork); and while
+   * SATCAT is stale or unavailable, that the classes may lag. One line of
+   * at most 72 characters: a SATCAT notice that does not fit beside the
+   * groups goes to the tooltip.
+   * @returns {{info: string, infoTitle: string}}
+   */
+  function rowNotice() {
+    const evidence = classEvidenceNotice();
+    const groups =
+      paused() && layerState._lastError
+        ? translateFeedError(layerState._lastError)
+        : '';
+    if (!groups) return evidence;
+    const line = evidence.info ? `${groups} · ${evidence.info}` : groups;
+    return line.length <= 72
+      ? { info: line, infoTitle: evidence.infoTitle }
+      : {
+          info: groups,
+          infoTitle: [evidence.info, evidence.infoTitle]
+            .filter(Boolean)
+            .join('\n'),
+        };
   }
 
   /** Tell the manager to re-render this layer's row (chip state / legend counts). */
@@ -725,7 +759,8 @@ export function createControls({ state: layerState, services, parts, source }) {
      * takes seconds to arrive and frequently 502s, so ACTIVE means "Starlink
      * points are on screen" and nothing less. The legend tally is cached
      * against the catalog revision. While SATCAT is stale or unavailable the
-     * info line says the classes may lag (see `classEvidenceNotice`).
+     * info line says the classes may lag, and while CelesTrak is paused which
+     * groups are missing (see `rowNotice`).
      * @returns {{ chips: Array<object>, legend: Array<object>, info: string,
      *   infoTitle: string }} Row controls.
      */
@@ -765,7 +800,7 @@ export function createControls({ state: layerState, services, parts, source }) {
           count: counts[id],
         });
       }
-      return { chips, legend, ...classEvidenceNotice() };
+      return { chips, legend, ...rowNotice() };
     },
 
     /**
@@ -781,19 +816,25 @@ export function createControls({ state: layerState, services, parts, source }) {
 
     getStats() {
       const stale = Boolean(layerState._coreStale || layerState._denseStale);
+      // Swedish fork: the pause is told until its end, then what holds
+      // without it (ingestion.js celestrakGroupsStatus).
+      const error = paused()
+        ? celestrakPausedError(layerState._pausedUntil)
+        : layerState._lastError;
       return {
         count: layerState._count,
         lastUpdate: layerState._lastUpdate,
         stale,
-        status:
-          layerState._lastError === 'CelesTrak unreachable'
-            ? 'unavailable'
-            : layerState._lastError
-              ? 'degraded'
-              : stale
-                ? 'stale'
-                : 'nominal',
-        error: layerState._lastError,
+        // Swedish fork: no group came, whatever the error says (CelesTrak
+        // unreachable, paused by its usage policy, or groups missing).
+        status: layerState._coreUnavailable
+          ? 'unavailable'
+          : error
+            ? 'degraded'
+            : stale
+              ? 'stale'
+              : 'nominal',
+        error,
         // SATCAT refines the classes; when it is stale or unavailable the
         // classes rest on UCS, names and groups alone.
         classEvidence: layerState._satcatState,

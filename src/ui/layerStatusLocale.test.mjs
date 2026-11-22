@@ -61,6 +61,29 @@ const cases = [
     },
     'group unavailable',
   ],
+  // Swedish fork: CelesTrak paused by its usage policy (satellites/ingestion.js).
+  [
+    'satellites',
+    {
+      count: 10,
+      error:
+        'CelesTrak paused until 2026-11-22T13:05:00.000Z (its usage policy)',
+      source: 'CelesTrak',
+      lastUpdate: now,
+    },
+    'paused until',
+  ],
+  // Swedish fork: groups CelesTrak answered 404 for (satellites/ingestion.js).
+  [
+    'satellites',
+    {
+      count: 10,
+      error: '2 CelesTrak groups missing (CelesTrak answered 404)',
+      source: 'CelesTrak',
+      lastUpdate: now,
+    },
+    'missing',
+  ],
   [
     'air-quality',
     {
