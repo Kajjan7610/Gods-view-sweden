@@ -9,6 +9,7 @@ import { speedCamerasProxy } from './speedCameras.js';
 import { trafikverketRoadsProxy } from './trafikverketRoads.js';
 import { trafikverketWeatherProxy } from './trafikverketWeather.js';
 import { transitAlertsProxy } from './transitAlerts.js';
+import { transitProxy } from './transit.js';
 
 function mounted(plugin) {
   const routes = new Map();
@@ -136,6 +137,65 @@ test("the Rail layer's Trafikverket trains refuse another site; keyless feeds do
   assert.notEqual(keyless.statusCode, 403);
 });
 
+test("the Rail layer's Trafikverket trains refuse another site however the id is spelled", async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  let asked = 0;
+  const plugin = railProxy({
+    fetchImpl: async () => {
+      asked += 1;
+      return new Response('{}');
+    },
+    env: { TRAFIKVERKET_API_KEY: 'a' },
+    readPathPack: async () => '{"paths":1}',
+    pathPackVersion: async () => 'v1',
+  });
+  t.after(() => plugin.closeBundle());
+  const handler = mounted(plugin).get('/api/rail');
+  const res = () => ({
+    statusCode: 0,
+    headersSent: false,
+    setHeader() {},
+    writeHead(status) {
+      this.statusCode = status;
+    },
+    end() {},
+    destroy() {},
+  });
+  const ask = async (url, headers) => {
+    const answer = res();
+    await handler({ method: 'GET', url, headers, socket: {} }, answer);
+    return answer.statusCode;
+  };
+  const foreign = {
+    host: 'localhost:4173',
+    origin: 'https://example.com',
+    'sec-fetch-site': 'cross-site',
+  };
+  // Spellings the rail service reads as Trafikverket's trains: an encoded
+  // character, a dot segment, a backslash, a trailing slash, a query.
+  for (const url of [
+    '/trains/trafikverket%2Dtrains',
+    '/trains/%74rafikverket-trains',
+    '/trains/./trafikverket-trains',
+    '/x/../trains/trafikverket-trains',
+    '/trains\\trafikverket-trains',
+    '/trains/trafikverket-trains/',
+    '/trains/trafikverket-trains?fresh=1',
+    '/paths/trafikverket%2Dtrains',
+  ])
+    assert.equal(await ask(url, foreign), 403, url);
+  assert.equal(asked, 0, 'Trafikverket is never asked');
+  // The app's own page is answered, however it spells the id.
+  const own = {
+    host: 'localhost:4173',
+    origin: 'http://localhost:4173',
+    'sec-fetch-site': 'same-origin',
+  };
+  assert.notEqual(await ask('/trains/trafikverket%2Dtrains', own), 403);
+  assert.ok(asked > 0, 'asked for the own page');
+});
+
 test("the Rail layer's railway disruptions refuse another site, and without the key ask nothing", async (t) => {
   t.mock.method(console, 'log', () => {});
   t.mock.method(console, 'warn', () => {});
@@ -220,4 +280,76 @@ test("the app's own page is still answered", async (t) => {
     'sec-fetch-site': 'same-origin',
   });
   assert.equal(own.statusCode, 200);
+});
+
+test("the Transit layer's key-spending feeds refuse another site however the id is spelled; keyless feeds do not", async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  // The proxy gets its own fetch; nothing may reach the network.
+  t.mock.method(globalThis, 'fetch', async () => {
+    throw new Error('no network in this test');
+  });
+  let asked = 0;
+  const plugin = transitProxy({
+    fetchImpl: async () => {
+      asked += 1;
+      return new Response('{}', { status: 500 });
+    },
+    // Keys of this test's own: Trafikverket's shared snapshot is kept per key.
+    env: {
+      TRAFIKVERKET_API_KEY: 'transit-gate-a',
+      TRAFIKLAB_GTFS_RT_KEY: 'transit-gate-b',
+    },
+    // Route names from static GTFS are not under test.
+    enrichVehicles: (_feed, vehicles) => vehicles,
+  });
+  t.after(() => plugin.closeBundle());
+  const handler = mounted(plugin).get('/api/transit');
+  const status = async (url, headers) => {
+    const answer = {
+      statusCode: 0,
+      setHeader() {},
+      writeHead(code) {
+        this.statusCode = code;
+      },
+      end() {},
+    };
+    await handler({ method: 'GET', url, headers, socket: {} }, answer);
+    return answer.statusCode;
+  };
+  const foreign = {
+    host: 'localhost:4173',
+    origin: 'https://example.com',
+    'sec-fetch-site': 'cross-site',
+  };
+  // Spellings the transit service reads as the same feed: an encoded
+  // character, a dot segment, a backslash, a trailing slash, a query.
+  for (const id of ['trafikverket-trains', 'trafiklab-sl'])
+    for (const url of [
+      `/vehicles/${id}`,
+      `/vehicles/${id.replace('-', '%2D')}`,
+      `/vehicles/%74${id.slice(1)}`,
+      `/vehicles/./${id}`,
+      `/x/../vehicles/${id}`,
+      `/vehicles\\${id}`,
+      `/vehicles/${id}/`,
+      `/vehicles/${id}?fresh=1`,
+    ])
+      assert.equal(await status(url, foreign), 403, url);
+  assert.equal(asked, 0, 'no key-spending feed is asked');
+  // The app's own page is answered, however it spells the id.
+  const own = {
+    host: 'localhost:4173',
+    origin: 'http://localhost:4173',
+    'sec-fetch-site': 'same-origin',
+  };
+  for (const url of [
+    '/vehicles/trafikverket%2Dtrains',
+    '/vehicles/trafiklab%2Dsl',
+  ])
+    assert.notEqual(await status(url, own), 403, url);
+  assert.equal(asked, 2, 'each asked once for the own page');
+  // A keyless feed answers another site as before.
+  assert.notEqual(await status('/vehicles/mbta', foreign), 403);
+  assert.equal(asked, 3);
 });

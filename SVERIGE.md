@@ -440,6 +440,16 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-22 (nyckelflöden nekar andra webbplatser, hur adressen än skrivs)
+- Flöden som kostar en nyckel, Trafikverkets tåg och Trafiklabs 16
+  trafikbolag, svarar bara appens egen sida, både i tåglagret
+  (`/api/rail`) och i kollektivtrafiklagret (`/api/transit`). Servern läser
+  flödets namn på samma sätt som när den hämtar flödet, också när adressen
+  har kodade tecken, punktdelar eller omvända snedstreck, och en fråga från
+  en annan webbplats nekas (403) innan något hämtas. Appens egen sida
+  svarar som förut, utom bakom en omvänd proxy, som för de andra
+  nyckelflödena. Flöden utan nyckel påverkas inte.
+
 ### 2026-11-22 (trafik- och tågflöden utan angiven licens)
 - Fyra trafikflöden och ett tågflöde hämtas inte längre, eftersom deras
   operatörer inte anger någon licens för dem. En granskning 2026-11-21

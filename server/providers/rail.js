@@ -5,10 +5,8 @@ import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
 import { createRailService } from '../../src/sources/railService.js';
 import { createRailDisruptionsService } from '../../src/sources/trafikverketRailDisruptions.js';
-import {
-  RAIL_FEED_ID_PATTERN,
-  getRegisteredRailFeed,
-} from '../../src/data/railFeeds.js';
+import { RAIL_FEED_ID_PATTERN } from '../../src/data/railFeeds.js';
+import { resolveRailRoute } from '../../src/data/railProxy.js';
 import { admitSameSite } from './common/same-site.js';
 
 /**
@@ -223,6 +221,28 @@ export async function sendRailResponse(response, res) {
   await pipeline(Readable.fromWeb(response.body), res);
 }
 
+/**
+ * Swedish fork: the feed a rail request names, read as the rail service reads
+ * it: the same URL (`http://localhost/api/rail` + the request path), the same
+ * parser and resolveRailRoute. A spelling the service accepts (an encoded
+ * character, a dot segment, a backslash) therefore names the same feed here.
+ * @param {string|undefined} requestUrl The request URL after the mount.
+ * @returns {object|null}
+ */
+function requestedRailFeed(requestUrl) {
+  let url;
+  try {
+    url = new URL(`http://localhost/api/rail${requestUrl || '/'}`);
+  } catch {
+    return null;
+  }
+  if (!url.pathname.startsWith('/api/rail/')) return null;
+  return (
+    resolveRailRoute(url.pathname.slice('/api/rail'.length) + url.search)
+      ?.feed ?? null
+  );
+}
+
 /** Connect the reusable rail request service to development and preview. */
 export function railProxy(options = {}) {
   const pathsDir =
@@ -267,10 +287,10 @@ export function railProxy(options = {}) {
   function install(server) {
     server.middlewares.use('/api/rail', async (req, res) => {
       // Swedish fork: a feed that spends a key (Trafikverket's trains)
-      // answers the app's own page only, as the fork's other key routes do.
+      // answers the app's own page only, as the fork's other key routes do,
+      // however the request spells its id.
       const route = String(req.url || '').split('?')[0];
-      const feedId = route.split('/')[2];
-      if (getRegisteredRailFeed(feedId)?.requiresKey && admitSameSite(req, res))
+      if (requestedRailFeed(req.url)?.requiresKey && admitSameSite(req, res))
         return;
       // Swedish fork: Trafikverket's railway disruptions spend the same key
       // and answer the same page only.

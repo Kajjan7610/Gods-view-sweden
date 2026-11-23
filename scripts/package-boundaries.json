@@ -7852,6 +7852,8 @@
     "modules": [
       "server/providers/common/http.js",
       "server/providers/common/rate-limit.js",
+      "server/providers/common/same-site.js",
+      "src/localRequestGate.mjs",
       "server/providers/transit.js",
       "server/providers/trafiklabStatic.js",
       "server/providers/transitHistory.js",
