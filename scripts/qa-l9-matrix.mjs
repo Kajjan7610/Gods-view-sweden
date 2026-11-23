@@ -41,6 +41,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { gpRecord, parseGpCsv } from '../src/sources/gp.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -771,32 +772,30 @@ check({
 });
 
 check({
-  id: 'B4', group: 'B', desc: 'CelesTrak TLE proxy serves and caches (/api/celestrak/stations)',
+  id: 'B4', group: 'B', desc: 'CelesTrak GP proxy serves and caches (/api/celestrak/stations)',
   run: async () => {
     const r = await jget('/api/celestrak/stations', { timeoutMs: 40000 });
     if (!r.ok) return fail(`HTTP ${r.status}`);
-    const lines = r.text.split('\n').filter((l) => /^1 /.test(l)).length;
+    // CelesTrak GP data as CSV: a header, then a row per object.
+    const rows = parseGpCsv(r.text).length;
     const cache = r.headers.get('x-tle-cache');
-    return lines > 0 ? pass(`${lines} TLE records, x-tle-cache=${cache}`) : fail('no TLE lines in response');
+    return rows > 0 ? pass(`${rows} GP records, x-tle-cache=${cache}`) : fail('no GP rows in response');
   },
 });
 
 check({
-  id: 'B5', group: 'B', desc: 'TLEs are FRESH (epoch under 14 days — a stale catalog silently mis-propagates)',
+  id: 'B5', group: 'B', desc: 'GP data is FRESH (epoch under 14 days — a stale catalog silently mis-propagates)',
   run: async () => {
     const r = await jget('/api/celestrak/stations', { timeoutMs: 40000 });
     if (!r.ok) return fail(`HTTP ${r.status}`);
-    const line1 = r.text.split('\n').find((l) => /^1 /.test(l));
-    if (!line1) return fail('no TLE line 1 found');
-    // Columns 19-32: epoch YYDDD.DDDDDDDD
-    const yy = Number(line1.slice(18, 20));
-    const ddd = Number(line1.slice(20, 32));
-    const year = yy < 57 ? 2000 + yy : 1900 + yy;
-    const epoch = new Date(Date.UTC(year, 0, 1) + (ddd - 1) * 86400000);
+    const [first] = parseGpCsv(r.text);
+    if (!first) return fail('no GP row found');
+    // The OMM epoch, UTC: 2026-11-21T12:34:56.123456.
+    const epoch = new Date(Date.parse(`${gpRecord(first).EPOCH.replace(/Z$/, '').slice(0, 23)}Z`));
     const ageDays = (Date.now() - epoch.getTime()) / 86400000;
     return ageDays >= 0 && ageDays < 14
       ? pass(`newest epoch ${epoch.toISOString().slice(0, 10)} (${ageDays.toFixed(1)} d old)`)
-      : fail(`TLE epoch ${epoch.toISOString().slice(0, 10)} is ${ageDays.toFixed(1)} days old`);
+      : fail(`GP epoch ${epoch.toISOString().slice(0, 10)} is ${ageDays.toFixed(1)} days old`);
   },
 });
 

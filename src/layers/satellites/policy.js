@@ -3,7 +3,8 @@ import { cssColor, hexColor } from '../../render/color.js';
 import { SATELLITE_CLASS_DISPLAY, SATELLITE_CLASS_IDS } from './classes.js';
 
 /**
- * Satellite Orbits — Real-time positions via CelesTrak TLE + SGP4 propagation.
+ * Satellite Orbits — Real-time positions via CelesTrak GP data (CSV) + SGP4
+ * propagation.
  *
  * Loads eleven CelesTrak groups: stations, visual, GPS, GLONASS, Galileo, the
  * geosynchronous belt, and the Earth resources, weather, Planet, SAR and

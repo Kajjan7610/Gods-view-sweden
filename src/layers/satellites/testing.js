@@ -131,6 +131,8 @@ export function createTesting({ state: layerState, services, parts, source }) {
     };
     parts.rendering._attachTo(NO_DRAW);
     layerState._catalog = new Map();
+    layerState._coreSatrecs.clear();
+    layerState._denseSatrecs.clear();
     layerState._points = new Map();
     layerState._detectionObjects = new Map();
     layerState._orbitPaths = new Map();
@@ -155,6 +157,8 @@ export function createTesting({ state: layerState, services, parts, source }) {
     layerState._viewer = null;
     parts.rendering._detach();
     layerState._catalog = new Map();
+    layerState._coreSatrecs.clear();
+    layerState._denseSatrecs.clear();
     layerState._points = new Map();
     layerState._denseIds = [];
     layerState._denseLoadToken++;

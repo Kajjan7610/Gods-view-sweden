@@ -19,6 +19,8 @@ import { groundTrackBearingDeg } from './orbits.js';
 import { indexImagingSensors } from './sensors.js';
 import { ISS_NORAD, TRACKED_ORBIT_COLOR } from './policy.js';
 import { toLonLatH } from '../../geo/ellipsoid.js';
+import { gpSatrec, parseGpCsv } from '../../sources/gp.js';
+import { gpCsv } from '../../testSupport/gpFixtures.mjs';
 import { bindFakeDraw } from '../../testSupport/fakeDrawPort.mjs';
 import { fakeInput } from '../../input/testDoubles.mjs';
 import {
@@ -30,18 +32,37 @@ import {
 const COMPANION = 25545;
 const GPS = 32711;
 
-function tle(name, id, motion = '15.48899044', inclination = ' 51.6326') {
+/** CelesTrak GP fields of one element set (16 October 2026, 18:57 UTC). */
+function gp(name, id, motion = '15.48899044', inclination = '51.6326') {
   // Owned synthetic element sets; never live requests. The station pair
   // share elements, so the companion is docked to the ISS.
-  return `${name}\n1 ${id}U 98067A   26289.78971908  .00007803  00000+0  15012-3 0  9995\n2 ${id} ${inclination}  58.3278 0006748 271.9059  88.1156 ${motion}590607`;
+  return {
+    OBJECT_NAME: name,
+    OBJECT_ID: '1998-067A',
+    EPOCH: '2026-10-16T18:57:11.728512',
+    MEAN_MOTION: motion,
+    ECCENTRICITY: '.0006748',
+    INCLINATION: inclination,
+    RA_OF_ASC_NODE: '58.3278',
+    ARG_OF_PERICENTER: '271.9059',
+    MEAN_ANOMALY: '88.1156',
+    EPHEMERIS_TYPE: '0',
+    CLASSIFICATION_TYPE: 'U',
+    NORAD_CAT_ID: String(id),
+    ELEMENT_SET_NO: '999',
+    REV_AT_EPOCH: '59060',
+    BSTAR: '.15012E-3',
+    MEAN_MOTION_DOT: '.00007803',
+    MEAN_MOTION_DDOT: '0',
+  };
 }
 
 const GROUP_TEXT = {
-  stations: [
-    tle('ISS (ZARYA)', ISS_NORAD),
-    tle('PROGRESS-MS 31', COMPANION),
-  ].join('\n'),
-  'gps-ops': tle('GPS FIXTURE', GPS, ' 2.00563000', ' 55.0000'),
+  stations: gpCsv(
+    gp('ISS (ZARYA)', ISS_NORAD),
+    gp('PROGRESS-MS 31', COMPANION),
+  ),
+  'gps-ops': gpCsv(gp('GPS FIXTURE', GPS, '2.00563000', '55.0000')),
 };
 
 /** The layer's live draw set whose id ends with `suffix`. */
@@ -118,7 +139,7 @@ const SATCAT_TEXT = {
     `ISS (ZARYA),1998-067A,${ISS_NORAD},PAY,+,ISS`,
     `PROGRESS-MS 31,2026-001A,${COMPANION},PAY,+,CIS`,
   ].join('\n'),
-  // No designator: the TLE's is used.
+  // No designator: the GP row's is used.
   'gps-ops': [SATCAT_HEADER, `GPS FIXTURE,,${GPS},PAY,+,US`].join('\n'),
 };
 const UCS = new Map([
@@ -330,8 +351,15 @@ test('the subject says what it is, which TLE it flies, and who owns and runs it'
   const iss = f.methods.getCockpitSubject();
   assert.equal(iss.satelliteClass, 'stations');
   assert.equal(iss.cosparId, '1998-067A');
-  assert.match(iss.tle.line1, /^1 25544U/);
-  assert.match(iss.tle.line2, /^2 25544 /);
+  // The two TLE lines of the GP row's elements, checksums included.
+  assert.equal(
+    iss.tle.line1,
+    '1 25544U 98067A   26289.78971908  .00007803  00000+0  15012-3 0  9995',
+  );
+  assert.equal(
+    iss.tle.line2,
+    '2 25544  51.6326  58.3278 0006748 271.9059  88.1156 15.48899044590607',
+  );
   // Day 289.789… of 2026.
   assert.ok(
     Math.abs(
@@ -356,7 +384,7 @@ test('the subject says what it is, which TLE it flies, and who owns and runs it'
   assert.equal(
     gps.cosparId,
     '1998-067A',
-    'from TLE line 1 when SATCAT has none',
+    'from the GP designator when SATCAT has none',
   );
   assert.deepEqual(gps.owner, { countryCode: 'US', label: 'United States' });
   assert.equal(gps.operator, null);
@@ -384,6 +412,23 @@ test('the subject says what it is, which TLE it flies, and who owns and runs it'
   assert.equal(bare.owner, null);
   assert.equal(bare.operator, null);
   assert.equal(bare.cosparId, null);
+});
+
+test('a satellite numbered 100000 or up keeps its epoch and COSPAR id, without TLE lines', () => {
+  // CelesTrak writes no TLE for it; the GP row still carries the elements.
+  const [entry] = parseGpCsv(gpCsv(gp('NEW OBJECT', 100123)));
+  const info = satelliteCockpitInfo(
+    100123,
+    { name: entry.name, group: 'stations', satrec: gpSatrec(entry), gp: entry },
+    { latitude: 1, longitude: 2, altitude: 400_000 },
+  );
+  assert.equal(info.noradId, 100123);
+  assert.equal(info.cosparId, '1998-067A');
+  assert.equal(info.tle.line1, null);
+  assert.equal(info.tle.line2, null);
+  assert.ok(
+    Math.abs(info.tle.epochMs - Date.parse('2026-10-16T18:57:11.728Z')) < 1,
+  );
 });
 
 test('a GNSS satellite carries its class and an orbital speed', async (t) => {

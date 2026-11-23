@@ -1,5 +1,4 @@
-import { gstime, twoline2satrec } from 'satellite.js';
-import { noradIdFromSatnum, tleLineLaunchYear } from '../../sources/tle.js';
+import { gstime } from 'satellite.js';
 import { reckonEarthFixed, sampleOrbit } from './motion.js';
 import {
   DENSE_REFRESH_FRAMES,
@@ -61,7 +60,7 @@ export function createCatalog({ state: layerState, services, parts, source }) {
 
   /**
    * Load the dense catalog extras (Starlink) as points-only satellites.
-   * Chunked so ~10K twoline2satrec builds + initial propagations never block a
+   * Chunked so ~10K satrec builds + initial propagations never block a
    * frame; a token guards against mode flips / catalog rebuilds mid-load.
    */
 
@@ -102,11 +101,16 @@ export function createCatalog({ state: layerState, services, parts, source }) {
         return { status: 'superseded', reason: 'dense-load-superseded' };
       }
 
-      const entries = parts.orbits.parseTLE(text);
+      const entries = parts.orbits.parseGp(text);
       const style = POINT_STYLES.dense;
       const nowMs = layerState.now();
       const gmst = gstime(new Date(nowMs));
       let added = 0;
+      // Swedish fork: every core rebuild reloads the shell, mostly the same
+      // rows (the proxy serves them for 6 h): an unchanged row gets the
+      // satrec it had. A load cut short keeps what it had for the next.
+      const satrecs = layerState._denseSatrecs;
+      satrecs.begin();
 
       for (let start = 0; start < entries.length; start += DENSE_CREATE_CHUNK) {
         loadSignal.throwIfAborted();
@@ -120,10 +124,10 @@ export function createCatalog({ state: layerState, services, parts, source }) {
         const end = Math.min(start + DENSE_CREATE_CHUNK, entries.length);
         for (let i = start; i < end; i++) {
           const entry = entries[i];
-          const satrec = twoline2satrec(entry.line1, entry.line2);
-          if (!satrec || satrec.error !== 0) continue;
-          const noradId = noradIdFromSatnum(satrec.satnum);
+          const noradId = entry.noradId;
           if (layerState._catalog.has(noradId)) continue; // core catalog keeps priority
+          const satrec = satrecs.satrec(entry);
+          if (!satrec) continue;
           // Its first sample places it now and moves it from then on.
           const orbitSample = sampleOrbit(satrec, nowMs);
           if (!orbitSample) continue;
@@ -132,9 +136,9 @@ export function createCatalog({ state: layerState, services, parts, source }) {
             name: entry.name,
             satrec,
             group: 'dense',
-            launchYear: tleLineLaunchYear(entry.line1),
-            line1: entry.line1,
-            line2: entry.line2,
+            launchYear: entry.launchYear,
+            // The CelesTrak row (cockpitSubject.js reads it).
+            gp: entry,
             // The dense feed is CelesTrak's Starlink group.
             satelliteClass: 'starlink',
             ucs: null,
@@ -155,11 +159,12 @@ export function createCatalog({ state: layerState, services, parts, source }) {
         await new Promise((resolve) => setTimeout(resolve, 0));
         loadSignal.throwIfAborted();
       }
+      satrecs.end();
 
       // A 200 that yields nothing usable is still a failed load — an empty body,
-      // an HTML error page the proxy passed through, or a feed of TLEs the core
-      // catalog already owns. Treating it as success is the same lie as treating
-      // a 502 as success, just through a different door.
+      // an HTML error page the proxy passed through, or a feed of objects the
+      // core catalog already owns. Treating it as success is the same lie as
+      // treating a 502 as success, just through a different door.
       if (added === 0) {
         console.warn(
           `[Data:Satellites] Dense group '${DENSE_GROUP_PATH}' returned no usable satellites`,
@@ -242,6 +247,8 @@ export function createCatalog({ state: layerState, services, parts, source }) {
       layerState._catalog.delete(noradId);
     }
     layerState._denseIds = [];
+    // The shell is gone, and its satrecs with it.
+    layerState._denseSatrecs.clear();
     layerState._denseStale = false;
     layerState._denseCursor = 0;
     layerState._count = layerState._points.size;

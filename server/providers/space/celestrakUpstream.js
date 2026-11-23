@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { readResponseTextCapped } from '../common/http.js';
 
-// Swedish fork: one transport for every CelesTrak call, the GP (TLE) and
+// Swedish fork: one transport for every CelesTrak call, the GP (CSV) and
 // SATCAT routes of celestrak.js, which the satellites layer, Space Missions
 // and the voice tools read through. CelesTrak's usage policy
 // (https://celestrak.org/usage-policy.php, last updated 2026-11-16) asks a

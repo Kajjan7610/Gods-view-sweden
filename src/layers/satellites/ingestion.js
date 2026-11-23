@@ -1,7 +1,5 @@
-import { twoline2satrec } from 'satellite.js';
 import { msg } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
-import { noradIdFromSatnum, tleLineLaunchYear } from '../../sources/tle.js';
 import { CATALOG_GROUPS, ISS_NORAD, POINT_STYLES } from './policy.js';
 import { classifySatellite, parseSatcatCsv } from './classes.js';
 import { matchImagingSensor } from './sensors.js';
@@ -16,12 +14,12 @@ export const SATCAT_WAIT_MS = 3000;
 /**
  * How long a complete, current SATCAT read is kept before the layer asks
  * again, ms. SATCAT changes daily and the proxy caches it a day, so the
- * five-minute TLE update does not read all eleven groups each time.
+ * five-minute GP update does not read all eleven groups each time.
  */
 export const SATCAT_KEEP_MS = 6 * 60 * 60 * 1000;
 
 /**
- * How many CelesTrak reads (the TLE groups, then SATCAT) run at once
+ * How many CelesTrak reads (the GP groups, then SATCAT) run at once
  * (Swedish fork). The proxy asks CelesTrak one call at a time, so more at
  * once would only hold the browser's connections (six per origin over
  * HTTP/1.1) from the other layers.
@@ -29,7 +27,7 @@ export const SATCAT_KEEP_MS = 6 * 60 * 60 * 1000;
 export const CELESTRAK_READS_AT_ONCE = 2;
 
 /**
- * How long a catalog rebuild waits for the TLE groups, ms (Swedish fork). On
+ * How long a catalog rebuild waits for the GP groups, ms (Swedish fork). On
  * an empty cache the proxy fetches them one at a time, so a slow CelesTrak
  * could hold the rebuild, and with it Space Missions' wait for this layer
  * (SATELLITE_SETTLE_TIMEOUT_MS, 30 s), for minutes. A group not in by then
@@ -152,7 +150,7 @@ export function createIngestion({
       Date.now() - layerState._satcatReadAtMs < SATCAT_KEEP_MS
     )
       return Promise.resolve([]);
-    // Swedish fork: two at a time, as the TLE groups (CELESTRAK_READS_AT_ONCE).
+    // Swedish fork: two at a time, as the GP groups (CELESTRAK_READS_AT_ONCE).
     return readInTurn(CATALOG_GROUPS, CELESTRAK_READS_AT_ONCE, (groupDef) =>
       source
         .readSatcat(groupDef.path, { signal })
@@ -271,7 +269,7 @@ export function createIngestion({
       try {
         updateSignal.throwIfAborted();
         // Load all core groups; a failed/empty group degrades gracefully
-        // (parseTLE of an upstream error body yields []).
+        // (parseGp of an upstream error body yields []).
         const localEvidence = _readLocalEvidence();
         // Swedish fork: the proxy asks CelesTrak one call at a time, so the
         // groups are read two at a time (the browser's other connections
@@ -307,7 +305,7 @@ export function createIngestion({
                     heldUntil,
                     gone,
                   };
-                const entries = parts.orbits.parseTLE(res.text);
+                const entries = parts.orbits.parseGp(res.text);
                 updateSignal.throwIfAborted();
                 return {
                   ...groupDef,
@@ -408,58 +406,56 @@ export function createIngestion({
 
         const now = new Date(layerState.now());
 
-        // Process all TLE entries in CATALOG_GROUPS order
+        // Process all GP entries in CATALOG_GROUPS order
         const allEntries = [];
         for (const r of results) {
-          for (const e of r.entries)
-            allEntries.push({ ...e, group: r.tag, stale: r.stale });
+          for (const gp of r.entries)
+            allEntries.push({ gp, group: r.tag, stale: r.stale });
         }
 
-        // Every group each TLE came in, keyed by its catalog-number column:
-        // the shown tag is the first, but classification reads them all.
+        // Every group each object came in, keyed by its catalog number: the
+        // shown tag is the first, but classification reads them all.
         const groupsByNumber = new Map();
         for (const entry of allEntries) {
-          const number = String(entry.line1 || '')
-            .slice(2, 7)
-            .trim();
-          const groups = groupsByNumber.get(number);
-          if (!groups) groupsByNumber.set(number, [entry.group]);
+          const groups = groupsByNumber.get(entry.gp.noradId);
+          if (!groups) groupsByNumber.set(entry.gp.noradId, [entry.group]);
           else if (!groups.includes(entry.group)) groups.push(entry.group);
         }
 
         // Deduplicate by NORAD ID — first (most specific) group tag wins
         const seen = new Set();
         let coreStale = false;
+        // Swedish fork: an unchanged row (the proxy serves the same rows for
+        // 6 h) gets the satrec it had in the last rebuild; this rebuild keeps
+        // only the satrecs of its own catalog.
+        const satrecs = layerState._coreSatrecs;
+        satrecs.begin();
 
         for (const entry of allEntries) {
-          const satrec = twoline2satrec(entry.line1, entry.line2);
-          if (!satrec || satrec.error !== 0) continue;
-
-          const noradId = noradIdFromSatnum(satrec.satnum);
+          const { noradId, name } = entry.gp;
           if (seen.has(noradId)) continue;
+          const satrec = satrecs.satrec(entry.gp);
+          if (!satrec) continue;
           seen.add(noradId);
 
           // Store in catalog
-          const launchYear = tleLineLaunchYear(entry.line1);
+          const launchYear = entry.gp.launchYear;
           const ucs = layerState._ucs?.get(noradId) || null;
           const satcat = layerState._satcat.get(noradId) || null;
-          const groups = groupsByNumber.get(
-            String(entry.line1 || '')
-              .slice(2, 7)
-              .trim(),
-          ) || [entry.group];
+          const groups = groupsByNumber.get(noradId) || [entry.group];
           layerState._catalog.set(noradId, {
-            name: entry.name,
+            name,
             satrec,
             group: entry.group,
             groups,
             // satellite.js does not keep the designator the year match reads.
             launchYear,
-            line1: entry.line1,
-            line2: entry.line2,
+            // The CelesTrak row: the Cockpit reads its COSPAR id and TLE
+            // lines from it (cockpitSubject.js).
+            gp: entry.gp,
             satelliteClass: classifySatellite({
               noradId,
-              name: entry.name,
+              name,
               group: entry.group,
               groups,
               ucs,
@@ -468,10 +464,7 @@ export function createIngestion({
             }),
             ucs,
             satcat,
-            sensor: matchImagingSensor(layerState._sensors, {
-              noradId,
-              name: entry.name,
-            }),
+            sensor: matchImagingSensor(layerState._sensors, { noradId, name }),
           });
 
           coreStale ||= entry.stale;
@@ -489,6 +482,7 @@ export function createIngestion({
             parts.controls._classVisible(noradId),
           );
         }
+        satrecs.end();
 
         // Show ISS orbital path by default
         if (layerState._catalog.has(ISS_NORAD)) {

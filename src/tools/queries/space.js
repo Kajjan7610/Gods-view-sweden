@@ -1,12 +1,11 @@
 /** Space queries: launches, satellite passes and satellites overhead. */
 
 import { suggestView } from '../views.js';
-import { twoline2satrec } from 'satellite.js';
 import {
   findNextSatellitePass,
   lookAnglesAt,
 } from '../../data/satellitePass.js';
-import { parseTleText, tleCatalogNumber } from '../../sources/tle.js';
+import { createGpSatrecCache, parseGpCsv } from '../../sources/gp.js';
 import { POINT_SCHEMA, resolvePoint } from '../area.js';
 import { defineTool, ToolError } from '../catalog.js';
 import { LIMIT_SCHEMA, capRows, countNoun, isoTime } from '../results.js';
@@ -124,6 +123,38 @@ function followSatellite(services, point, satellite) {
     : null;
 }
 
+/**
+ * Swedish fork: satrecs kept per group between questions. The proxy serves
+ * the same rows for 6 h, so a second question about a group builds none of
+ * them again; each group keeps only the satrecs its last overhead list
+ * asked for (createGpSatrecCache), and every group's go once no question
+ * has come for SATRECS_IDLE_MS.
+ */
+export const SATRECS_IDLE_MS = 5 * 60_000;
+const groupSatrecs = new Map();
+let satrecsIdle = null;
+
+/** Drop every group's satrecs (the idle timer's end, and tests). */
+export function dropSatelliteSatrecs() {
+  clearTimeout(satrecsIdle);
+  satrecsIdle = null;
+  groupSatrecs.clear();
+}
+
+/** The group's satrec cache; asking for it puts the idle drop back. */
+function satrecsFor(group) {
+  let satrecs = groupSatrecs.get(group);
+  if (!satrecs) groupSatrecs.set(group, (satrecs = createGpSatrecCache()));
+  clearTimeout(satrecsIdle);
+  satrecsIdle = setTimeout(dropSatelliteSatrecs, SATRECS_IDLE_MS);
+  // It never keeps a Node process (the MCP server, a test run) alive.
+  satrecsIdle.unref?.();
+  return satrecs;
+}
+
+/** The satrec cache a group's last questions left, for tests. */
+export const _satelliteSatrecsForTest = (group) => groupSatrecs.get(group);
+
 async function readCatalog(services, group, signal) {
   const result = await services.satellites.readGroup(group, { signal });
   if (!result.ok)
@@ -131,34 +162,38 @@ async function readCatalog(services, group, signal) {
       'unavailable',
       `The ${group} satellite catalog is unavailable (HTTP ${result.status})`,
     );
-  const entries = parseTleText(result.text).flatMap((entry) => {
-    try {
-      return [
-        {
-          ...entry,
-          norad: tleCatalogNumber(entry.line1),
-          satrec: twoline2satrec(entry.line1, entry.line2),
-        },
-      ];
-    } catch {
-      return [];
-    }
-  });
+  // CelesTrak GP data as CSV (src/sources/gp.js), every object numbered
+  // 100000 and up included. A satrec is asked for when first needed
+  // (satrecOf): a pass needs one, the overhead list one per satellite.
+  const satrecs = satrecsFor(group);
+  const entries = parseGpCsv(result.text).map((gp) => ({
+    name: gp.name,
+    norad: gp.noradId,
+    gp,
+    satrecs,
+  }));
   // The proxy serves its last copy when CelesTrak is down; old orbital
   // elements make predictions drift.
-  return { entries, stale: result.stale === true };
+  return { entries, satrecs, stale: result.stale === true };
 }
 
+/** An entry's satrec, asked once; null when SGP4 rejects its elements. */
+function satrecOf(entry) {
+  if (entry.satrec === undefined) entry.satrec = entry.satrecs.satrec(entry.gp);
+  return entry.satrec;
+}
+
+/** The satellite asked for, of those whose elements make an orbit. */
 function matchSatellite(entries, wanted) {
-  if (wanted == null)
-    return entries.find((entry) => entry.norad === ISS_NORAD) ?? null;
+  const first = (matches) =>
+    entries.find((entry) => matches(entry) && satrecOf(entry)) ?? null;
+  if (wanted == null) return first((entry) => entry.norad === ISS_NORAD);
   const text = String(wanted).trim().toUpperCase();
   const number = /^\d+$/.test(text) ? Number(text) : null;
   return (
-    entries.find((entry) => number != null && entry.norad === number) ??
-    entries.find((entry) => entry.name.toUpperCase() === text) ??
-    entries.find((entry) => entry.name.toUpperCase().includes(text)) ??
-    null
+    first((entry) => number != null && entry.norad === number) ??
+    first((entry) => entry.name.toUpperCase() === text) ??
+    first((entry) => entry.name.toUpperCase().includes(text))
   );
 }
 
@@ -205,7 +240,7 @@ export const nextSatellitePass = defineTool({
       );
     const hours = args.hours ?? 24;
     const pass = findNextSatellitePass({
-      satrec: satellite.satrec,
+      satrec: satrecOf(satellite),
       latDeg: point.lat,
       lonDeg: point.lon,
       fromMs: nowMs(services),
@@ -274,10 +309,18 @@ export const satellitesOverhead = defineTool({
     const group = args.group ?? 'stations';
     const minimum = args.min_elevation_deg ?? 10;
     const at = nowMs(services);
-    const { entries, stale } = await readCatalog(services, group, signal);
+    const { entries, satrecs, stale } = await readCatalog(
+      services,
+      group,
+      signal,
+    );
+    // Every satellite of the group is asked for: the group's cache keeps
+    // just those.
+    satrecs.begin();
     const rows = entries
       .flatMap((entry) => {
-        const look = lookAnglesAt(entry.satrec, at, point.lat, point.lon);
+        const satrec = satrecOf(entry);
+        const look = satrec && lookAnglesAt(satrec, at, point.lat, point.lon);
         return look && look.elevDeg >= minimum
           ? [
               {
@@ -291,6 +334,7 @@ export const satellitesOverhead = defineTool({
           : [];
       })
       .sort((a, b) => b.elevation_deg - a.elevation_deg);
+    satrecs.end();
     return {
       summary:
         `${countNoun(rows.length, 'satellite')} from the ${group} group ${rows.length === 1 ? 'is' : 'are'} at least ${minimum}° above ${point.label} at ${isoTime(at)}` +

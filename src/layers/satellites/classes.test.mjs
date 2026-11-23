@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { twoline2satrec } from 'satellite.js';
+import { createGpSatrecCache, gpSatrec, parseGpCsv } from '../../sources/gp.js';
+import { gpCsv } from '../../testSupport/gpFixtures.mjs';
 import {
   DEFAULT_SATELLITE_CLASSES,
   PRESUMED_DEAD_AFTER_YEARS,
   SATELLITE_CLASS_DISPLAY,
   SATELLITE_CLASS_IDS,
   classifySatellite,
-  cosparIdFromTleLine1,
   mergeClassVisibility,
   ownerFromSatcat,
   ownerFromUcs,
@@ -133,7 +133,7 @@ test('satellites launched after the UCS snapshot are classed by name', () => {
     assert.equal(classify({ name, group: 'visual', launchYear: 2025 }), expected, name);
 });
 
-test('the group the TLE came in is the last resort', () => {
+test('the group the elements came in is the last resort', () => {
   assert.equal(classify({ name: 'UNNAMED-1', group: 'resource', launchYear: 2024 }), 'imaging');
   assert.equal(classify({ name: 'UNNAMED-1', group: 'geo', launchYear: 2024 }), 'telecom');
   assert.equal(classify({ name: 'UNNAMED-1', group: 'science', launchYear: 2024 }), 'probes');
@@ -238,21 +238,31 @@ test('owner prefers UCS, falls back to SATCAT, and Starlink is American', () => 
   assert.equal(satelliteOperator({ satelliteClass: 'imaging' }), null);
 });
 
-const ISS_LINE1 = '1 25544U 98067A   24001.50000000  .00016717  00000-0  30370-3 0  9993';
-const ISS_LINE2 = '2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.50377579432323';
-
-test('COSPAR ids come from TLE line 1, across the 1957 century pivot', () => {
-  assert.equal(cosparIdFromTleLine1(ISS_LINE1), '1998-067A');
-  assert.equal(cosparIdFromTleLine1(ISS_LINE1.replace('98067A  ', '24123BC ')), '2024-123BC');
-  assert.equal(cosparIdFromTleLine1(ISS_LINE1.replace('98067A  ', '57001A  ')), '1957-001A');
-  assert.equal(cosparIdFromTleLine1(ISS_LINE1.replace('98067A  ', '        ')), null);
-  assert.equal(cosparIdFromTleLine1(null), null);
+// The ISS set of 1 January 2024 as CelesTrak GP CSV (COSPAR ids: src/sources/gp.test.mjs).
+const ISS_GP = gpCsv({
+  OBJECT_NAME: 'ISS (ZARYA)',
+  OBJECT_ID: '1998-067A',
+  EPOCH: '2024-01-01T12:00:00.000000',
+  MEAN_MOTION: '15.50377579',
+  ECCENTRICITY: '.0006703',
+  INCLINATION: '51.6416',
+  RA_OF_ASC_NODE: '247.4627',
+  ARG_OF_PERICENTER: '130.5360',
+  MEAN_ANOMALY: '325.0288',
+  EPHEMERIS_TYPE: '0',
+  CLASSIFICATION_TYPE: 'U',
+  NORAD_CAT_ID: '25544',
+  ELEMENT_SET_NO: '999',
+  REV_AT_EPOCH: '43232',
+  BSTAR: '.30370E-3',
+  MEAN_MOTION_DOT: '.00016717',
+  MEAN_MOTION_DDOT: '0',
 });
 
-test('the TLE epoch is read as epoch milliseconds', () => {
-  const satrec = twoline2satrec(ISS_LINE1, ISS_LINE2);
-  // Day 001.5 of 2024: 1 January 2024, 12:00 UTC.
-  assert.ok(Math.abs(tleEpochMs(satrec) - Date.UTC(2024, 0, 1, 12)) < 1000);
+test('the element set epoch is read as epoch milliseconds', () => {
+  const satrec = gpSatrec(parseGpCsv(ISS_GP)[0]);
+  // 1 January 2024, 12:00 UTC.
+  assert.ok(Math.abs(tleEpochMs(satrec) - Date.UTC(2024, 0, 1, 12)) < 1);
   assert.equal(tleEpochMs(null), null);
   assert.equal(tleEpochMs({}), null);
 });
@@ -343,6 +353,7 @@ test('a failed Starlink load hides the core catalog Starlink points again', asyn
     },
     _denseLoadToken: 3,
     _denseIds: [],
+    _denseSatrecs: createGpSatrecCache(),
     _catalog: new Map(),
     _points: new Map(),
     _detectionObjects: new Map(),

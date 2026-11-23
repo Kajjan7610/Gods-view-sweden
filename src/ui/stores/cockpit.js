@@ -97,7 +97,9 @@ export const useCockpitStore = defineStore('gev-cockpit', () => {
    *      focus: { key, label }|null }, trackUp, northDeg,
    *    place: { kind: 'country'|'sea'|'ocean', name, countryCode,
    *      division?|null, near?|null }|null|undefined,
-   *    noradId|null, cosparId|null, tle: { line1, line2, epochMs }|null,
+   *    noradId|null, cosparId|null,
+   *    tle: { line1|null, line2|null, epochMs }|null (the lines null for an
+   *      object numbered 100000 or up, which has no TLE spelling),
    *    tleAgeMs|null (now minus the TLE epoch, read on each publish),
    *    owner: { countryCode|null, label|null }|null, operator|null }` where
    * `place` is what the sub-satellite point is over (undefined until the

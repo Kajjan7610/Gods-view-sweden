@@ -459,6 +459,61 @@ git merge origin/main
 - Knappen bredvid kartan visar nu också symbol och namn för något som ett
   annat program låter Cockpit åka med, som originalets knapp gjorde.
 
+### 2026-11-23 (CelesTrak i CSV: objekt med nummer från 100000 kommer med)
+- CelesTraks användarregler (lästa 2026-11-22) säger att alla nya objekt
+  får sexsiffriga katalognummer från 100000 och uppåt och att deras
+  GP-data inte finns i TLE-format, och att 404-svar kan komma av att man
+  fortsätter fråga efter GP-data med `FORMAT=tle`. Appen frågade efter
+  TLE, så alla objekt från 100000 och uppåt saknades.
+- Servern frågar nu CelesTrak efter GP-data som CSV
+  (`gp.php?GROUP=<grupp>&FORMAT=CSV`, skrivet som i CelesTraks
+  dokumentation av GP-formaten): en rubrikrad med OMM-fälten och en rad per
+  objekt. `src/sources/gp.js` läser raderna efter fältnamnen, och
+  satellite.js bygger banan direkt ur fälten (`json2satrec`).
+  Satellitlagret, Starlink-läget, Rymduppdrag och röststyrningens
+  passageverktyg läser samma rader, så ett objekt med nummer 100000 eller
+  högre beräknas och ritas som alla andra, och Rymduppdrag hittar nya
+  uppskjutningars nyttolaster under deras nya nummer.
+- TLE-formatet frågas aldrig efter, inte heller som reserv, och ett test
+  letar igenom koden efter `FORMAT=tle` (och 2LE och 3LE). Ett svar utan
+  GP-rubrik och minst en rad räknas som oanvändbart, som svar utan
+  TLE-rader förut: pausen gäller och den senaste kopian visas. En rad med
+  fel antal fält, ett katalognummer som inte bara är siffror eller en epok
+  som inte är en tid hoppas över, och nästa rad läses; en rad vars element
+  inte är en bana får ingen bana och ritas inte, som en trasig TLE förut.
+- Cachen har nya filer, `.gev-cache/celestrak-gp-csv-<grupp>.json`. De
+  gamla TLE-filerna (`celestrak-<grupp>.json`) läses inte längre och kan
+  tas bort. Första gången hämtas därför alla grupper på nytt, med samma
+  regler som förut. En CSV-rad är något kortare än ett objekts tre
+  TLE-rader.
+- Banorna (satellite.js satrec) byggs bara för rader som är nya. Servern
+  ger samma rader i 6 timmar medan satellitlagret byggs om var femte
+  minut, så en rad med samma katalognummer, epok och innehåll som förut
+  får tillbaka sin bana från förra ombyggnaden, i katalogen och i
+  Starlink-läget, som läses om vid varje ombyggnad. En rad som rättats
+  eller blivit ogiltig vid samma epok byggs om. Bara banorna i den katalog
+  som visas sparas, och de släpps när Starlink stängs av eller lagret tas
+  bort. Röststyrningen sparar banorna per grupp mellan frågorna och släpper
+  dem när ingen fråga kommit på fem minuter; passageverktyget bygger bara
+  banan för den satellit som efterfrågas.
+- Katalognummer, epok och element läses där de står i raden, tecken för
+  tecken, så att varken delsträngar eller reguljära uttryck behövs för
+  varje objekt.
+  Mätt på 16 000 objekt, med banorna kvar i katalogen som i appen, tar en
+  ombyggnad med oförändrade rader ungefär en sjundedel av tiden den tog
+  med TLE, och den första, när inget är sparat, ungefär lika lång tid.
+  Röststyrningens lista över satelliter ovanför tar för 10 000 Starlink
+  ungefär en tredjedel av tiden vid följande frågor och ungefär en tiondel
+  mer vid den första.
+- Uppskjutningsåret som Rymduppdrag matchar på kommer nu ur OBJECT_ID
+  (till exempel `2026-148A`) i stället för TLE:ns tvåsiffriga år.
+- Cockpit-vyn visar fortfarande de två TLE-raderna under knappen TLE,
+  skrivna ur samma element med kontrollsiffror. Ett objekt med nummer från
+  100000 har ingen TLE-form, så där visas epok och ålder men ingen
+  TLE-knapp.
+- Källförteckningen (Data attribution) säger "Satellites (GP orbital
+  elements and SATCAT)" i stället för TLEs.
+
 ### 2026-11-22 (Launch Library: bara det appen läser)
 - Rymduppdragens proxy (`/api/launches`) sparade och skickade vidare hela
   Launch Librarys detaljerade svar: uppdateringarna med bidragsgivarnas
@@ -516,7 +571,6 @@ git merge origin/main
   README och DATA_SOURCES.md säger samma sak.
 - Under granskning, och påslagna tills vidare: SEPTA:s tåg och
   spårvagnar, TTC i Toronto, PID i Prag och Edmonton Transit Service.
-
 ### 2026-11-22 (CelesTrak enligt deras användarregler)
 - CelesTraks användarregler (celestrak.org/usage-policy.php, senast
   ändrade 2026-11-16, lästa 2026-11-22) säger att program som hämtar på
@@ -585,9 +639,6 @@ git merge origin/main
   redan begärts hamnar i serverns cache till nästa uppdatering.
 - Node:s fetch ber redan om komprimerade svar (`br, gzip, deflate`); nu
   säger appen det uttryckligen.
-- Kvar till nästa steg: appen läser CelesTrak i TLE-format, som saknar
-  objekt med katalognummer 100000 och uppåt (alla som katalogiserats på
-  senare tid). De saknas tills appen går över till CSV eller OMM.
 
 ### 2026-11-22 (välkomstrutan på svenska)
 - Originalets välkomstruta, som kom med sammanslagningen 2026-11-21, var

@@ -21,6 +21,7 @@ import { createLifecycle } from './lifecycle.js';
 import { createInteraction } from './interaction.js';
 import { CELESTRAK_READS_AT_ONCE, createIngestion } from './ingestion.js';
 import { layerFeedState } from '../../data/feedState.js';
+import { gpCsv } from '../../testSupport/gpFixtures.mjs';
 
 const GROUPS = [
   'stations',
@@ -40,10 +41,28 @@ const GROUPS = [
 /** The core catalog's groups, one owned satellite each. */
 const CORE = GROUPS.filter((group) => group !== 'starlink');
 
-function tle(id, invalid = false) {
-  // Owned synthetic catalog IDs over one valid element set; never live requests.
-  const motion = invalid ? ' 0.00000000' : '15.48899044';
-  return `OWNED ORBIT FIXTURE ${id}\n1 ${id}U 98067A   26289.78971908  .00007803  00000+0  15012-3 0  9995\n2 ${id}  51.6326  58.3278 0006748 271.9059  88.1156 ${motion}590607`;
+function gp(id, invalid = false) {
+  // Owned synthetic catalog IDs over one valid element set, as CelesTrak GP
+  // CSV; never live requests. A mean motion of zero is no orbit.
+  return gpCsv({
+    OBJECT_NAME: `OWNED ORBIT FIXTURE ${id}`,
+    OBJECT_ID: '1998-067A',
+    EPOCH: '2026-10-16T18:57:11.728512',
+    MEAN_MOTION: invalid ? '0.00000000' : '15.48899044',
+    ECCENTRICITY: '.0006748',
+    INCLINATION: '51.6326',
+    RA_OF_ASC_NODE: '58.3278',
+    ARG_OF_PERICENTER: '271.9059',
+    MEAN_ANOMALY: '88.1156',
+    EPHEMERIS_TYPE: '0',
+    CLASSIFICATION_TYPE: 'U',
+    NORAD_CAT_ID: String(id),
+    ELEMENT_SET_NO: '999',
+    REV_AT_EPOCH: '59060',
+    BSTAR: '.15012E-3',
+    MEAN_MOTION_DOT: '.00007803',
+    MEAN_MOTION_DDOT: '0',
+  });
 }
 
 async function fixture(t) {
@@ -67,7 +86,7 @@ async function fixture(t) {
       'X-TLE-Cache': policy.stale.has(group) ? 'STALE-ERROR' : 'MISS',
     });
     res.end(
-      tle(
+      gp(
         policy.ids[group] ?? 25545 + GROUPS.indexOf(group),
         policy.invalid.has(group),
       ),
@@ -268,6 +287,30 @@ test('dense extras keep their launch year for mission orbit matching', async (t)
     });
   assert.equal(track('1998-11-20T06:40:00Z')?.noradId, 25551);
   assert.equal(track('2026-06-29T02:25:00Z'), null);
+});
+
+// Swedish fork: every core rebuild reloads the Starlink shell, whose rows
+// the proxy serves unchanged for 6 h.
+test('a rebuild reloads the dense shell with the satrecs it had, and dropping the shell drops them', async (t) => {
+  const f = await fixture(t);
+  await f.update();
+  f.state._params.catalog = 'dense';
+  assert.equal((await f.parts.catalog._loadDenseCatalog()).status, 'ready');
+  const dense = () => f.state._catalog.get(25551);
+  const { satrec } = dense();
+  const core = f.state._catalog.get(25545).satrec;
+  // The rebuild clears the catalog and loads the shell again.
+  await f.update();
+  assert.equal((await f.state._denseLoadPromise).status, 'ready');
+  assert.equal(dense().group, 'dense');
+  assert.equal(dense().satrec, satrec, 'the dense satrec is not built again');
+  assert.equal(f.state._catalog.get(25545).satrec, core, 'nor the core one');
+  // Back to core: the shell's satrecs go with it.
+  f.state._params.catalog = 'core';
+  f.parts.catalog._removeDenseCatalog();
+  f.state._params.catalog = 'dense';
+  assert.equal((await f.parts.catalog._loadDenseCatalog()).status, 'ready');
+  assert.notEqual(dense().satrec, satrec);
 });
 
 test('cancelling dense replacement preserves admitted stale extras until rebuild', async (t) => {

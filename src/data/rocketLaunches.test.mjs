@@ -6,6 +6,7 @@ import * as Cesium from 'cesium';
 import { fromDegrees } from '../geo/ellipsoid.js';
 import { bindFakeDraw } from '../testSupport/fakeDrawPort.mjs';
 import { fakeSceneFrame } from '../testSupport/fakeCesiumScene.mjs';
+import { gpCsv } from '../testSupport/gpFixtures.mjs';
 import { gstime } from 'satellite.js';
 import { worldClock } from '../time/worldClock.js';
 import { createModel } from '../layers/launches/model.js';
@@ -1085,11 +1086,29 @@ test('matches compact payload identifiers without accepting an arbitrary constel
   assert.ok(scoreSatelliteNameMatch('Starlink Group 17-40', 'STARLINK-1008') < 12);
 });
 
-test('finds a newly launched payload in the active TLE fallback catalog', () => {
-  const tle = `SXM-11
-1 69728U 26148A   26208.65166678  .00000015  00000+0  00000+0 0  9990
-2 69728   0.0784 264.9826 0001797 240.4588 273.9506  1.00271527   440`;
-  const track = findSatelliteOrbitTrackInTle(tle, 'Sirius SXM-11', {
+// SXM-11 (2026-148A) in the active group, as CelesTrak GP CSV.
+const SXM_11_GP = {
+  OBJECT_NAME: 'SXM-11',
+  OBJECT_ID: '2026-148A',
+  EPOCH: '2026-07-27T15:38:24.009792',
+  MEAN_MOTION: '1.00271527',
+  ECCENTRICITY: '.0001797',
+  INCLINATION: '0.0784',
+  RA_OF_ASC_NODE: '264.9826',
+  ARG_OF_PERICENTER: '240.4588',
+  MEAN_ANOMALY: '273.9506',
+  EPHEMERIS_TYPE: '0',
+  CLASSIFICATION_TYPE: 'U',
+  NORAD_CAT_ID: '69728',
+  ELEMENT_SET_NO: '999',
+  REV_AT_EPOCH: '44',
+  BSTAR: '0',
+  MEAN_MOTION_DOT: '.00000015',
+  MEAN_MOTION_DDOT: '0',
+};
+
+test('finds a newly launched payload in the active GP fallback catalog', () => {
+  const track = findSatelliteOrbitTrackInTle(gpCsv(SXM_11_GP), 'Sirius SXM-11', {
     launchTime: '2026-06-29T02:25:00Z',
   });
   assert.equal(track?.noradId, 69728);
@@ -1099,6 +1118,25 @@ test('finds a newly launched payload in the active TLE fallback catalog', () => 
   assert.ok(track?.current.speedMps > 1000);
   assert.ok(track?.current.speedMps < 12000);
   assert.equal(typeof track?.positionAt, 'function');
+});
+
+test('finds a payload numbered 100000 and up, which only GP data carries', () => {
+  // Every newly catalogued object is numbered past 99999; CelesTrak sends no TLE for it.
+  const active = gpCsv(
+    { ...SXM_11_GP, OBJECT_NAME: 'SXM-10', OBJECT_ID: '2025-120A', NORAD_CAT_ID: '64050' },
+    { ...SXM_11_GP, NORAD_CAT_ID: '412345' },
+  );
+  const track = findSatelliteOrbitTrackInTle(active, 'Sirius SXM-11', {
+    launchTime: '2026-06-29T02:25:00Z',
+  });
+  assert.equal(track?.noradId, 412345);
+  assert.equal(track?.name, 'SXM-11');
+  assert.ok(track?.orbitPath.length > 100);
+  // Another launch year's namesake is not taken for it.
+  assert.equal(
+    findSatelliteOrbitTrackInTle(active, 'Sirius SXM-11', { launchTime: '2030-06-29T02:25:00Z' }),
+    null,
+  );
 });
 
 test('real mission build, select, refresh, deselect, disable, and destroy paths publish no native labels', async () => {

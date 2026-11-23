@@ -1,27 +1,64 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { twoline2satrec } from 'satellite.js';
 import { composeCatalog, coreTools } from '../index.js';
 import {
   findNextSatellitePass,
   lookAnglesAt,
 } from '../../data/satellitePass.js';
+import { gpSatrec, noradIdFromSatnum, parseGpCsv } from '../../sources/gp.js';
 import {
-  noradIdFromSatnum,
-  parseTleText,
-  tleCatalogNumber,
-} from '../../sources/tle.js';
+  GP_CSV_HEADER,
+  gpCsv,
+  gpCsvRow,
+} from '../../testSupport/gpFixtures.mjs';
+import {
+  SATRECS_IDLE_MS,
+  _satelliteSatrecsForTest,
+  dropSatelliteSatrecs,
+} from './space.js';
 
-// Element sets published for 1 January 2024.
-const TLE = `ISS (ZARYA)
-1 25544U 98067A   24001.50000000  .00016717  00000-0  30270-3 0  9994
-2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.50377579432414
-CSS (TIANHE)
-1 48274U 21035A   24001.50000000  .00020137  00000-0  24481-3 0  9993
-2 48274  41.4697 175.8913 0005643 312.8370 141.6893 15.61287398150000
-`;
+// Element sets published for 1 January 2024, as CelesTrak GP fields.
+const ISS = Object.freeze({
+  OBJECT_NAME: 'ISS (ZARYA)',
+  OBJECT_ID: '1998-067A',
+  EPOCH: '2024-01-01T12:00:00.000000',
+  MEAN_MOTION: '15.50377579',
+  ECCENTRICITY: '.0006703',
+  INCLINATION: '51.6416',
+  RA_OF_ASC_NODE: '247.4627',
+  ARG_OF_PERICENTER: '130.5360',
+  MEAN_ANOMALY: '325.0288',
+  EPHEMERIS_TYPE: '0',
+  CLASSIFICATION_TYPE: 'U',
+  NORAD_CAT_ID: '25544',
+  ELEMENT_SET_NO: '999',
+  REV_AT_EPOCH: '43241',
+  BSTAR: '.30270E-3',
+  MEAN_MOTION_DOT: '.00016717',
+  MEAN_MOTION_DDOT: '0',
+});
+const CSS = Object.freeze({
+  OBJECT_NAME: 'CSS (TIANHE)',
+  OBJECT_ID: '2021-035A',
+  EPOCH: '2024-01-01T12:00:00.000000',
+  MEAN_MOTION: '15.61287398',
+  ECCENTRICITY: '.0005643',
+  INCLINATION: '41.4697',
+  RA_OF_ASC_NODE: '175.8913',
+  ARG_OF_PERICENTER: '312.8370',
+  MEAN_ANOMALY: '141.6893',
+  EPHEMERIS_TYPE: '0',
+  CLASSIFICATION_TYPE: 'U',
+  NORAD_CAT_ID: '48274',
+  ELEMENT_SET_NO: '999',
+  REV_AT_EPOCH: '15000',
+  BSTAR: '.24481E-3',
+  MEAN_MOTION_DOT: '.00020137',
+  MEAN_MOTION_DDOT: '0',
+});
+const GP = gpCsv(ISS, CSS);
 const CLOCK = { now: () => Date.UTC(2024, 0, 1, 12) };
-const satellites = (text = TLE, ok = true) => ({
+const satellites = (text = GP, ok = true) => ({
   calls: [],
   async readGroup(group) {
     this.calls.push(group);
@@ -29,116 +66,122 @@ const satellites = (text = TLE, ok = true) => ({
   },
 });
 
-test('TLE text parses into named entries with catalog numbers', () => {
-  const entries = parseTleText(`${TLE}\nBROKEN\nnot a line\nnor this\n`);
+test('GP CSV parses into named entries with catalog numbers', () => {
+  const entries = parseGpCsv(`${GP}BROKEN\nnot,a,row\nnor this\n`);
   assert.deepEqual(
     entries.map((entry) => entry.name),
     ['ISS (ZARYA)', 'CSS (TIANHE)'],
   );
-  assert.equal(tleCatalogNumber(entries[0].line1), 25544);
-  assert.equal(tleCatalogNumber('1 xx'), null);
+  assert.equal(entries[0].noradId, 25544);
+  // The TLE format is not read at all.
+  assert.deepEqual(
+    parseGpCsv(
+      'ISS (ZARYA)\n1 25544U 98067A   24001.50000000  .00016717  00000-0  30270-3 0  9994\n2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.50377579432414',
+    ),
+    [],
+  );
 });
 
-for (const missingLine of [1, 2]) {
-  test(`TLE parsing resumes after a set missing line ${missingLine}`, () => {
-    const sets = Array.from({ length: 8 }, (_, i) => {
-      const lines = TLE.trim().split('\n').slice(0, 3);
-      lines[0] = `SAT ${i}`;
-      return lines;
-    });
-    sets[1].splice(missingLine, 1);
-    const entries = parseTleText(sets.flat().join('\r\n'));
+for (const [missing, cut] of [
+  ['a field', (row) => row.replace(',51.6416,', ',')],
+  ['its last field', (row) => row.slice(0, row.lastIndexOf(','))],
+]) {
+  test(`GP parsing resumes after a row missing ${missing}`, () => {
+    const rows = Array.from({ length: 8 }, (_, i) =>
+      gpCsvRow({
+        ...ISS,
+        OBJECT_NAME: `SAT ${i}`,
+        NORAD_CAT_ID: `${4000 + i}`,
+      }),
+    );
+    rows[1] = cut(rows[1]);
+    const entries = parseGpCsv([GP_CSV_HEADER, ...rows].join('\r\n'));
     assert.deepEqual(
       entries.map((entry) => entry.name),
       ['SAT 0', 'SAT 2', 'SAT 3', 'SAT 4', 'SAT 5', 'SAT 6', 'SAT 7'],
     );
-    assert.ok(
-      entries.every(
-        (entry) => entry.line1.startsWith('1 ') && entry.line2.startsWith('2 '),
-      ),
-    );
+    assert.ok(entries.every((entry) => gpSatrec(entry)));
   });
 }
 
-test('TLE parsing rejects pairs with mismatched catalog numbers and resumes', () => {
-  const text = `SAT A
-1 25544U 98067A   24001.50000000  .00016717  00000-0  30270-3 0  9994
-2 48274  41.4697 175.8913 0005643 312.8370 141.6893 15.61287398150000
-SAT B
-1 48274U 21035A   24001.50000000  .00020137  00000-0  24481-3 0  9993
-2 48274  41.4697 175.8913 0005643 312.8370 141.6893 15.61287398150000
-`;
-  const entries = parseTleText(text);
+test('GP parsing rejects a row spliced from two objects and resumes', () => {
+  // One object's name and number with the next one's elements run on.
+  const spliced = `${gpCsvRow({ ...ISS, OBJECT_NAME: 'SAT A' })},${gpCsvRow(CSS)}`;
+  const text = [
+    GP_CSV_HEADER,
+    spliced,
+    gpCsvRow({ ...CSS, OBJECT_NAME: 'SAT B' }),
+  ].join('\n');
+  const entries = parseGpCsv(text);
   assert.deepEqual(
     entries.map((entry) => entry.name),
     ['SAT B'],
   );
-  assert.equal(tleCatalogNumber(entries[0].line1), 48274);
-  assert.equal(tleCatalogNumber(entries[0].line2), 48274);
+  assert.equal(entries[0].noradId, 48274);
 });
 
-test('TLE parsing accepts matching Alpha-5 pairs and rejects mismatched Alpha-5 pairs', () => {
-  const text = `SAT MISMATCH
-1 A0000U 98067A   24001.50000000  .00016717  00000-0  30270-3 0  9994
-2 A0001  41.4697 175.8913 0005643 312.8370 141.6893 15.61287398150000
-SAT ALPHA5
-1 A0000U 98067A   24001.50000000  .00016717  00000-0  30270-3 0  9994
-2 A0000  41.4697 175.8913 0005643 312.8370 141.6893 15.61287398150000
-`;
-  const entries = parseTleText(text);
-  assert.deepEqual(
-    entries.map((entry) => entry.name),
-    ['SAT ALPHA5'],
+test('GP parsing reads catalog numbers above 99999 as they are', () => {
+  const ids = [100000, 100404, 179999, 180000, 229999, 230000, 270449, 339999];
+  // Past what even Alpha-5 could spell in a TLE.
+  ids.push(340000, 412345);
+  const text = gpCsv(
+    ...ids.map((id) => ({
+      ...CSS,
+      OBJECT_NAME: `SAT ${id}`,
+      NORAD_CAT_ID: `${id}`,
+    })),
   );
-  assert.equal(tleCatalogNumber(entries[0].line1), 100000);
-  assert.equal(tleCatalogNumber(entries[0].line2), 100000);
+  const entries = parseGpCsv(text);
+  assert.deepEqual(
+    entries.map((entry) => entry.noradId),
+    ids,
+  );
+  for (const entry of entries)
+    assert.equal(noradIdFromSatnum(gpSatrec(entry).satnum), entry.noradId);
 });
 
-test('TLE parsing rejects a pair whose catalog fields are malformed and resumes', () => {
-  // Read as digits up to the first non-digit, both fields would be 2554.
-  const text = `SAT MALFORMED
-1 2554AU 98067A   24001.50000000  .00016717  00000-0  30270-3 0  9994
-2 2554B  51.6416 247.4627 0006703 130.5360 325.0288 15.50377579432414
-SAT HALF MALFORMED
-1 2554AU 98067A   24001.50000000  .00016717  00000-0  30270-3 0  9994
-2 02554  51.6416 247.4627 0006703 130.5360 325.0288 15.50377579432414
-${TLE}`;
+test('GP parsing rejects a row whose catalog number is malformed and resumes', () => {
+  const malformed = [
+    '2554A',
+    '255 4',
+    '-1234',
+    '0x1F0',
+    '1.5',
+    '1e3',
+    'A0000',
+    '',
+  ];
+  const text = gpCsv(
+    ...malformed.map((id) => ({
+      ...ISS,
+      OBJECT_NAME: 'SAT MALFORMED',
+      NORAD_CAT_ID: id,
+    })),
+    ISS,
+    CSS,
+  );
   assert.deepEqual(
-    parseTleText(text).map((entry) => entry.name),
+    parseGpCsv(text).map((entry) => entry.name),
     ['ISS (ZARYA)', 'CSS (TIANHE)'],
   );
 });
 
-test('Alpha-5 catalog numbers decode, skipping I and O', () => {
-  for (const [field, id] of [
-    ['A0000', 100000],
-    ['A0404', 100404],
-    ['H9999', 179999],
-    ['J0000', 180000],
-    ['N9999', 229999],
-    ['P0000', 230000],
-    ['T0449', 270449],
-    ['Z9999', 339999],
-  ]) {
-    assert.equal(noradIdFromSatnum(field), id, field);
-    assert.equal(tleCatalogNumber(`1 ${field}U`), id, field);
-  }
-});
-
-test('a digit catalog field reads as it did before', () => {
+test('a digit catalog number reads as it did before', () => {
   assert.equal(noradIdFromSatnum('25544'), 25544);
   assert.equal(noradIdFromSatnum('00404'), 404);
   assert.equal(noradIdFromSatnum('  404'), 404);
-  assert.equal(tleCatalogNumber('1 25544U'), 25544);
-  assert.equal(tleCatalogNumber('1   404U'), 404);
-  // An OMM satrec carries the number unpadded, past five digits.
+  assert.equal(
+    parseGpCsv(gpCsv({ ...ISS, NORAD_CAT_ID: '00404' }))[0].noradId,
+    404,
+  );
+  // A GP satrec carries the number unpadded, past five digits.
   assert.equal(noradIdFromSatnum('100000'), 100000);
 });
 
-test('a malformed catalog field is no number', () => {
+test('a malformed catalog number is no number', () => {
   for (const field of [
+    'A0000',
     'I0000',
-    'O0000',
     'a0404',
     'A00',
     '2554A',
@@ -151,9 +194,9 @@ test('a malformed catalog field is no number', () => {
     '     ',
   ]) {
     assert.ok(Number.isNaN(noradIdFromSatnum(field)), JSON.stringify(field));
-    assert.equal(
-      tleCatalogNumber(`1 ${field.padEnd(5)}U`),
-      null,
+    assert.deepEqual(
+      parseGpCsv(gpCsv({ ...ISS, NORAD_CAT_ID: field })),
+      [],
       JSON.stringify(field),
     );
   }
@@ -161,22 +204,30 @@ test('a malformed catalog field is no number', () => {
 });
 
 test('a satellite numbered above 99999 keeps its number and is found by it', async () => {
-  // The ISS set with its catalog field in Alpha-5: A0000 is 100000.
-  const text = TLE.replaceAll('25544', 'A0000');
-  const [iss] = parseTleText(text);
-  const { satnum } = twoline2satrec(iss.line1, iss.line2);
-  assert.ok(Number.isNaN(Number(satnum))); // what the catalog builders used
-  assert.equal(noradIdFromSatnum(satnum), 100000);
+  // The ISS set under 412345, a number no TLE (not even Alpha-5) can spell.
+  const text = gpCsv({ ...ISS, NORAD_CAT_ID: '412345' }, CSS);
+  const [iss] = parseGpCsv(text);
+  assert.equal(noradIdFromSatnum(gpSatrec(iss).satnum), 412345);
   const catalog = composeCatalog({
     tools: coreTools,
     services: { satellites: satellites(text), clock: CLOCK },
   });
   const result = await catalog.call('next_satellite_pass', {
     location: { lat: 40.7, lon: -74 },
-    satellite: '100000',
+    satellite: '412345',
   });
   assert.equal(result.data.satellite, 'ISS (ZARYA)');
-  assert.equal(result.data.norad, 100000);
+  assert.equal(result.data.norad, 412345);
+  assert.ok(Date.parse(result.data.pass.rise) >= CLOCK.now());
+  // And it is overhead when the ISS would be.
+  const atPeak = await composeCatalog({
+    tools: coreTools,
+    services: {
+      satellites: satellites(text),
+      clock: { now: () => Date.parse(result.data.pass.peak) },
+    },
+  }).call('satellites_overhead', { location: { lat: 40.7, lon: -74 } });
+  assert.equal(atPeak.data.rows[0].norad, 412345);
 });
 
 test('the next pass defaults to the ISS and reports times, peak and direction', async () => {
@@ -201,6 +252,28 @@ test('the next pass defaults to the ISS and reports times, peak and direction', 
       `^ISS \\(ZARYA\\) next rises over 40.7000, -74.0000 at ${pass.rise} in the ${pass.rise_direction}, peaking at \\d+°`,
     ),
   );
+});
+
+test('a satellite whose elements are no orbit is passed over, and the overhead list skips it', async () => {
+  const broken = gpCsv({ ...ISS, MEAN_MOTION: 'fast' }, CSS);
+  const catalog = composeCatalog({
+    tools: coreTools,
+    services: { satellites: satellites(broken), clock: CLOCK },
+  });
+  await assert.rejects(
+    catalog.call('next_satellite_pass', { location: { lat: 0, lon: 0 } }),
+    /No satellite matching "ISS" is in the stations group/,
+  );
+  const tianhe = await catalog.call('next_satellite_pass', {
+    location: { lat: 0, lon: 0 },
+    satellite: 'tianhe',
+  });
+  assert.equal(tianhe.data.norad, 48274);
+  const overhead = await catalog.call('satellites_overhead', {
+    location: { lat: 0, lon: 0 },
+    min_elevation_deg: 0,
+  });
+  assert.ok(overhead.data.rows.every((row) => row.norad !== 25544));
 });
 
 test('satellites are matched by name or catalog number within the group', async () => {
@@ -307,8 +380,7 @@ test('satellite azimuths that round to 360 read as 0', async () => {
   });
   // At these points the ISS's raw azimuths fall just below 360°; check that
   // first so the test cannot pass on a raw value near 0.
-  const [, line1, line2] = TLE.split('\n');
-  const iss = twoline2satrec(line1, line2);
+  const iss = gpSatrec(parseGpCsv(GP)[0]);
   const nearNorth = (deg) => deg > 359.5 && deg < 360;
   const rawPass = findNextSatellitePass({
     satrec: iss,
@@ -333,7 +405,7 @@ test('satellite azimuths that round to 360 read as 0', async () => {
 
 test('stale orbit and launch data are reported', async () => {
   const stale = {
-    readGroup: async () => ({ ok: true, status: 200, text: TLE, stale: true }),
+    readGroup: async () => ({ ok: true, status: 200, text: GP, stale: true }),
   };
   const catalog = composeCatalog({
     tools: coreTools,
@@ -355,6 +427,42 @@ test('stale orbit and launch data are reported', async () => {
   assert.match(launches.summary, /\(data may be stale\)\.$/);
 });
 
+// Swedish fork: the proxy serves the same rows for 6 h.
+test('a second question about a group builds none of its satrecs again, and an idle while drops them', async (t) => {
+  dropSatelliteSatrecs();
+  t.after(dropSatelliteSatrecs);
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const catalog = composeCatalog({
+    tools: coreTools,
+    services: { satellites: satellites(), clock: CLOCK },
+  });
+  const overhead = () =>
+    catalog.call('satellites_overhead', {
+      location: { lat: 40.7, lon: -74 },
+      min_elevation_deg: 0,
+    });
+  await overhead();
+  const satrecs = _satelliteSatrecsForTest('stations');
+  // The same rows read again find the satrecs the list built.
+  const [iss, css] = parseGpCsv(GP);
+  const issSatrec = satrecs.satrec(iss);
+  const cssSatrec = satrecs.satrec(css);
+  await overhead();
+  assert.equal(satrecs.satrec(iss), issSatrec, 'not built again');
+  assert.equal(satrecs.satrec(css), cssSatrec);
+  // A pass question asks the same cache.
+  await catalog.call('next_satellite_pass', {
+    location: { lat: 40.7, lon: -74 },
+  });
+  assert.equal(_satelliteSatrecsForTest('stations'), satrecs);
+  assert.equal(satrecs.satrec(iss), issSatrec);
+  // Each question puts the drop back; none for SATRECS_IDLE_MS drops all.
+  t.mock.timers.tick(SATRECS_IDLE_MS - 1);
+  assert.equal(_satelliteSatrecsForTest('stations'), satrecs);
+  t.mock.timers.tick(1);
+  assert.equal(_satelliteSatrecsForTest('stations'), undefined);
+});
+
 test('satellite and launch sources read the proxies stale markers', async () => {
   const { createSatelliteSource } =
     await import('../../layers/satellites/source.js');
@@ -362,7 +470,7 @@ test('satellite and launch sources read the proxies stale markers', async () => 
     await import('../../layers/launches/source.js');
   const satellites = createSatelliteSource({
     fetchImpl: async () =>
-      new Response(TLE, { headers: { 'x-tle-cache': 'STALE-ERROR' } }),
+      new Response(GP, { headers: { 'x-tle-cache': 'STALE-ERROR' } }),
   });
   assert.equal((await satellites.readGroup('stations')).stale, true);
   const launches = createLaunchSource({

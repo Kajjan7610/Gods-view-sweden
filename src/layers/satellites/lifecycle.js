@@ -192,6 +192,9 @@ export function createLifecycle({
       layerState._detectionObjects.clear();
       layerState._orbitPaths.clear();
       layerState._catalog.clear();
+      // Swedish fork: the satrecs kept for the next rebuild go with it.
+      layerState._coreSatrecs.clear();
+      layerState._denseSatrecs.clear();
       layerState._denseIds = [];
       layerState._denseCursor = 0;
       layerState._denseLoadToken++;

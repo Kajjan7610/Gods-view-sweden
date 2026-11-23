@@ -1,5 +1,6 @@
 import { DEFAULT_SATELLITE_CLASSES } from './classes.js';
 import { worldClock, worldTimeFor } from '../../time/worldClock.js';
+import { createGpSatrecCache } from '../../sources/gp.js';
 
 export function createState({ services }) {
   const { setOverlayEntries, setOverlaySourceVisible, clearOverlaySource } =
@@ -14,11 +15,18 @@ export function createState({ services }) {
 
   state._overlayHost = state.DEFAULT_OVERLAY_HOST;
 
-  // Satellite catalog: { noradId → { name, satrec, group, line1, line2,
-  // satelliteClass, ucs, satcat } } — class, UCS and SATCAT records from
+  // Satellite catalog: { noradId → { name, satrec, group, gp,
+  // satelliteClass, ucs, satcat } } — `gp` the CelesTrak GP row
+  // (src/sources/gp.js); class, UCS and SATCAT records from
   // src/layers/satellites/classes.js and the sources the update read.
 
   state._catalog = new Map();
+
+  // Swedish fork: the satrecs of the core catalog and of the dense extras,
+  // kept between rebuilds by catalog number and epoch (src/sources/gp.js
+  // createGpSatrecCache), so an unchanged row is never built twice.
+  state._coreSatrecs = createGpSatrecCache();
+  state._denseSatrecs = createGpSatrecCache();
 
   /** The draw sets (`{points, tracked, rings}`), owned by the rendering part. */
   state._sets = null;
@@ -217,8 +225,8 @@ export function createState({ services }) {
 
   state._contextRefreshedAtMs = 0;
 
-  state._lookupTleText = null;
+  state._lookupGpText = null;
 
-  state._lookupTleEntries = [];
+  state._lookupGpEntries = [];
   return state;
 }

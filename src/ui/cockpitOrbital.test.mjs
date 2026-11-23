@@ -309,6 +309,24 @@ test('the readout names the owner, operator and element set', async (t) => {
   );
 });
 
+test('an object numbered 100000 or up dates its element set, with no TLE to unfold', async (t) => {
+  const f = fixture(t);
+  f.store.publishOrbital({
+    ...VIEW,
+    noradId: 412345,
+    cosparId: '2026-148A',
+    // CelesTrak writes no TLE for it (src/layers/satellites/cockpitSubject.js).
+    tle: { line1: null, line2: null, epochMs: ISS_TLE.epochMs },
+  });
+  await nextTick();
+  assert.equal(
+    f.text('.cockpit-orbital-ident-text'),
+    'NORAD 412345 · 2026-148A · EPOCH 2026-11-04 08:12Z',
+  );
+  assert.equal(document.getElementById('cockpit-orbital-tle-toggle'), null);
+  assert.equal(document.getElementById('cockpit-orbital-tle'), null);
+});
+
 test('unknown identity fields leave their rows out', async (t) => {
   const f = fixture(t);
   f.store.publishOrbital({

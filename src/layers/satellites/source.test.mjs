@@ -167,7 +167,7 @@ test('satellite pass prediction methods report no-tle on cold catalog and coerce
 
 // Swedish fork: the proxy says until when CelesTrak's usage policy keeps it
 // from asking (server/providers/space/celestrak.js).
-test('a TLE read says until when the proxy holds off CelesTrak', async () => {
+test('a GP read says until when the proxy holds off CelesTrak', async () => {
   let heldUntil = '2026-11-22T13:05:00.000Z';
   const source = createSatelliteSource({
     fetchImpl: async (url) => {
@@ -180,7 +180,7 @@ test('a TLE read says until when the proxy holds off CelesTrak', async () => {
         ok: true,
         status: 200,
         headers: { get: (name) => headers[name] ?? null },
-        text: async () => 'ISS\n1 25544U fixture\n2 25544 fixture',
+        text: async () => 'OBJECT_NAME,NORAD_CAT_ID\nISS (ZARYA),25544',
       };
     },
   });
@@ -192,14 +192,14 @@ test('a TLE read says until when the proxy holds off CelesTrak', async () => {
   assert.equal((await source.readGroup('stations')).heldUntil, null);
 });
 
-test('a TLE read says when the proxy answered from its copy while the refresh waits, and when CelesTrak said 404', async () => {
+test('a GP read says when the proxy answered from its copy while the refresh waits, and when CelesTrak said 404', async () => {
   let headers = { 'x-tle-cache': 'STALE' };
   const source = createSatelliteSource({
     fetchImpl: async () => ({
       ok: true,
       status: 200,
       headers: { get: (name) => headers[name] ?? null },
-      text: async () => 'ISS\n1 25544U fixture\n2 25544 fixture',
+      text: async () => 'OBJECT_NAME,NORAD_CAT_ID\nISS (ZARYA),25544',
     }),
   });
   assert.equal((await source.readGroup('stations')).stale, true);

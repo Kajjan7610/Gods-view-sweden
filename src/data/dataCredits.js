@@ -162,7 +162,7 @@ export const DATA_CREDITS = [
   {
     key: 'celestrak',
     html:
-      'Satellites (TLEs and SATCAT): CelesTrak ' +
+      'Satellites (GP orbital elements and SATCAT): CelesTrak ' +
       '(<a href="https://celestrak.org" target="_blank" rel="noopener">celestrak.org</a>), ' +
       'Dr. T.S. Kelso',
   },

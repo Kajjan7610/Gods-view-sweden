@@ -250,18 +250,16 @@ async function main() {
     if (url.origin === APP_ORIGIN
       && ['/api/celestrak/active', '/api/celestrak/starlink'].includes(url.pathname)) {
       const dense = url.pathname.endsWith('/starlink');
+      // CelesTrak GP data as CSV, as the proxy now serves it.
       request.respond({
         status: 200,
         contentType: 'text/plain',
-        body: (dense ? [
-          'STARLINK-1007',
-          '1 44713U 19074A   24001.50000000  .00016717  00000-0  10270-3 0  9004',
-          '2 44713  53.0000 247.4627 0006703 130.5360 325.0288 15.06000000 12345',
-        ] : [
-          'ISS (ZARYA)',
-          '1 25544U 98067A   24001.50000000  .00016717  00000-0  10270-3 0  9004',
-          '2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.49814310 12345',
-        ]).join('\n') + '\n',
+        body: [
+          'OBJECT_NAME,OBJECT_ID,EPOCH,MEAN_MOTION,ECCENTRICITY,INCLINATION,RA_OF_ASC_NODE,ARG_OF_PERICENTER,MEAN_ANOMALY,EPHEMERIS_TYPE,CLASSIFICATION_TYPE,NORAD_CAT_ID,ELEMENT_SET_NO,REV_AT_EPOCH,BSTAR,MEAN_MOTION_DOT,MEAN_MOTION_DDOT',
+          dense
+            ? 'STARLINK-1007,2019-074A,2024-01-01T12:00:00.000000,15.06000000,.0006703,53.0000,247.4627,130.5360,325.0288,0,U,44713,900,1234,.10270E-3,.00016717,0'
+            : 'ISS (ZARYA),1998-067A,2024-01-01T12:00:00.000000,15.49814310,.0006703,51.6416,247.4627,130.5360,325.0288,0,U,25544,900,1234,.10270E-3,.00016717,0',
+        ].join('\n') + '\n',
       });
       return;
     }

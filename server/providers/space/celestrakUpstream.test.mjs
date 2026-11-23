@@ -19,22 +19,27 @@ const START = Date.parse('2026-11-22T08:00:00Z');
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const GP = (group) =>
-  `https://celestrak.org/NORAD/elements/gp.php?GROUP=${group}&FORMAT=tle`;
+  `https://celestrak.org/NORAD/elements/gp.php?GROUP=${group}&FORMAT=CSV`;
 const SATCAT = (group) =>
   `https://celestrak.org/satcat/records.php?GROUP=${group}&FORMAT=CSV`;
-const TLE = 'ISS\n1 25544U fixture\n2 25544 fixture\n';
+/** A GP answer as CelesTrak's CSV gives it: a header, then a row. */
+const GP_BODY =
+  'OBJECT_NAME,NORAD_CAT_ID,EPOCH,MEAN_MOTION\nFIXTURE,25544,2024-01-01T12:00:00,15.5\n';
 
 /** What celestrak.js asks with: a label for the log, never the URL. */
 const asking = (label = 'GP group stations', priority = 0) => ({
   label,
   priority,
-  validate: (body) => /^1 /m.test(body),
-  invalid: 'no TLE lines in response',
+  validate: (body) => /^OBJECT_NAME,[^\n]*\n\S/.test(body),
+  invalid: 'no GP CSV rows in response',
   maxBytes: 1 << 20,
 });
 
 /** A transport over a fake clock and fetch; `answer(call)` gives each reply. */
-function harness({ answer = () => new Response(TLE), statePath = null } = {}) {
+function harness({
+  answer = () => new Response(GP_BODY),
+  statePath = null,
+} = {}) {
   const clock = { now: START };
   const calls = [];
   const warnings = [];
@@ -145,7 +150,7 @@ const FAILURES = [
 for (const [kind, answer, pauseMs] of FAILURES)
   test(`${kind} pauses every CelesTrak call, GP and SATCAT, for ${pauseMs / MINUTE} min`, async () => {
     const h = harness({
-      answer: ({ index }) => (index === 1 ? answer() : new Response(TLE)),
+      answer: ({ index }) => (index === 1 ? answer() : new Response(GP_BODY)),
     });
     await assert.rejects(h.ask(), refusal());
     const until = START + pauseMs;
@@ -167,7 +172,7 @@ for (const [kind, answer, pauseMs] of FAILURES)
       new RegExp(`paused until ${new Date(until).toISOString()}`),
     );
     h.clock.now = until;
-    assert.equal((await h.ask(GP('visual'))).body, TLE);
+    assert.equal((await h.ask(GP('visual'))).body, GP_BODY);
     assert.equal(h.calls.length, 2);
   });
 
@@ -208,11 +213,11 @@ test('a 404 leaves out only its URL: never asked again in this process, and for 
   const h = harness({
     statePath,
     answer: ({ url }) =>
-      url === GP('stations') ? status(404) : new Response(TLE),
+      url === GP('stations') ? status(404) : new Response(GP_BODY),
   });
   await assert.rejects(h.ask(), refusal('gone'));
   assert.equal(h.upstream.status().heldUntil, null, 'nothing else waits');
-  assert.equal((await h.ask(GP('visual'))).body, TLE);
+  assert.equal((await h.ask(GP('visual'))).body, GP_BODY);
   assert.equal(h.calls.length, 2);
   assert.deepEqual(h.warnings, [
     '[celestrak-proxy] CelesTrak answered 404 for GP group stations: not asked again, nor for 24 h after a restart',
@@ -298,7 +303,7 @@ test('waiting() tells a call queued behind another from one in flight', async ()
   const h = harness({
     answer: async () => {
       await gate;
-      return new Response(TLE);
+      return new Response(GP_BODY);
     },
   });
   const first = h.ask(GP('stations'));
@@ -323,7 +328,7 @@ test('calls go one at a time, GP before SATCAT, and the first failure stops the 
       order.push(url);
       await new Promise(setImmediate);
       inFlight--;
-      return new Response(TLE);
+      return new Response(GP_BODY);
     },
   });
   const burst = [
@@ -371,7 +376,7 @@ test('a URL already queued or in flight is joined, not refused by its own 2 h', 
   const h = harness({
     answer: async () => {
       await gate;
-      return new Response(TLE);
+      return new Response(GP_BODY);
     },
   });
   const first = h.ask();
@@ -381,14 +386,14 @@ test('a URL already queued or in flight is joined, not refused by its own 2 h', 
   const answers = await Promise.all([first, second]);
   assert.deepEqual(
     answers.map(({ body }) => body),
-    [TLE, TLE],
+    [GP_BODY, GP_BODY],
   );
   assert.equal(h.calls.length, 1, 'one call for both');
   assert.equal(h.upstream.admit(GP('stations')).reason, 'gap');
 });
 
 for (const [kind, answer] of [
-  ['a success', () => new Response(TLE)],
+  ['a success', () => new Response(GP_BODY)],
   [
     'a timeout',
     () => {
@@ -401,7 +406,7 @@ for (const [kind, answer] of [
     const statePath = tempFile(t);
     const h = harness({
       statePath,
-      answer: ({ index }) => (index === 1 ? answer() : new Response(TLE)),
+      answer: ({ index }) => (index === 1 ? answer() : new Response(GP_BODY)),
     });
     await h.ask().catch(() => {});
     await h.upstream.flush();
@@ -419,9 +424,15 @@ for (const [kind, answer] of [
     );
     assert.equal(h.calls.length, 1, 'not sent again');
     // Other groups go on.
-    assert.equal((await restarted.request(GP('visual'), asking())).body, TLE);
+    assert.equal(
+      (await restarted.request(GP('visual'), asking())).body,
+      GP_BODY,
+    );
     h.clock.now = START + CELESTRAK_URL_GAP_MS;
-    assert.equal((await restarted.request(GP('stations'), asking())).body, TLE);
+    assert.equal(
+      (await restarted.request(GP('stations'), asking())).body,
+      GP_BODY,
+    );
     assert.equal(h.calls.length, 3);
     await restarted.flush();
     assert.ok(
@@ -433,13 +444,13 @@ for (const [kind, answer] of [
 test('a call that never connected pauses 15 min but does not start its URL’s 2 h', async () => {
   const h = harness({
     answer: ({ index }) =>
-      index === 1 ? unreachable('ENOTFOUND') : new Response(TLE),
+      index === 1 ? unreachable('ENOTFOUND') : new Response(GP_BODY),
   });
   await assert.rejects(h.ask(), refusal('failed'));
   assert.equal(h.upstream.status().heldUntil, START + CELESTRAK_SERVER_HOLD_MS);
   h.clock.now = START + CELESTRAK_SERVER_HOLD_MS;
   assert.equal(h.upstream.admit(GP('stations')), null);
-  assert.equal((await h.ask()).body, TLE);
+  assert.equal((await h.ask()).body, GP_BODY);
 });
 
 test('no log line names a URL, whatever goes wrong', async () => {

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseTleText, tleLineLaunchYear } from '../../sources/tle.js';
+import { createGpSatrecCache, parseGpCsv } from '../../sources/gp.js';
+import { gpCsv } from '../../testSupport/gpFixtures.mjs';
 import {
   CELESTRAK_READS_AT_ONCE,
   SATCAT_KEEP_MS,
@@ -15,26 +16,66 @@ import { createOrbits } from './orbits.js';
 import { createControls } from './controls.js';
 import { setLocale } from '../../i18n/index.js';
 
-// The ISS set (1 January 2024) with its catalog field swapped per satellite.
-const ISS_LINE1 =
-  '1 25544U 98067A   24001.50000000  .00016717  00000-0  30370-3 0  9993';
-const ISS_LINE2 =
-  '2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.50377579432323';
+// The ISS set (1 January 2024), CelesTrak GP fields written by hand, with
+// its catalog number swapped per satellite.
+const ISS = Object.freeze({
+  OBJECT_ID: '1998-067A',
+  EPOCH: '2024-01-01T12:00:00.000000',
+  MEAN_MOTION: '15.50377579',
+  ECCENTRICITY: '.0006703',
+  INCLINATION: '51.6416',
+  RA_OF_ASC_NODE: '247.4627',
+  ARG_OF_PERICENTER: '130.5360',
+  MEAN_ANOMALY: '325.0288',
+  EPHEMERIS_TYPE: '0',
+  CLASSIFICATION_TYPE: 'U',
+  ELEMENT_SET_NO: '999',
+  REV_AT_EPOCH: '43232',
+  BSTAR: '.30370E-3',
+  MEAN_MOTION_DOT: '.00016717',
+  MEAN_MOTION_DDOT: '0',
+});
 
-function tleSet(name, field) {
-  return [
-    name,
-    ISS_LINE1.replace('25544', field),
-    ISS_LINE2.replace('25544', field),
-  ].join('\n');
-}
+/** One satellite's fields: the ISS set under its own name and number. */
+const satellite = (name, noradId) => ({
+  ...ISS,
+  OBJECT_NAME: name,
+  NORAD_CAT_ID: String(noradId),
+});
+
+/** A group's GP CSV holding one satellite. */
+const gpSet = (name, noradId) => gpCsv(satellite(name, noradId));
+
+// SXM-11, international designator 2026-148A, in the geostationary belt.
+const SXM_11 = Object.freeze({
+  OBJECT_NAME: 'SXM-11',
+  OBJECT_ID: '2026-148A',
+  EPOCH: '2026-07-27T15:38:24.009792',
+  MEAN_MOTION: '1.00271527',
+  ECCENTRICITY: '.0001797',
+  INCLINATION: '0.0784',
+  RA_OF_ASC_NODE: '264.9826',
+  ARG_OF_PERICENTER: '240.4588',
+  MEAN_ANOMALY: '273.9506',
+  EPHEMERIS_TYPE: '0',
+  CLASSIFICATION_TYPE: 'U',
+  NORAD_CAT_ID: '69728',
+  ELEMENT_SET_NO: '999',
+  REV_AT_EPOCH: '44',
+  BSTAR: '0',
+  MEAN_MOTION_DOT: '.00000015',
+  MEAN_MOTION_DDOT: '0',
+});
 
 // Orbit tracks hand their path to the renderer; positions pass through here.
 const orbitParts = {
   rendering: { _rendererPositions: (positions) => positions },
 };
 
-function ingestionFor(catalogText, { source: sourceExtras = {} } = {}) {
+function ingestionFor(
+  catalogText,
+  { source: sourceExtras = {}, orbits: orbitExtras = {} } = {},
+) {
   const state = {
     _trackingRefreshEpoch: 0,
     _activeUpdateControllers: new Set(),
@@ -47,13 +88,16 @@ function ingestionFor(catalogText, { source: sourceExtras = {} } = {}) {
     _params: { catalog: 'core', showOrbits: false },
     _satcat: new Map(),
     _ucs: null,
+    _coreSatrecs: createGpSatrecCache(),
+    _denseSatrecs: createGpSatrecCache(),
     now: Date.now,
     coverageChanged() {},
   };
   const parts = {
     orbits: {
-      parseTLE: parseTleText,
+      parseGp: parseGpCsv,
       propagatePosition: () => ({ longitude: 0, latitude: 0, altitude: 4e5 }),
+      ...orbitExtras,
     },
     labels: { _syncIssOverlay() {} },
     controls: {
@@ -99,16 +143,22 @@ function ingestionFor(catalogText, { source: sourceExtras = {} } = {}) {
   return { state, update: () => methods.update({}) };
 }
 
-test('every Alpha-5 satellite keeps its own catalog entry through dedupe', async (t) => {
+test('every satellite numbered 100000 and up keeps its own catalog entry, propagated and drawn', async (t) => {
   t.mock.method(console, 'log', () => {});
   t.mock.method(console, 'warn', () => {});
+  // Real SGP4, at the elements' epoch: each dot is where its orbit puts it.
+  const { propagatePosition } = createOrbits({ state: {}, parts: orbitParts });
   const { state, update } = ingestionFor(
-    [
-      tleSet('FIRST', 'A0000'),
-      tleSet('SECOND', 'B0001'),
-      tleSet('THIRD', 'Z9999'),
-    ].join('\n'),
+    gpCsv(
+      satellite('FIRST', 100000),
+      satellite('SECOND', 110001),
+      satellite('THIRD', 339999),
+      // Past what a TLE could spell even in Alpha-5.
+      satellite('FOURTH', 412345),
+    ),
+    { orbits: { propagatePosition } },
   );
+  state.now = () => Date.parse('2024-01-01T13:00:00Z');
   await update();
   assert.deepEqual(
     [...state._catalog].map(([id, entry]) => [id, entry.name]),
@@ -116,23 +166,57 @@ test('every Alpha-5 satellite keeps its own catalog entry through dedupe', async
       [100000, 'FIRST'],
       [110001, 'SECOND'],
       [339999, 'THIRD'],
+      [412345, 'FOURTH'],
     ],
   );
-  assert.deepEqual([...state._points.keys()], [100000, 110001, 339999]);
-  assert.equal(state._count, 3);
+  assert.deepEqual([...state._points.keys()], [100000, 110001, 339999, 412345]);
+  for (const [id, { position }] of state._points) {
+    const radiusKm = Math.hypot(position.x, position.y, position.z) / 1000;
+    assert.ok(radiusKm > 6700 && radiusKm < 6900, `${id}: ${radiusKm} km`);
+  }
+  assert.equal(state._count, 4);
+  assert.equal(state._catalog.get(412345).satrec.satnum, '412345');
+});
+
+// Swedish fork: the proxy serves the same rows for 6 h and the catalog is
+// rebuilt every 5 min.
+test('a rebuild reuses the satrec of an unchanged row, and keeps only its own catalog', async (t) => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
+  let text = gpCsv(satellite('FIRST', 40100), satellite('SECOND', 40101));
+  const { state, update } = ingestionFor(() => text);
+  const satrecOf = (id) => state._catalog.get(id)?.satrec;
+  await update();
+  const [first, second] = [satrecOf(40100), satrecOf(40101)];
+  assert.ok(first && second && first !== second);
+  // The same rows: the same satrecs, in new catalog entries.
+  const entry = state._catalog.get(40100);
+  await update();
+  assert.equal(satrecOf(40100), first);
+  assert.equal(satrecOf(40101), second);
+  assert.notEqual(state._catalog.get(40100), entry, 'the entry is rebuilt');
+  // A new element set (a new epoch) is built anew; the other is kept.
+  text = gpCsv(satellite('FIRST', 40100), {
+    ...satellite('SECOND', 40101),
+    EPOCH: '2024-01-02T00:00:00.000000',
+  });
+  await update();
+  assert.equal(satrecOf(40100), first);
+  assert.notEqual(satrecOf(40101), second);
+  // An object the catalog no longer holds is forgotten with it.
+  text = gpCsv(satellite('SECOND', 40101));
+  await update();
+  assert.equal(state._catalog.has(40100), false);
+  text = gpCsv(satellite('FIRST', 40100), satellite('SECOND', 40101));
+  await update();
+  assert.ok(satrecOf(40100));
+  assert.notEqual(satrecOf(40100), first, 'not held while it was gone');
 });
 
 test('a mission payload does not match a loaded satellite from another launch year', async (t) => {
   t.mock.method(console, 'log', () => {});
   t.mock.method(console, 'warn', () => {});
-  // SXM-11, international designator 2026-148A.
-  const { state, update } = ingestionFor(
-    [
-      'SXM-11',
-      '1 69728U 26148A   26208.65166678  .00000015  00000+0  00000+0 0  9990',
-      '2 69728   0.0784 264.9826 0001797 240.4588 273.9506  1.00271527   440',
-    ].join('\n'),
-  );
+  const { state, update } = ingestionFor(gpCsv(SXM_11));
   await update();
   const { getSatelliteOrbitTrack } = createOrbits({ state, parts: orbitParts });
   const track = (launchTime) =>
@@ -144,16 +228,11 @@ test('a mission payload does not match a loaded satellite from another launch ye
 test('a satellite with a blank designator keeps matching by name', async (t) => {
   t.mock.method(console, 'log', () => {});
   t.mock.method(console, 'warn', () => {});
-  const { state, update } = ingestionFor(
-    [
-      'SXM-11',
-      '1 69728U          26208.65166678  .00000015  00000+0  00000+0 0  9990',
-      '2 69728   0.0784 264.9826 0001797 240.4588 273.9506  1.00271527   440',
-    ].join('\n'),
-  );
+  const text = gpCsv({ ...SXM_11, OBJECT_ID: '' });
+  const { state, update } = ingestionFor(text);
   await update();
   const { getSatelliteOrbitTrack } = createOrbits({ state, parts: orbitParts });
-  assert.equal(tleLineLaunchYear('1 69728U          26208.65166678'), null);
+  assert.equal(parseGpCsv(text)[0].launchYear, null);
   assert.equal(
     getSatelliteOrbitTrack('Sirius SXM-11', {
       launchTime: '2030-06-29T02:25:00Z',
@@ -171,7 +250,7 @@ test('a hanging SATCAT read neither holds the catalog nor is lost when it lands'
     answer = resolve;
   });
   const { state, update } = ingestionFor(
-    (path) => (path === 'stations' ? tleSet('OLD STAGE', '40115') : ''),
+    (path) => (path === 'stations' ? gpSet('OLD STAGE', '40115') : ''),
     { source: { readSatcat: () => satcatAnswer } },
   );
   state._enabled = true;
@@ -206,7 +285,7 @@ test('a satellite in visual and resource is imaging, whichever group shows it', 
   // A name no pattern knows, no UCS record and no SATCAT: only its groups.
   const { state, update } = ingestionFor((path) =>
     path === 'visual' || path === 'resource'
-      ? tleSet('ZZ TESTSAT', '50001')
+      ? gpSet('ZZ TESTSAT', '50001')
       : '',
   );
   await update();
@@ -221,7 +300,7 @@ test('a stale SATCAT copy never overrules a current read of the same object', as
   t.mock.method(console, 'warn', () => {});
   const header =
     'OBJECT_NAME,OBJECT_ID,NORAD_CAT_ID,OBJECT_TYPE,OPS_STATUS_CODE,OWNER\n';
-  const { state, update } = ingestionFor(tleSet('ZZ TESTSAT', '50002'), {
+  const { state, update } = ingestionFor(gpSet('ZZ TESTSAT', '50002'), {
     source: {
       // visual is current and says it died; resource, a cached copy, still
       // says it works.
@@ -244,7 +323,7 @@ test('a stale SATCAT copy never overrules a current read of the same object', as
 test('a failed SATCAT read is told on the layer row, not only the console', async (t) => {
   t.mock.method(console, 'log', () => {});
   t.mock.method(console, 'warn', () => {});
-  const { state, update } = ingestionFor(tleSet('OLD STAGE', '40115'), {
+  const { state, update } = ingestionFor(gpSet('OLD STAGE', '40115'), {
     source: { readSatcat: async () => ({ ok: false, text: '' }) },
   });
   await update();
@@ -284,7 +363,7 @@ test('a current SATCAT read is kept between updates; a failed one is asked again
     'OBJECT_NAME,OBJECT_ID,NORAD_CAT_ID,OBJECT_TYPE,OPS_STATUS_CODE\n';
   let reads = 0;
   let ok = true;
-  const { state, update } = ingestionFor(tleSet('ZZ TESTSAT', '50003'), {
+  const { state, update } = ingestionFor(gpSet('ZZ TESTSAT', '50003'), {
     source: {
       readSatcat: async () => {
         reads++;
@@ -330,9 +409,9 @@ function controlsOf(state) {
 
 /** One satellite per group path, its own catalog number. */
 const groupIds = new Map();
-function tleFor(path) {
+function gpFor(path) {
   if (!groupIds.has(path)) groupIds.set(path, String(40200 + groupIds.size));
-  return tleSet(`SAT ${path}`, groupIds.get(path));
+  return gpSet(`SAT ${path}`, groupIds.get(path));
 }
 
 /** Each core group's read, as `answer(path)` says. */
@@ -472,7 +551,7 @@ test('the pause is told until its end as the row is drawn, the missing groups on
           : {
               ok: true,
               status: 200,
-              text: tleFor(path),
+              text: gpFor(path),
               stale: true,
               heldUntil: soon,
             },
@@ -510,8 +589,8 @@ test('the groups are read two at a time, and SATCAT, two at a time too, only onc
   t.mock.method(console, 'log', () => {});
   t.mock.method(console, 'warn', () => {});
   const asked = [];
-  const reading = { tle: 0, satcat: 0 };
-  const most = { tle: 0, satcat: 0 };
+  const reading = { gp: 0, satcat: 0 };
+  const most = { gp: 0, satcat: 0 };
   const read = async (kind, path, answer) => {
     asked.push(`${kind} ${path}`);
     reading[kind]++;
@@ -522,20 +601,20 @@ test('the groups are read two at a time, and SATCAT, two at a time too, only onc
   };
   const { update } = ingestionFor('', {
     source: {
-      readGroup: (path) => read('tle', path, { ok: true, text: tleFor(path) }),
+      readGroup: (path) => read('gp', path, { ok: true, text: gpFor(path) }),
       readSatcat: (path) => {
-        assert.equal(reading.tle, 0, 'every TLE read is in');
+        assert.equal(reading.gp, 0, 'every GP read is in');
         return read('satcat', path, { ok: false, text: '' });
       },
     },
   });
   await update();
   assert.deepEqual(most, {
-    tle: CELESTRAK_READS_AT_ONCE,
+    gp: CELESTRAK_READS_AT_ONCE,
     satcat: CELESTRAK_READS_AT_ONCE,
   });
   assert.deepEqual(asked, [
-    ...CATALOG_GROUPS.map(({ path }) => `tle ${path}`),
+    ...CATALOG_GROUPS.map(({ path }) => `gp ${path}`),
     ...CATALOG_GROUPS.map(({ path }) => `satcat ${path}`),
   ]);
 });
@@ -549,7 +628,7 @@ test('while paused, the info line keeps to 72 characters in every language, a SA
       readGroup: async (path) =>
         path === 'geo'
           ? { ok: false, status: 502, text: '', heldUntil }
-          : { ok: true, text: tleFor(path), stale: true, heldUntil },
+          : { ok: true, text: gpFor(path), stale: true, heldUntil },
       readSatcat: async () => ({ ok: false, text: '' }),
     },
   });
@@ -601,7 +680,7 @@ test('a group not in within TLE_WAIT_MS is told as unavailable, so the layer sti
       readGroup: (path, { signal }) => {
         asked.push(path);
         if (path === 'stations')
-          return Promise.resolve({ ok: true, text: tleFor(path) });
+          return Promise.resolve({ ok: true, text: gpFor(path) });
         // The others hang, as a slow CelesTrak behind the proxy's queue.
         return new Promise((resolve, reject) =>
           signal.addEventListener('abort', () => reject(signal.reason), {
@@ -630,7 +709,7 @@ test('a group not in within TLE_WAIT_MS is told as unavailable, so the layer sti
 test('a failed imaging-sensor pack is warned about, as the UCS pack is', async (t) => {
   t.mock.method(console, 'log', () => {});
   const warn = t.mock.method(console, 'warn', () => {});
-  const { state, update } = ingestionFor(tleSet('OLD STAGE', '40115'), {
+  const { state, update } = ingestionFor(gpSet('OLD STAGE', '40115'), {
     source: {
       readSensors: async () => {
         throw new Error('chunk failed');

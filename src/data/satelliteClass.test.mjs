@@ -14,23 +14,45 @@ import satellitesLayer, {
   _setDenseCatalogStateForTest,
 } from './satellites.js';
 import { CATALOG_GROUPS } from '../layers/satellites/policy.js';
+import { gpCsv } from '../testSupport/gpFixtures.mjs';
 
 /**
- * A real, parseable TLE under an arbitrary 5-digit catalog number, so the dense
- * load exercises the production path. Both fixtures deliberately avoid 25544 —
- * that is the ISS, and the ISS is force-classified as a STATION everywhere.
- * @param {string} satnum Five-digit catalog number.
- * @param {string} name Object name line.
+ * The fields of a real, parseable element set (the ISS on 20 September
+ * 2008) under an arbitrary catalog number, so the dense load exercises the
+ * production path. The fixtures deliberately avoid 25544 — that is the ISS,
+ * and the ISS is force-classified as a STATION everywhere.
+ * @param {string|number} noradId Catalog number.
+ * @param {string} name Object name.
  */
-const tleFor = (satnum, name) => [
-  name,
-  `1 ${satnum}U 98067A   08264.51782528 -.00002182  00000-0 -11606-4 0  2927`,
-  `2 ${satnum}  51.6416 247.4627 0006703 130.5360 325.0288 15.72125391563537`,
-].join('\n');
+const gpObject = (noradId, name) => ({
+  OBJECT_NAME: name,
+  OBJECT_ID: '1998-067A',
+  EPOCH: '2008-09-20T12:25:40.104192',
+  MEAN_MOTION: '15.72125391',
+  ECCENTRICITY: '.0006703',
+  INCLINATION: '51.6416',
+  RA_OF_ASC_NODE: '247.4627',
+  ARG_OF_PERICENTER: '130.5360',
+  MEAN_ANOMALY: '325.0288',
+  EPHEMERIS_TYPE: '0',
+  CLASSIFICATION_TYPE: 'U',
+  NORAD_CAT_ID: String(noradId),
+  ELEMENT_SET_NO: '292',
+  REV_AT_EPOCH: '56353',
+  BSTAR: '-.11606E-4',
+  MEAN_MOTION_DOT: '-.00002182',
+  MEAN_MOTION_DDOT: '0',
+});
+/** CelesTrak GP CSV holding that element set once. */
+const gpFor = (noradId, name) => gpCsv(gpObject(noradId, name));
 
-const DENSE_TLE = tleFor('44444', 'STARLINK-TEST');
-const ALT_TLE = tleFor('33333', 'DRIFTER-1');
-const ISS_TLE = tleFor('25544', 'ISS (ZARYA)');
+// The Starlink shell, one of them numbered past what a TLE can spell.
+const DENSE_GP = gpCsv(
+  gpObject(44444, 'STARLINK-TEST'),
+  gpObject(412345, 'STARLINK-NEW'),
+);
+const ALT_GP = gpFor(33333, 'DRIFTER-1');
+const ISS_GP = gpFor(25544, 'ISS (ZARYA)');
 
 /** Poll the chip until the async dense load settles (or give up). */
 async function settleChip(maxTicks = 50) {
@@ -182,7 +204,7 @@ test('STARLINK reports loading, then ACTIVE only once the points exist', async (
   const originalFetch = globalThis.fetch;
   const refreshes = [];
   try {
-    globalThis.fetch = async () => ({ ok: true, text: async () => DENSE_TLE });
+    globalThis.fetch = async () => ({ ok: true, text: async () => DENSE_GP });
     _setDenseCatalogStateForTest({});
     satellitesLayer.setRowControlsListener(() => refreshes.push(satellitesLayer.getRowControls()));
 
@@ -206,6 +228,9 @@ test('STARLINK reports loading, then ACTIVE only once the points exist', async (
     assert.ok(refreshes.length >= 2, 'load start and load completion each pushed a refresh');
     const legend = satellitesLayer.getRowControls().legend;
     assert.equal(legend.some((row) => row.klass === 'starlink'), true);
+    // The Starlink numbered past 99999 is in the shell like the other.
+    assert.equal(_catalogGroupForTest(44444), 'dense');
+    assert.equal(_catalogGroupForTest(412345), 'dense');
   } finally {
     globalThis.fetch = originalFetch;
     _clearDenseCatalogStateForTest();
@@ -239,7 +264,7 @@ test('a failed STARLINK load reverts the mode rather than leaving an active chip
     assert.ok(pushes >= 2, 'the failure pushed its own refresh');
 
     // Retrying against a healthy feed clears the error — it does not latch.
-    globalThis.fetch = async () => ({ ok: true, text: async () => DENSE_TLE });
+    globalThis.fetch = async () => ({ ok: true, text: async () => DENSE_GP });
     satellitesLayer.setParams(settled.params);
     const recovered = await settleChip();
     assert.equal(recovered.state, 'active');
@@ -263,6 +288,13 @@ test('a 200 that yields no usable satellites is a failure, not a live catalog', 
     empty: '',
     html: '<!DOCTYPE html><html><body>502 Bad Gateway</body></html>',
     junk: 'NOT-A-TLE\nstill not a tle\nnope',
+    // The TLE format the proxy no longer asks for is not read either.
+    tle: [
+      'STARLINK-TEST',
+      '1 44444U 98067A   08264.51782528 -.00002182  00000-0 -11606-4 0  2927',
+      '2 44444  51.6416 247.4627 0006703 130.5360 325.0288 15.72125391563537',
+    ].join('\n'),
+    header: gpCsv(),
   };
   try {
     for (const [name, body] of Object.entries(bodies)) {
@@ -277,9 +309,9 @@ test('a 200 that yields no usable satellites is a failure, not a live catalog', 
       _clearDenseCatalogStateForTest();
     }
 
-    // The same guard fires when every TLE is already in the core catalog, so
-    // "added nothing" can never masquerade as "loaded".
-    globalThis.fetch = async () => ({ ok: true, text: async () => DENSE_TLE });
+    // The same guard fires when every object is already in the core catalog,
+    // so "added nothing" can never masquerade as "loaded".
+    globalThis.fetch = async () => ({ ok: true, text: async () => DENSE_GP });
     _setDenseCatalogStateForTest({});
     satellitesLayer.setParams({ catalog: 'dense' });
     assert.equal((await settleChip()).state, 'active', 'a real feed still loads');
@@ -332,7 +364,7 @@ test('a real stations-feed outage keeps the ISS under STATIONS in the legend', a
     const viewer = { scene: { primitives: { add: (p) => p, remove() {} } } };
     globalThis.fetch = async (url) => ({
       ok: true,
-      text: async () => (String(url).endsWith('/visual') ? ISS_TLE : ''),
+      text: async () => (String(url).endsWith('/visual') ? ISS_GP : ''),
     });
 
     await satellitesLayer.update(viewer);
@@ -370,7 +402,7 @@ test('a catalog rebuild refreshes the detection overlay class strings', async ()
     let homeGroup = 'geo';
     globalThis.fetch = async (url) => ({
       ok: true,
-      text: async () => (String(url).endsWith(`/${homeGroup}`) ? ALT_TLE : ''),
+      text: async () => (String(url).endsWith(`/${homeGroup}`) ? ALT_GP : ''),
     });
 
     // Every class on: the seeded satellite's class must not hide it.
@@ -421,10 +453,10 @@ test('every class but Starlink shows by default; each class chip turns its class
   console.log = () => {};
   console.warn = () => {};
   const served = {
-    '/api/celestrak/stations': ISS_TLE,
-    '/api/celestrak/resource': tleFor('90002', 'SENTINEL-2A'),
-    '/api/celestrak/gps-ops': tleFor('90001', 'GPS BIII-1'),
-    '/api/celestrak/visual': tleFor('90003', 'SL-16 R/B'),
+    '/api/celestrak/stations': ISS_GP,
+    '/api/celestrak/resource': gpFor('90002', 'SENTINEL-2A'),
+    '/api/celestrak/gps-ops': gpFor('90001', 'GPS BIII-1'),
+    '/api/celestrak/visual': gpFor('90003', 'SL-16 R/B'),
   };
   const shown = () => satellitesLayer.getAllPositions().map((row) => row.id).sort();
   const chip = (id) =>
@@ -483,6 +515,38 @@ test('every class but Starlink shows by default; each class chip turns its class
       debris: false,
     });
     assert.deepEqual(shown(), [25544, 90002], 'restored from letters');
+  } finally {
+    console.log = log;
+    console.warn = warn;
+    globalThis.fetch = originalFetch;
+    _clearDenseCatalogStateForTest();
+  }
+});
+
+test('a satellite numbered 100000 and up is propagated and drawn like any other', async () => {
+  const originalFetch = globalThis.fetch;
+  const log = console.log;
+  const warn = console.warn;
+  console.log = () => {};
+  console.warn = () => {};
+  const served = {
+    '/api/celestrak/stations': ISS_GP,
+    // Newly catalogued: CelesTrak gives it no TLE, only GP data.
+    '/api/celestrak/resource': gpFor(412002, 'SENTINEL-1D'),
+  };
+  try {
+    _setDenseCatalogStateForTest({});
+    satellitesLayer.setParams({ classes: { imaging: true } });
+    globalThis.fetch = async (url) => ({
+      ok: true,
+      text: async () => served[String(url)] || '',
+    });
+    await satellitesLayer.update({ scene: { primitives: { add: (p) => p, remove() {} } } });
+    assert.equal(_catalogGroupForTest(412002), 'resource');
+    const drawn = satellitesLayer.getAllPositions().find((row) => row.id === 412002);
+    assert.ok(drawn, 'its dot is on the globe');
+    assert.equal(drawn.label, 'SENTINEL-1D');
+    assert.ok(drawn.altitudeM > 100e3 && drawn.altitudeM < 2000e3, `${drawn.altitudeM} m`);
   } finally {
     console.log = log;
     console.warn = warn;

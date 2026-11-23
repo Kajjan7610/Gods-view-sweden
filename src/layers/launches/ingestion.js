@@ -25,8 +25,9 @@ export function createIngestion({
    * @param {object} input Retry state.
    * @param {boolean} input.enabled Whether Space Missions is active.
    * @param {number} input.retryCount Number of post-TLE retries already used.
-   * @param {string|null} input.activeTleText Resolved active TLE catalog.
-   * @param {string|null} input.renderedTleText TLE catalog used for the last build.
+   * @param {string|null} input.activeTleText Resolved active catalog (CelesTrak
+   *   GP CSV; the "Tle" names stay from the TLE format).
+   * @param {string|null} input.renderedTleText Active catalog used for the last build.
    * @returns {boolean} Whether to schedule a refresh.
    */
 

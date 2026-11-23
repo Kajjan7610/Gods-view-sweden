@@ -4,14 +4,9 @@ import {
   eciToGeodetic,
   degreesLong,
   degreesLat,
-  twoline2satrec,
 } from 'satellite.js';
 import { findNextSatellitePass } from '../../data/satellitePass.js';
-import {
-  noradIdFromSatnum,
-  parseTleText,
-  tleLineLaunchYear,
-} from '../../sources/tle.js';
+import { gpSatrec, noradIdFromSatnum, parseGpCsv } from '../../sources/gp.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { ORBIT_PATH_STEPS, ISS_NORAD } from './policy.js';
 
@@ -68,9 +63,11 @@ export function groundTrackBearingDeg(
 
 export function createOrbits({ state: layerState, services, parts, source }) {
   /**
-   * Parse TLE text into array of { name, line1, line2 } objects.
+   * Parse CelesTrak GP CSV into
+   * `{ name, noradId, launchYear, epoch, row, columns }` entries
+   * (src/sources/gp.js).
    */
-  const parseTLE = parseTleText;
+  const parseGp = parseGpCsv;
 
   /**
    * Propagate satellite position at a given JS Date.
@@ -296,12 +293,13 @@ export function createOrbits({ state: layerState, services, parts, source }) {
     return score;
   }
 
-  function lookupTleEntries(tleText) {
-    if (tleText !== layerState._lookupTleText) {
-      layerState._lookupTleText = tleText;
-      layerState._lookupTleEntries = parseTLE(tleText);
+  /** The entries of a GP catalog text, parsed once per text. */
+  function lookupGpEntries(gpText) {
+    if (gpText !== layerState._lookupGpText) {
+      layerState._lookupGpText = gpText;
+      layerState._lookupGpEntries = parseGp(gpText);
     }
-    return layerState._lookupTleEntries;
+    return layerState._lookupGpEntries;
   }
 
   function orbitTrackFromRecord(name, satrec) {
@@ -323,10 +321,12 @@ export function createOrbits({ state: layerState, services, parts, source }) {
   }
 
   /**
-   * Find and propagate a mission payload directly from a TLE catalog.
+   * Find and propagate a mission payload directly from a GP catalog.
    * This supports newly launched payloads that are present in CelesTrak's active
-   * feed but have not yet moved into a narrower operational group.
-   * @param {string} tleText Three-line-element catalog text.
+   * feed but have not yet moved into a narrower operational group; numbered
+   * 100000 and up, as every newly catalogued object is, they come only in GP
+   * data (Swedish fork: the name keeps "Tle" for the layers' contract).
+   * @param {string} tleText CelesTrak GP CSV (`FORMAT=CSV`), the active group.
    * @param {string} query Mission or payload name.
    * @param {{launchTime?: string|null}} [options] Optional launch epoch for namesake rejection.
    * @returns {{noradId:number,name:string,current:object,periodSec:number,orbitPath:Array<{x:number,y:number,z:number}>,positionAt:function(Date):object|null}|null}
@@ -339,8 +339,8 @@ export function createOrbits({ state: layerState, services, parts, source }) {
     let bestEntry = null;
     let bestScore = 0;
     const catalogText = String(tleText || '');
-    for (const entry of lookupTleEntries(catalogText)) {
-      const designatorYear = tleLineLaunchYear(entry.line1);
+    for (const entry of lookupGpEntries(catalogText)) {
+      const designatorYear = entry.launchYear;
       if (
         launchYear !== null &&
         designatorYear !== null &&
@@ -354,8 +354,8 @@ export function createOrbits({ state: layerState, services, parts, source }) {
       }
     }
     if (!bestEntry || bestScore < 12) return null;
-    const satrec = twoline2satrec(bestEntry.line1, bestEntry.line2);
-    if (!satrec || satrec.error !== 0) return null;
+    const satrec = gpSatrec(bestEntry);
+    if (!satrec) return null;
     return orbitTrackFromRecord(bestEntry.name, satrec);
   }
 
@@ -398,7 +398,7 @@ export function createOrbits({ state: layerState, services, parts, source }) {
     return orbitTrackFromRecord(sat.name, sat.satrec);
   }
   return {
-    parseTLE,
+    parseGp,
     propagatePosition,
     orbitalPeriodSeconds,
     computeOrbitPath,
@@ -406,8 +406,7 @@ export function createOrbits({ state: layerState, services, parts, source }) {
     getNextSatellitePass,
     resolveSatelliteForPass,
     scoreSatelliteNameMatch,
-    lookupTleEntries,
-    tleLineLaunchYear,
+    lookupGpEntries,
     orbitTrackFromRecord,
     findSatelliteOrbitTrackInTle,
     getSatelliteOrbitTrack,

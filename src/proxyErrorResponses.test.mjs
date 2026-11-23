@@ -8,6 +8,8 @@ import { readResponseTextCapped, coalesceProxyRequest } from './sources/httpBody
 import { makeRateLimiter, clientKey } from '../server/providers/common/rate-limit.js';
 import { createCelestrakUpstream } from '../server/providers/space/celestrakUpstream.js';
 import { LL2_FAILURE_WAIT_MS, LL2_RETRY_AFTER_MAX_MS, launchLibraryAppBody } from '../server/providers/space/launch-library.js';
+import { CELESTRAK_GP_FIELDS } from '../server/providers/space/celestrak.js';
+import { gpCsv } from './testSupport/gpFixtures.mjs';
 
 const source = ['local.js', 'common/http.js', 'aircraft/enrichment.js', 'terrain.js', 'space/celestrak.js', 'space/launch-library.js', '../../src/data/spaceProviderRequests.js']
   .map(file => readFileSync(new URL(`../server/providers/${file}`, import.meta.url), 'utf8'))
@@ -47,6 +49,8 @@ function fixture(name, overrides = {}, preview = false) {
     // Swedish fork: CelesTrak's calls go through its transport
     // (space/celestrakUpstream.js); it sends with the fixture's fetch, clock
     // and console, and keeps no file.
+    // The GP fields celestrakProxy checks a body's header for.
+    CELESTRAK_GP_FIELDS,
     createCelestrakUpstream: (options) => createCelestrakUpstream({
       fetchImpl: (...args) => deps.fetch(...args),
       now: () => (deps.Date ?? Date).now(),
@@ -60,10 +64,10 @@ function fixture(name, overrides = {}, preview = false) {
     resolveTerrainHeightRequest: async () => { throw new Error(detail); },
     ...overrides,
   };
-  const helpers = ['launchLibraryRequestHeaders', 'celestrakTleUrl', 'celestrakSatcatUrl', 'launchLibraryRecentUrl'].map(extract).join('\n');
+  const helpers = ['launchLibraryRequestHeaders', 'celestrakGpUrl', 'celestrakSatcatUrl', 'launchLibraryRecentUrl'].map(extract).join('\n');
   const plugin = new Function(...Object.keys(deps), `${helpers}\n${extract(name)}\nreturn ${name}();`)(...Object.values(deps));
   let middleware;
-  // A plugin with several routes (CelesTrak: TLEs, then SATCAT) is tested on its first.
+  // A plugin with several routes (CelesTrak: GP data, then SATCAT) is tested on its first.
   plugin[preview ? 'configurePreviewServer' : 'configureServer']({ middlewares: { use(_route, handler) { middleware ??= handler; } } });
   return {
     logs,
@@ -148,19 +152,21 @@ test('CelesTrak retains invalid-group and unavailable responses', async () => {
   assert.equal(res.headers['x-tle-cache'], 'NONE');
 });
 
-test('CelesTrak retains fresh and stale TLE caches', async () => {
+test('CelesTrak retains fresh and stale GP caches', async () => {
   let now = Date.now();
   let calls = 0;
+  // A valid GP answer (src/sources/gp.js): the CSV header and one row.
+  const gp = gpCsv({ OBJECT_NAME: 'FIXTURE', NORAD_CAT_ID: '25544', EPOCH: '2024-01-01T12:00:00', MEAN_MOTION: '15.5', ECCENTRICITY: '.0006703', INCLINATION: '51.6', RA_OF_ASC_NODE: '247.4', ARG_OF_PERICENTER: '130.5', MEAN_ANOMALY: '325', BSTAR: '.3E-3' });
   const app = fixture('celestrakProxy', {
     Date: class extends Date { static now() { return now; } },
-    fetch: async () => { if (++calls > 1) throw new Error(detail); return new Response('1 valid-fixture-TLE'); },
+    fetch: async () => { if (++calls > 1) throw new Error(detail); return new Response(gp); },
   });
   assert.equal((await app.request('/stations')).headers['x-tle-cache'], 'MISS');
   assert.equal((await app.request('/stations')).headers['x-tle-cache'], 'HIT');
   now += 7 * 3600_000;
   const stale = await app.request('/stations');
   assert.equal(stale.status, 200);
-  assert.equal(stale.body, '1 valid-fixture-TLE');
+  assert.equal(stale.body, gp);
   assert.equal(stale.headers['x-tle-cache'], 'STALE-ERROR');
 });
 

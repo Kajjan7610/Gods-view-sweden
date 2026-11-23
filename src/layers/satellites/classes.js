@@ -21,7 +21,7 @@
  * The evidence, strongest first: CelesTrak SATCAT's object type and
  * operational status (current, so it overrules UCS on a satellite that has
  * died since), the UCS Satellite Database's purpose (May 2023), name patterns
- * for satellites launched after it, and the CelesTrak group the TLE came in.
+ * for satellites launched after it, and the CelesTrak group the elements came in.
  * Pure: no Cesium, no fetches, so the tables are unit-tested directly.
  *
  * @module satelliteClasses
@@ -97,8 +97,9 @@ const DEBRIS_OBJECT_TYPES = new Set(['R/B', 'DEB']);
 /**
  * SATCAT files a new launch's objects as UNK until it identifies them, so an
  * unknown object launched within this many calendar years (2: this year or
- * last) is not presumed debris. Years, not dates: the TLE designator, the
- * fallback when SATCAT has no launch date, carries only the year.
+ * last) is not presumed debris. Years, not dates: the international
+ * designator, the fallback when SATCAT has no launch date, carries only the
+ * year.
  */
 export const UNIDENTIFIED_GRACE_YEARS = 2;
 /** SATCAT operational status: nonoperational, decayed. */
@@ -162,10 +163,11 @@ function launchYearOf(launchDate) {
  *   satcat?: {objectType?: string, opsStatus?: string,
  *     launchDate?: string|null}|null,
  *   launchYear?: number|null, nowYear?: number}} subject `groups` is every
- *   CelesTrak group the TLE came in (`group` is the one it is shown under):
- *   the first of them that names a class gives the last-resort class, so a
- *   satellite in both `visual` and `resource` is still imaging. `launchYear` is
- *   the TLE designator's; SATCAT's launch date wins where it has one (an
+ *   CelesTrak group the elements came in (`group` is the one it is shown
+ *   under): the first of them that names a class gives the last-resort class,
+ *   so a satellite in both `visual` and `resource` is still imaging.
+ *   `launchYear` is the GP designator's (OBJECT_ID); SATCAT's launch date
+ *   wins where it has one (an
  *   object deployed from the ISS carries the station's 1998 designator).
  * @returns {'stations'|'imaging'|'telecom'|'starlink'|'probes'|'debris'}
  */
@@ -675,23 +677,8 @@ export function satelliteOperator({ ucs = null, satelliteClass } = {}) {
 }
 
 /**
- * The international designator (COSPAR id) from TLE line 1, columns 10–17:
- * `98067A` → `1998-067A`. Two-digit years below 57 are 20xx.
- * @param {string|null|undefined} line1
- * @returns {string|null}
- */
-export function cosparIdFromTleLine1(line1) {
-  const field = String(line1 || '')
-    .slice(9, 17)
-    .trim();
-  const match = /^(\d{2})(\d{3})([A-Z]{1,3})$/.exec(field);
-  if (!match) return null;
-  const yy = Number(match[1]);
-  return `${yy < 57 ? 2000 + yy : 1900 + yy}-${match[2]}${match[3]}`;
-}
-
-/**
- * The TLE's epoch as epoch milliseconds, from satellite.js's Julian date.
+ * The element set's epoch as epoch milliseconds, from satellite.js's Julian
+ * date.
  * @param {{jdsatepoch?: number, jdsatepochF?: number}|null|undefined} satrec
  * @returns {number|null}
  */

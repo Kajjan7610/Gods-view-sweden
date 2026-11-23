@@ -182,25 +182,22 @@ const SYNTH = {
     { icao: 'aaa002', callsign: 'SYN002', lon: -97.7600, lat: 30.2800, alt: 9500, vel: 210, track: 45 },
     { icao: 'aaa003', callsign: 'SYN003', lon: -97.7300, lat: 30.2550, alt: 8700, vel: 250, track: 135 },
   ],
-  // Two real, well-formed TLEs (ISS + Hubble). SGP4 needs a valid element set;
-  // these are static public catalog entries, so the propagated positions are
+  // Two real, well-formed element sets (ISS + Hubble) as CelesTrak GP CSV,
+  // the form the proxy serves. SGP4 needs a valid element set; these are
+  // static public catalog entries, so the propagated positions are
   // reproducible run to run.
   tle: [
-    'ISS (ZARYA)',
-    '1 25544U 98067A   24001.50000000  .00016717  00000-0  10270-3 0  9004',
-    '2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.49814310 12345',
-    'HST',
-    '1 20580U 90037B   24001.50000000  .00001250  00000-0  67000-4 0  9992',
-    '2 20580  28.4700 288.8102 0002613 321.7208 133.2117 15.09299130 12345',
+    'OBJECT_NAME,OBJECT_ID,EPOCH,MEAN_MOTION,ECCENTRICITY,INCLINATION,RA_OF_ASC_NODE,ARG_OF_PERICENTER,MEAN_ANOMALY,EPHEMERIS_TYPE,CLASSIFICATION_TYPE,NORAD_CAT_ID,ELEMENT_SET_NO,REV_AT_EPOCH,BSTAR,MEAN_MOTION_DOT,MEAN_MOTION_DDOT',
+    'ISS (ZARYA),1998-067A,2024-01-01T12:00:00.000000,15.49814310,.0006703,51.6416,247.4627,130.5360,325.0288,0,U,25544,900,1234,.10270E-3,.00016717,0',
+    'HST,1990-037B,2024-01-01T12:00:00.000000,15.09299130,.0002613,28.4700,288.8102,321.7208,133.2117,0,U,20580,999,1234,.67000E-4,.00001250,0',
     '',
   ].join('\n'),
   // One dense (Starlink-shell) element set, so dense mode has a real subject
   // to track. Same orbital elements as the ISS entry with a distinct satnum,
   // which keeps SGP4 valid and the propagation reproducible.
   denseTle: [
-    'STARLINK-1007',
-    '1 44713U 19074A   24001.50000000  .00016717  00000-0  10270-3 0  9004',
-    '2 44713  53.0000 247.4627 0006703 130.5360 325.0288 15.06000000 12345',
+    'OBJECT_NAME,OBJECT_ID,EPOCH,MEAN_MOTION,ECCENTRICITY,INCLINATION,RA_OF_ASC_NODE,ARG_OF_PERICENTER,MEAN_ANOMALY,EPHEMERIS_TYPE,CLASSIFICATION_TYPE,NORAD_CAT_ID,ELEMENT_SET_NO,REV_AT_EPOCH,BSTAR,MEAN_MOTION_DOT,MEAN_MOTION_DDOT',
+    'STARLINK-1007,2019-074A,2024-01-01T12:00:00.000000,15.06000000,.0006703,53.0000,247.4627,130.5360,325.0288,0,U,44713,900,1234,.10270E-3,.00016717,0',
     '',
   ].join('\n'),
   military: [
@@ -522,7 +519,7 @@ async function main() {
             status: 'ready',
           }));
         }
-        // CelesTrak SATCAT, which the satellite classes read beside the TLEs.
+        // CelesTrak SATCAT, which the satellite classes read beside the GP data.
         // An empty CSV (header only) keeps the run hermetic: the classes fall
         // back to names and groups, as they do when SATCAT is unavailable.
         if (isAppRequest && url.pathname.startsWith('/api/celestrak-satcat/')) {
@@ -531,7 +528,7 @@ async function main() {
             { status: 200, headers: { 'Content-Type': 'text/csv' } },
           ));
         }
-        // CelesTrak TLE groups. Served from a fixed two-satellite catalog so
+        // CelesTrak GP groups. Served from a fixed two-satellite catalog so
         // the satellite assertions are deterministic and the run never depends
         // on an upstream that rate-limits (it was answering 403 the night this
         // was written).
@@ -1103,7 +1100,9 @@ async function main() {
         // this a disappearance. It is not: absence is only proven when every
         // potential carrier loaded.
         const fullTle = window.__SYNTH.tle;
-        const truncatedTle = fullTle.split('\n').slice(3).join('\n');
+        // The ISS row is the first under the CSV header; HST stays.
+        const withoutIss = (text) => text.split('\n').filter((_, line) => line !== 1).join('\n');
+        const truncatedTle = withoutIss(fullTle);
         window.__SYNTH.tle = truncatedTle;
         window.__SYNTH.failGroup = 'geo';
         await satellites.update(window.__godsEyeView.viewer);
@@ -1116,7 +1115,7 @@ async function main() {
         await new Promise((resolve) => setTimeout(resolve, 800));
 
         // Now the subject vanishes from a COMPLETE catalog — proven absence.
-        window.__SYNTH.tle = fullTle.split('\n').slice(3).join('\n');
+        window.__SYNTH.tle = withoutIss(fullTle);
         await satellites.update(window.__godsEyeView.viewer);
         await new Promise((resolve) => setTimeout(resolve, 800));
         const afterSubjectGone = await window.__gevVoiceCommands.runner('get_entity_context', { scope: 'selected' });

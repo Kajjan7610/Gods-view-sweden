@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { promises as fsp } from 'node:fs';
+import { promises as fsp, readdirSync, readFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   celestrakProxy,
   rocketLaunchesProxy,
@@ -10,14 +11,38 @@ import {
   LL2_CACHE_TTL_MS,
 } from 'gods-eye-view/server/providers/space';
 import {
+  celestrakGpUrl,
   celestrakTleUrl,
   launchLibraryRecentUrl,
 } from 'gods-eye-view/sources/space';
 import * as compatibility from '../../server/providers/local.js';
 import { sharedCelestrakUpstream } from '../../server/providers/space/celestrakUpstream.js';
+import { CELESTRAK_GP_FIELDS } from '../../server/providers/space/celestrak.js';
 import { createLaunchSource } from 'gods-eye-view/layers/launches/source';
+import { GP_REQUIRED_FIELDS } from '../sources/gp.js';
+import { gpCsv } from '../testSupport/gpFixtures.mjs';
 
-const TLE = 'ISS\n1 25544U fixture\n2 25544 fixture\n';
+// One GP answer: the documented CSV header and a row (src/sources/gp.js).
+const ISS_FIELDS = Object.freeze({
+  OBJECT_NAME: 'ISS (ZARYA)',
+  OBJECT_ID: '1998-067A',
+  EPOCH: '2024-01-01T12:00:00.000000',
+  MEAN_MOTION: '15.50377579',
+  ECCENTRICITY: '.0006703',
+  INCLINATION: '51.6416',
+  RA_OF_ASC_NODE: '247.4627',
+  ARG_OF_PERICENTER: '130.5360',
+  MEAN_ANOMALY: '325.0288',
+  EPHEMERIS_TYPE: '0',
+  CLASSIFICATION_TYPE: 'U',
+  NORAD_CAT_ID: '25544',
+  ELEMENT_SET_NO: '999',
+  REV_AT_EPOCH: '43232',
+  BSTAR: '.30370E-3',
+  MEAN_MOTION_DOT: '.00016717',
+  MEAN_MOTION_DDOT: '0',
+});
+const GP = gpCsv(ISS_FIELDS);
 const MINUTE = 60_000;
 
 function install(plugin, preview = false) {
@@ -84,11 +109,14 @@ function oversizedResponse(text) {
 }
 
 test('portable requests keep fixed origins, encode group data and preserve the 30-day UTC window', () => {
-  const tle = celestrakTleUrl('stations&FORMAT=json');
-  assert.equal(tle.origin, 'https://celestrak.org');
-  assert.equal(tle.pathname, '/NORAD/elements/gp.php');
-  assert.equal(tle.searchParams.get('GROUP'), 'stations&FORMAT=json');
-  assert.equal(tle.searchParams.get('FORMAT'), 'tle');
+  const gp = celestrakGpUrl('stations&FORMAT=json');
+  assert.equal(gp.origin, 'https://celestrak.org');
+  assert.equal(gp.pathname, '/NORAD/elements/gp.php');
+  assert.equal(gp.searchParams.get('GROUP'), 'stations&FORMAT=json');
+  // As CelesTrak's GP documentation writes it (gp-data-formats.php).
+  assert.deepEqual(gp.searchParams.getAll('FORMAT'), ['CSV']);
+  // The old name stays, deprecated, for consumers and upstream merges.
+  assert.equal(celestrakTleUrl, celestrakGpUrl);
   const end = new Date('2026-03-01T12:34:56.000Z');
   const url = launchLibraryRecentUrl(end);
   assert.equal(url.origin, 'https://ll.thespacedevs.com');
@@ -110,12 +138,11 @@ test('compatibility exports retain the same LL2 header helper and TTL', () => {
   assert.equal(compatibility.LL2_CACHE_TTL_MS, LL2_CACHE_TTL_MS);
 });
 
-test('exported CelesTrak plugin coalesces refreshes, retains stale TLEs, and reads disk in a new instance', async (t) => {
+test('exported CelesTrak plugin coalesces refreshes, retains stale GP data, and reads disk in a new instance', async (t) => {
   isolateDisk(t);
   let now = Date.now();
   t.mock.method(Date, 'now', () => now);
   t.mock.method(console, 'warn', () => {});
-  const tle = 'ISS\n1 25544U fixture\n2 25544 fixture';
   let calls = 0,
     release;
   const gate = new Promise((resolve) => {
@@ -125,7 +152,7 @@ test('exported CelesTrak plugin coalesces refreshes, retains stale TLEs, and rea
     calls++;
     assert.equal(new URL(url).searchParams.get('GROUP'), 'stations');
     await gate;
-    return new Response(tle);
+    return new Response(GP);
   });
   const request = install(celestrakProxy());
   assert.equal((await request('/api/celestrak', '/../bad')).status, 400);
@@ -134,36 +161,105 @@ test('exported CelesTrak plugin coalesces refreshes, retains stale TLEs, and rea
   const second = request('/api/celestrak', '/stations');
   release();
   for (const res of await Promise.all([first, second]))
-    assert.equal(res.body, tle);
+    assert.equal(res.body, GP);
   assert.equal(calls, 1);
   assert.equal(
     (await request('/api/celestrak', '/stations')).headers['x-tle-cache'],
     'HIT',
   );
   now += 6 * 3600_000;
-  t.mock.method(globalThis, 'fetch', async () => new Response('not a TLE'));
+  t.mock.method(globalThis, 'fetch', async () => new Response('not GP CSV'));
   const stale = await request('/api/celestrak', '/stations');
-  assert.equal(stale.body, tle);
+  assert.equal(stale.body, GP);
   assert.equal(stale.headers['x-tle-cache'], 'STALE-ERROR');
   t.mock.method(fsp, 'readFile', async () =>
-    JSON.stringify({ at: now, body: tle }),
+    JSON.stringify({ at: now, body: GP }),
   );
   t.mock.method(globalThis, 'fetch', async () => {
     throw Error('fresh disk must prevent fetch');
   });
   const disk = await install(celestrakProxy())('/api/celestrak', '/stations');
   assert.equal(disk.headers['x-tle-cache'], 'HIT');
-  assert.equal(disk.body, tle);
+  assert.equal(disk.body, GP);
 });
 
-test('CelesTrak answers 502 to an oversized TLE body without caching it', async (t) => {
+// Swedish fork: GP data comes as CSV, which carries objects numbered 100000
+// and up; the TLE format does not. One format only, asked for every group.
+test('every GP group is asked for as CSV, cached under its own file, and an answer without GP rows is refused', async (t) => {
+  isolateDisk(t);
+  let now = Date.now();
+  t.mock.method(Date, 'now', () => now);
+  t.mock.method(console, 'warn', () => {});
+  const formats = [];
+  const written = [];
+  t.mock.method(fsp, 'writeFile', async (file) => {
+    written.push(String(file).split(/[\\/]/).pop());
+  });
+  let answer = () => new Response(GP);
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    formats.push(new URL(url).searchParams.getAll('FORMAT').join('&'));
+    return answer();
+  });
+  const request = install(celestrakProxy());
+  const groups = [
+    'stations',
+    'visual',
+    'gps-ops',
+    'glo-ops',
+    'galileo',
+    'geo',
+    'resource',
+    'weather',
+    'planet',
+    'sar',
+    'science',
+    'starlink',
+    'active',
+  ];
+  for (const group of groups)
+    assert.equal((await request('/api/celestrak', `/${group}`)).status, 200);
+  assert.deepEqual(
+    formats,
+    groups.map(() => 'CSV'),
+  );
+  assert.deepEqual(
+    written,
+    groups.map((group) => `celestrak-gp-csv-${group}.json`),
+  );
+  // An object numbered past 99999 passes through as CelesTrak sent it.
+  const big = gpCsv({ ...ISS_FIELDS, NORAD_CAT_ID: '412345' });
+  for (const [body, usable] of [
+    [big, true],
+    // A header with no row under it, an error page, the TLE format, SATCAT.
+    [gpCsv(), false],
+    ['<!DOCTYPE html><html><body>busy</body></html>', false],
+    [
+      'ISS (ZARYA)\n1 25544U 98067A   24001.50000000  .00016717  00000-0  30370-3 0  9993\n2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.50377579432323\n',
+      false,
+    ],
+    [
+      'OBJECT_NAME,OBJECT_ID,NORAD_CAT_ID,OBJECT_TYPE,OPS_STATUS_CODE,OWNER\nISS (ZARYA),1998-067A,25544,PAY,+,ISS\n',
+      false,
+    ],
+  ]) {
+    // Past the 6 h cache, the URL's 2 h and any 15-minute pause.
+    now += 7 * 3600_000;
+    answer = () => new Response(body);
+    const res = await request('/api/celestrak', '/stations');
+    assert.equal(res.status, 200);
+    assert.equal(res.body, usable ? body : big, body.slice(0, 30));
+    assert.equal(res.headers['x-tle-cache'], usable ? 'MISS' : 'STALE-ERROR');
+  }
+  assert.equal(formats.length, groups.length + 5);
+  assert.ok(formats.every((format) => format === 'CSV'));
+});
+
+test('CelesTrak answers 502 to an oversized GP body without caching it', async (t) => {
   isolateDisk(t);
   t.mock.method(console, 'warn', () => {});
   const bodies = [];
   t.mock.method(globalThis, 'fetch', async () => {
-    const oversized = oversizedResponse(
-      'ISS\n1 25544U fixture\n2 25544 fixture\n',
-    );
+    const oversized = oversizedResponse(GP);
     bodies.push(oversized.state);
     return oversized.response;
   });
@@ -213,12 +309,12 @@ test('space providers honor Retry-After, gate groups, preserve stale dates and r
   t.mock.method(console, 'warn', () => {});
   let now = Date.now();
   t.mock.method(Date, 'now', () => now);
-  for (const kind of ['tle', 'launches']) {
+  for (const kind of ['gp', 'launches']) {
     // Swedish fork: CelesTrak's usage policy pauses every call at least 2 h
     // after a 403, whatever shorter Retry-After it gives; Launch Library
     // waits at least 4 minutes after a failure (15 calls an hour without a
     // token), longer when its Retry-After asks.
-    const pauseS = kind === 'tle' ? 7200 : 240;
+    const pauseS = kind === 'gp' ? 7200 : 240;
     for (const retryAfter of ['90', new Date(now + 90000).toUTCString()]) {
       let calls = 0;
       let fail = false;
@@ -233,22 +329,18 @@ test('space providers honor Retry-After, gate groups, preserve stale dates and r
               },
             }),
             {
-              status: kind === 'tle' ? 403 : 429,
+              status: kind === 'gp' ? 403 : 429,
               headers: { 'Retry-After': retryAfter },
             },
           );
-        return new Response(
-          kind === 'tle'
-            ? 'ISS\n1 25544U fixture\n2 25544 fixture\n'
-            : '{"results":[]}',
-        );
+        return new Response(kind === 'gp' ? GP : '{"results":[]}');
       });
       const request = install(
-        kind === 'tle' ? celestrakProxy() : rocketLaunchesProxy(),
+        kind === 'gp' ? celestrakProxy() : rocketLaunchesProxy(),
       );
-      const route = kind === 'tle' ? '/api/celestrak' : '/api/launches';
-      const url = kind === 'tle' ? '/stations' : '/';
-      if (kind === 'tle') {
+      const route = kind === 'gp' ? '/api/celestrak' : '/api/launches';
+      const url = kind === 'gp' ? '/stations' : '/';
+      if (kind === 'gp') {
         assert.equal(
           (await request(route, '/not-a-supported-group')).status,
           400,
@@ -274,18 +366,18 @@ test('space providers honor Retry-After, gate groups, preserve stale dates and r
       assert.equal(stale.body, first.body);
       assert.equal(stale.headers['Retry-After'], String(pauseS));
       assert.ok(
-        stale.headers[kind === 'tle' ? 'X-TLE-Cached-At' : 'X-GEV-Cached-At'],
+        stale.headers[kind === 'gp' ? 'X-TLE-Cached-At' : 'X-GEV-Cached-At'],
       );
-      if (kind === 'tle')
+      if (kind === 'gp')
         assert.equal(
           stale.headers['X-CelesTrak-Held-Until'],
           new Date(now + pauseS * 1000).toISOString(),
         );
       assert.equal(cancelled, true);
       await request(route, url);
-      if (kind === 'tle')
+      if (kind === 'gp')
         assert.equal((await request(route, '/visual')).status, 502);
-      assert.equal(calls, 2, 'cooldown applies across TLE groups');
+      assert.equal(calls, 2, 'cooldown applies across GP groups');
       now += pauseS * 1000 + 1000;
       fail = false;
       assert.equal((await request(route, url)).status, 200);
@@ -296,11 +388,10 @@ test('space providers honor Retry-After, gate groups, preserve stale dates and r
 
 test('Space Missions reads the active catalog through the real proxy while unknown groups stay rejected', async (t) => {
   isolateDisk(t);
-  const tle = 'ISS\n1 25544U fixture\n2 25544 fixture\n';
   const fetched = [];
   t.mock.method(globalThis, 'fetch', async (url) => {
     fetched.push(new URL(url).searchParams.get('GROUP'));
-    return new Response(tle);
+    return new Response(GP);
   });
   const request = install(celestrakProxy());
   // Route the browser source's real request into the middleware.
@@ -312,14 +403,14 @@ test('Space Missions reads the active catalog through the real proxy while unkno
       return new Response(res.body, { status: res.status });
     },
   });
-  assert.equal(await source.getActiveTle(), tle);
+  assert.equal(await source.getActiveTle(), GP);
   assert.deepEqual(fetched, ['active']);
   for (const group of ['/not-a-group', '/active-extra', '/../active'])
     assert.equal((await request('/api/celestrak', group)).status, 400);
   assert.deepEqual(fetched, ['active'], 'rejected groups never reach upstream');
 });
 
-test('SATCAT is proxied per core group for a day, separately from TLEs, and served stale on failure', async (t) => {
+test('SATCAT is proxied per core group for a day, separately from GP data, and served stale on failure', async (t) => {
   isolateDisk(t);
   let now = Date.now();
   t.mock.method(Date, 'now', () => now);
@@ -362,7 +453,7 @@ test('SATCAT is proxied per core group for a day, separately from TLEs, and serv
       'x-satcat-cache'
     ],
     'HIT',
-    'a day-long cache, unlike the 6 h TLEs',
+    'a day-long cache, unlike the 6 h GP data',
   );
   now += 2 * 3600_000;
   t.mock.method(
@@ -376,7 +467,7 @@ test('SATCAT is proxied per core group for a day, separately from TLEs, and serv
 });
 
 // Swedish fork: CelesTrak's usage policy asks a client to stop on any answer
-// but 200, so a bad SATCAT answer now pauses the TLEs too (it used to hold
+// but 200, so a bad SATCAT answer now pauses the GP route too (it used to hold
 // off only SATCAT, for 60 s).
 test('any CelesTrak failure pauses both routes, and the answers say until when', async (t) => {
   isolateDisk(t);
@@ -390,7 +481,7 @@ test('any CelesTrak failure pauses both routes, and the answers say until when',
     fetched.push(parsed.pathname);
     return parsed.pathname.startsWith('/satcat/')
       ? satcatAnswer()
-      : new Response(TLE);
+      : new Response(GP);
   });
   const request = install(celestrakProxy());
   const satcat = await request('/api/celestrak-satcat', '/sar');
@@ -411,7 +502,7 @@ test('any CelesTrak failure pauses both routes, and the answers say until when',
   now += 15 * MINUTE;
   const starlink = await request('/api/celestrak', '/starlink');
   assert.equal(starlink.status, 200);
-  assert.equal(starlink.body, TLE);
+  assert.equal(starlink.body, GP);
   assert.equal(starlink.headers['X-CelesTrak-Held-Until'], undefined);
 
   // A 429 is CelesTrak throttling this client: both routes wait 2 h.
@@ -436,7 +527,7 @@ test('while paused, a group is served from its last copy, however old, with the 
   t.mock.method(Date, 'now', () => now);
   const fetchedAt = now - 3 * 24 * 60 * MINUTE;
   t.mock.method(fsp, 'readFile', async () =>
-    JSON.stringify({ at: fetchedAt, body: TLE }),
+    JSON.stringify({ at: fetchedAt, body: GP }),
   );
   let calls = 0;
   t.mock.method(globalThis, 'fetch', async () => {
@@ -452,7 +543,7 @@ test('while paused, a group is served from its last copy, however old, with the 
     [held, 15],
   ]) {
     assert.equal(res.status, 200);
-    assert.equal(res.body, TLE);
+    assert.equal(res.body, GP);
     assert.equal(res.headers['x-tle-cache'], 'STALE-ERROR');
     assert.equal(
       res.headers['X-TLE-Cached-At'],
@@ -476,9 +567,9 @@ test('a refresh waiting its turn is answered from the last copy at once, and lan
   t.mock.method(Date, 'now', () => now);
   const fetchedAt = now - 7 * 60 * MINUTE;
   t.mock.method(fsp, 'readFile', async () =>
-    JSON.stringify({ at: fetchedAt, body: TLE }),
+    JSON.stringify({ at: fetchedAt, body: GP }),
   );
-  const fresh = 'ISS\n1 25544U fresh\n2 25544 fresh\n';
+  const fresh = gpCsv({ ...ISS_FIELDS, EPOCH: '2024-01-02T00:00:00.000000' });
   const sent = [];
   let release;
   const gate = new Promise((resolve) => {
@@ -496,7 +587,7 @@ test('a refresh waiting its turn is answered from the last copy at once, and lan
   // Queued behind it: the last copy now, with its real age, no pause.
   const queued = await request('/api/celestrak', '/visual');
   assert.equal(queued.status, 200);
-  assert.equal(queued.body, TLE);
+  assert.equal(queued.body, GP);
   assert.equal(queued.headers['x-tle-cache'], 'STALE');
   assert.equal(
     queued.headers['X-TLE-Cached-At'],
@@ -521,8 +612,8 @@ test('a group CelesTrak answered 404 for is marked as no longer asked, with its 
   t.mock.method(Date, 'now', () => now);
   const fetchedAt = now - 7 * 60 * MINUTE;
   t.mock.method(fsp, 'readFile', async (file) => {
-    if (String(file).endsWith('celestrak-stations.json'))
-      return JSON.stringify({ at: fetchedAt, body: TLE });
+    if (String(file).endsWith('celestrak-gp-csv-stations.json'))
+      return JSON.stringify({ at: fetchedAt, body: GP });
     throw Error('no cache');
   });
   let calls = 0;
@@ -580,7 +671,7 @@ test('CelesTrak admits a same-origin request behind the documented reverse proxy
   let calls = 0;
   t.mock.method(globalThis, 'fetch', async () => {
     calls++;
-    return new Response('ISS\n1 25544U fixture\n2 25544 fixture\n');
+    return new Response(GP);
   });
   const request = install(celestrakProxy());
   const proxied = {
@@ -651,6 +742,67 @@ test('a burst reaches CelesTrak one call at a time, and the first failure answer
   }
   assert.deepEqual(sent, ['stations'], 'the first failure stopped the rest');
   now += 7200_000;
-  t.mock.method(globalThis, 'fetch', async () => new Response(TLE));
+  t.mock.method(globalThis, 'fetch', async () => new Response(GP));
   assert.equal((await request('/api/celestrak', '/geo')).status, 200);
+});
+
+// Swedish fork: CelesTrak gives objects numbered 100000 and up no TLE, and
+// warns that asking its GP pages for that format leads to 404s. No code in
+// the checkout may ask for it (TLE, 2LE or 3LE), however it is written, and
+// CSV is asked for as CelesTrak documents it, `FORMAT=CSV`.
+test('the proxy checks a GP header for the fields the parser needs', () => {
+  assert.deepEqual(CELESTRAK_GP_FIELDS, GP_REQUIRED_FIELDS);
+});
+
+test('no code asks CelesTrak for the TLE format, and CSV is asked for as documented', () => {
+  const root = fileURLToPath(new URL('../../', import.meta.url));
+  const files = [];
+  const visit = (dir) => {
+    for (const entry of readdirSync(path.join(root, dir), {
+      withFileTypes: true,
+    })) {
+      const name = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        if (entry.name !== 'node_modules' && !entry.name.startsWith('.'))
+          visit(name);
+      } else if (
+        /\.(?:[cm]?js|vue|html)$/.test(entry.name) &&
+        !/\.test\.[cm]?js$/.test(entry.name)
+      )
+        files.push(name);
+    }
+  };
+  for (const dir of ['src', 'server', 'scripts', 'tools', 'dev', 'build'])
+    visit(dir);
+  const tleFormat = /FORMAT\W{0,6}(?:tle|[23]le)\b/i;
+  for (const written of [
+    'gp.php?GROUP=active&FORMAT=tle',
+    'format=TLE',
+    "url.searchParams.set('FORMAT', 'tle')",
+    'FORMAT: "3le"',
+    'FORMAT=2LE&',
+  ])
+    assert.match(written, tleFormat, written);
+  assert.doesNotMatch("url.searchParams.set('FORMAT', 'CSV')", tleFormat);
+  // Case-sensitive: `FORMAT` with a lowercase `csv`, not `outputFormat`.
+  const lowercaseCsv = /FORMAT\W{0,6}csv\b/;
+  for (const written of [
+    'gp.php?GROUP=active&FORMAT=csv',
+    "url.searchParams.set('FORMAT', 'csv')",
+  ])
+    assert.match(written, lowercaseCsv, written);
+  for (const written of [
+    'gp.php?GROUP=GPS-OPS&FORMAT=CSV',
+    "outputFormat: 'csv'",
+    "format === 'csv'",
+  ])
+    assert.doesNotMatch(written, lowercaseCsv, written);
+  assert.ok(files.includes('src/data/spaceProviderRequests.js'));
+  assert.ok(files.includes('server/providers/space/celestrak.js'));
+  const offenders = (pattern) =>
+    files.filter((file) =>
+      pattern.test(readFileSync(path.join(root, file), 'utf8')),
+    );
+  assert.deepEqual(offenders(tleFormat), []);
+  assert.deepEqual(offenders(lowercaseCsv), []);
 });

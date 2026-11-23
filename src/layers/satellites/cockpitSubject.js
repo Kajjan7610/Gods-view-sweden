@@ -1,8 +1,8 @@
 import { cameraOf } from '../../render/rendererOf.js';
 import { satelliteClassText } from '../../data/satelliteClass.js';
+import { gpCosparId, gpTleLines } from '../../sources/gp.js';
 import {
   classifySatellite,
-  cosparIdFromTleLine1,
   satelliteClassEnterable,
   satelliteOperator,
   satelliteOwner,
@@ -24,6 +24,9 @@ export const COCKPIT_ORBIT_DIM_FACTOR = 0.3;
 /**
  * Who and what a catalog entry is: class, COSPAR id, TLE, owner, operator.
  * Fixed for the entry's life, so it is worked out once and kept on it.
+ * Swedish fork: the element set comes from CelesTrak's GP row (`sat.gp`),
+ * its two TLE lines written from it; an object numbered 100000 or up has no
+ * TLE spelling, so its `tle` keeps the epoch with null lines.
  * @param {number} noradId
  * @param {object} sat Catalog entry.
  */
@@ -33,13 +36,18 @@ function satelliteIdentity(noradId, sat) {
     sat.satelliteClass ||
     classifySatellite({ noradId, name: sat.name, group: sat.group });
   const epochMs = tleEpochMs(sat.satrec);
+  const lines = epochMs === null ? null : gpTleLines(sat.gp);
   const identity = Object.freeze({
     satelliteClass,
-    cosparId: sat.satcat?.cosparId || cosparIdFromTleLine1(sat.line1),
+    cosparId: sat.satcat?.cosparId || gpCosparId(sat.gp),
     tle:
-      sat.line1 && sat.line2 && epochMs !== null
-        ? Object.freeze({ line1: sat.line1, line2: sat.line2, epochMs })
-        : null,
+      epochMs === null
+        ? null
+        : Object.freeze({
+            line1: lines?.line1 ?? null,
+            line2: lines?.line2 ?? null,
+            epochMs,
+          }),
     owner: freezeOwner(
       satelliteOwner({ ucs: sat.ucs, satcat: sat.satcat, satelliteClass }),
     ),
@@ -226,7 +234,7 @@ export function createCockpitSubject({ state: layerState, parts }) {
      *   velocityMps: number|null, stale: false,
      *   satelliteClass: 'stations'|'imaging'|'telecom'|'starlink'|'probes'|'debris',
      *   cosparId: string|null,
-     *   tle: {line1: string, line2: string, epochMs: number}|null,
+     *   tle: {line1: string|null, line2: string|null, epochMs: number}|null,
      *   owner: {countryCode: string|null, label: string|null}|null,
      *   operator: string|null}|null} Null while the layer is off or nothing
      *   is tracked.

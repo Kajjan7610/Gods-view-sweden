@@ -1,29 +1,52 @@
 import path from 'node:path';
 import { promises as fsp } from 'node:fs';
 import {
+  celestrakGpUrl,
   celestrakSatcatUrl,
-  celestrakTleUrl,
 } from '../../../src/data/spaceProviderRequests.js';
 import { createCelestrakUpstream } from './celestrakUpstream.js';
 import { admitSameSiteKeyless } from '../common/same-site.js';
 
 /**
- * Vite plugin: CelesTrak TLE proxy.
+ * The fields a GP row needs to become an orbit, the ones src/sources/gp.js
+ * reads (its GP_REQUIRED_FIELDS; a test holds the two lists equal): a body
+ * whose header lacks one is not usable.
+ */
+export const CELESTRAK_GP_FIELDS = Object.freeze([
+  'OBJECT_NAME',
+  'NORAD_CAT_ID',
+  'EPOCH',
+  'MEAN_MOTION',
+  'ECCENTRICITY',
+  'INCLINATION',
+  'RA_OF_ASC_NODE',
+  'ARG_OF_PERICENTER',
+  'MEAN_ANOMALY',
+  'BSTAR',
+]);
+
+/**
+ * Vite plugin: CelesTrak GP proxy.
  *
  * CelesTrak does not send CORS headers, so this middleware fetches
- * satellite TLE data server-side and forwards it to the browser.
+ * satellite GP data server-side and forwards it to the browser.
  * Upstream URL: https://celestrak.org/NORAD/elements/gp.php
  *
  * @returns {import('vite').Plugin}
  */
 /**
- * CelesTrak GP/TLE proxy with a memory + disk cache.
- * Upstream: https://celestrak.org/NORAD/elements/gp.php?GROUP=<group>&FORMAT=tle
+ * CelesTrak GP proxy with a memory + disk cache.
+ * Upstream: https://celestrak.org/NORAD/elements/gp.php?GROUP=<group>&FORMAT=CSV
  * CelesTrak asks clients not to re-fetch GP data more than ~every 2 h and
  * throttles offenders; every dev reload used to refetch every group. Cache TTL
- * 6 h; on upstream failure the freshest stale copy is served (a stale TLE
- * beats an empty satellites layer). Pattern mirrors openSkyProxy's
+ * 6 h; on upstream failure the freshest stale copy is served (stale elements
+ * beat an empty satellites layer). Pattern mirrors openSkyProxy's
  * cache+serve-stale. Adapted from skylight's TleStore (MIT).
+ *
+ * Swedish fork: GP data comes as CSV (src/sources/gp.js parses it), which,
+ * unlike the TLE format, carries objects numbered 100000 and up. Its cache
+ * files are new (`celestrak-gp-csv-<group>.json`); the TLE ones are no
+ * longer read, so no group is ever asked for in both formats.
  *
  * The same plugin serves CelesTrak SATCAT records for the satellites layer's
  * groups at `/api/celestrak-satcat/<group>` (object type, operational status
@@ -62,15 +85,29 @@ export function celestrakProxy({ upstream = createCelestrakUpstream() } = {}) {
     'sar',
     'science',
   ];
+  /** Whether a body is GP CSV: those fields on its first line, a row under it. */
+  const isGpCsv = (body) => {
+    const end = body.indexOf('\n');
+    if (end < 0) return false;
+    // trim() also drops a byte order mark before the first name.
+    const header = body
+      .slice(0, end)
+      .split(',')
+      .map((name) => name.trim().replace(/^"(.*)"$/, '$1'));
+    return (
+      CELESTRAK_GP_FIELDS.every((name) => header.includes(name)) &&
+      /\S/.test(body.slice(end + 1))
+    );
+  };
   const feeds = [
     {
       route: '/api/celestrak',
       ttlMs: TLE_TTL_MS,
       cacheHeader: 'x-tle-cache',
       cachedAtHeader: 'X-TLE-Cached-At',
-      diskName: (group) => `celestrak-${group}.json`,
-      upstreamUrl: celestrakTleUrl,
-      // The layer cannot do without the TLEs: they go first in the queue.
+      diskName: (group) => `celestrak-gp-csv-${group}.json`,
+      upstreamUrl: celestrakGpUrl,
+      // The layer cannot do without its elements: they go first in the queue.
       priority: 0,
       label: 'GP group',
       groups: new Set([
@@ -79,9 +116,10 @@ export function celestrakProxy({ upstream = createCelestrakUpstream() } = {}) {
         // Space Missions (`getActiveTle`) reads the full active catalog.
         'active',
       ]),
-      // An upstream error page parses to zero TLEs — treat as failure, keep cache.
-      validate: (body) => /^1 /m.test(body),
-      invalid: 'no TLE lines in response',
+      // An upstream error page or an empty answer has no GP rows — treat as
+      // failure, keep cache.
+      validate: isGpCsv,
+      invalid: 'no GP CSV rows in response',
     },
     {
       route: '/api/celestrak-satcat',
@@ -100,7 +138,11 @@ export function celestrakProxy({ upstream = createCelestrakUpstream() } = {}) {
     },
   ];
 
-  /** The largest group (`active`) measures ~2.7 MB; this bounds a runaway body. */
+  /**
+   * The largest group (`active`) measured ~2.7 MB as TLE; a CSV row is a
+   * little shorter than an object's three TLE lines. This bounds a runaway
+   * body.
+   */
   const CELESTRAK_MAX_RESPONSE_BYTES = 16 * 1024 * 1024;
 
   function createFeedHandler(feed) {

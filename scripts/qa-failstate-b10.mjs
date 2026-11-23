@@ -131,16 +131,14 @@ async function captureLayerControl(page, layerId, filename) {
   await row.screenshot({ path: path.join(ARTIFACT_DIR, filename) });
 }
 
-// A minimal but valid TLE for one satellite (ISS), so the "good catalog" pass
+// A minimal but valid catalog (ISS and NOAA 19), so the "good catalog" pass
 // builds a non-zero catalog we can later prove is preserved across the outage.
-// parseTLE in satellites.js expects `NAME\n1 ...\n2 ...` triplets.
+// The proxy serves CelesTrak GP data as CSV (src/sources/gp.js parses it):
+// a header naming the fields, then a row per object.
 const GOOD_TLE = [
-  'ISS (ZARYA)',
-  '1 25544U 98067A   08264.51782528 -.00002182  00000-0 -11606-4 0  2927',
-  '2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.72125391563537',
-  'NOAA 19',
-  '1 33591U 09005A   08264.51782528 -.00000045  00000-0  35116-4 0  9999',
-  '2 33591  99.1949 123.4567 0013000 200.0000 160.0000 14.12345678123456',
+  'OBJECT_NAME,OBJECT_ID,EPOCH,MEAN_MOTION,ECCENTRICITY,INCLINATION,RA_OF_ASC_NODE,ARG_OF_PERICENTER,MEAN_ANOMALY,EPHEMERIS_TYPE,CLASSIFICATION_TYPE,NORAD_CAT_ID,ELEMENT_SET_NO,REV_AT_EPOCH,BSTAR,MEAN_MOTION_DOT,MEAN_MOTION_DDOT',
+  'ISS (ZARYA),1998-067A,2008-09-20T12:25:40.104192,15.72125391,.0006703,51.6416,247.4627,130.5360,325.0288,0,U,25544,292,56353,-.11606E-4,-.00002182,0',
+  'NOAA 19,2009-005A,2008-09-20T12:25:40.104192,14.12345678,.0013000,99.1949,123.4567,200.0000,160.0000,0,U,33591,999,12345,.35116E-4,-.00000045,0',
 ].join('\n');
 
 async function main() {
