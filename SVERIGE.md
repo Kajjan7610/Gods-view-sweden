@@ -440,6 +440,27 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-22 (Launch Library: bara det appen läser)
+- Rymduppdragens proxy (`/api/launches`) sparade och skickade vidare hela
+  Launch Librarys detaljerade svar: uppdateringarna med bidragsgivarnas
+  namn och profilbilder, byråernas chefer, bildernas fotografer, videornas
+  utgivare och, vid en bemannad uppskjutning, besättningens
+  astronautuppgifter (namn, födelsedag, biografi, porträtt och sociala
+  medier). Nu behåller servern, efter en lista över tillåtna fält, bara det
+  appen läser innan något sparas eller skickas: uppskjutningens id,
+  kortnamn, namn, tid och status, rampen och dess läge, leverantörens och
+  raketens namn, uppdragets namn, beskrivning och bana, nyttolaster, steg
+  och landningar, tidslinjen och banpunkterna. Inget av det är uppgifter
+  om en person, så inga astronautuppgifter skickas vidare; uppdragets
+  beskrivning är Launch Librarys egen text och kan nämna besättningen vid
+  namn.
+- En cache som en tidigare version sparat
+  (`.gev-cache/launch-library-2-v2.3.json`) skärs till samma fält när den
+  läses, och filen skrivs om.
+- Efter ett misslyckat anrop väntar servern minst fyra minuter (utan nyckel
+  tillåter Launch Library 15 anrop i timmen), och en `Retry-After` följs i
+  upp till en timme i stället för en halvtimme.
+
 ### 2026-11-22 (nyckelflöden nekar andra webbplatser, hur adressen än skrivs)
 - Flöden som kostar en nyckel, Trafikverkets tåg och Trafiklabs 16
   trafikbolag, svarar bara appens egen sida, både i tåglagret

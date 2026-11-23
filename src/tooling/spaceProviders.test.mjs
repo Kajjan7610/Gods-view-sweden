@@ -216,8 +216,9 @@ test('space providers honor Retry-After, gate groups, preserve stale dates and r
   for (const kind of ['tle', 'launches']) {
     // Swedish fork: CelesTrak's usage policy pauses every call at least 2 h
     // after a 403, whatever shorter Retry-After it gives; Launch Library
-    // keeps the Retry-After it asks for.
-    const pauseS = kind === 'tle' ? 7200 : 90;
+    // waits at least 4 minutes after a failure (15 calls an hour without a
+    // token), longer when its Retry-After asks.
+    const pauseS = kind === 'tle' ? 7200 : 240;
     for (const retryAfter of ['90', new Date(now + 90000).toUTCString()]) {
       let calls = 0;
       let fail = false;

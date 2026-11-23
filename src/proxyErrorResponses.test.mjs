@@ -7,6 +7,7 @@ import { parseTerrainPoints } from './data/terrainHeightsProxy.js';
 import { readResponseTextCapped, coalesceProxyRequest } from './sources/httpBody.js';
 import { makeRateLimiter, clientKey } from '../server/providers/common/rate-limit.js';
 import { createCelestrakUpstream } from '../server/providers/space/celestrakUpstream.js';
+import { LL2_FAILURE_WAIT_MS, LL2_RETRY_AFTER_MAX_MS, launchLibraryAppBody } from '../server/providers/space/launch-library.js';
 
 const source = ['local.js', 'common/http.js', 'aircraft/enrichment.js', 'terrain.js', 'space/celestrak.js', 'space/launch-library.js', '../../src/data/spaceProviderRequests.js']
   .map(file => readFileSync(new URL(`../server/providers/${file}`, import.meta.url), 'utf8'))
@@ -53,6 +54,8 @@ function fixture(name, overrides = {}, preview = false) {
       ...options,
     }),
     LL2_CACHE_TTL_MS: 15 * 60_000,
+    // Swedish fork: Launch Library's field allow-list and its waits.
+    launchLibraryAppBody, LL2_FAILURE_WAIT_MS, LL2_RETRY_AFTER_MAX_MS,
     parseTerrainPoints: () => [[1, 2]],
     resolveTerrainHeightRequest: async () => { throw new Error(detail); },
     ...overrides,
