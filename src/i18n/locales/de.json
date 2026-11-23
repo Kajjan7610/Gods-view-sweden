@@ -5852,5 +5852,30 @@
   "{count} CelesTrak groups missing (CelesTrak answered 404)": {
     "one": "{count} CelesTrak-Gruppe fehlt (CelesTrak antwortete 404)",
     "other": "{count} CelesTrak-Gruppen fehlen (CelesTrak antwortete 404)"
-  }
+  },
+  "adsb.lol · whole view · {count} aircraft": {
+    "one": "adsb.lol · ganze Ansicht · {count} Flugzeug",
+    "other": "adsb.lol · ganze Ansicht · {count} Flugzeuge"
+  },
+  "adsb.lol · whole view · nearest {count} of {seen} aircraft": {
+    "one": "adsb.lol · ganze Ansicht · das nächste {count} von {seen} Flugzeugen",
+    "other": "adsb.lol · ganze Ansicht · die nächsten {count} von {seen} Flugzeugen"
+  },
+  "The aircraft shown were read up to {n} min ago.": "Die angezeigten Flugzeuge wurden vor bis zu {n} Min. abgefragt.",
+  "Zoomed out, the middle of the view is read about every {centre} min and the outer areas about every {outer} min, so today’s quota lasts all day.": "Herausgezoomt wird die Mitte der Ansicht etwa alle {centre} Min. abgefragt und die äußeren Gebiete etwa alle {outer} Min., damit das heutige Kontingent den ganzen Tag reicht.",
+  "The other areas are read one at a time, the nearest first.": "Die übrigen Gebiete werden nacheinander abgefragt, das nächste zuerst.",
+  "Today’s quota keeps only the area around the map centre up to date; the others are not read.": "Das heutige Kontingent hält nur das Gebiet um die Kartenmitte aktuell; die übrigen werden nicht abgefragt.",
+  "Today’s quota keeps the areas nearest the map centre up to date, {count} of {total}; the others are not read.": "Das heutige Kontingent hält die der Kartenmitte nächsten Gebiete aktuell, {count} von {total}; die übrigen werden nicht abgefragt.",
+  "adsb.lol · about {percent} of the view · {count} aircraft": {
+    "one": "adsb.lol · ca. {percent} der Ansicht · {count} Flugzeug",
+    "other": "adsb.lol · ca. {percent} der Ansicht · {count} Flugzeuge"
+  },
+  "adsb.lol · about {percent} of the view · nearest {count} of {seen} aircraft": {
+    "one": "adsb.lol · ca. {percent} der Ansicht · nächstes {count} von {seen}",
+    "other": "adsb.lol · ca. {percent} der Ansicht · nächste {count} von {seen}"
+  },
+  "up to {n} min old": "bis {n} Min. alt",
+  "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "Von {seen} rund um die Ansicht abgefragten Flugzeugen werden die {count} gezeigt, die der Kartenmitte am nächsten sind.",
+  "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "Herausgezoomt wird die Mitte der Ansicht etwa alle {centre} Min. abgefragt; die äußeren Gebiete werden gerade nicht abgefragt, und das schon Abgefragte bleibt bis zu 30 Minuten stehen.",
+  "Only the view within {km} km of the map centre is read.": "Abgefragt wird nur der Teil der Ansicht bis {km} km von der Kartenmitte."
 }

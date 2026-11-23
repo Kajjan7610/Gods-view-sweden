@@ -183,3 +183,65 @@ test('a delivery after a pause in polling gives no lags, and the next one does',
   feed(delay, { ageMs: 10 * SEC, contacts: 20, polls: 1, startMs: now });
   assert.equal(delay.lagCount, learned + 20, 'polling again, lags count again');
 });
+
+// Swedish fork: a whole view of flights reads its centre less often than one
+// disc is read; its lags are kept apart and dropped as soon as the feed is
+// one disc again, and a lag since a report it brought is not one disc's.
+/**
+ * Polls every 30 s for `minutes`, 100 contacts re-read every `gapS`, each
+ * contact's previous report carried from poll to poll (in `feed`), as the
+ * layer carries it across zooming in and out.
+ */
+function polled(delay, feed, { minutes, gapS, whole = false }) {
+  for (let p = 0; p < minutes * 2; p++) {
+    feed.now += POLL;
+    if (feed.now - feed.readAt >= gapS * SEC) feed.readAt = feed.now;
+    const reportMs = feed.readAt - 5 * SEC;
+    for (let c = 0; c < 100; c++)
+      delay.noteReport(feed.now, reportMs, feed.report, { whole });
+    feed.report = reportMs;
+    delay.settle(feed.now, { whole });
+  }
+  return feed.now;
+}
+const newFeed = () => ({ now: 0, readAt: -Infinity, report: undefined });
+
+test('back from a whole view the delay falls to one disc’s level by the second poll, not over an hour', () => {
+  const delay = createDisplayDelay({ floorMs: FLOOR, pollMs: POLL });
+  const feed = newFeed();
+  const alone = delay.step(polled(delay, feed, { minutes: 30, gapS: 150 }));
+  assert.ok(alone > 140 * SEC && alone < 170 * SEC, String(alone));
+  // Zoomed in again 7 min after the centre was last read: it is read at
+  // once, and the lags since the whole view's reports span its pace.
+  let now = polled(delay, feed, { minutes: 170, gapS: 450, whole: true });
+  assert.equal(delay.step(now), DISPLAY_DELAY_CAP_MS, 'zoomed out: the cap');
+  now = polled(delay, feed, { minutes: 1, gapS: 150 });
+  assert.ok(
+    Math.abs(delay.step(now) - alone) < DISPLAY_DELAY_DEADBAND_MS,
+    `${delay.step(now)} after a minute`,
+  );
+  // Those lags were not taken for one disc's.
+  now = polled(delay, feed, { minutes: 60, gapS: 150 });
+  assert.ok(Math.abs(delay.step(now) - alone) < DISPLAY_DELAY_DEADBAND_MS);
+});
+
+test('a session begun zoomed out holds its delay until one disc’s lags say where to fall, then falls within a poll', () => {
+  const delay = createDisplayDelay({ floorMs: FLOOR, pollMs: POLL });
+  const feed = newFeed();
+  let now = polled(delay, feed, { minutes: 120, gapS: 450, whole: true });
+  assert.equal(delay.step(now), DISPLAY_DELAY_CAP_MS);
+  // Zoomed in, the centre is read at once: its lags span the whole view's
+  // pace and say nothing of one disc's. No dip to the floor meanwhile.
+  now = polled(delay, feed, { minutes: 2, gapS: 150 });
+  assert.equal(delay.lagCount, 0);
+  assert.ok(delay.step(now) > 280 * SEC, String(delay.step(now)));
+  // Read again, its lags are one disc's: down within a poll.
+  const steps = [];
+  for (let p = 0; p < 4; p++) {
+    now = polled(delay, feed, { minutes: 0.5, gapS: 150 });
+    steps.push(Math.round(delay.step(now) / SEC));
+  }
+  const falling = steps.findIndex((s) => s < 280);
+  assert.ok(falling >= 0, steps.join(' '));
+  assert.ok(steps[falling + 1] < 170, `within a poll: ${steps.join(' ')}`);
+});

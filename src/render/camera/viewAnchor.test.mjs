@@ -6,7 +6,7 @@ import { WGS84 } from '../../geo/ellipsoid.js';
 import { bindRenderer } from '../rendererOf.js';
 import { createStubRenderer } from '../stub/index.js';
 import { fakeCameraPort } from '../../testSupport/fakeCameraPort.mjs';
-import { viewAnchor } from './viewAnchor.js';
+import { viewAnchor, viewExtent } from './viewAnchor.js';
 
 const deg = Math.PI / 180;
 
@@ -114,4 +114,31 @@ test('a port without a position goes by its view rectangle unless it spans every
     unbind();
   }
   assert.equal(viewAnchor({}), null, 'no camera');
+});
+
+test('the ground in view is the view rectangle as it is, never one of the whole globe', () => {
+  const viewer = {};
+  const camera = fakeCameraPort({
+    pose: { lon: 16, lat: 62 },
+    viewRectangle: { west: -20, south: 40, east: 60, north: 70 },
+  });
+  const unbind = bindRenderer(viewer, { camera: camera.port });
+  try {
+    // The server cuts it around the look-at point and says how much it read.
+    assert.deepEqual(viewExtent(viewer), {
+      west: -20,
+      south: 40,
+      east: 60,
+      north: 70,
+    });
+    camera.setViewRectangle({ west: -180, south: -90, east: 180, north: 90 });
+    assert.equal(viewExtent(viewer), null, 'the whole globe');
+    camera.setViewRectangle({ west: 10, south: 60, east: 20, north: 55 });
+    assert.equal(viewExtent(viewer), null, 'not a rectangle');
+    camera.setViewRectangle(null);
+    assert.equal(viewExtent(viewer), null, 'no rectangle');
+  } finally {
+    unbind();
+  }
+  assert.equal(viewExtent({}), null);
 });

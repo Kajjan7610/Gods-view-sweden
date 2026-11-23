@@ -481,3 +481,53 @@ test('back at live, a placed contact eases from where it is drawn over a recover
     metres(easing.position('c', Date.now(), {}), placedAt(Date.now())) < 1,
   );
 });
+
+// Swedish fork: in a whole view of adsb.lol discs, a position older than its
+// centre is read again is aged.
+test('an aged contact is drawn faded, as one that missed an update', () => {
+  const records = new Map([
+    ['c1', { klass: 'airliner', onGround: false }],
+    ['o1', { klass: 'airliner', onGround: false, aged: true }],
+    ['m1', { klass: 'airliner', onGround: false }],
+  ]);
+  const state = {
+    now: () => WORLD_MS,
+    _icons: createContactIcons(),
+    _positionHistory: new Map(),
+    _cockpitNearContacts: new Set(),
+    records: { data: records, missingPolls: new Map([['m1', 1]]) },
+  };
+  const icons = createAircraftIcons({
+    state,
+    services: { focus: { focusPassIsNeeded: () => false } },
+    parts: {
+      rendering: {
+        _iconKind: (_id, klass) => klass,
+        _fleetBillboardColor: () => [1, 1, 1, 1],
+        _fleetBillboardScale: () => 1,
+      },
+    },
+    layerId: 'flights',
+    courseMaxDps: 3,
+    cockpitContactSizePx: 8,
+  });
+  for (const id of records.keys()) {
+    state._icons.put(
+      {
+        id,
+        pos: fromDegrees(16, 62, 9000),
+        motion: { kind: 'hold', courseDeg: 0 },
+        size: [20, 20],
+      },
+      { expiresAt: Infinity },
+    );
+    icons._applyIconPresentation(id);
+  }
+  assert.equal(state._icons.alpha('c1'), 1);
+  assert.equal(state._icons.alpha('o1'), 0.45);
+  assert.equal(state._icons.alpha('m1'), 0.45);
+  // Read afresh, it is drawn as any other.
+  records.get('o1').aged = false;
+  icons._applyIconPresentation('o1');
+  assert.equal(state._icons.alpha('o1'), 1);
+});

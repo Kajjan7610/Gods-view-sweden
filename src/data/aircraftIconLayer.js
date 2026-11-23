@@ -420,7 +420,8 @@ function fixedDelay(ms) {
  * @param {() => boolean} [options.followsClock] True while the layer follows
  *   the world clock: contacts draw at the world's time (`state.now()`, the
  *   scene's time) with no delay.
- * @param {number} [options.staleAlpha] A contact's alpha after a missed update.
+ * @param {number} [options.staleAlpha] A contact's alpha after a missed
+ *   update, or while its record is aged (`aged`, Swedish fork).
  * @param {number} options.courseMaxDps The fleet's course slew cap.
  * @param {number} options.cockpitContactSizePx Cockpit far-contact pip size.
  * @param {(icao24: string) => boolean} [options.holdsPlan] True while something
@@ -1088,7 +1089,12 @@ export function createAircraftIcons({
       look.rotationMode = 'screen';
       look.rotation = 0;
     }
-    look.alpha = state.records.missingPolls.get(icao24) ? staleAlpha : 1;
+    // Faded after a missed update, and (Swedish fork) while its position is
+    // older than a whole view's centre is read again (aged).
+    look.alpha =
+      state.records.missingPolls.get(icao24) || info?.aged === true
+        ? staleAlpha
+        : 1;
     icons.update(icao24, look);
     // An airborne helicopter drawn as its glyph turns its rotor.
     const frame = cockpitDot

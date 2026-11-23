@@ -94,5 +94,29 @@ export function createClockFollow({ flightState, services, parts }) {
     flightState.feed._lastUpdate = null;
   }
 
-  return { resetMotion, absentAtHandover, handOverMotion, clear };
+  /**
+   * Swedish fork: drop the contacts of a whole view of adsb.lol discs whose
+   * newest fix is older than `cutoffMs` (epoch ms), the tracked one too.
+   * Resolves how many contacts are left.
+   * @param {number} cutoffMs
+   * @returns {number}
+   */
+  function dropOlderThan(cutoffMs) {
+    for (const icao24 of [...(flightState._icons?.ids() ?? [])]) {
+      const meta = flightState.records.data.get(icao24);
+      if (!(meta?.newestFixMs < cutoffMs)) continue;
+      if (icao24 === flightState._trackedIcao)
+        parts.tracking._clearTracking(false, { evicted: true });
+      parts.icons._forgetContact(icao24);
+    }
+    return flightState._icons?.count ?? 0;
+  }
+
+  return {
+    resetMotion,
+    absentAtHandover,
+    handOverMotion,
+    clear,
+    dropOlderThan,
+  };
 }

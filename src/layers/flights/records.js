@@ -350,6 +350,9 @@ export class FlightRecords {
       // The feed estimated this position: it places the aircraft, and stands
       // in on the tracked trail only until the next received report.
       estimated: observation.estimated === true,
+      // Swedish fork: in a whole view, read longer ago than its centre is
+      // read again: drawn faded, and not counted in how late the feed is.
+      aged: observation.aged === true,
       groundM: Number.isFinite(groundM) ? groundM : null,
       onGround,
       // Round 7: sticky airborne history — the landed fast-cull only

@@ -5852,5 +5852,30 @@
   "{count} CelesTrak groups missing (CelesTrak answered 404)": {
     "one": "{count} CelesTrak-grupp saknas (CelesTrak svarade 404)",
     "other": "{count} CelesTrak-grupper saknas (CelesTrak svarade 404)"
-  }
+  },
+  "adsb.lol · whole view · {count} aircraft": {
+    "one": "adsb.lol · hela vyn · {count} plan",
+    "other": "adsb.lol · hela vyn · {count} plan"
+  },
+  "adsb.lol · whole view · nearest {count} of {seen} aircraft": {
+    "one": "adsb.lol · hela vyn · {count} närmaste av {seen} plan",
+    "other": "adsb.lol · hela vyn · {count} närmaste av {seen} plan"
+  },
+  "The aircraft shown were read up to {n} min ago.": "Planen som visas lästes för upp till {n} min sedan.",
+  "Zoomed out, the middle of the view is read about every {centre} min and the outer areas about every {outer} min, so today’s quota lasts all day.": "Utzoomat läses mitten av vyn med ungefär {centre} min mellanrum och de yttre områdena med ungefär {outer} min, så att dagens kvot räcker hela dagen.",
+  "The other areas are read one at a time, the nearest first.": "De andra områdena läses ett i taget, det närmaste först.",
+  "Today’s quota keeps only the area around the map centre up to date; the others are not read.": "Dagens kvot räcker till att hålla bara området runt kartans mitt aktuellt; de andra läses inte.",
+  "Today’s quota keeps the areas nearest the map centre up to date, {count} of {total}; the others are not read.": "Dagens kvot räcker till att hålla områdena närmast kartans mitt aktuella, {count} av {total}; de andra läses inte.",
+  "adsb.lol · about {percent} of the view · {count} aircraft": {
+    "one": "adsb.lol · ca {percent} av vyn · {count} plan",
+    "other": "adsb.lol · ca {percent} av vyn · {count} plan"
+  },
+  "adsb.lol · about {percent} of the view · nearest {count} of {seen} aircraft": {
+    "one": "adsb.lol · ca {percent} av vyn · {count} närmaste av {seen} plan",
+    "other": "adsb.lol · ca {percent} av vyn · {count} närmaste av {seen} plan"
+  },
+  "up to {n} min old": "upp till {n} min gamla",
+  "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "Av {seen} plan som lästs runt vyn visas de {count} som är närmast kartans mitt.",
+  "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "Utzoomat läses mitten av vyn med ungefär {centre} min mellanrum; de yttre områdena läses inte just nu, och det som lästs står kvar i upp till 30 minuter.",
+  "Only the view within {km} km of the map centre is read.": "Bara den del av vyn som ligger inom {km} km från kartans mitt läses."
 }

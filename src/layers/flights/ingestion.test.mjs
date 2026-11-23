@@ -6,7 +6,7 @@ import { createIngestion } from './ingestion.js';
 
 function setup(
   source,
-  { getQuery = () => ({ latitude: 39 }), clearContacts } = {},
+  { getQuery = () => ({ latitude: 39 }), clearContacts, dropOlderThan } = {},
 ) {
   const feed = {
     _source: source,
@@ -29,6 +29,7 @@ function setup(
     setSourceLabel: (label) => labels.push(label),
     applyPendingTrackingRestore: () => restores.push(true),
     ...(clearContacts ? { clearContacts } : {}),
+    ...(dropOlderThan ? { dropOlderThan } : {}),
   });
   return { feed, accepted, labels, restores, update: methods.update };
 }
@@ -349,4 +350,56 @@ test('aircraft read from an adsb.lol disc leave the map once older than 30 minut
   await probe.update(null);
   assert.equal(cleared.length, 0);
   assert.equal(probe.feed._count, 2);
+});
+
+// Swedish fork: a whole view's discs are read at different times; its
+// aircraft leave the map each on its own once older than 30 min.
+test('a whole view’s aircraft go each on its own once past 30 minutes: after an answer, a failed poll and while waiting', async (t) => {
+  const NOW = 1_800_000_000_000;
+  let now = NOW;
+  t.mock.method(Date, 'now', () => now);
+  const cutoffs = [];
+  let left = 2;
+  let answer;
+  const probe = setup(
+    {
+      async getSnapshot() {
+        if (answer instanceof Error) throw answer;
+        return answer;
+      },
+    },
+    {
+      getQuery: () => STOCKHOLM,
+      dropOlderThan: (cutoff) => {
+        cutoffs.push(cutoff);
+        return left;
+      },
+    },
+  );
+  const whole = (fields = {}) => ({
+    records: [],
+    source: 'adsb.lol',
+    observedAtMs: now,
+    quota: said({ discs: { shown: 3, total: 6 }, ...fields }),
+  });
+  answer = whole();
+  left = 1;
+  await probe.update(null);
+  assert.deepEqual(cutoffs, [NOW - 30 * MINUTE]);
+  assert.equal(probe.feed._count, 1, 'what is left of the contacts');
+  // A failed poll, and the wait it asks for.
+  now += MINUTE;
+  answer = refusal(502, { retryAfterMs: 5 * MINUTE });
+  await probe.update(null);
+  now += MINUTE;
+  await probe.update(null);
+  assert.deepEqual(cutoffs.slice(1), [
+    NOW + MINUTE - 30 * MINUTE,
+    NOW + 2 * MINUTE - 30 * MINUTE,
+  ]);
+  // One disc is one age: nothing to drop on its own.
+  probe.feed._retryAt = 0;
+  answer = { ...whole(), quota: said() };
+  await probe.update(null);
+  assert.equal(cutoffs.length, 3);
 });

@@ -48,6 +48,7 @@ export function createIngestion({
   followsClock = () => false,
   timedAnswer = () => true,
   clearContacts = () => {},
+  dropOlderThan = () => null,
 }) {
   const methods = {
     async update(viewer, { signal = null } = {}) {
@@ -90,12 +91,19 @@ export function createIngestion({
 
   /**
    * Swedish fork: drop every contact drawn from an adsb.lol disc (the quota
-   * names where it was read) once it is older than ADSBLOL_SHOWN_MAX_MS.
+   * names where it was read) once it is older than ADSBLOL_SHOWN_MAX_MS; of
+   * a whole view, read from discs of different ages, each aircraft goes on
+   * its own once it is that old.
    */
   function dropOutlived(nowMs) {
     const quota = feed._lastQuota;
     if (!quota?.anchor || !Number.isFinite(feed._lastUpdate)) return;
-    if (nowMs - feed._lastUpdate <= ADSBLOL_SHOWN_MAX_MS) return;
+    if (nowMs - feed._lastUpdate <= ADSBLOL_SHOWN_MAX_MS) {
+      if (quota.discs)
+        feed._count =
+          dropOlderThan(nowMs - ADSBLOL_SHOWN_MAX_MS) ?? feed._count;
+      return;
+    }
     clearContacts();
     feed._count = 0;
     feed._lastUpdate = null;
@@ -176,6 +184,9 @@ export function createIngestion({
       // Freshness belongs to the source snapshot, not the moment this browser
       // received a cached 200 response.
       feed._lastUpdate = outlived ? null : sourceEpochMs;
+      // Swedish fork: a whole view's aircraft the answer no longer has go
+      // as soon as they are past the cap, not after the missed polls.
+      if (!timed && !outlived) dropOutlived(Date.now());
       feed._lastTrackingRefreshOutcome = {
         epoch: trackingRefreshEpoch,
         status: 'accepted',

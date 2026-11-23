@@ -11,18 +11,22 @@ import { readAdsbVerticalRateFpm } from '../adsbFields.js';
 const openSkyId = (row) =>
   Array.isArray(row) ? cleanText(row[0]).toLowerCase() : '';
 
-/** The aircraft (lowercase ICAO) a state-vector snapshot's `estimatedByIcao` names. */
-const estimatedCache = new WeakMap();
-function estimatedIds(payload) {
-  const list = payload?.estimatedByIcao;
+/**
+ * The aircraft (lowercase ICAO) a state-vector snapshot's list names: its
+ * `estimatedByIcao`, or (Swedish fork) its `agedByIcao`.
+ */
+const namedCache = new WeakMap();
+function namedIds(list) {
   if (!Array.isArray(list)) return EMPTY_IDS;
-  let ids = estimatedCache.get(list);
+  let ids = namedCache.get(list);
   if (!ids) {
     ids = new Set(list.map((id) => cleanText(id).toLowerCase()));
-    estimatedCache.set(list, ids);
+    namedCache.set(list, ids);
   }
   return ids;
 }
+const estimatedIds = (payload) => namedIds(payload?.estimatedByIcao);
+const agedIds = (payload) => namedIds(payload?.agedByIcao);
 const EMPTY_IDS = new Set();
 
 /** Normalize the OpenSky state-vector route, including its regional fallback. */
@@ -134,6 +138,9 @@ export function openSkySnapshot(
       // on the last course out of receiver range) names those aircraft.
       if (record && estimatedIds(payload).has(record.id))
         record.estimated = true;
+      // Swedish fork: in a whole view, read longer ago than its centre is
+      // read again (server/providers/aircraft/adsbLolView.js).
+      if (record && agedIds(payload).has(record.id)) record.aged = true;
       return record;
     },
     'OpenSky',

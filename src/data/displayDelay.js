@@ -23,6 +23,15 @@
  * slows or speeds up a little rather than the whole fleet jumping; an aim
  * within 2 s of where it is leaves it there. Until a layer has drawn a
  * contact, it takes its aim at once.
+ *
+ * Swedish fork: a whole view of flights reads its centre less often than one
+ * disc is read. Its lags are kept in a window of their own (`whole`), aimed
+ * at once they are enough, and dropped as soon as a delivery is one disc
+ * again; a lag since a report a whole view brought is not one disc's
+ * either. Once one disc's lags say where to, the delay falls to the aim
+ * within a poll interval: by the second poll after zooming in when one
+ * disc's lags from before the whole view remain, else once the centre has
+ * been read twice zoomed in.
  */
 
 /** @constant {number} Percentile of the recent lags the delay covers. */
@@ -43,6 +52,8 @@ export const DISPLAY_DELAY_FALL = 0.05;
 export const DISPLAY_DELAY_DEADBAND_MS = 2_000;
 /** @constant {number} Poll intervals between deliveries past which a delivery gives no lags. */
 export const DISPLAY_DELAY_GAP_POLLS = 3;
+/** @constant {number} Poll intervals the delay takes to fall back after a whole view. */
+export const DISPLAY_DELAY_CATCH_UP_POLLS = 1;
 
 function createWindow(capacity) {
   return { values: new Float64Array(capacity), count: 0, cursor: 0 };
@@ -74,6 +85,16 @@ export function createDisplayDelay({
 }) {
   const lags = createWindow(DISPLAY_DELAY_LAGS);
   const firstAges = createWindow(DISPLAY_DELAY_LAGS);
+  // A whole view's lags, whether the last delivery was one, and when the
+  // newest one came.
+  const wholeLags = createWindow(DISPLAY_DELAY_LAGS);
+  let wasWhole = false;
+  let wholeAtMs = -Infinity;
+  // Back from a whole view, until one disc's lags say where to fall to.
+  let catchingUp = false;
+  // How fast the delay falls (per unit of real time): faster, back from a
+  // whole view, until it reaches its aim.
+  let fall = DISPLAY_DELAY_FALL;
   let aimMs = floorMs;
   let fromMs = floorMs;
   let fromAtMs = NaN;
@@ -90,7 +111,7 @@ export function createDisplayDelay({
     if (!Number.isFinite(fromAtMs)) return fromMs;
     const elapsed = Math.max(0, nowMs - fromAtMs);
     const change = Math.max(
-      -DISPLAY_DELAY_FALL * elapsed,
+      -fall * elapsed,
       Math.min(DISPLAY_DELAY_RISE * elapsed, aimMs - fromMs),
     );
     return fromMs + change;
@@ -113,33 +134,51 @@ export function createDisplayDelay({
     /**
      * A contact's report received at `receiptMs`: its time, and the
      * contact's previous report time (none for a contact seen first).
+     * `whole`: delivered in a whole view (its lags kept apart).
      */
-    noteReport(receiptMs, reportMs, previousReportMs) {
+    noteReport(receiptMs, reportMs, previousReportMs, { whole = false } = {}) {
       if (receiptMs !== deliveryMs) {
         afterGap = receiptMs - deliveryMs > DISPLAY_DELAY_GAP_POLLS * pollMs;
         deliveryMs = receiptMs;
       }
+      if (whole) wholeAtMs = receiptMs;
       if (Number.isFinite(previousReportMs)) {
-        if (reportMs > previousReportMs && !afterGap)
-          add(lags, receiptMs - previousReportMs);
+        // A lag since a report a whole view brought spans its pace.
+        if (
+          reportMs > previousReportMs &&
+          !afterGap &&
+          (whole || previousReportMs >= wholeAtMs)
+        )
+          add(whole ? wholeLags : lags, receiptMs - previousReportMs);
       } else if (Number.isFinite(reportMs))
         add(firstAges, receiptMs - reportMs);
     },
 
     /**
      * Aim again after a delivery. `jump`: nothing is drawn yet, so the delay
-     * takes the aim at once.
+     * takes the aim at once. `whole`: the delivery was a whole view's.
      * @param {number} nowMs
-     * @param {{jump?: boolean}} [options]
+     * @param {{jump?: boolean, whole?: boolean}} [options]
      * @returns {number} The delay now (whole ms).
      */
-    settle(nowMs, { jump = false } = {}) {
+    settle(nowMs, { jump = false, whole = false } = {}) {
+      // One disc again: the whole view's lags no longer say anything.
+      if (wasWhole && !whole) {
+        wholeLags.count = wholeLags.cursor = 0;
+        catchingUp = true;
+      }
+      if (whole) catchingUp = false;
+      wasWhole = whole;
+      const window =
+        whole && wholeLags.count >= DISPLAY_DELAY_MIN_LAGS ? wholeLags : lags;
       let next = aimMs;
-      if (lags.count >= DISPLAY_DELAY_MIN_LAGS)
+      if (window.count >= DISPLAY_DELAY_MIN_LAGS)
         next = clamp(
-          percentile(lags, DISPLAY_DELAY_RANK) + DISPLAY_DELAY_MARGIN_MS,
+          percentile(window, DISPLAY_DELAY_RANK) + DISPLAY_DELAY_MARGIN_MS,
         );
-      else if (firstAges.count)
+      // Back from a whole view first sightings say nothing: the delay waits
+      // for one disc's lags.
+      else if (firstAges.count && !catchingUp)
         next = clamp(
           percentile(firstAges, DISPLAY_DELAY_RANK) +
             pollMs +
@@ -151,6 +190,18 @@ export function createDisplayDelay({
       // An aim this close leaves the delay where it is.
       aimMs =
         Math.abs(next - now) < DISPLAY_DELAY_DEADBAND_MS && !jump ? now : next;
+      // Back from a whole view, once one disc's lags say where to, the delay
+      // reaches its aim within a poll interval; once there, it falls at its
+      // usual rate again.
+      if (catchingUp && lags.count >= DISPLAY_DELAY_MIN_LAGS) {
+        catchingUp = false;
+        if (aimMs < fromMs)
+          fall = Math.max(
+            DISPLAY_DELAY_FALL,
+            (fromMs - aimMs) / (DISPLAY_DELAY_CATCH_UP_POLLS * pollMs),
+          );
+      } else if (fromMs - aimMs < DISPLAY_DELAY_DEADBAND_MS)
+        fall = DISPLAY_DELAY_FALL;
       currentMs = Math.round(fromMs);
       return currentMs;
     },
@@ -169,6 +220,11 @@ export function createDisplayDelay({
     reset() {
       lags.count = lags.cursor = 0;
       firstAges.count = firstAges.cursor = 0;
+      wholeLags.count = wholeLags.cursor = 0;
+      wasWhole = false;
+      wholeAtMs = -Infinity;
+      catchingUp = false;
+      fall = DISPLAY_DELAY_FALL;
       aimMs = fromMs = currentMs = floorMs;
       fromAtMs = NaN;
       deliveryMs = NaN;

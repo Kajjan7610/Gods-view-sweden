@@ -71,8 +71,10 @@ export function createCivilFlightLayer({
     },
     followsClock: () => flightState.timeline.active(),
     timedAnswer: snapshotAnswer,
-    // Swedish fork: adsb.lol's aircraft past the age cap leave the map.
+    // Swedish fork: adsb.lol's aircraft past the age cap leave the map, a
+    // whole view's each on its own.
     clearContacts: () => parts.clockFollow.clear(),
+    dropOlderThan: (cutoffMs) => parts.clockFollow.dropOlderThan(cutoffMs),
     setSourceLabel: (source) => {
       layer.source = source;
     },

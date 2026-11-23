@@ -5971,5 +5971,34 @@
     "one": "{count} grupo do CelesTrak ausente (o CelesTrak respondeu 404)",
     "many": "{count} de grupos do CelesTrak ausentes (o CelesTrak respondeu 404)",
     "other": "{count} grupos do CelesTrak ausentes (o CelesTrak respondeu 404)"
-  }
+  },
+  "adsb.lol · whole view · {count} aircraft": {
+    "one": "adsb.lol · vista inteira · {count} aeronave",
+    "many": "adsb.lol · vista inteira · {count} de aeronaves",
+    "other": "adsb.lol · vista inteira · {count} aeronaves"
+  },
+  "adsb.lol · whole view · nearest {count} of {seen} aircraft": {
+    "one": "adsb.lol · vista inteira · {count} mais próxima de {seen} aeronaves",
+    "many": "adsb.lol · vista inteira · as {count} mais próximas de {seen} aeronaves",
+    "other": "adsb.lol · vista inteira · as {count} mais próximas de {seen} aeronaves"
+  },
+  "The aircraft shown were read up to {n} min ago.": "As aeronaves exibidas foram lidas há até {n} min.",
+  "Zoomed out, the middle of the view is read about every {centre} min and the outer areas about every {outer} min, so today’s quota lasts all day.": "Com a vista afastada, o centro é lido cerca de a cada {centre} min e as áreas externas a cada {outer} min, para que a cota de hoje dure o dia todo.",
+  "The other areas are read one at a time, the nearest first.": "As demais áreas são lidas uma de cada vez, a mais próxima primeiro.",
+  "Today’s quota keeps only the area around the map centre up to date; the others are not read.": "A cota de hoje mantém atualizada só a área em torno do centro do mapa; as demais não são lidas.",
+  "Today’s quota keeps the areas nearest the map centre up to date, {count} of {total}; the others are not read.": "A cota de hoje mantém atualizadas as áreas mais próximas do centro do mapa, {count} de {total}; as demais não são lidas.",
+  "adsb.lol · about {percent} of the view · {count} aircraft": {
+    "one": "adsb.lol · cerca de {percent} da vista · {count} aeronave",
+    "many": "adsb.lol · cerca de {percent} da vista · {count} de aeronaves",
+    "other": "adsb.lol · cerca de {percent} da vista · {count} aeronaves"
+  },
+  "adsb.lol · about {percent} of the view · nearest {count} of {seen} aircraft": {
+    "one": "adsb.lol · cerca de {percent} da vista · {count} mais próxima de {seen}",
+    "many": "adsb.lol · cerca de {percent} da vista · as {count} mais próximas de {seen}",
+    "other": "adsb.lol · cerca de {percent} da vista · as {count} mais próximas de {seen}"
+  },
+  "up to {n} min old": "até {n} min",
+  "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "De {seen} aeronaves lidas em torno da vista, são exibidas as {count} mais próximas do centro do mapa.",
+  "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "Com a vista afastada, o centro é lido cerca de a cada {centre} min; as áreas externas não são lidas agora, e o que foi lido permanece até 30 minutos.",
+  "Only the view within {km} km of the map centre is read.": "Só é lida a parte da vista a até {km} km do centro do mapa."
 }

@@ -6090,5 +6090,38 @@
     "few": "{count} группы CelesTrak отсутствуют (CelesTrak ответил 404)",
     "many": "{count} групп CelesTrak отсутствуют (CelesTrak ответил 404)",
     "other": "{count} группы CelesTrak отсутствуют (CelesTrak ответил 404)"
-  }
+  },
+  "adsb.lol · whole view · {count} aircraft": {
+    "one": "adsb.lol · весь вид · {count} самолёт",
+    "few": "adsb.lol · весь вид · {count} самолёта",
+    "many": "adsb.lol · весь вид · {count} самолётов",
+    "other": "adsb.lol · весь вид · {count} самолёта"
+  },
+  "adsb.lol · whole view · nearest {count} of {seen} aircraft": {
+    "one": "adsb.lol · весь вид · ближайший {count} из {seen} самолётов",
+    "few": "adsb.lol · весь вид · ближайшие {count} из {seen} самолётов",
+    "many": "adsb.lol · весь вид · ближайшие {count} из {seen} самолётов",
+    "other": "adsb.lol · весь вид · ближайшие {count} из {seen} самолётов"
+  },
+  "The aircraft shown were read up to {n} min ago.": "Показанные самолёты получены до {n} мин назад.",
+  "Zoomed out, the middle of the view is read about every {centre} min and the outer areas about every {outer} min, so today’s quota lasts all day.": "При отдалённом виде центр запрашивается примерно раз в {centre} мин, а внешние области — раз в {outer} мин, чтобы сегодняшней квоты хватило на весь день.",
+  "The other areas are read one at a time, the nearest first.": "Остальные области запрашиваются по одной, начиная с ближайшей.",
+  "Today’s quota keeps only the area around the map centre up to date; the others are not read.": "Сегодняшняя квота поддерживает актуальной только область вокруг центра карты; остальные не запрашиваются.",
+  "Today’s quota keeps the areas nearest the map centre up to date, {count} of {total}; the others are not read.": "Сегодняшняя квота поддерживает актуальными области, ближайшие к центру карты, — {count} из {total}; остальные не запрашиваются.",
+  "adsb.lol · about {percent} of the view · {count} aircraft": {
+    "one": "adsb.lol · ок. {percent} вида · {count} самолёт",
+    "few": "adsb.lol · ок. {percent} вида · {count} самолёта",
+    "many": "adsb.lol · ок. {percent} вида · {count} самолётов",
+    "other": "adsb.lol · ок. {percent} вида · {count} самолёта"
+  },
+  "adsb.lol · about {percent} of the view · nearest {count} of {seen} aircraft": {
+    "one": "adsb.lol · ок. {percent} вида · ближайший {count} из {seen}",
+    "few": "adsb.lol · ок. {percent} вида · ближайшие {count} из {seen}",
+    "many": "adsb.lol · ок. {percent} вида · ближайшие {count} из {seen}",
+    "other": "adsb.lol · ок. {percent} вида · ближайшие {count} из {seen}"
+  },
+  "up to {n} min old": "до {n} мин",
+  "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "Из {seen} самолётов, полученных вокруг вида, показаны {count}, ближайшие к центру карты.",
+  "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "При отдалённом виде центр запрашивается примерно раз в {centre} мин; внешние области сейчас не запрашиваются, а полученное остаётся до 30 минут.",
+  "Only the view within {km} km of the map centre is read.": "Запрашивается только часть вида не дальше {km} км от центра карты."
 }

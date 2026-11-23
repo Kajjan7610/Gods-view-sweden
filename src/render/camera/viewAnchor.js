@@ -1,6 +1,7 @@
 import { rayEllipsoid, toLonLatH } from '../../geo/ellipsoid.js';
 import { rectangleCenter } from '../../geo/rectangle.js';
 import { toDegrees, toRadians } from '../../geo/vector.js';
+import { usableViewExtent } from '../../geo/viewExtent.js';
 import { findCamera } from '../rendererOf.js';
 
 /** The middle of a degree rectangle, across the antimeridian too. */
@@ -86,4 +87,17 @@ export function viewAnchor(viewer) {
   return Number.isFinite(latitude) && Number.isFinite(longitude)
     ? { latitude, longitude }
     : null;
+}
+
+/**
+ * The ground in view in degrees, `{west, south, east, north}`, or null: no
+ * view rectangle, or one that spans every longitude (the whole globe, or a
+ * pole in view), which says nothing of where the view is. Swedish fork: the
+ * flights feed sends it whole; the server reads the part around the look-at
+ * point and says how much of the view that is.
+ * @param {object} viewer
+ * @returns {{west: number, south: number, east: number, north: number}|null}
+ */
+export function viewExtent(viewer) {
+  return usableViewExtent(findCamera(viewer)?.viewRectangle?.() ?? null);
 }

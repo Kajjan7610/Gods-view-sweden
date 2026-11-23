@@ -5,6 +5,7 @@ import test from 'node:test';
 import { adsbLolProxy } from './adsb-lol.js';
 import { createAdsbLolUpstream } from './adsbLolUpstream.js';
 import { gnssIntegrityProxy } from '../gnssIntegrity.js';
+import { greatCircleKm } from './adsbLolView.js';
 
 const START = Date.parse('2026-11-22T08:00:00Z');
 const STOCKHOLM = '?lat=59.3300&lon=18.0700';
@@ -79,7 +80,7 @@ async function setup(t, { answer, env = {} } = {}) {
     fetchImpl: async (url, init) => {
       calls.push(url);
       sent.push(init?.headers?.['x-api-key'] ? 'keyed' : 'keyless');
-      return answer ? answer({ index: calls.length, point }) : point();
+      return answer ? answer({ index: calls.length, point, url }) : point();
     },
   });
   const { openSkyProxy } = await import(`./opensky.js?budget=${Math.random()}`);
@@ -516,4 +517,340 @@ test('OpenSky mode: a stale OpenSky frame gives way only to a newer adsb.lol dis
     Math.floor((clock.now - lagMs) / 1000),
   );
   assert.equal(adsbLol.status().used, 1);
+});
+
+
+// Swedish fork: the whole view, when the layer names one wider than a disc
+// (adsbLolView.js): the centre disc as above, and outer discs around it.
+/** Zoomed out over Sweden: the look-at point and the ground in view. */
+const SWEDEN_VIEW = '?lat=62.0000&lon=16.0000&bbox=4.00,54.00,30.00,70.00';
+const CENTRE = 'https://api.adsb.lol/v2/lat/62/lon/16/dist/250';
+/** The view's outer discs' centres, nearest the look-at point first. */
+const OUTER_AT = [
+  [60, 20],
+  [60, 10],
+  [65, 11.61],
+  [65, 23.23],
+  [55, 17.14],
+];
+const OUTER = OUTER_AT.map(
+  ([lat, lon]) => `https://api.adsb.lol/v2/lat/${lat}/lon/${lon}/dist/250`,
+);
+const KEY = { ADSBLOL_API_KEY: 'whole-view-key' };
+
+/**
+ * The aircraft adsb.lol knows of: `own` near each of the view's disc
+ * centres (`lat/lon#i`); one more (`abcdef`) whose position the centre disc
+ * hears 50 s old and the others 2 s; one whose owner asked not to be shown.
+ * Each disc answers with every one of them within its 250 nm, as adsb.lol
+ * does.
+ */
+function sky(clock, { own = 1 } = {}) {
+  const aircraft = [[62, 16], ...OUTER_AT].flatMap(([lat, lon]) =>
+    Array.from({ length: own }, (_, i) => ({
+      hex: `${lat}/${lon}#${i}`,
+      lat: lat + i * 0.001,
+      lon,
+      alt_baro: 30000,
+      seen_pos: 1,
+    })),
+  );
+  aircraft.push(
+    { hex: 'abcdef', lat: 61, lon: 17, alt_baro: 20000 },
+    { hex: 'aa0001', lat: 61.5, lon: 16.5, alt_baro: 9000, dbFlags: 8 },
+  );
+  const within = (url) => {
+    const [, lat, lon] = /\/lat\/(-?[\d.]+)\/lon\/(-?[\d.]+)\//.exec(url);
+    const centre = { latitude: Number(lat), longitude: Number(lon) };
+    return aircraft.filter(
+      (a) =>
+        greatCircleKm(centre, { latitude: a.lat, longitude: a.lon }) <= 463,
+    );
+  };
+  return {
+    within,
+    answer: ({ url }) =>
+      Response.json({
+        now: clock.now / 1000,
+        ac: within(url).map((a) =>
+          a.hex === 'abcdef' ? { ...a, seen_pos: url === CENTRE ? 50 : 2 } : a,
+        ),
+      }),
+  };
+}
+
+/** A header's seconds, pair or single, as numbers. */
+const seconds = (value) => String(value ?? '').split('/').map(Number);
+
+test('zoomed out: the outer discs one per answer, nearest first, merged once per aircraft, then read at the pace they share with the centre', async (t) => {
+  let clock;
+  const route = await setup(t, {
+    env: KEY,
+    answer: (call) => sky(clock).answer(call),
+  });
+  ({ clock } = route);
+  const { calls, flights } = route;
+  const first = await flights('/api/flights', SWEDEN_VIEW);
+  assert.equal(first.statusCode, 200);
+  assert.deepEqual(calls, [CENTRE, OUTER[0]]);
+  assert.equal(first.headers['x-opensky-cache'], 'MISS');
+  assert.equal(first.headers['x-flight-anchor'], '62.00,16.00');
+  assert.equal(first.headers['x-flight-discs'], '2/6');
+  assert.equal(first.headers['x-flight-discs-kept'], undefined, 'all kept');
+  // 684 paced calls a day; no outer disc is read yet, so the centre is
+  // paced as one place, each outer disc every seven flights gaps.
+  assert.deepEqual(seconds(first.headers['x-flight-gap-seconds']), [126, 884]);
+  assert.equal(first.headers['x-flight-outer-age-seconds'], '0');
+  assert.equal(first.headers['x-flight-capped'], undefined);
+  assert.equal(first.headers['x-flight-view-clipped'], undefined);
+  const covered = Number(first.headers['x-flight-view-covered']);
+  assert.ok(covered > 25 && covered < 82, String(covered));
+  assert.match(
+    first.headers['x-flight-coverage'],
+    /regional.*2 of 6 discs, about \d+% of the view/,
+  );
+  const body = JSON.parse(first.body);
+  assert.deepEqual(body.states.map((row) => row[0]).sort(), [
+    '60/10#0',
+    '60/20#0',
+    '62/16#0',
+    '65/11.61#0',
+    'abcdef',
+  ]);
+  // The aircraft both discs hear, from the one with its fresher position.
+  const shared = body.states.find((row) => row[0] === 'abcdef');
+  assert.equal(shared[3], START / 1000 - 2);
+  assert.equal(body.agedByIcao, undefined, 'every position is fresh');
+  assert.equal(first.headers['x-flight-count'], '5');
+  assert.equal(first.headers['x-flight-privacy-hidden'], '1', 'once');
+
+  // One call more each answer; as outer discs are read, the centre shares
+  // more of the pace with them.
+  for (const [i, url] of OUTER.slice(1).entries()) {
+    clock.now += 30_000;
+    const next = await flights('/api/flights', SWEDEN_VIEW);
+    assert.equal(next.headers['x-opensky-cache'], 'PACED');
+    const [gap] = seconds(next.headers['x-flight-gap-seconds']);
+    assert.ok(Math.abs(gap - (126 * (3 + i)) / 2) <= 3, String(gap));
+    assert.equal(next.headers['x-flight-discs'], `${i + 3}/6`);
+    assert.equal(calls.at(-1), url);
+  }
+  assert.equal(calls.length, 6);
+  // At 150 s the centre's gap in the view (3.5 flights gaps) is not over.
+  clock.now = START + 150_000;
+  await flights('/api/flights', SWEDEN_VIEW);
+  assert.equal(calls.length, 6);
+  clock.now = START + 450_000;
+  const whole = await flights('/api/flights', SWEDEN_VIEW);
+  assert.equal(whole.headers['x-opensky-cache'], 'MISS');
+  assert.equal(whole.headers['x-flight-discs'], '6/6');
+  // Six discs leave the corners of Sweden's box out: never "the whole view".
+  const all = Number(whole.headers['x-flight-view-covered']);
+  assert.ok(all > 75 && all < 90, String(all));
+  assert.equal(whole.headers['x-flight-outer-age-seconds'], '450');
+  assert.equal(whole.headers['x-adsblol-budget'], '7/950');
+  assert.deepEqual(calls.slice(6), [CENTRE]);
+  assert.equal(JSON.parse(whole.body).states.length, 7);
+  // At its own gap, the nearest outer disc is asked again with the centre;
+  // the outer discs read longer ago than the centre's gap are aged.
+  clock.now = START + 900_000;
+  const later = await flights('/api/flights', SWEDEN_VIEW);
+  assert.deepEqual(calls.slice(7), [CENTRE, OUTER[0]]);
+  const aged = new Set(JSON.parse(later.body).agedByIcao ?? []);
+  assert.ok(aged.has('55/17.14#0'), 'read 780 s ago');
+  assert.equal(aged.has('62/16#0'), false);
+  assert.equal(aged.has('60/20#0'), false, 'read just now');
+  // Zoomed in again, the centre is paced as one place.
+  clock.now = START + 1_200_000;
+  const zoomedIn = '?lat=62.0000&lon=16.0000';
+  assert.equal(
+    (await flights('/api/flights', zoomedIn)).headers['x-opensky-cache'],
+    'MISS',
+  );
+  clock.now += 30_000;
+  const close = await flights('/api/flights', zoomedIn);
+  assert.equal(close.headers['x-opensky-cache'], 'PACED');
+  assert.equal(close.headers['x-flight-discs'], undefined);
+  assert.equal(close.headers['x-flight-gap-seconds'], undefined);
+  const [alone] = seconds(close.headers['x-adsblol-gap-seconds']);
+  assert.ok(alone >= 126 && alone < 140, String(alone));
+});
+
+test('the whole view only when the discs leave none of it out and none of it was cut away', async (t) => {
+  let clock;
+  const route = await setup(t, {
+    env: KEY,
+    answer: (call) => sky(clock).answer(call),
+  });
+  ({ clock } = route);
+  // Central Sweden: the centre and two outer discs reach every part of it.
+  const small = '?lat=62.0000&lon=16.0000&bbox=10.00,57.00,22.00,63.00';
+  let answer;
+  for (let i = 0; i < 3; i++) {
+    answer = await route.flights('/api/flights', small);
+    clock.now += 30_000;
+  }
+  assert.equal(answer.headers['x-flight-discs'], '3/3');
+  assert.equal(answer.headers['x-flight-view-covered'], '100');
+  // A view reaching past the box around the look-at point is cut: never
+  // the whole view, whatever the discs cover of the part kept.
+  const wide = await route.flights(
+    '/api/flights',
+    '?lat=62.0000&lon=16.0000&bbox=-60.00,30.00,80.00,85.00',
+  );
+  assert.equal(wide.headers['x-flight-view-clipped'], '1');
+  assert.ok(Number(wide.headers['x-flight-view-covered']) < 50);
+});
+
+test('outer discs are served up to 30 min old and never older, and none is asked while adsb.lol is locked', async (t) => {
+  let clock;
+  let locked = false;
+  const route = await setup(t, {
+    env: KEY,
+    answer: (call) =>
+      locked
+        ? new Response('', { status: 429, headers: { 'Retry-After': '7200' } })
+        : sky(clock).answer(call),
+  });
+  ({ clock } = route);
+  const { calls, flights } = route;
+  for (let i = 0; i < 5; i++) {
+    await flights('/api/flights', SWEDEN_VIEW);
+    clock.now += 30_000;
+  }
+  assert.equal(calls.length, 6);
+  locked = true;
+  clock.now = START + 450_000;
+  const kept = await flights('/api/flights', SWEDEN_VIEW);
+  assert.equal(kept.headers['x-opensky-cache'], 'STALE');
+  assert.equal(kept.headers['x-flight-discs'], '6/6');
+  assert.equal(kept.headers['x-flight-outer-held'], '1', 'locked out');
+  assert.ok(kept.headers['x-adsblol-locked-until']);
+  // The newest disc in reach stands in for the centre; the point's own
+  // disc, older but young enough, is in the view as well.
+  assert.equal(kept.headers['x-flight-anchor'], '65.00,11.61');
+  const ids = JSON.parse(kept.body).states.map((row) => row[0]);
+  assert.ok(ids.includes('62/16#0'));
+  assert.equal(ids.length, new Set(ids).size, 'each aircraft once');
+  // Past 30 min the first outer disc and the point's own are gone; the
+  // centre is the newest disc in its reach no older than that, counted once.
+  clock.now = START + 30 * 60_000 + 15_000;
+  const later = await flights('/api/flights', SWEDEN_VIEW);
+  assert.equal(later.statusCode, 200);
+  assert.equal(later.headers['x-flight-anchor'], '65.00,11.61');
+  assert.equal(later.headers['x-flight-discs'], '4/6');
+  assert.ok(Number(later.headers['x-flight-outer-age-seconds']) <= 1800);
+  for (const row of JSON.parse(later.body).states)
+    assert.ok(row[3] >= clock.now / 1000 - 1800 - 60, row[0]);
+  // With every disc past 30 min, nothing is left to serve.
+  clock.now = START + 32 * 60_000 + 1_000;
+  assert.equal((await flights('/api/flights', SWEDEN_VIEW)).statusCode, 503);
+  assert.equal(calls.length, 7, 'nothing asked while locked');
+});
+
+test('an outer disc that keeps failing waits its gap, and the farther ones are asked meanwhile', async (t) => {
+  let clock;
+  const route = await setup(t, {
+    env: KEY,
+    answer: (call) =>
+      call.url === OUTER[0]
+        ? new Response('', { status: 502 })
+        : sky(clock).answer(call),
+  });
+  ({ clock } = route);
+  const { calls, flights } = route;
+  for (let i = 0; i < 12; i++) {
+    await flights('/api/flights', SWEDEN_VIEW);
+    clock.now += 30_000;
+  }
+  // Tried once, held a minute, then every other outer disc in turn.
+  assert.equal(calls.filter((url) => url === OUTER[0]).length, 1);
+  for (const url of OUTER.slice(1)) assert.ok(calls.includes(url), url);
+  const answer = await flights('/api/flights', SWEDEN_VIEW);
+  assert.equal(answer.headers['x-flight-discs'], '5/6');
+});
+
+test('a whole view spends no more than the disc around the point in view alone would, the centre read half as often', async (t) => {
+  // Two routes on one clock, without a key: with the ground in view, and
+  // without.
+  const clock = { now: START };
+  const answer = (call) => sky(clock).answer(call);
+  const wide = await setup(t, { answer });
+  const lone = await setup(t, { answer });
+  t.mock.method(Date, 'now', () => clock.now);
+  for (let at = START; at < START + 3 * 3_600_000; at += 30_000) {
+    wide.clock.now = lone.clock.now = clock.now = at;
+    await wide.flights('/api/flights', SWEDEN_VIEW);
+    await lone.flights('/api/flights', '?lat=62.0000&lon=16.0000');
+  }
+  const centre = wide.calls.filter((url) => url === CENTRE).length;
+  assert.equal(lone.calls.length, 40);
+  assert.ok(
+    Math.abs(wide.calls.length - lone.calls.length) <= 2,
+    `${wide.calls.length} against ${lone.calls.length}`,
+  );
+  assert.ok(Math.abs(centre - 20) <= 1, `${centre}: about half as often`);
+  assert.equal(new Set(wide.calls).size, 3, 'the centre and two outer discs');
+});
+
+test('without a key the view keeps the two nearest outer discs fresh all day, and says it keeps three of its six areas', async (t) => {
+  let clock;
+  const route = await setup(t, { answer: (call) => sky(clock).answer(call) });
+  ({ clock } = route);
+  const { calls, flights } = route;
+  let worst = 0;
+  for (let at = START; at <= START + 24 * 3_600_000; at += 30_000) {
+    clock.now = at;
+    const answer = await flights('/api/flights', SWEDEN_VIEW);
+    assert.equal(answer.statusCode, 200);
+    if (at >= START + 30_000) {
+      assert.equal(answer.headers['x-flight-discs'], '3/6', String(at - START));
+      assert.equal(answer.headers['x-flight-discs-kept'], '3');
+    }
+    worst = Math.max(worst, Number(answer.headers['x-flight-outer-age-seconds']));
+  }
+  assert.deepEqual(
+    [...new Set(calls.filter((url) => url !== CENTRE))],
+    [OUTER[0], OUTER[1]],
+  );
+  assert.ok(worst <= 20 * 60 + 30, `${worst} s`);
+  // A day's calls stay within the flights' paced share.
+  assert.ok(calls.length <= 324 + 6, String(calls.length));
+});
+
+test('a view that spans every longitude, or none named, is one disc as before', async (t) => {
+  const { calls, flights } = await setup(t);
+  for (const query of [
+    '?lat=62.0000&lon=16.0000&bbox=-180.00,-90.00,180.00,90.00',
+    '?lat=62.0000&lon=16.0000&bbox=4.00,54.00,30.00',
+    '?lat=62.0000&lon=16.0000&bbox=4,54,x,70',
+    '?lat=62.0000&lon=16.0000',
+  ]) {
+    const answer = await flights('/api/flights', query);
+    assert.equal(answer.statusCode, 200, query);
+    assert.equal(answer.headers['x-flight-discs'], undefined, query);
+  }
+  assert.equal(calls.length, 1);
+});
+
+test('past 2,000 aircraft a whole view keeps those nearest the point in view, and says of how many', async (t) => {
+  let clock;
+  const many = (call) => sky(clock, { own: 1500 }).answer(call);
+  const route = await setup(t, { env: KEY, answer: many });
+  ({ clock } = route);
+  const answer = await route.flights('/api/flights', SWEDEN_VIEW);
+  const union = new Set(
+    [CENTRE, OUTER[0]].flatMap((url) =>
+      sky(clock, { own: 1500 })
+        .within(url)
+        .filter((a) => a.hex !== 'aa0001')
+        .map((a) => a.hex),
+    ),
+  );
+  assert.equal(answer.headers['x-flight-count'], '2000');
+  assert.equal(answer.headers['x-flight-capped'], `2000/${union.size}`);
+  const kept = new Set(JSON.parse(answer.body).states.map((row) => row[0]));
+  assert.equal(kept.size, 2000);
+  // Those of the look-at point's own cell are the nearest of all.
+  for (let i = 0; i < 1500; i++) assert.ok(kept.has(`62/16#${i}`), String(i));
 });

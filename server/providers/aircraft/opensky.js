@@ -12,9 +12,21 @@ import {
 } from '../common/http.js';
 import { requiredFiniteQueryNumber } from '../common/query.js';
 import {
+  clipViewExtent,
+  usableViewExtent,
+  viewExtentArea,
+} from '../../../src/geo/viewExtent.js';
+import {
   ADSBLOL_FLIGHTS_MAX_GAP_MS,
   createAdsbLolUpstream,
 } from './adsbLolUpstream.js';
+import {
+  ADSBLOL_VIEW_MAX_KM,
+  adsbLolViewPlan as planAdsbLolView,
+  coveredShare,
+  mergeAdsbLolDiscs,
+  reachesWholeExtent,
+} from './adsbLolView.js';
 // ---------------------------------------------------------------------------
 // OpenSky OAuth2 token + response cache state
 // ---------------------------------------------------------------------------
@@ -175,7 +187,10 @@ export function flightsFromAdsbLol(env = process.env) {
       .toLowerCase() !== 'opensky'
   );
 }
-/** Regional civilian fallback cache, keyed by a coarse 0.25° view anchor. */
+/**
+ * Regional civilian fallback cache, keyed by a coarse 0.25° view anchor, or
+ * by a whole view's lattice disc (Swedish fork, adsbLolView.js).
+ */
 const _adsbLolPointCache = new Map();
 /** Per-anchor single-flight map for concurrent regional fallback requests. */
 const _adsbLolPointInFlight = new Map();
@@ -194,6 +209,16 @@ const ADSBLOL_STALE_MAX_MS = 30 * 60_000;
 // A request this close to a disc read within the pacing gap is the same
 // place: that disc is served, paced, whichever cell it was read for.
 const ADSBLOL_SAME_PLACE_KM = 50;
+// Swedish fork: whole views merged from several discs (adsbLolView.js), by
+// their discs and the minute, a few at a time.
+const _adsbLolViewCache = new Map();
+const ADSBLOL_VIEW_CACHE_MAX = 8;
+/** When an outer disc that failed was last tried, by its cache key. */
+const _adsbLolOuterTries = new Map();
+/** An outer disc read within this many of its gaps is read on time. */
+const ADSBLOL_OUTER_LATE = 1.5;
+/** An aircraft read longer ago than the centre's gap and this is aged. */
+const ADSBLOL_AGED_MARGIN_MS = 60_000;
 // A 200 response can still contain an old OpenSky snapshot. Past this point
 // the viewport-scoped adsb.lol source is more honest and keeps local motion
 // current instead of coasting a stale worldwide frame indefinitely.
@@ -417,16 +442,18 @@ function distanceKm(a, b) {
 /**
  * The cached disc whose anchor lies within `withinKm` of the point and that
  * is no older than `maxAgeMs` (younger than it when `younger`): the newest
- * such, or the nearest; null when none is.
+ * such, or the nearest; null when none is. With `centresOnly` a whole
+ * view's outer discs are left out.
  */
 function cachedAdsbLolDisc(
   anchor,
   now,
-  { withinKm, maxAgeMs, younger = false, nearest = false },
+  { withinKm, maxAgeMs, younger = false, nearest = false, centresOnly = false },
 ) {
   let best = null;
   let bestKm = Infinity;
   for (const record of _adsbLolPointCache.values()) {
+    if (centresOnly && record.kind === 'outer') continue;
     const age = now - record.cachedAt;
     if (younger ? age >= maxAgeMs : age > maxAgeMs) continue;
     const km = distanceKm(anchor, record.anchor);
@@ -439,11 +466,15 @@ function cachedAdsbLolDisc(
   return best;
 }
 
-/** When the newest disc was read, any place's; 0 with none. */
+/**
+ * When the newest disc was read, any place's; 0 with none. An outer disc of
+ * a whole view does not count: it never stands in for asking the place in
+ * view.
+ */
 function newestAdsbLolDiscAt() {
   let newest = 0;
   for (const record of _adsbLolPointCache.values())
-    newest = Math.max(newest, record.cachedAt);
+    if (record.kind !== 'outer') newest = Math.max(newest, record.cachedAt);
   return newest;
 }
 
@@ -457,14 +488,74 @@ function staleAdsbLolDisc(anchor, now) {
 }
 
 /**
+ * Read one adsb.lol disc through the shared transport as `kind` (the flights
+ * around the point in view, or an outer disc of a whole view) and keep it
+ * under `cacheKey`; a call already on its way for the key is joined.
+ * @returns {{promise: Promise<object>, shared: boolean}}
+ */
+function readAdsbLolDisc(adsbLol, kind, cacheKey, anchor) {
+  return coalesceProxyRequest(_adsbLolPointInFlight, cacheKey, async () => {
+    const payload = await adsbLol.request(
+      kind,
+      `/v2/lat/${anchor.latitude}/lon/${anchor.longitude}/dist/${ADSBLOL_POINT_RADIUS_NM}`,
+      {
+        userAgent: 'gods-eye-view-adsblol-regional-fallback/1.0',
+        timeoutMs: 10_000,
+        read: (upstream, signal) =>
+          readResponseJsonCapped(
+            upstream,
+            ADSBLOL_POINT_MAX_RESPONSE_BYTES,
+            signal,
+          ),
+      },
+    );
+    const normalized = normalizeAdsbLolPointResponse(payload);
+    const body = JSON.stringify(normalized);
+    // Left out by the normalizer: owners who asked not to be shown, and
+    // military aircraft. Their addresses, so a whole view counts each once.
+    const rows = Array.isArray(payload?.ac) ? payload.ac : [];
+    const visible = new Set(visibleAdsbLolAircraft(rows));
+    const hiddenHex = rows
+      .filter((row) => !visible.has(row))
+      .map(
+        (row, index) =>
+          String(row?.hex ?? '')
+            .trim()
+            .toLowerCase() || `#${cacheKey}#${index}`,
+      );
+    const record = {
+      body,
+      // Compressed once per entry; ADSBLOL_POINT_CACHE_MAX bounds the
+      // extra memory.
+      gzip: await gzipBody(body),
+      cachedAt: Date.now(),
+      // When adsb.lol observed it, to weigh it against another frame.
+      observedAtMs: normalized.time * 1000,
+      anchor: { latitude: anchor.latitude, longitude: anchor.longitude },
+      count: normalized.states.length,
+      privacyHidden: hiddenHex.length,
+      hiddenHex,
+      kind,
+    };
+    _adsbLolPointCache.delete(cacheKey);
+    _adsbLolPointCache.set(cacheKey, record);
+    while (_adsbLolPointCache.size > ADSBLOL_POINT_CACHE_MAX) {
+      _adsbLolPointCache.delete(_adsbLolPointCache.keys().next().value);
+    }
+    return record;
+  });
+}
+
+/**
  * The adsb.lol disc around the request's place, through the shared transport
  * (adsbLolUpstream.js). Resolves null without a place; a disc to serve, with
  * its `cacheStatus` (HIT from this cell's cache; PACED from the same place's,
  * read within the pacing gap; MISS or INFLIGHT fresh; STALE from a disc in
  * reach when none could, or should, be asked for); or `{refusal}`, why there
- * is nothing to serve.
+ * is nothing to serve. `centreGapMs`, a whole view's gap for its centre
+ * (viewPace), stands in for the flights' own.
  */
-async function fetchAdsbLolPointFallback(req, adsbLol) {
+async function fetchAdsbLolPointFallback(req, adsbLol, centreGapMs = null) {
   const anchor = adsbLolFallbackAnchor(req);
   if (!anchor) return null;
   const roundedLat = Math.round(anchor.latitude * 4) / 4;
@@ -486,7 +577,7 @@ async function fetchAdsbLolPointFallback(req, adsbLol) {
     // The same place is asked again only after the pacing gap, so the day's
     // quota lasts: within ADSBLOL_SAME_PLACE_KM of a disc read since, that
     // disc is served, with its age and where it was read.
-    const gapMs = adsbLol.gapMs('flights', now);
+    const gapMs = centreGapMs ?? adsbLol.gapMs('flights', now);
     const paced = cachedAdsbLolDisc(anchor, now, {
       withinKm: ADSBLOL_SAME_PLACE_KM,
       maxAgeMs: gapMs,
@@ -499,16 +590,24 @@ async function fetchAdsbLolPointFallback(req, adsbLol) {
     // nearest disc in reach read within the gap is served; and while any
     // call went out within the gap, the nearest in reach up to 30 minutes
     // old, so places far apart share one pace. With none, the place is
-    // asked, as a paced call.
+    // asked, as a paced call. Swedish fork: the gap is the flights' own
+    // here, never a whole view's longer one, and a whole view's outer discs
+    // never stand in, so another place's calls do not keep a zoomed-out
+    // centre on old data.
     if (!adsbLol.roomForNew('flights', now)) {
-      const reach = { withinKm: ADSBLOL_STALE_REACH_KM, nearest: true };
+      const shareGapMs = adsbLol.gapMs('flights', now);
+      const reach = {
+        withinKm: ADSBLOL_STALE_REACH_KM,
+        nearest: true,
+        centresOnly: true,
+      };
       const nearby =
         cachedAdsbLolDisc(anchor, now, {
           ...reach,
-          maxAgeMs: gapMs,
+          maxAgeMs: shareGapMs,
           younger: true,
         }) ??
-        (newestAdsbLolDiscAt() > now - gapMs
+        (newestAdsbLolDiscAt() > now - shareGapMs
           ? cachedAdsbLolDisc(anchor, now, {
               ...reach,
               maxAgeMs: ADSBLOL_STALE_MAX_MS,
@@ -518,50 +617,10 @@ async function fetchAdsbLolPointFallback(req, adsbLol) {
     }
   }
 
-  const request = coalesceProxyRequest(
-    _adsbLolPointInFlight,
-    cacheKey,
-    async () => {
-      const payload = await adsbLol.request(
-        'flights',
-        `/v2/lat/${roundedLat}/lon/${roundedLon}/dist/${ADSBLOL_POINT_RADIUS_NM}`,
-        {
-          userAgent: 'gods-eye-view-adsblol-regional-fallback/1.0',
-          timeoutMs: 10_000,
-          read: (upstream, signal) =>
-            readResponseJsonCapped(
-              upstream,
-              ADSBLOL_POINT_MAX_RESPONSE_BYTES,
-              signal,
-            ),
-        },
-      );
-      const normalized = normalizeAdsbLolPointResponse(payload);
-      const body = JSON.stringify(normalized);
-      const record = {
-        body,
-        // Compressed once per entry; ADSBLOL_POINT_CACHE_MAX bounds the
-        // extra memory.
-        gzip: await gzipBody(body),
-        cachedAt: Date.now(),
-        // When adsb.lol observed it, to weigh it against another frame.
-        observedAtMs: normalized.time * 1000,
-        anchor: { latitude: roundedLat, longitude: roundedLon },
-        count: normalized.states.length,
-        // Left out by the normalizer: owners who asked not to be shown,
-        // and military aircraft.
-        privacyHidden:
-          (Array.isArray(payload?.ac) ? payload.ac.length : 0) -
-          visibleAdsbLolAircraft(payload?.ac).length,
-      };
-      _adsbLolPointCache.delete(cacheKey);
-      _adsbLolPointCache.set(cacheKey, record);
-      while (_adsbLolPointCache.size > ADSBLOL_POINT_CACHE_MAX) {
-        _adsbLolPointCache.delete(_adsbLolPointCache.keys().next().value);
-      }
-      return record;
-    },
-  );
+  const request = readAdsbLolDisc(adsbLol, 'flights', cacheKey, {
+    latitude: roundedLat,
+    longitude: roundedLon,
+  });
   try {
     const record = await request.promise;
     return { ...record, cacheStatus: request.shared ? 'INFLIGHT' : 'MISS' };
@@ -587,6 +646,210 @@ async function fetchAdsbLolPointFallback(req, adsbLol) {
       }
     );
   }
+}
+
+/**
+ * The view the request names (`bbox=west,south,east,north`, degrees),
+ * clipped around its place, with whether that cut any of it away and how
+ * large the part kept is against the whole; null without one, or for one
+ * that spans every longitude (the whole globe, a pole).
+ */
+function adsbLolViewExtent(req, lookAt) {
+  const raw = new URL(req?.url || '', 'http://localhost').searchParams.get(
+    'bbox',
+  );
+  const parts = String(raw ?? '').split(',');
+  if (parts.length !== 4) return null;
+  const [west, south, east, north] = parts.map((part) =>
+    part.trim() === '' ? NaN : Number(part),
+  );
+  const named = usableViewExtent({ west, south, east, north });
+  const extent = named && clipViewExtent(named, lookAt, ADSBLOL_VIEW_MAX_KM);
+  if (!extent) return null;
+  const ratio = Math.min(1, viewExtentArea(extent) / viewExtentArea(named));
+  return { extent, clipped: ratio < 1 - 1e-9, ratio };
+}
+
+/**
+ * The view's discs merged into one answer, the centre's first (`centre`
+ * marks it), kept a minute: within it no other disc's aircraft passes the
+ * age cap, as every one kept is younger than the cap at the minute's end.
+ * Aircraft read longer ago than the centre's gap and a minute are named
+ * aged. Past the most an answer gives, those nearest the look-at point.
+ */
+async function mergedAdsbLolView(entries, lookAt, now, centreGapMs) {
+  const minute = Math.floor(now / 60_000);
+  const agedAfterMs =
+    Math.round(centreGapMs / 60_000) * 60_000 + ADSBLOL_AGED_MARGIN_MS;
+  const key = [
+    `${lookAt.latitude.toFixed(2)},${lookAt.longitude.toFixed(2)}`,
+    minute,
+    agedAfterMs,
+    ...entries.map(
+      ({ record, centre }) =>
+        `${centre ? 'c' : 'o'}${record.anchor.latitude},${record.anchor.longitude}@${record.cachedAt}`,
+    ),
+  ].join('|');
+  const cached = _adsbLolViewCache.get(key);
+  if (cached) return cached;
+  const merged = mergeAdsbLolDiscs(
+    entries.map(({ record, centre }) => ({
+      payload: JSON.parse(record.body),
+      hidden: record.hiddenHex ?? [],
+      anchor: record.anchor,
+      centre,
+    })),
+    lookAt,
+    {
+      notBeforeS: ((minute + 1) * 60_000 - ADSBLOL_STALE_MAX_MS) / 1000,
+      agedBeforeS: (minute * 60_000 - agedAfterMs) / 1000,
+    },
+  );
+  const body = JSON.stringify(merged.payload);
+  const view = {
+    body,
+    gzip: await gzipBody(body),
+    count: merged.count,
+    seen: merged.seen,
+    privacyHidden: merged.privacyHidden,
+  };
+  _adsbLolViewCache.set(key, view);
+  while (_adsbLolViewCache.size > ADSBLOL_VIEW_CACHE_MAX)
+    _adsbLolViewCache.delete(_adsbLolViewCache.keys().next().value);
+  return view;
+}
+
+/** Note an outer disc that failed: it waits its gap before it is tried again. */
+function triedAdsbLolOuter(key, at) {
+  _adsbLolOuterTries.delete(key);
+  _adsbLolOuterTries.set(key, at);
+  while (_adsbLolOuterTries.size > ADSBLOL_POINT_CACHE_MAX)
+    _adsbLolOuterTries.delete(_adsbLolOuterTries.keys().next().value);
+}
+
+/**
+ * Swedish fork: the whole view the request names, when it is larger than
+ * the centre disc (adsbLolView.js), or null: where it is, how much of it was
+ * cut away around the look-at point, the outer discs it needs, nearest the
+ * look-at point first, the points its coverage is judged on, and the pace
+ * they share with the centre (viewPace), known before the centre is asked.
+ * The centre is weighed only against the outer discs read on time.
+ */
+function adsbLolViewPlan(req, adsbLol) {
+  const lookAt = adsbLolFallbackAnchor(req);
+  const view = lookAt ? adsbLolViewExtent(req, lookAt) : null;
+  if (!view) return null;
+  // The centre disc's own cell, wherever the disc served was read: the
+  // view's discs depend on where it is, not on what was kept.
+  const cell = {
+    latitude: Math.round(lookAt.latitude * 4) / 4,
+    longitude: Math.round(lookAt.longitude * 4) / 4,
+  };
+  const { discs: planned, points } = planAdsbLolView(lookAt, view.extent, cell);
+  if (!planned.length) return null;
+  const now = Date.now();
+  const live = (kept, outerMs) =>
+    planned.slice(0, kept).filter((disc) => {
+      const record = _adsbLolPointCache.get(disc.key);
+      return record && now - record.cachedAt <= outerMs * ADSBLOL_OUTER_LATE;
+    }).length;
+  return {
+    lookAt,
+    cell,
+    planned,
+    points,
+    view,
+    pace: adsbLol.viewPace(planned.length, now, live),
+  };
+}
+
+/**
+ * Swedish fork: the whole view around the centre disc served. The outer
+ * discs are served from what was read, up to 30 min old; of those the pace
+ * keeps, at most one is asked per answer: the nearest the look-at point
+ * that was never read or was read (or tried, when it failed) longer ago
+ * than its gap, while the transport has room for it (roomForOuter). The
+ * answer is the centre's, with every disc's aircraft, how many of the
+ * view's discs it holds and keeps, how much of the view they cover, their
+ * gaps, whether the outer discs are held back, and when the oldest disc but
+ * the centre's was read.
+ */
+async function wholeAdsbLolView(plan, centre, adsbLol) {
+  const { lookAt, cell, planned, points, view, pace } = plan;
+  const now = Date.now();
+  const kept = planned.slice(0, pace.kept);
+  const lastTry = (disc) =>
+    Math.max(
+      _adsbLolPointCache.get(disc.key)?.cachedAt ?? 0,
+      _adsbLolOuterTries.get(disc.key) ?? 0,
+    );
+  const due = kept.find((disc) => now - lastTry(disc) >= pace.outerMs);
+  // A call already on its way for the disc is joined: it is spent already.
+  if (
+    due &&
+    (_adsbLolPointInFlight.has(due.key) || adsbLol.roomForOuter(now))
+  ) {
+    const request = readAdsbLolDisc(adsbLol, 'outer', due.key, due);
+    try {
+      await request.promise;
+      _adsbLolOuterTries.delete(due.key);
+    } catch (error) {
+      if (!request.shared) {
+        // A disc that fails waits its gap; the farther ones go on meanwhile.
+        triedAdsbLolOuter(due.key, Date.now());
+        if (error?.name !== 'AbortError')
+          console.warn(
+            '[adsb.lol Flights Whole View]',
+            `${error?.message || error}${error?.cause?.message ? `: ${error.cause.message}` : ''}`,
+          );
+      }
+    }
+  }
+  const at = Date.now();
+  const usable = (record) =>
+    record && at - record.cachedAt <= ADSBLOL_STALE_MAX_MS;
+  const outer = planned
+    .map((disc) => _adsbLolPointCache.get(disc.key))
+    .filter(usable);
+  // A centre served from another disc (STALE, the newest in reach) keeps
+  // the point's own disc too while it is young enough; each disc is merged
+  // once.
+  const own = _adsbLolPointCache.get(
+    `${cell.latitude.toFixed(2)},${cell.longitude.toFixed(2)}`,
+  );
+  const same = (a) => (b) =>
+    a.cachedAt === b.record.cachedAt &&
+    a.anchor.latitude === b.record.anchor.latitude &&
+    a.anchor.longitude === b.record.anchor.longitude;
+  const entries = [{ record: centre, centre: true }];
+  for (const record of [...(usable(own) ? [own] : []), ...outer])
+    if (!entries.some(same(record))) entries.push({ record, centre: false });
+  const merged = await mergedAdsbLolView(entries, lookAt, at, pace.centreMs);
+  const anchors = entries.map(({ record }) => record.anchor);
+  const { share, uncovered } = coveredShare(points, anchors);
+  // The whole view only when nothing in it is left out, between the points
+  // either, nor cut away.
+  const whole =
+    uncovered === 0 &&
+    !view.clipped &&
+    reachesWholeExtent(view.extent, anchors);
+  const others = entries.slice(1).map(({ record }) => record.cachedAt);
+  return {
+    ...centre,
+    ...merged,
+    discs: {
+      shown: Math.min(1 + planned.length, entries.length),
+      total: 1 + planned.length,
+      kept: 1 + pace.kept,
+    },
+    pace,
+    outerHeld: kept.length > 0 && !adsbLol.roomForOuter(at),
+    view: {
+      covered: whole ? 100 : Math.min(99, Math.floor(share * view.ratio * 100)),
+      clipped: view.clipped,
+    },
+    outerCachedAt: others.length ? Math.min(...others) : null,
+  };
 }
 
 /**
@@ -647,6 +910,45 @@ function writeAdsbLolPoint(
     // A paced disc is asked again after this gap: it is not stale before.
     ...(fallback.cacheStatus === 'PACED' && Number.isFinite(fallback.gapMs)
       ? { 'X-ADSBLOL-Gap-Seconds': String(Math.ceil(fallback.gapMs / 1000)) }
+      : {}),
+    // Swedish fork: a whole view says how many of its discs it holds, and
+    // keeps when the pace keeps fewer than it needs; how much of the view
+    // they cover (100 only when nothing is left out or cut away) and whether
+    // it was cut to the box around the look-at point; how often its centre
+    // and outer discs are read, and whether the outer discs are held back;
+    // how old the oldest disc but the centre's is; and how many aircraft
+    // were kept of how many when it held more than the most it gives.
+    ...(fallback.discs
+      ? {
+          'X-Flight-Discs': `${fallback.discs.shown}/${fallback.discs.total}`,
+          ...(fallback.discs.kept < fallback.discs.total
+            ? { 'X-Flight-Discs-Kept': String(fallback.discs.kept) }
+            : {}),
+          'X-Flight-View-Covered': String(fallback.view.covered),
+          ...(fallback.view.clipped ? { 'X-Flight-View-Clipped': '1' } : {}),
+          ...(fallback.outerHeld ? { 'X-Flight-Outer-Held': '1' } : {}),
+          'X-Flight-Gap-Seconds': [
+            fallback.pace.centreMs,
+            ...(Number.isFinite(fallback.pace.outerMs)
+              ? [fallback.pace.outerMs]
+              : []),
+          ]
+            .map((ms) => Math.round(ms / 1000))
+            .join('/'),
+          ...(Number.isFinite(fallback.outerCachedAt)
+            ? {
+                'X-Flight-Outer-Age-Seconds': String(
+                  Math.max(
+                    0,
+                    Math.round((Date.now() - fallback.outerCachedAt) / 1000),
+                  ),
+                ),
+              }
+            : {}),
+          ...(fallback.seen > fallback.count
+            ? { 'X-Flight-Capped': `${fallback.count}/${fallback.seen}` }
+            : {}),
+        }
       : {}),
     ...adsbLolBudgetHeaders(adsbLol),
     ...encoded.headers,
@@ -750,12 +1052,24 @@ export function openSkyProxy({ adsbLol = createAdsbLolUpstream() } = {}) {
         }
         if (flightsFromAdsbLol()) {
           res.setHeader('X-Feed-Source', 'adsb.lol');
-          const fallback = await fetchAdsbLolPointFallback(req, adsbLol);
+          // Swedish fork: a view larger than the disc gets its outer discs,
+          // and its centre shares their pace.
+          const plan = adsbLolViewPlan(req, adsbLol);
+          const fallback = await fetchAdsbLolPointFallback(
+            req,
+            adsbLol,
+            plan?.pace.centreMs,
+          );
           if (fallback?.body) {
-            writeAdsbLolPoint(req, res, fallback, {
+            const view = plan
+              ? await wholeAdsbLolView(plan, fallback, adsbLol)
+              : null;
+            writeAdsbLolPoint(req, res, view ?? fallback, {
               requestedMode: 'off',
               reason: 'flights_source_adsblol',
-              coverage: ADSBLOL_VIEW_COVERAGE,
+              coverage: view
+                ? `${ADSBLOL_VIEW_COVERAGE}, ${view.discs.shown} of ${view.discs.total} discs, ${view.view.covered === 100 ? 'the whole view' : `about ${view.view.covered}% of the view`}`
+                : ADSBLOL_VIEW_COVERAGE,
               adsbLol,
             });
             return;

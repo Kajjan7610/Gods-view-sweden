@@ -128,9 +128,19 @@ function feedSource(response, fallback) {
  * call may be sent (`lockedUntil`, epoch ms), how the disc was served
  * (`cache`: MISS, HIT, PACED, STALE …), a paced disc's gap (`gapMs`), where
  * it was read (`anchor`, from X-Flight-Anchor) and the point asked about
- * (`asked`).
+ * (`asked`). A whole view adds how many of its discs it holds of how many
+ * it needs and keeps up to date (`discs`, from X-Flight-Discs and
+ * X-Flight-Discs-Kept), how often its centre and outer discs are read
+ * (`gaps`, from X-Flight-Gap-Seconds; `outerMs` null with none kept),
+ * whether the outer discs are held back just now (`outerHeld`), how much of
+ * the view the discs cover, in whole percent, 100 only for all of it, and
+ * whether the view was cut to the part around the look-at point (`view`,
+ * from X-Flight-View-Covered and X-Flight-View-Clipped), when its oldest
+ * disc but the centre's was read (`outerReadAt`, epoch ms by this clock)
+ * and, when it held more aircraft than the server gives, how many of how
+ * many it kept (`capped`).
  */
-function adsbLolQuota(response, payload, query) {
+function adsbLolQuota(response, payload, query, nowMs) {
   const budget = /^(\d+)\/(\d+)$/.exec(
     String(header(response, 'x-adsblol-budget') ?? '').trim(),
   );
@@ -147,6 +157,16 @@ function adsbLolQuota(response, payload, query) {
   );
   const asked =
     Number.isFinite(query?.latitude) && Number.isFinite(query?.longitude);
+  const pair = (name) =>
+    /^(\d+)\/(\d+)$/.exec(String(header(response, name) ?? '').trim());
+  const discs = pair('x-flight-discs');
+  const capped = pair('x-flight-capped');
+  const whole = (name, pattern = /^\d+$/) =>
+    pattern.exec(String(header(response, name) ?? '').trim());
+  const outerAge = whole('x-flight-outer-age-seconds');
+  const kept = whole('x-flight-discs-kept');
+  const gaps = whole('x-flight-gap-seconds', /^(\d+)(?:\/(\d+))?$/);
+  const covered = whole('x-flight-view-covered');
   return {
     used: budget ? Number(budget[1]) : null,
     limit: budget ? Number(budget[2]) : null,
@@ -164,7 +184,49 @@ function adsbLolQuota(response, payload, query) {
     asked: asked
       ? { latitude: query.latitude, longitude: query.longitude }
       : null,
+    ...(discs
+      ? {
+          discs: {
+            shown: Number(discs[1]),
+            total: Number(discs[2]),
+            kept: kept ? Number(kept[0]) : Number(discs[2]),
+          },
+        }
+      : {}),
+    ...(discs && gaps
+      ? {
+          gaps: {
+            centreMs: Number(gaps[1]) * 1000,
+            outerMs: gaps[2] ? Number(gaps[2]) * 1000 : null,
+          },
+        }
+      : {}),
+    ...(discs
+      ? { outerHeld: header(response, 'x-flight-outer-held') === '1' }
+      : {}),
+    ...(discs && covered
+      ? {
+          view: {
+            covered: Math.min(100, Number(covered[0])),
+            clipped: header(response, 'x-flight-view-clipped') === '1',
+          },
+        }
+      : {}),
+    ...(discs && outerAge
+      ? { outerReadAt: nowMs - Number(outerAge[0]) * 1000 }
+      : {}),
+    ...(discs && capped
+      ? { capped: { count: Number(capped[1]), of: Number(capped[2]) } }
+      : {}),
   };
+}
+
+/** A view extent as the flights feed sends it: `west,south,east,north`. */
+function bboxParam(bbox) {
+  const edges = [bbox?.west, bbox?.south, bbox?.east, bbox?.north];
+  return edges.every(Number.isFinite)
+    ? edges.map((edge) => edge.toFixed(2)).join(',')
+    : null;
 }
 
 /** A paced adsb.lol disc is no older than its gap; this margin covers transit. */
@@ -185,6 +247,9 @@ export function createFlightSource({
       if (Number.isFinite(query.latitude) && Number.isFinite(query.longitude)) {
         params.set('lat', query.latitude.toFixed(4));
         params.set('lon', query.longitude.toFixed(4));
+        // Swedish fork: the ground in view, for a whole view's outer discs.
+        const bbox = bboxParam(query.bbox);
+        if (bbox) params.set('bbox', bbox);
       }
       const { response, payload } = await readResponse(
         fetchImpl,
@@ -192,7 +257,7 @@ export function createFlightSource({
         { signal },
         'Flights',
       );
-      const quota = adsbLolQuota(response, payload, query);
+      const quota = adsbLolQuota(response, payload, query, now());
       if (!response.ok) {
         const error = openSkyError(response, now());
         if (quota) error.quota = quota;

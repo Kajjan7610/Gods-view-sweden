@@ -327,10 +327,13 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   (läst 2026-11-21): utan nyckel 500 per dygn och IP-adress, med en gratis
   nyckel 1 000 och med en mottagarnyckel 7 200; appen håller sig under det
   med en egen dygnsbudget (se loggen 2026-11-22). Appen läser flygplanen
-  inom 250 sjömil från kartans mitt, där blicken träffar marken, och i
-  cockpit runt planet man sitter i. Med en nyckel kan adsb.lol knyta de
-  områden appen frågar om (rutor på 0,25 grader, i Sverige omkring 28 × 14
-  km) till den som har nyckeln; utan nyckel bara till IP-adressen. Täckningen över Sverige var
+  inom 250 sjömil från kartans mitt, där blicken träffar marken, när vyn
+  är större också i upp till fem yttre skivor på ett fast rutnät (se
+  loggen 2026-11-23, flyget i hela vyn), och i cockpit runt planet man
+  sitter i. Med en nyckel kan adsb.lol knyta de områden appen frågar om
+  (rutor på 0,25 grader, i Sverige omkring 28 × 14 km, och rutnätets
+  skivor med omkring 550 km mellanrum) till den som har nyckeln; utan
+  nyckel bara till IP-adressen. Täckningen över Sverige var
   2026-11-11 i nivå med OpenSkys (137 mot 139 flygplan runt Malmö, 60 mot
   64 runt Stockholm, 12 mot 12 runt Kiruna). adsb.lol:s data är
   ofiltrerad, men appen tar bort flygplan vars ägare bett om att inte visas
@@ -402,9 +405,9 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 | `SWEDAVIA_WAITTIME_KEY` | köerna i säkerhetskontrollen | apideveloper.swedavia.se → WaitTime Free |
 | `ADSBDB_ROUTES` | `on`: flygrutter från adsbdb, vars ruttdata inte får publiceras utan David J Taylors tillstånd; tom (standard): inga rutter | ingen nyckel |
 | `REGIONAL_NEWS_GOOGLE` | `on`: rubrikerna i stadsdossiern och cockpit från Google News, vars villkor bara tillåter personligt, icke-kommersiellt bruk; tom (standard): inga rubriker över Sverige, GDELT utanför | ingen nyckel |
-| `FLIGHTS_SOURCE` | tom (standard): flyg från adsb.lol (ODbL) runt kartans mitt, OpenSky frågas aldrig; `opensky`: originalets OpenSky, som kräver deras skriftliga tillstånd | ingen nyckel |
+| `FLIGHTS_SOURCE` | tom (standard): flyg från adsb.lol (ODbL) runt kartans mitt och utzoomat i upp till fem skivor till i vyn, OpenSky frågas aldrig; `opensky`: originalets OpenSky, som kräver deras skriftliga tillstånd | ingen nyckel |
 | `ADSBLOL_API_KEY` | valfri: fler flyguppdateringar per dygn. Utan nyckel tillåter adsb.lol 500 anrop per dygn och IP-adress, med en gratis nyckel 1 000. Nyckeln stannar på servern och skickas bara till adsb.lol | www.adsb.lol/request (under KOPPLA PÅ) |
-| `ADSBLOL_DAILY_BUDGET` | högst så många anrop till adsb.lol under ett dygn; standard 450 utan nyckel, 950 med. GNSS-integriteten har 20 % för sig själv och flyget resten; militärflyget tar av flygets del och slutar vid 50 % | ingen nyckel |
+| `ADSBLOL_DAILY_BUDGET` | högst så många anrop till adsb.lol under ett dygn; standard 450 utan nyckel, 950 med. GNSS-integriteten har 20 % för sig själv och flyget resten; militärflyget tar av flygets del och slutar vid 50 %; utzoomat delar hela vyns yttre skivor flygets paus med mittskivan | ingen nyckel |
 | `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` | flyg med större kvot än utan konto (originalets lager; OpenSkys villkor kräver skriftligt tillstånd för användning i en app som denna, se "Källor med oklara eller särskilda villkor") | opensky-network.org → konto → API client (under KOPPLA PÅ) |
 | `ENTSOE_PRODUCTION` | `on`: produktion, förbrukning och dygnskurva från ENTSO-E också; tom (standard): bara flödena, eftersom produktion och förbrukning inte ingår i ENTSO-E:s fria data | ingen nyckel |
 | `ENTSOE_SECURITY_TOKEN` | kraftsystemets flöden från ENTSO-E (CC BY 4.0); behövs för lagret | transparency.entsoe.eu → registrera, mejla transparency@entsoe.eu "RESTful API access", sedan My Account → Generate token |
@@ -439,6 +442,127 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-23 (flyget i hela vyn)
+- När vyn är större än skivan runt kartans mitt, som utzoomat över
+  Sverige eller Norden, visas nu flygplanen i mer av vyn. adsb.lol frågas
+  bara om skivor på 250 sjömil och har ingen ruta att fråga om, så resten
+  av vyn täcks av yttre skivor på ett fast rutnät: rader var femte
+  breddgrad mellan 85° S och 85° N, med mittpunkter ungefär fem
+  breddgrader isär längs raden. Ingen punkt ligger längre än omkring 390
+  km från en mittpunkt, väl inom skivans 463 km, och alla vyer och
+  användare frågar om samma skivor.
+- Lagret skickar med marken i vyn (`bbox`, från kamerans vyrektangel); en
+  vy som rymmer alla longituder (hela jorden, en pol i bild) skickas inte,
+  och cockpit skickar ingen. Servern läser vyn högst 1 500 km från
+  kartans mitt och väljer de yttre skivor som täcker minst en tiondel av
+  en skivas yta av det som mittskivan och närmare skivor lämnar, närmast
+  kartans mitt först, högst fem (sex skivor med mittskivan). Ryms vyn i
+  mittskivan frågas ingen yttre skiva, och svaret är som förut.
+- Sex skivor räcker inte till en stor vy. Med alla lästa täcks hela
+  Sverige (4–30° Ö, 54–70° N) till 82 % i stället för 27 %, Norden till
+  omkring en tredjedel och Europa till en tiondel. Svaret säger därför hur
+  stor del av vyns yta skivorna når (`X-Flight-View-Covered`, i procent)
+  och om vyn skars av vid 1 500 km (`X-Flight-View-Clipped`). Hela vyn
+  sägs bara när skivorna når varje punkt i den, med 10 km till godo, och
+  ingenting skurits bort; annars en andel räknad på punkter med 100 km
+  mellanrum, avrundad nedåt och högst 99 %. Provat på 3 000 slumpade vyer
+  över Europa: hela vyn sades 33 gånger och aldrig där ett rutnät med 15
+  km mellanrum hittade en lucka, och ingen andel låg mer än en
+  procentenhet över den uppmätta (oftast två till fem under).
+- Inzoomat, när vyn ryms i mittskivan, är allt som förut. Utzoomat delar
+  mittskivan och de yttre skivorna på flygets paus: mittskivan väger som
+  två yttre skivor, och tillsammans frågar de lika ofta som en enda plats
+  skulle göra, så att flygets jämna del räcker hela dygnet och resten
+  stannar hos nya platser. Vyn håller så många yttre skivor aktuella, de
+  närmaste först, som hinner läsas om inom 20 minuter i den takten. Med
+  nyckel och hela Sverige i bild (fem yttre skivor) läses mitten ungefär
+  var 7:e minut och varje yttre skiva ungefär var 15:e; med två yttre
+  skivor var 4:e och var 8:e minut. Utan nyckel hinner bara de två
+  närmaste yttre skivorna med: mitten ungefär var 9:e minut och de yttre
+  var 18:e. Mitten väger bara mot de yttre skivor som lästs i tid, så
+  medan vyn fylls, eller när de yttre skivorna hålls tillbaka, läses
+  mitten oftare, ner till flygets egen paus. Pauserna räknas ur budgeten,
+  inte som fasta tal, och växer när nya platser drar ut flygets paus.
+  Mitten väntar aldrig längre än flygets längsta paus, tio minuter.
+- En yttre skiva frågas högst en per svar, den närmaste som inte är läst
+  eller är äldre än sin paus; en som inte svarar väntar sin paus innan den
+  frågas igen, och de längre bort frågas under tiden. Inga yttre skivor
+  frågas medan flyget hålls tillbaka efter ett fel, när flygets jämna del
+  är använd, eller medan nya platser drar ut flygets paus så att en ny
+  plats inte kan frågas direkt: då går platserna runt kartans mitt först.
+  En yttre skiva står aldrig i mittens ställe, och när platser långt isär
+  delar flygets paus jämförs de med flygets egen paus, inte vyns längre.
+  Med nyckel, Sverige utzoomat i en flik och Madrid inzoomat i en annan,
+  var mitten i Sverige äldre än tio minuter i 43 svar av 2 880 i stället
+  för 763; Madrid fick i gengäld 39 sådana svar i stället för inga, eftersom
+  de yttre skivorna tar av samma paus. Två inzoomade platser frågas exakt
+  som förut.
+- De yttre skivorna visas från det som lästs, högst 30 minuter gamla och
+  aldrig äldre, och deras flygplan tas bort från kartan när de blir äldre
+  än 30 minuter, också när en hämtning misslyckas. Skivorna slås ihop till
+  ett svar: varje flygplan en gång, från den skiva som har dess färskaste
+  position, dolda flygplan räknade en gång per ICAO-adress, högst 2 000
+  flygplan, de närmast kartans mitt. Ett flygplan från en äldre skiva tas
+  bort när det ligger så djupt inne i en färskare skiva att det inte hunnit
+  flyga ut därifrån sedan (högst 680 knop, med 10 km marginal) och den
+  färskare skivan inte har det: det har landat eller hörs inte längre.
+  Svaret säger hur många av vyns skivor det har (`X-Flight-Discs`), hur
+  många takten håller aktuella när den inte räcker till alla
+  (`X-Flight-Discs-Kept`), om de yttre skivorna hålls tillbaka just nu
+  (`X-Flight-Outer-Held`), hur ofta mitten och de yttre skivorna läses
+  (`X-Flight-Gap-Seconds`), hur gammal den äldsta skivan utom mittens är
+  (`X-Flight-Outer-Age-Seconds`) och, när fler flygplan fanns, hur många
+  av hur många som visas (`X-Flight-Capped`).
+- Raden i Datalager säger "adsb.lol · hela vyn · 312 plan" bara när
+  skivorna når hela vyn, annars hur stor del, som "adsb.lol · ca 82 % av
+  vyn · 312 plan", med "· upp till 14 min gamla" när någon skiva är minst
+  en minut gammal och "· 2 000 närmaste av 2 513 plan" när servern behöll
+  de närmaste. Verktygstipset säger hur ofta mitten och de yttre områdena
+  läses utzoomat ("Utzoomat läses mitten av vyn med ungefär 7 min
+  mellanrum och de yttre områdena med ungefär 15 min, så att dagens kvot
+  räcker hela dagen."), eller att de yttre områdena inte läses just nu och
+  att det som lästs står kvar i upp till 30 minuter; hur många områden
+  kvoten håller aktuella när den inte räcker till alla, att de andra läses
+  ett i taget medan vyn fylls, att bara vyn inom 1 500 km från kartans
+  mitt läses när den skurits av, hur många plan som lästs runt vyn när
+  bara de närmaste visas, och hur gamla planen är när raden inte rymmer
+  det. Högst 72 tecken på alla appens språk (som längst 70).
+- Flygplan vars position är äldre än mittens paus och en minut ritas
+  blekare, som plan som missat en uppdatering, vilken skiva de än kom från,
+  och räknas inte in när lagret bestämmer hur långt efter verkligheten det
+  ritar. Färska plan i mitten ritas fullt (förut bleknade ibland fyra av
+  fem av dem och växlade fram och tillbaka). Mitten läses mer sällan
+  utzoomat, så planen ritas där upp till fem minuter efter verkligheten,
+  och planen i mitten kan ritas förbi sin senaste position, med nyckel i
+  upp till omkring två och en halv minut och utan nyckel omkring fyra,
+  tills nästa läsning rättar dem; de fryser inte. Den fördröjningen hålls
+  för sig och släpps när ett svar inte längre har några yttre skivor.
+  Inzoomad igen faller den till inzoomad nivå inom en uppdatering när
+  lagret mätt den nivån förut, annars när mitten lästs två gånger inzoomad
+  (med nyckel omkring tre minuter, förut omkring en timme), och planen
+  glider då ikapp under en halv minut i stället för att hoppa.
+- Budgetfilen skriver de yttre skivornas anrop både i flygets kolumn och i
+  en egen, så att en äldre version av appen som startas på samma fil
+  räknar dem som flygets.
+- Provkört mot simulerade svar i 24 och 48 timmar, med och utan nyckel
+  (stillastående utzoomad vy över hela Sverige och över mellersta Sverige,
+  oavbruten panorering, panorering tio minuter i timmen, hopp mellan städer
+  och cockpit), och jämfört med samma körning utan hela vyn: mittskivan
+  mörknade aldrig, flygets del nekades aldrig, dygnets anrop stannade vid
+  flygets jämna del (med nyckel 672 av 684 i stillastående vy, utan nyckel
+  320 av 324, lika många som med bara mittskivan), och ingen yttre skiva
+  eller yttre flygplansposition var äldre än 30 minuter. Stillastående
+  över hela Sverige fanns alla sex områden med nyckel hela dygnet och
+  raden sa ca 77 % av vyn, utan nyckel tre av sex områden och ca 45 %;
+  över mellersta Sverige, med två yttre skivor, sa raden hela vyn i 2 879
+  av 2 880 svar. Vid oavbruten panorering går mitten först och de yttre
+  områdena glesnar. I cockpit frågades exakt som förut, och inzoomat gav
+  varje svar samma status, huvuden och innehåll som förut, också efter
+  ett dygn utzoomat.
+- Med en nyckel kan adsb.lol knyta också de yttre skivorna till nyckelns
+  innehavare. De ligger på det fasta rutnätet, med omkring 550 km mellan
+  mittpunkterna, och säger bara ungefär vilken del av kartan som visas.
 
 ### 2026-11-23 (en ingång till Cockpit bredvid kartan)
 - Två knappar till Cockpit syntes samtidigt: originalets under HUD:ens

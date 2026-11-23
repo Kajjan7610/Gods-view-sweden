@@ -1,7 +1,7 @@
 // Swedish fork: the flights row tells what adsb.lol's daily quota allows.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { setLocale } from '../../i18n/index.js';
+import { formatNumber, setLocale } from '../../i18n/index.js';
 import { createControls, flightsQuotaRow } from './controls.js';
 
 // Lock ends are local times: read them as a Swedish user would.
@@ -301,6 +301,62 @@ test('the whole line stays within 72 characters in every language and state', (t
       observedAtMs: NOW - 59 * MINUTE,
       quota: { ...counted, keyRefused: true, cache: 'STALE' },
     },
+    // Swedish fork: a whole view read from several discs: all of it, or
+    // about how much, and up to how old.
+    wholeView: {
+      observedAtMs: NOW - 59 * MINUTE,
+      quota: {
+        ...counted,
+        discs: { shown: 6, total: 6 },
+        view: { covered: 100, clipped: false },
+      },
+    },
+    wholeViewOuter: {
+      observedAtMs: NOW - 20_000,
+      quota: {
+        ...counted,
+        discs: { shown: 6, total: 6 },
+        view: { covered: 100, clipped: false },
+        outerReadAt: NOW - 59 * MINUTE,
+      },
+    },
+    partOfView: {
+      observedAtMs: NOW - 59 * MINUTE,
+      quota: {
+        ...counted,
+        discs: { shown: 5, total: 6 },
+        view: { covered: 99, clipped: true },
+      },
+    },
+    partOfViewOuter: {
+      observedAtMs: NOW - 20_000,
+      quota: {
+        ...counted,
+        discs: { shown: 5, total: 6 },
+        view: { covered: 99, clipped: true },
+        outerReadAt: NOW - 59 * MINUTE,
+      },
+    },
+    wholeViewNearest: {
+      observedAtMs: NOW - 20_000,
+      quota: {
+        ...counted,
+        discs: { shown: 6, total: 6 },
+        view: { covered: 100, clipped: false },
+        outerReadAt: NOW - 59 * MINUTE,
+        capped: { count: 12345, of: 12345 },
+      },
+    },
+    partOfViewNearest: {
+      observedAtMs: NOW - 20_000,
+      quota: {
+        ...counted,
+        discs: { shown: 5, total: 6 },
+        view: { covered: 99, clipped: true },
+        outerReadAt: NOW - 59 * MINUTE,
+        capped: { count: 12345, of: 12345 },
+      },
+    },
   };
   for (const locale of [
     'en',
@@ -398,4 +454,196 @@ test('the layer row reads the feed it was given', () => {
   flightState.feed._lastSource = 'OpenSky Network';
   flightState.feed._lastQuota = null;
   assert.equal(getRowControls(), null);
+});
+
+
+// Swedish fork: a whole view, read from a centre disc and outer discs that
+// share the flights' pace (with a key and five outer discs, every 442 s and
+// every 884 s).
+const MIDDLE =
+  'Utzoomat läses mitten av vyn med ungefär 7 min mellanrum och de yttre områdena med ungefär 15 min, så att dagens kvot räcker hela dagen.';
+const REST = 'De andra områdena läses ett i taget, det närmaste först.';
+const view = (fields = {}) =>
+  quota({
+    cache: 'PACED',
+    discs: { shown: 6, total: 6, kept: 6 },
+    gaps: { centreMs: 442_000, outerMs: 884_000 },
+    view: { covered: 100, clipped: false },
+    ...fields,
+  });
+/** The Swedish percent, as Intl writes it. */
+const percent = (n) =>
+  formatNumber(n / 100, { style: 'percent', maximumFractionDigits: 0 });
+
+test('sv: the whole view only when nothing of it is left out or cut away, else about how much, and up to how old', (t) => {
+  inLocale(t, 'sv');
+  const fresh = row({ quota: view({ outerReadAt: NOW - 20_000 }) });
+  assert.equal(fresh.info, 'adsb.lol · hela vyn · 137 plan');
+  assert.equal(fresh.infoTitle, `${MIDDLE} ${KEYLESS} ${BUDGET}`);
+  assert.equal(
+    row({ quota: view({ outerReadAt: NOW - 24 * MINUTE }) }).info,
+    'adsb.lol · hela vyn · 137 plan · upp till 24 min gamla',
+  );
+  // The middle older than every outer area: the oldest is still told.
+  assert.equal(
+    row({
+      observedAtMs: NOW - 3 * MINUTE,
+      quota: view({ outerReadAt: NOW - 2 * MINUTE }),
+    }).info,
+    'adsb.lol · hela vyn · 137 plan · upp till 3 min gamla',
+  );
+  // Sweden's box zoomed out: six discs leave its corners out.
+  const sweden = row({
+    quota: view({
+      view: { covered: 82, clipped: false },
+      outerReadAt: NOW - 14 * MINUTE,
+    }),
+  });
+  assert.equal(
+    sweden.info,
+    `adsb.lol · ca ${percent(82)} av vyn · 137 plan · upp till 14 min gamla`,
+  );
+  // A view cut to the box around the map centre is never all of it.
+  const cut = row({ quota: view({ view: { covered: 99, clipped: true } }) });
+  assert.equal(cut.info, `adsb.lol · ca ${percent(99)} av vyn · 137 plan`);
+  assert.equal(
+    cut.infoTitle,
+    `${MIDDLE} Bara den del av vyn som ligger inom ${formatNumber(1500)} km från kartans mitt läses. ${KEYLESS} ${BUDGET}`,
+  );
+  // Still filling: the rest are read one at a time.
+  const filling = row({
+    quota: view({
+      discs: { shown: 2, total: 6, kept: 6 },
+      view: { covered: 41, clipped: false },
+    }),
+  });
+  assert.equal(filling.info, `adsb.lol · ca ${percent(41)} av vyn · 137 plan`);
+  assert.equal(filling.infoTitle, `${MIDDLE} ${REST} ${KEYLESS} ${BUDGET}`);
+});
+
+test('sv: past the most aircraft an answer gives, the line says how many of the nearest, and the tooltip how old', (t) => {
+  inLocale(t, 'sv');
+  const nearest = row({
+    quota: view({
+      outerReadAt: NOW - 24 * MINUTE,
+      capped: { count: 2000, of: 2513 },
+    }),
+  });
+  assert.equal(
+    nearest.info,
+    `adsb.lol · hela vyn · ${formatNumber(2000)} närmaste av ${formatNumber(2513)} plan`,
+  );
+  assert.equal(
+    nearest.infoTitle,
+    `${MIDDLE} Av ${formatNumber(2513)} plan som lästs runt vyn visas de ${formatNumber(2000)} som är närmast kartans mitt. Planen som visas lästes för upp till 24 min sedan. ${KEYLESS} ${BUDGET}`,
+  );
+});
+
+test('sv: while the outer areas are held back, the tooltip says so and never that they are read', (t) => {
+  inLocale(t, 'sv');
+  const held = row({
+    quota: view({
+      discs: { shown: 3, total: 6, kept: 6 },
+      view: { covered: 55, clipped: false },
+      outerHeld: true,
+    }),
+  });
+  assert.equal(
+    held.infoTitle,
+    `Utzoomat läses mitten av vyn med ungefär 7 min mellanrum; de yttre områdena läses inte just nu, och det som lästs står kvar i upp till 30 minuter. ${KEYLESS} ${BUDGET}`,
+  );
+});
+
+test('a whole view gives way to every line that says more, and is never said in Cockpit', (t) => {
+  inLocale(t, 'sv');
+  const outer = { outerReadAt: NOW - 24 * MINUTE };
+  assert.equal(
+    row({ quota: view({ ...outer, cache: 'STALE' }) }).info,
+    'adsb.lol · äldre data från närheten · 137 plan',
+  );
+  assert.equal(
+    row({ quota: view({ ...outer, failed: true, cache: null }) }).info,
+    'adsb.lol svarar inte · äldre data · 137 plan',
+  );
+  assert.equal(
+    row({ quota: view({ ...outer, lockedUntil: TOMORROW }) }).info,
+    'adsb.lol: dagens kvot är slut, åter mån 13:00',
+  );
+  assert.equal(
+    row({ quota: view({ ...outer, keyRefused: true }) }).info,
+    'adsb.lol nekade nyckeln – kontrollera den under KOPPLA PÅ',
+  );
+  assert.equal(
+    row({ cockpit: true, quota: view(outer) }).info,
+    'adsb.lol · 250 NM runt ditt plan · 137 plan',
+  );
+  assert.equal(
+    row({ quota: view({ ...outer, discs: { shown: 1, total: 1 } }) }).info,
+    'adsb.lol · 250 NM runt kartans mitt · 137 plan',
+    'one disc is the disc around the map centre',
+  );
+  assert.equal(
+    row({ quota: view({ ...outer, view: undefined }) }).info,
+    'adsb.lol · 250 NM runt kartans mitt · 137 plan',
+    'without word of how much is covered, never the whole view',
+  );
+});
+
+test('en: the whole view in English', () => {
+  setLocale('en');
+  assert.equal(
+    row({ quota: view({ outerReadAt: NOW - 24 * MINUTE }) }).info,
+    'adsb.lol · whole view · 137 aircraft · up to 24 min old',
+  );
+  assert.equal(
+    row({ quota: view({ view: { covered: 82, clipped: false } }) }).info,
+    'adsb.lol · about 82% of the view · 137 aircraft',
+  );
+  assert.equal(
+    row({ quota: view({ capped: { count: 2000, of: 2513 } }) }).info,
+    'adsb.lol · whole view · nearest 2,000 of 2,513 aircraft',
+  );
+});
+
+test('sv: zoomed out without a key, the tooltip says how often the middle is read and how many areas the quota keeps', (t) => {
+  inLocale(t, 'sv');
+  // Without a key the pace keeps two of five outer discs: three of six areas.
+  const keyless = row({
+    quota: view({
+      discs: { shown: 3, total: 6, kept: 3 },
+      gaps: { centreMs: 533_000, outerMs: 1_067_000 },
+      view: { covered: 55, clipped: false },
+      outerReadAt: NOW - 17 * MINUTE,
+    }),
+  });
+  assert.equal(
+    keyless.info,
+    `adsb.lol · ca ${percent(55)} av vyn · 137 plan · upp till 17 min gamla`,
+  );
+  assert.equal(
+    keyless.infoTitle,
+    `Utzoomat läses mitten av vyn med ungefär 9 min mellanrum och de yttre områdena med ungefär 18 min, så att dagens kvot räcker hela dagen. Dagens kvot räcker till att hålla områdena närmast kartans mitt aktuella, 3 av 6; de andra läses inte. ${KEYLESS} ${BUDGET}`,
+  );
+  // With none kept, only the middle, at the flights' own pace.
+  const centre = row({
+    quota: view({
+      discs: { shown: 1, total: 6, kept: 1 },
+      gaps: { centreMs: 600_000, outerMs: null },
+      view: { covered: 27, clipped: false },
+    }),
+  });
+  assert.equal(
+    centre.infoTitle,
+    `Dagens kvot räcker till att hålla bara området runt kartans mitt aktuellt; de andra läses inte. ${KEYLESS} ${BUDGET}`,
+  );
+  // Still filling: the rest are read one at a time.
+  assert.equal(
+    row({
+      quota: view({
+        discs: { shown: 2, total: 6, kept: 3 },
+        view: { covered: 41, clipped: false },
+      }),
+    }).infoTitle,
+    `${MIDDLE} Dagens kvot räcker till att hålla områdena närmast kartans mitt aktuella, 3 av 6; de andra läses inte. ${REST} ${KEYLESS} ${BUDGET}`,
+  );
 });

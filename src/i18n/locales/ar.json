@@ -6328,5 +6328,46 @@
     "few": "{count} مجموعات CelesTrak مفقودة (ردّ CelesTrak بـ 404)",
     "many": "{count} مجموعة CelesTrak مفقودة (ردّ CelesTrak بـ 404)",
     "other": "{count} مجموعة CelesTrak مفقودة (ردّ CelesTrak بـ 404)"
-  }
+  },
+  "adsb.lol · whole view · {count} aircraft": {
+    "zero": "adsb.lol · العرض كاملًا · {count} طائرة",
+    "one": "adsb.lol · العرض كاملًا · طائرة واحدة ({count})",
+    "two": "adsb.lol · العرض كاملًا · طائرتان ({count})",
+    "few": "adsb.lol · العرض كاملًا · {count} طائرات",
+    "many": "adsb.lol · العرض كاملًا · {count} طائرة",
+    "other": "adsb.lol · العرض كاملًا · {count} طائرة"
+  },
+  "adsb.lol · whole view · nearest {count} of {seen} aircraft": {
+    "zero": "adsb.lol · العرض كاملًا · أقرب {count} من {seen} طائرة",
+    "one": "adsb.lol · العرض كاملًا · أقرب {count} من {seen} طائرة",
+    "two": "adsb.lol · العرض كاملًا · أقرب {count} من {seen} طائرة",
+    "few": "adsb.lol · العرض كاملًا · أقرب {count} من {seen} طائرة",
+    "many": "adsb.lol · العرض كاملًا · أقرب {count} من {seen} طائرة",
+    "other": "adsb.lol · العرض كاملًا · أقرب {count} من {seen} طائرة"
+  },
+  "The aircraft shown were read up to {n} min ago.": "الطائرات المعروضة قُرئت قبل ما يصل إلى {n} د.",
+  "Zoomed out, the middle of the view is read about every {centre} min and the outer areas about every {outer} min, so today’s quota lasts all day.": "عند التصغير يُقرأ وسط العرض كل {centre} د تقريبًا والمناطق الخارجية كل {outer} د، لتكفي حصة اليوم اليوم كله.",
+  "The other areas are read one at a time, the nearest first.": "تُقرأ المناطق الأخرى واحدة تلو الأخرى، الأقرب أولًا.",
+  "Today’s quota keeps only the area around the map centre up to date; the others are not read.": "تُبقي حصة اليوم منطقة وسط الخريطة وحدها محدّثة؛ ولا تُقرأ المناطق الأخرى.",
+  "Today’s quota keeps the areas nearest the map centre up to date, {count} of {total}; the others are not read.": "تُبقي حصة اليوم المناطق الأقرب إلى وسط الخريطة محدّثة، {count} من {total}؛ ولا تُقرأ المناطق الأخرى.",
+  "adsb.lol · about {percent} of the view · {count} aircraft": {
+    "zero": "adsb.lol · نحو {percent} من العرض · {count} طائرة",
+    "one": "adsb.lol · نحو {percent} من العرض · طائرة واحدة ({count})",
+    "two": "adsb.lol · نحو {percent} من العرض · طائرتان ({count})",
+    "few": "adsb.lol · نحو {percent} من العرض · {count} طائرات",
+    "many": "adsb.lol · نحو {percent} من العرض · {count} طائرة",
+    "other": "adsb.lol · نحو {percent} من العرض · {count} طائرة"
+  },
+  "adsb.lol · about {percent} of the view · nearest {count} of {seen} aircraft": {
+    "zero": "adsb.lol · نحو {percent} من العرض · أقرب {count} من {seen}",
+    "one": "adsb.lol · نحو {percent} من العرض · أقرب {count} من {seen}",
+    "two": "adsb.lol · نحو {percent} من العرض · أقرب {count} من {seen}",
+    "few": "adsb.lol · نحو {percent} من العرض · أقرب {count} من {seen}",
+    "many": "adsb.lol · نحو {percent} من العرض · أقرب {count} من {seen}",
+    "other": "adsb.lol · نحو {percent} من العرض · أقرب {count} من {seen}"
+  },
+  "up to {n} min old": "حتى {n} د",
+  "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "من بين {seen} طائرة قُرئت حول العرض تُعرض أقرب {count} إلى وسط الخريطة.",
+  "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "عند التصغير يُقرأ وسط العرض كل {centre} د تقريبًا؛ ولا تُقرأ المناطق الخارجية الآن، ويبقى ما قُرئ حتى 30 دقيقة.",
+  "Only the view within {km} km of the map centre is read.": "لا يُقرأ إلا جزء العرض الواقع ضمن {km} كم من وسط الخريطة."
 }

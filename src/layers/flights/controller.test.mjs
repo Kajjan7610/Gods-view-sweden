@@ -97,3 +97,28 @@ test('with no viewer or camera the query names no area', () => {
   const cockpit = controller({ feed: {}, _cockpitContactMode: true });
   assert.deepEqual(cockpit._flightQuery({}), {}, 'in Cockpit too');
 });
+
+// Swedish fork: a wider view is asked for too, around the look-at point.
+test('with a view rectangle the query names the ground in view around the look-at point; in Cockpit it never does', () => {
+  const viewer = {};
+  // High over Sweden, looking straight down at it.
+  const camera = looking([16, 62, 2_000_000], [16, 62]);
+  camera.setViewRectangle({ west: 4, south: 54, east: 30, north: 70 });
+  const unbind = bindRenderer(viewer, { camera: camera.port });
+  try {
+    const query = controller()._flightQuery(viewer);
+    assert.ok(Math.abs(query.latitude - 62) < 1e-6);
+    assert.deepEqual(query.bbox, { west: 4, south: 54, east: 30, north: 70 });
+    // A view of the whole globe says nothing of where it is: no box.
+    camera.setViewRectangle({ west: -180, south: -90, east: 180, north: 90 });
+    assert.equal('bbox' in controller()._flightQuery(viewer), false);
+    camera.setViewRectangle({ west: 4, south: 54, east: 30, north: 70 });
+    const cockpit = { feed: {}, _cockpitContactMode: true };
+    assert.deepEqual(controller(cockpit)._flightQuery(viewer), {
+      latitude: 62,
+      longitude: 16,
+    });
+  } finally {
+    unbind();
+  }
+});

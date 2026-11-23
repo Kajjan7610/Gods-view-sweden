@@ -5971,5 +5971,34 @@
     "one": "{count} קבוצת CelesTrak חסרה (CelesTrak השיב 404)",
     "two": "{count} קבוצות CelesTrak חסרות (CelesTrak השיב 404)",
     "other": "{count} קבוצות CelesTrak חסרות (CelesTrak השיב 404)"
-  }
+  },
+  "adsb.lol · whole view · {count} aircraft": {
+    "one": "adsb.lol · כל התצוגה · {count} מטוס",
+    "two": "adsb.lol · כל התצוגה · {count} מטוסים",
+    "other": "adsb.lol · כל התצוגה · {count} מטוסים"
+  },
+  "adsb.lol · whole view · nearest {count} of {seen} aircraft": {
+    "one": "adsb.lol · כל התצוגה · {count} הקרובים מתוך {seen} מטוסים",
+    "two": "adsb.lol · כל התצוגה · {count} הקרובים מתוך {seen} מטוסים",
+    "other": "adsb.lol · כל התצוגה · {count} הקרובים מתוך {seen} מטוסים"
+  },
+  "The aircraft shown were read up to {n} min ago.": "המטוסים המוצגים נקראו לפני עד {n} דק׳.",
+  "Zoomed out, the middle of the view is read about every {centre} min and the outer areas about every {outer} min, so today’s quota lasts all day.": "בתצוגה מרוחקת מרכז התצוגה נקרא בערך כל {centre} דק׳ והאזורים החיצוניים כל {outer} דק׳, כדי שהמכסה היומית תספיק לכל היום.",
+  "The other areas are read one at a time, the nearest first.": "האזורים האחרים נקראים אחד אחד, הקרוב ביותר קודם.",
+  "Today’s quota keeps only the area around the map centre up to date; the others are not read.": "המכסה היומית שומרת מעודכן רק את האזור סביב מרכז המפה; האחרים לא נקראים.",
+  "Today’s quota keeps the areas nearest the map centre up to date, {count} of {total}; the others are not read.": "המכסה היומית שומרת מעודכנים את האזורים הקרובים ביותר למרכז המפה, {count} מתוך {total}; האחרים לא נקראים.",
+  "adsb.lol · about {percent} of the view · {count} aircraft": {
+    "one": "adsb.lol · כ-{percent} מהתצוגה · {count} מטוס",
+    "two": "adsb.lol · כ-{percent} מהתצוגה · {count} מטוסים",
+    "other": "adsb.lol · כ-{percent} מהתצוגה · {count} מטוסים"
+  },
+  "adsb.lol · about {percent} of the view · nearest {count} of {seen} aircraft": {
+    "one": "adsb.lol · כ-{percent} מהתצוגה · {count} הקרובים מתוך {seen}",
+    "two": "adsb.lol · כ-{percent} מהתצוגה · {count} הקרובים מתוך {seen}",
+    "other": "adsb.lol · כ-{percent} מהתצוגה · {count} הקרובים מתוך {seen}"
+  },
+  "up to {n} min old": "עד {n} דק׳",
+  "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "מתוך {seen} מטוסים שנקראו סביב התצוגה מוצגים {count} הקרובים ביותר למרכז המפה.",
+  "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "בתצוגה מרוחקת מרכז התצוגה נקרא בערך כל {centre} דק׳; האזורים החיצוניים לא נקראים כרגע, ומה שנקרא נשאר עד 30 דקות.",
+  "Only the view within {km} km of the map centre is read.": "נקרא רק חלק התצוגה שבטווח {km} ק״מ ממרכז המפה."
 }

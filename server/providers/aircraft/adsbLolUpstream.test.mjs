@@ -616,9 +616,11 @@ test('counts and lockout persist across a restart, are written only on change, a
   await first.upstream.flush();
   const saved = JSON.parse(readFileSync(statePath, 'utf8'));
   assert.equal(JSON.stringify(saved).includes('persist-secret'), false);
+  // Swedish fork: a fifth column counts a whole view's outer discs.
+  assert.equal(saved.version, 3);
   assert.deepEqual(saved.calls, {
     keyless: [],
-    keyed: [[Math.floor(START / MINUTE), 1, 1, 1]],
+    keyed: [[Math.floor(START / MINUTE), 1, 1, 1, 0]],
   });
   assert.deepEqual(saved.lock, {
     until: START + 2 * HOUR,
@@ -718,4 +720,143 @@ test('an unreadable or corrupt saved budget starts from zero with one warning; a
   const blocked = harness({ statePath: dir });
   assert.equal(blocked.upstream.status().used, 0);
   assert.equal(blocked.warnings.length, 1);
+});
+
+// Swedish fork: a whole view's outer discs share the flights' pace with the
+// disc around the point in view (opensky.js, adsbLolView.js).
+test('zoomed out, the centre and its outer discs share the flights’ pace as one place would, the centre weighing two', () => {
+  // 950 with a key: the flights paced at 684, one place every 126.3 s.
+  const keyed = harness({ env: { ADSBLOL_API_KEY: 'k' } });
+  const unit = DAY / 684;
+  assert.deepEqual(keyed.upstream.viewPace(0), {
+    kept: 0,
+    live: 0,
+    centreMs: unit,
+    outerMs: Infinity,
+  });
+  const five = keyed.upstream.viewPace(5);
+  assert.equal(five.kept, 5);
+  assert.ok(Math.abs(five.centreMs - 3.5 * unit) < 1e-6, 'about 7.4 min');
+  assert.ok(Math.abs(five.outerMs - 7 * unit) < 1e-6, 'about 14.7 min');
+  // Together they ask as often as one place at the flights' gap.
+  assert.ok(Math.abs(1 / five.centreMs + 5 / five.outerMs - 1 / unit) < 1e-12);
+  const two = keyed.upstream.viewPace(2);
+  assert.ok(Math.abs(two.centreMs - 2 * unit) < 1e-6, 'about 4.2 min');
+  assert.ok(Math.abs(two.outerMs - 4 * unit) < 1e-6);
+  // 450 without a key, one place every 266.7 s: only two outer discs are
+  // read again within 20 min.
+  const keyless = harness().upstream.viewPace(5);
+  assert.equal(keyless.kept, 2);
+  assert.ok(Math.abs(keyless.centreMs - (2 * DAY) / 324) < 1e-6);
+  assert.ok(Math.abs(keyless.outerMs - (4 * DAY) / 324) < 1e-6);
+});
+
+test('a whole view keeps fewer outer discs while the pace is stretched, and none when it is at its longest; the centre never waits longer than the flights do', async () => {
+  // 300 calls at once stretch the keyed pace to (1 day + 1 min) / 385.
+  const busy = harness({ env: { ADSBLOL_API_KEY: 'k' } });
+  for (let i = 0; i < 300; i++) await busy.ask('flights');
+  const stretched = busy.upstream.viewPace(5);
+  assert.equal(stretched.kept, 3);
+  assert.ok(stretched.outerMs <= 20 * MINUTE);
+  // With the flights at their longest gap, 10 min, no outer disc is kept and
+  // the centre is paced as one place.
+  const tight = harness({ env: { ADSBLOL_DAILY_BUDGET: '100' } });
+  for (let i = 0; i < 60; i++) await tight.ask('flights');
+  assert.deepEqual(tight.upstream.viewPace(5), {
+    kept: 0,
+    live: 0,
+    centreMs: 10 * MINUTE,
+    outerMs: Infinity,
+  });
+  for (const outer of [1, 2, 3, 4, 5]) {
+    const { centreMs } = busy.upstream.viewPace(outer);
+    assert.ok(centreMs <= 10 * MINUTE, String(outer));
+  }
+});
+
+test('outer calls count in the flights’ pace, come only from its paced share and wait while the flights are held', async () => {
+  const keyed = harness({ env: { ADSBLOL_API_KEY: 'k' } });
+  for (let i = 0; i < 40; i++) await keyed.ask('outer');
+  assert.equal(keyed.upstream.gapMs('flights'), (DAY + MINUTE) / 645);
+  assert.equal(keyed.upstream.status().used, 40);
+  // 1,000 a day: the flights 800, paced 720. Past those the outer discs
+  // stop, and the rest stays for new places.
+  const h = harness({ env: { ADSBLOL_DAILY_BUDGET: '1000' } });
+  for (let i = 0; i < 720; i++) await h.ask('flights');
+  await assert.rejects(h.ask('outer'), refusal('budget'));
+  assert.equal(h.upstream.admit('flights'), null);
+  // Held back after a failure: the flights hold the outer discs too, not
+  // the other way round.
+  const failing = harness({
+    answer: () => new Response('', { status: 503 }),
+  });
+  await assert.rejects(failing.ask('flights'), refusal('upstream'));
+  assert.equal(failing.upstream.admit('outer').reason, 'cooldown');
+  failing.clock.now += 60_000;
+  await assert.rejects(failing.ask('outer'), refusal('upstream'));
+  assert.equal(failing.upstream.admit('outer').reason, 'cooldown');
+  assert.equal(failing.upstream.admit('flights'), null);
+});
+
+test('a saved budget of the second format has no outer calls; the third keeps them, in the flights’ pace, and counted with the flights for an earlier build', async (t) => {
+  const dir = path.dirname(path.dirname(tempFile(t)));
+  const minute = Math.floor(START / MINUTE);
+  const second = path.join(dir, 'second.json');
+  writeFileSync(
+    second,
+    JSON.stringify({ version: 2, calls: { keyless: [[minute, 2, 1, 0]] } }),
+  );
+  assert.equal(harness({ statePath: second }).upstream.status().used, 3);
+  // 22 outer calls, written in the flights' column too.
+  const third = path.join(dir, 'third.json');
+  writeFileSync(
+    third,
+    JSON.stringify({ version: 3, calls: { keyless: [[minute, 22, 0, 0, 22]] } }),
+  );
+  const kept = harness({ statePath: third });
+  assert.equal(kept.upstream.status().used, 22, 'not counted twice');
+  assert.equal(kept.upstream.gapMs('flights'), (DAY + MINUTE) / 303);
+  // What a build writes: an earlier one reading its second column alone
+  // counts every outer call.
+  const statePath = tempFile(t);
+  const h = harness({ statePath });
+  await h.ask('flights');
+  await h.ask('outer');
+  await h.ask('outer');
+  await h.upstream.flush();
+  assert.deepEqual(JSON.parse(readFileSync(statePath, 'utf8')).calls.keyless, [
+    [minute, 3, 0, 0, 2],
+  ]);
+  assert.equal(harness({ statePath }).upstream.status().used, 3);
+});
+
+test('a whole view weighs its centre only against the outer discs read on time, so failing ones do not slow it', () => {
+  const keyed = harness({ env: { ADSBLOL_API_KEY: 'k' } });
+  const unit = DAY / 684;
+  const two = keyed.upstream.viewPace(5, START, () => 2);
+  assert.equal(two.kept, 5);
+  assert.equal(two.live, 2);
+  assert.ok(Math.abs(two.centreMs - 2 * unit) < 1e-6);
+  assert.ok(Math.abs(two.outerMs - 7 * unit) < 1e-6, 'their own gap kept');
+  // None read on time: the centre as one place.
+  assert.ok(
+    Math.abs(keyed.upstream.viewPace(5, START, () => 0).centreMs - unit) < 1e-6,
+  );
+  // More than kept is never counted.
+  assert.equal(keyed.upstream.viewPace(5, START, () => 9).live, 5);
+});
+
+test('outer discs are asked only while a new place could be asked at once: the places in view come first', async () => {
+  // 450 a day: a new place is asked at once while the counted calls keep
+  // the pace within twice its even gap, the first 162 of a day at once.
+  const h = harness();
+  for (let i = 0; i < 162; i++) await h.ask('flights');
+  assert.equal(h.upstream.roomForOuter(), true);
+  await h.ask('flights');
+  assert.equal(h.upstream.roomForNew('flights'), false);
+  assert.equal(h.upstream.admit('outer'), null, 'admitted, yet waits');
+  assert.equal(h.upstream.roomForOuter(), false);
+  // As the burst nears the end of the window, there is room again.
+  h.clock.now += 12 * HOUR;
+  assert.equal(h.upstream.roomForOuter(), true);
 });

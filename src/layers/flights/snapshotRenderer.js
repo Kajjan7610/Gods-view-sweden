@@ -17,24 +17,34 @@ import {
 /**
  * Note how late each report in a live snapshot is, and aim the display delay
  * again, before any contact is planned with it: a layer drawing nothing yet
- * takes the new delay at once.
+ * takes the new delay at once. Swedish fork: in a whole view of adsb.lol
+ * discs (the answer names its discs), a report read longer ago than its
+ * centre is read again (aged) says nothing of how late the feed is, and a
+ * contact last seen aged counts as seen first; the view's lags are kept
+ * apart from one disc's, and dropped once the view is one disc again.
  */
 function noteDelivery(flightState, snapshot) {
   const delay = flightState._displayDelay;
   if (!delay) return;
   const receiptMs = Date.now();
+  const whole = Boolean(snapshot.quota?.discs);
   for (const observation of snapshot.records) {
+    if (observation.aged === true) continue;
     const reportMs = observation.positionTimeMs;
     if (!(Number.isFinite(reportMs) && reportMs > 0)) continue;
-    const history = flightState._positionHistory.get(observation.id);
+    const history =
+      flightState.records?.data?.get(observation.id)?.aged === true
+        ? null
+        : flightState._positionHistory.get(observation.id);
     const previous = history && newestReport(history);
     delay.noteReport(
       receiptMs,
       reportMs,
       previous ? Math.trunc(previous.epochMs) : undefined,
+      { whole },
     );
   }
-  delay.settle(receiptMs, { jump: !flightState._icons.count });
+  delay.settle(receiptMs, { jump: !flightState._icons.count, whole });
 }
 
 /** Apply reconciled aircraft records to the layer's drawing and follow state. */

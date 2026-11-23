@@ -5733,5 +5733,26 @@
   "CelesTrak paused until {time} (its usage policy)": "CelesTrakは{time}まで一時停止中（利用ポリシーによる）",
   "{count} CelesTrak groups missing (CelesTrak answered 404)": {
     "other": "CelesTrakの{count}グループがありません（CelesTrakが404を返答）"
-  }
+  },
+  "adsb.lol · whole view · {count} aircraft": {
+    "other": "adsb.lol · 表示範囲全体 · 航空機{count}機"
+  },
+  "adsb.lol · whole view · nearest {count} of {seen} aircraft": {
+    "other": "adsb.lol · 表示範囲全体 · {seen}機中、近い{count}機"
+  },
+  "The aircraft shown were read up to {n} min ago.": "表示中の航空機の取得: 最大{n}分前。",
+  "Zoomed out, the middle of the view is read about every {centre} min and the outer areas about every {outer} min, so today’s quota lasts all day.": "ズームアウト時は、表示範囲の中心を約{centre}分ごと、周辺の区域を約{outer}分ごとに取得し、本日の割り当てが一日もつようにします。",
+  "The other areas are read one at a time, the nearest first.": "ほかの区域は近いものから1つずつ取得します。",
+  "Today’s quota keeps only the area around the map centre up to date; the others are not read.": "本日の割り当てで最新に保てるのは地図の中心の区域だけで、ほかの区域は取得しません。",
+  "Today’s quota keeps the areas nearest the map centre up to date, {count} of {total}; the others are not read.": "本日の割り当てで最新に保てるのは地図の中心に近い区域だけです（{total}区域中{count}区域）。ほかの区域は取得しません。",
+  "adsb.lol · about {percent} of the view · {count} aircraft": {
+    "other": "adsb.lol · 表示範囲の約{percent} · 航空機{count}機"
+  },
+  "adsb.lol · about {percent} of the view · nearest {count} of {seen} aircraft": {
+    "other": "adsb.lol · 表示範囲の約{percent} · {seen}機中、近い{count}機"
+  },
+  "up to {n} min old": "最大{n}分前",
+  "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "表示範囲の周りで取得した{seen}機のうち、地図の中心に近い{count}機を表示しています。",
+  "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "ズームアウト時は、表示範囲の中心を約{centre}分ごとに取得します。周辺の区域は現在取得しておらず、取得済みのデータは最大30分表示されます。",
+  "Only the view within {km} km of the map centre is read.": "地図の中心から{km} km以内の表示範囲だけを取得します。"
 }

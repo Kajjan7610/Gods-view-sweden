@@ -810,3 +810,97 @@ test('a paced adsb.lol disc is stale only past its gap and a margin; any other a
     assert.equal((await at(121, said)).stale, true, cache);
   }
 });
+
+// Swedish fork: a whole view of flights from adsb.lol's discs.
+test('the flights feed names the ground in view and reads what a whole view says of its discs', async () => {
+  const requests = [];
+  const source = createFlightSource({
+    now: () => now,
+    fetchImpl: async (url) => {
+      requests.push(url);
+      return response(
+        {
+          time: now / 1000,
+          states: [aircraft, ['def456', ...aircraft.slice(1)]],
+          agedByIcao: ['DEF456'],
+        },
+        {
+          'x-flight-source': 'adsb.lol',
+          'x-adsblol-budget': '12/950',
+          'x-flight-anchor': '62.00,16.00',
+          'x-flight-discs': '4/6',
+          'x-flight-discs-kept': '5',
+          'x-flight-gap-seconds': '442/884',
+          'x-flight-view-covered': '82',
+          'x-flight-outer-held': '1',
+          'x-flight-outer-age-seconds': '600',
+          'x-flight-capped': '2000/2600',
+        },
+      );
+    },
+  });
+  const snapshot = await source.getSnapshot({
+    latitude: 62,
+    longitude: 16,
+    bbox: { west: 4, south: 54.123, east: 30, north: 70 },
+  });
+  assert.equal(
+    requests[0],
+    '/api/flights?lat=62.0000&lon=16.0000&bbox=4.00%2C54.12%2C30.00%2C70.00',
+  );
+  assert.deepEqual(snapshot.quota.discs, { shown: 4, total: 6, kept: 5 });
+  assert.deepEqual(snapshot.quota.gaps, {
+    centreMs: 442_000,
+    outerMs: 884_000,
+  });
+  assert.deepEqual(snapshot.quota.view, { covered: 82, clipped: false });
+  assert.equal(snapshot.quota.outerHeld, true);
+  assert.equal(snapshot.quota.outerReadAt, now - 600_000);
+  assert.deepEqual(snapshot.quota.capped, { count: 2000, of: 2600 });
+  // Read longer ago than the centre is read again: so marked, and only those.
+  const [centre, aged] = snapshot.records;
+  assert.equal('aged' in centre, false);
+  assert.equal(aged.aged, true);
+  // No box without a place, nor a box that is not one.
+  await source.getSnapshot({
+    bbox: { west: 4, south: 54, east: 30, north: 70 },
+  });
+  await source.getSnapshot({
+    latitude: 62,
+    longitude: 16,
+    bbox: { west: 4, south: 54, east: 30 },
+  });
+  assert.deepEqual(requests.slice(1), [
+    '/api/flights',
+    '/api/flights?lat=62.0000&lon=16.0000',
+  ]);
+  // Every disc kept, and none but the centre: the kept count is the total,
+  // and the outer discs have no gap.
+  const centreOnly = await createFlightSource({
+    now: () => now,
+    fetchImpl: async () =>
+      response(
+        { time: now / 1000, states: [aircraft] },
+        {
+          'x-adsblol-budget': '1/950',
+          'x-flight-discs': '1/6',
+          'x-flight-gap-seconds': '600',
+        },
+      ),
+  }).getSnapshot({ latitude: 62, longitude: 16 });
+  assert.deepEqual(centreOnly.quota.discs, { shown: 1, total: 6, kept: 6 });
+  assert.deepEqual(centreOnly.quota.gaps, { centreMs: 600_000, outerMs: null });
+  // One disc says nothing of discs.
+  const lone = await createFlightSource({
+    now: () => now,
+    fetchImpl: async () =>
+      response(
+        { time: now / 1000, states: [aircraft] },
+        { 'x-adsblol-budget': '1/950', 'x-flight-outer-age-seconds': '60' },
+      ),
+  }).getSnapshot({ latitude: 62, longitude: 16 });
+  assert.equal('discs' in lone.quota, false);
+  assert.equal('gaps' in lone.quota, false);
+  assert.equal('outerReadAt' in lone.quota, false);
+  assert.equal('capped' in lone.quota, false);
+});

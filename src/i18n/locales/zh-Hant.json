@@ -5733,5 +5733,26 @@
   "CelesTrak paused until {time} (its usage policy)": "CelesTrak 暫停至 {time}（依其使用政策）",
   "{count} CelesTrak groups missing (CelesTrak answered 404)": {
     "other": "缺少 {count} 個 CelesTrak 分組（CelesTrak 返回 404）"
-  }
+  },
+  "adsb.lol · whole view · {count} aircraft": {
+    "other": "adsb.lol · 整個視圖 · {count} 架飛機"
+  },
+  "adsb.lol · whole view · nearest {count} of {seen} aircraft": {
+    "other": "adsb.lol · 整個視圖 · {seen} 架中最近的 {count} 架"
+  },
+  "The aircraft shown were read up to {n} min ago.": "顯示的飛機數據讀取時間：最多 {n} 分鐘前。",
+  "Zoomed out, the middle of the view is read about every {centre} min and the outer areas about every {outer} min, so today’s quota lasts all day.": "縮小視圖時，視圖中心約每 {centre} 分鐘讀取一次，外圍區域約每 {outer} 分鐘讀取一次，以便今日配額夠用一整天。",
+  "The other areas are read one at a time, the nearest first.": "其餘區域逐個讀取，最近的優先。",
+  "Today’s quota keeps only the area around the map centre up to date; the others are not read.": "今日配額只能讓地圖中心的區域保持最新；其餘區域不讀取。",
+  "Today’s quota keeps the areas nearest the map centre up to date, {count} of {total}; the others are not read.": "今日配額只能讓離地圖中心最近的區域保持最新（{total} 個中的 {count} 個）；其餘區域不讀取。",
+  "adsb.lol · about {percent} of the view · {count} aircraft": {
+    "other": "adsb.lol · 視圖約 {percent} · {count} 架飛機"
+  },
+  "adsb.lol · about {percent} of the view · nearest {count} of {seen} aircraft": {
+    "other": "adsb.lol · 視圖約 {percent} · {seen} 架中最近的 {count} 架"
+  },
+  "up to {n} min old": "最多 {n} 分鐘前",
+  "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "在視圖周圍讀取的 {seen} 架飛機中，顯示離地圖中心最近的 {count} 架。",
+  "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "縮小視圖時，視圖中心約每 {centre} 分鐘讀取一次；外圍區域暫不讀取，已讀取的數據最多保留 30 分鐘。",
+  "Only the view within {km} km of the map centre is read.": "只讀取距地圖中心 {km} 公里以內的視圖部分。"
 }

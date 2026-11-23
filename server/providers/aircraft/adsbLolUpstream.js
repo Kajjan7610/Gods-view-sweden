@@ -28,6 +28,15 @@ import path from 'node:path';
 //   the flights' part and stops once half the day's budget is used. Calls
 //   without a key and with one are counted apart, as adsb.lol counts them:
 //   per address, and per key.
+// - The outer discs of a whole view (`outer`, opensky.js) share the flights'
+//   pace with the disc around the point in view: counted with the flights,
+//   they never take the rest the new places keep (they stop once the
+//   flights' part holds its paced share), they wait while the flights are
+//   held back after a failure, and while the pace is too stretched for a
+//   new place to be asked at once (roomForOuter). Zoomed out, the centre
+//   weighs as much as two outer discs, and the view keeps as many outer
+//   discs as are read again within 20 min at that pace (viewPace): together
+//   they spend the pace as one place would.
 // - The same place is asked again only after a gap that spends 90 % of the
 //   caller's share evenly over the window (the rest is for new places), and
 //   longer while calls already counted would otherwise leave too little of
@@ -80,7 +89,20 @@ const PACING = Object.freeze({
   flights: Object.freeze([30_000, ADSBLOL_FLIGHTS_MAX_GAP_MS]),
   gnss: Object.freeze([60_000, 30 * 60_000]),
 });
-const KINDS = Object.freeze(['flights', 'gnss', 'mil']);
+/** The callers each pace counts: a whole view's outer discs share the flights'. */
+const PACED_KINDS = Object.freeze({
+  flights: Object.freeze(['flights', 'mil', 'outer']),
+  gnss: Object.freeze(['gnss']),
+});
+/** Zoomed out, the disc around the point in view weighs this many outer discs. */
+const CENTRE_WEIGHT = 2;
+/**
+ * A whole view keeps no more outer discs than are read again within this at
+ * its pace: two thirds of the 30 min an outer disc may be shown, so a failed
+ * call or two still leave it on the map.
+ */
+const OUTER_GAP_MAX_MS = 20 * 60_000;
+const KINDS = Object.freeze(['flights', 'gnss', 'mil', 'outer']);
 /**
  * Failures before any connection was made, so adsb.lol never saw the call.
  * A reset, a closed socket or a timeout may come after the request went out:
@@ -132,6 +154,8 @@ const minuteOf = (ms) => Math.floor(ms / BUCKET_MS);
 /** When the calls counted in a minute have all left the window. */
 const bucketLeavesAt = (minute) => (minute + 1) * BUCKET_MS + WINDOW_MS;
 const total = (rows) => rows.reduce((sum, [, calls]) => sum + calls, 0);
+/** One minute's calls, every caller at none. */
+const emptyRow = () => ({ flights: 0, gnss: 0, mil: 0, outer: 0 });
 
 /** Whether a fetch failure left no answer (see UNREACHED), causes included. */
 function unreached(error, depth = 0) {
@@ -179,7 +203,7 @@ function newState() {
     loaded: false,
     /**
      * Calls sent per key state, per minute, per caller:
-     * `{keyless|keyed: Map<minute, {flights, gnss, mil}>}`.
+     * `{keyless|keyed: Map<minute, {flights, gnss, mil, outer}>}`.
      */
     calls: { keyless: new Map(), keyed: new Map() },
     /** @type {{until: number, status: number, keyed: boolean}|null} */
@@ -293,11 +317,22 @@ export function createAdsbLolUpstream({
   function shares(kind, at) {
     const all = limit(at);
     const reserve = Math.floor(all * GNSS_RESERVE);
-    const flights = { kinds: ['flights', 'mil'], allowed: all - reserve };
+    const flights = {
+      kinds: ['flights', 'mil', 'outer'],
+      allowed: all - reserve,
+    };
     if (kind === 'flights') return [flights];
     if (kind === 'gnss') return [{ kinds: ['gnss'], allowed: reserve }];
     if (kind === 'mil')
       return [flights, { kinds: KINDS, allowed: Math.floor(all * MIL_SHARE) }];
+    if (kind === 'outer')
+      // From the flights' paced share only: the rest is for new places.
+      return [
+        {
+          kinds: flights.kinds,
+          allowed: Math.floor(flights.allowed * PACED_SHARE),
+        },
+      ];
     throw new TypeError(`Unknown adsb.lol caller: ${kind}`);
   }
 
@@ -357,7 +392,7 @@ export function createAdsbLolUpstream({
       // Counts from a clock more than a window ahead are not believed.
       if (!Number.isSafeInteger(minute) || minute > minuteOf(at + WINDOW_MS))
         return;
-      const row = { flights: 0, gnss: 0, mil: 0 };
+      const row = emptyRow();
       for (const kind of KINDS) {
         const n = byKind[kind];
         if (Number.isSafeInteger(n) && n > 0) row[kind] = n;
@@ -374,8 +409,15 @@ export function createAdsbLolUpstream({
         const rows = saved?.calls?.[keyState];
         for (const row of Array.isArray(rows) ? rows : []) {
           if (!Array.isArray(row)) continue;
-          const [minute, flights, gnss, mil] = row;
-          add(keyState, minute, { flights, gnss, mil });
+          // The third format counts the outer discs with the flights, so an
+          // earlier build reading it counts every call, and apart in a fifth
+          // column; the second had none.
+          const [minute, calls, gnss, mil, outer] = row;
+          const apart = Number.isSafeInteger(outer) && outer > 0 ? outer : 0;
+          const flights = Number.isSafeInteger(calls)
+            ? Math.max(0, calls - apart)
+            : calls;
+          add(keyState, minute, { flights, gnss, mil, outer: apart });
         }
       }
     }
@@ -401,17 +443,19 @@ export function createAdsbLolUpstream({
         prune(at);
         const lock = state.lock?.until > at ? state.lock : null;
         const text = JSON.stringify({
-          version: 2,
+          version: 3,
           calls: Object.fromEntries(
             Object.entries(state.calls).map(([keyState, minutes]) => [
               keyState,
               [...minutes]
                 .sort((a, b) => a[0] - b[0])
+                // The outer discs counted with the flights too (see load).
                 .map(([minute, row]) => [
                   minute,
-                  row.flights,
+                  row.flights + (row.outer ?? 0),
                   row.gnss,
                   row.mil,
+                  row.outer ?? 0,
                 ]),
             ]),
           ),
@@ -438,8 +482,9 @@ export function createAdsbLolUpstream({
   function count(kind, at, withKey) {
     const minutes = callsOf(withKey);
     const minute = minuteOf(at);
-    const row = minutes.get(minute) ?? { flights: 0, gnss: 0, mil: 0 };
-    row[kind] += 1;
+    const row = minutes.get(minute) ?? emptyRow();
+    // A row an earlier version kept in this memory may lack a caller.
+    row[kind] = (row[kind] ?? 0) + 1;
     minutes.set(minute, row);
     persist();
     return { minutes, minute, kind };
@@ -493,7 +538,7 @@ export function createAdsbLolUpstream({
   /**
    * May this caller ask adsb.lol now? null when it may, else why not and
    * until when: `{reason, until, status, retryAfterMs}`.
-   * @param {'flights'|'gnss'|'mil'} kind
+   * @param {'flights'|'gnss'|'mil'|'outer'} kind
    * @param {number} [at]
    */
   function admit(kind, at = now()) {
@@ -511,8 +556,11 @@ export function createAdsbLolUpstream({
     }
     if (until)
       return { reason: 'budget', until, status: 429, retryAfterMs: until - at };
-    const hold = holds.get(kind);
-    if (hold?.until > at)
+    const held = (caller) =>
+      holds.get(caller)?.until > at ? holds.get(caller) : null;
+    // The outer discs also wait while the flights are held after a failure.
+    const hold = held(kind) ?? (kind === 'outer' ? held('flights') : null);
+    if (hold)
       return {
         reason: 'cooldown',
         until: hold.until,
@@ -578,7 +626,7 @@ export function createAdsbLolUpstream({
    * (its `cause` the error met) and, but for a refused key, holds the caller
    * back; a call that never reached adsb.lol is taken back from the count.
    * Only the requester's own abort is thrown as it came.
-   * @param {'flights'|'gnss'|'mil'} kind
+   * @param {'flights'|'gnss'|'mil'|'outer'} kind
    * @param {string} pathname e.g. `/v2/mil`
    * @param {{read?: (response: Response, signal: AbortSignal) => Promise<unknown>,
    *   timeoutMs?: number, userAgent?: string, signal?: AbortSignal}} [options]
@@ -649,8 +697,9 @@ export function createAdsbLolUpstream({
    * too small to pace. See gapMs.
    */
   function pace(kind, at) {
-    if (!PACING[kind]) throw new TypeError(`adsb.lol does not pace ${kind}`);
-    const [{ kinds, allowed }] = shares(kind, at);
+    const kinds = PACED_KINDS[kind];
+    if (!kinds) throw new TypeError(`adsb.lol does not pace ${kind}`);
+    const [{ allowed }] = shares(kind, at);
     const paced = Math.floor(allowed * PACED_SHARE);
     if (paced <= 0) return { gap: Infinity, even: Infinity };
     const rows = counted(kinds, at);
@@ -697,6 +746,53 @@ export function createAdsbLolUpstream({
   }
 
   /**
+   * Whether an outer disc of a whole view may be asked now (Swedish fork):
+   * admitted (no lock, no hold of its own or of the flights', the flights'
+   * paced share not spent), and only while a new place could be asked at
+   * once (roomForNew): when the pace is too stretched for that, the places
+   * around the point in view come first.
+   * @param {number} [at]
+   */
+  function roomForOuter(at = now()) {
+    return !admit('outer', at) && roomForNew('flights', at);
+  }
+
+  /**
+   * The pace of a whole view (Swedish fork): the disc around the point in
+   * view and the `outer` discs the view needs, nearest first, share the
+   * flights' pace, the centre weighing CENTRE_WEIGHT outer discs. Together
+   * they spend it as one place would (gapMs), so its exact bound holds for
+   * them as well and the rest stays for new places. The view keeps the
+   * nearest outer discs that are read again within OUTER_GAP_MAX_MS at that
+   * pace, so the centre waits at most half as long, never past the flights'
+   * longest gap. The centre is weighed against only the `live` outer discs,
+   * those read on time, so outer discs that fail do not slow it: with none
+   * its gap is the flights' own, as for one place.
+   * @param {number} outer The outer discs the view needs.
+   * @param {number} [at]
+   * @param {(kept: number, outerMs: number) => number} [live] How many of the
+   *   kept outer discs were read within their gap; all by default.
+   * @returns {{kept: number, live: number, centreMs: number, outerMs: number}}
+   *   How many outer discs are kept and live, and the gaps (`outerMs`
+   *   Infinity with none kept).
+   */
+  function viewPace(outer, at = now(), live = (kept) => kept) {
+    const unit = gapMs('flights', at);
+    let kept = Math.max(0, Math.floor(outer) || 0);
+    while (kept > 0 && unit * (CENTRE_WEIGHT + kept) > OUTER_GAP_MAX_MS)
+      kept -= 1;
+    if (!kept) return { kept, live: 0, centreMs: unit, outerMs: Infinity };
+    const outerMs = unit * (CENTRE_WEIGHT + kept);
+    const read = Math.min(kept, Math.max(0, Math.floor(live(kept, outerMs))));
+    return {
+      kept,
+      live: read,
+      centreMs: (unit * (CENTRE_WEIGHT + read)) / CENTRE_WEIGHT,
+      outerMs,
+    };
+  }
+
+  /**
    * What the budget stands at, for headers and logs: never the key. `used`
    * and `limit` are those of the key state calls go with now, every caller
    * together; `keyRefused` says a key is set that adsb.lol refused (calls go
@@ -722,6 +818,8 @@ export function createAdsbLolUpstream({
     request,
     gapMs,
     roomForNew,
+    roomForOuter,
+    viewPace,
     status,
     /** Resolves once the last change is written (tests, shutdown). */
     flush: () => state.writing ?? Promise.resolve(),
