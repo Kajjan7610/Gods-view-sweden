@@ -35,7 +35,12 @@ function fixture(t) {
   // A browser does not focus a hidden control; happy-dom does, so refuse
   // here the way a browser would.
   const hiddenFocus = [];
-  for (const id of ['cockpit-entry', 'map-view-switch']) {
+  // Swedish fork: and the map's entry beside the globe.
+  for (const id of [
+    'cockpit-entry',
+    'map-view-switch',
+    'cockpit-quick-entry',
+  ]) {
     const button = document.getElementById(id);
     const focus = button.focus.bind(button);
     button.focus = (options) => {
@@ -176,6 +181,29 @@ test('entering shows the HUD and focuses the exit once it renders; exiting retur
   });
   assert.equal(hud.classList.contains('signals-active'), false);
   assert.equal(document.activeElement?.id, 'cockpit-entry');
+});
+
+// Swedish fork: the map's entry beside the globe gets its focus back too,
+// once it shows again.
+test('exiting returns focus to the map entry that opened Cockpit', async (t) => {
+  const { $, cockpit, hiddenFocus } = fixture(t);
+  cockpit.syncEntry();
+  await nextTick();
+  const mapEntry = $('#cockpit-quick-entry');
+  mapEntry.focus();
+  mapEntry.click();
+  assert.equal(cockpit.active, true);
+  await nextTick();
+  await Promise.resolve();
+  assert.equal(document.activeElement?.id, 'map-view-switch');
+
+  $('#map-view-switch').click();
+  assert.equal(cockpit.active, false);
+  await nextTick();
+  await Promise.resolve();
+  assert.equal(mapEntry.hidden, false);
+  assert.equal(document.activeElement?.id, 'cockpit-quick-entry');
+  assert.deepEqual(hiddenFocus, []);
 });
 
 test('a tracked aircraft shows the map entry; it and the C key enter and leave', async (t) => {

@@ -2,10 +2,6 @@
 import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useHudStore } from '../stores/hud.js';
-import { useCockpitStore } from '../stores/cockpit.js';
-import { cockpitEntryFace } from '../cockpitPresentation.js';
-import UiButton from '../kit/UiButton.vue';
-import UiIcon from '../kit/UiIcon.vue';
 
 // The readouts, visibility, layout variant and colors IntelHUD publishes.
 const { hud } = storeToRefs(useHudStore());
@@ -14,14 +10,9 @@ const { hud } = storeToRefs(useHudStore());
 // right after IntelHUD is built.
 const EMPTY = Object.freeze({ vessel: {}, sensor: [], recShown: null });
 const view = computed(() => hud.value ?? EMPTY);
-// The selected vehicle's readout offers the same entry as the Contacts
-// button, so first person needs no Contacts panel. The Cockpit controller
-// answers its clicks.
-const { presence: cockpit } = storeToRefs(useCockpitStore());
-// The entry names the subject it would ride (cockpitEntryFace).
-const entry = computed(() =>
-  cockpitEntryFace(cockpit.value?.entryKind, cockpit.value?.entryFace),
-);
+// Swedish fork: no Cockpit entry under the readouts. The map's entry beside
+// the globe (#cockpit-quick-entry, CockpitView) shows while the HUD is off
+// and on a phone too, where this corner is hidden.
 </script>
 
 <template>
@@ -60,10 +51,7 @@ const entry = computed(() =>
         <div class="hud-readout" hidden><div id="hud-gsd">{{ view.gsd }}</div></div>
         <div class="hud-readout"><div id="hud-alt">{{ view.alt }}</div></div>
         <div class="hud-readout"><div id="hud-ais-vessel" :class="['hud-ais-vessel', { active: view.vessel.active }]">{{ view.vessel.text }}</div></div>
-        <UiButton id="cockpit-entry-readout" :hidden="!cockpit?.entryAvailable">
-          <UiIcon :name="entry.icon" :size="null" />
-          <span>{{ entry.label }}</span>
-        </UiButton>
+        <!-- Swedish fork: the Cockpit entry is the map's, beside the globe. -->
       </div>
       <div class="hud-bracket">┘</div>
     </div>

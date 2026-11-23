@@ -343,7 +343,8 @@ export class CockpitViewController {
       }),
     );
     this._listen(this.entry, 'click', () => this.enter());
-    // The map button beside the globe enters whatever the readout would.
+    // Swedish fork: the map button beside the globe enters whatever the
+    // Contacts entry would.
     this._listen(this.quickEntry, 'click', () => this.enter());
     // Double-clicking the followed track is a third way in.
     this._listen(
@@ -363,11 +364,8 @@ export class CockpitViewController {
       (event) => this.onOrbitalWheel(event),
       { passive: false },
     );
-    // The readout's entry renders inside the Intel HUD, which may mount after
-    // this controller; delegated like the radar's range button.
-    this._listen(document, 'click', (event) => {
-      if (event.target?.closest?.('#cockpit-entry-readout')) this.enter();
-    });
+    // Swedish fork: no entry under the Intel HUD readout; the map button
+    // above is the entry outside the Context rail.
     this._listen(this.tr3bToggle, 'click', () => this.toggleTrackedTr3b());
     this._listen(this.mapViewButton, 'click', () => this.exit());
     this._listen(this.visionPrevious, 'click', () => this.cycleVisionMode(-1));

@@ -66,6 +66,9 @@ const RIGHT_STACK_OBSTACLE_SELECTOR = [
   '#command-dock',
   '#gev-voice-control',
   '#world-timeline',
+  // Swedish fork: the view switcher, which the map's Cockpit entry shows
+  // outside Cockpit too; the right column stops above it.
+  '#view-switcher',
 ].join(', ');
 /** The body class the welcome sets while BROWSE STORIES loads. */
 const OPENING_STORIES = 'first-run-opening-stories';

@@ -834,12 +834,11 @@ export function exit({ restoreTracking = true } = {}) {
     layer?.refocusTrackedById?.(subject);
   }
   this.syncEntry();
-  // Return to the card or readout control that opened Cockpit.
-  const readoutEntry = document.getElementById('cockpit-entry-readout');
+  // Return to the card or map control that opened Cockpit. Swedish fork: the
+  // map's entry, not one under the Intel HUD readout.
   const restoreTarget =
     this.entryFocusOrigin === this.entry ||
     this.entryFocusOrigin?.hasAttribute('data-entity-cockpit-entry') ||
-    (readoutEntry && this.entryFocusOrigin === readoutEntry) ||
     (this.quickEntry && this.entryFocusOrigin === this.quickEntry)
       ? this.entryFocusOrigin
       : this.entry || this.entryFocusOrigin;

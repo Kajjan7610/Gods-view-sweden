@@ -361,11 +361,13 @@ async function orbitAt(t, options) {
   return { ...scene, clock };
 }
 
-test('a tracked satellite offers an ORBIT entry in Contacts and the readout', async (t) => {
+// Swedish fork: the second entry is the map's, beside the globe; the Intel
+// HUD readout has none.
+test('a tracked satellite offers an ORBIT entry in Contacts and beside the map', async (t) => {
   const { $, cockpit } = fixture(t);
   cockpit.syncEntry();
   await nextTick();
-  for (const selector of ['#cockpit-entry', '#cockpit-entry-readout']) {
+  for (const selector of ['#cockpit-entry', '#cockpit-quick-entry']) {
     const entry = $(selector);
     assert.equal(entry.hidden, false, selector);
     assert.match(entry.textContent, /satellite_alt/);
@@ -379,7 +381,8 @@ test('a shut orbit gate keeps the entry hidden and refuses entry', async (t) => 
   cockpit.syncEntry();
   await nextTick();
   assert.equal($('#cockpit-entry').hidden, true);
-  assert.equal($('#cockpit-entry-readout').hidden, true);
+  // Swedish fork: the map's entry, the readout has none.
+  assert.equal($('#cockpit-quick-entry').hidden, true);
   assert.equal(cockpit.enter(), false);
   assert.equal(cockpit.active, false);
 });

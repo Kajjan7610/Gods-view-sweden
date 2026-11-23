@@ -22,6 +22,13 @@
   pointer-events: auto;
 }
 
+/* Swedish fork: the corner column's width below 768px in the desktop shell,
+   room for its widest button (3D), which the view switcher beside it keeps
+   clear of (cockpit.css). */
+:root {
+  --corner-column-width: 3.5rem;
+}
+
 .locale-picker {
   position: relative;
   display: flex;
@@ -263,6 +270,12 @@ body.cockpit-mode .cockpit-position-readout {
     inset-inline-end: 10px;
     inset-block-end: max(16px, env(safe-area-inset-bottom));
     flex-direction: column;
+  }
+
+  /* Swedish fork: a set width in the desktop shell, so the view switcher
+     beside the column knows where it ends. */
+  body:not(.mobile-shell) #corner-actions {
+    inline-size: var(--corner-column-width);
   }
 
   #corner-actions #key-setup-chip {

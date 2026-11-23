@@ -35,8 +35,11 @@ const {
   orbital: orbitalView,
 } = storeToRefs(useCockpitStore());
 const active = computed(() => Boolean(presence.value?.active));
-// The map entry names the subject it would ride, like the Contacts entry.
-const quickEntry = computed(() => cockpitEntryFace(presence.value?.entryKind));
+// The map entry names the subject it would ride, like the Contacts entry; an
+// application provider's subject brings its own face.
+const quickEntry = computed(() =>
+  cockpitEntryFace(presence.value?.entryKind, presence.value?.entryFace),
+);
 // A vessel subject swaps the aviation readouts for bridge ones.
 const bridge = computed(() => presence.value?.subjectKind === 'vessel');
 // A satellite subject keeps only its orbital HUD over the nadir picture.
@@ -289,7 +292,9 @@ const tickStyle = (tick) =>
 
   <nav id="view-switcher" :aria-label="t('View switcher')">
     <!-- Shown beside the map while an aircraft, vessel or satellite can be
-         entered, so Cockpit is one click away instead of inside the Context rail. -->
+         entered, so Cockpit is one click away instead of inside the Context rail.
+         Swedish fork: the one entry outside the rail, with the HUD on or off and
+         on a phone (the HUD readout's is removed). -->
     <UiButton id="cockpit-quick-entry" aria-keyshortcuts="C" :title="t('Enter cockpit view')" :hidden="active || !presence?.entryKind">
       <UiIcon :name="quickEntry.icon" :size="null" />
       <span>{{ quickEntry.label }}</span>

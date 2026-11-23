@@ -33,36 +33,8 @@
   color: #00dcff;
   font-size: 18px;
 }
-/* The same entry under the selected vehicle's Intel HUD readout. The HUD
-   lets clicks through, so the button takes them back. */
-#intel-hud #cockpit-entry-readout {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  min-height: 30px;
-  padding: 0 10px;
-  border: 1px solid var(--hud-border);
-  border-radius: 6px;
-  background: rgba(2, 12, 18, 0.72);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  pointer-events: auto;
-  cursor: pointer;
-}
-#intel-hud #cockpit-entry-readout[hidden] {
-  display: none;
-}
-#intel-hud #cockpit-entry-readout:hover,
-#intel-hud #cockpit-entry-readout:focus-visible {
-  border-color: var(--hud-color);
-  outline: none;
-}
-#intel-hud #cockpit-entry-readout .material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
-  font-size: 16px;
-  text-transform: none;
-}
+/* Swedish fork: no entry under the Intel HUD readout; the map's entry is
+   #view-switcher #cockpit-quick-entry, below. */
 #cockpit-entry kbd {
   padding: 3px 5px;
   border: 1px solid rgba(220, 238, 255, 0.25);
@@ -2200,6 +2172,21 @@ body.cockpit-mode #intel-hud .hud-left-edge {
 }
 body.cockpit-mode #intel-hud .hud-right-edge {
   right: 22px;
+}
+
+/* Swedish fork: the map's quick entry shows the switcher outside Cockpit too.
+   Up to 767.98px the corner buttons stand in a column at the bottom right
+   (bottom left, right to left; locale-picker.css), whose height changes with
+   the buttons shown, so in the desktop shell the switcher stands beside it,
+   level with its bottom: the column's inline offset, its width and a gap.
+   It rises with the World Timeline, which runs across the bottom there. */
+@media (max-width: 767.98px) {
+  body:not(.mobile-shell):not(.cockpit-mode) #view-switcher {
+    inset-inline: auto calc(10px + var(--corner-column-width) + 0.5rem);
+    bottom: calc(
+      max(16px, env(safe-area-inset-bottom)) + var(--world-timeline-lift, 0px)
+    );
+  }
 }
 
 @media (max-width: 760px) {

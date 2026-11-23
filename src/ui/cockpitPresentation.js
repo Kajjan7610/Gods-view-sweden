@@ -176,8 +176,9 @@ export function tleAgeParts(ageMs) {
 
 /**
  * The Cockpit entry for each subject it can ride: an aircraft's cockpit, a
- * vessel's bridge or a satellite's orbit. Both entry buttons (Contacts and
- * the Intel HUD readout) show it.
+ * vessel's bridge or a satellite's orbit. Both entry buttons show it:
+ * Contacts' and, in the Swedish fork, the map's beside the globe (the Intel
+ * HUD readout has none).
  */
 const COCKPIT_ENTRY_FACES = Object.freeze({
   aircraft: Object.freeze({ icon: 'flight', label: msg('COCKPIT') }),

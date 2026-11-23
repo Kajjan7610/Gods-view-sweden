@@ -1,8 +1,9 @@
 // The small surfaces' buttons and Material glyphs are the kit's: the locale
 // picker, the phone tab bar, the globe actions and compass, the imagery
 // divider, the scene sharing dialog, the layer group index, the celestial
-// ring, the title logo, Exit clean view, the HUD's cockpit entry, the News
-// cards, the rail cards, the layer rows' toggles, the credits line and the
+// ring, the title logo, Exit clean view, the Intel HUD (Swedish fork: no
+// cockpit entry there), the News cards, the rail cards, the layer rows'
+// toggles, the credits line and the
 // camera calibration chips hand-write no <button> and no Material Symbols
 // span. The Omnibar guide's extra rings are its template's, not built in
 // script. The locale picker's globe, caret and check and a News card's
@@ -40,7 +41,9 @@ const SURFACES = {
   // The overlay targets' buttons and the title logo.
   'views/SceneChromeView.vue': [2, 0, 0],
   'views/DisplayControlsView.vue': [1, 0, 0],
-  'views/IntelHudView.vue': [1, 0, 1],
+  // Swedish fork: −1 button and −1 glyph, the readout's Cockpit entry; the
+  // map's entry beside the globe (CockpitView) is the one.
+  'views/IntelHudView.vue': [0, 0, 0],
   // The card's face and the selected card's clear chip.
   'news/NewsCard.vue': [2, 0, 0],
   'rail/RailCard.vue': [1, 0, 0],

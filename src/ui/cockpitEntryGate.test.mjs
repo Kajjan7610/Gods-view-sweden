@@ -21,9 +21,10 @@ import { CockpitCoordinator } from './cockpitCoordinator.js';
 import { ContextControls } from './contextControls.js';
 import { _handleContextLayerChange } from './contextLayerChanges.js';
 import { useCockpitStore } from './stores/cockpit.js';
-import { useHudStore } from './stores/hud.js';
 import ContextView from './views/ContextView.vue';
 import IntelHudView from './views/IntelHudView.vue';
+// Swedish fork: the map's entry (#cockpit-quick-entry) is CockpitView's.
+import CockpitView from './views/CockpitView.vue';
 
 const CIVIL = Object.freeze({
   icao24: 'abc123',
@@ -71,7 +72,11 @@ function fixture(
   const host = document.body.appendChild(document.createElement('div'));
   const pinia = createPinia();
   const app = createApp(
-    defineComponent(() => () => [h(ContextView), h(IntelHudView)]),
+    defineComponent(() => () => [
+      h(ContextView),
+      h(IntelHudView),
+      h(CockpitView),
+    ]),
   ).use(pinia);
   app.mount(host);
   const store = useCockpitStore(pinia);
@@ -345,28 +350,30 @@ test('other layers may be turned off during a session; the ridden layer ends it'
   assert.equal(cockpit.active, false, 'the ridden layer going off ends it');
 });
 
-test('the readout offers the same entry, labelled by kind, and enters on click', async (t) => {
-  const { $, cockpit, pinia } = fixture(t, {
+// Swedish fork: the map's entry beside the globe, not one under the Intel HUD
+// readout, which shows only while the HUD does.
+test('the map offers the same entry, labelled by kind, and enters on click', async (t) => {
+  const { $, cockpit } = fixture(t, {
     enabled: ['flights'],
     tracked: { layerId: 'flights', info: CIVIL },
   });
-  useHudStore(pinia);
-  const readoutEntry = $('#cockpit-entry-readout');
-  assert.equal(readoutEntry.hidden, true, 'hidden until entry is available');
+  assert.equal($('#cockpit-entry-readout'), null, 'no entry under the readout');
+  const mapEntry = $('#cockpit-quick-entry');
+  assert.equal(mapEntry.hidden, true, 'hidden until entry is available');
   cockpit.syncEntry();
   await nextTick();
-  assert.equal(readoutEntry.hidden, false);
-  assert.match(readoutEntry.textContent, /flight/);
-  assert.match(readoutEntry.textContent, /COCKPIT/);
+  assert.equal(mapEntry.hidden, false);
+  assert.match(mapEntry.textContent, /flight/);
+  assert.match(mapEntry.textContent, /COCKPIT/);
   assert.equal(
     $('#cockpit-entry').hidden,
     false,
     'the Contacts entry follows the same presence',
   );
-  readoutEntry.click();
+  mapEntry.click();
   await nextTick();
   assert.equal(cockpit.active, true);
-  assert.equal(readoutEntry.hidden, true, 'inside, there is nothing to enter');
+  assert.equal(mapEntry.hidden, true, 'inside, there is nothing to enter');
 });
 
 const AIR_AND_SEA = [
@@ -601,7 +608,8 @@ test('without a Cockpit, ending Contacts restores the layers it found', async (t
   assert.deepEqual(on(manager), [], 'Live Flights goes back off');
 });
 
-test('the readout entry reads BRIDGE for a selected vessel', async (t) => {
+// Swedish fork: the map's entry; the readout has none.
+test('the map entry reads BRIDGE for a selected vessel', async (t) => {
   const { $, store } = fixture(t);
   store.publishPresence({
     active: false,
@@ -611,10 +619,10 @@ test('the readout entry reads BRIDGE for a selected vessel', async (t) => {
     tr3b: null,
   });
   await nextTick();
-  const readoutEntry = $('#cockpit-entry-readout');
-  assert.equal(readoutEntry.hidden, false);
-  assert.match(readoutEntry.textContent, /directions_boat/);
-  assert.match(readoutEntry.textContent, /BRIDGE/);
+  const mapEntry = $('#cockpit-quick-entry');
+  assert.equal(mapEntry.hidden, false);
+  assert.match(mapEntry.textContent, /directions_boat/);
+  assert.match(mapEntry.textContent, /BRIDGE/);
 });
 
 test('without providers the built-in order decides: a vessel selected after an aircraft still reads COCKPIT', async (t) => {
@@ -629,7 +637,8 @@ test('without providers the built-in order decides: a vessel selected after an a
   cockpit.syncEntry();
   await nextTick();
   assert.equal(store.presence.entryKind, 'aircraft');
-  assert.match($('#cockpit-entry-readout').textContent, /COCKPIT/);
+  // Swedish fork: the map's entry; the readout has none.
+  assert.match($('#cockpit-quick-entry').textContent, /COCKPIT/);
   // And the other way round: an aircraft tracked after the vessel.
   const later = fixture(t, {
     enabled: ['flights', 'ais-live-vessels'],
@@ -652,14 +661,14 @@ test('a tracked satellite needs Satellites on for the ORBIT entry', async (t) =>
 });
 
 test('with Satellites on, the tracked satellite offers ORBIT and reports itself', async (t) => {
-  const { $, cockpit, coordinator, pinia } = fixture(t, {
+  const { $, cockpit, coordinator } = fixture(t, {
     enabled: ['satellites'],
     satellite: SATELLITE,
   });
-  useHudStore(pinia);
   cockpit.syncEntry();
   await nextTick();
-  for (const selector of ['#cockpit-entry', '#cockpit-entry-readout']) {
+  // Swedish fork: Contacts' entry and the map's; the readout has none.
+  for (const selector of ['#cockpit-entry', '#cockpit-quick-entry']) {
     assert.equal($(selector).hidden, false, selector);
     assert.match($(selector).textContent, /satellite_alt/);
     assert.match($(selector).textContent, /ORBIT/);
@@ -668,7 +677,7 @@ test('with Satellites on, the tracked satellite offers ORBIT and reports itself'
   assert.equal(coordinator.getCockpitState().entryAllowed, false);
   assert.equal(coordinator.controlCockpit('enter').ok, false);
   assert.equal(cockpit.active, false);
-  $('#cockpit-entry-readout').click();
+  $('#cockpit-quick-entry').click();
   await nextTick();
   assert.equal(cockpit.active, true);
   assert.equal(cockpit.subjectKind, 'satellite');
@@ -697,7 +706,8 @@ test('tracked debris offers no ORBIT entry and refuses to be entered', async (t)
   });
   cockpit.syncEntry();
   await nextTick();
-  for (const selector of ['#cockpit-entry', '#cockpit-entry-readout'])
+  // Swedish fork: Contacts' entry and the map's; the readout has none.
+  for (const selector of ['#cockpit-entry', '#cockpit-quick-entry'])
     assert.equal($(selector).hidden, true, selector);
   assert.equal(cockpit.enter(), false);
   assert.equal(cockpit.enter({ kind: 'satellite' }), false);
@@ -774,7 +784,9 @@ test("a provider's subject needs only its own layer, and never a Context change 
   await nextTick();
   assert.equal(on.$('#cockpit-entry').hidden, false);
   assert.match(on.$('#cockpit-entry').textContent, /RIDE/);
-  assert.match(on.$('#cockpit-entry-readout').textContent, /commute/);
+  // Swedish fork: the map's entry shows the provider's face too.
+  assert.match(on.$('#cockpit-quick-entry').textContent, /commute/);
+  assert.match(on.$('#cockpit-quick-entry').textContent, /RIDE/);
 });
 
 test("a provider's view reports its subject, refuses voice entry and ends with its layer", async (t) => {

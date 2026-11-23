@@ -440,6 +440,25 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-23 (en ingång till Cockpit bredvid kartan)
+- Två knappar till Cockpit syntes samtidigt: originalets under HUD:ens
+  avläsning nere till höger och den svenska versionens bredvid kartan.
+  Originalets är borttagen. Den syntes bara när HUD:en var på och i
+  layouten Taktisk (Minimal döljer det hörnet, och HUD:en slår på sig själv
+  bara i några av kartstilarna), och aldrig på mobilen, där HUD:ens hörn är
+  dolda. Knappen bredvid kartan syns för flygplan, fartyg och satelliter med
+  HUD:en på eller av, i alla HUD-layouter och på mobilen, och anger
+  tangenten C för skärmläsare. Ingången i Kontakter och tangenten C finns
+  kvar.
+- Mellan 721 och 767 pixlars bredd står hörnknapparna (Power Up, 3D,
+  språket och textstorleken) i en kolumn nere till höger, och knappen
+  hamnade på den. Nu står den bredvid kolumnen, i jämnhöjd med dess
+  nederkant, och spegelvänt med kolumnen vid text från höger till vänster.
+  Den stiger med tidslinjen när den visas, och panelerna till höger slutar
+  ovanför knappen.
+- Knappen bredvid kartan visar nu också symbol och namn för något som ett
+  annat program låter Cockpit åka med, som originalets knapp gjorde.
+
 ### 2026-11-22 (Launch Library: bara det appen läser)
 - Rymduppdragens proxy (`/api/launches`) sparade och skickade vidare hela
   Launch Librarys detaljerade svar: uppdateringarna med bidragsgivarnas

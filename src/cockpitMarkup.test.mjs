@@ -72,9 +72,11 @@ const voiceActions = fs.readFileSync(
 );
 
 test('Cockpit has one reset action beside its bottom exit path', () => {
-  // The Swedish fork keeps a map-side entry beside the exit path, shown only
-  // while an aircraft is tracked.
+  // The Swedish fork keeps a map-side entry beside the exit path, shown while
+  // an aircraft, vessel or satellite can be entered.
   assert.equal((html.match(/id="cockpit-quick-entry"/g) || []).length, 1);
+  // Swedish fork: and no second one under the Intel HUD readout.
+  assert.doesNotMatch(html, /id="cockpit-entry-readout"/);
   assert.doesNotMatch(html, /id="cockpit-exit"/);
   // The exit button's attributes, in whatever order the button renders them.
   const exit = html.match(
@@ -1206,6 +1208,109 @@ test('mobile Cockpit prioritizes flight instruments and collision-safe controls'
     mobileCockpit[1],
     /body\.cockpit-mode #view-switcher button \{[\s\S]*?padding-inline:\s*9px;/,
   );
+});
+
+// Swedish fork: the map's Cockpit entry shows the view switcher outside
+// Cockpit. Up to 767.98px the corner buttons stand in a column at the bottom
+// right (bottom left, right to left), as tall as the buttons it shows (the
+// Power Up chip comes and goes), so in the desktop shell the switcher stands
+// beside it, level with its bottom; and the right panel column stops above
+// the switcher.
+test('the view switcher stands beside the corner column, and the right column stops above it', () => {
+  const rem = 16;
+  const read = (file) =>
+    fs.readFileSync(path.join(ROOT, 'src/ui/styles', file), 'utf8');
+  const picker = read('locale-picker.css');
+  // The column: its inline offset and bottom, and the width the desktop shell
+  // sets, all from locale-picker.css.
+  const declared = picker.match(/--corner-column-width: ([\d.]+)rem;/g) ?? [];
+  assert.equal(declared.length, 1, 'the column width is declared once');
+  const width = Number(declared[0].match(/([\d.]+)rem/)[1]) * rem;
+  const columnBlock = picker.match(
+    /@media \(max-width: (767\.98)px\) \{([\s\S]*?)\n\}/,
+  );
+  assert.ok(columnBlock, 'the corner column breakpoint is missing');
+  const column = columnBlock[2].match(
+    /\n {2}#corner-actions \{\s*inset-inline-end: (\d+)px;\s*inset-block-end: max\((\d+)px, env\(safe-area-inset-bottom\)\);\s*flex-direction: column;\s*\}/,
+  );
+  assert.ok(column, 'the corner column is missing');
+  const offset = Number(column[1]);
+  const bottom = Number(column[2]);
+  assert.match(
+    columnBlock[2],
+    /body:not\(\.mobile-shell\) #corner-actions \{\s*inline-size: var\(--corner-column-width\);\s*\}/,
+  );
+  // That width holds the column's widest buttons, 3D and the text size, as
+  // their own rules size them (sverige-legibility.css); the mono face is
+  // JetBrains Mono, whose glyphs advance 0.6em.
+  const legibility = read('sverige-legibility.css');
+  const value = (pattern) => Number(legibility.match(pattern)[1]);
+  const padX = value(
+    /#text-size-button,\s*#globe-saver-button \{[^}]*?padding: [\d.]+rem ([\d.]+)rem;/,
+  );
+  const gap = value(
+    /#text-size-button,\s*#globe-saver-button \{[^}]*?gap: ([\d.]+)rem;/,
+  );
+  const icon = value(
+    /#globe-saver-button \.material-symbols-outlined \{[^}]*?font-size: ([\d.]+)rem;/,
+  );
+  const label = value(/\.globe-saver-label \{[^}]*?font-size: ([\d.]+)rem;/);
+  const tracking = value(
+    /\.globe-saver-label \{[^}]*?letter-spacing: ([\d.]+)em;/,
+  );
+  const glyph = value(/\.text-size-glyph \{[^}]*?font-size: ([\d.]+)rem;/);
+  const small = value(/\.text-size-glyph small \{[^}]*?font-size: ([\d.]+)rem;/);
+  const bars = 3 * value(/\.text-size-level i \{[^}]*?width: (\d+)px;/);
+  const barGaps = 2 * value(/\.text-size-level \{[^}]*?gap: (\d+)px;/);
+  const border = 2;
+  const threeD =
+    (2 * padX + icon + gap + 2 * (0.6 + tracking) * label) * rem + border;
+  const textSize =
+    (2 * padX + 0.6 * glyph + 0.6 * small + gap) * rem +
+    bars +
+    barGaps +
+    border;
+  for (const [name, need] of [
+    ['3D', threeD],
+    ['text size', textSize],
+  ])
+    assert.ok(need <= width, `${name} needs ${need}px of the ${width}px column`);
+  // The switcher: beside the column at the same breakpoint, level with its
+  // bottom, in the desktop shell only, outside Cockpit.
+  const beside = css.match(
+    /@media \(max-width: (767\.98)px\) \{\s*body:not\(\.mobile-shell\):not\(\.cockpit-mode\) #view-switcher \{\s*inset-inline: auto calc\((\d+)px \+ var\(--corner-column-width\) \+ ([\d.]+)rem\);\s*bottom: calc\(\s*max\((\d+)px, env\(safe-area-inset-bottom\)\) \+ var\(--world-timeline-lift, 0px\)\s*\);\s*\}\s*\}/,
+  );
+  assert.ok(beside, 'the switcher beside the corner column is missing');
+  assert.equal(beside[1], columnBlock[1], 'the column’s breakpoint');
+  assert.equal(Number(beside[2]), offset, 'the column’s inline offset');
+  assert.ok(Number(beside[3]) * rem >= 8, 'at least 8px from the column');
+  assert.equal(Number(beside[4]), bottom, 'level with the column’s bottom');
+  // So its end edge stands this far in from the screen's: the column's
+  // offset, its width and the gap.
+  assert.equal(offset + width + Number(beside[3]) * rem, 10 + 56 + 8);
+  // Cockpit and the phone shell keep their own places.
+  const narrow = css.match(
+    /@media \(max-width: 760px\) \{([\s\S]*?)\n\}\n\n@media \(prefers-reduced-motion/,
+  );
+  assert.ok(narrow, 'the 760px rules are missing');
+  assert.match(
+    narrow[1],
+    /body\.cockpit-mode #view-switcher \{[\s\S]*?bottom:\s*max\(76px, env\(safe-area-inset-bottom\)\);/,
+  );
+  assert.match(
+    fs.readFileSync(path.join(ROOT, 'src/ui/styles/mobile-shell.css'), 'utf8'),
+    /body\.mobile-shell:not\(\.cockpit-mode\) #view-switcher \{\s*right: 12px;\s*bottom: calc\(var\(--mobile-tab-space\) \+ 106px \+ var\(--world-timeline-lift, 0px\)\);\s*\}/,
+  );
+  // The right panel column stops above it.
+  const layout = fs.readFileSync(
+    new URL('./ui/panelLayoutController.js', import.meta.url),
+    'utf8',
+  );
+  const right = layout.match(
+    /const RIGHT_STACK_OBSTACLE_SELECTOR = \[([\s\S]*?)\]\.join/,
+  );
+  assert.ok(right, 'the right column obstacles are missing');
+  assert.match(right[1], /'#view-switcher'/);
 });
 
 test('the unread Stories announcement waits until Cockpit closes', () => {
