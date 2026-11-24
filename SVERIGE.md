@@ -344,10 +344,10 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   publicerade på aisstream.io (sökt 2026-11-11); tjänsten beskriver sig
   som gratis. Hör till gruppen utan publicerad licens.
 - **Kollektivtrafik och tåg (originalets lager):** ett flöde vars operatör
-  inte anger någon licens hämtas inte; i dag gäller det 17 trafikflöden och
-  5 tågflöden (se loggen 2026-11-22). Under granskning, och påslagna tills
-  vidare: SEPTA:s tåg och spårvagnar, TTC i Toronto, PID i Prag och
-  Edmonton Transit Service.
+  inte anger någon licens hämtas inte; i dag gäller det 16 trafikflöden och
+  5 tågflöden (se loggen 2026-11-22 och 2026-11-24). Under granskning, och
+  påslagna tills vidare: SEPTA:s tåg och spårvagnar, TTC i Toronto, PID i
+  Prag och Edmonton Transit Service.
 - **NASA FIRMS (bränder, originalets lager):** öppna data. NASA uppmuntrar
   fri användning och publicering; källan anges som "NASA FIRMS"
   (earthdata.nasa.gov/data/tools/firms/faq, läst 2026-11-11).
@@ -589,6 +589,26 @@ git merge origin/main
 - Med förslagen går nu alltså också ungefär vilken del av kartan som visas
   till komoots Photon-tjänst i Tyskland. Den vanliga platssökningen skickade
   redan vyns mitt dit, utan avrundning.
+
+### 2026-11-24 (Adelaide Metro i kollektivtrafiklagret)
+- Adelaide Metros bussar, tåg, spårvagnar och SeaLink-färjan visas nu i
+  kollektivtrafiklagret. Originalet anger ingen licens för realtidsflödet,
+  eftersom delstatens katalogsida inte gick att läsa för ett skript, och
+  därför hämtade den svenska versionen inte flödet. Sidan lästes 2026-11-23
+  i en webbläsare: datasetet "Adelaide Metro Real-Time Passenger
+  Information" från Department for Infrastructure and Transport på
+  data.sa.gov.au har licensen Creative Commons Attribution, med länk till
+  CC BY 4.0, och beskrivningen säger att Adelaide Metro ger sin
+  realtidsinformation "in SIRI and GTFS-R format". Tåglagret hämtar redan
+  samma flöde under CC BY 4.0.
+- Flödet har nu licensen CC BY 4.0 med länk till datasetet, och källan
+  anges som "Adelaide Metro (Department for Infrastructure and Transport)"
+  med CC BY 4.0. Som alla trafikflöden hämtas det bara när lagret är på och
+  kartan visar Adelaide.
+- Den svenska versionen hämtar nu 54 av 70 trafikflöden (de svenska när
+  nycklarna är satta); 16 hämtas inte, eftersom deras operatörer inte anger
+  någon licens. README nämner Adelaide i raden för kollektivtrafik, och
+  DATA_SOURCES.md har licensen och de nya siffrorna.
 
 ### 2026-11-23 (flyget i hela vyn)
 - När vyn är större än skivan runt kartans mitt, som utzoomat över

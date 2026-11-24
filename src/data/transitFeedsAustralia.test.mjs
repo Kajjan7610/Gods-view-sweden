@@ -3,7 +3,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { transitFeedCredit } from './dataCredits.js';
 import {
-  getRegisteredTransitFeed,
   getTransitFeed,
   publicTransitCatalog,
   transitFeedsInRange,
@@ -53,10 +52,7 @@ test('TransLink route ids resolve rail, light rail and ferries; buses stay a def
 });
 
 test('Adelaide Metro route ids resolve trains, trams and the SeaLink ferry', () => {
-  // Swedish fork: Adelaide Metro states no licence, so it is registered but
-  // not polled; its route modes are still read from the registry.
-  assert.equal(getTransitFeed('adelaide-metro'), null);
-  const adelaide = getRegisteredTransitFeed('adelaide-metro');
+  const adelaide = getTransitFeed('adelaide-metro');
   const cases = [
     ['BEL', 'rail'],
     ['GAWC', 'rail'],
@@ -93,6 +89,24 @@ test('TransLink feeds credit the operator and department as text', () => {
       /^Transit \(Translink, Department of Transport and Main Roads\): <a href="https:\/\/translink\.com\.au\/about-translink\/open-data"[^>]*>CC BY 4\.0<\/a>$/,
     );
   }
+});
+
+test('Adelaide Metro is polled under CC BY 4.0 and credits the department', () => {
+  // Swedish fork: the state catalogue's realtime dataset, read in a browser on
+  // 2026-11-23, is CC BY 4.0, so the feed is routable, offered and in range.
+  const adelaide = publicTransitCatalog().find(
+    (feed) => feed.id === 'adelaide-metro',
+  );
+  assert.ok(adelaide, 'Adelaide Metro is offered to the browser');
+  assert.equal(getTransitFeed('adelaide-metro')?.license, 'CC BY 4.0');
+  assert.deepEqual(
+    transitFeedsInRange(-34.9285, 138.6007).map((feed) => feed.id),
+    ['adelaide-metro'],
+  );
+  assert.match(
+    transitFeedCredit(adelaide).html,
+    /^Transit \(Adelaide Metro \(Department for Infrastructure and Transport\)\): <a href="https:\/\/data\.sa\.gov\.au\/data\/dataset\/adelaide-metro-real-time-passenger-information"[^>]*>CC BY 4\.0<\/a>$/,
+  );
 });
 
 test('DATA_SOURCES documents the TransLink feeds in the transit row style', () => {

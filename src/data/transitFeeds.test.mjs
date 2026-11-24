@@ -732,8 +732,9 @@ test('feeds with no stated licence say so and name the basis they ship on', () =
 });
 
 test('feeds that state no licence are registered, credited and never polled', () => {
-  // Swedish fork: 13 labels say so; four more name a page or a catalogue
+  // Swedish fork: 12 labels say so; four more name a page or a catalogue
   // that states no licence (read 2026-11-21) and are `licensed: false`.
+  // Adelaide Metro is polled: its catalogue, read 2026-11-23, is CC BY 4.0.
   const off = TRANSIT_FEED_REGISTRY.filter((feed) => statesNoLicence(feed));
   assert.deepEqual(
     off.filter((feed) => feed.licensed === false).map((feed) => feed.id),
@@ -745,8 +746,8 @@ test('feeds that state no licence are registered, credited and never polled', ()
     ],
   );
   assert.equal(TRANSIT_FEED_REGISTRY.length, 70);
-  assert.equal(off.length, 17);
-  assert.equal(TRANSIT_ENABLED_FEEDS.length, 53, 'the other 53 are polled');
+  assert.equal(off.length, 16);
+  assert.equal(TRANSIT_ENABLED_FEEDS.length, 54, 'the other 54 are polled');
   const offered = new Set(publicTransitCatalog().map((entry) => entry.id));
   for (const feed of off) {
     assert.equal(getTransitFeed(feed.id), null, `${feed.id} is not routable`);

@@ -1739,11 +1739,16 @@ export const TRANSIT_FEED_REGISTRY = Object.freeze([
     // Any Accept naming a protobuf type gets base64 text labelled JSON; only
     // */* returns the binary feed (checked 2026-11-08).
     headers: { Accept: '*/*' },
-    license: 'No licence stated for the realtime feed',
-    licenseUrl: 'https://mobilitydatabase.org/feeds/gtfs_rt/mdb-1772',
-    attribution: 'Adelaide Metro',
+    // Swedish fork: the original states no licence here because the state
+    // catalogue page refused automated reads. Read in a browser (2026-11-23),
+    // its realtime dataset is CC BY 4.0, so the fork polls the feed.
+    license: 'CC BY 4.0',
+    licenseUrl:
+      'https://data.sa.gov.au/data/dataset/adelaide-metro-real-time-passenger-information',
+    attribution: 'Adelaide Metro (Department for Infrastructure and Transport)',
     terms: {
-      note: 'Official keyless endpoint; the state catalogue page refused automated reads, so no licence is quoted. Same basis as Metro Transit and OVapi. Speeds are m/s. The server picks its encoding from Accept, hence the override.',
+      quote: 'Creative Commons Attribution',
+      note: 'The licence of the data.sa.gov.au dataset “Adelaide Metro Real-Time Passenger Information” (Department for Infrastructure and Transport), read in a browser on 2026-11-23; it links to http://creativecommons.org/licenses/by/4.0. The dataset says Adelaide Metro provides its realtime information “in SIRI and GTFS-R format”. The Rail layer polls the same feed under CC BY 4.0. Official keyless endpoint. Speeds are m/s. The server picks its encoding from Accept, hence the override.',
     },
     defaultMode: 'bus',
     routeMode: adelaideMetroRouteMode,
