@@ -30,6 +30,15 @@ export async function createEsriImagery(token = arcgisApiKey()) {
       token,
       credit: ESRI_IMAGERY_CREDIT,
       enablePickFeatures: false,
+      // Swedish fork: without a policy Cesium fetches tile 23/0/0 per
+      // provider to learn what a "missing" tile looks like. The keyed
+      // service answers that probe with 404, and after a failed probe
+      // Cesium's policy never discards anything. So the probe changed
+      // nothing on screen but cost one request per provider: in the app
+      // that is the cockpit preview on aircraft cards (cardPreviews.js);
+      // the map stacks' own Esri layer goes through the globe port and has
+      // its own probe in maps/globeEngine.js.
+      tileDiscardPolicy: new Cesium.NeverTileDiscardPolicy(),
     },
   );
 }

@@ -443,6 +443,25 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-24 (Esris satellitkarta utan upprepade provrutor)
+- För att känna igen Esris bild för "ingen bild här" hämtar kartan ruta
+  23/0/0. Esris nyckeltjänst svarar 404 på den rutan, varje gång.
+- Kartans Esri-lager går genom globporten (`src/maps/globeEngine.js`),
+  både i 3D-läget och i sparläget. Den tolkade 404 som "inte läst" och
+  frågade igen med nästa omgång rutor. Det gav 47 provanrop i stället för
+  ett under de första sekunderna, och fler vid varje panorering. Anropen
+  kan dra från ArcGIS-kvoten, men om Esri räknar 404-svar har inte gått att
+  kontrollera.
+- Nu är ett svar slutgiltigt, även 404 och 401/403. Bara inget svar, 429
+  och 5xx frågas igen. Tre tester i `globeEngine.test.mjs` håller fast det,
+  och det första av dem misslyckas mot den gamla koden. I webbläsaren föll
+  provanropen från 47 till 1, och kartrutorna laddades som förut.
+- Förhandsbilden i cockpit på flygkorten skapar en egen Esri-karta i Cesium.
+  Den hämtade samma provruta en gång per förhandsbild. Efter ett
+  misslyckat prov kastar Cesium aldrig någon ruta, så provet ändrade inget
+  på skärmen. Där används nu en policy som aldrig kastar rutor och därför
+  inte hämtar provrutan (`mapSources.test.mjs`).
+
 ### 2026-11-24 (rubrikerna på kontextpanelens kort)
 - Kontextpanelens kort för en klickad punkt i många svenska lager hade
   punktens pick-id som rubrik, till exempel "se-ferry:21",

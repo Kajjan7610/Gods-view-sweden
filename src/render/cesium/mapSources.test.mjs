@@ -366,3 +366,25 @@ test('the OpenStreetMap map names its contributors on the map itself', () => {
   assert.match(osm.credit, /© OpenStreetMap contributors/);
   assert.ok(osm.credit.includes('https://www.openstreetmap.org/copyright'));
 });
+
+// Swedish fork: the cockpit preview's Esri provider must not probe tile 23/0/0
+// (the keyed service answers 404, so the probe changed nothing on screen).
+test('Esri imagery skips Cesium’s missing-tile probe', async (t) => {
+  const { createEsriImagery } = await import('./mapImagery.js');
+  let seen;
+  t.mock.method(
+    Cesium.ArcGisMapServerImageryProvider,
+    'fromBasemapType',
+    async (type, options) => {
+      seen = { type, options };
+      return {};
+    },
+  );
+  await createEsriImagery('test-key');
+  assert.equal(seen.type, Cesium.ArcGisBaseMapType.SATELLITE);
+  assert.equal(seen.options.token, 'test-key');
+  assert.ok(
+    seen.options.tileDiscardPolicy instanceof Cesium.NeverTileDiscardPolicy,
+  );
+  await assert.rejects(createEsriImagery(''), /ARCGIS_API_KEY/);
+});

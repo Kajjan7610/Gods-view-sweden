@@ -20,7 +20,9 @@ import { KEYLESS_TERRAIN_URL } from './keylessTerrain.js';
 const ESRI_MAX_LEVEL = 23;
 /**
  * A tile Esri has no imagery for: it answers every such tile with this one
- * "Map data not yet available" picture, the same bytes each time.
+ * "Map data not yet available" picture, the same bytes each time. Swedish
+ * fork: the keyed service (ibasemaps-api) answers this tile with 404
+ * instead, and then there is no picture to compare with.
  */
 const esriMissingTileUrl = (tileUrl) =>
   tileUrl.replace(/\/tile\/\d+\/\d+\/\d+/, '/tile/23/0/0');
@@ -42,15 +44,29 @@ const credit = (text) => ({ text });
 /** Esri's "no imagery here" picture's bytes, once read; null if unread. */
 let esriMissing = null;
 
+/**
+ * Whether Esri's answer to the "no imagery here" picture is final. Swedish
+ * fork: the keyed service answers that tile with 404, every time, so a
+ * refusal is final (there is no picture to compare with); only no answer,
+ * a 429 or a 5xx is asked again. Before, every 404 sent the probe again
+ * with the next wave of tiles: 47 probes in the first seconds instead of
+ * one, and more with every pan, in 3D and saver mode alike (2026-11-24).
+ */
+const esriAnswerIsFinal = (status) =>
+  status >= 200 && status < 500 && status !== 429;
+
 /** Read Esri's "no imagery here" picture, once; null while it cannot be. */
 function esriMissingTile(tileUrl) {
   esriMissing ??= fetch(esriMissingTileUrl(tileUrl))
-    .then((response) => (response.ok ? response.arrayBuffer() : null))
-    .then((buffer) => (buffer ? new Uint8Array(buffer) : null))
-    .catch(() => null)
-    .then((bytes) => {
-      // Not read: asked for again with the next tile.
-      if (!bytes) esriMissing = null;
+    .then(async (response) => ({
+      bytes: response.ok ? new Uint8Array(await response.arrayBuffer()) : null,
+      final: esriAnswerIsFinal(response.status),
+    }))
+    .catch(() => ({ bytes: null, final: false }))
+    .then(({ bytes, final }) => {
+      // No final answer (none, a 429, a 5xx, an unreadable body): asked
+      // for again with the next tile.
+      if (!final) esriMissing = null;
       return bytes;
     });
   return esriMissing;
@@ -61,7 +77,7 @@ const sameBytes = (a, b) =>
 
 /**
  * An Esri tile, fetched. Esri's "no imagery here" picture is a missing tile,
- * drawn from its parent, as Cesium's own Esri provider discards it; a
+ * drawn from its parent, as Cesium's DiscardMissingTileImagePolicy would; a
  * refused tile is a failed one, which counts toward the Esri source's
  * fallback to OSM.
  */

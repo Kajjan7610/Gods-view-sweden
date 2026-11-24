@@ -473,3 +473,79 @@ test('a released imagery spec with a destroy of its own is told, once', () => {
   engine.release(own);
   assert.equal(engine.isDestroyed(own), true);
 });
+
+// Swedish fork: the keyed Esri service answers the no-imagery probe with
+// 404, every time. That answer is final, so the probe is not sent again
+// with every tile; only no answer (or a 429 / 5xx) is asked again.
+test('a refused Esri no-imagery probe is not sent again with each tile', async () => {
+  const fresh = await import('./globeEngine.js?esri-probe-404');
+  const spec = fresh.globeMapEngine.imagery.esri('test-key');
+  const at = (z, y, x) =>
+    spec.url.replace('{z}', z).replace('{y}', y).replace('{x}', x);
+  const probes = (asked) =>
+    asked.filter((url) => url.split('?')[0].endsWith('/tile/23/0/0')).length;
+  const signal = new AbortController().signal;
+  await withFetch(
+    (url) =>
+      url.split('?')[0].endsWith('/tile/23/0/0')
+        ? bytesResponse([], 404)
+        : bytesResponse([1, 2, 3]),
+    async (asked) => {
+      for (let x = 0; x < 5; x++) {
+        const tile = await spec.fetchTile({ url: at(10, 3, x), signal });
+        assert.deepEqual([...new Uint8Array(tile.bytes)], [1, 2, 3]);
+      }
+      assert.equal(probes(asked), 1, 'one probe for the whole session');
+    },
+  );
+});
+
+test('an Esri no-imagery probe that got no answer is asked again', async () => {
+  const fresh = await import('./globeEngine.js?esri-probe-offline');
+  const spec = fresh.globeMapEngine.imagery.esri('test-key');
+  const at = (z, y, x) =>
+    spec.url.replace('{z}', z).replace('{y}', y).replace('{x}', x);
+  const signal = new AbortController().signal;
+  let probe = 0;
+  await withFetch(
+    (url) => {
+      if (!url.split('?')[0].endsWith('/tile/23/0/0'))
+        return bytesResponse([1, 2, 3]);
+      probe += 1;
+      return probe === 1 ? new Error('offline') : bytesResponse([9, 9]);
+    },
+    async () => {
+      await spec.fetchTile({ url: at(10, 3, 1), signal });
+      await spec.fetchTile({ url: at(10, 3, 2), signal });
+      await spec.fetchTile({ url: at(10, 3, 3), signal });
+      assert.equal(probe, 2, 'asked again once, then kept');
+    },
+  );
+});
+
+test('an Esri no-imagery probe answered 503 is asked again, a 403 is not', async () => {
+  for (const [status, expected] of [
+    [503, 3],
+    [403, 1],
+  ]) {
+    const fresh = await import(`./globeEngine.js?esri-probe-${status}`);
+    const spec = fresh.globeMapEngine.imagery.esri('test-key');
+    const at = (z, y, x) =>
+      spec.url.replace('{z}', z).replace('{y}', y).replace('{x}', x);
+    const signal = new AbortController().signal;
+    let probe = 0;
+    await withFetch(
+      (url) => {
+        if (!url.split('?')[0].endsWith('/tile/23/0/0'))
+          return bytesResponse([1, 2, 3]);
+        probe += 1;
+        return bytesResponse([], status);
+      },
+      async () => {
+        for (let x = 0; x < 3; x++)
+          await spec.fetchTile({ url: at(10, 3, x), signal });
+        assert.equal(probe, expected, `probe answered ${status}`);
+      },
+    );
+  }
+});
