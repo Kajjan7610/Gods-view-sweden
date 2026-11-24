@@ -444,6 +444,14 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-24 (förarvyn utan aktuell position)
+- Ett tåg som stod vid perrongen på Stockholm C utan aktuell position
+  visade "VISAS 120 S EFTER REALTID · RAK LINJE MELLAN POSITIONSRAPPORTER"
+  överst i förarvyn, fast fordonet stod still på sin senaste rapporterade
+  plats. Nu säger raden "INGEN AKTUELL POSITION" i varningsfärg, med samma
+  ord som rutan LÄGE och fordonskorten. Det gäller både tåg och
+  kollektivtrafikfordon. Ett test i `cockpitRides.test.mjs` håller fast det.
+
 ### 2026-11-24 (förarvy från bussar, spårvagnar och tåg)
 - Cockpit kan åka med en buss, spårvagn eller ett tåg, inte bara med plan,
   fartyg och satelliter. Välj fordonet på kartan i lagret Kollektivtrafik

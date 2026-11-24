@@ -692,6 +692,35 @@ test('a stop is the id the newest report named, never a name', () => {
   }
 });
 
+test('a vehicle with no recent fix says so, not how far behind it is shown', (t) => {
+  for (const ride of [
+    transitRide(
+      transitLayer(
+        vehicle({ motion: { word: 'NO FIX', shownBehindMs: 120_000 } }),
+      ),
+    ),
+    railRide(
+      railLayer(train({ motion: { word: 'NO FIX', shownBehindMs: 120_000 } })),
+    ),
+  ]) {
+    enter(ride);
+    const view = cockpitSubjectHudView(hudOf(ride));
+    assert.deepEqual(view.meta, {
+      text: 'NO RECENT FIX',
+      tone: 'warning',
+    });
+  }
+  inLocale(t, 'sv');
+  const ride = railRide(
+    railLayer(train({ motion: { word: 'NO FIX', shownBehindMs: 120_000 } })),
+  );
+  enter(ride);
+  assert.equal(
+    cockpitSubjectHudView(hudOf(ride)).meta.text,
+    'INGEN AKTUELL POSITION',
+  );
+});
+
 test('a feed that has stopped updating raises a warning', () => {
   const ride = transitRide(
     transitLayer(vehicle({ motion: { feedStale: true } })),

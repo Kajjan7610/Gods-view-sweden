@@ -562,15 +562,25 @@ function createRide(spec, layer, requestFocus) {
         detail: t('Shown at street level · depth not in the feed'),
       });
     const name = nameOf(subject, draft.word, draft.named);
+    // A vehicle with no recent fix stands where it was last reported: no lag
+    // or glide to tell, only that its position is not current (2026-11-24,
+    // a parked train at Stockholm C read "shown 120 s behind").
+    const meta =
+      draft.motion === 'NO FIX'
+        ? {
+            text: t('No recent fix').toLocaleUpperCase(draft.locale),
+            tone: 'warning',
+          }
+        : {
+            text: draft.straight
+              ? `${lag} · ${t('STRAIGHT LINE BETWEEN POSITION REPORTS')}`
+              : lag,
+            tone: 'estimate',
+          };
     const next = Object.freeze({
       kicker: feedName ? `${kind} · ${feedName}` : kind,
       title: name,
-      meta: {
-        text: draft.straight
-          ? `${lag} · ${t('STRAIGHT LINE BETWEEN POSITION REPORTS')}`
-          : lag,
-        tone: 'estimate',
-      },
+      meta,
       speed: {
         value: draft.kmh,
         unit: t('km/h'),
