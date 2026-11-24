@@ -6128,5 +6128,8 @@
   "Every minute; the security queues every 3 minutes": "Каждую минуту; очереди на досмотр каждые 3 минуты",
   "CC0 1.0 (Trafikverket) · Swedavia's API terms: shown in the app, credited": "CC0 1.0 (Trafikverket) · Условия API Swedavia: показ в приложении, с источником",
   "Nothing published in view. Only protected areas whose managers publish their trails and facilities are covered, plus the state mountain trails.": "В этом виде ничего не опубликовано. Охвачены только охраняемые территории, управляющие которых публикуют свои тропы и объекты, а также государственные горные тропы.",
-  "video stream|Live": "Прямой эфир"
+  "video stream|Live": "Прямой эфир",
+  "Train {number}": "Поезд {number}",
+  "Train {number} to {destination}": "Поезд {number} до {destination}",
+  "Polisen gives no exact place": "Polisen не указывает точное место"
 }

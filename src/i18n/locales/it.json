@@ -6005,5 +6005,8 @@
   "Every minute; the security queues every 3 minutes": "Ogni minuto; le code ai controlli di sicurezza ogni 3 minuti",
   "CC0 1.0 (Trafikverket) · Swedavia's API terms: shown in the app, credited": "CC0 1.0 (Trafikverket) · Condizioni dell’API di Swedavia: mostrato nell’app, con fonte",
   "Nothing published in view. Only protected areas whose managers publish their trails and facilities are covered, plus the state mountain trails.": "Niente di pubblicato nella vista. Sono coperte solo le aree protette i cui gestori pubblicano i propri sentieri e strutture, più i sentieri statali di montagna.",
-  "video stream|Live": "In diretta"
+  "video stream|Live": "In diretta",
+  "Train {number}": "Treno {number}",
+  "Train {number} to {destination}": "Treno {number} per {destination}",
+  "Polisen gives no exact place": "Polisen non indica il luogo esatto"
 }

@@ -2,7 +2,7 @@ import { msg, onLocaleChange, t } from '../../i18n/index.js';
 import { fromDegrees } from '../../geo/ellipsoid.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
-import { analystRows } from '../analystRows.js';
+import { analystPick, analystRows } from '../analystRows.js';
 import { COMPANIES, companyById, storeColor, tidyStores } from './records.js';
 import { COMPANY_STORES_OVERLAY_SOURCE_ID, buildStoreCard } from './cards.js';
 export * from './records.js';
@@ -10,6 +10,17 @@ export * from './cards.js';
 export { createCompanyStoresSource } from './source.js';
 
 export const COMPANY_STORES_LAYER_ID = 'company-stores';
+/**
+ * A store by its chain and its own name ("Willys · Sickla"), the chain left
+ * out when the name already says it ("ICA Nära Sjöstaden").
+ */
+function storeName(row) {
+  const chain = row.brand || companyById(row.company)?.name || '';
+  const name = row.name || '';
+  if (!chain || name.toLowerCase().includes(chain.toLowerCase()))
+    return name || chain || null;
+  return name ? `${chain} · ${name}` : chain;
+}
 const PICK_PREFIX = 'se-store:';
 
 /** A store on the ground: its bundled height above the ellipsoid, else 0. */
@@ -357,12 +368,19 @@ export function createCompanyStoresLayer({
     getAnalystRecords(maxCount = 2000) {
       if (!_enabled) return [];
       return analystRows(visible(), maxCount, {
+        name: storeName,
         extra: (row) => ({
           company: companyById(row.company)?.name ?? row.company,
           brand: row.brand ?? null,
           address: row.address ?? null,
         }),
       });
+    },
+
+    /** What a picked store is called, and where it is. */
+    findByQuery(pickId) {
+      const id = pickedStore(pickId);
+      return id ? analystPick(_storeById.get(id), { name: storeName }) : null;
     },
 
     getStats() {

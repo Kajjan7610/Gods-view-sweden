@@ -3,7 +3,7 @@ import { fromDegrees } from '../../geo/ellipsoid.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { analystRows } from '../analystRows.js';
+import { analystPick, analystRows } from '../analystRows.js';
 import { DESK_CLASSES, deskClass, deskColor } from './records.js';
 import {
   POLICE_STATIONS_OVERLAY_SOURCE_ID,
@@ -15,6 +15,8 @@ export * from './cards.js';
 export { createPoliceStationsSource } from './source.js';
 
 export const POLICE_STATIONS_LAYER_ID = 'police-stations';
+/** A station by its name, as its card has it; one without by what it is. */
+const stationName = (row) => row.name || t('POLICE STATION');
 const PICK_PREFIX = 'se-police-station:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -355,12 +357,21 @@ export function createPoliceStationsLayer({
     getAnalystRecords(maxCount = 1000) {
       if (!_enabled) return [];
       return analystRows(_stations, maxCount, {
+        name: stationName,
         extra: (row) => ({
           address: row.address || null,
           desk: deskClass(row),
           services: row.services.join(', '),
         }),
       });
+    },
+
+    /** What a picked station is called, and where it is. */
+    findByQuery(pickId) {
+      const id = pickedStation(pickId);
+      return id
+        ? analystPick(_stationById.get(id), { name: stationName })
+        : null;
     },
 
     getStats() {

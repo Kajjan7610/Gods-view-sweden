@@ -1,7 +1,7 @@
 // The fork's layers hand their rows to the context panel and the analyst.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { analystRows, middleOf } from './analystRows.js';
+import { analystPick, analystRows, middleOf } from './analystRows.js';
 
 test('rows become records with a place, a name and a few fields', () => {
   const rows = [
@@ -25,6 +25,24 @@ test('rows become records with a place, a name and a few fields', () => {
     }),
     [{ id: 'x', name: 'X', lat: 2, lon: 1 }],
   );
+});
+
+test('a picked row is named and placed as its record is', () => {
+  const row = { id: '21', name: 'Gullmarsleden', point: [11.6, 58.32] };
+  assert.deepEqual(analystPick(row), {
+    name: 'Gullmarsleden',
+    latitude: 58.32,
+    longitude: 11.6,
+  });
+  assert.deepEqual(
+    analystPick(row, {
+      place: () => [12, 59],
+      name: (picked) => `Route ${picked.name}`,
+    }),
+    { name: 'Route Gullmarsleden', latitude: 59, longitude: 12 },
+  );
+  assert.equal(analystPick(null), null);
+  assert.equal(analystPick({ id: 'x', name: 'No place' }), null);
 });
 
 test('the middle of a ring or line', () => {

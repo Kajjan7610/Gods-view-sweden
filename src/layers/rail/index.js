@@ -12,7 +12,12 @@ import { createRouteDisplay } from './routeDisplay.js';
 import { createRailSchedules } from './schedules.js';
 import { createRailDisruptions } from './disruptions.js';
 import { getRegisteredRailFeed } from '../../data/railFeeds.js';
-import { DEFAULT_RAIL_CATEGORY_VISIBILITY, RAIL_POLL_MS } from './policy.js';
+import { t } from '../../i18n/index.js';
+import {
+  DEFAULT_RAIL_CATEGORY_VISIBILITY,
+  RAIL_POLL_MS,
+  railTrainName,
+} from './policy.js';
 
 /** One Rail layer's mutable scene state; nothing is module-global. */
 function createState({ services }) {
@@ -200,14 +205,31 @@ export function createRailLayer({
   // Swedish fork: Trafikverket's railway disruptions (disruptions.js).
   parts.disruptions = createRailDisruptions(context);
 
+  /**
+   * Swedish fork: a picked train's name for the Context panel's card, at
+   * its last reported place; a Swedish one by its number and destination.
+   */
+  const describeTrain = (pickId) => {
+    const entry = state._trains.get(pickId);
+    const record = entry?.record;
+    if (!Number.isFinite(record?.lat) || !Number.isFinite(record?.lon))
+      return null;
+    return {
+      name: railTrainName(entry.feedId, record, t),
+      latitude: record.lat,
+      longitude: record.lon,
+    };
+  };
+
   return Object.assign(
     { updateInterval: RAIL_POLL_MS },
     parts.lifecycle.methods,
     parts.controls.methods,
     parts.cockpit.methods,
     {
-      /** Swedish fork: a disruption dot's name for the Context panel. */
-      findByQuery: (query) => parts.disruptions.describe(query),
+      /** Swedish fork: a disruption dot's or a train's name for Context. */
+      findByQuery: (query) =>
+        parts.disruptions.describe(query) ?? describeTrain(query),
       /** Test seams: this instance's own state and parts. */
       _railStateForTest: () => state,
       _railPartsForTest: () => parts,

@@ -3,7 +3,7 @@ import { fromDegrees } from '../../geo/ellipsoid.js';
 import { cssColor } from '../../render/color.js';
 import { drawOf, findCamera, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
-import { analystRows, middleOf } from '../analystRows.js';
+import { analystPick, analystRows, middleOf } from '../analystRows.js';
 import { cableClassificationTypeForScene } from '../submarineCables/surface.js';
 import {
   OTHER_PARTIES,
@@ -574,6 +574,16 @@ export function createElectionDistrictsLayer({
               : null,
           };
         },
+      });
+    },
+
+    /** What a picked district is called, at its middle as in the records. */
+    findByQuery(pickId) {
+      if (!isOwnPick(pickId)) return null;
+      const code = pickId.slice(PICK_PREFIX.length).split(':')[0];
+      return analystPick(_byCode.get(code), {
+        place: middleOfDistrict,
+        name: (district) => district.n,
       });
     },
 

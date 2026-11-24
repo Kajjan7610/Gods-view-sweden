@@ -293,11 +293,12 @@ test('the analyst reads the shown stores, and nothing while the layer is off', a
   layer.enable();
   await layer.update();
   const records = layer.getAnalystRecords();
+  // Named by chain and store; a name that already says the chain says it once.
   assert.deepEqual(
     records.map((r) => [r.name, r.lat, r.lon]),
     [
       ['ICA Nära 1', store(1).point[1], store(1).point[0]],
-      ['ICA Nära 2', store(2).point[1], store(2).point[0]],
+      ['City Gross · ICA Nära 2', store(2).point[1], store(2).point[0]],
     ],
   );
   assert.equal(records[0].company, 'ICA');

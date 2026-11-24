@@ -252,7 +252,8 @@ test('the analyst reads the zones and their prices, and nothing while off', asyn
   await h.layer.update();
   const [record, ...rest] = h.layer.getAnalystRecords();
   assert.equal(rest.length, 0);
-  assert.equal(record.name, 'SE3 Stockholm');
+  assert.equal(record.name, 'Bidding zone SE3');
+  assert.equal(record.place, 'Stockholm');
   assert.equal(record.lat, 59.5);
   assert.equal(record.lon, 16);
   assert.equal(record.sekPerKwhNow, 0.4);

@@ -310,7 +310,7 @@ test('the analyst reads the sites within reach, and nothing while the layer is o
   const records = layer.getAnalystRecords();
   assert.deepEqual(
     records.map(({ name, lat, lon }) => ({ name, lat, lon })),
-    [{ name: 'Rotebro', lat: 59.47, lon: 17.9 }],
+    [{ name: 'E4 · Rotebro', lat: 59.47, lon: 17.9 }],
     'the site 1,000 km off shows no marker',
   );
   assert.equal(records[0].road, 'E4');

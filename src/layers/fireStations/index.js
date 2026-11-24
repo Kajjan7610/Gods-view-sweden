@@ -3,7 +3,7 @@ import { fromDegrees } from '../../geo/ellipsoid.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { analystRows } from '../analystRows.js';
+import { analystPick, analystRows } from '../analystRows.js';
 import { READINESS_CLASSES, UNKNOWN_COLOR, readinessColor } from './records.js';
 import {
   FIRE_STATIONS_OVERLAY_SOURCE_ID,
@@ -16,6 +16,15 @@ export * from './cards.js';
 export { createFireStationsSource } from './source.js';
 
 export const FIRE_STATIONS_LAYER_ID = 'fire-stations';
+/**
+ * A station by its name, else by the municipal seat close beside it, as its
+ * card has it.
+ */
+const stationName = (row) =>
+  row.name ||
+  (row.near && row.near.km <= TITLE_PLACE_WITHIN_KM
+    ? row.near.name
+    : t('FIRE STATION'));
 const PICK_PREFIX = 'se-fire-station:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -337,17 +346,21 @@ export function createFireStationsLayer({
     getAnalystRecords(maxCount = 2000) {
       if (!_enabled) return [];
       return analystRows(_stations, maxCount, {
-        name: (row) =>
-          row.name ||
-          (row.near && row.near.km <= TITLE_PLACE_WITHIN_KM
-            ? row.near.name
-            : t('FIRE STATION')),
+        name: stationName,
         extra: (row) => ({
           readiness: readinessLabel(row.readiness),
           nearestSeat: row.near?.name ?? null,
           nearestSeatKm: row.near?.km ?? null,
         }),
       });
+    },
+
+    /** What a picked station is called, and where it is. */
+    findByQuery(pickId) {
+      const id = pickedStation(pickId);
+      return id
+        ? analystPick(_stationById.get(id), { name: stationName })
+        : null;
     },
 
     getStats() {

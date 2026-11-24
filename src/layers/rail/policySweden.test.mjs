@@ -3,7 +3,7 @@
 // station call, in the Transit card's words (the same catalog entries).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRailSelectionCopy } from './policy.js';
+import { buildRailSelectionCopy, railTrainName } from './policy.js';
 import { getRegisteredRailFeed } from '../../data/railFeeds.js';
 
 const NOW = Date.parse('2026-11-17T12:00:00Z');
@@ -87,4 +87,24 @@ test('timetable stops, when a feed has them, take the place of the line', () => 
   });
   assert.ok(copy.details.some((line) => line.startsWith('T(Next Tierp')));
   assert.ok(!copy.details.some((line) => line.includes('T(departed ')));
+});
+
+test('the Context panel heads a Swedish train with its number and where it goes', () => {
+  const { headsign, ...plain } = train;
+  void headsign;
+  assert.equal(
+    railTrainName(feed.id, { ...plain, destination: 'Stockholm C' }, t),
+    'T(Train 541 to Stockholm C)',
+  );
+  assert.equal(railTrainName(feed.id, plain, t), 'T(Train 541)');
+  // Without a route id the number is the run's id, without its date.
+  assert.equal(
+    railTrainName(feed.id, { ...plain, routeId: null }, t),
+    'T(Train 541)',
+  );
+  // Another feed's train goes by its own card's title, without the glyph.
+  assert.equal(
+    railTrainName('amtrak', train, t),
+    'T(Route 541) · T(To Gävle C)',
+  );
 });

@@ -4,7 +4,7 @@ import { cssColor } from '../../render/color.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { analystRows } from '../analystRows.js';
+import { analystPick, analystRows } from '../analystRows.js';
 import {
   LEVEL_CLASSES,
   NO_VALUE_COLOR,
@@ -423,6 +423,12 @@ export function createSeaWeatherLayer({
           waveHeightM: row.waveHeight,
         }),
       });
+    },
+
+    /** What a picked station is called, and where it is. */
+    findByQuery(pickId) {
+      const id = pickedStation(pickId);
+      return id ? analystPick(_stationById.get(id)) : null;
     },
 
     getStats() {

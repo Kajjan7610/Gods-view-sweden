@@ -4,7 +4,7 @@ import { cssColor } from '../../render/color.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { analystRows } from '../analystRows.js';
+import { analystPick, analystRows } from '../analystRows.js';
 import {
   EVENT_CATEGORIES,
   categoryColor,
@@ -16,6 +16,8 @@ export * from './cards.js';
 export { createPolisenEventsSource } from './source.js';
 
 export const POLISEN_EVENTS_LAYER_ID = 'polisen-events';
+/** A notice by its title, as its card has it: the kind of event and where. */
+const eventName = (row) => [row.type, row.place].filter(Boolean).join(' · ');
 const PICK_PREFIX = 'se-polisen:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -451,14 +453,23 @@ export function createPolisenEventsLayer({
     getAnalystRecords(maxCount = 500) {
       if (!_enabled) return [];
       return analystRows(visibleEvents(), maxCount, {
-        name: (row) => [row.type, row.place].filter(Boolean).join(' · '),
+        name: eventName,
         extra: (row) => ({
           type: row.type,
           place: row.place,
+          // The dot stands near the centre of the place (or the county):
+          // the coordinates a card shows are not where it happened.
+          location: t('Polisen gives no exact place'),
           time: new Date(row.time).toISOString(),
           summary: row.summary || null,
         }),
       });
+    },
+
+    /** What a picked notice is called, and where it is. */
+    findByQuery(pickId) {
+      const id = pickedEvent(pickId);
+      return id ? analystPick(_eventById.get(id), { name: eventName }) : null;
     },
 
     getStats() {

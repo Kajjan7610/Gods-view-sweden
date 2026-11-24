@@ -3,7 +3,7 @@ import { fromDegrees } from '../../geo/ellipsoid.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { analystRows } from '../analystRows.js';
+import { analystPick, analystRows } from '../analystRows.js';
 import {
   PRICE_CLASSES,
   priceAt,
@@ -21,6 +21,8 @@ export * from './cards.js';
 export { createElectricityPricesSource } from './source.js';
 
 export const ELECTRICITY_PRICES_LAYER_ID = 'electricity-prices';
+/** A zone by its bidding zone ("Bidding zone SE1"). */
+const zoneName = (zone) => t('Bidding zone {zone}', { zone: zone.id });
 const PICK_PREFIX = 'se-elpris:';
 const OUTLINE_COLOR = '#ffffff';
 const LABEL_SOURCE_ID = 'electricity-price-labels';
@@ -437,13 +439,21 @@ export function createElectricityPricesLayer({
       if (!_enabled) return [];
       const nowMs = now();
       return analystRows(_zones, maxCount, {
-        name: (zone) => `${zone.id} ${zone.name}`,
+        name: zoneName,
         extra: (zone) => ({
+          // The city the zone is named for, which its name no longer says.
+          place: zone.name ?? null,
           sekPerKwhNow: priceAt(zone.today, nowMs)?.sek ?? null,
           sekPerKwhTodayMean: summarizeDay(zone.today)?.mean ?? null,
           sekPerKwhTomorrowMean: summarizeDay(zone.tomorrow)?.mean ?? null,
         }),
       });
+    },
+
+    /** What a picked zone is called, and where its point is. */
+    findByQuery(pickId) {
+      const id = pickedZone(pickId);
+      return id ? analystPick(_zoneById.get(id), { name: zoneName }) : null;
     },
 
     getStats() {

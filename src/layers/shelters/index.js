@@ -9,7 +9,7 @@ import {
 } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { analystRows } from '../analystRows.js';
+import { analystPick, analystRows } from '../analystRows.js';
 import { SHELTER_STATES, clipViewBox, shelterColor } from './records.js';
 import {
   SHELTERS_OVERLAY_SOURCE_ID,
@@ -22,6 +22,9 @@ export * from './cards.js';
 export { createSheltersSource } from './source.js';
 
 export const SHELTERS_LAYER_ID = 'shelters';
+/** A shelter as its card names it: a shelter number alone says little. */
+const shelterName = (row) =>
+  row.number ? t('SHELTER · {number}', { number: row.number }) : t('SHELTER');
 const PICK_PREFIX = 'se-shelter:';
 const OUTLINE_COLOR = '#0b1a1a';
 const SCALE_BY_DISTANCE = Object.freeze({
@@ -483,11 +486,7 @@ export function createSheltersLayer({
     getAnalystRecords(maxCount = SHOWN) {
       if (!_enabled) return [];
       return analystRows(_shown, maxCount, {
-        // Named as its card is: a shelter number alone says little.
-        name: (row) =>
-          row.number
-            ? t('SHELTER · {number}', { number: row.number })
-            : t('SHELTER'),
+        name: shelterName,
         extra: (row) => ({
           property: row.property,
           places: row.places,
@@ -495,6 +494,14 @@ export function createSheltersLayer({
           distanceFromCentreM: row.distance,
         }),
       });
+    },
+
+    /** What a picked shelter is called, and where it is. */
+    findByQuery(pickId) {
+      const id = pickedShelter(pickId);
+      return id
+        ? analystPick(_shelterById.get(id), { name: shelterName })
+        : null;
     },
 
     getStats() {

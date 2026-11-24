@@ -3,7 +3,7 @@ import { fromDegrees } from '../../geo/ellipsoid.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { analystRows } from '../analystRows.js';
+import { analystPick, analystRows } from '../analystRows.js';
 import { statusColor } from './records.js';
 import {
   ROAD_FERRIES_OVERLAY_SOURCE_ID,
@@ -421,6 +421,12 @@ export function createRoadFerriesLayer({
           message: row.messages.join(' · ') || null,
         }),
       });
+    },
+
+    /** What a picked route is called, and where it is. */
+    findByQuery(pickId) {
+      const id = pickedRoute(pickId);
+      return id ? analystPick(_routeById.get(id)) : null;
     },
 
     getStats() {

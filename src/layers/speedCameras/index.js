@@ -4,7 +4,7 @@ import { distance } from '../../geo/vector.js';
 import { drawOf, findCamera, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { analystRows } from '../analystRows.js';
+import { analystPick, analystRows } from '../analystRows.js';
 import {
   CAMERA_COLOR,
   SPEED_CAMERAS_OVERLAY_SOURCE_ID,
@@ -15,6 +15,15 @@ export * from './cards.js';
 export { createSpeedCamerasSource } from './source.js';
 
 export const SPEED_CAMERAS_LAYER_ID = 'speed-cameras';
+/**
+ * A camera site by its road and place, as Trafikverket names them ("E4 ·
+ * Hjulsta"); a name that is only the site's number is no place.
+ */
+function siteName(row) {
+  const place = row.name && row.name !== row.id ? row.name : null;
+  const road = row.road && !place?.includes(row.road) ? row.road : null;
+  return [road, place].filter(Boolean).join(' · ') || t('SPEED CAMERA');
+}
 const PICK_PREFIX = 'se-speed-camera:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -439,12 +448,19 @@ export function createSpeedCamerasLayer({
         ? _cameras.filter((row) => distance(eye, ecefOf(row)) <= SHOW_WITHIN_M)
         : _cameras;
       return analystRows(shown, maxCount, {
+        name: siteName,
         extra: (row) => ({
           road: row.road,
           county: row.county,
           facingDeg: row.bearing,
         }),
       });
+    },
+
+    /** What a picked camera site is called, and where it is. */
+    findByQuery(pickId) {
+      const id = pickedCamera(pickId);
+      return id ? analystPick(_cameraById.get(id), { name: siteName }) : null;
     },
 
     getStats() {

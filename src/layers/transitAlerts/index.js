@@ -3,7 +3,7 @@ import { fromDegrees } from '../../geo/ellipsoid.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { analystRows } from '../analystRows.js';
+import { analystPick, analystRows } from '../analystRows.js';
 import { ALERT_KINDS, alertColor } from './records.js';
 import { TRANSIT_ALERTS_OVERLAY_SOURCE_ID, buildStopCard } from './cards.js';
 export * from './records.js';
@@ -352,6 +352,12 @@ export function createTransitAlertsLayer({
           firstAlert: row.alerts[0]?.header ?? null,
         }),
       });
+    },
+
+    /** What a picked stop is called, and where it is. */
+    findByQuery(pickId) {
+      const id = pickedStop(pickId);
+      return id ? analystPick(_stopById.get(id)) : null;
     },
 
     getStats() {

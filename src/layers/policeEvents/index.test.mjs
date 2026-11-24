@@ -289,6 +289,7 @@ test('the notices shown are records at the place each names', async (t) => {
     [['a', 'Trafikolycka · Göteborg', 57.7075, 11.9675]],
   );
   assert.equal(records[0].time, new Date(NOW - HOUR).toISOString());
+  assert.equal(records[0].location, 'Polisen gives no exact place');
   h.layer.disable();
   assert.deepEqual(h.layer.getAnalystRecords(), []);
 });

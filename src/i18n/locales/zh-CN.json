@@ -5759,5 +5759,8 @@
   "Every minute; the security queues every 3 minutes": "每分钟；安检排队情况每 3 分钟",
   "CC0 1.0 (Trafikverket) · Swedavia's API terms: shown in the app, credited": "CC0 1.0（Trafikverket）· Swedavia API 条款：在应用中显示，注明来源",
   "Nothing published in view. Only protected areas whose managers publish their trails and facilities are covered, plus the state mountain trails.": "此视图内没有已公布的内容。仅涵盖管理方公布了步道和设施的保护区，以及国家山地步道。",
-  "video stream|Live": "直播"
+  "video stream|Live": "直播",
+  "Train {number}": "列车 {number}",
+  "Train {number} to {destination}": "列车 {number}（开往{destination}）",
+  "Polisen gives no exact place": "Polisen 不提供确切地点"
 }

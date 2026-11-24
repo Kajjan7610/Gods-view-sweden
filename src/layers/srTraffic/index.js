@@ -3,7 +3,7 @@ import { fromDegrees } from '../../geo/ellipsoid.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
 import { createGroundHeights } from '../groundHeights.js';
-import { analystRows } from '../analystRows.js';
+import { analystPick, analystRows } from '../analystRows.js';
 import { SR_PRIORITIES, priorityColor } from './records.js';
 import {
   PRIORITY_LABELS,
@@ -16,6 +16,8 @@ export * from './cards.js';
 export { createSrTrafficSource } from './source.js';
 
 export const SR_TRAFFIC_LAYER_ID = 'sr-traffic';
+/** A message as its card names it: the kind of event and SR's own title. */
+const messageName = (row) => [row.kind, row.title].filter(Boolean).join(' · ');
 const PICK_PREFIX = 'se-srtrafik:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -387,8 +389,7 @@ export function createSrTrafficLayer({
     getAnalystRecords(maxCount = 1000) {
       if (!_enabled) return [];
       return analystRows(visibleMessages(), maxCount, {
-        // Named as its card is: the kind of event and SR's own title.
-        name: (row) => [row.kind, row.title].filter(Boolean).join(' · '),
+        name: messageName,
         extra: (row) => ({
           location: row.location,
           priority: row.priority,
@@ -398,6 +399,14 @@ export function createSrTrafficLayer({
             : null,
         }),
       });
+    },
+
+    /** What a picked message is called, and where it is. */
+    findByQuery(pickId) {
+      const id = pickedMessage(pickId);
+      return id
+        ? analystPick(_messageById.get(id), { name: messageName })
+        : null;
     },
 
     getStats() {

@@ -6005,5 +6005,8 @@
   "Every minute; the security queues every 3 minutes": "כל דקה; התורים בבידוק הביטחוני כל 3 דקות",
   "CC0 1.0 (Trafikverket) · Swedavia's API terms: shown in the app, credited": "CC0 1.0 (Trafikverket) · תנאי ה-API של Swedavia: מוצג באפליקציה, בציון המקור",
   "Nothing published in view. Only protected areas whose managers publish their trails and facilities are covered, plus the state mountain trails.": "לא פורסם דבר בתצוגה. מכוסים רק שטחים מוגנים שמנהליהם מפרסמים את השבילים והמתקנים שלהם, וכן שבילי ההרים הממלכתיים.",
-  "video stream|Live": "שידור חי"
+  "video stream|Live": "שידור חי",
+  "Train {number}": "רכבת {number}",
+  "Train {number} to {destination}": "רכבת {number} לכיוון {destination}",
+  "Polisen gives no exact place": "Polisen אינה מוסרת מיקום מדויק"
 }

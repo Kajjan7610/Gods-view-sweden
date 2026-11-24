@@ -44,6 +44,25 @@ export function analystRows(
 }
 
 /**
+ * One picked row as a layer's findByQuery hands it to the Context panel
+ * (src/data/pickedContext.js): `{name, latitude, longitude}`, named and
+ * placed by the same `place` and `name` as analystRows, so the panel's card
+ * finds the row's record and its heading is the row's name, not the pick id
+ * ("se-ferry:21"). Null without a row or a place.
+ */
+export function analystPick(
+  row,
+  { place = (r) => r?.point, name = (r) => r?.name } = {},
+) {
+  if (!row) return null;
+  const at = place(row);
+  const lon = Number(at?.[0]);
+  const lat = Number(at?.[1]);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  return { name: name(row) ?? null, latitude: lat, longitude: lon };
+}
+
+/**
  * A year as text, so a card shows "2019" and not a number with a thousands
  * separator; null when it is not a whole year.
  */

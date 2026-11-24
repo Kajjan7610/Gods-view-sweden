@@ -393,6 +393,35 @@ function railCardTitle(record, headsign, t) {
   return `🚆 ${t('Vehicle {vehicle}', { vehicle: label || record.id })}`;
 }
 
+/** Swedish fork: Trafikverket's trains, whose route id is the train number. */
+const SWEDISH_TRAINS_FEED_ID = 'trafikverket-trains';
+
+/**
+ * Swedish fork: a train as the Context panel's card heads it (findByQuery).
+ * A Swedish train goes by its number and, where Trafikverket's last station
+ * call says it, where it is going ("Train 2861 to Stockholm C"); a train of
+ * another feed by its own card's title, without the glyph.
+ * @param {string} feedId
+ * @param {object} record Train record from the snapshot.
+ * @param {(text: string, values?: object) => string} [t]
+ * @returns {string}
+ */
+export function railTrainName(feedId, record, t = englishText) {
+  if (feedId !== SWEDISH_TRAINS_FEED_ID) {
+    const headsign =
+      typeof record.headsign === 'string' && record.headsign.trim()
+        ? record.headsign.trim()
+        : null;
+    return railCardTitle(record, headsign, t).replace(/^🚆 /, '');
+  }
+  const number = String(record.routeId || record.id).split('-')[0];
+  const destination =
+    typeof record.destination === 'string' ? record.destination.trim() : '';
+  return destination
+    ? t('Train {number} to {destination}', { number, destination })
+    : t('Train {number}', { number });
+}
+
 /**
  * Swedish fork: how late a train was at its last station call, and that
  * call ("4 min late · departed Uppsala C"), in the Transit card's words, for

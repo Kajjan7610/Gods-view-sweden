@@ -443,6 +443,44 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-24 (rubrikerna på kontextpanelens kort)
+- Kontextpanelens kort för en klickad punkt i många svenska lager hade
+  punktens pick-id som rubrik, till exempel "se-ferry:21",
+  "se-police-station:1233", "se-roadwx:222", "se-flow:2358",
+  "se-elpris:SE1" och "rail:trafikverket-trains:2861-20261121". Kortet tar
+  rubriken från lagrets `findByQuery`, som bara lagren från 2026-11-18 och
+  senare hade; för de andra blev pick-id:t rubrik, och kortet hittade inte
+  heller punktens fakta.
+- Alla svenska lager som tar emot klick har nu en `findByQuery` som
+  namnger punkten på samma sätt som lagrets poster för analytikern, så
+  kortet får rubrik, plats och fakta: vägfärjor ledens namn, polisstationer
+  stationens, polishändelser händelsetypen och orten, fartkameror väg och
+  plats ("E4 · Rotebro"), vägväder, vattenföring, gammastrålning,
+  SMHI-väder och sjöväder stationens namn, elpris "Elområde SE1", butiker
+  kedja och butik ("Willys · Sickla", bara namnet när det redan säger
+  kedjan), och brandstationer, sjukhus, skyddsrum, blixtnedslag, SR:s
+  trafikmeddelanden, kollektivtrafikstörningar och valdistrikt som sina
+  kort. Ett svenskt tåg heter "Tåg 2861" och, när Trafikverkets senaste
+  stationsanrop säger vart det går, "Tåg 2861 mot Stockholm C". Tåg i
+  andra länder får sitt korts rubrik. Trafikverkets vägkameror i lagret
+  CCTV hade sitt id som rubrik ("se-trafikverket-30000123") och heter nu
+  som kameran, också när man klickar på en av kamerans synlinjer.
+- Polisens händelser ritas nära ortens (eller länets) mitt, men kortet i
+  kontextpanelen visar koordinater som ser exakta ut. Kortet har därför
+  också "Plats: Polisen anger ingen exakt plats", samma förbehåll som
+  händelsens eget kort på kartan.
+- Nytt test (`src/layers/swedishCardHeadings.test.mjs`) klickar som
+  kontextpanelen på allt som 26 svenska lager ritar, och på de svenska
+  delarna av originalets lager som tar emot klick: tåg (Järnväg), bussar
+  (Kollektivtrafik), SMHI:s mätstationer (Luftkvalitet) och Trafikverkets
+  vägkameror (CCTV). Det fallerar om en rubrik är ett pick-id, med eller
+  utan kolon. Det fallerar också om ett svenskt lager saknas i testet utan
+  att säga varför det inte öppnar något kort i kontextpanelen: Väglag,
+  Kraftsystemet, Vädervarningar och Kommuner och län äger inga klick och
+  öppnar bara sina egna kort, Historiska flygfoton, Norrskensprognos och
+  originalets radar- och blixtbilder har inget att klicka på, och
+  Jordbävningar namnges genom kontextlagret.
+
 ### 2026-11-24 ("Realtid" i stället för "Live")
 - Kortet för ISS, och för allt annat som rör sig (flygplan, fartyg, tåg),
   visade "Live" på svenska. Texten var markerad för översättning och fanns

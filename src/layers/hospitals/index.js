@@ -8,7 +8,7 @@ import {
   findQuery,
 } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
-import { analystRows } from '../analystRows.js';
+import { analystPick, analystRows } from '../analystRows.js';
 import {
   ED_BANDS,
   ED_METRICS,
@@ -522,6 +522,12 @@ export function createHospitalsLayer({
           statisticsYear: row.ed ? (_statistics.year ?? null) : null,
         }),
       });
+    },
+
+    /** What a picked hospital is called, and where it is. */
+    findByQuery(pickId) {
+      const id = pickedHospital(pickId);
+      return id ? analystPick(_hospitalById.get(id)) : null;
     },
 
     getStats() {

@@ -3,7 +3,7 @@ import { fromDegrees } from '../../geo/ellipsoid.js';
 import { cssColor } from '../../render/color.js';
 import { drawOf, findFrame } from '../../render/rendererOf.js';
 import { inputFor } from '../../input/dispatcher.js';
-import { analystRows } from '../analystRows.js';
+import { analystPick, analystRows } from '../analystRows.js';
 import { AGE_CLASSES, ageClass } from './records.js';
 import {
   LIGHTNING_STRIKES_OVERLAY_SOURCE_ID,
@@ -15,6 +15,9 @@ export * from './cards.js';
 export { createLightningStrikesSource } from './source.js';
 
 export const LIGHTNING_STRIKES_LAYER_ID = 'lightning-strikes';
+/** A strike by its kind, as its card has it. */
+const strikeName = (row) =>
+  row.kind === 'cloud' ? t('LIGHTNING · IN CLOUD') : t('LIGHTNING STRIKE');
 const PICK_PREFIX = 'se-lightning:';
 const CARD_HOST_OPTIONS = Object.freeze({
   cohortLimit: 1,
@@ -441,10 +444,7 @@ export function createLightningStrikesLayer({
       if (!_enabled) return [];
       const nowMs = now();
       return analystRows(current(), maxCount, {
-        name: (row) =>
-          row.kind === 'cloud'
-            ? t('LIGHTNING · IN CLOUD')
-            : t('LIGHTNING STRIKE'),
+        name: strikeName,
         extra: (row) => ({
           kind: strikeKindLabel(row.kind),
           time: new Date(row.at).toISOString(),
@@ -453,6 +453,12 @@ export function createLightningStrikesLayer({
           sensors: row.sensors ?? null,
         }),
       });
+    },
+
+    /** What a picked strike is called, and where it is. */
+    findByQuery(pickId) {
+      const id = pickedStrike(pickId);
+      return id ? analystPick(_strikeById.get(id), { name: strikeName }) : null;
     },
 
     getStats() {
