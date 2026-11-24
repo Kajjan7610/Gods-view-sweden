@@ -6386,6 +6386,7 @@
   "SHOWN {seconds} S BEHIND REAL TIME": "معروض متأخرًا {seconds} ث عن الوقت الفعلي",
   "SHOWN BEHIND REAL TIME": "معروض متأخرًا عن الوقت الفعلي",
   "STRAIGHT LINE BETWEEN POSITION REPORTS": "خط مستقيم بين تقارير الموقع",
+  "ALONG THE ROUTE, ESTIMATED BETWEEN REPORTS": "على مسار الخط، تقدير بين التقارير",
   "REPORTED": "تقرير",
   "COMPUTED": "محسوبة",
   "LINE": "الخط",

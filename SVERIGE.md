@@ -41,7 +41,7 @@ Tre regler gäller:
 |---|---|---|
 | Vägkameror (1 553 st, livebilder i 3D) | Trafikverket, objekt `Camera` | Cameras / CCTV |
 | Tåg i realtid, färgade efter försening (rosa 3–14 min, magenta 15+ min) | Trafikverket, objekt `TrainPosition` och `TrainAnnouncement` | Transit |
-| Bussar, tunnelbana, spårvagn, pendeltåg (16 regionbolag, med linjenummer) | Trafiklab GTFS Regional | Transit |
+| Bussar, tunnelbana, spårvagn, pendeltåg (16 regionbolag, med linjenummer; mellan två positionsrapporter längs linjens sträckning där det går) | Trafiklab GTFS Regional | Transit |
 | Tåg i originalets tåglager, färgade efter trafikslag (lokal, regional, nationell, internationell), med destination och försening vid senaste station | Trafikverket, samma hämtning som Transit (`TrainPosition`, `TrainAnnouncement`, `TrainStation`) | Rail |
 | Störningar i tågtrafiken: Trafikverkets aktuella trafikmeddelanden för järnvägen (banarbeten, tågfel, fel i anläggningen) som röda punkter på de svenska stationer de gäller, med knappen STÖRNINGAR; klick ger meddelandet, sträckan och Trafikverkets prognos för de två nyaste störningarna | Trafikverket, objekt `OperativeEvent` och `TrainStation` (befintlig nyckel) | Rail |
 | Väglag och händelser (olyckor, avstängda vägar, vägarbeten, hinder, färjor) | Trafikverket, `RoadCondition` och `Situation` | Road Conditions (Sweden), under Events |
@@ -86,7 +86,7 @@ Tre regler gäller:
 | Flygtavla: Swedavias tio flygplatser, hela dagens avgångar och ankomster, köerna i säkerhetskontrollen över terminalerna (när lagret Köer och restider är på), följ planet i luften och dagens rutter på globen | Swedavia FlightInfo och WaitTime (gratisnycklar) | Kortet över en Swedavia-flygplats och tavlans egen panel |
 | Flygväder: METAR och TAF för flygplatserna | NOAA Aviation Weather Center (ingen nyckel) | Flygtavlan och cockpit |
 | Cockpit: knapp vid kartan och C-tangenten när ett plan, fartyg eller en satellit är valt, Swedavias rader för planet, svensk lägesbild i genomgången (ort och län, SMHI:s väder, varningar och VMA) | Swedavia, SMHI, Krisinformation.se, NOAA (METAR/TAF) | Cockpit |
-| Förarvy: Cockpit åker med den buss, spårvagn eller det tåg som är valt på kartan, från förarens höjd. Fordonet visas 25–120 s efter realtid och glider i rak linje mellan positionsrapporterna, och HUD:en säger det; linje, senaste rapportens ålder, hållplatsens id enligt rapporten, fart (beräknad eller angiven), källa och licens | Samma hämtningar som lagren Kollektivtrafik (Trafiklab GTFS Regional) och Järnväg (Trafikverket) | Cockpit: välj fordonet och tryck C eller knappen vid kartan |
+| Förarvy: Cockpit åker med den buss, spårvagn eller det tåg som är valt på kartan, från förarens höjd. Fordonet visas 25–120 s efter realtid och glider mellan positionsrapporterna längs linjens sträckning där det går, annars i rak linje, och HUD:en säger vilket; linje, senaste rapportens ålder, hållplatsens id enligt rapporten, fart (beräknad eller angiven), källa och licens | Samma hämtningar som lagren Kollektivtrafik (Trafiklab GTFS Regional) och Järnväg (Trafikverket) | Cockpit: välj fordonet och tryck C eller knappen vid kartan |
 | Fartkameror: ca 2 800 fasta trafiksäkerhetskameror som pilar i kamerans riktning, och de närmaste i dossiern | Trafikverket (CC0) | Speed Cameras (Sweden), under Infrastructure, och NU-fliken |
 | Sverige-turen "Sverige just nu" | Lagren ovan | Scener |
 | Berättelsen "Natten över Sverige": norrsken, chansen över Kiruna, molnen och vägen mot Abisko, med levande siffror i bildtexterna och svensk berättarröst | NOAA SWPC, SMHI, Trafikverket; rösten från elevenlabs.io | Berättelser (STORIES), och Scener |
@@ -400,7 +400,7 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
 |---|---|---|
 | `TRAFIKVERKET_API_KEY` | vägkameror, tåg och störningar i tågtrafiken, väglag och händelser, vägväder, vägfärjor, köer och restider, tjäldjup, rastplatser, fartkameror, och i stadsdossiern tåg från stationen och trafiken runt staden | data.trafikverket.se |
 | `TRAFIKLAB_GTFS_RT_KEY` | bussar m.m. live | trafiklab.se → GTFS Regional Realtime |
-| `TRAFIKLAB_GTFS_STATIC_KEY` | linjenummer och fordonstyp | trafiklab.se → GTFS Regional Static |
+| `TRAFIKLAB_GTFS_STATIC_KEY` | linjenummer, fordonstyp och linjernas sträckning | trafiklab.se → GTFS Regional Static |
 | `TRAFIKLAB_REALTIME_KEY` | lokaltrafikens avgångar i stadsdossiern | trafiklab.se → Trafiklab Realtime APIs |
 | `SWEDAVIA_FLIGHTINFO_KEY` | avgångar och ankomster i dossiern, tavlan och cockpit | apideveloper.swedavia.se → FlightInfo Free |
 | `SWEDAVIA_WAITTIME_KEY` | köerna i säkerhetskontrollen | apideveloper.swedavia.se → WaitTime Free |
@@ -443,6 +443,63 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-25 (bussar och spårvagnar följer linjens sträckning)
+- Mellan två positionsrapporter gled bussar och spårvagnar i rak linje och
+  skar genom kvarter i varje sväng; i förarvyn syntes det tydligt. Nu följer
+  fordonen i Trafiklabs 16 regionala flöden sin tur längs linjens
+  sträckning mellan rapporterna, med kurvor och hörn, och vänder sig efter
+  sträckningen. Det gäller allt i de flödena (buss, spårvagn, tunnelbana,
+  pendeltåg, båt); Trafikverkets tåg väntar på Trafiklabs svar om `trv`, och
+  tåglagret är orört.
+- Sträckningen kommer från `shapes.txt` i operatörens statiska GTFS
+  Regional (CC0 1.0), i samma nedladdning som linjenumren, så den kostar
+  inga extra anrop. Varje tur får sitt `shape_id` ur `trips.txt`. Servern
+  förenklar varje sträckning till 2 m (Douglas-Peucker, punkter på
+  fem decimaler) och sparar den i `.gev-cache/trafiklab/shapes-<operatör>.json`.
+  Gränser: högst 4 000 punkter per sträckning (annars grövre, upp till
+  16 m), högst 200 000 råpunkter medan en sträckning läses och högst 24 MB
+  sträckningar per operatör; filen läses i bitar och bara de sträckningar
+  någon tur använder behålls. En sträckning som inte ryms visas som förut, i
+  rak linje. Enligt granskningen finns `shapes.txt` hos 15 av de 16
+  operatörerna; för Dalatrafik är det obekräftat, och utan sträckning blir
+  det rak linje.
+- `/api/transit/shapes?feed=…&ids=…` svarar bara ur cachen och startar
+  aldrig en nedladdning: Bronze-nyckeln har 50 statiska anrop i månaden.
+  Högst 32 id per fråga och 1 MB per svar, appens egen sida bara, och
+  nyckeln syns aldrig i svar eller loggar.
+- Ett fordon följer sträckningen bara när allt stämmer: båda rapporterna
+  ligger högst 40 m från den, den senare längre fram längs den (aldrig
+  bakåt), vägen längs den är högst tre gånger den raka och farten rimlig för
+  fordonstypen, och turens id stämmer exakt. Annars, och vid en omledning,
+  rak linje som förut. Fordonet ritas aldrig förbi den senaste rapporten.
+  En sträcka som fordonet redan visas på byter aldrig form mitt i, så en
+  sträckning som kommer sent flyttar inget fordon i sidled, och det valda
+  fordonets spår ritas inte om där det redan gått i rak linje.
+- Passerar sträckningen samma plats två gånger (en slinga, vägen ut och
+  vägen hem) tas den kortaste vägen framåt som passar båda rapporterna, så
+  ett fordon kör aldrig ett varv till; efter ett stopp fortsätter det där det
+  stod. Där vägen ut och vägen hem ligger på samma linje och appen inte kan
+  skilja dem åt blir det rak linje.
+- Fordonet vänder sig efter sträckningens egen riktning. Vid ett stopp står
+  det kvar vänt åt det håll det kom, och förarvyn säger fortfarande att det
+  följer sträckningen tills det kör vidare i rak linje. En förflyttning
+  kortare än 12 m vrider inte fordonet.
+- Appen hämtar sträckningar bara när lagret är på, för fordon som syns och
+  rör sig, med kameran under 15 km, samlade per flöde, och håller högst 384
+  sträckningar och 300 000 punkter (12 MB) i minnet. Vid gränsen släpps
+  den som använts längst sedan, aldrig en som använts de senaste 30
+  sekunderna; ryms inget mer frågar appen inte efter fler. Allt släpps när
+  lagret stängs av. Ritningen per bildruta skapar inga nya objekt och räknar
+  ingen trigonometri. Uppmätt i Node på den här datorn tar 800 fordon längs
+  sträckningen ungefär 0,30 ms per bildruta mot 0,25 ms i rak linje.
+- Förarvyns HUD säger "VISAS 45 S EFTER REALTID · LÄNGS LINJENS
+  STRÄCKNING, UPPSKATTAT MELLAN RAPPORTER" när fordonet följer
+  sträckningen och som förut "RAK LINJE MELLAN POSITIONSRAPPORTER" annars.
+  Den nya texten finns på alla 13 språken; zh-Hant är genererad ur zh-CN.
+- En operatör vars cache är äldre än detta behåller den tills den går ut
+  efter sina 14 dagar och får sträckningarna vid nästa nedladdning. Inget
+  versionsnummer har höjts.
 
 ### 2026-11-24 (förarvyn utan aktuell position)
 - Ett tåg som stod vid perrongen på Stockholm C utan aktuell position

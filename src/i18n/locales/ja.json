@@ -5771,6 +5771,7 @@
   "SHOWN {seconds} S BEHIND REAL TIME": "実時間より{seconds}秒遅れで表示",
   "SHOWN BEHIND REAL TIME": "実時間より遅れて表示",
   "STRAIGHT LINE BETWEEN POSITION REPORTS": "位置報告の間は直線で表示",
+  "ALONG THE ROUTE, ESTIMATED BETWEEN REPORTS": "位置報告の間は路線の経路に沿って推定表示",
   "REPORTED": "報告値",
   "COMPUTED": "算出値",
   "LINE": "系統",

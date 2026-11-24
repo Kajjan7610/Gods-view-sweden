@@ -11,9 +11,12 @@
  * layer already moves it smoothly), at a driver's height above the floor it
  * stands on, and turns with its drawn course. The layers draw a vehicle 25 to
  * 120 s behind real time, in a straight line from one position report to the
- * next unless a train runs along its line. The HUD says so, says whether its
- * speed was reported or worked out between two reports, and gives a stop only
- * as the id the newest report named. Nothing on it is guessed.
+ * next unless a train runs along its line, or a vehicle of the Trafiklab
+ * feeds (a bus, tram, metro or commuter train, or boat) along its trip's
+ * route shape (src/layers/transit/routeShapes.js). The HUD
+ * says which, says whether its speed was reported or worked out between two
+ * reports, and gives a stop only as the id the newest report named. What is
+ * estimated is called an estimate.
  *
  * Leaving the view brings the map back to the vehicle, seen from above: Rail's
  * focusTrain does that for a train, and a Transit vehicle is framed through
@@ -387,7 +390,9 @@ const TRANSIT_RIDE = Object.freeze({
   heightOf: (subject) => subject.position?.groundHeightM,
   routeOf: transitLine,
   stopOf: (subject) => subject.stop ?? null,
-  straight: () => true,
+  // Along its trip's route shape between reports, where the layer says so.
+  straight: (subject) => subject.motion?.alongRouteShape !== true,
+  alongRoute: (subject) => subject.motion?.alongRouteShape === true,
   // Drawn at street level, as the Transit card says (UNDERGROUND_MODES).
   underground: (subject) => subject.mode === 'subway',
   // focusVehicle only selects: the camera would stay at street level.
@@ -418,6 +423,7 @@ const RAIL_RIDE = Object.freeze({
   // Rail snapshots name no stop of the newest report.
   stopOf: () => null,
   straight: (subject) => !subject.path,
+  alongRoute: () => false,
   // Drawn at street level, as the Rail card says.
   underground: (subject) => subject.mode === 'metro',
   // focusTrain follows or flies to the train itself.
@@ -497,6 +503,7 @@ function createRide(spec, layer, requestFocus) {
     draft.named = spec.namedOf(layer, subject);
     draft.route = spec.routeOf(subject);
     draft.straight = spec.straight(subject);
+    draft.alongRoute = spec.alongRoute(subject);
     draft.underground = spec.underground(subject);
     draft.behindS = secondsOf(motion?.shownBehindMs);
     const speedMps = speedOf(motion);
@@ -574,7 +581,9 @@ function createRide(spec, layer, requestFocus) {
         : {
             text: draft.straight
               ? `${lag} · ${t('STRAIGHT LINE BETWEEN POSITION REPORTS')}`
-              : lag,
+              : draft.alongRoute
+                ? `${lag} · ${t('ALONG THE ROUTE, ESTIMATED BETWEEN REPORTS')}`
+                : lag,
             tone: 'estimate',
           };
     const next = Object.freeze({

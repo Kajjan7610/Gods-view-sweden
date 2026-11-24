@@ -6140,6 +6140,7 @@
   "SHOWN {seconds} S BEHIND REAL TIME": "ПОКАЗ ОТСТАЁТ ОТ РЕАЛЬНОГО ВРЕМЕНИ НА {seconds} С",
   "SHOWN BEHIND REAL TIME": "ПОКАЗ ОТСТАЁТ ОТ РЕАЛЬНОГО ВРЕМЕНИ",
   "STRAIGHT LINE BETWEEN POSITION REPORTS": "ПО ПРЯМОЙ МЕЖДУ ОТЧЁТАМИ О ПОЗИЦИИ",
+  "ALONG THE ROUTE, ESTIMATED BETWEEN REPORTS": "ПО ТРАССЕ МАРШРУТА, ОЦЕНКА МЕЖДУ ОТЧЁТАМИ",
   "REPORTED": "ОТЧЁТ",
   "COMPUTED": "РАСЧЁТ",
   "LINE": "МАРШРУТ",

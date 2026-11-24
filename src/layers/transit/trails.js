@@ -10,6 +10,9 @@ import { createContactTrailRenderer } from '../../data/contactTrailRenderer.js';
 import { fixDistanceM } from './movement.js';
 import { TRANSIT_MODE_COLORS } from './policy.js';
 import { transitStyleProfile } from '../../data/transitPresetStyle.js';
+// Swedish fork: Trafiklab vehicles between reports along their route shape.
+import { createRouteShapes } from './routeShapes.js';
+import { sampleRouteShapePosition } from '../../data/transitRouteShapes.js';
 
 // Final Cesium batching uses 3,152 bytes per two-lane edge.
 // The 1,278-instance body plus 64 bytes/instance reserve stays below 2 MiB.
@@ -25,6 +28,14 @@ export function createTrails({ state, services, parts, source }) {
     selected = null,
     fadeTimer = null,
     revision = 0;
+  // Swedish fork: route shapes (./routeShapes.js); an arriving shape
+  // prepares its vehicles' paths again.
+  const routeShapes = createRouteShapes({
+    state,
+    parts,
+    services,
+    prepare: (entry) => prepareEntry(entry),
+  });
   function ensureRenderer() {
     if (!renderer && state._viewer)
       renderer = createContactTrailRenderer(state._viewer);
@@ -58,6 +69,8 @@ export function createTrails({ state, services, parts, source }) {
       entry.trailSegments = [];
       entry.trailVertices = 0;
     }
+    // Swedish fork: null for a feed without route shapes.
+    const shaping = routeShapes.begin(entry);
     const draped = entry === selected && ensureRenderer()?.diagnostics().ground;
     const paths = new Map(),
       all = [],
@@ -82,6 +95,8 @@ export function createTrails({ state, services, parts, source }) {
         Math.max(0, entry.sample.toSeq - entry.track.baseSeq),
         b,
       );
+      // Swedish fork: the shaped corridor's surface first.
+      routeShapes.corridor(entry, a, b, floor);
       const n = Math.min(
         TRAIL_VERTEX_LIMIT - 1,
         Math.max(1, Math.ceil(fixDistanceM(a, b) / STEP_M)),
@@ -118,7 +133,19 @@ export function createTrails({ state, services, parts, source }) {
       if (markerCorridor) markerIntervals--;
       if (a.epoch !== b.epoch || b.flags & FIX_FLAGS.BREAK) continue;
       if (entry !== selected && b.t < entry.sample.displayT) continue;
-      const desired = Math.max(1, Math.ceil(fixDistanceM(a, b) / STEP_M));
+      // Swedish fork: the route shape's points, in the room the steps below
+      // leave, where every rule holds (./routeShapes.js); else straight.
+      const shaped = routeShapes.segment(
+        shaping,
+        a,
+        b,
+        markerCorridor
+          ? TRAIL_VERTEX_LIMIT - markerVertices - 2 * markerIntervals - 1
+          : TRAIL_VERTEX_LIMIT - 1,
+      );
+      const desired = shaped
+        ? shaped.lat.length - 1
+        : Math.max(1, Math.ceil(fixDistanceM(a, b) / STEP_M));
       // Reserve endpoints for every future marker interval. Sparse reports
       // coarsen the active path instead of losing the vehicle to the body cap.
       const n = markerCorridor
@@ -131,15 +158,19 @@ export function createTrails({ state, services, parts, source }) {
       if (!retainBody || n < desired) entry.trailTruncated = true;
       if (!markerCorridor && !retainBody) continue;
       if (markerCorridor) markerVertices += n + 1;
+      // Swedish fork: a shaped path is drawn whole, or not: straight steps.
+      const along = shaped?.lat.length === n + 1 ? shaped : null;
       const positions = [],
         heights = [];
       let valid = true;
       for (let k = 0; k <= n; k++) {
         const fraction = k / n;
-        const point = {
-          lat: a.lat + (b.lat - a.lat) * fraction,
-          lon: a.lon + (((b.lon - a.lon + 540) % 360) - 180) * fraction,
-        };
+        const point = along
+          ? { lat: along.lat[k], lon: along.lon[k] }
+          : {
+              lat: a.lat + (b.lat - a.lat) * fraction,
+              lon: a.lon + (((b.lon - a.lon + 540) % 360) - 180) * fraction,
+            };
         const h = floor(point);
         heights.push(h);
         if (h === null) {
@@ -149,21 +180,35 @@ export function createTrails({ state, services, parts, source }) {
           positions.push(draped ? fromDegrees(point.lon, point.lat) : null);
         } else positions.push(fromDegrees(point.lon, point.lat, h));
       }
-      signature += `${a.seq}/${b.seq}:${heights.join(',')};`;
+      // Swedish fork: a shaped path is told apart, and its points are
+      // reached at the shares of the time its `fractions` give.
+      signature += `${a.seq}/${b.seq}${along ? `~${along.uid}` : ''}:${heights.join(',')};`;
       if (retainBody) vertices += n + 1;
-      if (valid) paths.set(a.seq, { positions, toSeq: b.seq });
+      if (valid)
+        paths.set(
+          a.seq,
+          along
+            ? { positions, toSeq: b.seq, shape: along, cursor: 0 }
+            : { positions, toSeq: b.seq },
+        );
       if (!valid && !draped) continue;
       if (entry === selected && retainBody && fixDistanceM(a, b) > 0) {
         for (let k = 0; k < n; k++)
           all.push({
             fromSeq: a.seq,
             toSeq: b.seq,
-            fromT: a.t + ((b.t - a.t) * k) / n,
-            toT: a.t + ((b.t - a.t) * (k + 1)) / n,
+            fromT: along
+              ? a.t + (b.t - a.t) * along.fractions[k]
+              : a.t + ((b.t - a.t) * k) / n,
+            toT: along
+              ? a.t + (b.t - a.t) * along.fractions[k + 1]
+              : a.t + ((b.t - a.t) * (k + 1)) / n,
             positions: [positions[k], positions[k + 1]],
           });
       }
     }
+    // Swedish fork: this pass's route-shape decisions are the vehicle's now.
+    routeShapes.end(entry, shaping);
     const changed =
       entry.pathSignature !== signature ||
       entry.pathRevision !== entry.track.revision;
@@ -226,6 +271,9 @@ export function createTrails({ state, services, parts, source }) {
     }
     const path = entry.displayPaths?.get(sample.fromSeq);
     if (!path || path.toSeq !== sample.toSeq) return null;
+    // Swedish fork: a shaped path's points are spaced by arc length.
+    if (path.shape !== undefined)
+      return sampleRouteShapePosition(path, sample, out);
     const scaled = sample.fraction * (path.positions.length - 1);
     const index = Math.min(path.positions.length - 2, Math.floor(scaled));
     // Keep scalar interpolation in this frame function. Passing the changing
@@ -340,6 +388,8 @@ export function createTrails({ state, services, parts, source }) {
     if (previous) releaseSelectionGeometry(previous);
     renderer?.destroy();
     renderer = null;
+    // Swedish fork: turning the layer off drops its route shapes.
+    if (!state._enabled) routeShapes.clear();
   }
   return {
     prepareEntry,
@@ -355,5 +405,7 @@ export function createTrails({ state, services, parts, source }) {
       pending: historyRequest !== null,
     }),
     diagnostics: () => renderer?.diagnostics() || null,
+    // Swedish fork: the route shapes held and asked for.
+    routeShapeDiagnostics: () => routeShapes.diagnostics(),
   };
 }

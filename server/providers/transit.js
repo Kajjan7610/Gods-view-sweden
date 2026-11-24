@@ -1,6 +1,10 @@
 import { createTransitService } from '../../src/sources/transitService.js';
 import { resolveTransitRoute } from '../../src/data/transitProxy.js';
 import { sharedTrafiklabStatic } from './trafiklabStatic.js';
+import {
+  createTransitShapesHandler,
+  isTransitShapesRequest,
+} from './trafiklabShapes.js';
 import { admitSameSite } from './common/same-site.js';
 export { fetchTransitFeed } from '../../src/sources/transitService.js';
 
@@ -35,12 +39,19 @@ export function transitProxy(options = {}) {
     enrichVehicles: trafiklabStatic.enrichVehicles,
     ...options,
   });
+  // Swedish fork: the Trafiklab feeds' route shapes, from the static GTFS
+  // cache only (trafiklabShapes.js): a shapes request never downloads.
+  const shapes = createTransitShapesHandler({
+    cachedShapes: options.cachedShapes ?? trafiklabStatic.cachedShapes,
+  });
   const close = () => {
     service.close();
     trafiklabStatic.close();
   };
   function install(server) {
     server.middlewares.use('/api/transit', async (req, res) => {
+      // Swedish fork: `/api/transit/shapes` (trafiklabShapes.js).
+      if (isTransitShapesRequest(req.url)) return shapes(req, res);
       // Swedish fork: a feed that spends a key (Trafikverket's trains, the
       // Trafiklab operators) answers the app's own page only, however the
       // request spells its id; keyless feeds answer as before.

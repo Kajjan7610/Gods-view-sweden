@@ -5771,6 +5771,7 @@
   "SHOWN {seconds} S BEHIND REAL TIME": "显示比实时滞后 {seconds} 秒",
   "SHOWN BEHIND REAL TIME": "显示滞后于实时",
   "STRAIGHT LINE BETWEEN POSITION REPORTS": "位置上报之间按直线显示",
+  "ALONG THE ROUTE, ESTIMATED BETWEEN REPORTS": "位置上报之间沿线路走向推算显示",
   "REPORTED": "上报值",
   "COMPUTED": "推算值",
   "LINE": "线路",

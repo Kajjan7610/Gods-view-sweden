@@ -664,6 +664,44 @@ test('the HUD says what is shown and how it is known', () => {
   );
 });
 
+test('a bus drawn along its route shape says so, as an estimate, in English and Swedish', (t) => {
+  const layer = transitLayer(vehicle({ motion: { alongRouteShape: true } }));
+  const ride = transitRide(layer);
+  enter(ride);
+  assert.deepEqual(cockpitSubjectHudView(hudOf(ride)).meta, {
+    text: 'SHOWN 45 S BEHIND REAL TIME · ALONG THE ROUTE, ESTIMATED BETWEEN REPORTS',
+    tone: 'estimate',
+  });
+  // Off the shape again (a detour, or no shape): straight, as before.
+  layer.state.selected = vehicle({ motion: { alongRouteShape: false } });
+  layer.state.held = layer.state.selected;
+  assert.equal(
+    cockpitSubjectHudView(hudOf(ride)).meta.text,
+    'SHOWN 45 S BEHIND REAL TIME · STRAIGHT LINE BETWEEN POSITION REPORTS',
+  );
+  // No recent fix says only that, shape or not.
+  layer.state.selected = vehicle({
+    motion: { alongRouteShape: true, word: 'NO FIX' },
+  });
+  layer.state.held = layer.state.selected;
+  assert.equal(cockpitSubjectHudView(hudOf(ride)).meta.text, 'NO RECENT FIX');
+
+  inLocale(t, 'sv');
+  layer.state.selected = vehicle({ motion: { alongRouteShape: true } });
+  layer.state.held = layer.state.selected;
+  assert.equal(
+    cockpitSubjectHudView(hudOf(ride)).meta.text,
+    'VISAS 45 S EFTER REALTID · LÄNGS LINJENS STRÄCKNING, UPPSKATTAT MELLAN RAPPORTER',
+  );
+  layer.state.selected = vehicle();
+  layer.state.held = layer.state.selected;
+  assert.equal(
+    cockpitSubjectHudView(hudOf(ride)).meta.text,
+    'VISAS 45 S EFTER REALTID · RAK LINJE MELLAN POSITIONSRAPPORTER',
+    'a snapshot without the flag is drawn straight',
+  );
+});
+
 test('a stop is the id the newest report named, never a name', () => {
   const captions = [
     ['IN_TRANSIT_TO', 'NEXT STOP'],
@@ -885,6 +923,20 @@ test('every language’s words fit the Cockpit’s room for them', (t) => {
     const inferred = longest({ modeInferred: true });
     enter(inferred);
     fits(hudOf(inferred).kicker, 48, `${locale} kicker, mode not known`);
+    // Swedish fork: the most seconds behind along a route shape.
+    const shaped = longest({
+      motion: {
+        derivedSpeedMps: null,
+        shownBehindMs: 120_000,
+        word: 'WAITING',
+        feedStale: true,
+        alongRouteShape: true,
+      },
+    });
+    enter(shaped);
+    const shapedMeta = hudOf(shaped).meta.text;
+    assert.ok(!/STRAIGHT|RAK LINJE/.test(shapedMeta), `${locale} shaped`);
+    fits(shapedMeta, 96, `${locale} meta along the route`);
     const ride = longest();
     const face = ride.entryFace();
     fits(face.label, 16, `${locale} entry face`);

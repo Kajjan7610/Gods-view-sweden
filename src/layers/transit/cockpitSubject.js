@@ -26,8 +26,12 @@ function reuse(previous, next) {
  * where it is drawn, how fast it moves and how that is known. A call while
  * nothing in it changed returns the snapshot it returned before, and a part
  * that did not change (its feed, its stop) is the same object in the next
- * one, so a view can read it on every frame. Transit has no route shapes or
- * stops, so a snapshot names only the vehicle's last reported stop.
+ * one, so a view can read it on every frame. Transit has no stops, so a
+ * snapshot names only the vehicle's last reported stop. Swedish fork: the
+ * Trafiklab feeds have route shapes, and a vehicle may be drawn along its
+ * trip's shape between two reports (./routeShapes.js);
+ * `motion.alongRouteShape` says whether the segment drawn is, and while the
+ * vehicle stands at a report it reached along its shape, still is.
  * `setCockpitSubject(key)` holds a vehicle: its sprite, 3D model, card,
  * trail and detection box are hidden, it keeps moving when it is out of the camera's
  * view, its feed stays polled, and clicks and Escape no longer change the
@@ -138,6 +142,9 @@ export function createTransitCockpitSubject({ state, parts, services }) {
     motion.reportAgeMs = finiteOrNull(sample?.latestReportAgeMs);
     motion.shownBehindMs = finiteOrNull(sample?.actualDelayMs);
     motion.feedStale = status?.stale === true;
+    // Swedish fork: drawn along its route shape, not a straight line.
+    motion.alongRouteShape =
+      entry.routeShapeDrawn === true && entry.placed !== true;
 
     const stop = draft.stop;
     stop.stopId = record.stopId || null;

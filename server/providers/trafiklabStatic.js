@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import { ROUTE_SHAPE_ID_PATTERN } from '../../src/data/transitRouteShapes.js';
+import { readShapesMember } from './trafiklabShapes.js';
 
 /**
  * Trafiklab (Samtrafiken) GTFS Regional static data, for route numbers.
@@ -13,7 +15,11 @@ import zlib from 'node:zlib';
  *
  * The same download also keeps each stop's position and name
  * (`stops.txt`), which the Swedish fork's transit-disruption layer places
- * its alerts by.
+ * its alerts by, and each trip's route shape (`trips.txt` `shape_id`,
+ * `shapes.txt`; trafiklabShapes.js): the vehicle gets the trip's `shapeId`,
+ * and `/api/transit/shapes` serves the shape from the cache. A join cached
+ * before shapes were read stays in use until it expires; the next download
+ * brings them.
  *
  * Static downloads are rationed: the default Bronze key allows 50 a month,
  * so each operator's join is cached on disk for two weeks (16 operators
@@ -32,6 +38,14 @@ export const TRAFIKLAB_STATIC_FETCH_TIMEOUT_MS = 5 * 60_000;
 export const TRAFIKLAB_STATIC_MAX_ZIP_BYTES = 400 * 1024 * 1024;
 export const TRAFIKLAB_STATIC_MAX_FILE_BYTES = 512 * 1024 * 1024;
 const CACHE_VERSION = 1;
+const SHAPES_CACHE_VERSION = 1;
+/**
+ * Operators whose route shapes `/api/transit/shapes` keeps in memory, the
+ * most recently asked: a view is over one or two counties at a time.
+ */
+const SHAPE_TABLES_KEPT = 4;
+/** An operator with no readable shapes cache is looked for again after this. */
+const SHAPES_MISS_RETRY_MS = 5 * 60_000;
 const OPERATOR_RE = /^[a-z][a-z0-9-]{1,40}$/;
 
 /**
@@ -68,6 +82,29 @@ export function gtfsRouteMode(value) {
  * @returns {Map<string, Buffer>}
  */
 export function readZipMembers(zip, wanted) {
+  const out = new Map();
+  for (const [base, { method, data }] of readZipEntries(zip, wanted)) {
+    if (method === 0) out.set(base, data);
+    else if (method === 8)
+      out.set(
+        base,
+        zlib.inflateRawSync(data, {
+          maxOutputLength: TRAFIKLAB_STATIC_MAX_FILE_BYTES,
+        }),
+      );
+    else throw new Error(`unsupported zip method ${method}`);
+  }
+  return out;
+}
+
+/**
+ * Swedish fork: named members of a ZIP archive as stored, still compressed,
+ * for a member too large to inflate at once (`shapes.txt`).
+ * @param {Buffer} zip Whole archive.
+ * @param {string[]} wanted Base names.
+ * @returns {Map<string, {method: number, data: Buffer}>}
+ */
+export function readZipEntries(zip, wanted) {
   const want = new Set(wanted);
   const out = new Map();
   let eocd = -1;
@@ -103,16 +140,7 @@ export function readZipMembers(zip, wanted) {
       30 +
       zip.readUInt16LE(localOffset + 26) +
       zip.readUInt16LE(localOffset + 28);
-    const data = zip.subarray(start, start + compressed);
-    if (method === 0) out.set(base, data);
-    else if (method === 8)
-      out.set(
-        base,
-        zlib.inflateRawSync(data, {
-          maxOutputLength: TRAFIKLAB_STATIC_MAX_FILE_BYTES,
-        }),
-      );
-    else throw new Error(`unsupported zip method ${method}`);
+    out.set(base, { method, data: zip.subarray(start, start + compressed) });
   }
   return out;
 }
@@ -164,9 +192,11 @@ export function parseCsv(text, onRow) {
  * Join trips to routes: tripId -> `<mode>:<short name>`.
  * @param {string} routesCsv routes.txt
  * @param {string} tripsCsv trips.txt
+ * @param {Map<string, string>|null} [tripShapes] Swedish fork: filled with
+ *   tripId -> `shape_id` for each trip that names a shape, from the same pass.
  * @returns {Map<string, string>}
  */
-export function buildTripRouteIndex(routesCsv, tripsCsv) {
+export function buildTripRouteIndex(routesCsv, tripsCsv, tripShapes = null) {
   const routes = new Map();
   let col = null;
   const routeHeader = parseCsv(routesCsv, (fields, header) => {
@@ -192,14 +222,18 @@ export function buildTripRouteIndex(routesCsv, tripsCsv) {
   const trips = new Map();
   let tripCol = -1;
   let routeCol = -1;
+  let shapeCol = -1;
   const tripHeader = parseCsv(tripsCsv, (fields, header) => {
     if (tripCol < 0) {
       tripCol = header.indexOf('trip_id');
       routeCol = header.indexOf('route_id');
+      shapeCol = header.indexOf('shape_id');
       if (tripCol < 0 || routeCol < 0) return;
     }
     const token = routes.get(fields[routeCol]);
     if (token && fields[tripCol]) trips.set(fields[tripCol], token);
+    if (tripShapes && shapeCol >= 0 && fields[tripCol] && fields[shapeCol])
+      tripShapes.set(fields[tripCol], fields[shapeCol]);
   });
   if (!tripHeader.includes('trip_id') || !tripHeader.includes('route_id'))
     throw new Error('trips.txt has no trip_id/route_id columns');
@@ -241,11 +275,52 @@ export function buildStopIndex(stopsCsv) {
 }
 
 /**
+ * Swedish fork: the trips whose shape was read, as the cache keeps them:
+ * each shape id once (`shapeIds`), each trip by its shape's index there.
+ * @param {Map<string, string>} tripShapeIds tripId -> shape_id.
+ * @param {Map<string, string>} shapes The shapes read, by id.
+ * @returns {{shapeIds: string[], tripShapes: Map<string, number>}}
+ */
+export function joinTripShapes(tripShapeIds, shapes) {
+  const shapeIds = [];
+  const indexOf = new Map();
+  const tripShapes = new Map();
+  for (const [trip, shape] of tripShapeIds) {
+    if (!shapes.has(shape)) continue;
+    let index = indexOf.get(shape);
+    if (index === undefined) {
+      index = shapeIds.length;
+      shapeIds.push(shape);
+      indexOf.set(shape, index);
+    }
+    tripShapes.set(trip, index);
+  }
+  return { shapeIds, tripShapes };
+}
+
+/** The trip-to-shape join a cached file holds, or none (cached before shapes). */
+function cachedShapeJoin(parsed) {
+  const shapeIds = parsed?.shapeIds;
+  const trips = parsed?.tripShapes;
+  if (
+    !Array.isArray(shapeIds) ||
+    !shapeIds.every((id) => typeof id === 'string') ||
+    !trips ||
+    typeof trips !== 'object'
+  )
+    return { tripShapes: null, shapeIds: null };
+  return { tripShapes: new Map(Object.entries(trips)), shapeIds };
+}
+
+/**
  * Background loader and vehicle enricher for every Trafiklab feed.
  *
  * @param {{env?: object, fetchImpl?: typeof fetch, cacheDir?: string,
  *   now?: () => number}} [options]
  * @returns {{enrichVehicles: (feed: object, vehicles: object[]) => object[],
+ *   stopsFor: (operator: string) => Map<string, Array>|null,
+ *   cachedShapes: (operator: string, ids: string[]) =>
+ *     Promise<{staticAt: number|null, shapes: Map<string, string>}>,
  *   ready: (operator: string) => Promise<void>, close: () => void}}
  */
 export function createTrafiklabStatic({
@@ -255,8 +330,19 @@ export function createTrafiklabStatic({
   now = Date.now,
 } = {}) {
   /** @type {Map<string, {trips: Map<string,string>|null, loadedAt: number,
+   *   tripShapes: Map<string, number>|null, shapeIds: string[]|null,
    *   retryAt: number, loading: Promise<void>|null}>} */
   const state = new Map();
+  /**
+   * Swedish fork: operators' route shapes as `/api/transit/shapes` serves
+   * them, {fetchedAt, shapes}, the most recently asked last; the file reads
+   * in flight; when an operator with no readable file is looked for again;
+   * and how many downloads have renewed each operator's shapes.
+   */
+  const shapeTables = new Map();
+  const shapeReads = new Map();
+  const shapeMisses = new Map();
+  const shapeRenewals = new Map();
   const controllers = new Set();
   let keylessLogged = false;
   let closed = false;
@@ -272,6 +358,142 @@ export function createTrafiklabStatic({
   const cacheFile = (operator) =>
     path.join(cacheDir, `static-${operator}.json`);
   const stopsFile = (operator) => path.join(cacheDir, `stops-${operator}.json`);
+  const shapesFile = (operator) =>
+    path.join(cacheDir, `shapes-${operator}.json`);
+
+  /** Cache an operator's shapes; false when they could not be written. */
+  function writeShapes(operator, fetchedAt, shapes) {
+    try {
+      fs.mkdirSync(cacheDir, { recursive: true });
+      const temp = `${shapesFile(operator)}.${process.pid}.tmp`;
+      fs.writeFileSync(
+        temp,
+        JSON.stringify({
+          version: SHAPES_CACHE_VERSION,
+          operator,
+          fetchedAt,
+          shapes: Object.fromEntries(shapes),
+        }),
+      );
+      fs.renameSync(temp, shapesFile(operator));
+      return true;
+    } catch (error) {
+      console.warn(
+        `[trafiklab-static] could not cache ${operator} route shapes: ${error?.message || error}`,
+      );
+      return false;
+    }
+  }
+
+  /**
+   * An operator's cached shapes, or null when it has none (no file, or one
+   * that is not a shapes cache). A file that cannot be read just now (busy,
+   * denied) throws: it is not taken for missing.
+   */
+  async function readShapes(operator) {
+    let text;
+    try {
+      text = await fs.promises.readFile(shapesFile(operator), 'utf8');
+    } catch (error) {
+      if (error?.code === 'ENOENT') return null;
+      throw error;
+    }
+    try {
+      const parsed = JSON.parse(text);
+      if (
+        parsed?.version !== SHAPES_CACHE_VERSION ||
+        parsed.operator !== operator ||
+        !parsed.shapes ||
+        typeof parsed.shapes !== 'object'
+      )
+        return null;
+      const shapes = new Map();
+      for (const [id, encoded] of Object.entries(parsed.shapes))
+        if (typeof encoded === 'string') shapes.set(id, encoded);
+      return { fetchedAt: Number(parsed.fetchedAt) || 0, shapes };
+    } catch (error) {
+      console.warn(
+        `[trafiklab-static] ${operator} route shapes cache unread: ${error?.name || 'error'}`,
+      );
+      return null;
+    }
+  }
+
+  /** Keep an operator's shapes in memory as the most recently asked. */
+  function rememberShapes(operator, table) {
+    shapeTables.delete(operator);
+    shapeTables.set(operator, table);
+    shapeMisses.delete(operator);
+    while (shapeTables.size > SHAPE_TABLES_KEPT)
+      shapeTables.delete(shapeTables.keys().next().value);
+  }
+
+  /**
+   * After a download: the operator's new shapes replace those in memory,
+   * if any are (nobody asked otherwise: they wait in their file), and a file
+   * read begun before the download is not kept.
+   */
+  function renewShapes(operator, table) {
+    shapeRenewals.set(operator, (shapeRenewals.get(operator) ?? 0) + 1);
+    shapeMisses.delete(operator);
+    if (shapeTables.has(operator)) rememberShapes(operator, table);
+  }
+
+  /** An operator's shapes, from memory or its cache file; never downloaded. */
+  async function shapeTable(operator) {
+    const held = shapeTables.get(operator);
+    if (held) {
+      rememberShapes(operator, held);
+      return held;
+    }
+    if (now() < (shapeMisses.get(operator) ?? 0)) return null;
+    const renewals = shapeRenewals.get(operator) ?? 0;
+    let reading = shapeReads.get(operator);
+    if (!reading) {
+      reading = readShapes(operator).finally(() => shapeReads.delete(operator));
+      shapeReads.set(operator, reading);
+    }
+    const table = await reading;
+    if (closed) return null;
+    // A download that finished meanwhile is newer than the file read.
+    if (shapeTables.has(operator)) return shapeTables.get(operator);
+    if ((shapeRenewals.get(operator) ?? 0) !== renewals)
+      return shapeTable(operator);
+    if (!table) {
+      shapeMisses.set(operator, now() + SHAPES_MISS_RETRY_MS);
+      return null;
+    }
+    rememberShapes(operator, table);
+    return table;
+  }
+
+  /**
+   * The shapes of an archive's trips, read in chunks; none (straight lines)
+   * when the archive has no `shapes.txt`, its trips name no shapes, or the
+   * member cannot be read: the route join and stops stand either way.
+   */
+  async function readArchiveShapes(operator, zip, tripShapeIds) {
+    try {
+      const member = readZipEntries(zip, ['shapes.txt']).get('shapes.txt');
+      if (!member || !tripShapeIds.size) return new Map();
+      // Only an id a request could name is worth reading.
+      const wanted = new Set();
+      for (const id of new Set(tripShapeIds.values()))
+        if (ROUTE_SHAPE_ID_PATTERN.test(id)) wanted.add(id);
+      if (!wanted.size) return new Map();
+      const read = await readShapesMember(member, wanted);
+      if (read.dropped)
+        console.warn(
+          `[trafiklab-static] ${operator}: ${read.dropped} route shapes left out${read.overBudget ? `, ${read.overBudget} of them over the size cap` : ''}; straight lines for them`,
+        );
+      return read.shapes;
+    } catch (error) {
+      console.warn(
+        `[trafiklab-static] ${operator} route shapes unread (${error?.message || error}); straight lines`,
+      );
+      return new Map();
+    }
+  }
 
   function readStops(operator) {
     try {
@@ -313,13 +535,14 @@ export function createTrafiklabStatic({
       return {
         fetchedAt: Number(parsed.fetchedAt) || 0,
         trips: new Map(Object.entries(parsed.trips || {})),
+        ...cachedShapeJoin(parsed),
       };
     } catch {
       return null;
     }
   }
 
-  function writeCache(operator, fetchedAt, trips) {
+  function writeCache(operator, fetchedAt, trips, shapeJoin = null) {
     try {
       fs.mkdirSync(cacheDir, { recursive: true });
       const temp = `${cacheFile(operator)}.${process.pid}.tmp`;
@@ -330,6 +553,13 @@ export function createTrafiklabStatic({
           operator,
           fetchedAt,
           trips: Object.fromEntries(trips),
+          // Swedish fork: each trip's shape, by its index in shapeIds.
+          ...(shapeJoin
+            ? {
+                shapeIds: shapeJoin.shapeIds,
+                tripShapes: Object.fromEntries(shapeJoin.tripShapes),
+              }
+            : {}),
         }),
       );
       fs.renameSync(temp, cacheFile(operator));
@@ -379,14 +609,22 @@ export function createTrafiklabStatic({
       ]);
       if (!members.has('routes.txt') || !members.has('trips.txt'))
         throw new Error('archive has no routes.txt/trips.txt');
+      const tripShapeIds = new Map();
+      const trips = buildTripRouteIndex(
+        members.get('routes.txt').toString('utf8'),
+        members.get('trips.txt').toString('utf8'),
+        tripShapeIds,
+      );
+      const stops = members.has('stops.txt')
+        ? buildStopIndex(members.get('stops.txt').toString('utf8'))
+        : new Map();
+      // Swedish fork: route shapes from the same archive (trafiklabShapes.js).
+      const shapes = await readArchiveShapes(operator, zip, tripShapeIds);
       return {
-        trips: buildTripRouteIndex(
-          members.get('routes.txt').toString('utf8'),
-          members.get('trips.txt').toString('utf8'),
-        ),
-        stops: members.has('stops.txt')
-          ? buildStopIndex(members.get('stops.txt').toString('utf8'))
-          : new Map(),
+        trips,
+        stops,
+        shapes,
+        shapeJoin: joinTripShapes(tripShapeIds, shapes),
       };
     } finally {
       clearTimeout(timer);
@@ -399,13 +637,20 @@ export function createTrafiklabStatic({
     const cached = readCache(operator);
     const cachedStops = readStops(operator);
     if (cachedStops) entry.stops = cachedStops;
+    // The cached join's trips and their shapes (none in a join cached
+    // before shapes were read: it stays in use until it expires).
+    const cachedJoin = () => ({
+      trips: cached.trips,
+      tripShapes: cached.tripShapes,
+      shapeIds: cached.shapeIds,
+    });
     // A fresh join without stops is enough unless someone asked for stops.
     if (
       cached &&
       t - cached.fetchedAt < TRAFIKLAB_STATIC_MAX_AGE_MS &&
       (cachedStops || !entry.wantStops)
     ) {
-      Object.assign(entry, { trips: cached.trips, loadedAt: cached.fetchedAt });
+      Object.assign(entry, cachedJoin(), { loadedAt: cached.fetchedAt });
       return;
     }
     const key = String(env.TRAFIKLAB_GTFS_STATIC_KEY ?? '').trim();
@@ -416,24 +661,38 @@ export function createTrafiklabStatic({
           '[trafiklab-static] route numbers off: set TRAFIKLAB_GTFS_STATIC_KEY to join Trafiklab trips to routes',
         );
       }
-      if (cached) Object.assign(entry, { trips: cached.trips, loadedAt: t });
+      if (cached) Object.assign(entry, cachedJoin(), { loadedAt: t });
       entry.retryAt = t + TRAFIKLAB_STATIC_KEYLESS_RETRY_MS;
       return;
     }
     try {
-      const { trips, stops } = await queued(() => download(operator, key));
-      if (closed) return;
-      writeCache(operator, t, trips);
+      const { trips, stops, shapes, shapeJoin } = await queued(() =>
+        download(operator, key),
+      );
+      // A download is paid for: it is cached even by a loader closed while it
+      // was being read. The shapes first and the join last: a join names only
+      // shapes that are on disk, and none when they could not be written.
+      const join = writeShapes(operator, t, shapes) ? shapeJoin : null;
       writeStops(operator, t, stops);
-      Object.assign(entry, { trips, stops, loadedAt: t, retryAt: 0 });
+      writeCache(operator, t, trips, join);
+      if (closed) return;
+      if (join) renewShapes(operator, { fetchedAt: t, shapes });
+      Object.assign(entry, {
+        trips,
+        stops,
+        tripShapes: join?.tripShapes ?? null,
+        shapeIds: join?.shapeIds ?? null,
+        loadedAt: t,
+        retryAt: 0,
+      });
       console.log(
-        `[trafiklab-static] ${operator}: ${trips.size} trips joined to routes, ${stops.size} stops`,
+        `[trafiklab-static] ${operator}: ${trips.size} trips joined to routes, ${stops.size} stops, ${shapes.size} route shapes`,
       );
     } catch (error) {
       // Keep any older join rather than losing route numbers to an outage;
       // the message never includes the request URL, so the key stays private.
       if (cached && !entry.trips)
-        Object.assign(entry, { trips: cached.trips, loadedAt: t });
+        Object.assign(entry, cachedJoin(), { loadedAt: t });
       entry.retryAt = now() + TRAFIKLAB_STATIC_RETRY_MS;
       console.warn(
         `[trafiklab-static] ${operator} download failed (${error?.message || error}); next try in 6 h`,
@@ -448,6 +707,8 @@ export function createTrafiklabStatic({
       entry = {
         trips: null,
         stops: null,
+        tripShapes: null,
+        shapeIds: null,
         wantStops: false,
         loadedAt: 0,
         retryAt: 0,
@@ -473,11 +734,21 @@ export function createTrafiklabStatic({
     enrichVehicles(feed, vehicles) {
       const operator = feed?.staticOperator;
       if (!operator || !Array.isArray(vehicles)) return vehicles;
-      const trips = ensure(operator)?.trips;
+      const entry = ensure(operator);
+      const trips = entry?.trips;
       if (!trips) return vehicles;
+      // Swedish fork: and the trip's route shape, where the join has one.
+      const { tripShapes, shapeIds } = entry;
       return vehicles.map((vehicle) => {
-        const token = vehicle?.tripId ? trips.get(vehicle.tripId) : null;
-        return token ? { ...vehicle, routeId: token } : vehicle;
+        const tripId = vehicle?.tripId;
+        const token = tripId ? trips.get(tripId) : null;
+        const index = tripId ? tripShapes?.get(tripId) : undefined;
+        const shapeId = Number.isInteger(index) ? shapeIds?.[index] : null;
+        if (!token && !shapeId) return vehicle;
+        const enriched = { ...vehicle };
+        if (token) enriched.routeId = token;
+        if (shapeId) enriched.shapeId = shapeId;
+        return enriched;
       });
     },
     /**
@@ -490,6 +761,29 @@ export function createTrafiklabStatic({
     stopsFor(operator) {
       return ensure(operator, { wantStops: true })?.stops ?? null;
     },
+    /**
+     * Swedish fork: the operator's cached route shapes among `ids`, for
+     * `/api/transit/shapes`. Read from memory or the cache file only: it
+     * never starts a download, whoever asks. `staticAt` is when the shapes
+     * were downloaded; null, and no shapes, when none are cached. Rejects
+     * when the cache file cannot be read just now (busy, denied).
+     * @param {string} operator
+     * @param {string[]} ids
+     * @returns {Promise<{staticAt: number|null, shapes: Map<string, string>}>}
+     */
+    async cachedShapes(operator, ids) {
+      const none = { staticAt: null, shapes: new Map() };
+      if (closed || !OPERATOR_RE.test(String(operator)) || !Array.isArray(ids))
+        return none;
+      const table = await shapeTable(operator);
+      if (!table) return none;
+      const shapes = new Map();
+      for (const id of ids) {
+        const encoded = table.shapes.get(id);
+        if (encoded !== undefined) shapes.set(id, encoded);
+      }
+      return { staticAt: table.fetchedAt, shapes };
+    },
     /** Resolves when the operator's current load attempt settles. Tests. */
     async ready(operator) {
       await ensure(operator)?.loading;
@@ -499,6 +793,10 @@ export function createTrafiklabStatic({
       for (const controller of controllers) controller.abort();
       controllers.clear();
       state.clear();
+      shapeTables.clear();
+      shapeReads.clear();
+      shapeMisses.clear();
+      shapeRenewals.clear();
     },
   };
 }

@@ -9,6 +9,8 @@ import {
   correctHeight,
   setTimeOffsetMs,
 } from '../../data/contactPlayback.js';
+// Swedish fork: a vehicle along its trip's route shape between reports.
+import { followRouteShape } from '../../data/transitRouteShapes.js';
 const MODE_MAX_SPEED_MPS = Object.freeze({
   bus: 36, // ~130 km/h — a coach on a motorway
   trolleybus: 28, // ~100 km/h — wired to the street
@@ -217,6 +219,9 @@ export function updatePlayback(entry, wallNowMs, monoNowMs) {
   entry.clocks.wallNowMs = wallNowMs;
   entry.clocks.monoNowMs = monoNowMs;
   advance(entry.track, entry.clocks, entry.sample);
+  // Swedish fork: between two reports on its route shape, where the shaped
+  // path draws it, its course and speed along it (precomputed, trails.js).
+  if (entry.routeShaped === true) followRouteShape(entry);
   const placed = entry.placement?.place(entry.key, wallNowMs) ?? null;
   const wasPlaced = entry.placed === true;
   entry.placed = placed !== null;
