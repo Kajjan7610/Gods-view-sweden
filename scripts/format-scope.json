@@ -104,6 +104,8 @@
   "src/standalone/scene.js",
   "src/standalone/startupChrome.js",
   "src/standalone/startupChrome.test.mjs",
+  "src/standalone/cockpitRides.test.mjs",
+  "src/standalone/controls.test.mjs",
   "src/standalone/tools.js",
   "build/vite.js",
   "server/standalone/vite.config.js",

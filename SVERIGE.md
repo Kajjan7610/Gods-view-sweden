@@ -86,6 +86,7 @@ Tre regler gäller:
 | Flygtavla: Swedavias tio flygplatser, hela dagens avgångar och ankomster, köerna i säkerhetskontrollen över terminalerna (när lagret Köer och restider är på), följ planet i luften och dagens rutter på globen | Swedavia FlightInfo och WaitTime (gratisnycklar) | Kortet över en Swedavia-flygplats och tavlans egen panel |
 | Flygväder: METAR och TAF för flygplatserna | NOAA Aviation Weather Center (ingen nyckel) | Flygtavlan och cockpit |
 | Cockpit: knapp vid kartan och C-tangenten när ett plan, fartyg eller en satellit är valt, Swedavias rader för planet, svensk lägesbild i genomgången (ort och län, SMHI:s väder, varningar och VMA) | Swedavia, SMHI, Krisinformation.se, NOAA (METAR/TAF) | Cockpit |
+| Förarvy: Cockpit åker med den buss, spårvagn eller det tåg som är valt på kartan, från förarens höjd. Fordonet visas 25–120 s efter realtid och glider i rak linje mellan positionsrapporterna, och HUD:en säger det; linje, senaste rapportens ålder, hållplatsens id enligt rapporten, fart (beräknad eller angiven), källa och licens | Samma hämtningar som lagren Kollektivtrafik (Trafiklab GTFS Regional) och Järnväg (Trafikverket) | Cockpit: välj fordonet och tryck C eller knappen vid kartan |
 | Fartkameror: ca 2 800 fasta trafiksäkerhetskameror som pilar i kamerans riktning, och de närmaste i dossiern | Trafikverket (CC0) | Speed Cameras (Sweden), under Infrastructure, och NU-fliken |
 | Sverige-turen "Sverige just nu" | Lagren ovan | Scener |
 | Berättelsen "Natten över Sverige": norrsken, chansen över Kiruna, molnen och vägen mot Abisko, med levande siffror i bildtexterna och svensk berättarröst | NOAA SWPC, SMHI, Trafikverket; rösten från elevenlabs.io | Berättelser (STORIES), och Scener |
@@ -442,6 +443,56 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-24 (förarvy från bussar, spårvagnar och tåg)
+- Cockpit kan åka med en buss, spårvagn eller ett tåg, inte bara med plan,
+  fartyg och satelliter. Välj fordonet på kartan i lagret Kollektivtrafik
+  eller Järnväg och tryck C, knappen bredvid kartan eller ingången i
+  Kontext-rälsen; knappen visar en buss, ett tåg eller en båt och FÖRARVY.
+  Kameran sitter där lagret ritar fordonet, på en förares ögonhöjd, och
+  följer det när lagret flyttar det. Piltangenterna tittar runt, Home eller
+  0 tittar framåt igen. LÄMNA eller Esc går ur. Kameran lyfter då och visar
+  fordonet ovanifrån: en buss eller spårvagn från ett par kilometers håll,
+  snett ovanifrån som ett tåg, och ett tåg i rörelse följs som när man
+  klickar på det. Ett tåg som står still, eller som inte har rapporterat på
+  länge, flygs bara till med kamerans egen vinkel och avstånd, så kameran
+  stannar då nära marken; det är tåglagrets eget beteende.
+- Lagren visar fordonen 25–120 s efter realtid, och mellan två
+  positionsrapporter glider de i rak linje (ett tåg som är knutet till sin
+  linje i originalets tåglager glider längs den; svenska tåg har ingen
+  linje). HUD:en säger det: "VISAS 45 S EFTER REALTID · RAK LINJE MELLAN
+  POSITIONSRAPPORTER". Farten står i km/h som BERÄKNAD (räknad mellan två
+  rapporter, alltså den rörelse som syns) eller ANGIVEN (fordonets egen
+  rapport). Korten visar linje, hur gammal senaste rapporten är,
+  hållplatsens id enligt senaste rapporten (flödet har inga
+  hållplatsnamn, så inget namn hittas på), läge (i rörelse, står still,
+  ingen aktuell position, väntar på uppdatering), källan och, när källan
+  inte redan anger den, licensen på en egen rad. Linje står bara där
+  flödet själv namnger linjen: Trafikverkets tåg i lagret Kollektivtrafik
+  heter "Tåg 2861" efter sitt nummer, och ett fordon utan linje går under
+  sin egen beteckning, aldrig under ett rått linje-id. Har flödet slutat
+  uppdateras visas en varning under LIVESIGNALER, och en tunnelbana säger
+  där att den visas på gatunivå. En fordonstyp som flödet bara antar sägs
+  inte; då står FÖRARVY i stället.
+- Ögonhöjderna är egna antaganden, utan publicerad källa: buss 2,4 m över
+  vägen, spårvagn 2,5 m och tåg 3,0 m över rälsen, tunnelbana 2,4 m över
+  gatan (lagren ritar tunnelbanan på gatunivå, eftersom flödena inte anger
+  något djup), färja 6 m över vattenlinjen, övriga 2,5 m. Ögat flyttas inte
+  fram mot vindrutan, eftersom det inte är känt var på fordonet GPS:en
+  sitter.
+- Förarvyn hämtar ingenting själv. Lagret håller fordonet och fortsätter
+  hämta dess flöde var 15:e sekund även när fordonet är utanför bild, men
+  inte när fliken är dold. En timme i en svensk buss kostar ungefär 240
+  anrop mot Trafiklab, 0,8 % av Bronze-nyckelns 30 000 i månaden. En timme
+  i ett svenskt tåg kostar ungefär 330 anrop mot Trafikverket.
+- Cockpit har 22 nya texter (FÖRARVY, LÄMNA, Titta framåt, HUD:ens rader,
+  taggar och varning, och titta åt höger, vänster och bakåt), översatta
+  till alla 13 språken; zh-Hant är genererad ur zh-CN.
+- Bussymbolen `directions_bus` är tillagd i appens delmängd av Material
+  Symbols, hämtad från Google Fonts (Apache 2.0, redan angiven i
+  `public/fonts/README.md`).
+- Två nya testfiler, `src/standalone/cockpitRides.test.mjs` och
+  `src/standalone/controls.test.mjs`, prövar förarvyn mot låtsaslager.
 
 ### 2026-11-24 (Esris satellitkarta utan upprepade provrutor)
 - För att känna igen Esris bild för "ingen bild här" hämtar kartan ruta
