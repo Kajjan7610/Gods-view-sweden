@@ -3501,8 +3501,8 @@
   "World time": "Världstid",
   "Play speed": "Uppspelningshastighet",
   "Scroll or pinch to zoom, drag to move along · double-click to see it all": "Scrolla eller nyp för att zooma, dra för att flytta · dubbelklicka för att se allt",
-  "Live": "Live",
-  "Back to live": "Tillbaka till live",
+  "Live": "Realtid",
+  "Back to live": "Tillbaka till realtid",
   "Rail": "Järnväg",
   "Urban rail": "Tunnelbana/spårväg",
   "Local rail": "Lokaltåg",
@@ -3899,7 +3899,7 @@
   "{n} h ago": "för {n} h sedan",
   "{n} d ago": "för {n} d sedan",
   "Out of feed · last reading": "Utanför flödet · senaste avläsning",
-  "Live · {age}": "Live · {age}",
+  "Live · {age}": "Realtid · {age}",
   "{n} m": "{n} m",
   "{n} km": "{n} km",
   "updated {age}": "uppdaterad {age}",
@@ -4560,7 +4560,7 @@
   "Move up": "Flytta upp",
   "Move down": "Flytta ned",
   "Click a shot to go to it, double-click to rename.": "Klicka på en tagning för att gå till den, dubbelklicka för att byta namn.",
-  "Back to live at the starting view": "Tillbaka till live i startvyn",
+  "Back to live at the starting view": "Tillbaka till realtid i startvyn",
   "Exit cockpit to fly to a bike share city": "Lämna cockpit för att flyga till en stad med lånecyklar",
   "Open {panel}": "Öppna {panel}",
   "Visual": "Visning",
@@ -5881,5 +5881,6 @@
   "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg; the security queues at Arlanda, Landvetter and Bromma": "Cirka 200 restidssträckor och 1 200 mätpunkter, Stockholm och Göteborg; köerna i säkerhetskontrollen på Arlanda, Landvetter och Bromma",
   "Every minute; the security queues every 3 minutes": "Varje minut; köerna i säkerhetskontrollen var 3:e minut",
   "CC0 1.0 (Trafikverket) · Swedavia's API terms: shown in the app, credited": "CC0 1.0 (Trafikverket) · Swedavias API-villkor: visas i appen, med källa",
-  "Nothing published in view. Only protected areas whose managers publish their trails and facilities are covered, plus the state mountain trails.": "Inget publicerat i vyn. Bara skyddade områden vars förvaltare publicerar sina leder och anordningar finns med, plus de statliga lederna i fjällen."
+  "Nothing published in view. Only protected areas whose managers publish their trails and facilities are covered, plus the state mountain trails.": "Inget publicerat i vyn. Bara skyddade områden vars förvaltare publicerar sina leder och anordningar finns med, plus de statliga lederna i fjällen.",
+  "video stream|Live": "Direkt"
 }

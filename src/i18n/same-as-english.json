@@ -358,7 +358,8 @@
     "{speed} km/h",
     "{value} min",
     "Influenza A",
-    "Influenza B"
+    "Influenza B",
+    "video stream|Live"
   ],
   "es": [
     "1 min/s",
@@ -1763,7 +1764,6 @@
     "NADIR",
     "SENSOR",
     "1 min/s",
-    "Live",
     "EXPORT",
     "via {source}",
     "Video",
@@ -1785,7 +1785,6 @@
     "Squawk {code}",
     "Signal",
     "{n} acres",
-    "Live · {age}",
     "{n} m",
     "{n} km",
     "storm",

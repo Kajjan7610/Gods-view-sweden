@@ -27,7 +27,9 @@ export function useLiveScreen() {
   const statusText = computed(() => {
     switch (view.value?.state) {
       case 'playing':
-        return t('Live');
+        // Swedish fork: its own entry, so a broadcast can read "Direkt" in
+        // Swedish while a reading or the timeline reads "Realtid".
+        return t('Live', { context: 'video stream' });
       case 'offline':
         return t('Stream is offline');
       case 'unavailable':

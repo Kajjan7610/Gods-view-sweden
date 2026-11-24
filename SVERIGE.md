@@ -443,6 +443,22 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-24 ("Realtid" i stället för "Live")
+- Kortet för ISS, och för allt annat som rör sig (flygplan, fartyg, tåg),
+  visade "Live" på svenska. Texten var markerad för översättning och fanns
+  i alla 13 språkfiler, men den svenska översättningen var det engelska
+  ordet, uttryckligen godkänt som "samma som engelska" när originalet
+  översatte kontextpanelen 2026-11-14. De flesta andra språk översätter
+  ordet; tyskan behåller "Live".
+- Svenskan säger nu "Realtid" ("Realtid · 12 s" med senaste läsningens
+  ålder). Samma ord används där originalet använder "Live" för lagrens
+  status i kontextpanelen och för tidslinjens knapp tillbaka till nuet, och
+  knappens och loggans verktygstips säger "Tillbaka till realtid" och
+  "Tillbaka till realtid i startvyn". En sändning som spelas, i sektionen
+  LIVE och på cockpitens LIVE-sida, har en egen text och säger "Direkt";
+  den svenska versionen erbjuder i dag inga sändningar. "LIVE" i HUD:en och
+  lagernamn som Liveflyg är oförändrade.
+
 ### 2026-11-24 (leder och friluftsanordningar i hela vyn)
 - Lagret Leder och friluftsanordningar såg tomt ut på många ställen, till
   exempel vid Åre och Nacka. Ögonblicksbilden och servervägen fungerar:
