@@ -7,6 +7,7 @@ import {
   inExtent,
   mayBePrivate,
   onlyNumbersLookPrivate,
+  photonBias,
   resetPlaceSuggestions,
 } from './placeSuggestions.js';
 
@@ -670,4 +671,126 @@ test('a long line is read quickly', () => {
     mayBePrivate(line);
     assert.ok(performance.now() - started < 1000, line.slice(0, 12));
   }
+});
+
+// Swedish fork: the language and the view Photon is asked with.
+/** A Photon feature named `name`, in Stockholm unless told otherwise. */
+const place = (name, extra = {}) => ({
+  geometry: { type: 'Point', coordinates: [18.07, 59.33] },
+  properties: { name, country: 'Sverige', countrycode: 'se', ...extra },
+});
+const STOCKHOLM = { lat: 59.3293, lon: 18.0686, heightM: 50_000 };
+const PARIS = { lat: 48.8566, lon: 2.3522, heightM: 50_000 };
+
+/** A suggester in `ui` whose answers come from `answer(url)`, one per ask. */
+function photonDouble(ui, answer = () => []) {
+  const asked = [];
+  const service = createPlaceSuggester({
+    endpoint: 'https://fixture.test/api/',
+    fetchImpl: async (url) => {
+      asked.push(url);
+      return Response.json({ features: answer(url) });
+    },
+    uiLanguage: () => ui,
+  });
+  return { asked, service };
+}
+
+test('other interfaces ask Photon as the original does', async () => {
+  for (const [ui, lang] of [
+    ['en', 'en'],
+    ['de-AT', 'de'],
+    ['fr', 'fr'],
+    ['it', 'it'],
+    // Without a language of Photon's, none is sent.
+    ['es', null],
+    ['zh-Hant', null],
+    [undefined, 'en'],
+  ]) {
+    resetPlaceSuggestions();
+    const { asked, service } = photonDouble(ui);
+    await service.suggest('Gladsaxe', { near: STOCKHOLM });
+    assert.equal(asked.at(-1).searchParams.get('lang'), lang, String(ui));
+  }
+});
+
+test('Swedish asks for the own names over the Nordic countries, English elsewhere', async () => {
+  for (const [near, lang] of [
+    [STOCKHOLM, 'default'],
+    [{ lat: 69.65, lon: 18.96, heightM: 20_000 }, 'default'],
+    [PARIS, 'en'],
+    [null, 'en'],
+  ]) {
+    resetPlaceSuggestions();
+    const { asked, service } = photonDouble('sv', () => [place('Gladsaxe')]);
+    const [found] = await service.suggest('Gladsaxe', { near });
+    assert.equal(found.name, 'Gladsaxe');
+    assert.equal(asked.length, 1, 'asked once');
+    assert.equal(asked[0].searchParams.get('lang'), lang, JSON.stringify(near));
+  }
+});
+
+test('an own-name answer in another script is asked once more in English', async () => {
+  const { asked, service } = photonDouble('sv', (url) =>
+    url.searchParams.get('lang') === 'default'
+      ? [place('Санкт-Петербург', { country: 'Россия', countrycode: 'ru' })]
+      : [place('Saint Petersburg', { country: 'Russia', countrycode: 'ru' })],
+  );
+  const near = { lat: 59.94, lon: 30.31, heightM: 50_000 };
+  const [found] = await service.suggest('Petersburg', { near });
+  assert.equal(found.name, 'Saint Petersburg');
+  assert.equal(found.detail, 'Russia');
+  assert.deepEqual(
+    asked.map((url) => url.searchParams.get('lang')),
+    ['default', 'en'],
+  );
+  // Both answers are kept: asking again sends nothing.
+  await service.suggest('Petersburg', { near });
+  assert.equal(asked.length, 2);
+});
+
+test('Photon leans toward the view, its middle rounded to a tenth of a degree', async () => {
+  const { asked, service } = photonDouble('sv');
+  // Stockholm from 50 km: a city and its surroundings.
+  await service.suggest('Arlanda', { near: STOCKHOLM });
+  const [url] = asked;
+  assert.equal(url.searchParams.get('lat'), '59.3');
+  assert.equal(url.searchParams.get('lon'), '18.1');
+  assert.equal(url.searchParams.get('zoom'), '10');
+  // The same view is answered from the cache; another view is asked anew.
+  await service.suggest('Arlanda', { near: { ...STOCKHOLM, lat: 59.33 } });
+  assert.equal(asked.length, 1);
+  await service.suggest('Arlanda', {
+    near: { lat: 62, lon: 15, heightM: 1_500_000 },
+  });
+  assert.equal(asked.length, 2);
+  assert.equal(asked[1].searchParams.get('zoom'), '5');
+  // Without a view, or from higher than 4,000 km, nothing leans.
+  await service.suggest('Sigtuna');
+  await service.suggest('Märsta', {
+    near: { lat: 60, lon: 15, heightM: 4_000_001 },
+  });
+  assert.equal(asked.length, 4);
+  for (const plain of asked.slice(2))
+    for (const name of ['lat', 'lon', 'zoom'])
+      assert.equal(plain.searchParams.get(name), null, name);
+});
+
+test('a view becomes a bias only with a place and a height up to 4,000 km', () => {
+  assert.deepEqual(photonBias({ lat: -0.04, lon: 179.96, heightM: 800 }), {
+    lat: '0.0',
+    lon: '180.0',
+    zoom: '10',
+  });
+  // At the limit, near the pole, the widest lean.
+  assert.equal(photonBias({ lat: 85, lon: 20, heightM: 4_000_000 })?.zoom, '4');
+  for (const near of [
+    null,
+    { lat: 59.3, lon: 18.1 },
+    { lat: 59.3, lon: 18.1, heightM: 0 },
+    { lat: 59.3, lon: 18.1, heightM: 4_000_001 },
+    { lat: 91, lon: 18.1, heightM: 5000 },
+    { lat: Number.NaN, lon: 18.1, heightM: 5000 },
+  ])
+    assert.equal(photonBias(near), null, JSON.stringify(near));
 });

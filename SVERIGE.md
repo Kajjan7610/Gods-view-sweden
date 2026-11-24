@@ -443,6 +443,31 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-24 (platsförslagen på svenska och nära vyn)
+- Platsförslagen medan man skriver frågade Photon utan att säga vilket
+  språk svaret skulle ha när gränssnittet var svenskt. Photon gick då efter
+  webbläsarens språklista, så ett svenskt gränssnitt i en webbläsare som
+  också listar engelska fick engelska undertexter ("GLADSAXE MUNICIPALITY").
+- Ett svenskt gränssnitt ber nu om platsernas egna namn (`lang=default`)
+  när vyns mitt ligger över Norden (ungefär 54–71,5° N, 4–32° Ö), och om
+  engelska namn (`lang=en`) annars eller utan vy. Visar ett svar med egna
+  namn ett ord i ett annat skriftsystem, till exempel kyrilliska längst i
+  öster, frågas samma sak en gång till på engelska, och båda svaren sparas.
+  Alla andra språk frågar som i originalet: engelska, tyska, franska och
+  italienska med sitt eget språk (att Photons publika tjänst har
+  italienska är inte prövat här), övriga utan `lang`.
+- Förslagen lutar mot det vyn visar: `lat`/`lon` är punkten mitt i vyn,
+  avrundad till en tiondels grad (ungefär 11 km), och `zoom` den
+  webbkartzoom som visar ungefär lika mycket mark som vyn (4–10). Avsikten
+  är att platser i och nära vyn ska komma först, till exempel Arlanda i
+  Sigtuna när man tittar på Stockholm i stället för orter med samma namn
+  på andra håll; hur Photon rangordnar har inte mätts. Från en kamera högre
+  än 4 000 km, eller utan vy, skickas inget av dem. Bara vyn skickas, aldrig
+  var användaren är, och `location_bias_scale` lämnas som Photons standard.
+- Med förslagen går nu alltså också ungefär vilken del av kartan som visas
+  till komoots Photon-tjänst i Tyskland. Den vanliga platssökningen skickade
+  redan vyns mitt dit, utan avrundning.
+
 ### 2026-11-23 (flyget i hela vyn)
 - När vyn är större än skivan runt kartans mitt, som utzoomat över
   Sverige eller Norden, visas nu flygplanen i mer av vyn. adsb.lol frågas

@@ -150,9 +150,13 @@ watch(query, (value) => {
   placesTimer = setTimeout(async () => {
     const controller = new AbortController();
     placesAbort = controller;
+    // Swedish fork: Photon leans toward what the view shows (its middle and
+    // height, rounded in the suggester), never toward where the person is.
+    const view = entityCard.view;
     try {
       const found = await suggester.suggest(asked, {
         signal: controller.signal,
+        near: view?.center ? { ...view.center, heightM: view.heightM } : null,
       });
       if (controller.signal.aborted) return;
       places.value = found.slice(0, 3);

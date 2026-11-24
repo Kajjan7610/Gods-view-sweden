@@ -504,6 +504,108 @@ const PAUSE_AFTER_REFUSAL_MS = 60_000;
 const CACHE_LIMIT = 200;
 
 /**
+ * The interface languages Photon is asked to answer in, as the original asks
+ * (en, de, fr, it). Other interfaces send no `lang`, as the original does, and
+ * Photon goes by the browser's Accept-Language; Swedish is the fork's own
+ * (photonLanguage).
+ */
+const PHOTON_LANGUAGES = Object.freeze(['en', 'de', 'fr', 'it']);
+/**
+ * Swedish fork: where a Swedish interface asks for the places' own names
+ * (`lang=default`): a view over the Nordic countries. Elsewhere, or without a
+ * view, it asks for English names. Without `lang` Photon went by the
+ * browser's languages, and a Swedish interface in a browser that also lists
+ * English got English everywhere ("GLADSAXE MUNICIPALITY").
+ */
+const NORDIC = Object.freeze({ south: 54, north: 71.5, west: 4, east: 32 });
+/**
+ * Swedish fork: a letter of another script than the Latin one ("Санкт-
+ * Петербург" in the box's east): a `default` answer with one is asked once
+ * more in English.
+ */
+const OTHER_SCRIPT = /(?!\p{Script=Latin})\p{L}/u;
+/**
+ * Swedish fork: the highest camera whose view leans the suggestions (m).
+ * From higher, half the globe shows and its middle says nothing about what
+ * is meant.
+ */
+const MAX_BIAS_HEIGHT_M = 4_000_000;
+/**
+ * Swedish fork: the widest and narrowest lean (Photon's `zoom`, a web map's
+ * zoom level). Above 10 it would reach only the next few streets, too little
+ * for a place a town away, such as Arlanda seen from Stockholm's streets.
+ */
+const MIN_BIAS_ZOOM = 4;
+const MAX_BIAS_ZOOM = 10;
+
+/**
+ * Swedish fork: Photon's location bias for a view: the point it looks at,
+ * rounded to a tenth of a degree (about 11 km), and the web map zoom that
+ * shows about as much ground, meant to bring places in and around the view
+ * first. Only the view is sent, never the person's own location.
+ * @param {?{lat: number, lon: number, heightM: number}} near The view's
+ *   middle and the camera's height (m).
+ * @returns {?{lat: string, lon: string, zoom: string}} Null without a view,
+ *   or from a camera higher than MAX_BIAS_HEIGHT_M.
+ */
+export function photonBias(near) {
+  const lat = Number(near?.lat);
+  const lon = Number(near?.lon);
+  const height = Number(near?.heightM);
+  if (
+    ![lat, lon, height].every(Number.isFinite) ||
+    Math.abs(lat) > 90 ||
+    Math.abs(lon) > 180 ||
+    height <= 0 ||
+    height > MAX_BIAS_HEIGHT_M
+  )
+    return null;
+  // A 60° view sees about 1.155 × its height across; a 1,000 px wide web
+  // map at zoom z about 156,543 km × cos(latitude) / 2^z.
+  const zoom = Math.round(
+    Math.log2(
+      (156_543_034 * Math.cos((lat * Math.PI) / 180)) / (1.155 * height),
+    ),
+  );
+  const tenth = (value) => (Math.round(value * 10) / 10).toFixed(1);
+  return {
+    lat: tenth(lat),
+    lon: tenth(lon),
+    zoom: String(Math.min(MAX_BIAS_ZOOM, Math.max(MIN_BIAS_ZOOM, zoom))),
+  };
+}
+
+/**
+ * Swedish fork: the `lang` Photon is asked with, or null for none. A Swedish
+ * interface asks for the places' own names over the Nordic countries and
+ * for English names elsewhere or without a view; the others as the original
+ * does.
+ * @param {string} language The interface's two-letter language.
+ * @param {?{lat: string, lon: string}} bias photonBias's.
+ * @returns {?string}
+ */
+export function photonLanguage(language, bias) {
+  if (language !== 'sv')
+    return PHOTON_LANGUAGES.includes(language) ? language : null;
+  const lat = Number(bias?.lat);
+  const lon = Number(bias?.lon);
+  return lat >= NORDIC.south &&
+    lat <= NORDIC.north &&
+    lon >= NORDIC.west &&
+    lon <= NORDIC.east
+    ? 'default'
+    : 'en';
+}
+
+/** Swedish fork: whether a result shows a word of another script. */
+const inOtherScript = (feature) => {
+  const p = feature?.properties ?? {};
+  return [p.name, p.city, p.state, p.country].some((value) =>
+    OTHER_SCRIPT.test(String(value ?? '')),
+  );
+};
+
+/**
  * The spacing, the pause and the cache, shared by every suggester in the tab:
  * a search box that is put up again starts from where the last one left off.
  */
@@ -565,13 +667,21 @@ export function createPlaceSuggester({
   endpoint,
   fetchImpl = (...args) => globalThis.fetch(...args),
   limit = 4,
+  // Swedish fork: the interface's language (a seam for tests).
+  uiLanguage = () => globalThis.document?.documentElement?.lang,
 } = {}) {
   const enabled = endpoint === undefined || Boolean(endpoint);
   const { cache } = shared;
 
   return {
     enabled,
-    async suggest(query, { signal } = {}) {
+    /**
+     * @param {string} query
+     * @param {{signal?: AbortSignal, near?: ?{lat: number, lon: number,
+     *   heightM: number}}} [options] Swedish fork: `near` is the view's
+     *   middle and height, for Photon's location bias (photonBias).
+     */
+    async suggest(query, { signal, near = null } = {}) {
       signal?.throwIfAborted();
       const text = String(query ?? '')
         .trim()
@@ -585,10 +695,15 @@ export function createPlaceSuggester({
         mayBePrivate(text)
       )
         return [];
-      const language = (globalThis.document?.documentElement?.lang || 'en')
-        .slice(0, 2)
-        .toLowerCase();
-      const key = `${endpoint ?? ''}|${limit}|${language}|${text.toLowerCase()}`;
+      const language = (uiLanguage() || 'en').slice(0, 2).toLowerCase();
+      // Swedish fork: Photon's language and the view's bias are part of
+      // what is asked, so each answer is kept apart.
+      const bias = photonBias(near);
+      const lang = photonLanguage(language, bias);
+      const where = bias ? `${bias.lat},${bias.lon},${bias.zoom}` : '';
+      const keyFor = (asked) =>
+        `${endpoint ?? ''}|${limit}|${asked ?? `ui:${language}`}|${where}|${text.toLowerCase()}`;
+      const key = keyFor(lang);
       if (cache.has(key)) return cache.get(key);
 
       // The same text already on its way is that request's answer, unless
@@ -600,51 +715,50 @@ export function createPlaceSuggester({
         } catch {
           signal?.throwIfAborted();
         }
-      const ask = async () => {
-        // Concurrent callers recheck the gap after waking before sending.
-        while (shared.nextRequestAt > Date.now()) {
-          let timer;
-          const pause = new Promise((resolve) => {
-            timer = setTimeout(resolve, shared.nextRequestAt - Date.now());
-          });
-          try {
-            await waitForSignal(pause, signal);
-          } finally {
-            clearTimeout(timer);
-          }
-        }
-        signal?.throwIfAborted();
-        // The same text asked again while this one waited is answered now.
-        if (cache.has(key)) return cache.get(key);
-        if (Date.now() < shared.pausedUntil) return [];
-        const url = new URL(photonSearchUrl(text, { endpoint, limit }));
-        if (['en', 'de', 'fr', 'it'].includes(language))
-          url.searchParams.set('lang', language);
-
-        shared.nextRequestAt = Date.now() + MIN_GAP_MS;
-        let features;
+      /**
+       * Wait once for the tab's spacing. Callers check it again on waking and,
+       * with nothing awaited in between, take their turn (request).
+       */
+      const pauseForTurn = async () => {
+        let timer;
+        const pause = new Promise((resolve) => {
+          timer = setTimeout(resolve, shared.nextRequestAt - Date.now());
+        });
         try {
-          features = await requestWithDeadline(
-            async (requestSignal) => {
-              const response = await fetchImpl(url, { signal: requestSignal });
-              requestSignal.throwIfAborted();
-              if (!response.ok) throw new Error(`HTTP ${response.status}`);
-              const data = await response.json();
-              return data?.features;
-            },
-            { signal, timeoutMs: TIMEOUT_MS },
-          );
-        } catch (error) {
-          signal?.throwIfAborted();
-          // A refusal, a timeout or a failed request (a refusal sent without
-          // CORS headers arrives as one) all hold suggestions off a while.
-          void error;
-          shared.pausedUntil = Date.now() + PAUSE_AFTER_REFUSAL_MS;
-          return [];
+          await waitForSignal(pause, signal);
+        } finally {
+          clearTimeout(timer);
         }
+      };
+      /** One request to Photon: its features, or a throw when it fails. */
+      const request = (asked) => {
+        const url = new URL(photonSearchUrl(text, { endpoint, limit }));
+        // Swedish fork: the language, when there is one, and the view's bias.
+        if (asked) url.searchParams.set('lang', asked);
+        if (bias) {
+          url.searchParams.set('lat', bias.lat);
+          url.searchParams.set('lon', bias.lon);
+          url.searchParams.set('zoom', bias.zoom);
+        }
+        shared.nextRequestAt = Date.now() + MIN_GAP_MS;
+        return requestWithDeadline(
+          async (requestSignal) => {
+            const response = await fetchImpl(url, { signal: requestSignal });
+            requestSignal.throwIfAborted();
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            return data?.features;
+          },
+          { signal, timeoutMs: TIMEOUT_MS },
+        );
+      };
+      const refused = () => {
         signal?.throwIfAborted();
-        if (!Array.isArray(features)) return [];
-
+        // A refusal, a timeout or a failed request (a refusal sent without
+        // CORS headers arrives as one) all hold suggestions off a while.
+        shared.pausedUntil = Date.now() + PAUSE_AFTER_REFUSAL_MS;
+      };
+      const placesOf = (features) => {
         const seen = new Set();
         const places = [];
         for (const feature of features) {
@@ -696,10 +810,54 @@ export function createPlaceSuggester({
           });
           if (places.length >= limit) break;
         }
-
-        cache.set(key, places);
+        return places;
+      };
+      const remember = (cacheKey, places) => {
+        cache.set(cacheKey, places);
         if (cache.size > CACHE_LIMIT) cache.delete(cache.keys().next().value);
         return places;
+      };
+      const ask = async () => {
+        // Concurrent callers recheck the gap after waking before sending.
+        while (shared.nextRequestAt > Date.now()) await pauseForTurn();
+        signal?.throwIfAborted();
+        // The same text asked again while this one waited is answered now.
+        if (cache.has(key)) return cache.get(key);
+        if (Date.now() < shared.pausedUntil) return [];
+        let features;
+        try {
+          features = await request(lang);
+        } catch {
+          refused();
+          return [];
+        }
+        signal?.throwIfAborted();
+        if (!Array.isArray(features)) return [];
+        // Swedish fork: an answer in the places' own names that shows another
+        // script is asked once more in English, and that answer is kept for
+        // both, so neither is asked again.
+        if (lang === 'default' && features.some(inOtherScript)) {
+          const englishKey = keyFor('en');
+          if (cache.has(englishKey))
+            return remember(key, cache.get(englishKey));
+          while (shared.nextRequestAt > Date.now()) await pauseForTurn();
+          signal?.throwIfAborted();
+          if (Date.now() >= shared.pausedUntil) {
+            let english;
+            try {
+              english = await request('en');
+            } catch {
+              refused();
+              // The own names now; English is asked for again after the pause.
+              return placesOf(features);
+            }
+            signal?.throwIfAborted();
+            if (Array.isArray(english))
+              return remember(key, remember(englishKey, placesOf(english)));
+          }
+          return placesOf(features);
+        }
+        return remember(key, placesOf(features));
       };
       const asking = ask();
       shared.pending.set(key, asking);
