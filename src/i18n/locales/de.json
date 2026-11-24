@@ -5385,7 +5385,6 @@
   "Slow traffic at {count} measuring points; no stretch queued · {all}": "Zähfließender Verkehr an {count} Messstellen; keine Strecke im Stau · {all}",
   "No queues right now · {all}": "Gerade keine Staus · {all}",
   "Queues and travel times (Sweden)": "Staus und Fahrzeiten (Schweden)",
-  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg": "Etwa 200 Fahrzeitstrecken und 1 200 Messstellen, Stockholm und Göteborg",
   "Travel time · {name}": "Fahrzeit · {name}",
   "Measuring point · {direction}": "Messstelle · {direction}",
   "Measuring point": "Messstelle",
@@ -5877,5 +5876,9 @@
   "up to {n} min old": "bis {n} Min. alt",
   "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "Von {seen} rund um die Ansicht abgefragten Flugzeugen werden die {count} gezeigt, die der Kartenmitte am nächsten sind.",
   "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "Herausgezoomt wird die Mitte der Ansicht etwa alle {centre} Min. abgefragt; die äußeren Gebiete werden gerade nicht abgefragt, und das schon Abgefragte bleibt bis zu 30 Minuten stehen.",
-  "Only the view within {km} km of the map centre is read.": "Abgefragt wird nur der Teil der Ansicht bis {km} km von der Kartenmitte."
+  "Only the view within {km} km of the map centre is read.": "Abgefragt wird nur der Teil der Ansicht bis {km} km von der Kartenmitte.",
+  "With the layer on, the security queues at Arlanda, Landvetter and Bromma (Swedavia) also show over their terminals.": "Mit dieser Ebene erscheinen auch die Warteschlangen an der Sicherheitskontrolle in Arlanda, Landvetter und Bromma (Swedavia) über den Terminals.",
+  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg; the security queues at Arlanda, Landvetter and Bromma": "Etwa 200 Fahrzeitstrecken und 1 200 Messstellen, Stockholm und Göteborg; die Warteschlangen an der Sicherheitskontrolle in Arlanda, Landvetter und Bromma",
+  "Every minute; the security queues every 3 minutes": "Jede Minute; die Warteschlangen an der Sicherheitskontrolle alle 3 Minuten",
+  "CC0 1.0 (Trafikverket) · Swedavia's API terms: shown in the app, credited": "CC0 1.0 (Trafikverket) · API-Bedingungen von Swedavia: in der App angezeigt, mit Quelle"
 }

@@ -5272,7 +5272,6 @@
   "Slow traffic at {count} measuring points; no stretch queued · {all}": "{count} 個測量點緩行；沒有擁堵路段 · {all}",
   "No queues right now · {all}": "目前沒有擁堵 · {all}",
   "Queues and travel times (Sweden)": "擁堵與行程時間（瑞典）",
-  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg": "約 200 個行程時間路段和 1 200 個測量點，斯德哥爾摩和哥德堡",
   "Travel time · {name}": "行程時間 · {name}",
   "Measuring point · {direction}": "測量點 · {direction}",
   "Measuring point": "測量點",
@@ -5754,5 +5753,9 @@
   "up to {n} min old": "最多 {n} 分鐘前",
   "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "在視圖周圍讀取的 {seen} 架飛機中，顯示離地圖中心最近的 {count} 架。",
   "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "縮小視圖時，視圖中心約每 {centre} 分鐘讀取一次；外圍區域暫不讀取，已讀取的數據最多保留 30 分鐘。",
-  "Only the view within {km} km of the map centre is read.": "只讀取距地圖中心 {km} 公里以內的視圖部分。"
+  "Only the view within {km} km of the map centre is read.": "只讀取距地圖中心 {km} 公里以內的視圖部分。",
+  "With the layer on, the security queues at Arlanda, Landvetter and Bromma (Swedavia) also show over their terminals.": "打開此圖層後，阿蘭達、蘭德維特和布羅馬機場安檢的排隊情況（Swedavia）也會顯示在航站樓上方。",
+  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg; the security queues at Arlanda, Landvetter and Bromma": "約 200 個行程時間路段和 1 200 個測量點，斯德哥爾摩和哥德堡；阿蘭達、蘭德維特和布羅馬機場安檢的排隊情況",
+  "Every minute; the security queues every 3 minutes": "每分鐘；安檢排隊情況每 3 分鐘",
+  "CC0 1.0 (Trafikverket) · Swedavia's API terms: shown in the app, credited": "CC0 1.0（Trafikverket）· Swedavia API 條款：在應用中顯示，註明來源"
 }

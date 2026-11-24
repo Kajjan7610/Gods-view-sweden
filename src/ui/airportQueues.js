@@ -1,9 +1,11 @@
 /**
- * Security queues over the terminals (Swedish fork): when the view settles
- * near Arlanda, Landvetter or Bromma, each checkpoint Swedavia measures gets
- * a marker and label at its own position — "T5 · 3 min", green, yellow or orange by
- * length — read again every three minutes while the view stays. A click on
- * a label opens the airport board's security tab.
+ * Security queues over the terminals (Swedish fork): while the layer Köer
+ * och restider is on and the view settles near Arlanda, Landvetter or
+ * Bromma, each checkpoint Swedavia measures gets a marker and label at its
+ * own position — "T5 · 3 min", green, yellow or orange by length — read
+ * again every three minutes while the view stays. With the layer off nothing
+ * shows and Swedavia is not asked. A click on a label opens the airport
+ * board's security tab.
  */
 import { onLocaleChange, t } from '../i18n/index.js';
 import { SWEDAVIA_AIRPORTS } from '../data/swedaviaAirports.js';
@@ -45,6 +47,8 @@ const LABEL_HOST_OPTIONS = Object.freeze({
   moving: false,
 });
 const PICK_PREFIX = 'airport-queue:';
+/** The layer whose switch the labels follow: Köer och restider. */
+export const AIRPORT_QUEUES_LAYER_ID = 'road-queues';
 const LEVEL_COLORS = Object.freeze({
   short: '#69f0ae',
   medium: '#ffd54f',
@@ -56,13 +60,16 @@ const QUEUE_AIRPORTS = SWEDAVIA_AIRPORTS.filter((airport) => airport.queues);
 /**
  * Own the queue labels for one scene object (`viewer`). Text goes through
  * the world-overlay host (`overlayHost`: setEntries, setVisible,
- * clearSource, hitTest); the markers under it are one points set.
+ * clearSource, hitTest); the markers under it are one points set. With a
+ * `dataManager` the labels follow AIRPORT_QUEUES_LAYER_ID's switch; without
+ * one they always may show.
  * @param {{ openBoard: (iata: string) => void }} options
  */
 export function createAirportQueues({
   viewer: host,
   overlayHost,
   openBoard,
+  dataManager = null,
   fetchImpl = (...args) => globalThis.fetch(...args),
   documentRef = globalThis.document,
   now = () => Date.now(),
@@ -82,6 +89,13 @@ export function createAirportQueues({
 
   const cockpit = () =>
     documentRef?.body?.classList?.contains('cockpit-mode') === true;
+  /** Whether the queues layer is on, or turning on. */
+  const layerOn = () =>
+    !dataManager ||
+    Boolean(
+      dataManager.isEffectivelyEnabled?.(AIRPORT_QUEUES_LAYER_ID) ??
+      dataManager.isEnabled?.(AIRPORT_QUEUES_LAYER_ID),
+    );
 
   function viewCenter() {
     const height = findCamera(host)?.pose().height;
@@ -153,7 +167,7 @@ export function createAirportQueues({
     requestRender();
   }
   async function load() {
-    if (!airport || destroyed) return;
+    if (!airport || destroyed || !layerOn()) return;
     request?.abort();
     const controller = new AbortController();
     request = controller;
@@ -204,14 +218,15 @@ export function createAirportQueues({
     settleTimer = null;
     if (destroyed) return;
     const center = viewCenter();
-    // Only an airport whose terminals are in view: the queues cost a call
-    // against Swedavia's daily allowance.
-    const next = cockpit()
-      ? null
-      : airportUnder(center, QUEUE_AIRPORTS, {
-          km: queueReachKm(center?.height, NEAR_KM),
-          height: NEAR_HEIGHT_M,
-        });
+    // Only an airport whose terminals are in view, with the queues layer
+    // on: the queues cost a call against Swedavia's daily allowance.
+    const next =
+      cockpit() || !layerOn()
+        ? null
+        : airportUnder(center, QUEUE_AIRPORTS, {
+            km: queueReachKm(center?.height, NEAR_KM),
+            height: NEAR_HEIGHT_M,
+          });
     if (next?.iata === airport?.iata) {
       // The same airport: back from a hidden page, or out of cockpit.
       if (dots.show !== (Boolean(airport) && !cockpit())) draw();
@@ -231,6 +246,19 @@ export function createAirportQueues({
     clearTimeout(settleTimer);
     settleTimer = setTimeout(settle, SETTLE_DELAY_MS);
   });
+  // The queues layer switched: off takes the labels away at once and stops
+  // the reading; on looks at the view as it is now.
+  const removeLayerWatch =
+    dataManager?.subscribe?.((change) => {
+      if (
+        change?.layerId !== AIRPORT_QUEUES_LAYER_ID ||
+        !String(change.type ?? '').startsWith('visibility')
+      )
+        return;
+      clearTimeout(settleTimer);
+      settleTimer = null;
+      settle();
+    }) ?? null;
 
   registerPickOwner(
     AIRPORT_QUEUES_ID,
@@ -271,6 +299,7 @@ export function createAirportQueues({
       clearTimeout(refreshTimer);
       clearTimeout(settleTimer);
       removeMoveEnd?.();
+      removeLayerWatch?.();
       removeLocale?.();
       documentRef?.removeEventListener?.('visibilitychange', onVisible);
       removeClick?.();

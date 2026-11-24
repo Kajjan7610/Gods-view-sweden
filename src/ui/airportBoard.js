@@ -35,6 +35,8 @@ const WEATHER_TTL_MS = 10 * 60_000;
 /** How long the flights layer's contacts are read once for the board. */
 const AIRCRAFT_INDEX_MS = 20_000;
 const FLIGHTS_LAYER = 'flights';
+/** The layer the security queues' labels follow (src/ui/airportQueues.js). */
+const QUEUES_LAYER = 'road-queues';
 const AIRCRAFT_INDEX_MAX = 50_000;
 /** A checkpoint is shown from this far south and this high (about 1.2 km
     back at a 35° pitch, so its label sits near mid-screen). */
@@ -599,6 +601,12 @@ export function createAirportBoard({
       const queue = data?.security?.find((row) => (row.id || row.name) === key);
       if (!Number.isFinite(queue?.lat) || !Number.isFinite(queue?.lon)) return;
       close();
+      // The label shows only with the queues layer on: showing it on the
+      // map turns the layer on.
+      if (dataManager?.setEnabled && !dataManager.isEnabled?.(QUEUES_LAYER))
+        Promise.resolve(
+          dataManager.setEnabled(QUEUES_LAYER, true, { origin: 'user' }),
+        ).catch(() => {});
       // From the south, looking north over the checkpoint's terminal; its
       // label (src/ui/airportQueues.js) shows once the view settles.
       findCamera(host)?.flyTo(

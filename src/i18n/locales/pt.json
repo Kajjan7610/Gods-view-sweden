@@ -5498,7 +5498,6 @@
   "Slow traffic at {count} measuring points; no stretch queued · {all}": "Trânsito lento em {count} pontos de medição; nenhum trecho com fila · {all}",
   "No queues right now · {all}": "Nenhuma fila agora · {all}",
   "Queues and travel times (Sweden)": "Filas e tempos de viagem (Suécia)",
-  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg": "Cerca de 200 trechos de tempo de viagem e 1 200 pontos de medição, Estocolmo e Gotemburgo",
   "Travel time · {name}": "Tempo de viagem · {name}",
   "Measuring point · {direction}": "Ponto de medição · {direction}",
   "Measuring point": "Ponto de medição",
@@ -6000,5 +5999,9 @@
   "up to {n} min old": "até {n} min",
   "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "De {seen} aeronaves lidas em torno da vista, são exibidas as {count} mais próximas do centro do mapa.",
   "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "Com a vista afastada, o centro é lido cerca de a cada {centre} min; as áreas externas não são lidas agora, e o que foi lido permanece até 30 minutos.",
-  "Only the view within {km} km of the map centre is read.": "Só é lida a parte da vista a até {km} km do centro do mapa."
+  "Only the view within {km} km of the map centre is read.": "Só é lida a parte da vista a até {km} km do centro do mapa.",
+  "With the layer on, the security queues at Arlanda, Landvetter and Bromma (Swedavia) also show over their terminals.": "Com a camada ativada, as filas do controle de segurança de Arlanda, Landvetter e Bromma (Swedavia) também aparecem sobre os terminais.",
+  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg; the security queues at Arlanda, Landvetter and Bromma": "Cerca de 200 trechos de tempo de viagem e 1 200 pontos de medição, Estocolmo e Gotemburgo; as filas do controle de segurança de Arlanda, Landvetter e Bromma",
+  "Every minute; the security queues every 3 minutes": "A cada minuto; as filas do controle de segurança a cada 3 minutos",
+  "CC0 1.0 (Trafikverket) · Swedavia's API terms: shown in the app, credited": "CC0 1.0 (Trafikverket) · Termos da API da Swedavia: mostrado na app, com fonte"
 }

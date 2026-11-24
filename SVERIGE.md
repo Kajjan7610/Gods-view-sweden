@@ -48,7 +48,7 @@ Tre regler gäller:
 | Nederbördsradar, Norden (var 5:e minut, senaste timmen) | SMHI, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Nordics) |
 | Nederbördsradar, Europa inkl. Norge, Finland, Danmark och Baltikum (var 5:e minut) | EUMETNET OPERA, radarkomposit (CC BY 4.0, ingen nyckel) | Rain radar, under Weather (knapp Europe) |
 | Vägfärjor: Trafikverkets ca 40 färjeleder med nästa avgångar de kommande tre timmarna och nästa avgångstid bredvid varje led; gula där Trafikverket har ett meddelande för leden (inställda turer, nedsatt kapacitet, planerade avstängningar) | Trafikverket, objekt `FerryRoute`, `FerryAnnouncement` och färjemeddelanden i `Situation` (befintlig nyckel) | Road ferries (Sweden) / Vägfärjor, under Movement |
-| Köer och restider: Trafikverkets ca 200 restidssträckor, färgade efter Trafikverkets egen bedömning (fritt, trög trafik, kö, stillastående), och ca 1 200 mätpunkter där hastigheten nu jämförs med det normala för timmen (röd under hälften, gul klart under). Stockholm och Göteborg, några runt Malmö. Klick ger restid nu och normalt, hastighet och flöde | Trafikverket, objekt `TravelTimeRoute` 1.6 och `TrafficFlow` 1.6 med `BaselineTraffic` (befintlig nyckel) | Queues and travel times (Sweden) / Köer och restider, under Movement |
+| Köer och restider: Trafikverkets ca 200 restidssträckor, färgade efter Trafikverkets egen bedömning (fritt, trög trafik, kö, stillastående), och ca 1 200 mätpunkter där hastigheten nu jämförs med det normala för timmen (röd under hälften, gul klart under). Stockholm och Göteborg, några runt Malmö. Klick ger restid nu och normalt, hastighet och flöde. Med lagret på visas också köerna i säkerhetskontrollen på Arlanda, Landvetter och Bromma över terminalerna | Trafikverket, objekt `TravelTimeRoute` 1.6 och `TrafficFlow` 1.6 med `BaselineTraffic` (befintlig nyckel); köerna i säkerhetskontrollen från Swedavia WaitTime (gratisnyckel) | Queues and travel times (Sweden) / Köer och restider, under Movement |
 | Tjäldjup: Trafikverkets tjälstavar i den plogade vägbanan (ett 50-tal rapporterar), färgade efter hur djupt vägen är frusen, där givarnas temperaturprofil passerar 0 °C, med djupet bredvid varje punkt (ett spann där stavens översta givare sitter djupt); klick ger temperaturen på olika djup | Trafikverket, objekt `FrostDepthMeasurepoint` (befintlig nyckel) | Frost depth (Sweden) / Tjäldjup, under Events |
 | Rastplatser: de 317 rastplatserna i Trafikverkets data, gula där lastbilar har platser, med ett filter för bara dem; klick ger platser för bil och lastbil, toalett, picknickbord, lekplats, latrintömning och Trafikverkets anteckning. Antalet platser, inte hur många som är lediga | Trafikverket, objekt `Parking` (befintlig nyckel) | Rest areas (Sweden) / Rastplatser, under Movement |
 | Vägväder: ca 830 väderstationer längs vägarna (vägbanans och luftens temperatur, daggpunkt, vind, sikt, nederbörd; halkrisk markeras) | Trafikverket, objekt `WeatherMeasurepoint` | Road Weather (Sweden), under Events |
@@ -83,7 +83,7 @@ Tre regler gäller:
 | Virus i avloppsvattnet, hopfällt från början med en rad om vad som stiger eller påvisas nu: om covid-19, influensa A och B och RSV stiger, är stabila, sjunker, påvisas nu eller inte påvisas i det senaste veckoprovet, för orter med ett reningsverk i mätningen (Stockholmsområdets fyra verk som kolumner) | SLU och SEEC via SciLifeLab Pathogens Portal (CC BY 4.0, DOI 10.17044/scilifelab.14256317), ingen nyckel | Panelen STAD, fliken NU |
 | Små jordskalv i norra Europa: EMSC:s jordbävningar det senaste dygnet i rutan 54–72° N, 4–33° Ö, även de små, tillsammans med USGS:s (samma skalv ritas en gång); resten av världen är som förut USGS | EMSC FDSN (CC BY 4.0, ingen nyckel) | Earthquakes (24h) / Jordbävningar (24 h), under Events |
 | Himlen över Kiruna: den senaste bilden från IRF:s firmamentkamera i stadsdossierns norrskensrad, för orter inom 300 km från Kiruna och bara när det är mörkt där | IRF, Kiruna Atmospheric and Geophysical Observatory (CC BY 4.0), ingen nyckel | Panelen STAD, fliken NU |
-| Flygtavla: Swedavias tio flygplatser, hela dagens avgångar och ankomster, köerna i säkerhetskontrollen över terminalerna, följ planet i luften och dagens rutter på globen | Swedavia FlightInfo och WaitTime (gratisnycklar) | Kortet över en Swedavia-flygplats och tavlans egen panel |
+| Flygtavla: Swedavias tio flygplatser, hela dagens avgångar och ankomster, köerna i säkerhetskontrollen över terminalerna (när lagret Köer och restider är på), följ planet i luften och dagens rutter på globen | Swedavia FlightInfo och WaitTime (gratisnycklar) | Kortet över en Swedavia-flygplats och tavlans egen panel |
 | Flygväder: METAR och TAF för flygplatserna | NOAA Aviation Weather Center (ingen nyckel) | Flygtavlan och cockpit |
 | Cockpit: knapp vid kartan och C-tangenten när ett plan, fartyg eller en satellit är valt, Swedavias rader för planet, svensk lägesbild i genomgången (ort och län, SMHI:s väder, varningar och VMA) | Swedavia, SMHI, Krisinformation.se, NOAA (METAR/TAF) | Cockpit |
 | Fartkameror: ca 2 800 fasta trafiksäkerhetskameror som pilar i kamerans riktning, och de närmaste i dossiern | Trafikverket (CC0) | Speed Cameras (Sweden), under Infrastructure, och NU-fliken |
@@ -132,7 +132,7 @@ svenska data. Ändra i tabellen och kör `node scripts/sweden-sources.mjs`.
 | SE | Vägfärjor (Sverige) | Trafikverket | Omkring 40 färjeleder, avgångar de kommande tre timmarna | Varannan minut | CC0 1.0 |
 | SE | Tjäldjup (Sverige) | Trafikverket | Cirka 50 rapporterande tjälstavar i vägbanan, Sverige | Med några timmars mellanrum | CC0 1.0 |
 | SE | Rastplatser (Sverige) | Trafikverket | Cirka 320 rastplatser i Trafikverkets data, Sverige | När en rastplats ändras | CC0 1.0 |
-| SE | Köer och restider (Sverige) | Trafikverket | Cirka 200 restidssträckor och 1 200 mätpunkter, Stockholm och Göteborg | Varje minut | CC0 1.0 |
+| SE | Köer och restider (Sverige) | Trafikverket · Swedavia | Cirka 200 restidssträckor och 1 200 mätpunkter, Stockholm och Göteborg; köerna i säkerhetskontrollen på Arlanda, Landvetter och Bromma | Varje minut; köerna i säkerhetskontrollen var 3:e minut | CC0 1.0 (Trafikverket) · Swedavias API-villkor: visas i appen, med källa |
 | SE | Polishändelser (Sverige) | Polismyndigheten | De 500 senaste notiserna, cirka tio dagar, hela Sverige | Var 5:e minut | Öppna data, källan anges |
 | SE | Kollektivtrafikstörningar (Sverige) | Trafiklab (Samtrafiken) | Störningar vid hållplatserna hos 16 regionala trafikbolag | Var 15:e minut | CC0 1.0 |
 | +SE | Jordbävningar (24 h) | EMSC | Jordbävningar i norra Europa (54–72° N, 4–33° Ö) det senaste dygnet, även små. Originalet: Jordbävningar i hela världen det senaste dygnet (USGS) | Var 5:e minut | CC BY 4.0 (EMSC) |
@@ -442,6 +442,33 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-24 (köerna i säkerhetskontrollen följer lagret Köer och restider)
+- Etiketten "1 min" som stod kvar nära Stockholm när lagret Köer och
+  restider stängdes av var Swedavias kö i säkerhetskontrollen på Bromma
+  (Bromma har en enda kontroll, så inget terminalnamn står framför
+  minuterna). Etiketterna hörde inte till något lager: de visades när vyn
+  stannade med en flygplats terminaler i bild, vilka lager som än var på
+  (se 2026-11-07 och 2026-11-11).
+- Nu visas de bara när lagret Köer och restider är på. Stängs lagret av
+  försvinner etiketterna och punkterna under dem direkt, och Swedavia
+  frågas inte förrän lagret slås på igen; då läses vyn som den är. Det
+  sparar också av Swedavias dygnskvot (högst 300 anrop per nyckel), som
+  förut gick åt med ett anrop var tredje minut så länge en terminal låg i
+  bild, till exempel Bromma i en vy över Stockholm. Lagrets rad säger att
+  köerna följer med lagret.
+- Flygtavlans "Visa på kartan" för en säkerhetskontroll slår på lagret, så
+  att etiketten visas när kameran har kommit fram.
+- Lagrets ⓘ i Datalager och dess rad i dataattributionen anger nu också
+  Swedavia: källa "Trafikverket · Swedavia", köerna i omfattningen (läses var
+  tredje minut) och Swedavias villkor bredvid Trafikverkets CC0, med länk
+  till swedavia.se som villkoren ber om. Swedavias rad i DATA_SOURCES.md
+  fick sin kolumn för källangivelse.
+- Köer och restider skriver själv bara ett kort på kartan, för en klickad
+  sträcka eller mätpunkt, och tar bort det, linjerna och prickarna när
+  lagret stängs av, också när ett svar kommer in efteråt. Nya tester håller
+  båda delarna så (`src/layers/roadQueues/index.test.mjs`,
+  `src/ui/airportQueues.test.mjs`).
 
 ### 2026-11-24 (verktygstipsen över rälsen och ortskortet)
 - Verktygstipsen vid den vänstra rälsens ikoner ritades under rälsens

@@ -5272,7 +5272,6 @@
   "Slow traffic at {count} measuring points; no stretch queued · {all}": "{count} 計測地点で混雑、渋滞区間なし · {all}",
   "No queues right now · {all}": "現在渋滞なし · {all}",
   "Queues and travel times (Sweden)": "渋滞と所要時間（スウェーデン）",
-  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg": "約200の所要時間区間と1,200の計測地点、ストックホルムとヨーテボリ",
   "Travel time · {name}": "所要時間 · {name}",
   "Measuring point · {direction}": "計測地点 · {direction}",
   "Measuring point": "計測地点",
@@ -5754,5 +5753,9 @@
   "up to {n} min old": "最大{n}分前",
   "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "表示範囲の周りで取得した{seen}機のうち、地図の中心に近い{count}機を表示しています。",
   "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "ズームアウト時は、表示範囲の中心を約{centre}分ごとに取得します。周辺の区域は現在取得しておらず、取得済みのデータは最大30分表示されます。",
-  "Only the view within {km} km of the map centre is read.": "地図の中心から{km} km以内の表示範囲だけを取得します。"
+  "Only the view within {km} km of the map centre is read.": "地図の中心から{km} km以内の表示範囲だけを取得します。",
+  "With the layer on, the security queues at Arlanda, Landvetter and Bromma (Swedavia) also show over their terminals.": "このレイヤーをオンにすると、アーランダ、ランドヴェッテル、ブロンマ各空港の保安検査の待ち時間（Swedavia）もターミナルの上に表示されます。",
+  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg; the security queues at Arlanda, Landvetter and Bromma": "約200の所要時間区間と1,200の計測地点、ストックホルムとヨーテボリ。アーランダ、ランドヴェッテル、ブロンマ各空港の保安検査の待ち時間",
+  "Every minute; the security queues every 3 minutes": "1 分ごと。保安検査の待ち時間は 3 分ごと",
+  "CC0 1.0 (Trafikverket) · Swedavia's API terms: shown in the app, credited": "CC0 1.0（Trafikverket）· Swedavia の API 条件: アプリ内で表示、出典を明記"
 }

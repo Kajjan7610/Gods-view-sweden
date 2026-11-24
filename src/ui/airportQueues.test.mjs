@@ -19,7 +19,11 @@ const settle = async () => {
     await new Promise((resolve) => setImmediate(resolve));
 };
 
-function harness(t) {
+/**
+ * The labels on a scene; with `layer` ({on}), they follow the queues
+ * layer's switch through a data manager double.
+ */
+function harness(t, { layer = null } = {}) {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   t.mock.method(console, 'warn', () => {});
   const state = {
@@ -39,6 +43,13 @@ function harness(t) {
     click: null,
     opened: [],
     cockpit: false,
+    visible: null,
+  };
+  // Swedish fork: the queues layer's switch, as the data manager reports it.
+  const watchers = new Set();
+  const dataManager = layer && {
+    isEffectivelyEnabled: (id) => id === 'road-queues' && layer.on,
+    subscribe: (cb) => (watchers.add(cb), () => watchers.delete(cb)),
   };
   const host = { canvas: { clientWidth: 800, clientHeight: 600 } };
   const camera = fakeCameraPort({ pose: { height: state.height } });
@@ -54,11 +65,14 @@ function harness(t) {
       setEntries: (sourceId, entries) => {
         state.labels = entries;
       },
-      setVisible() {},
+      setVisible: (sourceId, on) => {
+        state.visible = on;
+      },
       clearSource() {},
       hitTest: () => (state.labelHit ? { entryId: state.labelHit } : null),
     },
     openBoard: (iata) => state.opened.push(iata),
+    dataManager,
     fetchImpl: async (url) => {
       state.urls.push(String(url));
       if (state.down) return { ok: false, status: 502 };
@@ -117,7 +131,23 @@ function harness(t) {
     await settle();
   };
   const markers = () => draw.set('airport-queues');
-  return { state, view, refresh, markers, queues, camera };
+  /** The queues layer is switched on or off. */
+  const switchLayer = async (on) => {
+    layer.on = on;
+    for (const watcher of [...watchers])
+      watcher({ type: 'visibility', layerId: 'road-queues', enabled: on });
+    await settle();
+  };
+  return {
+    state,
+    view,
+    refresh,
+    markers,
+    queues,
+    camera,
+    switchLayer,
+    watching: () => watchers.size,
+  };
 }
 
 test('the reach follows the height of the view, within bounds', () => {
@@ -251,4 +281,43 @@ test('a label or a marker clicked opens the board; anything else does not', asyn
   assert.equal(markers(), undefined);
   assert.equal(state.click, null);
   assert.equal(camera.listenerCount('moveEnd'), 0);
+});
+
+test('with the queues layer off nothing shows and Swedavia is not asked', async (t) => {
+  const { state, view, refresh, markers, switchLayer } = harness(t, {
+    layer: { on: false },
+  });
+  await view(BROMMA, 3000);
+  await refresh();
+  assert.deepEqual(state.urls, []);
+  assert.equal(state.labels.length, 0);
+  assert.equal(markers().show, false);
+  // On: the view as it is now is read and drawn.
+  await switchLayer(true);
+  assert.deepEqual(state.urls, ['/api/airport-board?iata=BMA&only=security']);
+  assert.equal(state.labels.length, 1);
+  assert.equal(state.visible, true);
+  assert.equal(markers().show, true);
+});
+
+test('turning the queues layer off clears the labels at once and stops asking', async (t) => {
+  const { state, view, refresh, markers, switchLayer, queues, watching } =
+    harness(t, { layer: { on: true } });
+  await view(BROMMA, 3000);
+  assert.equal(state.labels.length, 1);
+  await switchLayer(false);
+  assert.equal(state.labels.length, 0);
+  assert.equal(state.visible, false);
+  assert.equal(markers().show, false);
+  // No refresh, move or second look reads the queues while the layer is off.
+  const asked = state.urls.length;
+  await refresh();
+  await refresh();
+  await view(BROMMA, 2500);
+  state.listeners.get('visibilitychange')();
+  await refresh();
+  assert.equal(state.urls.length, asked);
+  assert.equal(watching(), 1);
+  queues.destroy();
+  assert.equal(watching(), 0, 'the watch goes with the labels');
 });

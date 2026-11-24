@@ -632,9 +632,12 @@ export const DATA_CREDITS = [
   },
   {
     key: 'road-queues',
+    // Swedish fork: the airport security queues show with the layer;
+    // Swedavia's terms ask for its name, preferably linked to swedavia.se.
     html:
       'Queues and travel times (Sweden): ' +
-      '<a href="https://data.trafikverket.se/" target="_blank" rel="noopener">Trafikverket</a> (open API, CC0 1.0)',
+      '<a href="https://data.trafikverket.se/" target="_blank" rel="noopener">Trafikverket</a> (open API, CC0 1.0); ' +
+      'security queues at Arlanda, Landvetter and Bromma from <a href="https://www.swedavia.se/" target="_blank" rel="noopener">Swedavia</a> (WaitTime API)',
   },
   {
     key: 'gamma-radiation',

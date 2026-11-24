@@ -316,8 +316,10 @@ export function createApplicationTools({
   });
   defer(() => airportBoard.destroy());
   // Queue labels over the terminals; a click opens the board's queues.
+  // Swedish fork: they show only while the queues layer is on.
   const airportQueues = createAirportQueues({
     viewer,
+    dataManager,
     overlayHost: {
       setEntries: worldOverlays.setOverlayEntries,
       setVisible: worldOverlays.setOverlaySourceVisible,

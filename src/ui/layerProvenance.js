@@ -227,12 +227,17 @@ export const LAYER_PROVENANCE = Object.freeze({
     licence: CC0,
   }),
   'road-queues': own({
-    source: 'Trafikverket',
+    // Swedavia's security queues show with the layer (src/ui/airportQueues.js).
+    source: 'Trafikverket · Swedavia',
     coverage: msg(
-      'About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg',
+      'About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg; the security queues at Arlanda, Landvetter and Bromma',
     ),
-    updates: msg('Every minute'),
-    licence: CC0,
+    updates: msg('Every minute; the security queues every 3 minutes'),
+    // Swedavia's terms (read 2026-11-11, SVERIGE.md): its data may be shown
+    // in the app, with Swedavia credited.
+    licence: msg(
+      "CC0 1.0 (Trafikverket) · Swedavia's API terms: shown in the app, credited",
+    ),
   }),
   'polisen-events': own({
     source: 'Polismyndigheten',

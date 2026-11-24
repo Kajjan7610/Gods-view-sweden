@@ -5837,7 +5837,6 @@
   "Slow traffic at {count} measuring points; no stretch queued · {all}": "حركة بطيئة عند {count} نقطة قياس؛ لا مقطع مزدحم · {all}",
   "No queues right now · {all}": "لا ازدحام الآن · {all}",
   "Queues and travel times (Sweden)": "الازدحام وأزمنة الرحلات (السويد)",
-  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg": "نحو 200 مقطع لزمن الرحلة و1 200 نقطة قياس، ستوكهولم ويوتيبوري",
   "Travel time · {name}": "زمن الرحلة · {name}",
   "Measuring point · {direction}": "نقطة قياس · {direction}",
   "Measuring point": "نقطة قياس",
@@ -6369,5 +6368,9 @@
   "up to {n} min old": "حتى {n} د",
   "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "من بين {seen} طائرة قُرئت حول العرض تُعرض أقرب {count} إلى وسط الخريطة.",
   "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "عند التصغير يُقرأ وسط العرض كل {centre} د تقريبًا؛ ولا تُقرأ المناطق الخارجية الآن، ويبقى ما قُرئ حتى 30 دقيقة.",
-  "Only the view within {km} km of the map centre is read.": "لا يُقرأ إلا جزء العرض الواقع ضمن {km} كم من وسط الخريطة."
+  "Only the view within {km} km of the map centre is read.": "لا يُقرأ إلا جزء العرض الواقع ضمن {km} كم من وسط الخريطة.",
+  "With the layer on, the security queues at Arlanda, Landvetter and Bromma (Swedavia) also show over their terminals.": "عند تشغيل الطبقة تظهر أيضًا طوابير التفتيش الأمني في أرلاندا ولاندفيتر وبروما (Swedavia) فوق مباني الركاب.",
+  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg; the security queues at Arlanda, Landvetter and Bromma": "نحو 200 مقطع لزمن الرحلة و1 200 نقطة قياس، ستوكهولم ويوتيبوري؛ وطوابير التفتيش الأمني في أرلاندا ولاندفيتر وبروما",
+  "Every minute; the security queues every 3 minutes": "كل دقيقة؛ وطوابير التفتيش الأمني كل 3 دقائق",
+  "CC0 1.0 (Trafikverket) · Swedavia's API terms: shown in the app, credited": "CC0 1.0 (Trafikverket) · شروط واجهة Swedavia البرمجية: يُعرض في التطبيق مع ذكر المصدر"
 }

@@ -460,6 +460,11 @@ export function createRoadQueuesLayer({
               }
             : item,
         ),
+        // The airports' security queues follow this switch
+        // (src/ui/airportQueues.js).
+        info: t(
+          'With the layer on, the security queues at Arlanda, Landvetter and Bromma (Swedavia) also show over their terminals.',
+        ),
       };
     },
 

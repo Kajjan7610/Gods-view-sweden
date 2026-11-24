@@ -5498,7 +5498,6 @@
   "Slow traffic at {count} measuring points; no stretch queued · {all}": "תנועה איטית ב-{count} נקודות מדידה; אין מקטע בפקק · {all}",
   "No queues right now · {all}": "אין פקקים כרגע · {all}",
   "Queues and travel times (Sweden)": "פקקים וזמני נסיעה (שוודיה)",
-  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg": "כ-200 מקטעי זמן נסיעה ו-1,200 נקודות מדידה, שטוקהולם ויטבורג",
   "Travel time · {name}": "זמן נסיעה · {name}",
   "Measuring point · {direction}": "נקודת מדידה · {direction}",
   "Measuring point": "נקודת מדידה",
@@ -6000,5 +5999,9 @@
   "up to {n} min old": "עד {n} דק׳",
   "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "מתוך {seen} מטוסים שנקראו סביב התצוגה מוצגים {count} הקרובים ביותר למרכז המפה.",
   "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "בתצוגה מרוחקת מרכז התצוגה נקרא בערך כל {centre} דק׳; האזורים החיצוניים לא נקראים כרגע, ומה שנקרא נשאר עד 30 דקות.",
-  "Only the view within {km} km of the map centre is read.": "נקרא רק חלק התצוגה שבטווח {km} ק״מ ממרכז המפה."
+  "Only the view within {km} km of the map centre is read.": "נקרא רק חלק התצוגה שבטווח {km} ק״מ ממרכז המפה.",
+  "With the layer on, the security queues at Arlanda, Landvetter and Bromma (Swedavia) also show over their terminals.": "כשהשכבה פועלת, מוצגים גם התורים בבידוק הביטחוני ב-Arlanda, ‏Landvetter ו-Bromma (Swedavia) מעל הטרמינלים.",
+  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg; the security queues at Arlanda, Landvetter and Bromma": "כ-200 מקטעי זמן נסיעה ו-1,200 נקודות מדידה, שטוקהולם ויטבורג; התורים בבידוק הביטחוני ב-Arlanda, ‏Landvetter ו-Bromma",
+  "Every minute; the security queues every 3 minutes": "כל דקה; התורים בבידוק הביטחוני כל 3 דקות",
+  "CC0 1.0 (Trafikverket) · Swedavia's API terms: shown in the app, credited": "CC0 1.0 (Trafikverket) · תנאי ה-API של Swedavia: מוצג באפליקציה, בציון המקור"
 }

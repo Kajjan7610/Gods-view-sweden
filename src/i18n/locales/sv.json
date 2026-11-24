@@ -5385,7 +5385,6 @@
   "Slow traffic at {count} measuring points; no stretch queued · {all}": "Trög trafik vid {count} mätpunkter; ingen sträcka med kö · {all}",
   "No queues right now · {all}": "Inga köer just nu · {all}",
   "Queues and travel times (Sweden)": "Köer och restider (Sverige)",
-  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg": "Cirka 200 restidssträckor och 1 200 mätpunkter, Stockholm och Göteborg",
   "Travel time · {name}": "Restid · {name}",
   "Measuring point · {direction}": "Mätpunkt · {direction}",
   "Measuring point": "Mätpunkt",
@@ -5877,5 +5876,9 @@
   "up to {n} min old": "upp till {n} min gamla",
   "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "Av {seen} plan som lästs runt vyn visas de {count} som är närmast kartans mitt.",
   "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "Utzoomat läses mitten av vyn med ungefär {centre} min mellanrum; de yttre områdena läses inte just nu, och det som lästs står kvar i upp till 30 minuter.",
-  "Only the view within {km} km of the map centre is read.": "Bara den del av vyn som ligger inom {km} km från kartans mitt läses."
+  "Only the view within {km} km of the map centre is read.": "Bara den del av vyn som ligger inom {km} km från kartans mitt läses.",
+  "With the layer on, the security queues at Arlanda, Landvetter and Bromma (Swedavia) also show over their terminals.": "Med lagret på visas också köerna i säkerhetskontrollen på Arlanda, Landvetter och Bromma (Swedavia) över terminalerna.",
+  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg; the security queues at Arlanda, Landvetter and Bromma": "Cirka 200 restidssträckor och 1 200 mätpunkter, Stockholm och Göteborg; köerna i säkerhetskontrollen på Arlanda, Landvetter och Bromma",
+  "Every minute; the security queues every 3 minutes": "Varje minut; köerna i säkerhetskontrollen var 3:e minut",
+  "CC0 1.0 (Trafikverket) · Swedavia's API terms: shown in the app, credited": "CC0 1.0 (Trafikverket) · Swedavias API-villkor: visas i appen, med källa"
 }

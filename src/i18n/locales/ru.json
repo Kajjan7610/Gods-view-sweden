@@ -5611,7 +5611,6 @@
   "Slow traffic at {count} measuring points; no stretch queued · {all}": "Затруднённое движение в {count} точках измерения; участков с пробками нет · {all}",
   "No queues right now · {all}": "Сейчас пробок нет · {all}",
   "Queues and travel times (Sweden)": "Пробки и время в пути (Швеция)",
-  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg": "Около 200 участков с временем в пути и 1 200 точек измерения, Стокгольм и Гётеборг",
   "Travel time · {name}": "Время в пути · {name}",
   "Measuring point · {direction}": "Точка измерения · {direction}",
   "Measuring point": "Точка измерения",
@@ -6123,5 +6122,9 @@
   "up to {n} min old": "до {n} мин",
   "Of {seen} aircraft read around the view, the {count} nearest the map centre are shown.": "Из {seen} самолётов, полученных вокруг вида, показаны {count}, ближайшие к центру карты.",
   "Zoomed out, the middle of the view is read about every {centre} min; the outer areas are not read just now, and what was read stays up to 30 minutes.": "При отдалённом виде центр запрашивается примерно раз в {centre} мин; внешние области сейчас не запрашиваются, а полученное остаётся до 30 минут.",
-  "Only the view within {km} km of the map centre is read.": "Запрашивается только часть вида не дальше {km} км от центра карты."
+  "Only the view within {km} km of the map centre is read.": "Запрашивается только часть вида не дальше {km} км от центра карты.",
+  "With the layer on, the security queues at Arlanda, Landvetter and Bromma (Swedavia) also show over their terminals.": "При включённом слое над терминалами Арланды, Ландветтера и Броммы также показываются очереди на досмотр (Swedavia).",
+  "About 200 travel-time stretches and 1 200 measuring points, Stockholm and Göteborg; the security queues at Arlanda, Landvetter and Bromma": "Около 200 участков с временем в пути и 1 200 точек измерения, Стокгольм и Гётеборг; очереди на досмотр в Арланде, Ландветтере и Бромме",
+  "Every minute; the security queues every 3 minutes": "Каждую минуту; очереди на досмотр каждые 3 минуты",
+  "CC0 1.0 (Trafikverket) · Swedavia's API terms: shown in the app, credited": "CC0 1.0 (Trafikverket) · Условия API Swedavia: показ в приложении, с источником"
 }

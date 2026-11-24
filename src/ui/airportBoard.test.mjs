@@ -609,3 +609,33 @@ test('a checkpoint is looked at from the south, its terminal ahead', async () =>
   assert.equal(options.durationS, 2);
   controller.destroy();
 });
+
+test('showing a checkpoint on the map turns the queues layer on', async () => {
+  for (const on of [false, true]) {
+    let actions = null;
+    const turnedOn = [];
+    const viewer = fakeViewer(59.33, 18.07, 3000);
+    const body = boardBody();
+    body.security[0] = { ...body.security[0], lat: 59.6489, lon: 17.9293 };
+    const controller = createAirportBoard({
+      viewer,
+      // Its label shows only with Köer och restider on (airportQueues.js).
+      dataManager: {
+        isEnabled: (id) => id === 'road-queues' && on,
+        setEnabled: async (id, enabled, { origin }) =>
+          turnedOn.push([id, enabled, origin]),
+      },
+      publish: () => {},
+      connect: (next) => ((actions = next), () => {}),
+      fetchImpl: async () => new Response(JSON.stringify(body)),
+      now: () => NOW,
+      documentRef: null,
+    });
+    actions.open('ARN');
+    await settled();
+    actions.showQueue('5');
+    assert.deepEqual(turnedOn, on ? [] : [['road-queues', true, 'user']]);
+    assert.equal(viewer.flights.length, 1);
+    controller.destroy();
+  }
+});
