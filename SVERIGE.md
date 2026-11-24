@@ -443,6 +443,20 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-24 (verktygstipsen över rälsen och ortskortet)
+- Verktygstipsen vid den vänstra rälsens ikoner ritades under rälsens
+  andra ikoner och under ortskortet. Det första kommer från originalet:
+  tipset och, medan en panel är öppen, varje ikon i rälsen har samma lager
+  (z-index 1), så ikonerna efter den som pekas på ritades ovanpå tipset där
+  rälsen lägger ikonerna i rad eller skriver namnen bredvid dem. Tipset
+  ligger nu ett lager högre, inom rälsen, i den svenska stilfilen
+  (`sverige-legibility.css`); originalets filer är orörda. Tipset hamnar
+  fortfarande under kort, paneler och dialoger som ligger över rälsen.
+- Ortskortet vid första besöket låg på lager 105, över den vänstra
+  kolumnen (lager 100) med rälsen, dess tips och dess paneler, fast kortet
+  ska ligga under rälsarna och deras paneler. Det ligger nu på 99: under
+  båda rälsarna och panelerna, över kartans etiketter som förut.
+
 ### 2026-11-24 (platsförslagen på svenska och nära vyn)
 - Platsförslagen medan man skriver frågade Photon utan att säga vilket
   språk svaret skulle ha när gränssnittet var svenskt. Photon gick då efter

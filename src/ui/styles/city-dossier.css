@@ -822,8 +822,10 @@
    way, with the town, a few facts, the new stamp and the offer to fly in. */
 .city-arrival {
   position: fixed;
-  /* Below the rails and their panels: a panel someone opens goes on top. */
-  z-index: 105;
+  /* Below the rails and their panels: a panel someone opens goes on top.
+     The left stack, with its rail, the rail's tips and its panels, is at
+     100 (layers.css); 105 put the card over all of them. */
+  z-index: 99;
   left: 28px;
   bottom: 150px;
   width: min(300px, calc(100vw - 56px));

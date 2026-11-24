@@ -309,6 +309,17 @@
   color: #ffc94d;
 }
 
+/* Swedish fork: a rail item's tip draws above the rail's other items. The
+   original gives the tip z-index 1 (kit.css), and so, in the same stacking
+   context, every rail item while the open panel's highlight shows
+   (rail-edge.css) and every name in a labelled rail (rail-split.css): the
+   items after the hovered one painted over its tip, where the left rail
+   lays its icons in a row or names them beside it. 2 stays inside the
+   rail, so the tip still goes under any card, panel or dialog above it. */
+.ui-tooltip__tip {
+  z-index: 2;
+}
+
 /* On a phone the original's search field leaves 60 px at the right edge
    for the language picker (Omnibar.vue); the 3D button below it is wider,
    so the field stops short of it. `:root` outranks the component's rule. */
