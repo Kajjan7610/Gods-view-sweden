@@ -443,6 +443,33 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-24 (leder och friluftsanordningar i hela vyn)
+- Lagret Leder och friluftsanordningar såg tomt ut på många ställen, till
+  exempel vid Åre och Nacka. Ögonblicksbilden och servervägen fungerar:
+  med filerna i repot svarar `/api/outdoor-trails` med lederna och
+  anordningarna i till exempel Tyresta, Söderåsen och fjällen. Men lagret
+  frågade bara efter en ruta på högst 0,4 grader runt vyns mitt, medan vyn
+  under 30 km höjd är upp till 0,9 grader bred rakt uppifrån och bredare
+  lutad, så det som låg i vyns ytterdelar frågades aldrig efter. Rakt
+  uppifrån från 30 km gav rutan över Åre inget, fast Tännforsens och
+  Hammarbergets 22 anordningar och leden vid forsen låg i bild 17 km väster
+  om byn; över Stockholms centrum likaså inget, fast 7 anordningar och 2
+  leder låg i bild.
+- Lagret frågar nu efter hela vyn, upp till 1 grad åt varje håll; en
+  lutande vy skärs till 1 grad runt mitten. Taken är desamma: de 1 500
+  anordningar som ligger närmast mitten och högst 400 leder och 30 000
+  punkter. Prövat mot filerna i repot på 3 245 rutor om en grad över hela
+  landet: som mest 1 029 anordningar (i Skåne), 168 leder och omkring
+  300 kB, inom taken, och servern svarade på högst omkring 70 ms.
+- Täckningen är gles: bara skyddade områden vars förvaltare publicerar
+  sina leder och anordningar, plus de statliga lederna i fjällen. Åre by
+  har inget närmare än Tännforsen, och Nackas egna reservat (Nyckelviken,
+  Velamsund, Erstavik) finns inte i Naturvårdsverkets data. En vy utan
+  något säger nu det och vad som finns med, i stället för bara "I vyn: 0
+  leder · 0 anordningar". Har läsningen misslyckats säger raden felet i
+  stället.
+- Nytt test med en verklig vy över Åre mot filerna i repot.
+
 ### 2026-11-24 (köerna i säkerhetskontrollen följer lagret Köer och restider)
 - Etiketten "1 min" som stod kvar nära Stockholm när lagret Köer och
   restider stängdes av var Swedavias kö i säkerhetskontrollen på Bromma

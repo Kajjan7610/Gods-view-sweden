@@ -86,6 +86,7 @@ function harness({ height = 8000, answer = {} } = {}) {
     source: {
       getSnapshot: async (query) => {
         reads.push(query);
+        if (reads.fail) throw reads.fail;
         return {
           facilities: FACILITIES,
           trails: TRAILS,
@@ -217,6 +218,48 @@ test('a camera move reads the view again once it settles', async (t) => {
   assert.equal(items(lines).length, 2);
   layer.disable();
   assert.equal(camera.listenerCount('moveEnd'), 0);
+  layer.destroy();
+});
+
+test('a view seen from 30 km is asked as a whole; an empty one says why', async () => {
+  const { layer, camera, reads } = harness({
+    height: 30_000,
+    answer: { facilities: [], trails: [], facilityTotal: 0, trailTotal: 0 },
+  });
+  // Straight down from 30 km: 0.7° of longitude here, more than 0.4°.
+  const view = { west: 17.92, south: 59.09, east: 18.62, north: 59.26 };
+  camera.setViewRectangle(view);
+  layer.enable();
+  await layer.update();
+  assert.deepEqual(reads[0].bbox, [
+    view.west,
+    view.south,
+    view.east,
+    view.north,
+  ]);
+  const controls = layer.getRowControls();
+  assert.deepEqual(controls.legend, []);
+  assert.equal(
+    controls.info,
+    'Nothing published in view. Only protected areas whose managers publish their trails and facilities are covered, plus the state mountain trails.',
+  );
+  assert.equal(layer.getStats().count, 0);
+  layer.destroy();
+});
+
+test('a read that failed is not said to have found nothing', async () => {
+  const { layer, camera, reads } = harness({
+    answer: { facilities: [], trails: [], facilityTotal: 0, trailTotal: 0 },
+  });
+  layer.enable();
+  await layer.update();
+  assert.match(layer.getRowControls().info, /^Nothing published in view/);
+  // The next view's read fails: the row has the error, not the empty note.
+  reads.fail = new Error('Trails unavailable (HTTP 502)');
+  camera.setPose({ lon: 18.3 });
+  await layer.update();
+  assert.equal(layer.getStats().error, 'Trails unavailable (HTTP 502)');
+  assert.equal(layer.getRowControls().info, '');
   layer.destroy();
 });
 

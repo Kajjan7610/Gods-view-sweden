@@ -28,8 +28,13 @@ import {
 
 export { decodeLine, distanceMeters, encodeLine };
 
-/** A view wider than this (degrees) shows nothing: zoom in. */
-export const OUTDOOR_MAX_SPAN_DEG = 0.4;
+/**
+ * The widest box a view asks for (degrees a side): a view seen straight down
+ * from the layer's highest, 30 km, is at most 0.9° across anywhere in Sweden
+ * (0.4° left out the outer half of it); a tilted view is cut to this about
+ * its centre. The route answers a wider box with nothing.
+ */
+export const OUTDOOR_MAX_SPAN_DEG = 1;
 /** Points a trail's lines keep in one answer, in all. */
 export const MAX_TRAIL_POINTS = 30_000;
 /** Trails one answer carries at most. */

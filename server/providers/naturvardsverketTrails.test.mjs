@@ -9,9 +9,12 @@ import {
   naturvardsverketTrailsProxy,
 } from './naturvardsverketTrails.js';
 import {
+  OUTDOOR_MAX_SPAN_DEG,
+  clipOutdoorBox,
   decodeLine,
   encodeLine,
 } from '../../src/layers/outdoorTrails/records.js';
+import { clipViewBox } from '../../src/layers/shelters/records.js';
 
 const FACILITIES = {
   source: 'Naturvårdsverket',
@@ -165,7 +168,7 @@ test('a missing snapshot is a 502, and is read again by the next view', async (t
 test('a wide view reads nothing, and a bad box is refused', async (t) => {
   const { request, reads, restore } = harness();
   t.after(restore);
-  const wide = await request(view([17, 59, 18, 59.3], [17.5, 59.1]));
+  const wide = await request(view([17, 59, 18.5, 59.3], [17.75, 59.1]));
   assert.equal(wide.json.tooWide, true);
   assert.equal(reads.length, 0);
   assert.equal((await request('/?bbox=1,2,3')).status, 400);
@@ -190,4 +193,54 @@ test('the bundled snapshot holds what the build promises', async () => {
   const size =
     (await stat(FACILITIES_FILE)).size + (await stat(TRAILS_FILE)).size;
   assert.ok(size < 8 * 1024 * 1024, `the snapshot stays small (${size} bytes)`);
+});
+
+test('a view over Åre from 30 km finds Tännforsen in the bundled snapshot', async (t) => {
+  // The route as the app runs it: the bundled files, and nobody upstream.
+  const fetches = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (...args) => {
+    fetches.push(args);
+    throw new Error('no upstream calls');
+  };
+  t.after(() => (globalThis.fetch = realFetch));
+  t.mock.method(console, 'log', () => {});
+  let handler;
+  naturvardsverketTrailsProxy().configureServer({
+    middlewares: { use: (_path, fn) => (handler = fn) },
+  });
+  const request = async (url) => {
+    const res = {
+      destroyed: false,
+      writeHead(code) {
+        this.status = code;
+      },
+      end(body) {
+        this.body = body;
+      },
+    };
+    await handler({ method: 'GET', url, headers: {} }, res);
+    return { status: res.status, json: JSON.parse(res.body) };
+  };
+  // A 60° view straight down from 30 km over Åre: 34.6 km across, 0.70° of
+  // longitude at 63.4° N, and 9/16 of that from south to north.
+  const centre = [13.08, 63.4];
+  const screen = [12.73, 63.31, 13.43, 63.49];
+  const bbox = clipOutdoorBox(screen, centre);
+  assert.ok(OUTDOOR_MAX_SPAN_DEG >= 0.9);
+  assert.deepEqual(bbox, screen, 'the whole view is asked');
+  const { status, json } = await request(view(bbox, centre));
+  assert.equal(status, 200);
+  assert.equal(json.tooWide, false);
+  // Tännforsen's and Hammarberget's facilities, 17 km west of the village,
+  // and the trail at the falls.
+  assert.ok(json.facilityTotal >= 10, `${json.facilityTotal} facilities`);
+  assert.ok(json.facilities.some((row) => row.area === 'Tännforsen'));
+  assert.ok(json.trailTotal >= 1);
+  assert.ok(json.trails.every((row) => row.lines.length > 0));
+  // The box of 0.4° a side the layer asked for before held none of it.
+  const before = clipViewBox(screen, centre, 0.4);
+  const old = await request(view(before, centre));
+  assert.equal(old.json.facilityTotal + old.json.trailTotal, 0);
+  assert.equal(fetches.length, 0);
 });

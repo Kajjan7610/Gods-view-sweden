@@ -569,10 +569,19 @@ export function createOutdoorTrailsLayer({
             ? ''
             : _capped
               ? t('Zoom in to see every trail and facility here.')
-              : t('In view: {trails} trails · {facilities} facilities', {
-                  trails: formatNumber(_trailTotal ?? 0),
-                  facilities: formatNumber(_facilityTotal ?? 0),
-                }),
+              : !_trailTotal && !_facilityTotal
+                ? // An empty view is the register's gaps, not a fault: the
+                  // legend that says so has no rows to stand in. After a
+                  // failed read nothing is known; the row shows the error.
+                  _lastError
+                  ? ''
+                  : t(
+                      'Nothing published in view. Only protected areas whose managers publish their trails and facilities are covered, plus the state mountain trails.',
+                    )
+                : t('In view: {trails} trails · {facilities} facilities', {
+                    trails: formatNumber(_trailTotal ?? 0),
+                    facilities: formatNumber(_facilityTotal ?? 0),
+                  }),
       };
     },
 
