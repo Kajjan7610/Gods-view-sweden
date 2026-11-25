@@ -9,6 +9,42 @@ import {
   transitFeedCredit,
 } from '../../data/dataCredits.js';
 
+// Swedish fork: buses and trams turn from icon into model nearer the camera
+// than the aircraft distances the fleet service carries (3 km, kept to
+// 3.6 km): a 12 m bus drawn life size 2 km away is a few pixels across, too
+// small to see or click, while its 20 px icon is hidden. Measured in the
+// app, it is still about 10 px at 530 m; within 300 m it is about as big
+// as its icon; 400 m is the hysteresis band's outer edge, so a model on the
+// edge is not dropped and loaded again as the camera moves. Every vehicle
+// this layer draws takes them, its metro, rail and ferry modes too; the Rail
+// layer's trains keep the aircraft distances (rail.js): they are long.
+// Metres, eye to vehicle.
+const TRANSIT_MODEL_ADD_M = 300;
+const TRANSIT_MODEL_KEEP_M = 400;
+
+/**
+ * Swedish fork: `services` with the fleet-model service's add and keep
+ * distances replaced by transit's own; its 3D preference, altitude ceiling,
+ * caps, cadence and asset resolver stay the shared service's.
+ * @param {object} services
+ * @returns {object}
+ */
+function withTransitModelDistances(services) {
+  const fleet = services.fleet;
+  if (!fleet) return services;
+  return {
+    ...services,
+    fleet: Object.freeze({
+      ...fleet,
+      policy: Object.freeze({
+        ...fleet.policy,
+        addM: TRANSIT_MODEL_ADD_M,
+        keepM: TRANSIT_MODEL_KEEP_M,
+      }),
+    }),
+  };
+}
+
 /**
  * Construct one layer using the application scene owners and the
  * application's surface services.
@@ -21,7 +57,8 @@ import {
  * instead and could not see either.
  *
  * `displayParams` reads the Flights layer's DISPLAY-rail 3D preference, under
- * which nearby vehicles are drawn as fleet models.
+ * which nearby vehicles are drawn as fleet models (Swedish fork: within
+ * transit's own distances, TRANSIT_MODEL_ADD_M and TRANSIT_MODEL_KEEP_M).
  *
  * `placement` is a host-supplied placement for its live vehicles, or null.
  * @param {{surface: object, source?: object, placement?: object|null,
@@ -40,7 +77,8 @@ export function createApplicationTransit({
   const { groundFloor, meshFloor } = surface;
   return createTransitLayer({
     source,
-    services: {
+    // Swedish fork: with transit's own model distances.
+    services: withTransitModelDistances({
       render,
       sprites,
       picking,
@@ -61,6 +99,6 @@ export function createApplicationTransit({
         display: displayParams,
         ...(resolveAsset ? { resolveAsset } : {}),
       }),
-    },
+    }),
   });
 }

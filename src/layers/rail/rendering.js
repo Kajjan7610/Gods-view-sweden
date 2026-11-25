@@ -905,21 +905,25 @@ export function createRendering({ state, services, parts }) {
   // Under the DISPLAY rail's 3D toggle, trains near the camera are drawn as
   // the project's procedural fleet models, chosen by category and mode,
   // painted in their category colour where the model marks it, on the
-  // aircraft layers' icon-to-model rules (services.fleet). The fleet set
-  // loads once, up front, when the layer starts.
+  // aircraft layers' icon-to-model rules (services.fleet). Swedish fork: the
+  // fleet set loads once, the first time a model could be drawn
+  // (askModelSet), not when the layer starts.
   let fleetModels = null;
   /** Items drawn last frame, and the map the next frame's are gathered into. */
   let modelItems = new Map();
   let spareItems = new Map();
   let modelCandidatesAtMs = -Infinity;
+  /**
+   * Swedish fork: whether this enable has asked for the fleet set, and when
+   * the trains were last looked through for one near enough.
+   */
+  let modelSetAsked = false;
+  let modelSetCheckedAtMs = -Infinity;
 
-  /** Load the fleet set and create the layer's models (on enable). */
+  /** Create the layer's models (on enable); the set loads when one is near. */
   function startModels() {
     const fleet = services.fleet;
     if (!fleet?.policy || !state._viewer) return;
-    loadFleetModelSet({ resolveAsset: fleet.resolveAsset }).catch(() => {
-      /* models stay off; trains keep their icons */
-    });
     fleetModels ||= createFleetModelLayer({
       viewer: state._viewer,
       display: fleet.display,
@@ -981,8 +985,60 @@ export function createRendering({ state, services, parts }) {
     return item;
   }
 
+  /**
+   * Swedish fork: load the fleet set (its catalog, types and every GLB) the
+   * first time a model could be drawn: 3D on, a draw port that draws models,
+   * the camera under the models' ceiling and a train shown within the keep
+   * distance (with the candidates' margin). Loaded when the layer started, it
+   * was fetched for views that never come that near. The trains are looked
+   * through at the candidates' cadence, not every frame; asked once an
+   * enable, as it was: a failed load is tried again when the layer is next
+   * turned on. Until the set is in, trains keep their icons.
+   * @param {number} now performance.now()
+   */
+  function askModelSet(now) {
+    const fleet = services.fleet;
+    if (modelSetAsked || !fleetModels.setId || !fleet.display?.()?.models3d)
+      return;
+    if (!state._trains.size || now - modelSetCheckedAtMs < MODEL_CANDIDATES_MS)
+      return;
+    const eye = cameraPose();
+    const below = (eye?.height ?? Infinity) < fleet.policy.altitudeCeilingM;
+    if (!eye?.position || !below) return;
+    // Timed only once trains are looked through: a frame before the first
+    // poll's trains are in does not hold back the frame that brings them.
+    modelSetCheckedAtMs = now;
+    // The candidates' margin (updateModels): a train may come that much
+    // nearer before the next look.
+    const keepM = fleet.policy.keepM;
+    const limitSq = keepM * keepM * 1.44;
+    for (const entry of state._trains.values()) {
+      // As updateModels draws them: shown, and not ridden.
+      if (
+        !entry.marker ||
+        !categoryShown(entry) ||
+        entry.key === state._cockpitSubjectKey ||
+        distanceSquared(eye.position, entry.marker.position) > limitSq
+      )
+        continue;
+      modelSetAsked = true;
+      loadFleetModelSet({ resolveAsset: fleet.resolveAsset }).then(
+        // The first models are placed on a frame nothing else may ask for.
+        () => {
+          if (state._enabled) governorRequestRender('rail-models');
+        },
+        () => {
+          /* models stay off; trains keep their icons */
+        },
+      );
+      return;
+    }
+  }
+
   function updateModels() {
     if (!fleetModels) return;
+    // Swedish fork: the set loads when a model could first be drawn.
+    if (!fleetModelSet()) askModelSet(performance.now());
     if (!fleetModels.active() || state._trains.size === 0) {
       if (modelItems.size) {
         for (const item of modelItems.values()) handBack(item.entry);
@@ -1032,6 +1088,9 @@ export function createRendering({ state, services, parts }) {
     modelItems.clear();
     spareItems.clear();
     modelCandidatesAtMs = -Infinity;
+    // Swedish fork: the next enable asks for the set again if it is not in.
+    modelSetAsked = false;
+    modelSetCheckedAtMs = -Infinity;
     if (destroy) {
       fleetModels?.destroy();
       fleetModels = null;

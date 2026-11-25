@@ -572,20 +572,24 @@ export function createRendering({
 
   // Under the DISPLAY rail's 3D toggle, vessels near the camera are drawn as
   // the project's procedural fleet models at their reported length and beam,
-  // on the aircraft layers' icon-to-model rules (services.fleet). The fleet
-  // set loads once, up front, when the layer starts.
+  // on the aircraft layers' icon-to-model rules (services.fleet). Swedish
+  // fork: the fleet set loads once, the first time a model could be drawn
+  // (askModelSet), not when the layer starts.
   let fleetModels = null;
   /** Items drawn last frame, and the map the next frame's are gathered into. */
   let modelItems = new Map();
   let spareItems = new Map();
   let modelCandidatesAtMs = -Infinity;
+  /**
+   * Swedish fork: whether this enable has asked for the fleet set, and when
+   * the vessels were last looked through for one near enough.
+   */
+  let modelSetAsked = false;
+  let modelSetCheckedAtMs = -Infinity;
 
   function ensureModels(viewer) {
     const fleet = services.fleet;
     if (!viewer || fleetModels || !fleet?.policy) return;
-    loadFleetModelSet({ resolveAsset: fleet.resolveAsset }).catch(() => {
-      /* models stay off; vessels keep their icons */
-    });
     fleetModels = createFleetModelLayer({
       viewer,
       display: fleet.display,
@@ -655,8 +659,66 @@ export function createRendering({
     syncRecordIcon(record);
   }
 
+  /**
+   * Swedish fork: load the fleet set (its catalog, types and every GLB) the
+   * first time a model could be drawn: 3D on, a draw port that draws models,
+   * the camera under the models' ceiling and a vessel with a model within
+   * the keep distance (with the candidates' margin). Loaded when the layer
+   * started, it was fetched for views that never come that near. The
+   * vessels are looked through at the candidates' cadence, not every frame;
+   * asked once an enable, as Transit and Rail ask: a failed load is tried
+   * again when the layer is next turned on. Until the set is in, vessels
+   * keep their icons.
+   * @param {number} now performance.now()
+   */
+  function askModelSet(now) {
+    const fleet = services.fleet;
+    if (modelSetAsked || !fleetModels.setId || !fleet.display?.()?.models3d)
+      return;
+    if (
+      !state.records.all.length ||
+      now - modelSetCheckedAtMs < MODEL_CANDIDATES_MS
+    )
+      return;
+    const eye = state.viewer ? findCamera(state.viewer)?.pose() : null;
+    const below = (eye?.height ?? Infinity) < fleet.policy.altitudeCeilingM;
+    if (!eye?.position || !below) return;
+    // Timed only once vessels are looked through: a frame before the first
+    // snapshot's vessels are in does not hold back the frame that brings them.
+    modelSetCheckedAtMs = now;
+    // The candidates' margin (gatherModelItems): a vessel may come that much
+    // nearer before the next look.
+    const keepM = fleet.policy.keepM;
+    const limitSq = keepM * keepM * 1.44;
+    for (const record of state.records.all) {
+      // As modelItem draws them: no virtual aid, not ridden, there yet.
+      const waterline = getVisual(record).waterline;
+      if (
+        !waterline ||
+        record.virtual === true ||
+        isCockpitSubject(record) ||
+        !seenYet(record) ||
+        distanceSquared(eye.position, waterline) > limitSq
+      )
+        continue;
+      modelSetAsked = true;
+      loadFleetModelSet({ resolveAsset: fleet.resolveAsset }).then(
+        // The first models are placed on a frame nothing else may ask for.
+        () => {
+          if (state.feed.enabled) governorRequestRender('ais-vessels-models');
+        },
+        () => {
+          /* models stay off; vessels keep their icons */
+        },
+      );
+      return;
+    }
+  }
+
   function updateModels() {
     if (!fleetModels) return;
+    // Swedish fork: the set loads when a model could first be drawn.
+    if (!fleetModelSet()) askModelSet(performance.now());
     if (!fleetModels.active()) {
       if (modelItems.size) {
         modelItems.clear();
@@ -702,6 +764,9 @@ export function createRendering({
     modelItems = new Map();
     spareItems = new Map();
     modelCandidatesAtMs = -Infinity;
+    // Swedish fork: and asks for the set again if it is not in.
+    modelSetAsked = false;
+    modelSetCheckedAtMs = -Infinity;
   }
 
   // The layer does not hold the continuous render loop. Its passes run in
@@ -1615,6 +1680,12 @@ export function createRendering({
       for (const item of modelItems.values())
         getVisual(item.record).modelOwnsVisual = false;
       modelItems.clear();
+    }
+    // Swedish fork: hidden as the layer is turned off, it asks for the fleet
+    // set again when next on if it is not in (askModelSet).
+    if (!show) {
+      modelSetAsked = false;
+      modelSetCheckedAtMs = -Infinity;
     }
     vesselState._vesselOverlayHost.setVisible(VESSEL_OVERLAY_SOURCE_ID, show);
   }

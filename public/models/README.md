@@ -33,8 +33,10 @@ How the layers use them:
   its `transit.elevation` entry, for a source that names those modes).
 - Transit and rail models carry a `_TINT` vertex attribute that marks where
   the route or category colour is painted.
-- The whole set loads once, up front, when a layer that draws it starts; no
-  model is fetched while a session runs.
+- The whole set loads once. Flights loads it up front when it starts; in the
+  Swedish version Transit, Rail and Vessels ask for it only the first time
+  3D models are on and one of their vehicles is within its model distance,
+  so a session that never comes that close fetches no model.
 
 `src/data/fleetModels.js` reads the set and chooses each vehicle's model;
 `src/data/fleetModels.test.mjs` checks that every model `types.json` names is

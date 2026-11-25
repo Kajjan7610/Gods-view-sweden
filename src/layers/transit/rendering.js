@@ -8,7 +8,7 @@ import {
 import { poseSignature } from '../../render/camera/poseSignature.js';
 import { heightsOf } from '../../queries/heights.js';
 import { fromDegreesInto } from '../../geo/ellipsoid.js';
-import { Vec3 } from '../../geo/vector.js';
+import { distanceSquared, Vec3 } from '../../geo/vector.js';
 import { viewPlanes } from '../../geo/frustum.js';
 import { perspectiveCourseRotation } from '../../data/screenRotation.js';
 import {
@@ -938,22 +938,22 @@ export function createRendering({ state, services, parts }) {
   // Under the DISPLAY rail's 3D toggle, vehicles in view near the camera are
   // drawn as the project's procedural fleet models, chosen by mode, painted
   // in their mode colour where the model marks it, on the aircraft layers'
-  // icon-to-model rules (services.fleet). The fleet set loads once, up front,
-  // when the layer starts.
+  // icon-to-model rules (services.fleet). Swedish fork: the fleet set loads
+  // once, the first time a model could be drawn (askModelSet), not when the
+  // layer starts.
   let fleetModels = null;
   /** Items drawn last frame, and the map the next frame's are gathered into. */
   let modelItems = new Map();
   let spareItems = new Map();
   /** The lift icons are drawn with above the floor; a model stands on the floor. */
   const groundLiftM = services.ground?.GROUND_FLOOR_LIFT_M || 0;
+  /** Swedish fork: whether this enable has asked for the fleet set. */
+  let modelSetAsked = false;
 
-  /** Load the fleet set and create the layer's models (on enable). */
+  /** Create the layer's models (on enable); the set loads when one is near. */
   function startModels() {
     const fleet = services.fleet;
     if (!fleet?.policy || !state._viewer) return;
-    loadFleetModelSet({ resolveAsset: fleet.resolveAsset }).catch(() => {
-      /* models stay off; vehicles keep their icons */
-    });
     fleetModels ||= createFleetModelLayer({
       viewer: state._viewer,
       display: fleet.display,
@@ -995,8 +995,51 @@ export function createRendering({ state, services, parts }) {
       );
   }
 
+  /**
+   * Swedish fork: load the fleet set (its catalog, types and every GLB) the
+   * first time a model could be drawn: 3D on, a draw port that draws models,
+   * the camera under the models' ceiling and a vehicle in view within the
+   * keep distance. Loaded when the layer started, it was fetched for views
+   * that never come that near. Asked once an enable, as it was: a failed
+   * load is tried again when the layer is next turned on. Until the set is
+   * in, vehicles keep their icons.
+   */
+  function askModelSet() {
+    const fleet = services.fleet;
+    if (modelSetAsked || !fleetModels.setId || !fleet.display?.()?.models3d)
+      return;
+    const eye = cameraPose();
+    const below = (eye?.height ?? Infinity) < fleet.policy.altitudeCeilingM;
+    if (!eye?.position || !below) return;
+    const keepSq = fleet.policy.keepM * fleet.policy.keepM;
+    for (const entry of state._visible) {
+      // As updateModels draws them: a known mode, placed, not ridden.
+      if (
+        !entry.marker ||
+        !entry.hasRendered ||
+        entry.mode === 'unknown' ||
+        entry.key === state._cockpitSubjectKey ||
+        distanceSquared(eye.position, entry.marker.position) > keepSq
+      )
+        continue;
+      modelSetAsked = true;
+      loadFleetModelSet({ resolveAsset: fleet.resolveAsset }).then(
+        // The first models are placed on a frame nothing else may ask for.
+        () => {
+          if (state._enabled) governorRequestRender('transit-models');
+        },
+        () => {
+          /* models stay off; vehicles keep their icons */
+        },
+      );
+      return;
+    }
+  }
+
   function updateModels() {
     if (!fleetModels) return;
+    // Swedish fork: the set loads when a model could first be drawn.
+    if (!fleetModelSet()) askModelSet();
     if (!fleetModels.active() || state._vehicles.size === 0) {
       if (modelItems.size) {
         for (const item of modelItems.values()) handBack(item.entry);
@@ -1068,6 +1111,8 @@ export function createRendering({ state, services, parts }) {
     for (const item of modelItems.values()) item.entry.modelOwnsVisual = false;
     modelItems.clear();
     spareItems.clear();
+    // Swedish fork: the next enable asks for the set again if it is not in.
+    modelSetAsked = false;
     if (destroy) {
       fleetModels?.destroy();
       fleetModels = null;
