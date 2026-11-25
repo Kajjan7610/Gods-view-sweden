@@ -56,6 +56,7 @@ Kaj Obst captured the following files from God's Eye View Sverige (this fork) in
 - `sverige/visby-varldsarv.webp`
 - `sverige/kiruna-himlen.webp`
 - `sverige/vadervarningar.webp`
+- `sverige/forarvy-buss.webp` (2026-11-25: the Cockpit ride view on SL bus line 2 in Stockholm, Trafiklab GTFS Regional data, CC0)
 
 They are included as project documentation for this repository and are not covered by the project's MIT License. They show Google Photorealistic 3D Tiles and live public data layers (Trafikverket, Trafiklab, Swedavia, SMHI, SCB, Kolada, Valmyndigheten, Wikidata, ENTSO-E, Naturvårdsverket, Riksantikvarieämbetet, IRF and others) with the in-app attribution visible in frame; those elements remain subject to Google Maps Platform's and each data provider's terms. Keep the visible attribution intact. `kallor.webp` is the fork's sources title card (first made for its promotional film, redrawn 2026-11-13 and 2026-11-20 with the sources of the day).
 

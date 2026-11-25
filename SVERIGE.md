@@ -444,6 +444,13 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-25 (förarvyn i README)
+- README:s svenska del visar förarvyn: en bred bild under flygtavlan och
+  cockpit (`docs/media/sverige/forarvy-buss.webp`, SL:s linje 2 i
+  Stockholm i 3D med HUD:en "längs linjens sträckning") och en punkt
+  Förarvy i funktionslistan. Bilden finns i förteckningen i
+  `docs/media/README.md`.
+
 ### 2026-11-25 (bussar och spårvagnar följer linjens sträckning)
 - Mellan två positionsrapporter gled bussar och spårvagnar i rak linje och
   skar genom kvarter i varje sväng; i förarvyn syntes det tydligt. Nu följer

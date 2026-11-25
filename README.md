@@ -40,6 +40,9 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 <td width="50%"><img src="docs/media/sverige/cockpit.webp" alt="Cockpit i ett plan på 37 000 fot över Västergötland"><br><b>Cockpit</b>: i ett plan över Sverige, med Swedavias rader, flygväder och vädret på marken från SMHI</td>
 </tr>
 <tr>
+<td colspan="2"><img src="docs/media/sverige/forarvy-buss.webp" alt="Förarvy från SL:s buss linje 2 på en gata i Stockholm i 3D, med linje, senaste rapport, fart och källa i HUD:en"><br><b>Förarvy</b>: kliv in i en buss, spårvagn eller ett tåg och åk med från förarens höjd, här SL:s linje 2 i Stockholm. Välj fordonet och tryck C. Bussar och spårvagnar följer linjens sträckning mellan positionsrapporterna, och HUD:en säger ärligt hur långt efter realtid fordonet visas</td>
+</tr>
+<tr>
 <td><img src="docs/media/sverige/vagkameror-3d.webp" alt="Trafikverkets vägkamera med livebilden lagd i 3D-scenen"><br><b>Vägkameror i 3D</b>: drygt 1 500 av Trafikverkets kameror med livebilden placerad i scenen</td>
 <td><img src="docs/media/sverige/stadsdossier-sevart.webp" alt="Stadsdossiern för Uppsala med Uppsala slott utpekat"><br><b>Stadsdossier</b>: en panel för varje ort, här Uppsala med fliken Sevärt från Wikidata</td>
 </tr>
@@ -66,6 +69,7 @@ Grunden är [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) av B
 </table>
 
 - **Flyg:** följ ett plan i luften från tavlan, dagens rutter på globen, METAR och TAF, och en svensk lägesbild i cockpit.
+- **Förarvy:** åk med en buss, spårvagn eller ett tåg i 3D från förarens höjd: välj fordonet på kartan och tryck C. Bussar och spårvagnar från 16 regionala trafikbolag följer linjens sträckning (Trafiklab GTFS Regional, CC0) mellan positionsrapporterna; tåg och fordon utan känd sträckning går rakt, och HUD:en säger vilket.
 - **Varje stad:** stadsdossiern (panelen STAD) för svenska orter med folkmängd, skatt, inkomst, val, läget just nu, tåg från stationen, bussar och spårvagnar från största hållplatsen, Sevärt och ett besökspass. Fliken STATISTIK har Koladas nyckeltal, bland dem räddningstjänstens responstider; BEFOLKNING och SAMHÄLLE har siffror från SCB; NU visar virus i avloppsvattnet (SLU och SEEC, CC BY 4.0) och himlen över Kiruna från IRF:s firmamentkamera (CC BY 4.0).
 - **Väg och trafik:** tåg i realtid färgade efter försening, bussar och spårvagnar från 16 regionala trafikbolag, väglag, vägväder, köer och restider, rastplatser, tjäldjup, kollektivtrafikstörningar, störningar i tågtrafiken och Trafikverkets vägfärjor med nästa avgångar.
 - **Väder, kris och infrastruktur:** SMHI:s väder, varningar, radar, luftkvalitet och vattenföring, blixtnedslag från DMI, små jordskalv i norra Europa från EMSC, VMA och krisnyheter från Krisinformation.se, Polisens händelser, norrskensprognos, elpris per elområde, kraftsystemets flöden, vindkraftverk, sjöväder och strålning.
