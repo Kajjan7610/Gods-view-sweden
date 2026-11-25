@@ -8,6 +8,9 @@ export function createStandaloneControls(options) {
   const given = options?.services?.cockpitSubjects;
   return createApplicationControls({
     catalog,
+    // Swedish fork: no startView here, so the camera starts and the title's
+    // logo returns to Västerås (SWEDISH_START_VIEW in app/controls.js), not
+    // to the visitor's country (homeCountryView).
     ...options,
     // Swedish fork: the Cockpit also rides the bus, tram or train selected
     // on the map (cockpitRides.js), after any subjects a caller gives.

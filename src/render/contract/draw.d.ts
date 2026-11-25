@@ -27,8 +27,18 @@ import type {
 /** How an item's height is read. */
 export type HeightMode = 'absolute' | 'clampGround' | 'relativeGround';
 
-/** What `clampGround` / `relativeGround` clamp to. */
-export type ClampTarget = 'terrain' | 'tiles' | 'both';
+/**
+ * What `clampGround` / `relativeGround` clamp to. `overlay`: clamped
+ * shapes' flat fills and outlines, and draped lines, are drawn on the
+ * ellipsoid (height 0) over everything else, 3D tiles and terrain included,
+ * which never hide them: neither draped onto the tiles nor hidden under
+ * them. Only the ellipsoid hides them: what lies past its horizon from the
+ * eye is not drawn (the far side of the globe never shows through it).
+ * Their edges follow the surface's curve between their positions, as a
+ * draped item's do. Icons, points and models clamp to an `overlay` as to
+ * `both`; extruded shapes and walls stand on the surface as with `both`.
+ */
+export type ClampTarget = 'terrain' | 'tiles' | 'both' | 'overlay';
 
 /**
  * `cluster`: screen-space clustering of a set's icons. Which icons cluster
@@ -133,7 +143,20 @@ export interface SetSpec {
    * `live` (the default) is wall time minus `delayMs`, as a live feed is
    * drawn a little behind real time; `scene` is the frame port's scene time.
    */
-  motionClock?: { kind: 'live'; delayMs?: number } | { kind: 'scene' };
+  motionClock?:
+    | {
+        kind: 'live';
+        delayMs?: number;
+        /**
+         * Who asks for the frames moving rows need: the set itself, one after
+         * another while a row moves (the default), or its `owner`, at the
+         * rate the rows move on screen. An owner's set may also draw a
+         * change written in place on the owner's next frame without asking
+         * for one (the owner writes as a frame begins).
+         */
+        frames?: 'set' | 'owner';
+      }
+    | { kind: 'scene' };
   show?: boolean;
 }
 
@@ -337,10 +360,32 @@ export interface LineAgeFade {
   showMs?: number;
 }
 
+/**
+ * `lineBreaks`: a line drawn as several runs, so many lines in one style can
+ * be one item (thousands of moving objects' trails sent as one line, say),
+ * and the renderer handles one item instead of thousands. Each break is the
+ * index `i` of a position that starts a new run (`0 < i < positions.length`,
+ * strictly increasing): the segment from position `i - 1` to `i` is not
+ * drawn (nor picked), and the line does not join across it, each run having
+ * two ends of its own, capped and joined as a line of its own would be.
+ * `segmentColors` and `segmentShow` stay one a pair of neighbouring
+ * positions (`j`: from position `j` to `j + 1`), so a pair across a break
+ * has an entry that is ignored; `ageFade.times` stays one a position; and
+ * `revealFraction` runs along the runs, in order, as one length (the gaps
+ * between them have none). A renderer without the capability is never sent
+ * `breaks`: its lines are sent one item a run instead.
+ */
+export type LineBreaks = number[] | Uint32Array;
+
 export interface LineItem {
   id: string;
   /** ECEF positions, or packed `x, y, z` triples. */
   positions: Ecef[] | Float64Array;
+  /**
+   * `lineBreaks`: the positions that start a new run of the line
+   * (`LineBreaks`). [absent or empty: one run]
+   */
+  breaks?: LineBreaks;
   widthPx: number;
   /**
    * `3d`: straight in space; `geodesic`: along the ellipsoid; `draped`: on
@@ -719,7 +764,8 @@ export interface DrawPort {
   field?(spec: FieldSpec): FieldHandle;
   /**
    * Whether clamped items (`clampTo: 'tiles' | 'both'`, draped lines and
-   * shapes) are draped onto the 3D tiles now (`draped`), or drawn over them
+   * shapes; never `overlay` ones, always drawn over the tiles) are draped
+   * onto the 3D tiles now (`draped`), or drawn over them
    * and hidden past the ellipsoid's horizon (`overlay`), the fallback a
    * renderer uses where it cannot drape. Without tiles in the base it is
    * `draped`: clamping to terrain or the ellipsoid always drapes, on a

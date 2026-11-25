@@ -89,11 +89,15 @@ export function cesiumCapabilities(scene, only) {
     ...(scene?.context?.floatingPointTexture
       ? ['lineAgeFade', 'lineTimeWindow']
       : []),
+    // Lines in runs, a piece a run (`draw.js`).
+    'lineBreaks',
     'followFrame',
     'pointVisibility',
     // Cesium's AUTODETECT tracking frame (`follow.js`).
     'followAutodetect',
     'cameraChangeThreshold',
+    // Every hold and release is told (`onHoldsChange`).
+    'holdChanges',
     // The zoom-out guard reads the scene's own controller and frame events.
     ...(scene?.screenSpaceCameraController && scene?.preRender
       ? ['keepEarthFramed']
@@ -300,7 +304,10 @@ export function createCesiumPorts(
   const holds = new Map();
   // Told when the first hold is taken and the last released.
   const heldListeners = listenerList(report);
+  // Told every hold taken or released.
+  const holdsListeners = listenerList(report);
   function applyHolds() {
+    holdsListeners.fire();
     const continuous = holds.size > 0;
     if (scene.requestRenderMode === !continuous) return;
     scene.requestRenderMode = !continuous;
@@ -381,6 +388,9 @@ export function createCesiumPorts(
       };
     },
     onHeldChange: (cb) => heldListeners.on(cb),
+    ...(capabilities.has('holdChanges')
+      ? { onHoldsChange: (cb) => holdsListeners.on(cb) }
+      : {}),
     /** Cesium can idle, so it draws on demand. */
     mode: () => 'demand',
     diagnostics: () => ({
@@ -860,6 +870,7 @@ export function createCesiumPorts(
       for (const list of Object.values(rendererListeners)) list.clear();
       for (const list of Object.values(frameListeners)) list.clear();
       heldListeners.clear();
+      holdsListeners.clear();
       drawPart.dispose();
       cameraPart.dispose();
       creditsPart.dispose();

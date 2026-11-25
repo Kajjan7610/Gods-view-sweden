@@ -251,8 +251,8 @@ npm run doctor
 npm run dev
 ```
 
-Open **`http://localhost:4173`**. Choose **Live Contacts**, **Space Missions**,
-**Environmental**, or **Explore Manually** from the first-run panel.
+Open **`http://localhost:4173`**. Choose **Space Missions**, **Environmental**,
+or **Explore Manually** from the first-run panel.
 
 <details>
 <summary>Startup performance</summary>
@@ -426,7 +426,7 @@ and it carries the LAN-sharing rules alongside [Keys & Costs](#-api-keys).
 
 Choose a first-run mission, or try these in order. Your starting basemap depends on the keys you've added.
 
-1. **Light up the sky.** Take the **Live Contacts** mission (or turn on **Flights** yourself) — thousands of live aircraft, gliding on real telemetry, detection mesh already reading the scene. Click one: the camera locks on, a trail draws behind it, and its live telemetry card comes up.
+1. **Light up the sky.** Turn on **Live Flights** in Data Layers — thousands of live aircraft, gliding on real telemetry, detection mesh already reading the scene. Click one: the camera locks on, a trail draws behind it, and its live telemetry card comes up.
 2. **Take the controls.** Hit **COCKPIT** on your tracked plane and ride it down, switching sensors mid-flight: NVG into Ironbow FLIR.
 3. **Drop into a busy airport.** Search one and descend to the taxiways with **3D** aircraft on — grounded contacts, taxi trails, the whole apron working in real time.
 4. **Look through a public camera.** Turn on **Cameras** over Austin, London, California, Finland, or Delaware (live video). The feeds aren't webcam embeds — they project _into_ the 3D city. Cycle coverage to **VIEWSHED** and every camera draws its estimated coverage volume — where it reaches, and where it goes blind.
@@ -514,7 +514,7 @@ Fifty-six layers and map sources. **Forty-four have a keyless path.** Some offer
 | 🗺️ **Map Stack**            | Esri satellite imagery, Google Photorealistic 3D, OSM, plus additional ion-hosted stacks                                                                                                                                                                                                                                                                                            | Esri / Google / Ion / OSM               | 🟢 Esri satellite + OSM · 🟡 ion-hosted Google 3D + world terrain · 🔴 direct Google + place search |
 | ✈️ **Live Flights**         | 11,000+ live aircraft (in the Swedish version from adsb.lol, without route or track history)                                                                                                                                                                                                                                                                                                                                               | OpenSky + adsb.lol                      | 🟢 (🟡 optional for more polling credits)                                                           |
 | 📡 **GNSS Integrity** | Regional navigation accuracy scores; anomalies do not confirm interference | adsb.lol, GPSJAM aggregation | 🟢 |
-| 🔥 **Fire Perimeters** | Incident boundaries and reported containment | WFIGS / NIFC | 🟢 |
+| 🔥 **Fire Perimeters** | Incident boundaries coloured by how recently they were mapped; size, containment and cause on each card when the source reports them | WFIGS / NIFC | 🟢 |
 | 🚢 **Live Vessels**         | Thousands of ships worldwide                                                                                                                                                                                                                                                                                                                                                        | AISStream                               | 🟡                                                                                                  |
 | 🛰️ **Satellites**           | About 1,300 objects in six classes (Stations, Imaging, Telecom, Starlink, Probes, Debris) with a toggle and a live count each; Starlink loads its whole shell                                                                                                                                                                                                                       | CelesTrak                               | 🟢                                                                                                  |
 | 🌍 **Earthquakes**          | Global seismic activity, last 24h; the Swedish version adds EMSC's earthquakes in northern Europe (54–72° N, 4–33° E), small ones included; a quake both feeds list is drawn once | USGS · EMSC (CC BY 4.0)                 | 🟢                                                                                                  |
@@ -568,7 +568,7 @@ Fifty-six layers and map sources. **Forty-four have a keyless path.** Some offer
 | 🌡 **Weather Now (Sweden)** | SMHI's ~185 weather stations coloured by air temperature or wind, with the coldest (or windiest) values written out; click a station for the latest reading and SMHI's forecast for the spot | SMHI | 🟢 |
 | 🌀 **Cyclones**             | Advisory positions, forecast tracks and uncertainty cones (Atlantic, eastern/central North Pacific); warnings with 34-knot wind danger areas elsewhere                                                                                                                                                                                                                             | NOAA NHC / CPHC · JTWC                  | 🟢                                                                                                  |
 
-**Weather, keyless.** **Wind** animates 10 m forecast flow from NOAA GFS or ECMWF IFS, with an optional color field and a reading at map center. **Rain radar**, **Satellite clouds** and **Lightning density** are observations on one history timeline in the **WEATHER** panel (step back, **Play**, **Latest**); **Cyclone advisories** draw NHC and CPHC positions, forecast tracks and cones. On Google 3D Tiles the observed layers float above the city as translucent shells, sharpened around your view.
+**Weather, keyless.** **Wind** animates 10 m forecast flow from NOAA GFS or ECMWF IFS, with an optional color field and a reading at map center. **Rain radar**, **Satellite clouds** and **Lightning density** are observations that follow the world timeline (drag back, **Play**, **Live**); **Cyclone advisories** draw NHC and CPHC positions, forecast tracks and cones. On Google 3D Tiles the observed layers float above the city as translucent shells, sharpened around your view.
 
 In the app, **Data Layers** groups them as Movement, Cameras, Infrastructure, Events, Weather and Audio; Directions and OSM Places sit in the separate **Utilities** panel with Draw and Import.
 
