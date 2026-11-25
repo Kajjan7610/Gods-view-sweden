@@ -322,7 +322,8 @@
 
 /* On a phone the original's search field leaves 60 px at the right edge
    for the language picker (Omnibar.vue); the 3D button below it is wider,
-   so the field stops short of it. `:root` outranks the component's rule. */
-:root body.mobile-shell:has(#globe-saver-button) #gev-omnibar {
+   so the field stops short of it. `:root` outranks the component's rule.
+   `.has-globe-saver` is a page-root class (src/ui/rail/rootClass.js). */
+:root body.mobile-shell:is(.has-globe-saver *, #globe-saver-button) #gev-omnibar {
   inset-inline: 16px 74px;
 }

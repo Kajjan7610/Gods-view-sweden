@@ -4,12 +4,14 @@ import { t } from '../../../i18n/index.js';
 import { readGlobeSaver, saveGlobeSaver } from '../../../globeSaver.js';
 import UiButton from '../../kit/UiButton.vue';
 import UiIcon from '../../kit/UiIcon.vue';
+import { vRootClass } from '../../rail/rootClass.js';
 import { useCornerActions } from './cornerActions.js';
 
 // The 3D button (Swedish fork), in the bottom-right corner row: Google 3D
 // Tiles on, or saver mode (the keyless globe, no 3D Tiles session spent).
 // The tiles load only at start, so a change reloads the page; the view
-// itself is kept in the address.
+// itself is kept in the address. While drawn it holds `has-globe-saver` on
+// the page root (src/ui/rail/rootClass.js; sverige-legibility.css reads it).
 const storage = globalThis.localStorage;
 const saver = ref(readGlobeSaver(storage, globalThis.location?.search));
 const corner = useCornerActions();
@@ -30,7 +32,7 @@ function toggle() {
 
 <template>
   <Teleport v-if="corner" :to="corner">
-    <UiButton id="globe-saver-button" :class="{ saver }" :pressed="!saver" :aria-label="label" :title="label" @click="toggle">
+    <UiButton id="globe-saver-button" v-root-class="{ 'has-globe-saver': true }" :class="{ saver }" :pressed="!saver" :aria-label="label" :title="label" @click="toggle">
       <UiIcon name="public" :size="null" />
       <span class="globe-saver-label">{{ saver ? t('2D') : t('3D') }}</span>
     </UiButton>

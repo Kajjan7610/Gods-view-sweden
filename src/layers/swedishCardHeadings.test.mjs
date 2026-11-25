@@ -1039,16 +1039,22 @@ test('cctv: a Trafikverket road camera is headed by its name', (t) => {
       },
     ],
   });
-  // The layer owns its cameras' picks once its catalog is in (lifecycle.js).
-  picking.registerPickOwner('cctv', (id) => layer.findByQuery(id) !== null);
+  // The layer owns its cameras' picks once its catalog is in (lifecycle.js,
+  // ownsCctvPick): a camera, or a ray or plane of a loaded camera.
+  picking.registerPickOwner('cctv', (id) => layer.recordIdForPick(id) !== null);
   t.after(() => picking.unregisterPickOwner('cctv'));
   const dataManager = managerOf(layer);
-  // The camera's icon, and a ray of its coverage, name the camera.
+  // The camera's icon, and a ray of its coverage, name the camera. Picked
+  // with no draw set, as the original's resolver test does: with one, the
+  // layer asks its own icon and coverage sets.
   for (const id of [
     'se-trafikverket-30000123',
     'cctv-se-trafikverket-30000123-ray-tl',
   ]) {
-    const title = headingOf(dataManager, id);
+    const title = describeEntity(
+      dataManager,
+      resolvePickedContext({ set: '', id, surface: false }, { dataManager }),
+    )?.title;
     assert.equal(title, 'E4 Kista', id);
     assert.doesNotMatch(title, RAW_ID);
   }

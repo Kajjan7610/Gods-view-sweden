@@ -120,24 +120,6 @@ export function createCctvLayer({ services, source }) {
       openingCameraId: parts.navigation.openingCameraId,
       reopenNearestCamera: parts.navigation.reopenNearestCamera,
       cctvCycleIndex: parts.navigation.cctvCycleIndex,
-      // Swedish fork: a picked camera's name and place for the Context
-      // panel's card (src/data/pickedContext.js), which is otherwise headed
-      // by the camera's id ("se-trafikverket-30000123"); a coverage ray or
-      // plane names its camera, as the layer's pick ownership reads it.
-      findByQuery(id) {
-        const ray =
-          /^cctv-(.+)-(?:ray-tl|ray-tr|ray-br|ray-bl|cap|plane|plane-label)$/.exec(
-            id,
-          );
-        const camera = state._recordById?.get(ray ? ray[1] : id)?.camera;
-        if (!Number.isFinite(camera?.lat) || !Number.isFinite(camera?.lon))
-          return null;
-        return {
-          name: camera.name || null,
-          latitude: camera.lat,
-          longitude: camera.lon,
-        };
-      },
     },
   );
 }

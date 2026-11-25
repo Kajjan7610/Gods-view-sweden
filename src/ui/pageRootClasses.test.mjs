@@ -22,6 +22,7 @@ import IntelHudView from './views/IntelHudView.vue';
 import LayerPanelsView from './views/LayerPanelsView.vue';
 import StoriesView from './views/StoriesView.vue';
 import WelcomeView from './views/WelcomeView.vue';
+import GlobeSaverButton from './views/panels/GlobeSaverButton.vue';
 import LocalePicker from './views/panels/LocalePicker.vue';
 import Omnibar from './views/panels/Omnibar.vue';
 import WorldTimeline from './views/panels/WorldTimeline.vue';
@@ -243,6 +244,23 @@ test('the language picker holds has-locale-picker while it is drawn', (t) => {
   assert.ok(!on('has-locale-picker'));
 });
 
+// Swedish fork: the 3D button teleports into the corner row once it exists.
+test('the 3D button holds has-globe-saver while it is drawn', async (t) => {
+  const { unmount } = mount(t, GlobeSaverButton);
+  await settle();
+  assertSameNode(document.getElementById('globe-saver-button'), null);
+  assert.ok(!on('has-globe-saver'));
+  const corner = document.createElement('div');
+  corner.id = 'corner-actions';
+  document.body.append(corner);
+  await new Promise((done) => setTimeout(done, 0));
+  await settle();
+  assert.ok(corner.querySelector('#globe-saver-button'));
+  assert.ok(on('has-globe-saver'));
+  unmount();
+  assert.ok(!on('has-globe-saver'));
+});
+
 test('the panel stack holds left-panel-open while a panel directly in it is open', async (t) => {
   const { unmount } = mount(t, LayerPanelsView);
   await settle();
@@ -434,6 +452,8 @@ const ROOT_CLASSES = Object.freeze({
   'has-world-timeline': '#world-timeline',
   'has-locale-picker': '#locale-picker',
   'has-omnibar': '#gev-omnibar',
+  // Swedish fork: the 3D button in the corner row.
+  'has-globe-saver': '#globe-saver-button',
 });
 
 /** The compound selectors of `selector`, split at combinators and commas outside parentheses. */
