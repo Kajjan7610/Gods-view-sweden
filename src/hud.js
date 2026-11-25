@@ -854,7 +854,7 @@ export class IntelHUD {
   /**
    * Build the one-line semantic summary string from the latest camera metrics.
    * Includes mode, observation band, nearest POI or lat/lon sector, region,
-   * altitude, view window dimensions, sun elevation, ONA, and local timezone.
+   * altitude, view window dimensions, sun elevation, and local timezone.
    * @returns {string} Formatted summary line for the HUD summary readout.
    */
   _composeSummary() {
@@ -893,9 +893,10 @@ export class IntelHUD {
     const provenance = hudTelemetryProvenance(
       this._dataManager?.getAll?.() || [],
     );
-    // ALT, SUN and ONA are sensor codes, as in the corner readouts.
+    // ALT and SUN are sensor codes, as in the corner readouts. Swedish fork:
+    // no off-nadir angle (ONA), which the HUD does not show anywhere else.
     const line = t(
-      '{mode} {band} {locality} | {region} | ALT {alt} | WINDOW {window} | SUN {sun}° | ONA {ona}° | {zone}',
+      '{mode} {band} {locality} | {region} | ALT {alt} | WINDOW {window} | SUN {sun}° | {zone}',
       {
         mode: modeLabel,
         band: viewBandLabel(band),
@@ -904,7 +905,6 @@ export class IntelHUD {
         alt: altTag,
         window: winTag,
         sun: formatNumber(Math.round(m.sunEl)),
-        ona: formatNumber(Math.round(m.ona)),
         zone: localTag,
       },
     );

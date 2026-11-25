@@ -423,7 +423,7 @@
   "Awaiting telemetry...": "等待遥测数据…",
   "AIS: --": "AIS: --",
   "N/A": "无",
-  "{mode} {band} {locality} | {region} | ALT {alt} | WINDOW {window} | SUN {sun}° | ONA {ona}° | {zone}": "{mode} {band} {locality} | {region} | ALT {alt} | 窗口 {window} | SUN {sun}° | ONA {ona}° | {zone}",
+  "{mode} {band} {locality} | {region} | ALT {alt} | WINDOW {window} | SUN {sun}° | {zone}": "{mode} {band} {locality} | {region} | ALT {alt} | 窗口 {window} | SUN {sun}° | {zone}",
   "NEAR {poi} ({city}) {distance}": "{poi}（{city}）附近 {distance}",
   "SECTOR {lat} {lon}": "扇区 {lat} {lon}",
   "N": "北",

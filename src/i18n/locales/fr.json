@@ -443,7 +443,7 @@
   "Awaiting telemetry...": "En attente de télémétrie…",
   "AIS: --": "AIS : --",
   "N/A": "N/D",
-  "{mode} {band} {locality} | {region} | ALT {alt} | WINDOW {window} | SUN {sun}° | ONA {ona}° | {zone}": "{mode} · {band} · {locality} | {region} | ALT {alt} | FENÊTRE {window} | SOLEIL {sun}° | ONA {ona}° | {zone}",
+  "{mode} {band} {locality} | {region} | ALT {alt} | WINDOW {window} | SUN {sun}° | {zone}": "{mode} · {band} · {locality} | {region} | ALT {alt} | FENÊTRE {window} | SOLEIL {sun}° | {zone}",
   "NEAR {poi} ({city}) {distance}": "PRÈS DE {poi} ({city}) {distance}",
   "SECTOR {lat} {lon}": "SECTEUR {lat} {lon}",
   "hemisphere|N": "N",

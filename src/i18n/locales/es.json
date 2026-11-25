@@ -2204,7 +2204,7 @@
   "Needs {envVars} — add it in Provider Settings — or a Cesium ion token for the ion-hosted route": "Necesita {envVars} — se añade en Ajustes de proveedores — o un token de Cesium ion para la ruta alojada en ion",
   "Comparison in use by another scene": "La comparación está en uso por otra escena",
   "A location reading needs a loaded forecast and the Earth at the center of the view.": "Una lectura en un punto necesita un pronóstico cargado y la Tierra en el centro de la vista.",
-  "{mode} {band} {locality} | {region} | ALT {alt} | WINDOW {window} | SUN {sun}° | ONA {ona}° | {zone}": "{mode} · {band} · {locality} | {region} | ALT {alt} | VENTANA {window} | SOL {sun}° | ONA {ona}° | {zone}",
+  "{mode} {band} {locality} | {region} | ALT {alt} | WINDOW {window} | SUN {sun}° | {zone}": "{mode} · {band} · {locality} | {region} | ALT {alt} | VENTANA {window} | SOL {sun}° | {zone}",
   "light {source} to use your {name} key": "activa {source} para usar tu clave de {name}",
   "light {source}": "activa {source}",
   ", or ": ", o ",

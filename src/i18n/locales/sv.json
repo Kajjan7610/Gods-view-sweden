@@ -1217,7 +1217,7 @@
   "view band|REGIONAL": "REGION",
   "view band|GLOBAL": "GLOBAL",
   "N/A": "SAKNAS",
-  "{mode} {band} {locality} | {region} | ALT {alt} | WINDOW {window} | SUN {sun}° | ONA {ona}° | {zone}": "{mode} {band} {locality} | {region} | ALT {alt} | FÖNSTER {window} | SOL {sun}° | ONA {ona}° | {zone}",
+  "{mode} {band} {locality} | {region} | ALT {alt} | WINDOW {window} | SUN {sun}° | {zone}": "{mode} {band} {locality} | {region} | ALT {alt} | FÖNSTER {window} | SOL {sun}° | {zone}",
   "NEAR {poi} ({city}) {distance}": "NÄRA {poi} ({city}) {distance}",
   "SECTOR {lat} {lon}": "SEKTOR {lat} {lon}",
   "hemisphere|N": "N",

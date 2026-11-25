@@ -423,7 +423,7 @@
   "Awaiting telemetry...": "テレメトリー待ち…",
   "AIS: --": "AIS: --",
   "N/A": "不明",
-  "{mode} {band} {locality} | {region} | ALT {alt} | WINDOW {window} | SUN {sun}° | ONA {ona}° | {zone}": "{mode} {band} {locality} | {region} | ALT {alt} | 範囲 {window} | SUN {sun}° | ONA {ona}° | {zone}",
+  "{mode} {band} {locality} | {region} | ALT {alt} | WINDOW {window} | SUN {sun}° | {zone}": "{mode} {band} {locality} | {region} | ALT {alt} | 範囲 {window} | SUN {sun}° | {zone}",
   "NEAR {poi} ({city}) {distance}": "{poi}（{city}）付近 {distance}",
   "SECTOR {lat} {lon}": "セクター {lat} {lon}",
   "hemisphere|N": "N",
