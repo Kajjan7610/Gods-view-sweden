@@ -58,6 +58,25 @@ test('the snapshot and the day say when production is not offered', async () => 
   assert.equal(day.productionOffered, false);
 });
 
+test('the snapshot says when the proxy is reading ENTSO-E anew for a stale answer', async () => {
+  const base = { links: [], areas: [] };
+  const refreshing = await sourceAnswering({
+    ...base,
+    stale: true,
+    refreshing: true,
+  }).getSnapshot();
+  assert.equal(refreshing.stale, true);
+  assert.equal(refreshing.refreshing, true);
+  const paused = await sourceAnswering({ ...base, stale: true }).getSnapshot();
+  assert.equal(paused.refreshing, false);
+  // Only a stale answer is refreshing.
+  const fresh = await sourceAnswering({
+    ...base,
+    refreshing: true,
+  }).getSnapshot();
+  assert.equal(fresh.refreshing, false);
+});
+
 test('a missing or refused ENTSO-E key says what to do', async () => {
   const missing = sourceAnswering({ error: 'not_configured' }, 503);
   await assert.rejects(missing.getSnapshot(), {

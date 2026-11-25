@@ -707,6 +707,124 @@ test('a story reads the latest quarter: flows south and north, import, export an
   assert.deepEqual(layer.storyFacts(), {});
 });
 
+/** A source whose answers are counted; `answer` is the next one it gives. */
+function countingSource(answer) {
+  const source = {
+    answer,
+    reads: 0,
+    getSnapshot: async () => {
+      source.reads += 1;
+      return source.answer;
+    },
+  };
+  return source;
+}
+const settle = () => new Promise((resolve) => setImmediate(resolve));
+const mockTimers = (t) =>
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+/** A stale answer while the proxy reads ENTSO-E anew for it. */
+const refreshingAnswer = () => snapshot({ stale: true, refreshing: true });
+
+test('a stale answer while the proxy refreshes is read once more 90 s on; a fresh one asks nothing early', async (t) => {
+  mockTimers(t);
+  const source = countingSource(refreshingAnswer());
+  const { layer } = harness(t, source);
+  layer.enable();
+  await layer.update();
+  assert.equal(layer.getStats().stale, true);
+  // The proxy reads ENTSO-E behind its stale answer: 90 s on the layer asks
+  // once more, and the answer is fresh.
+  source.answer = snapshot();
+  t.mock.timers.tick(89_000);
+  assert.equal(source.reads, 1);
+  t.mock.timers.tick(1_000);
+  assert.equal(source.reads, 2);
+  await settle();
+  assert.equal(layer.getStats().stale, false);
+  assert.ok(Object.keys(layer.storyFacts()).length > 0, 'a story may quote it');
+  t.mock.timers.tick(10 * 60_000);
+  assert.equal(source.reads, 2, 'nothing early after a fresh answer');
+});
+
+test('a stale answer with no refresh running is left to the next poll', async (t) => {
+  mockTimers(t);
+  // A refresh just failed: the proxy pauses, and nothing new comes early.
+  const source = countingSource(snapshot({ stale: true }));
+  const { layer } = harness(t, source);
+  layer.enable();
+  await layer.update();
+  t.mock.timers.tick(10 * 60_000);
+  assert.equal(source.reads, 1);
+  // It also lets go of an early read planned before.
+  source.answer = refreshingAnswer();
+  await layer.update();
+  source.answer = snapshot({ stale: true });
+  await layer.update();
+  t.mock.timers.tick(10 * 60_000);
+  assert.equal(source.reads, 3);
+});
+
+test('still stale 90 s on, the polls take over until a fresh answer', async (t) => {
+  mockTimers(t);
+  const source = countingSource(refreshingAnswer());
+  const { layer } = harness(t, source);
+  layer.enable();
+  await layer.update();
+  t.mock.timers.tick(90_000);
+  await settle();
+  assert.equal(source.reads, 2, 'one early read');
+  // ENTSO-E is slow or down and the proxy still stale: no early read every
+  // time, which would ask the proxy more often than the polls do.
+  t.mock.timers.tick(10 * 60_000);
+  assert.equal(source.reads, 2);
+  await layer.update();
+  t.mock.timers.tick(10 * 60_000);
+  assert.equal(source.reads, 3, 'a poll still stale asks nothing early');
+  // A fresh answer starts over: the next stale one is read again early.
+  source.answer = snapshot();
+  await layer.update();
+  source.answer = refreshingAnswer();
+  await layer.update();
+  assert.equal(source.reads, 5);
+  t.mock.timers.tick(90_000);
+  assert.equal(source.reads, 6);
+});
+
+test('turned off before the 90 s are up, the early read is gone', async (t) => {
+  mockTimers(t);
+  const source = countingSource(refreshingAnswer());
+  const { layer } = harness(t, source);
+  layer.enable();
+  await layer.update();
+  t.mock.timers.tick(30_000);
+  layer.disable();
+  // On again at once: no timer is left from before to read at 90 s.
+  layer.enable();
+  t.mock.timers.tick(10 * 60_000);
+  assert.equal(source.reads, 1);
+  layer.disable();
+  t.mock.timers.tick(10 * 60_000);
+  assert.equal(source.reads, 1);
+});
+
+test('the early read goes through the data manager when there is one', async (t) => {
+  mockTimers(t);
+  const source = countingSource(refreshingAnswer());
+  const { layer } = harness(t, source);
+  const refreshed = [];
+  layer.attachDataManager({
+    refreshLayer: async (id) => {
+      refreshed.push(id);
+      return true;
+    },
+  });
+  layer.enable();
+  await layer.update();
+  t.mock.timers.tick(90_000);
+  assert.deepEqual(refreshed, ['power-grid']);
+  assert.equal(source.reads, 1, 'not read past the manager');
+});
+
 test('the zones and the links drawn are records, the links at their middles', async (t) => {
   const { layer } = harness(t, {
     getSnapshot: async () => snapshot({ links: withMw('DE_SE4', 0) }),

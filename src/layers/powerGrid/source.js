@@ -10,8 +10,10 @@ export function createPowerGridSource({
 } = {}) {
   return {
     /**
+     * `refreshing`: stale, and the proxy is reading ENTSO-E anew for it.
      * @returns {Promise<{links: object[], areas: object[], production: object,
-     *   updated: number|null, stale: boolean, fetchedAt: number|null}>}
+     *   updated: number|null, stale: boolean, refreshing: boolean,
+     *   fetchedAt: number|null}>}
      */
     async getSnapshot({ signal } = {}) {
       signal?.throwIfAborted();
@@ -45,6 +47,7 @@ export function createPowerGridSource({
         production: payload.production || {},
         updated: Number.isFinite(payload.updated) ? payload.updated : null,
         stale: payload.stale === true,
+        refreshing: payload.stale === true && payload.refreshing === true,
         fetchedAt: Number.isFinite(payload.fetchedAt)
           ? payload.fetchedAt
           : null,

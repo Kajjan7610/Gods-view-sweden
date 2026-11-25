@@ -60,6 +60,15 @@ const RESIZE_SETTLE_MS = 250;
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 /** How faint a link outside the highlighted country draws. */
 const DIMMED_ALPHA = 0.18;
+/**
+ * How long after a stale answer saying `refreshing` the layer reads once
+ * more. The proxy answers at once with its last snapshot while it reads
+ * ENTSO-E anew, which takes up to about a minute (23–59 s measured); the
+ * next answer is then fresh, long before the next five-minute poll. A
+ * refresh that fails leaves ENTSO-E alone until this read is in
+ * (server/providers/powerGridEntsoe.js), so it never asks ENTSO-E itself.
+ */
+const STALE_REREAD_MS = 90_000;
 
 /** The point halfway along a link, for its label. */
 function midpoint([lon1, lat1], [lon2, lat2]) {
@@ -154,6 +163,10 @@ export function createPowerGridLayer({
   let _offCameraChanged = null;
   let _offCameraMoveEnd = null;
   let _resizeTimer = null;
+  let _manager = null;
+  /** The one early re-read after a stale answer, and whether it was spent. */
+  let _rereadTimer = null;
+  let _rereadSpent = false;
   const _occluder = new Cesium.EllipsoidalOccluder(Cesium.Ellipsoid.WGS84);
   /** The day's production, consumption and exchange on the right rail. */
   const _day = createPowerDay({ source });
@@ -232,6 +245,39 @@ export function createPowerGridLayer({
   function onResize() {
     clearTimeout(_resizeTimer);
     _resizeTimer = setTimeout(updateInView, RESIZE_SETTLE_MS);
+  }
+
+  /**
+   * ONE early re-read after a stale answer while the proxy refreshes, so a
+   * story that turned the layer on, or a reader after a quiet spell, gets
+   * fresh flows then and not at the next poll. A stale answer without a
+   * refresh running (one just failed) has nothing new to wait for; still
+   * stale after the re-read (ENTSO-E down), the polls take over. A fresh
+   * answer starts over; disable cancels it.
+   */
+  function scheduleStaleReread(stale, refreshing) {
+    clearTimeout(_rereadTimer);
+    _rereadTimer = null;
+    if (!stale) {
+      _rereadSpent = false;
+      return;
+    }
+    if (!refreshing || !_enabled || _rereadSpent) return;
+    _rereadTimer = setTimeout(() => {
+      _rereadTimer = null;
+      if (!_enabled) return;
+      _rereadSpent = true;
+      // Through the manager, as its own refreshes run, when there is one.
+      if (_manager) void _manager.refreshLayer(layer.id);
+      else void layer.update();
+    }, STALE_REREAD_MS);
+    _rereadTimer?.unref?.();
+  }
+
+  function cancelStaleReread() {
+    clearTimeout(_rereadTimer);
+    _rereadTimer = null;
+    _rereadSpent = false;
   }
 
   function onMotionChange() {
@@ -486,6 +532,11 @@ export function createPowerGridLayer({
     // ENTSO-E publishes quarter-hours; the proxy keeps an answer a while.
     updateInterval: 300000,
 
+    /** The early re-read after a stale answer runs as the manager's do. */
+    attachDataManager(manager) {
+      _manager = manager;
+    },
+
     init(viewer) {
       if (_viewer) throw new Error('Power grid layer is already initialized');
       _viewer = viewer;
@@ -519,6 +570,7 @@ export function createPowerGridLayer({
       _request = null;
       _ground.cancel();
       _enabled = false;
+      cancelStaleReread();
       _lastError = null;
       // The next answer after a pause draws, and asks for heights, again.
       _signature = null;
@@ -545,6 +597,8 @@ export function createPowerGridLayer({
             ? snapshot.fetchedAt
             : now();
         _lastError = null;
+        // Stale while the proxy reads ENTSO-E anew: ask once more soon.
+        scheduleStaleReread(_stale === true, snapshot.refreshing === true);
         const signature = signatureOf(snapshot);
         if (signature !== _signature) {
           // Not trusted until drawn: a drawing that fails is made again.
@@ -607,6 +661,7 @@ export function createPowerGridLayer({
       _focus = null;
       _lineBounds = [];
       _motionQuery = null;
+      _manager = null;
       if (_dataSource) {
         viewer.dataSources.remove(_dataSource, true);
         _dataSource = null;
