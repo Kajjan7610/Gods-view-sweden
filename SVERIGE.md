@@ -492,6 +492,49 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-25 (elva fel från kontrollen efter sammanslagningen)
+Webbläsarkontrollen efter sammanslagningen hittade elva fel som fanns redan
+före den. Alla är rättade, granskade av oberoende granskare och provade.
+- Kraftsystemet hängde 20–60 s på "AKTIVERAR" när det slogs på: servern
+  väntade på en hel ny hämtning från ENTSO-E (28 anrop) när svaret var äldre
+  än en kvart. Nu svarar den direkt med senaste bilden (högst två timmar
+  gammal, markerad som äldre) medan en ny hämtas i bakgrunden, och lagret
+  läser om en gång efter 90 s. Senaste svaret sparas i
+  `.gev-cache/power-grid-entsoe.json` med ett fingeravtryck av nyckeln
+  (aldrig nyckeln), så en omstart inom kvarten frågar inte ENTSO-E alls.
+  Antalet ENTSO-E-anrop ökar inte.
+- Luftkvalitet: medan servern letar upp SMHI:s mätserier står det
+  "SMHI-luftkvalitet startar upp" i raden, utan felmeddelande, och lagret
+  läser om efter serverns Retry-After (högst tre gånger, inte i en dold
+  flik) i stället för efter 20 minuter. Har sökningen misslyckats säger
+  raden det. Serielistan skrivs säkrare till `.gev-cache`.
+- Förarvyn visade "BERÄKNAD 0 km/h" för en buss vars kort sa 6 km/h. Nu
+  visas den rapporterade farten som ANGIVEN; utan rapport visas en beräknad
+  fart bara medan fordonet glider mellan två rapporter, annars "---".
+- Efter förarvyn i 2D-läge bytte kartan till OSM för gott: på förarhöjd ber
+  kartan Esri om så detaljerade rutor att Esri svarar 404 (ingen bild), och
+  det räknades som fel. En 404 från nivå 10 och nedåt är nu en saknad ruta
+  (den grövre visas); nyckelfel och serverfel byter till OSM som förut.
+- Fordonsmodeller: Kollektivtrafik, Järnväg och Fartyg hämtade alla 122
+  modellfiler (även flygplan) när lagret slogs på. Nu hämtas de först när
+  3D-modeller är på och ett fordon kommer inom modellavståndet. Bussar och
+  spårvagnar behåller sin ikon till 300 m (förut 3 km, där en buss blev
+  8×2 pixlar och inte gick att klicka på); då är modellen ungefär lika stor
+  som ikonen.
+- Markhöjder: anropen till `/api/terrain/heights` kom i skurar (147 i
+  minuten mot serverns gräns 90) och fick 429/502. Nu går högst ett anrop i
+  sekunden med upp till 64 punkter, samma punkt frågas bara en gång, och
+  klienten väntar enligt Retry-After vid 429 och backar vid serverfel. Det
+  valda eller körda fordonets mark frågas först.
+- Kartetiketter på svenska ("BUSS PÅ VÄG", "T-BANA STÅR STILL", "TÅG
+  INAKTUELL") och aldrig ett långt id-nummer; en namnlös SL-buss heter "SL",
+  inte "Stockholm, Sweden". Trafikverkets tåg visar ingen region.
+- HUD:ens sammanfattning visar inte längre "ONA" (en satellitterm).
+- Vindkraftverk: raden säger aldrig "uppförda 0 MW"; små verk visas med två
+  värdesiffror, och verk utan angiven effekt räknas för sig.
+- HUD-bannern gick in i LIVE-raden mellan 721 och 900 px (mest på tyska,
+  ryska, franska, portugisiska och japanska). Den radbryts nu i tid.
+
 ### 2026-11-25 (originalet sammanslaget)
 - Originalprojektet är sammanslaget fram till 2026-11-25 (18 pull
   requests sedan 2026-11-21). Alla svenska lager, källor och avgränsningar
