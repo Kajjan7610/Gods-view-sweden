@@ -129,3 +129,23 @@ test('a Trafikverket train card leads with its delay, last call and destination'
   assert.equal(transitDelayBand({ delayMinutes: 15 }), 'very-late');
   assert.equal(transitDelayBand(record), null);
 });
+
+// Swedish fork: an SL vehicle id is a 16-digit number; the card names the
+// vehicle by its label, or leaves the line out, never the bare number.
+test('a vehicle id that is only a long number is not a card line', () => {
+  setLocale('en');
+  const sl = { name: 'SL', region: 'Stockholm' };
+  const raw = { ...record, id: '9031001001004016', label: null };
+  const lines = buildTransitSelectionCopy(sl, raw, 'bus', now).details;
+  assert.ok(
+    lines.every((line) => !/d{9,}/.test(line)),
+    lines.join(' | '),
+  );
+  assert.ok(!lines.some((line) => line.startsWith('Vehicle')));
+  const named = { ...raw, label: '4057' };
+  const withLabel = buildTransitSelectionCopy(sl, named, 'bus', now).details;
+  assert.ok(withLabel.includes('Vehicle 4057'), withLabel.join(' | '));
+  const rawLabel = { ...record, id: 'T7', label: '9031001001004016' };
+  const kept = buildTransitSelectionCopy(sl, rawLabel, 'bus', now).details;
+  assert.ok(kept.includes('Vehicle T7'), kept.join(' | '));
+});

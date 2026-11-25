@@ -150,7 +150,9 @@ test('the public catalog exposes coverage and credit, never the upstream URL or 
   for (const entry of catalog) {
     assert.equal('url' in entry, false);
     assert.equal('headers' in entry, false);
-    assert.ok(entry.id && entry.name && entry.region && entry.attribution);
+    assert.ok(entry.id && entry.name && entry.attribution);
+    // Swedish fork: Trafikverket's national feed names no region.
+    assert.ok(entry.region || entry.id === 'trafikverket-trains', entry.id);
     assert.ok(
       Number.isFinite(entry.center.lat) && Number.isFinite(entry.loadRadiusKm),
     );

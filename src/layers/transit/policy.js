@@ -415,9 +415,20 @@ export function buildTransitSelectionCopy(
   t = englishText,
 ) {
   const icon = TRANSIT_MODE_ICON[mode] || TRANSIT_MODE_ICON.unknown;
-  const routeLabel = record.routeId
-    ? t('Route {route}', { route: transitRouteLabel(feed, record.routeId) })
-    : t('Vehicle {vehicle}', { vehicle: record.label || record.id });
+  // Swedish fork: a bare long number (an unjoined route key, a vehicle's
+  // database id) names nothing a rider knows. The title takes the next name,
+  // and the operator's when none is left, as Context does (entityContext.js).
+  const route = record.routeId ? transitRouteLabel(feed, record.routeId) : '';
+  const vehicle = [record.label, record.id].find(
+    (text) => text && !isRawNumber(text),
+  );
+  const routeLabel =
+    route && !isRawNumber(route)
+      ? t('Route {route}', { route })
+      : vehicle
+        ? t('Vehicle {vehicle}', { vehicle })
+        : feed?.name ||
+          t('Vehicle {vehicle}', { vehicle: record.label || record.id });
   const title = `${icon} ${routeLabel}`;
   // The mode is said in words on its own line. A glyph and a route id do not
   // tell a reader that the dot on Tremont Street is a subway train, and a
@@ -426,7 +437,11 @@ export function buildTransitSelectionCopy(
   const kindWord =
     feed?.modeWords?.[mode]?.word ||
     t(TRANSIT_MODE_WORD[mode] || TRANSIT_MODE_WORD.unknown);
-  const details = [`${kindWord} · ${feed.name} · ${feed.region}`];
+  // Swedish fork: a feed without a region (Trafikverket's national one)
+  // leaves it out, with no " · " left hanging.
+  const details = [
+    [kindWord, feed.name, feed.region].filter(Boolean).join(' · '),
+  ];
   if (Number.isFinite(record.delayMinutes)) details.push(delayLine(record, t));
   if (record.destination && record.destination !== record.lastStation)
     details.push(
@@ -477,9 +492,18 @@ export function buildTransitSelectionCopy(
   if (UNDERGROUND_MODES.has(mode)) {
     details.push(t('Shown at street level · depth not in the feed'));
   }
-  details.push(
-    `${t('Vehicle {vehicle}', { vehicle: record.id })}${record.label && record.label !== record.id ? ` · ${record.label}` : ''}`,
-  );
+  // Swedish fork: an id or label that is only a long number (an SL vehicle
+  // id, isRawNumber) tells a reader nothing; the line names the vehicle by
+  // its label instead, or is left out.
+  const idText = isRawNumber(record.id) ? null : record.id;
+  const labelText =
+    record.label && !isRawNumber(record.label) ? record.label : null;
+  const vehicleText = idText ?? labelText;
+  if (vehicleText) {
+    details.push(
+      `${t('Vehicle {vehicle}', { vehicle: vehicleText })}${labelText && labelText !== vehicleText ? ` · ${labelText}` : ''}`,
+    );
+  }
   const ageS = Math.round(
     (Number.isFinite(entry?.sample?.latestReportAgeMs)
       ? entry.sample.latestReportAgeMs
@@ -625,9 +649,29 @@ export function transitModeAbbr(mode, feed = null) {
 }
 
 /**
+ * Swedish fork: a bare long number, nine digits or more, is a database key or
+ * an unjoined route id (SL's "9031005990000123"), not a name a rider uses.
+ */
+const RAW_NUMBER = /^\d{9,}$/;
+
+/**
+ * Whether a label text is a bare long number (see RAW_NUMBER).
+ * @param {*} text
+ * @returns {boolean}
+ */
+export function isRawNumber(text) {
+  return RAW_NUMBER.test(String(text ?? '').trim());
+}
+
+/**
  * The bright first line of a vehicle's detection label: its route when the feed
  * names one, else the fleet number, else the raw id. What a person standing at
  * the stop would call it.
+ *
+ * Swedish fork: a bare long number is passed over for the next of these, and
+ * the operator's name stands in when nothing else is left, so an SL bus whose
+ * trip the route table did not join no longer reaches the map as its route
+ * key ("90110010004000…") or its vehicle id.
  * @param {object} record Normalized vehicle record.
  * @param {object|null} [feed] Registry entry, for feeds whose route ids are
  *   internal keys rather than the number on the vehicle.
@@ -636,10 +680,13 @@ export function transitModeAbbr(mode, feed = null) {
 export function transitDetectionId(record, feed = null) {
   const route =
     typeof record?.routeId === 'string' ? record.routeId.trim() : '';
-  if (route) return elideRouteText(transitRouteLabel(feed, route));
+  const routeText = route ? transitRouteLabel(feed, route) : '';
+  if (routeText && !isRawNumber(routeText)) return elideRouteText(routeText);
   const label = typeof record?.label === 'string' ? record.label.trim() : '';
-  if (label) return elideRouteText(label);
-  return elideRouteText(String(record?.id || 'TRANSIT'));
+  if (label && !isRawNumber(label)) return elideRouteText(label);
+  const id = String(record?.id || '');
+  if (id && !isRawNumber(id)) return elideRouteText(id);
+  return elideRouteText(feed?.name || id || 'TRANSIT');
 }
 
 /** Longest route text the single-line detection label can carry. */
@@ -662,13 +709,76 @@ function elideRouteText(text) {
 }
 
 /**
+ * Swedish fork: the detection label's mode word in the reader's language. The
+ * literal t() calls are how the catalog finds each word (scripts/i18n.mjs);
+ * with the English `t` this is transitModeAbbr. An operator's own word
+ * (feed.modeWords) is a name and stays as it is.
+ * @param {string} mode Resolved transit mode.
+ * @param {object|null} feed Registry entry.
+ * @param {(text: string, values?: object) => string} t
+ * @returns {string}
+ */
+function detectionModeWord(mode, feed, t) {
+  const own = feed?.modeWords?.[mode]?.abbr;
+  if (own) return own;
+  switch (mode) {
+    case 'bus':
+      return t('BUS', { context: 'transit label' });
+    case 'trolleybus':
+      return t('TROLLEY', { context: 'transit label' });
+    case 'tram':
+      return t('TRAM', { context: 'transit label' });
+    case 'cable_tram':
+      return t('CABLE', { context: 'transit label' });
+    case 'subway':
+      return t('METRO', { context: 'transit label' });
+    case 'monorail':
+      return t('MONO', { context: 'transit label' });
+    case 'rail':
+      return t('RAIL', { context: 'transit label' });
+    case 'funicular':
+      return t('FUNI', { context: 'transit label' });
+    case 'aerial_lift':
+      return t('GONDOLA', { context: 'transit label' });
+    case 'ferry':
+      return t('FERRY', { context: 'transit label' });
+    default:
+      return t('TRANSIT', { context: 'transit label' });
+  }
+}
+
+/**
+ * Swedish fork: what the vehicle is doing (displayMotion's word) in the
+ * reader's language. WAITING is a vehicle with no new report yet.
+ * @param {string} word
+ * @param {(text: string, values?: object) => string} t
+ * @returns {string}
+ */
+function detectionMotionWord(word, t) {
+  switch (word) {
+    case 'EN ROUTE':
+      return t('EN ROUTE', { context: 'transit label' });
+    case 'STOPPED':
+      return t('STOPPED', { context: 'transit label' });
+    case 'WAITING':
+      return t('WAITING', { context: 'transit label' });
+    case 'NO FIX':
+      return t('NO FIX', { context: 'transit label' });
+    default:
+      return word;
+  }
+}
+
+/**
  * The dim second line: what kind of vehicle it is and who runs it.
  * @param {string} mode Resolved transit mode.
  * @param {object} feed Registry entry.
+ * @param {(text: string, values?: object) => string} [t] Swedish fork:
+ *   translates the mode word; English when omitted.
  * @returns {string}
  */
-export function transitDetectionClass(mode, feed) {
-  const kind = transitModeAbbr(mode, feed);
+export function transitDetectionClass(mode, feed, t = englishText) {
+  const kind = detectionModeWord(mode, feed, t);
   const operator =
     typeof feed?.name === 'string' ? feed.name.toUpperCase() : '';
   return operator ? `${kind} ${operator}`.slice(0, 20) : kind;
@@ -687,6 +797,8 @@ export function transitDetectionClass(mode, feed) {
  * @param {string} mode Resolved transit mode.
  * @param {number} [nowMs]
  * @param {object|null} [feed] Registry entry, for its own mode vocabulary.
+ * @param {(text: string, values?: object) => string} [t] Swedish fork:
+ *   translates the words; English when omitted.
  * @returns {string}
  */
 export function transitDetectionMetric(
@@ -694,9 +806,10 @@ export function transitDetectionMetric(
   mode,
   nowMs = Date.now(),
   feed = null,
+  t = englishText,
 ) {
-  const kind = transitModeAbbr(mode, feed);
-  const state = transitVehicleState(entry, nowMs);
+  const kind = detectionModeWord(mode, feed, t);
+  const state = detectionMotionWord(transitVehicleState(entry, nowMs), t);
   return state ? `${kind} ${state}` : kind;
 }
 

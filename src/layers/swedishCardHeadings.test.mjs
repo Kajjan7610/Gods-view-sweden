@@ -1098,6 +1098,60 @@ test('transit: a Swedish bus is headed by its fleet number, not its key', async 
   assert.doesNotMatch(title, RAW_ID);
 });
 
+test('transit: an unnamed Swedish bus is headed by its operator, never its region or key', async (t) => {
+  const lifetime = new AbortController();
+  t.after(() => lifetime.abort());
+  const layer = createApplicationTransit({
+    surface: createSurfaceServices({
+      terrainSource: {
+        getHeights: async (chunk) => chunk.map(() => ({ ellipsoid: 20 })),
+      },
+      signal: lifetime.signal,
+      eventTarget: null,
+    }),
+  });
+  // An SL bus with no fleet number whose trip the route table did not join:
+  // its id, its label (the feed repeats the id there) and its route are
+  // bare database numbers.
+  const state = layer._transitStateForTest();
+  state._enabled = true;
+  const key = 'trafiklab-sl:9031005990000456';
+  const entry = {
+    key,
+    feedId: 'trafiklab-sl',
+    mode: 'bus',
+    fetchedAt: Date.now(),
+    record: {
+      id: '9031005990000456',
+      label: '9031005990000456',
+      routeId: '9011001000400000',
+      lat: 59.33,
+      lon: 18.07,
+      timestamp: Math.floor(Date.now() / 1000),
+    },
+    // Drawn, so the detection overlay labels it.
+    marker: {
+      position: fromDegrees(18.07, 59.33),
+      show: true,
+      width: 20,
+      height: 20,
+    },
+  };
+  state._vehicles.set(key, entry);
+  picking.registerPickOwner('transit', (id) => state._vehicles.has(id));
+  t.after(() => picking.unregisterPickOwner('transit'));
+  // The Context card: the operator, not "Stockholm, Sweden" nor the key.
+  const title = headingOf(managerOf(layer), key);
+  assert.equal(title, 'SL');
+  assert.doesNotMatch(title, RAW_ID);
+  // The map label: the operator too, not a long digit string.
+  state._markersShown = true;
+  state._visible.add(entry);
+  const [contact] = layer.getDetectableObjects();
+  assert.equal(contact.id, 'SL');
+  assert.doesNotMatch(contact.id, /\d{9,}/);
+});
+
 test('a pick id is told from a name, with or without a colon', () => {
   for (const id of [
     'se-ferry:21',

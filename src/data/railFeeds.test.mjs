@@ -42,8 +42,13 @@ test('every registered feed is complete, https and uniquely named', () => {
     );
     if (feed.format === 'irish-rail-xml')
       assert.equal(positions, 'event', `${feed.id} positions are events`);
-    for (const key of ['name', 'operator', 'region', 'license', 'attribution'])
+    for (const key of ['name', 'operator', 'license', 'attribution'])
       assert.ok(feed[key], `${feed.id} has ${key}`);
+    // Swedish fork: Trafikverket's national feed names no region.
+    assert.ok(
+      feed.region || feed.id === 'trafikverket-trains',
+      `${feed.id} has region`,
+    );
     assert.ok(URL.canParse(feed.licenseUrl), `${feed.id} licence url`);
     assert.equal(typeof feed.defaultEnabled, 'boolean', feed.id);
     assert.equal(typeof feed.terms?.quote, 'string', feed.id);

@@ -33,7 +33,8 @@ test('the card names the destination and the delay at the last call', () => {
   const copy = buildRailSelectionCopy(feed, train, NOW, NOW, null, t);
   assert.equal(copy.title, '🚆 T(Route 541) · T(To Gävle C)');
   assert.deepEqual(copy.details, [
-    'T(National rail) · T(Train) · Trafikverket · Sweden',
+    // No region: the feed is national.
+    'T(National rail) · T(Train) · Trafikverket',
     'T(Live GPS)',
     'T(4 min late) · T(departed Uppsala C)',
     'T(Reported 20 s ago)',

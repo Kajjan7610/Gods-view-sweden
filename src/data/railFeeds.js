@@ -1238,7 +1238,9 @@ export const RAIL_FEED_REGISTRY = Object.freeze([
     id: 'trafikverket-trains',
     name: 'Trafikverket',
     operator: 'Trafikverket (Swedish national train positions)',
-    region: 'Sweden',
+    // No region: a national feed covers the whole country, and its card
+    // read "Tåg · Trafikverket · Sweden" in Swedish too.
+    region: '',
     // The Transit entry's circles (src/data/transitFeeds.js): one circle
     // holding Trelleborg and Riksgränsen would also reach Oslo and Helsinki.
     center: Object.freeze({ lat: 62.0, lon: 16.5 }),

@@ -506,7 +506,9 @@ const TRAFIKLAB_FEEDS = TRAFIKLAB_OPERATORS.map(
       id: `trafiklab-${operator}`,
       name,
       operator: `${name} (GTFS Regional, via Trafiklab / Samtrafiken)`,
-      region: `${county}, Sweden`,
+      // The county's name alone, the same in every language: the vehicle
+      // card's first line said "Stockholm, Sweden" in Swedish too.
+      region: county,
       center: Object.freeze({ lat, lon }),
       loadRadiusKm: radiusKm,
       url: `https://opendata.samtrafiken.se/gtfs-rt/${operator}/VehiclePositions.pb`,
@@ -1035,7 +1037,9 @@ export const TRANSIT_FEED_REGISTRY = Object.freeze([
     id: 'trafikverket-trains',
     name: 'Trafikverket',
     operator: 'Trafikverket (Swedish national train positions)',
-    region: 'Sweden',
+    // No region: a national feed covers the whole country, and its card
+    // read "Tåg · Trafikverket · Sweden" in Swedish too.
+    region: '',
     // Sweden is long and thin: one circle holding Trelleborg and Riksgränsen
     // would also reach Oslo and Helsinki. Three circles (south, middle,
     // north) cover the country instead; `center`/`loadRadiusKm` stay the

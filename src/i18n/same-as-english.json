@@ -359,7 +359,8 @@
     "{value} min",
     "Influenza A",
     "Influenza B",
-    "video stream|Live"
+    "video stream|Live",
+    "transit label|BUS"
   ],
   "es": [
     "1 min/s",
@@ -600,7 +601,8 @@
     "Metro {line}",
     "{minutes} min {seconds} s",
     "{speed} km/h",
-    "{value} min"
+    "{value} min",
+    "transit label|METRO"
   ],
   "fr": [
     "1 min/s",
@@ -921,7 +923,8 @@
     "Tram {line}",
     "{minutes} min {seconds} s",
     "{speed} km/h",
-    "{value} min"
+    "{value} min",
+    "transit label|FERRY"
   ],
   "it": [
     "1 min/s",
@@ -1209,7 +1212,9 @@
     "{speed} km/h",
     "{value} min",
     "Influenza A",
-    "Influenza B"
+    "Influenza B",
+    "transit label|METRO",
+    "transit label|TRAM"
   ],
   "ja": [
     "{year} {variant}",
@@ -1320,7 +1325,22 @@
     "{n}%",
     "{n} hPa",
     "{n} mm",
-    "KT"
+    "KT",
+    "transit label|BUS",
+    "transit label|TROLLEY",
+    "transit label|TRAM",
+    "transit label|CABLE",
+    "transit label|METRO",
+    "transit label|MONO",
+    "transit label|RAIL",
+    "transit label|FUNI",
+    "transit label|GONDOLA",
+    "transit label|FERRY",
+    "transit label|TRANSIT",
+    "transit label|EN ROUTE",
+    "transit label|STOPPED",
+    "transit label|WAITING",
+    "transit label|NO FIX"
   ],
   "pt": [
     "1 min/s",
@@ -2010,7 +2030,22 @@
     "M {n}",
     "{n} MW",
     "{n}%",
-    "{n} hPa"
+    "{n} hPa",
+    "transit label|BUS",
+    "transit label|TROLLEY",
+    "transit label|TRAM",
+    "transit label|CABLE",
+    "transit label|METRO",
+    "transit label|MONO",
+    "transit label|RAIL",
+    "transit label|FUNI",
+    "transit label|GONDOLA",
+    "transit label|FERRY",
+    "transit label|TRANSIT",
+    "transit label|EN ROUTE",
+    "transit label|STOPPED",
+    "transit label|WAITING",
+    "transit label|NO FIX"
   ],
   "zh-Hant": [
     "{year} {variant}",
@@ -2113,7 +2148,22 @@
     "M {n}",
     "{n} MW",
     "{n}%",
-    "{n} hPa"
+    "{n} hPa",
+    "transit label|BUS",
+    "transit label|TROLLEY",
+    "transit label|TRAM",
+    "transit label|CABLE",
+    "transit label|METRO",
+    "transit label|MONO",
+    "transit label|RAIL",
+    "transit label|FUNI",
+    "transit label|GONDOLA",
+    "transit label|FERRY",
+    "transit label|TRANSIT",
+    "transit label|EN ROUTE",
+    "transit label|STOPPED",
+    "transit label|WAITING",
+    "transit label|NO FIX"
   ],
   "he": [
     "{year} {variant}",

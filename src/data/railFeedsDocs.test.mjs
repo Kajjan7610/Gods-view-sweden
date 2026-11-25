@@ -78,7 +78,13 @@ test('DATA_SOURCES.md states the rail counts and has one row per feed', () => {
   assert.equal(rows.length, registry, 'one row per feed');
   for (const feed of RAIL_FEED_REGISTRY)
     assert.ok(
-      rows.some((row) => row.includes(`| Rail layer trains, ${feed.region}:`)),
+      rows.some((row) =>
+        // Swedish fork: Trafikverket's national feed names no region; its
+        // row is found by its operator.
+        feed.region
+          ? row.includes(`| Rail layer trains, ${feed.region}:`)
+          : row.includes(`: ${feed.operator}.`),
+      ),
       `${feed.id} has a row`,
     );
 });

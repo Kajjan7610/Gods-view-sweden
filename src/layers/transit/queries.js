@@ -2,6 +2,7 @@ import {
   ACTIVATION_ENTER_ALTITUDE_M,
   FEED_STALE_AFTER_MS,
   aggregateTransitFeedHealth,
+  isRawNumber,
   transitDetectionClass,
   transitDetectionId,
   transitDetectionMetric,
@@ -14,6 +15,7 @@ import {
 } from '../../data/transitFeeds.js';
 import { transitModeTier } from '../../data/transitPresetStyle.js';
 import { displayMotion } from './movement.js';
+import { getLocale, t } from '../../i18n/index.js';
 
 /** The display's motion word as a record field for the Context card. */
 const MOTION_FIELD = Object.freeze({
@@ -43,13 +45,43 @@ function feedForEntry(state, entry) {
 }
 
 /**
+ * Swedish fork: the detection label's words (policy.js, "transit label") in
+ * the reader's language, each looked up once per language and then reused.
+ * The label refresh asks for two words for every labelled vehicle up to four
+ * times a second; a catalog lookup each time doubled its cost at a few
+ * thousand vehicles. A new language starts the table over.
+ * @param {(text: string, values?: object) => string} translate
+ * @returns {(text: string, values?: object) => string}
+ */
+function labelWords(translate) {
+  let locale = null;
+  let words = new Map();
+  return (text, values) => {
+    const current = getLocale();
+    if (current !== locale) {
+      locale = current;
+      words = new Map();
+    }
+    let word = words.get(text);
+    if (word === undefined) {
+      word = translate(text, values);
+      words.set(text, word);
+    }
+    return word;
+  };
+}
+
+/**
  * The layer row's answer to "what is on screen and is it honest?".
  * @param {object} context
+ * @param {(text: string, values?: object) => string} [context.translate]
+ *   Swedish fork: what the label words are looked up with; the catalog's t.
  * @returns {object}
  */
-export function createQueries({ state, parts }) {
+export function createQueries({ state, parts, translate = t }) {
   const empty = [];
   const defaults = {};
+  const labelT = labelWords(translate);
   let requestedMax = Infinity,
     requestedSeed = 0;
   /**
@@ -126,12 +158,14 @@ export function createQueries({ state, parts }) {
       cache.maxCount === maxCount &&
       cache.seed === seed
     ) {
+      // Swedish fork: the label's words in the reader's language (labelT).
       for (const contact of cache.contacts)
         contact.metric = transitDetectionMetric(
           contact._entry,
           contact._entry.mode,
           now,
           feedForEntry(state, contact._entry),
+          labelT,
         );
       return;
     }
@@ -157,6 +191,8 @@ export function createQueries({ state, parts }) {
         .map((scored) => scored.entry);
     }
     const contacts = [];
+    // Swedish fork: the class field's mode word follows the language too.
+    const locale = getLocale();
     for (const entry of chosen) {
       // Route and operator text change with the record and the mode, both of
       // which arrive on polls — the same events that rebuild this list.
@@ -167,12 +203,18 @@ export function createQueries({ state, parts }) {
         );
         entry.labelRecord = entry.record;
       }
-      if (!entry.labelClass || entry.labelMode !== entry.mode) {
+      if (
+        !entry.labelClass ||
+        entry.labelMode !== entry.mode ||
+        entry.labelLocale !== locale
+      ) {
         entry.labelClass = transitDetectionClass(
           entry.mode,
           feedForEntry(state, entry),
+          labelT,
         );
         entry.labelMode = entry.mode;
+        entry.labelLocale = locale;
       }
       const contact = {
         position: entry.marker.position,
@@ -187,6 +229,7 @@ export function createQueries({ state, parts }) {
           entry.mode,
           now,
           feedForEntry(state, entry),
+          labelT,
         ),
         // The bracket carries the mode colour in every preset: the detection
         // canvas sits above the post-FX chain, where the sprites' own colour
@@ -224,7 +267,7 @@ export function createQueries({ state, parts }) {
      * @param {number} [maxCount=Infinity] Most records to return.
      * @returns {Array<Object>} {id, label, routeId, mode, lat, lon, speedMps, courseDeg, status, occupancy},
      *   plus `key` (the layer's own vehicle key, which a map click carries),
-     *   `route`, `operator`, `place`, `observedMs` and `motion` (what the
+     *   `route`, `operator`, `region`, `observedMs` and `motion` (what the
      *   display shows: moving, stopped, waiting or no-fix) for the Context card.
      */
     getAnalystRecords(maxCount = Infinity) {
@@ -239,9 +282,13 @@ export function createQueries({ state, parts }) {
           continue;
         const feed = feedForEntry(state, entry);
         const reportedMs = vehicleReportTimeMs(record, entry.fetchedAt);
+        // Swedish fork: a bare long number is no fleet number; without it
+        // Context heads the card with the operator, never a raw number.
+        const label =
+          record.label && !isRawNumber(record.label) ? record.label : null;
         result.push({
-          id: record.label || record.id || entry.key,
-          label: record.label || null,
+          id: label || record.id || entry.key,
+          label,
           routeId: record.routeId || null,
           mode: entry.mode || null,
           lat: record.lat,
@@ -256,7 +303,10 @@ export function createQueries({ state, parts }) {
               ? transitRouteLabel(feed, record.routeId)
               : record.routeId || null,
           operator: feed?.name || null,
-          place: feed?.region || null,
+          // Swedish fork: `region`, not `place`, which Context reads as the
+          // card's heading ("Stockholm, Sweden"); an unnamed vehicle goes by
+          // its operator instead (entityContext.js, recordTitle).
+          region: feed?.region || null,
           observedMs: Number.isFinite(reportedMs) ? reportedMs : null,
           motion: MOTION_FIELD[displayMotion(entry, now).word] || null,
         });

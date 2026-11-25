@@ -501,7 +501,9 @@ export function buildRailSelectionCopy(
   /** Lines with a rank: when the card is too long, the highest ranks go. */
   const lines = [];
   const add = (rank, text) => lines.push({ rank, text });
-  add(0, `${category} · ${mode} · ${feed.name} · ${feed.region}`);
+  // Swedish fork: a feed without a region (Trafikverket's national one)
+  // leaves it out, with no " · " left hanging.
+  add(0, [category, mode, feed.name, feed.region].filter(Boolean).join(' · '));
 
   const shown = entry ? displayMotion(entry, nowMs) : null;
   const motion =
