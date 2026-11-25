@@ -190,7 +190,7 @@ de här gränserna, även för nya lager:
 ### Källor med oklara eller särskilda villkor
 
 Alla svenska källor gicks igenom 2026-11-10, och varje ny källa sedan dess
-när den lades till. De flesta har en öppen licens: CC0 (Trafikverket,
+när den lades till; avsnittet lästes igenom igen 2026-11-25. De flesta har en öppen licens: CC0 (Trafikverket,
 Trafiklabs GTFS-data, SCB, Naturvårdsverket, Wikidata och
 Riksantikvarieämbetets bebyggelseregister), CC BY 4.0 (SMHI, Trafiklabs
 realtids-API, DMI, EUMETSAT, EMSC, IRF, avloppsdatan från SLU och SEEC och
@@ -254,7 +254,10 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   Swedavia, helst med en länk till swedavia.se (3.4, 5.1). Oförändrad data
   får visas i egna appar men inte skickas vidare till andra system eller
   säljas (3.7), och nyckeln får inte lämnas till någon annan (5.2).
-  Tavlan och dossiern anger "Källa: Swedavia".
+  Tavlan och dossiern anger "Källa: Swedavia". Köerna i säkerhetskontrollen
+  (WaitTime) visas sedan 2026-11-24 bara när lagret Köer och restider är
+  på; då frågar appen inte heller Swedavia om dem, och lagrets källruta
+  anger "Trafikverket · Swedavia".
 - **Open-Meteo (vädret i cockpit, originalets lager):** villkoren lästa
   2026-11-11 (open-meteo.com/en/terms). Den fria nivån gäller bara
   icke-kommersiellt bruk, under 10 000 anrop per dygn, och datan är CC BY
@@ -340,7 +343,10 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   ofiltrerad, men appen tar bort flygplan vars ägare bett om att inte visas
   (märkta PIA eller LADD); vid kontrollen var det ett eller två per område.
   Källan anges som "adsb.lol (ODbL 1.0)" under "Datakällor" och ska anges
-  likadant i bilder och filmer.
+  likadant i bilder och filmer. En egen gratis nyckel (adsb.lol:s formulär
+  för enstaka användare, beviljad för det här projektet 2026-11-22) skrivs
+  in under KOPPLA PÅ som `ADSBLOL_API_KEY`; appen skickar den i huvudet
+  `x-api-key`, och dygnsbudgeten blir då 950 anrop i stället för 450.
 - **AISStream (fartyg, originalets lager):** inga villkor eller licens
   publicerade på aisstream.io (sökt 2026-11-11); tjänsten beskriver sig
   som gratis. Hör till gruppen utan publicerad licens.
@@ -349,6 +355,43 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   5 tågflöden (se loggen 2026-11-22 och 2026-11-24). Under granskning, och
   påslagna tills vidare: SEPTA:s tåg och spårvagnar, TTC i Toronto, PID i
   Prag och Edmonton Transit Service.
+- **Trafiklab (bussar, spårvagnar, linjer och sträckningar):** GTFS
+  Regional, både positionerna i realtid och tidtabellerna, är CC0; källan
+  anges ändå som "Trafiklab / Samtrafiken GTFS Regional (CC0 1.0)". Nycklarna
+  har kvoter: den fria nivån (Bronze) ger 30 000 realtidsanrop och 50
+  nedladdningar av tidtabellerna i månaden. Appen laddar ner varje läns
+  tidtabell högst var 14:e dag (omkring 35 nedladdningar i månaden), läser
+  linjernas sträckningar (`shapes.txt`) ur samma nedladdning och lämnar ut
+  dem till webbläsaren bara ur sin egen cache, så att inget anrop från
+  webbläsaren kan starta en nedladdning. Trafiklabs sträckningar för tåg
+  (operatören Trafikverket, "trv") används inte: i den version som
+  provades 2026-11-25 går de rakt mellan stationerna och följer inte
+  spåret, så svenska tåg går fortfarande rakt mellan positionsrapporterna.
+- **Lantmäteriet (Historiska flygfoton):** Ortofoto historiska Visning är
+  CC0 och avgiftsfri men kräver ett eget konto på Geotorget med
+  behörighet för produkten (beställs utan kostnad) och inloggning med
+  e-post och lösenord; BankID fungerar inte för tjänsten (Lantmäteriets
+  geodatasupport 2026-11-23). Användarnamn och lösenord skrivs in under
+  KOPPLA PÅ och används bara av appens server. Lantmäteriet planerar att
+  avveckla tjänsten under 2026, utan bestämt datum; de historiska bilderna
+  flyttar då till den avgiftsbelagda Ortofoto Visning, Årsvisa, medan
+  Ortofoto Nedladdning är avgiftsfri efter en ändamålsprövning.
+- **Esri (satellitbilden i 2D och sparläget, valfri nyckel):** Esris World
+  Imagery hämtas med en egen gratis nyckel från ArcGIS Location Platform
+  (`ARCGIS_API_KEY`); utan nyckel visas OpenStreetMap. Esris källangivelse
+  syns på kartan. Nyckeln syns i webbläsaren och ska begränsas hos Esri
+  till appens adresser. Den fria nivån är i dag 2 000 000 kartbildsrutor i
+  månaden; enligt Esris utskick ersätts den 2027-02-25 av en gemensam
+  månadspott på 50 US-dollar (ännu inte på Esris prissida vid kontroll
+  2026-11-21). Sedan 2026-11-24 hämtar appen Esris provruta för "ingen bild
+  här" en gång i stället för med varje omgång kartrutor.
+- **Photon (komoot, ortssökning och ortsförslag):** komoots publika
+  instans, fri att använda i måttlig omfattning (fair use, ingen
+  massanvändning); datan är OpenStreetMaps (ODbL 1.0) och källan anges som
+  "Photon (komoot)". Förslagen frågar högst en gång per halv sekund, och
+  text som kan vara privat (e-post, långa nummer, lösenord och nycklar)
+  skickas aldrig. I det svenska gränssnittet skickas också kartvyns mitt
+  avrundad till 0,1 grad, aldrig användarens position.
 - **NASA FIRMS (bränder, originalets lager):** öppna data. NASA uppmuntrar
   fri användning och publicering; källan anges som "NASA FIRMS"
   (earthdata.nasa.gov/data/tools/firms/faq, läst 2026-11-11).
@@ -443,6 +486,15 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-25 (källor med oklara eller särskilda villkor, genomgång)
+- Avsnittet lästes igenom mot det som har hänt sedan 2026-11-10. Nytt:
+  Trafiklab (kvoterna, linjernas sträckningar och att Trafiklabs
+  tågsträckningar inte används), Lantmäteriets historiska flygfoton
+  (Geotorget-konto, inloggning och den planerade avvecklingen), Esri
+  (valfri nyckel och den fria nivån från 2027-02-25) och Photon (fair use
+  och vad som skickas). Swedavia-punkten säger att köetiketterna följer
+  lagret Köer och restider, och adsb.lol-punkten hur en egen nyckel används.
 
 ### 2026-11-25 (förarvyn i README)
 - README:s svenska del visar förarvyn: en bred bild under flygtavlan och
