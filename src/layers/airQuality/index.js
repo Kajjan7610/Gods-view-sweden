@@ -8,7 +8,10 @@ import {
   findQuery,
 } from '../../render/rendererOf.js';
 import { formatNumber, getLocale, msg, t, tn } from '../../i18n/index.js';
-import { translateFeedError } from '../../ui/statusText.js';
+import {
+  translateFeedError,
+  translateStatusMessage,
+} from '../../ui/statusText.js';
 import { foldText } from '../../ui/cardText.js';
 import {
   AIR_QUALITY_BANDS,
@@ -50,6 +53,20 @@ const CARD_HOST_OPTIONS = Object.freeze({
   moving: false,
 });
 const NOTE_LINES = 3;
+/**
+ * Swedish fork: the longest wait for an early re-read. SMHI's proxy answers
+ * "starting up" with a Retry-After (two minutes) while it gathers its list
+ * of stations, and the layer reads again then instead of waiting for its
+ * next 20-minute refresh.
+ */
+const EARLY_REREAD_MAX_MS = 5 * 60_000;
+/**
+ * Swedish fork: the most early re-reads one warm-up gets. Gathering the list
+ * takes a couple of minutes, so one read after the first Retry-After can be
+ * too soon; past this many the normal refresh takes over, since an early read
+ * asks every other network again too.
+ */
+const EARLY_REREADS_MAX = 3;
 // The clock follows the app's language, not the browser's.
 const clock = (ms) =>
   new Intl.DateTimeFormat(getLocale(), {
@@ -134,8 +151,60 @@ export function createAirQualityLayer({
   let _clickHandler = null;
   let _selectedId = null;
   let _selectedCardId = null;
+  let _manager = null;
+  let _rereadTimer = null;
+  let _rereadsSpent = 0;
+  /**
+   * Swedish fork: a network that is starting up (SMHI's proxy gathering its
+   * stations), as English data. A notice, not an error: the row says it, and
+   * the load chip does not report a failed refresh.
+   */
+  let _notice = null;
 
   const notify = () => rowControlsListener?.();
+
+  /**
+   * Swedish fork: an early re-read when a network asks to be read again
+   * (SMHI's proxy while it starts up), after that answer's Retry-After and at
+   * most EARLY_REREAD_MAX_MS away; EARLY_REREADS_MAX in a row at most, then
+   * the normal refresh takes over. A read that asks for nothing (SMHI's
+   * stations have come) ends the warm-up and its count; disable cancels it.
+   * @param {Array<Error>} errors The failures of the read that just ended.
+   */
+  function scheduleEarlyReread(errors) {
+    clearTimeout(_rereadTimer);
+    _rereadTimer = null;
+    const waits = errors
+      .map((error) => error?.retryAfterMs)
+      .filter((ms) => Number.isFinite(ms) && ms > 0);
+    if (!waits.length) {
+      _rereadsSpent = 0;
+      return;
+    }
+    if (!_enabled || _rereadsSpent >= EARLY_REREADS_MAX) return;
+    _rereadTimer = setTimeout(
+      () => {
+        _rereadTimer = null;
+        // Not while the page is hidden, and not counted: the manager's own
+        // refresh, and its catch-up when the page shows again, take over.
+        if (!_enabled || globalThis.document?.visibilityState === 'hidden')
+          return;
+        _rereadsSpent += 1;
+        // Through the manager, as its own refreshes run, when there is one.
+        if (_manager) void _manager.refreshLayer(layer.id);
+        else void layer.update();
+      },
+      Math.min(EARLY_REREAD_MAX_MS, ...waits),
+    );
+    _rereadTimer?.unref?.();
+  }
+
+  function cancelEarlyReread() {
+    clearTimeout(_rereadTimer);
+    _rereadTimer = null;
+    _rereadsSpent = 0;
+  }
+
   const canSelect = () => !!(picking && input);
   const requestRender = () =>
     _viewer && findFrame(_viewer)?.requestRender(AIR_QUALITY_LAYER_ID);
@@ -257,6 +326,11 @@ export function createAirQualityLayer({
     source: 'ECCC MSC GeoMet',
     updateInterval: 1_200_000,
 
+    /** Swedish fork: the early re-read runs as the manager's refreshes do. */
+    attachDataManager(manager) {
+      _manager = manager;
+    },
+
     init(viewer) {
       if (_viewer) throw new Error('Air quality layer is already initialized');
       _markers = drawOf(viewer).shapes({
@@ -268,6 +342,7 @@ export function createAirQualityLayer({
       _count = 0;
       _lastUpdate = null;
       _lastError = null;
+      _notice = null;
       _enabled = false;
       overlayHost.setVisible(AIR_QUALITY_OVERLAY_SOURCE_ID, false);
     },
@@ -288,6 +363,8 @@ export function createAirQualityLayer({
       _request?.abort();
       _request = null;
       _enabled = false;
+      cancelEarlyReread();
+      _notice = null;
       followCamera(false);
       removeClickHandler();
       if (_markers) _markers.show = false;
@@ -317,19 +394,34 @@ export function createAirQualityLayer({
         _count = _readings.length;
         _lastUpdate = Date.now();
         // A network that failed while another answered: its stations are
-        // missing from the map, and the row says which one.
-        const [failed] = readings.failures || [];
+        // missing from the map, and the row says which one. Swedish fork: a
+        // network starting up is a notice, not that failure.
+        const failures = readings.failures || [];
+        const failed = failures.find((error) => error?.warmingUp !== true);
         _lastError = failed
           ? failed?.message || msg('Air quality request failed')
           : null;
+        _notice =
+          failures.find((error) => error?.warmingUp === true)?.message ?? null;
         if (failed)
           console.warn('[Data:AirQuality] A network failed:', _lastError);
+        scheduleEarlyReread(failures);
         notify();
         return true;
       } catch (error) {
         if (request.signal.aborted || _request !== request) return false;
+        // Swedish fork: the only network starting up is no failure either.
+        if (error?.warmingUp === true) {
+          _lastError = null;
+          _notice = error.message;
+          scheduleEarlyReread([error]);
+          notify();
+          return true;
+        }
         _lastError = error?.message || msg('Air quality request failed');
+        _notice = null;
         console.warn('[Data:AirQuality] Refresh failed:', _lastError);
+        scheduleEarlyReread([error]);
         notify();
         return false;
       } finally {
@@ -402,6 +494,8 @@ export function createAirQualityLayer({
       _request?.abort();
       _request = null;
       _enabled = false;
+      cancelEarlyReread();
+      _manager = null;
       followCamera(false);
       removeClickHandler();
       overlayHost.clearSource(AIR_QUALITY_OVERLAY_SOURCE_ID);
@@ -414,6 +508,7 @@ export function createAirQualityLayer({
       _count = 0;
       _lastUpdate = null;
       _lastError = null;
+      _notice = null;
       rowControlsListener = null;
     },
 
@@ -456,15 +551,17 @@ export function createAirQualityLayer({
             .join(' · '),
           status: _lastError
             ? translateFeedError(_lastError)
-            : _count === 0
-              ? _lastUpdate === null
-                ? t('No readings available')
-                : t('No current readings')
-              : tn(
-                  _count,
-                  '{count} station reporting',
-                  '{count} stations reporting',
-                ),
+            : _notice
+              ? translateStatusMessage(_notice)
+              : _count === 0
+                ? _lastUpdate === null
+                  ? t('No readings available')
+                  : t('No current readings')
+                : tn(
+                    _count,
+                    '{count} station reporting',
+                    '{count} stations reporting',
+                  ),
           units: providers.map((one) => one.scale).join(' / '),
         },
         legend: AIR_QUALITY_BANDS.map((band) => ({
@@ -516,6 +613,12 @@ export function createAirQualityLayer({
         observedAt: newestObservation(_readings),
         // Only a completed refresh can be stale; before one there is no feed.
         stale: _lastUpdate !== null && readingsAreStale(_readings),
+        // Swedish fork: a network starting up is guidance, not a fault
+        // (loadingFeedback.js GUIDANCE_STATUSES): the Layers row shows the
+        // note, and no refresh is reported failed.
+        ...(_notice && !_lastError
+          ? { status: 'idle', statusMessage: _notice }
+          : {}),
       };
     },
   };

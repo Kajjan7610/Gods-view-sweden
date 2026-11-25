@@ -116,7 +116,7 @@ test('the SMHI source reads the proxy and rejects its warm-up answer', async () 
     fetchImpl: async () =>
       Response.json({ error: 'warming_up' }, { status: 503 }),
   });
-  await assert.rejects(warming.getSnapshot(), /HTTP 503/);
+  await assert.rejects(warming.getSnapshot(), /starting up/);
   const malformed = createSmhiAirQualitySource({
     fetchImpl: async () => Response.json({}),
   });

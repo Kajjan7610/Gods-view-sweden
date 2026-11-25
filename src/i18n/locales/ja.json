@@ -4240,6 +4240,8 @@
   "Canada (ECCC AQHI) and Sweden (SMHI, European EAQI)": "カナダ（ECCC AQHI）とスウェーデン（SMHI、欧州 EAQI）",
   "Sweden · SMHI measurements on the European EAQI": "スウェーデン · 欧州 EAQI による SMHI の測定",
   "Malformed SMHI air-quality response": "SMHI の大気質応答が不正です",
+  "SMHI air quality": "SMHI の大気質",
+  "SMHI air quality is starting up": "SMHI の大気質を起動しています",
   "Import {import} MW · export {export} MW": "輸入 {import} MW · 輸出 {export} MW",
   "from {area} {mw}": "{area} から {mw}",
   "to {area} {mw}": "{area} へ {mw}",

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { existsSync, promises as fsp } from 'node:fs';
+import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -29,16 +29,21 @@ const LIST = [
   series('5', 'O3', 'Vavihill', 13.15, 56.02),
 ];
 
-async function harness(t, { fail = false } = {}) {
+async function harness(
+  t,
+  { fail = false, saved = null, now = () => NOW } = {},
+) {
   const dir = await mkdtemp(path.join(tmpdir(), 'smhi-aq-'));
   t.after(() => rm(dir, { recursive: true, force: true }));
   t.mock.method(console, 'log', () => {});
-  t.mock.method(console, 'warn', () => {});
+  const warn = t.mock.method(console, 'warn', () => {});
   const calls = [];
   let handler;
   const cachePath = path.join(dir, 'series.json');
+  // A series list left on disk from before, as its text.
+  if (saved !== null) await writeFile(cachePath, saved);
   smhiAirQualityProxy({
-    now: () => NOW,
+    now,
     cachePath,
     fetchImpl: async (url, init = {}) => {
       calls.push({
@@ -77,7 +82,17 @@ async function harness(t, { fail = false } = {}) {
     await handler({ method: 'GET', url, headers: {}, socket: {} }, res);
     return { ...res, json: () => JSON.parse(res.body) };
   };
-  return { request, calls, cachePath };
+  return { request, calls, cachePath, warn };
+}
+
+/** The series list on disk, or null while there is none that can be read. */
+async function savedList(cachePath) {
+  try {
+    const list = JSON.parse(await readFile(cachePath, 'utf8'));
+    return Array.isArray(list?.series) ? list : null;
+  } catch {
+    return null;
+  }
 }
 
 test('series of the four pollutants are kept, with their station', () => {
@@ -156,6 +171,89 @@ test('a failed discovery is not retried at once', async (t) => {
   await new Promise((resolve) => setTimeout(resolve, 20));
   assert.equal((await request()).status, 503);
   assert.equal(calls.length, 1, 'one listing attempt only');
+});
+
+test('a failed discovery is said as a failure, not as starting up, until it is tried again', async (t) => {
+  let clock = NOW;
+  const { request, calls, warn } = await harness(t, {
+    fail: true,
+    now: () => clock,
+  });
+  const failures = () =>
+    warn.mock.calls.filter((call) =>
+      String(call.arguments[0]).includes('discovery failed'),
+    ).length;
+  const waitForFailures = async (count) => {
+    for (let waited = 0; failures() < count && waited < 5000; waited += 10)
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    assert.equal(failures(), count);
+  };
+  assert.equal((await request()).json().error, 'warming_up');
+  await waitForFailures(1);
+  // Ten minutes before it is tried again: a failure, with the time left.
+  const failed = await request();
+  assert.equal(failed.status, 503);
+  assert.equal(failed.json().error, 'discovery_failed');
+  assert.equal(failed.headers['Retry-After'], '600');
+  clock += 9 * 60_000 + 30_000;
+  assert.equal((await request()).headers['Retry-After'], '30');
+  assert.equal(calls.length, 1, 'SMHI is not asked in the pause');
+  // Then it is tried again, and is starting up once more.
+  clock += 30_000;
+  assert.equal((await request()).json().error, 'warming_up');
+  await waitForFailures(2);
+  assert.equal(calls.length, 2);
+});
+
+test('a series list on disk that cannot be read is said once, and the series are found again', async (t) => {
+  const { request, calls, cachePath, warn } = await harness(t, {
+    saved: '{"at": 1762000000000, "series": [',
+  });
+  const first = await request();
+  assert.equal(first.status, 503);
+  assert.equal(first.json().error, 'warming_up');
+  // Asked until the stations come, never by opening the file the discovery
+  // replaces: on Windows a file held open cannot be replaced.
+  let ready = first;
+  for (let waited = 0; ready.status !== 200 && waited < 5000; waited += 10) {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    ready = await request();
+  }
+  assert.equal(ready.status, 200);
+  // The discovery ran as on a first start, and its list replaced the
+  // broken one.
+  assert.deepEqual(
+    calls.slice(0, 4).map((call) => call.url),
+    [8, 5, 6001, 7].map((id) => `${API_BASE}/timeseries?phenomenon=${id}`),
+  );
+  assert.deepEqual(
+    (await savedList(cachePath)).series.map((one) => one.id),
+    ['1', '2', '5'],
+  );
+  const said = warn.mock.calls
+    .map((call) => call.arguments.join(' '))
+    .filter((line) => line.includes('saved series list'));
+  assert.equal(said.length, 1);
+});
+
+test('the series list is written beside its file and moved over it', async (t) => {
+  const rename = t.mock.method(fsp, 'rename');
+  const { request, cachePath } = await harness(t);
+  assert.equal((await request()).status, 503);
+  for (let waited = 0; !existsSync(cachePath) && waited < 5000; waited += 10)
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  const moves = rename.mock.calls
+    .map((call) => call.arguments)
+    .filter(([, to]) => to === cachePath);
+  assert.equal(moves.length, 1);
+  const [[from]] = moves;
+  assert.equal(path.dirname(from), path.dirname(cachePath));
+  assert.match(path.basename(from), /^series\.json\..+\.tmp$/);
+  assert.deepEqual(
+    await readdir(path.dirname(cachePath)),
+    ['series.json'],
+    'no half-written file is left',
+  );
 });
 
 /** A proxy that already knows its series: no warm-up, a clock and a switch. */

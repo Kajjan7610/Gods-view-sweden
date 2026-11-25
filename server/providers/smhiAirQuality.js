@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
+import { defaultSourceRoot } from './common/source-root.js';
 
 // SMHI's air-quality database (Datavärdskap luft, open data, no key) through
 // its 52North REST API. It holds some 1,300 NO2/PM10/PM2.5/O3 series, most of
@@ -121,7 +122,7 @@ export function smhiAirQualityProxy({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
   cachePath = path.join(
-    process.cwd(),
+    defaultSourceRoot,
     '.gev-cache',
     'smhi-air-quality-series.json',
   ),
@@ -190,15 +191,23 @@ export function smhiAirQualityProxy({
   /**
    * The series kept on disk, read once: requests arriving while it is read
    * wait for it, so none of them starts a discovery the disk makes needless.
+   * A list that cannot be read is said once and found again.
    */
   function readDiskOnce() {
     diskRead ??= (async () => {
+      const unreadable = (why) =>
+        console.warn(
+          `[smhi-air-quality] the saved series list is left out (${why}); the series are found again`,
+        );
       try {
         const parsed = JSON.parse(await fsp.readFile(cachePath, 'utf8'));
         if (Number.isFinite(parsed?.at) && Array.isArray(parsed?.series))
           discovered = parsed;
-      } catch {
-        /* no disk cache yet */
+        else unreadable('unknown format');
+      } catch (error) {
+        // No list on disk yet is the first start.
+        if (error?.code !== 'ENOENT')
+          unreadable(error?.code || error?.name || 'error');
       }
     })();
     return diskRead;
@@ -227,10 +236,15 @@ export function smhiAirQualityProxy({
     console.log(
       `[smhi-air-quality] ${entry.series.length} of ${candidates.length} series active`,
     );
+    // Written beside the list and moved over it: a crash never leaves half
+    // a list.
+    const temp = `${cachePath}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`;
     try {
       await fsp.mkdir(path.dirname(cachePath), { recursive: true });
-      await fsp.writeFile(cachePath, JSON.stringify(entry), 'utf8');
+      await fsp.writeFile(temp, JSON.stringify(entry), 'utf8');
+      await fsp.rename(temp, cachePath);
     } catch (error) {
+      await fsp.rm(temp, { force: true }).catch(() => {});
       console.warn(
         `[smhi-air-quality] cache write failed: ${error?.message || error}`,
       );
@@ -311,6 +325,15 @@ export function smhiAirQualityProxy({
       return json(200, snapshot.value);
     await readDiskOnce();
     if (!discovered) {
+      // A failed discovery is not tried again for a while: that is a
+      // failure to say as one, not a list on its way.
+      const pausedMs = discoveryFailedAt + DISCOVERY_RETRY_MS - now();
+      if (pausedMs > 0)
+        return json(
+          503,
+          { error: 'discovery_failed' },
+          { 'Retry-After': String(Math.ceil(pausedMs / 1000)) },
+        );
       discoverInBackground();
       return json(503, { error: 'warming_up' }, { 'Retry-After': '120' });
     }

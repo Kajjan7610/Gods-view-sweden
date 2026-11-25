@@ -4230,6 +4230,8 @@
   "AIR QUALITY · {station}": "איכות אוויר · {station}",
   "Sweden · SMHI measurements on the European EAQI": "שוודיה · מדידות SMHI לפי מדד EAQI האירופי",
   "Malformed SMHI air-quality response": "תשובת איכות האוויר של SMHI פגומה",
+  "SMHI air quality": "איכות האוויר של SMHI",
+  "SMHI air quality is starting up": "איכות האוויר של SMHI בהפעלה",
   "Aurora forecast unavailable": "תחזית הזוהר הצפוני אינה זמינה",
   "Forecast for {time}": "תחזית ל-{time}",
   "Kp index {kp} from {time} (0 calm, 9 extreme storm)": "מדד Kp {kp} מ-{time} (0 רגוע, 9 סערה קיצונית)",

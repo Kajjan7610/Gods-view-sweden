@@ -114,9 +114,36 @@ export function createEcccAirQualitySource({
 }
 
 /**
+ * Swedish fork: the SMHI network's name in its HTTP errors, which the row
+ * shows translated as "<source> HTTP <status>" (ui/statusText.js).
+ */
+const SMHI_AIR_QUALITY = msg('SMHI air quality');
+/**
+ * The wait the proxy asks for while it warms up (its Retry-After, see
+ * server/providers/smhiAirQuality.js), used when the header is missing.
+ */
+const SMHI_WARM_UP_RETRY_MS = 120_000;
+/** Shortest wait honoured, so a zero Retry-After cannot spin the layer. */
+const SMHI_MIN_RETRY_MS = 5_000;
+
+/** Retry-After (seconds or an HTTP date) in ms, or null when unreadable. */
+function retryAfterMs(raw, nowMs) {
+  if (!raw) return null;
+  const seconds = Number(raw);
+  const ms = Number.isFinite(seconds)
+    ? seconds * 1000
+    : Date.parse(raw) - nowMs;
+  return Number.isFinite(ms) ? Math.max(SMHI_MIN_RETRY_MS, ms) : null;
+}
+
+/**
  * SMHI's Swedish air-quality stations through the same-origin proxy
  * (/api/air-quality-se), scored on the European EAQI. The proxy answers 503
- * while it is still discovering which of SMHI's series are active.
+ * `warming_up` while it is still discovering which of SMHI's series are
+ * active; that answer is an error of its own, marked `warmingUp` (a notice
+ * for the row, not a failed feed) and carrying the proxy's Retry-After as
+ * `retryAfterMs`, so the layer can read again once the list is in rather
+ * than at its next 20-minute refresh.
  * @param {object} [options]
  * @param {Function} [options.fetchImpl]
  * @param {() => number} [options.now]
@@ -126,17 +153,42 @@ export function createSmhiAirQualitySource({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
 } = {}) {
+  /** Whether a 503 is the proxy's warm-up answer; any other body is not. */
+  async function warmingUp(response, signal) {
+    if (response.status !== 503) return false;
+    try {
+      const payload = await readResponseJsonCapped(response, 4096, signal);
+      return payload?.error === 'warming_up';
+    } catch {
+      return false;
+    }
+  }
+
   return {
     async getSnapshot({ signal } = {}) {
       signal?.throwIfAborted();
       const response = await fetchImpl('/api/air-quality-se', { signal });
       if (!response.ok) {
+        if (await warmingUp(response, signal))
+          throw Object.assign(
+            new Error(msg('SMHI air quality is starting up')),
+            {
+              status: response.status,
+              warmingUp: true,
+              retryAfterMs:
+                retryAfterMs(response.headers.get('retry-after'), now()) ??
+                SMHI_WARM_UP_RETRY_MS,
+            },
+          );
         try {
           await response.body?.cancel();
         } catch {
           /* no-op */
         }
-        throw new Error(`SMHI air quality HTTP ${response.status}`);
+        throw Object.assign(
+          new Error(`${SMHI_AIR_QUALITY} HTTP ${response.status}`),
+          { status: response.status },
+        );
       }
       const payload = await readResponseJsonCapped(
         response,

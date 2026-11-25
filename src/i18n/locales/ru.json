@@ -4549,6 +4549,8 @@
   "Canada (ECCC AQHI) and Sweden (SMHI, European EAQI)": "Канада (ECCC AQHI) и Швеция (SMHI, европейский EAQI)",
   "Sweden · SMHI measurements on the European EAQI": "Швеция · измерения SMHI по европейской шкале EAQI",
   "Malformed SMHI air-quality response": "Некорректный ответ SMHI о качестве воздуха",
+  "SMHI air quality": "Качество воздуха SMHI",
+  "SMHI air quality is starting up": "Качество воздуха SMHI запускается",
   "Import {import} MW · export {export} MW": "Импорт {import} МВт · экспорт {export} МВт",
   "from {area} {mw}": "из {area} {mw}",
   "to {area} {mw}": "в {area} {mw}",
