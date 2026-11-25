@@ -383,9 +383,6 @@ export function createFirePerimetersLayer({
           openExternal(_selectedLink);
         return;
       }
-      // Swedish fork: a card under the click, this layer's or another's, is
-      // not the ground.
-      if (cardHit) return;
       const picked = event.topHit;
       const incidentId = picked ? pickedIncidentId(event.drawHit) : null;
       if (incidentId) {
