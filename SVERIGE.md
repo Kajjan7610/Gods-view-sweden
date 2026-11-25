@@ -492,6 +492,43 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-25 (originalet sammanslaget)
+- Originalprojektet är sammanslaget fram till 2026-11-25 (18 pull
+  requests sedan 2026-11-21). Alla svenska lager, källor och avgränsningar
+  finns kvar, och inga nya externa källor eller adresser har tillkommit.
+- Ny öppning från originalet: laddningsskärmens öga blir jordklotet, som
+  växer, vrider sig och stannar över startvyn. I den svenska versionen
+  stannar det över Västerås, inte över besökarens land enligt
+  tidszonen, och sedan visas den svenska välkomstdialogen som förut.
+  Öppningen spelas inte med `?intro=0`, med reducerad rörelse, i inbäddade
+  vyer, på Stories-länkar eller på länkar som följer eller väljer något.
+  Ett klick, en tangent eller hjulet hoppar till slutet.
+- Prestanda (originalets): rörliga lager (flyg, fartyg, satelliter) ritas
+  om bara så ofta som de rör sig på skärmen, 3–30 gånger i sekunden. Sidans
+  läge ligger i klasser på `<html>` i stället för `body:has(...)`, som
+  fick Chrome att räkna om hela sidans stil vid varje ändring. HUD:en gör
+  inget arbete och kör inga timers medan den är helt borta från sidan
+  (`display: none`, som i Cockpit); en avslagen HUD som bara är osynlig
+  räknas fortfarande som visad.
+- Satellitlagrets klassknappar visar färg och antal för varje påslagen
+  klass, i stället för en separat lista. CelesTraks paus står kvar i
+  raden. Skogsbränder (USA) färgas efter hur länge sedan omkretsen
+  kartlades.
+- Den svenska versionen behåller: en Cockpit-knapp (kartans, inte en till
+  i HUD:en), inga bana-, GSD- eller sensorrader i HUD:en, och brandkort
+  som tar emot klicket även utan InciWeb-länk, så att det aldrig går
+  vidare till marken under kortet (bara ett kort med länk öppnar något).
+- Växlar man mellan 3D och 2D med 3D-knappen laddas sidan om på samma vy
+  utan att öppningen spelas igen (ett engångsmärke i `sessionStorage`).
+- Anpassat till originalets nya regler: 3D-knappen sätter klassen
+  `has-globe-saver` på `<html>` medan den visas, så att mobilens sökfält
+  slutar före den utan `body:has(...)`. Trafikverkets vägkameror får sin
+  rubrik (till exempel "E4 Kista") från originalets egen kameraläsning,
+  som nu också gör en kameras siktlinjer och bildplan till kameran;
+  den svenska versionens egen lösning för det är borttagen.
+- Rättat i README: meningen om cykloner nämner åter JTWC, som föll bort
+  vid förra sammanslagningen.
+
 ### 2026-11-25 (trafik- och tågflödena under granskning avgjorda)
 - Flödena från de fyra operatörerna som var under granskning sedan
   2026-11-22 (fem i registret, eftersom SEPTA har två) är avgjorda.
