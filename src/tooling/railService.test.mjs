@@ -101,6 +101,8 @@ test('a feed that states no licence is refused on every route and never fetched'
     (feed) => !RAIL_ENABLED_FEEDS.includes(feed),
   ).map((feed) => feed.id);
   assert.deepEqual(dropped, [
+    'septa-regional-rail',
+    'septa-trolley',
     'marc',
     'tri-rail',
     'metrotransit-rail',
@@ -783,27 +785,42 @@ test('a viewer of every region at once is not refused by the global cap', async 
   t.after(() => {
     console.warn = warn;
   });
+  let now = 1_800_000_000_000;
+  let calls = 0;
   const service = createRailService({
-    now: () => 1_800_000_000_000,
-    fetchImpl: async () => new Response(mbtaBytes(), { status: 200 }),
+    now: () => now,
+    fetchImpl: async () => {
+      calls++;
+      return new Response(mbtaBytes(), { status: 200 });
+    },
   });
   t.after(service.close);
   const { feeds } = await (
     await service.handle(request('/api/rail/feeds'))
   ).json();
   const backoffs = [];
-  let requests = 0;
+  const caches = [];
+  const ask = async (route, feed) => {
+    const response = await service.handle(
+      request(`/api/rail/${route}/${feed.id}`),
+    );
+    backoffs.push(response.headers.get('X-Rail-Backoff'));
+    caches.push(response.headers.get('X-GEV-Cache'));
+  };
   for (const feed of feeds) {
-    for (const route of feed.tripUpdates ? ['trains', 'updates'] : ['trains']) {
-      requests += 1;
-      const response = await service.handle(
-        request(`/api/rail/${route}/${feed.id}`),
-      );
-      backoffs.push(response.headers.get('X-Rail-Backoff'));
-    }
+    for (const route of feed.tripUpdates ? ['trains', 'updates'] : ['trains'])
+      await ask(route, feed);
   }
-  assert.ok(requests > 40, `${requests} resources, more than the old cap`);
+  // Swedish fork: the feeds it polls come to fewer than 40 resources, so
+  // the viewer also asks for every feed's positions again half a minute on,
+  // when they are due, inside the same admission window.
+  now += 30_000;
+  for (const feed of feeds) await ask('trains', feed);
+  assert.ok(calls > 40, `${calls} upstream requests, more than the old cap`);
   assert.ok(!backoffs.includes('rate-limited'), 'the global cap held back');
+  // A feed with a kept snapshot answers a refusal with that snapshot
+  // (STALE-ERROR, no backoff header), so the second round checks that too.
+  assert.ok(!caches.includes('STALE-ERROR'), 'the global cap held back');
   assert.ok(railAdmissionGlobalMax() >= railNaturalRequestsPerMinute());
 });
 

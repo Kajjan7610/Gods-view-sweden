@@ -205,14 +205,20 @@ test('every feed is on, credited with its licence and terms, and fetched as publ
         !/^No (separate )?licen[cs]e/i.test(feed.license),
     ).map((feed) => feed.id),
   );
-  // Swedish fork: `licensed` is only ever false, and MARC is the one whose
-  // label names its publication (read 2026-11-21).
+  // Swedish fork: `licensed` is only ever false. SEPTA's two labels name the
+  // static data's agreement while the realtime feeds are listed "License Not
+  // Specified" (read 2026-11-25); MARC's names its publication (read
+  // 2026-11-21).
   assert.deepEqual(
     RAIL_FEED_REGISTRY.filter((feed) => 'licensed' in feed).map((feed) => [
       feed.id,
       feed.licensed,
     ]),
-    [['marc', false]],
+    [
+      ['septa-regional-rail', false],
+      ['septa-trolley', false],
+      ['marc', false],
+    ],
   );
 });
 
@@ -265,7 +271,15 @@ test('only enabled, well-formed ids resolve to a pollable feed', () => {
     RAIL_FEED_REGISTRY.filter((feed) => !getRailFeed(feed.id)).map(
       (feed) => feed.id,
     ),
-    ['marc', 'tri-rail', 'metrotransit-rail', 'charlotte-lynx', 'irish-rail'],
+    [
+      'septa-regional-rail',
+      'septa-trolley',
+      'marc',
+      'tri-rail',
+      'metrotransit-rail',
+      'charlotte-lynx',
+      'irish-rail',
+    ],
   );
 });
 
@@ -396,9 +410,11 @@ test('the public catalog exposes coverage and credit but never upstream URLs', (
   }
   const byId = new Map(catalog.map((entry) => [entry.id, entry]));
   // Swedish fork: Irish Rail publishes no licence for its positions, nor
-  // MARC for its feeds.
+  // MARC for its feeds, and SEPTA's realtime feeds are listed with none.
   assert.equal(byId.has('irish-rail'), false);
   assert.equal(byId.has('marc'), false);
+  assert.equal(byId.has('septa-regional-rail'), false);
+  assert.equal(byId.has('septa-trolley'), false);
   assert.equal(byId.get('mbta-rail').positions, 'gps');
   assert.equal(byId.get('mbta-rail').tripUpdates, true);
   // No upstream URL reaches the browser, by any field but the licence link

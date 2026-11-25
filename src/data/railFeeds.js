@@ -719,12 +719,18 @@ export const RAIL_FEED_REGISTRY = Object.freeze([
     staticGtfsEntry: 'google_rail.zip',
     license: 'SEPTA Trip Planning Data Agreement',
     licenseUrl: 'https://www3.septa.org/developer/',
+    // Swedish fork: SEPTA's agreements cover the static Trip Planning Data
+    // and the Open Data Portal datasets; the realtime feeds are listed
+    // "License Not Specified" (OpenDataPhilly,
+    // https://opendataphilly.org/datasets/septa-gtfs-alerts-updates, read
+    // 2026-11-25), so it is not polled.
+    licensed: false,
     attribution: 'SEPTA',
     defaultEnabled: true,
     terms: Object.freeze({
       quote:
         'non-exclusive, limited and revocable right to use, reproduce and redistribute the Trip Planning Data',
-      note: 'The agreement names the static data; SEPTA publishes the realtime feeds on the same developer page with no separate terms. Credit is text only: SEPTA trademarks may not be used.',
+      note: 'The agreement names the static data; the developer page no longer mentions the realtime feeds (read 2026-11-25). Credit is text only: SEPTA trademarks may not be used.',
     }),
     classify: always(LOCAL_RAIL),
   }),
@@ -745,6 +751,9 @@ export const RAIL_FEED_REGISTRY = Object.freeze([
     staticGtfsEntry: 'google_bus.zip',
     license: 'SEPTA Trip Planning Data Agreement',
     licenseUrl: 'https://www3.septa.org/developer/',
+    // Swedish fork: a SEPTA realtime feed, listed "License Not Specified"
+    // like the Regional Rail one (read 2026-11-25); not polled.
+    licensed: false,
     attribution: 'SEPTA',
     defaultEnabled: true,
     terms: Object.freeze({

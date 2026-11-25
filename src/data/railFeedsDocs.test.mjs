@@ -36,21 +36,21 @@ const counts = {
 };
 
 test('the registry holds the feeds the documents count', () => {
-  // Swedish fork: the five feeds that publish no licence (MARC since
-  // 2026-11-22) are not polled, and Trafikverket's trains are added (they
-  // need the free key).
+  // Swedish fork: the seven feeds with no licence for their positions (MARC
+  // since 2026-11-22, SEPTA's two since 2026-11-25) are not polled, and
+  // Trafikverket's trains are added (they need the free key).
   assert.deepEqual(counts, {
     registry: 31,
     gps: 30,
     stationReports: 1,
-    outOfTheBox: 23,
+    outOfTheBox: 21,
     tripUpdates: 22,
     staticGtfs: 29,
   });
   assert.equal(
     RAIL_ENABLED_FEEDS.length,
-    26,
-    'all but the five unlicensed, with Trafikverket',
+    24,
+    'all but the seven unlicensed, with Trafikverket',
   );
   assert.deepEqual(
     RAIL_FEED_REGISTRY.filter(

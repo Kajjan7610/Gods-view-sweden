@@ -26,32 +26,34 @@ import {
   railTrain as train,
 } from '../../testSupport/railLayerHarness.mjs';
 
-const FEED = 'septa-regional-rail';
-const PHILADELPHIA = { lat: 40.0, lon: -75.25 };
+const FEED = 'mta-lirr';
+/** The other bundled feed in range of New York, which the catalog leaves out. */
+const METRO_NORTH = 'mta-metro-north';
+const NEW_YORK = { lat: 40.75, lon: -73.7 };
 const MADRID = { lat: 40.42, lon: -3.7 };
-/** The server's catalog, narrowed to SEPTA so no other feed is polled. */
+/** The server's catalog, narrowed to the LIRR so no other feed is polled. */
 const CATALOG = publicRailCatalog().filter((feed) => feed.id === FEED);
-const LAT = 40.0;
+const LAT = 40.75;
 const STEP_M = 0.1 * 111_320 * Math.cos((LAT * Math.PI) / 180);
 const DAY = new Date(T0).toISOString().slice(0, 10);
 /** Seconds after midnight (UTC) at the tests' start. */
 const T0_SEC = (T0 - Date.parse(`${DAY}T00:00:00Z`)) / 1000;
 
 /**
- * A SEPTA schedule pack of one Paoli/Thorndale run, T1, west to east across
- * three stops an hour long, that left its first stop ten minutes before the
- * tests start. It is served, and must never place a train.
+ * An LIRR schedule pack of one Port Washington Branch run, T1, west to east
+ * across three stops an hour long, that left its first stop ten minutes
+ * before the tests start. It is served, and must never place a train.
  */
-const SEPTA_PACK = Object.freeze({
+const LIRR_PACK = Object.freeze({
   version: 1,
   feedId: FEED,
   timezone: 'UTC',
   window: { from: DAY, to: DAY },
-  routes: { PAO: { type: 2 } },
+  routes: { PW: { type: 2 } },
   stops: [
-    { id: 'A', name: 'Paoli', lat: LAT, lon: -75.45 },
-    { id: 'B', name: 'Bryn Mawr', lat: LAT, lon: -75.35 },
-    { id: 'C', name: '30th Street', lat: LAT, lon: -75.25 },
+    { id: 'A', name: 'Woodside', lat: LAT, lon: -73.9 },
+    { id: 'B', name: 'Broadway', lat: LAT, lon: -73.8 },
+    { id: 'C', name: 'Port Washington', lat: LAT, lon: -73.7 },
   ],
   patterns: [
     {
@@ -68,19 +70,19 @@ const SEPTA_PACK = Object.freeze({
       pattern: 0,
       profile: 0,
       startSec: T0_SEC - 600,
-      route: 'PAO',
+      route: 'PW',
       service: 'WK',
-      headsign: '30th Street',
-      name: '9512',
+      headsign: 'Port Washington',
+      name: '412',
     },
   },
 });
 const LIVE_V1 = railTrainKey(FEED, 'V1');
 
-/** SEPTA's live answer, switched by the test; its schedule pack is served. */
-function septa(app, answer = { status: 502 }) {
+/** The LIRR's live answer, switched by the test; its schedule pack is served. */
+function lirr(app, answer = { status: 502 }) {
   const live = { answer };
-  app.schedules.set(FEED, SEPTA_PACK);
+  app.schedules.set(FEED, LIRR_PACK);
   app.feeds.set(FEED, () =>
     typeof live.answer === 'function' ? live.answer() : live.answer,
   );
@@ -98,11 +100,11 @@ const asked = (app) => app.requested.filter((id) => id === FEED).length;
 function liveV1() {
   const minutes = (Date.now() - T0) / 60_000;
   return [
-    train('V1', LAT, -75.4 + minutes * 0.002, {
+    train('V1', LAT, -73.85 + minutes * 0.002, {
       tripId: 'T1',
-      routeId: 'PAO',
+      routeId: 'PW',
       category: 'local',
-      label: '9512',
+      label: '412',
     }),
   ];
 }
@@ -120,8 +122,8 @@ test('the layer has no timetable fallback to switch to', () => {
 
 test('a live feed whose operator fails shows unavailable, and no timetable is asked for', async (t) => {
   t.mock.method(console, 'warn', () => {});
-  const app = harness(t, { at: PHILADELPHIA, catalog: CATALOG });
-  septa(app);
+  const app = harness(t, { at: NEW_YORK, catalog: CATALOG });
+  lirr(app);
   await app.enable();
   for (let i = 0; i < 4; i += 1) {
     const status = feedStatus(app);
@@ -140,11 +142,11 @@ test('a live feed whose operator fails shows unavailable, and no timetable is as
 test('trains a failing feed drew are never moved on by its timetable; they age out', async (t) => {
   t.mock.method(console, 'warn', () => {});
   const app = harness(t, {
-    at: PHILADELPHIA,
+    at: NEW_YORK,
     catalog: CATALOG,
     scheduleStops: true,
   });
-  const live = septa(app, liveV1);
+  const live = lirr(app, liveV1);
   await app.enable();
   app.run(RAIL_POLL_MS);
   await app.poll();
@@ -174,10 +176,10 @@ test('trains a failing feed drew are never moved on by its timetable; they age o
 
 test('a server that answers with timetable positions has no live data: nothing drawn', async (t) => {
   t.mock.method(console, 'warn', () => {});
-  // SEPTA's trains route answers 200 with no live positions
+  // The LIRR's trains route answers 200 with no live positions
   // (`positions: 'schedule'`, no trains).
-  const app = harness(t, { at: PHILADELPHIA, catalog: CATALOG });
-  septa(app, { positions: 'schedule' });
+  const app = harness(t, { at: NEW_YORK, catalog: CATALOG });
+  lirr(app, { positions: 'schedule' });
   await app.enable();
   for (let i = 0; i < 3; i += 1) {
     app.run(RAIL_POLL_MS);
@@ -191,12 +193,12 @@ test('a server that answers with timetable positions has no live data: nothing d
 });
 
 test('a train record placed from a timetable is never drawn, whatever the feed says', async (t) => {
-  const app = harness(t, { at: PHILADELPHIA, catalog: CATALOG });
-  septa(app, () => [
-    train('V1', LAT, -75.4, { positionSource: 'schedule' }),
-    train('V2', LAT, -75.3, { positionSource: 'gps' }),
-    train('V3', LAT, -75.35, { positionSource: 'event' }),
-    train('V4', LAT, -75.32, { positionSource: undefined }),
+  const app = harness(t, { at: NEW_YORK, catalog: CATALOG });
+  lirr(app, () => [
+    train('V1', LAT, -73.85, { positionSource: 'schedule' }),
+    train('V2', LAT, -73.75, { positionSource: 'gps' }),
+    train('V3', LAT, -73.8, { positionSource: 'event' }),
+    train('V4', LAT, -73.77, { positionSource: undefined }),
   ]);
   await app.enable();
   assert.deepEqual(feedKeys(app).sort(), [
@@ -210,10 +212,10 @@ test('a train record placed from a timetable is never drawn, whatever the feed s
 test('a catalog feed without live positions is never polled', async (t) => {
   // A catalog entry whose positions are not live is left alone.
   const app = harness(t, {
-    at: PHILADELPHIA,
+    at: NEW_YORK,
     catalog: CATALOG.map((feed) => ({ ...feed, positions: 'schedule' })),
   });
-  septa(app, liveV1);
+  lirr(app, liveV1);
   await app.enable();
   app.run(RAIL_POLL_MS);
   await app.poll();
@@ -224,11 +226,15 @@ test('a catalog feed without live positions is never polled', async (t) => {
 });
 
 test('a feed the catalog leaves out is never polled once it loads', async (t) => {
-  // Here the catalog lists SEPTA's regional rail alone, so the other
-  // bundled feed in range (the trolleys) is dropped as soon as it answers.
-  const app = harness(t, { at: PHILADELPHIA, catalog: CATALOG });
-  septa(app, liveV1);
+  // Here the catalog lists the LIRR alone, so the other bundled feed in
+  // range (Metro-North) is dropped as soon as it answers.
+  const app = harness(t, { at: NEW_YORK, catalog: CATALOG });
+  lirr(app, liveV1);
   await app.enable();
+  assert.ok(
+    app.requested.includes(METRO_NORTH),
+    'Metro-North, bundled and in range, was asked for before the catalog',
+  );
   assert.deepEqual([...app.state()._activeFeeds.keys()], [FEED]);
   const before = app.requested.filter((id) => id !== FEED).length;
   for (let i = 0; i < 3; i += 1) {

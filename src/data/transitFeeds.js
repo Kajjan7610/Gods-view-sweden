@@ -1124,12 +1124,12 @@ export const TRANSIT_FEED_REGISTRY = Object.freeze([
     license: 'Open Government Licence \u2013 Toronto',
     licenseUrl: 'https://open.toronto.ca/open-data-licence/',
     attribution:
-      'Toronto Transit Commission \u2014 City of Toronto Open Data (Open Government Licence \u2013 Toronto)',
+      'Toronto Transit Commission \u2014 Contains information licensed under the Open Government Licence \u2013 Toronto',
     defaultEnabled: true,
     terms: Object.freeze({
       quote:
         'The Information Provider grants you a worldwide, royalty-free, perpetual, non-exclusive licence to use the Information, including for commercial purposes ... Acknowledge the source of the Information by including any attribution statement specified by the Information Provider.',
-      note: 'The City publishes this endpoint from the TTC BusTime NVAS catalogue entry, whose own licence field reads \"License not specified\"; the quote above is the portal-wide Open Government Licence \u2013 Toronto the City applies to its open data, so the credit carries the licence name the way the Metro Transit entry carries its public-domain note. BusTime is the surface system: buses and streetcars report real positions, the subway reports none, so Lines 1/2/4 are simply absent rather than inferred. The endpoint sends no ETag or Last-Modified, so conditional requests fall through to the proxy snapshot TTL.',
+      note: 'The City publishes this endpoint from its TTC BusTime NVAS catalogue entry (`ttc-bustime-real-time-next-vehicle-arrival-nvas`, metadata modified 2026-10-29, read 2026-11-25), which names the Toronto Transit Commission as owner and states the Open Government Licence \u2013 Toronto quoted above; its resource is https://bustime.ttc.ca/gtfsrt, under which this vehicles feed sits. The credit names the operator and the licence. BusTime is the surface system: buses and streetcars report real positions, the subway reports none, so Lines 1/2/4 are simply absent rather than inferred. The endpoint sends no ETag or Last-Modified, so conditional requests fall through to the proxy snapshot TTL.',
     }),
     defaultMode: 'bus',
     // Toronto rides streetcars. The vehicles are the shared `tram` mode and
@@ -1219,7 +1219,7 @@ export const TRANSIT_FEED_REGISTRY = Object.freeze([
     terms: Object.freeze({
       quote:
         'The Information Provider grants you a worldwide, royalty-free, perpetual, non-exclusive licence to use the Information including for commercial purposes subject to the terms below. ... Acknowledge the source of the Information by including any attribution statement specified by the Information Provider(s) and, where possible, provide a link to this licence.',
-      note: 'The endpoint sits on a vendor host, so provenance matters: the City publishes this exact URL on its own open-data developer page, https://explore.guelph.ca/pages/transit-gtfs-data, under an open-data initiative heading (that page is JavaScript-rendered; its readable source is the ArcGIS item JSON behind it). The licence is a verbatim OGL-Canada 2.0 derivative and the attribution wording above is its prescribed fallback, so it is used as written. The transit datasets carry a BLANK licence field in the portal catalogue; the Terms of Use supply it by default ("Except where otherwise noted this is the Open Government Licence"), the same shape of gap the TTC entry records. The Terms also publish a traffic limit \u2014 no concurrent requests, at most 5 per second \u2014 which one poll every 15 s satisfies many times over. Crests and logos are excluded from the grant, so the credit stays text.',
+      note: 'The endpoint sits on a vendor host, so provenance matters: the City publishes this exact URL on its own open-data developer page, https://explore.guelph.ca/pages/transit-gtfs-data, under an open-data initiative heading (that page is JavaScript-rendered; its readable source is the ArcGIS item JSON behind it). The licence is a verbatim OGL-Canada 2.0 derivative and the attribution wording above is its prescribed fallback, so it is used as written. The transit datasets carry a BLANK licence field in the portal catalogue; the Terms of Use supply it by default ("Except where otherwise noted this is the Open Government Licence"). The Terms also publish a traffic limit \u2014 no concurrent requests, at most 5 per second \u2014 which one poll every 15 s satisfies many times over. Crests and logos are excluded from the grant, so the credit stays text.',
     }),
     defaultMode: 'bus',
     routeLabel: guelphRouteLabel,
@@ -1411,13 +1411,14 @@ export const TRANSIT_FEED_REGISTRY = Object.freeze([
     center: { lat: 50.08, lon: 14.45 },
     loadRadiusKm: 60,
     url: 'https://api.golemio.cz/v2/vehiclepositions/gtfsrt/vehicle_positions.pb',
-    license: 'CC BY',
-    licenseUrl: 'https://pid.cz/o-systemu/opendata/',
-    attribution: 'Pražská integrovaná doprava (PID) / Golemio',
+    license: 'Prague open data: no copyright or database rights',
+    licenseUrl:
+      'https://lkod.cz/catalog/praha/datasets/https%3A%2F%2Fapi.lkod.cz%2Flod%2F03bdf7d6-a255-4e22-83f9-4b17b6822602%2Fcatalog%2F946fd8ea-e0b3-404d-8fe6-f5b1ba0be1b0',
+    attribution: 'Pražská integrovaná doprava (PID) / Golemio (Operátor ICT)',
     terms: {
       quote:
-        'Data, která lze stáhnout přímo zde z webu, jsou stejně jako celý obsah webu opatřena licencí CC-BY',
-      note: 'The PID open-data page lists this realtime feed and licenses the data it publishes under CC BY, crediting the author and any changes. The same page says data served from other sources follows that source’s licence; the feed is served by Golemio, the city’s data platform, which states none of its own. Keyless since the catalogue moved it off the X-Access-Token endpoint. Speeds are m/s, checked against movement on 2026-11-07. Route ids are `L` plus a number whose range gives the mode and the line (metro `L991` is A, train `L1004` is S4, ferry `L1801` is P1); `pidRoute` holds the table, read from PID’s GTFS routes.txt on 2026-11-09.',
+        'neobsahuje autorská díla ... není autorskoprávně chráněnou databází ... není chráněna zvláštním právem pořizovatele databáze ... neobsahuje osobní údaje',
+      note: 'The quote is the terms of use of this feed’s entry in Prague’s open-data catalogue, “Polohy vozů PID - API” (Operátor ICT / Golemio, read 2026-11-25): the data contains no copyright works, is not a copyright-protected database, carries no sui generis database right and contains no personal data, so it is free to reuse and the credit is a courtesy. The CC BY on the PID open-data page covers only data downloaded from pid.cz; that page says linked sources follow their own licence. Keyless since the catalogue moved it off the X-Access-Token endpoint. Speeds are m/s, checked against movement on 2026-11-07. Route ids are `L` plus a number whose range gives the mode and the line (metro `L991` is A, train `L1004` is S4, ferry `L1801` is P1); `pidRoute` holds the table, read from PID’s GTFS routes.txt on 2026-11-09.',
     },
     defaultMode: 'bus',
     routeLabel: pidRouteLabel,
@@ -1524,13 +1525,14 @@ export const TRANSIT_FEED_REGISTRY = Object.freeze([
     center: { lat: 53.53, lon: -113.52 },
     loadRadiusKm: 25,
     url: 'https://gtfs.edmonton.ca/TMGTFSRealTimeWebService/Vehicle/VehiclePositions.pb',
-    license: 'City of Edmonton Open Data Agreement',
+    license: 'Open Government Licence – City of Edmonton',
     licenseUrl:
-      'https://www.edmonton.ca/transportation/Web-version2.1-OpenDataAgreement.pdf',
+      'https://data.edmonton.ca/stories/s/City-of-Edmonton-Open-Data-Terms-of-Use/msh8-if28/',
     attribution:
-      'Contains information licensed under the Open Data Agreement – City of Edmonton',
+      'City of Edmonton — Contains information licensed under the Open Government Licence – City of Edmonton',
     terms: {
-      note: 'The agreement is the same municipal template as Mississauga and Burlington: a licence to use, modify and distribute for any lawful purpose, in any medium. It was read from search excerpts; the PDF itself would not extract here. Route ids are zero-padded. Speeds are m/s.',
+      quote: 'See Terms of Use',
+      note: 'The quote is the licence field of the City catalogue entry “Real Time Vehicle Position GTFS (PB File)” (https://data.edmonton.ca/d/uyt2-vrrn, read 2026-11-25). The Terms of Use it points to, linked above, are the “Open Government Licence - Edmonton”, Version 1.0, July 2022. Route ids are zero-padded. Speeds are m/s.',
     },
     defaultMode: 'bus',
     routeLabel: unpaddedRouteLabel,

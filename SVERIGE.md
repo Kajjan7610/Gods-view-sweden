@@ -352,9 +352,14 @@ licens ska helst ersättas med en dokumenterad källa eller godkännas:
   som gratis. Hör till gruppen utan publicerad licens.
 - **Kollektivtrafik och tåg (originalets lager):** ett flöde vars operatör
   inte anger någon licens hämtas inte; i dag gäller det 16 trafikflöden och
-  5 tågflöden (se loggen 2026-11-22 och 2026-11-24). Under granskning, och
-  påslagna tills vidare: SEPTA:s tåg och spårvagnar, TTC i Toronto, PID i
-  Prag och Edmonton Transit Service.
+  7 tågflöden (se loggen 2026-11-22, 2026-11-24 och 2026-11-25). Inget
+  flöde är längre under granskning. SEPTA:s tåg och spårvagnar hämtas
+  inte: SEPTA:s avtal gäller tidtabellerna och datamängderna i SEPTA:s
+  öppna dataportal, och realtidsflödena står som "License Not Specified"
+  hos OpenDataPhilly. TTC i Toronto (Open Government Licence – Toronto),
+  PID i Prag (Prags öppna data, utan upphovsrätt och databasskydd) och
+  Edmonton Transit Service (Open Government Licence – City of Edmonton)
+  hämtas med sina licenser.
 - **Trafiklab (bussar, spårvagnar, linjer och sträckningar):** GTFS
   Regional, både positionerna i realtid och tidtabellerna, är CC0; källan
   anges ändå som "Trafiklab / Samtrafiken GTFS Regional (CC0 1.0)". Nycklarna
@@ -486,6 +491,36 @@ git merge origin/main
 (`origin` = bilawalsidhu/gods-eye-view, `sweden` = det här repot.)
 
 ## Logg över justeringar
+
+### 2026-11-25 (trafik- och tågflödena under granskning avgjorda)
+- Flödena från de fyra operatörerna som var under granskning sedan
+  2026-11-22 (fem i registret, eftersom SEPTA har två) är avgjorda.
+  Operatörernas och katalogernas egna sidor lästes 2026-11-25.
+- SEPTA:s tåg och spårvagnar i Philadelphia hämtas inte längre. SEPTA:s
+  avtal gäller de statiska tidtabellerna (Trip Planning Data) och
+  datamängderna i SEPTA:s öppna dataportal, men realtidsflödena står som
+  "License Not Specified" hos OpenDataPhilly, och utvecklarsidan nämner
+  dem inte längre. Posterna är märkta `licensed: false` och finns kvar i
+  registret och i DATA_SOURCES.md; servern svarar 404 för dem och
+  kontaktar dem aldrig.
+- TTC i Toronto behålls. Stadens katalogpost för flödet anger nu licensen,
+  Open Government Licence – Toronto, och TTC som ägare. Källan anges som
+  "Toronto Transit Commission — Contains information licensed under the
+  Open Government Licence – Toronto".
+- PID i Prag behålls med ny etikett. Enligt Prags katalog över öppna data
+  (Operátor ICT / Golemio) innehåller datan inga upphovsrättsligt skyddade
+  verk eller personuppgifter och är ingen skyddad databas, så den får
+  användas fritt; källan anges ändå, som "Pražská integrovaná doprava
+  (PID) / Golemio (Operátor ICT)". CC BY på PID:s egen sida gäller bara
+  data som laddas ner där.
+- Edmonton Transit Service behålls med ny etikett. Stadens katalogpost
+  hänvisar till stadens användarvillkor, Open Government Licence –
+  Edmonton (version 1.0, juli 2022), och källan anges som "City of
+  Edmonton — Contains information licensed under the Open Government
+  Licence – City of Edmonton".
+- Den svenska versionen hämtar nu 54 av 70 trafikflöden (de svenska när
+  nycklarna är satta) och 24 av 31 tågflöden, varav 21 fungerar direkt.
+  README och DATA_SOURCES.md säger samma sak.
 
 ### 2026-11-25 (källor med oklara eller särskilda villkor, genomgång)
 - Avsnittet lästes igenom mot det som har hänt sedan 2026-11-10. Nytt:
@@ -1064,7 +1099,9 @@ git merge origin/main
   nycklarna är satta) och 26 av 31 tågflöden, varav 23 fungerar direkt.
   README och DATA_SOURCES.md säger samma sak.
 - Under granskning, och påslagna tills vidare: SEPTA:s tåg och
-  spårvagnar, TTC i Toronto, PID i Prag och Edmonton Transit Service.
+  spårvagnar, TTC i Toronto, PID i Prag och Edmonton Transit Service
+  (avgjort 2026-11-25: SEPTA:s två hämtas inte, de andra tre behålls; se
+  loggen den dagen).
 ### 2026-11-22 (CelesTrak enligt deras användarregler)
 - CelesTraks användarregler (celestrak.org/usage-policy.php, senast
   ändrade 2026-11-16, lästa 2026-11-22) säger att program som hämtar på
