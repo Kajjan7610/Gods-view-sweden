@@ -1,7 +1,11 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { t } from '../../../i18n/index.js';
-import { readGlobeSaver, saveGlobeSaver } from '../../../globeSaver.js';
+import {
+  markGlobeSaverReload,
+  readGlobeSaver,
+  saveGlobeSaver,
+} from '../../../globeSaver.js';
 import UiButton from '../../kit/UiButton.vue';
 import UiIcon from '../../kit/UiIcon.vue';
 import { vRootClass } from '../../rail/rootClass.js';
@@ -26,6 +30,8 @@ function toggle() {
   // A forcing ?globe= in the address would undo the choice: drop it.
   const url = new URL(globalThis.location.href);
   url.searchParams.delete('globe');
+  // The reloaded page opens at the same view, without the opening.
+  markGlobeSaverReload();
   globalThis.location.replace(url.toString());
 }
 </script>

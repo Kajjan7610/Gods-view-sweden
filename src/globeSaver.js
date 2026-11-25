@@ -28,3 +28,35 @@ export function saveGlobeSaver(storage, on) {
     /* no-op */
   }
 }
+
+/** The session mark of a reload the 3D button asked for. */
+export const GLOBE_SAVER_RELOAD_KEY = 'gev:globe-saver:reload';
+
+/**
+ * Mark the reload the 3D button is about to make, so the page it reloads
+ * into does not play the opening again (src/app/openingIntro.js): the
+ * viewer only switched the globe, at the view they were looking at.
+ */
+export function markGlobeSaverReload(session = undefined) {
+  try {
+    // Reading sessionStorage itself can throw where site data is blocked.
+    (session === undefined ? globalThis.sessionStorage : session)?.setItem(
+      GLOBE_SAVER_RELOAD_KEY,
+      '1',
+    );
+  } catch {
+    /* no-op: the opening plays, as on any reload */
+  }
+}
+
+/** Whether this load is the 3D button's reload; the mark is used once. */
+export function takeGlobeSaverReload(session = undefined) {
+  try {
+    const store = session === undefined ? globalThis.sessionStorage : session;
+    const marked = store?.getItem(GLOBE_SAVER_RELOAD_KEY) === '1';
+    if (marked) store.removeItem(GLOBE_SAVER_RELOAD_KEY);
+    return marked;
+  } catch {
+    return false;
+  }
+}

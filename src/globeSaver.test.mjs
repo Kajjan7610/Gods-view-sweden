@@ -2,9 +2,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  GLOBE_SAVER_RELOAD_KEY,
   GLOBE_SAVER_STORAGE_KEY,
+  markGlobeSaverReload,
   readGlobeSaver,
   saveGlobeSaver,
+  takeGlobeSaverReload,
 } from './globeSaver.js';
 
 const memory = () => {
@@ -48,4 +51,29 @@ test('refusing storage is no error', () => {
   assert.equal(readGlobeSaver(refusing), false);
   assert.doesNotThrow(() => saveGlobeSaver(refusing, true));
   assert.equal(readGlobeSaver(null, ''), false);
+});
+
+test("the 3D button's reload is told once, so it plays no opening", () => {
+  const session = memory();
+  assert.equal(takeGlobeSaverReload(session), false);
+  markGlobeSaverReload(session);
+  assert.equal(session.getItem(GLOBE_SAVER_RELOAD_KEY), '1');
+  assert.equal(takeGlobeSaverReload(session), true);
+  // The next reload, or a reload by hand, plays it as any start does.
+  assert.equal(takeGlobeSaverReload(session), false);
+  assert.equal(session.getItem(GLOBE_SAVER_RELOAD_KEY), null);
+});
+
+test("a session store that refuses, or none, never stops the start", () => {
+  const refusing = {
+    getItem() {
+      throw new Error('denied');
+    },
+    setItem() {
+      throw new Error('denied');
+    },
+  };
+  assert.doesNotThrow(() => markGlobeSaverReload(refusing));
+  assert.equal(takeGlobeSaverReload(refusing), false);
+  assert.equal(takeGlobeSaverReload(null), false);
 });
