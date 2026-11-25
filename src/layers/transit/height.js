@@ -180,7 +180,10 @@ export function createHeight({ state, services, parts }) {
     state._floorCursor += FLOOR_WARM_PER_POLL;
     const dem = [],
       mesh = [];
-    for (const cell of ordered) {
+    // Swedish fork: how many of the cold cells are the selected vehicle's.
+    let selectedDem = 0;
+    for (let i = 0; i < ordered.length; i++) {
+      const cell = ordered[i];
       let admitted = false;
       if (
         !cell.warm &&
@@ -189,6 +192,7 @@ export function createHeight({ state, services, parts }) {
         demUsed.add(cell.cell);
         dem.push(cell);
         admitted = true;
+        if (i < selectedCells.length) selectedDem += 1;
       }
       if (cell.warm && meshUsed + mesh.length < 40) {
         mesh.push(cell);
@@ -197,8 +201,13 @@ export function createHeight({ state, services, parts }) {
       if (admitted && cell.entry) cellCursors.set(cell.entry, cell.next);
     }
     meshUsed += mesh.length;
-    for (let i = 0; i < dem.length; i += 8)
-      warmGroundFloor(dem.slice(i, i + 8));
+    // Swedish fork: the cold cells in one warm call, not slices of 8, as the
+    // terrain service fills each paced request with up to 64 of them
+    // (services/terrainHeights.js). The selected vehicle's own (at most 12;
+    // a ridden vehicle is the selected one) go first, in a call of their own,
+    // so its floor does not wait behind a full request.
+    if (selectedDem) warmGroundFloor(dem.slice(0, selectedDem));
+    if (dem.length > selectedDem) warmGroundFloor(dem.slice(selectedDem));
     parts.rendering.sampleMeshFloors(mesh);
     // Cached completions can be adopted now; asynchronous completions are
     // adopted by the next bounded reread.

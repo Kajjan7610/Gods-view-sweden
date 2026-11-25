@@ -628,7 +628,10 @@ test('a floor that lands after the render deadline lifts the dots off the ellips
       if (terrainCalls === 1) {
         await new Promise((resolve) => setTimeout(resolve, FLOOR_RESOLVE_DEADLINE_MS + 200));
       }
-      return { ok: true, status: 200, json: async () => ({ results: [{ ellipsoid: 2400 }] }) };
+      // Swedish fork: a height for every point asked; the terrain queue fills a
+      // request with other waiting points too (services/terrainHeights.js).
+      const points = new URL(String(url), 'http://localhost').searchParams.get('points').split(';');
+      return { ok: true, status: 200, json: async () => ({ results: points.map(() => ({ ellipsoid: 2400 })) }) };
     }
     return {
       ok: true,
@@ -690,7 +693,10 @@ test('a floor that lands after the render deadline lifts the dots off the ellips
     assert.ok(Math.abs(heightOf(buried)) < 1, 'a cold floor anchors at the ellipsoid, as before');
 
     // The warm chain resolves out of band; wait for the floor to land.
-    for (let attempt = 0; attempt < 50 && cachedGroundFloor(lat, lon) == null; attempt += 1) {
+    // Swedish fork: the warm shares the slow request for the cell instead of
+    // asking again, and the terrain queue may start it up to a second after
+    // an earlier request (services/terrainHeights.js), so allow for both.
+    for (let attempt = 0; attempt < 300 && cachedGroundFloor(lat, lon) == null; attempt += 1) {
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
     assert.equal(cachedGroundFloor(lat, lon), 2400, 'the late floor landed in the shared cache');

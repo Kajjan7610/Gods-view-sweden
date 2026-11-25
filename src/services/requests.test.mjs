@@ -127,6 +127,30 @@ test('a failed terrain request carries the real heights the server had', async (
   });
 });
 
+// Swedish fork: the terrain queue tells a rate limit from a failing server.
+test('a failed request says its status and how long the server asked to wait', async () => {
+  const answers = [
+    () => new Response('{"error":"Rate limit exceeded"}', { status: 429, headers: { 'Retry-After': '10' } }),
+    () => Response.json({ error: 'x', partial: [null] }, { status: 502 }),
+    () => new Response('down', { status: 503, headers: { 'Retry-After': new Date(Date.now() + 5000).toUTCString() } }),
+  ];
+  const services = createApplicationRequestServices({ fetchImpl: async () => answers.shift()() });
+  const point = [{ lat: 59.3, lon: 18.1 }];
+  await assert.rejects(services.terrain.getHeights(point), { status: 429, retryAfterMs: 10_000 });
+  await assert.rejects(services.terrain.getHeights(point), (error) => {
+    assert.equal(error.status, 502);
+    assert.equal(error.retryAfterMs, null, 'no Retry-After given');
+    assert.deepEqual(error.partial, [null]);
+    return true;
+  });
+  await assert.rejects(services.weather.getConditions(59.3, 18.1), (error) => {
+    assert.match(error.message, /Weather unavailable \(503\)/);
+    assert.equal(error.status, 503);
+    assert.ok(error.retryAfterMs > 0 && error.retryAfterMs <= 5000, String(error.retryAfterMs));
+    return true;
+  });
+});
+
 test('the summary capability probe is asked once and unknown when unanswered', async () => {
   for (const [answer, expected] of [
     [() => Response.json({ configured: false }), false],

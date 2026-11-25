@@ -1335,7 +1335,12 @@ test('slow ALPR floors share real terrain requests across preparation, render an
         });
       }),
   });
-  const terrain = createTerrainHeights({ source: sourceServices.terrain });
+  // Swedish fork: unpaced, so the next batch goes as soon as one lands; the
+  // terrain service's pace has its own tests (terrainHeightsPacing.test.mjs).
+  const terrain = createTerrainHeights({
+    source: sourceServices.terrain,
+    gapMs: 0,
+  });
   const ground = createGroundFloor({ terrain });
   ground.FLOOR_RESOLVE_DEADLINE_MS = 1;
   const records = Array.from({ length: 130 }, (_, i) => ({

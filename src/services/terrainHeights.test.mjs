@@ -21,6 +21,12 @@ function stubSource() {
   };
 }
 
+/**
+ * Swedish fork: these tests are about the cache, so the service sends its
+ * requests unpaced; the pace has its own tests (terrainHeightsPacing.test.mjs).
+ */
+const unpaced = (options) => createTerrainHeights({ gapMs: 0, ...options });
+
 /** Distinct 5-decimal coordinates along the equator: 0.001, 0.002, … */
 const lonAt = (i) => i / 1000;
 const heightAt = (lon) => 1000 + Math.round(lon * 1000);
@@ -31,7 +37,7 @@ test('the default cache bound is exported so callers can reason about it', () =>
 });
 
 test('the in-memory cache stops growing once it reaches its entry bound', async () => {
-  const terrain = createTerrainHeights({
+  const terrain = unpaced({
     source: stubSource(),
     maxCacheEntries: 4,
   });
@@ -57,7 +63,7 @@ test('the in-memory cache stops growing once it reaches its entry bound', async 
 });
 
 test('a coordinate a consumer keeps reading outlives an equally old one it ignores', async () => {
-  const terrain = createTerrainHeights({
+  const terrain = unpaced({
     source: stubSource(),
     maxCacheEntries: 4,
   });
@@ -90,7 +96,7 @@ test('a coordinate a consumer keeps reading outlives an equally old one it ignor
 });
 
 test('a batch larger than the cache bound still reports every point it resolved', async () => {
-  const terrain = createTerrainHeights({
+  const terrain = unpaced({
     source: stubSource(),
     maxCacheEntries: 4,
   });
@@ -116,7 +122,7 @@ test('a batch larger than the cache bound still reports every point it resolved'
 
 test('warm batch consumers retain their terrain cells ahead of unused cells', async () => {
   let calls = 0;
-  const terrain = createTerrainHeights({
+  const terrain = unpaced({
     maxCacheEntries: 2,
     source: {
       async getHeights(points) {
@@ -137,7 +143,7 @@ test('warm batch consumers retain their terrain cells ahead of unused cells', as
 });
 
 test('a batch still reports its warm points after its own fetches evict them', async () => {
-  const terrain = createTerrainHeights({
+  const terrain = unpaced({
     source: stubSource(),
     maxCacheEntries: 2,
   });
@@ -157,7 +163,7 @@ test('a batch still reports its warm points after its own fetches evict them', a
 
 test('an out-of-range cache bound falls back to the default instead of disabling the cache', async () => {
   for (const maxCacheEntries of [0, -1, Number.NaN, undefined]) {
-    const terrain = createTerrainHeights({
+    const terrain = unpaced({
       source: stubSource(),
       maxCacheEntries,
     });

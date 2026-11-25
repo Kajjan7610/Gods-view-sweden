@@ -63,8 +63,17 @@ export function createApplicationRequestServices({
   }
   function requireOk(response, label) {
     if (!response.ok)
-      throw new Error(`${label} unavailable (${response.status})`);
+      throw requestError(`${label} unavailable (${response.status})`, response);
     return response.data;
+  }
+  // Swedish fork: a failed answer says its status and how long the server
+  // asked to be left alone, so the terrain queue can tell a rate limit (429)
+  // from a failing server (services/terrainHeights.js).
+  function requestError(message, response) {
+    const error = new Error(message);
+    error.status = response.status;
+    error.retryAfterMs = retryAfterMs(response.headers?.get?.('Retry-After'));
+    return error;
   }
   // Remember valid capability decisions for the page, so an
   // unconfigured server is never asked (and never answers with an error).
@@ -163,8 +172,9 @@ export function createApplicationRequestServices({
           Array.isArray(partial) &&
           partial.length === points.length
         ) {
-          const error = new Error(
+          const error = requestError(
             `Terrain heights unavailable (${response.status})`,
+            response,
           );
           error.partial = partial;
           throw error;

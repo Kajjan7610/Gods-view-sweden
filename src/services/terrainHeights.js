@@ -3,16 +3,72 @@ import { ensureGeoidReady, geoidHeight } from '../data/geoid.js';
 /** Default live-entry ceiling for the in-memory cache (see CACHE_MAX_ENTRIES). */
 export const DEFAULT_MAX_CACHE_ENTRIES = 20_000;
 
+/*
+ * Swedish fork: one paced request queue for the page's terrain heights.
+ *
+ * `/api/terrain/heights` allows a client 90 requests a minute and answers 429
+ * with Retry-After 10 past that, before its cache is read. Every layer standing
+ * on the ground asks it on its own: the transit floors, rail, the cockpit, the
+ * cameras, the Swedish layers' ground heights, one-shot floor reads. In 3D the
+ * globe is hidden, so every cell needs the server, and together they reached
+ * 147 requests a minute with many 502 and 429 answers.
+ *
+ * So this service sends one request at a time, starts no two less than
+ * REQUEST_GAP_MS apart (60 a minute at most), and fills each with up to 64 of
+ * the points its callers wait for, one from each waiting call in turn, so a
+ * call for a few points is not held behind another call's hundreds. A point
+ * already asked for is shared: a second caller waits for the same answer.
+ *
+ * A 429 holds the next request for its Retry-After (RATE_LIMIT_WAIT_MS without
+ * one). A 5xx that brings no height holds it for SERVER_BACKOFF_FIRST_MS,
+ * doubling up to SERVER_BACKOFF_MAX_MS until heights come through; a 502 with
+ * some real heights (the route's answer whenever one point has none) holds
+ * nothing back. Meanwhile nothing is sent and callers wait. A caller's wait
+ * runs out WAIT_TIMEOUT_MS, the request timeout it always had, after it was
+ * queued or after the last request that carried one of its points, so with a
+ * healthy server every point is answered, however many a caller asks for. Run
+ * out, the points still unanswered get the geoid stand-in a failed request
+ * gives, and those no other waiting caller holds are not sent: a caller asks
+ * again for what it still needs, and a view after a long outage is not queued
+ * behind the outage's. While a caller waits, cancelling drops its points
+ * nobody else waits for and cancels a request that nobody waits for any more,
+ * as its signal cancelled its own request before.
+ *
+ * The application's surface services own one terrain service per page, so
+ * this is the page's pace; a direct data-module caller's default instance
+ * (src/data/terrainHeights.js) keeps a queue of its own. Only the timing
+ * changed: what each answer, failure and stand-in puts in the cache is as
+ * before.
+ */
+/** Shortest time between the starts of two requests (ms). */
+export const REQUEST_GAP_MS = 1000;
+/** Wait after a 429 without a Retry-After, as long as the route asks for (ms). */
+export const RATE_LIMIT_WAIT_MS = 10_000;
+/** First wait after a 5xx answer with no height; each further one doubles it (ms). */
+export const SERVER_BACKOFF_FIRST_MS = 2000;
+/** Longest wait after a 5xx, and the most a Retry-After may hold the queue (ms). */
+export const SERVER_BACKOFF_MAX_MS = 60_000;
+/**
+ * How long a caller waits, after it was queued or after the last request that
+ * carried one of its points, before taking the geoid stand-in (ms).
+ */
+export const WAIT_TIMEOUT_MS = 30_000;
+
 /**
  * Construct an instance-owned terrainHeights service with explicit dependencies.
  * `maxCacheEntries` overrides the cache bound; it exists so the bound is
  * testable without minting twenty thousand coordinates, mirroring the injectable
- * `maxBytes` on the GBFS reader.
+ * `maxBytes` on the GBFS reader. Swedish fork: `gapMs`, `clock`, `setTimer` and
+ * `clearTimer` set the request pace and its clock, for tests.
  */
 export function createTerrainHeights({
   source,
   signal,
   maxCacheEntries = DEFAULT_MAX_CACHE_ENTRIES,
+  gapMs = REQUEST_GAP_MS,
+  clock = () => performance.now(),
+  setTimer = (fn, ms) => setTimeout(fn, ms),
+  clearTimer = (id) => clearTimeout(id),
 }) {
   if (typeof source?.getHeights !== 'function')
     throw new TypeError('Terrain heights require a source');
@@ -38,7 +94,8 @@ export function createTerrainHeights({
   //      request handler runs. So every network request this module issues is
   //      chunked at CHUNK_SIZE (64 points), well under that ceiling, and
   //      chunks are sent SEQUENTIALLY (not in parallel) to keep this client
-  //      well-behaved against a single dev-server proxy.
+  //      well-behaved against a single dev-server proxy. (Swedish fork: across
+  //      every caller of the service, paced; see REQUEST_GAP_MS.)
   //   2. The proxy's disk cache is keyed by the raw `points` query string, with
   //      no eviction — so a client that varies coordinate precision or point
   //      order defeats the warm cache and grows the cache file unbounded. This
@@ -53,6 +110,8 @@ export function createTerrainHeights({
   // Match the server's upstream batch so sequential upstream work also fits
   // within this client's 30-second request deadline when Re:Earth slows.
   const CHUNK_SIZE = 64;
+  /** That request deadline (ms). */
+  const REQUEST_TIMEOUT_MS = 30_000;
 
   /** Avoid repeatedly hitting a known-failing proxy from warm fallback reads. */
   const GEOID_FALLBACK_COOLDOWN_MS = 60_000;
@@ -172,14 +231,11 @@ export function createTerrainHeights({
    * @param {Array<{key: string, lat: number, lon: number}>} chunk
    * @returns {Promise<Map<string, number>>} key -> ellipsoid height (m)
    */
-  async function fetchChunk(chunk, requestSignal = signal) {
+  async function fetchChunk(chunk, requestSignal) {
     // lon,lat order (matches the proxy's documented `points=lon,lat;…` contract
-    // and Task 2's implementation).
-    const results = await source.getHeights(chunk, {
-      signal: requestSignal
-        ? AbortSignal.any([requestSignal, AbortSignal.timeout(30000)])
-        : AbortSignal.timeout(30000),
-    });
+    // and Task 2's implementation). Swedish fork: `requestSignal` carries the
+    // 30-second request timeout, on the queue's own timers (see `pump`).
+    const results = await source.getHeights(chunk, { signal: requestSignal });
     const body = { results };
     if (!Array.isArray(body?.results))
       throw new Error('malformed terrain heights response (no results array)');
@@ -218,13 +274,303 @@ export function createTerrainHeights({
     return Number.isFinite(sourceOrthometricM) ? sourceOrthometricM + n : n;
   }
 
+  // Swedish fork: the request queue (see REQUEST_GAP_MS at the top).
+  /**
+   * Points asked for and not answered yet, by cache key. `holds` counts the
+   * callers still waiting for the point, `sent`/`sentAt` mark it in a request,
+   * and `answer` settles `promise` with the real height, null for none (a
+   * stand-in is due), or undefined when a successful answer left it out.
+   * @type {Map<string, {key: string, lat: number, lon: number, holds: number,
+   *   sent: boolean, sentAt?: number,
+   *   answer: (height: number|null|undefined) => void,
+   *   promise: Promise<number|null|undefined>}>}
+   */
+  const waiting = new Map();
+  /**
+   * The calls with points not sent yet, in the order of their next turn: the
+   * points of each in its own order, and where its next turn starts. A
+   * request takes one point from each call in turn, so a call asking for a
+   * few points rides the next request however many another call has queued.
+   * @type {Array<{points: Array<object>, next: number}>}
+   */
+  let calls = [];
+  /** How many waiting points are not in a request yet. */
+  let unsentCount = 0;
+  /** The request out: its points, abort controller and timeout, or null. */
+  let flight = null;
+  let lastStartAt = -Infinity;
+  let blockedUntil = -Infinity;
+  let serverBackoffMs = 0;
+  let pumpTimer = null;
+
+  /** Whether a point still waits to be put in a request. */
+  const unsent = (point) => !point.sent && waiting.get(point.key) === point;
+
+  /**
+   * Whether the route takes the coordinate as sent (5 decimals): finite, and
+   * within ±90° and ±180°. It refuses a whole request for one that is not,
+   * so such a point is never queued and reads unresolved.
+   */
+  const routeTakes = (item) =>
+    Math.abs(Number(item.lat?.toFixed?.(5))) <= 90 &&
+    Math.abs(Number(item.lon?.toFixed?.(5))) <= 180;
+
+  /** The waiting point for a cache key, made when nobody asked for it yet. */
+  function want(item) {
+    let point = waiting.get(item.key);
+    if (!point) {
+      point = { key: item.key, lat: item.lat, lon: item.lon, holds: 0 };
+      point.sent = false;
+      point.promise = new Promise((resolve) => {
+        point.answer = resolve;
+      });
+      waiting.set(item.key, point);
+      unsentCount += 1;
+    }
+    point.holds += 1;
+    return point;
+  }
+
+  /** Settle a point for everyone waiting for it, unless it was dropped. */
+  function settle(point, height) {
+    if (waiting.get(point.key) !== point) return;
+    waiting.delete(point.key);
+    point.answer(height);
+  }
+
+  /** The next point a call has to send, or null when it has none left. */
+  function nextOf(call) {
+    while (call.next < call.points.length && !unsent(call.points[call.next]))
+      call.next += 1;
+    return call.next < call.points.length ? call.points[call.next] : null;
+  }
+
+  /**
+   * Up to CHUNK_SIZE points for a request, one from each call in turn; the
+   * next request goes on with the call after the last one this one served.
+   */
+  function take(now) {
+    const points = [];
+    let served = 0;
+    let found = true;
+    while (found && !served) {
+      found = false;
+      for (let i = 0; i < calls.length; i += 1) {
+        const call = calls[i];
+        const point = nextOf(call);
+        if (!point) continue;
+        call.next += 1;
+        point.sent = true;
+        point.sentAt = now;
+        unsentCount -= 1;
+        points.push(point);
+        found = true;
+        if (points.length === CHUNK_SIZE) {
+          served = i + 1;
+          break;
+        }
+      }
+    }
+    if (served) calls = [...calls.slice(served), ...calls.slice(0, served)];
+    calls = calls.filter((call) => nextOf(call) !== null);
+    return points;
+  }
+
+  /** Send the next request now, or when the pace and any back-off allow. */
+  function pump() {
+    if (pumpTimer !== null || flight || unsentCount <= 0 || signal?.aborted)
+      return;
+    const wait = Math.max(lastStartAt + gapMs, blockedUntil) - clock();
+    if (wait > 0) {
+      pumpTimer = setTimer(() => {
+        pumpTimer = null;
+        pump();
+      }, wait);
+      // A queue waiting for its turn keeps no process alive (a Node test run
+      // ends when its tests do).
+      pumpTimer?.unref?.();
+      return;
+    }
+    const now = clock();
+    const points = take(now);
+    if (!points.length) return;
+    lastStartAt = now;
+    const controller = new AbortController();
+    const current = { points, controller, timer: null };
+    flight = current;
+    // The request timeout it always had; like AbortSignal.timeout, it keeps
+    // no process alive.
+    current.timer = setTimer(() => {
+      current.timer = null;
+      controller.abort(
+        new DOMException('Terrain heights request timed out', 'TimeoutError'),
+      );
+    }, REQUEST_TIMEOUT_MS);
+    current.timer?.unref?.();
+    fetchChunk(
+      points.map(({ key, lat, lon }) => ({ key, lat, lon })),
+      signal ? AbortSignal.any([signal, controller.signal]) : controller.signal,
+    ).then(
+      (resolved) => land(current, resolved, null),
+      (error) => land(current, null, error),
+    );
+  }
+
+  /**
+   * A request came back: cache its real heights (a failure's `partial` too),
+   * answer its points, hold the queue after a 429 or a failing server, and go
+   * on. The route answers 502 whenever one point has no height (a transient
+   * gap, or while it leaves Re:Earth alone after an upstream 429) and still
+   * sends the heights it has: such an answer is the server working, not
+   * failing, so it holds nothing back beyond the pace.
+   */
+  function land(current, resolved, error) {
+    if (current.timer !== null) clearTimer(current.timer);
+    current.timer = null;
+    if (flight === current) flight = null;
+    if (signal?.aborted) return;
+    const partial =
+      Array.isArray(error?.partial) &&
+      error.partial.length === current.points.length
+        ? error.partial
+        : [];
+    const answered =
+      resolved ||
+      (error?.status !== 429 &&
+        partial.some((item) => Number.isFinite(item?.ellipsoid)));
+    if (answered) serverBackoffMs = 0;
+    else backOff(error);
+    current.points.forEach((point, index) => {
+      const ellipsoid = resolved
+        ? resolved.get(point.key)
+        : partial[index]?.ellipsoid;
+      // Round 6 (below): only a FINITE value is cached as 'reearth'.
+      if (Number.isFinite(ellipsoid)) {
+        cacheStore(point.key, { ellipsoid, source: 'reearth' });
+        settle(point, ellipsoid);
+      } else settle(point, resolved ? undefined : null);
+    });
+    pump();
+  }
+
+  /** Hold the queue after a rate limit or a failing server. */
+  function backOff(error) {
+    const status = error?.status;
+    const asked = Number.isFinite(error?.retryAfterMs)
+      ? error.retryAfterMs
+      : null;
+    let wait = 0;
+    if (status === 429) wait = asked ?? RATE_LIMIT_WAIT_MS;
+    else if (status >= 500) {
+      serverBackoffMs = Math.min(
+        serverBackoffMs * 2 || SERVER_BACKOFF_FIRST_MS,
+        SERVER_BACKOFF_MAX_MS,
+      );
+      wait = Math.max(serverBackoffMs, asked ?? 0);
+    }
+    if (wait > 0)
+      blockedUntil = Math.max(
+        blockedUntil,
+        clock() + Math.min(wait, SERVER_BACKOFF_MAX_MS),
+      );
+  }
+
+  /**
+   * A caller stopped waiting, cancelled or out of time: its points no other
+   * waiting caller holds are not sent (a caller asks again for what it still
+   * needs). A cancel also cancels the request out when none of its points is
+   * waited for any more.
+   */
+  function release(points, call, cancelled) {
+    calls = calls.filter((other) => other !== call);
+    for (const point of points) {
+      point.holds -= 1;
+      if (point.holds <= 0 && unsent(point)) {
+        waiting.delete(point.key);
+        unsentCount -= 1;
+      }
+    }
+    if (
+      cancelled &&
+      flight &&
+      flight.points.every((point) => point.holds <= 0)
+    ) {
+      for (const point of flight.points)
+        if (waiting.get(point.key) === point) waiting.delete(point.key);
+      flight.controller.abort();
+    }
+    if (unsentCount <= 0 && pumpTimer !== null) {
+      clearTimer(pumpTimer);
+      pumpTimer = null;
+    }
+  }
+
+  /**
+   * Wait for the points' answers. The wait runs out WAIT_TIMEOUT_MS after the
+   * call was queued or, later, after the last request that carried one of its
+   * points; while the queue moves, every waiting call has a point in each
+   * request, so a healthy server answers every point. Run out, a point still
+   * unanswered reads null (the stand-in is due) and those not sent yet are
+   * given up. Rejects when `requestSignal` aborts, giving up the call.
+   * @returns {Promise<Array<number|null|undefined>>} In `points` order.
+   */
+  function waitFor(points, call, requestSignal) {
+    return new Promise((resolve, reject) => {
+      const queuedAt = clock();
+      const heights = points.map(() => null);
+      let left = points.length;
+      let finished = false;
+      let timer = null;
+      const finish = (done) => {
+        if (finished) return;
+        finished = true;
+        if (timer !== null) clearTimer(timer);
+        timer = null;
+        requestSignal?.removeEventListener('abort', abort);
+        done();
+      };
+      const abort = () =>
+        finish(() => {
+          release(points, call, true);
+          reject(requestSignal.reason);
+        });
+      const watch = () => {
+        timer = null;
+        let moved = queuedAt;
+        for (const point of points)
+          if (point.sentAt > moved) moved = point.sentAt;
+        const idle = clock() - moved;
+        if (idle >= WAIT_TIMEOUT_MS) {
+          finish(() => {
+            release(points, call, false);
+            resolve(heights.slice());
+          });
+          return;
+        }
+        timer = setTimer(watch, WAIT_TIMEOUT_MS - idle);
+        // Like the request timeout it stands for, it keeps no process alive.
+        timer?.unref?.();
+      };
+      points.forEach((point, index) =>
+        point.promise.then((height) => {
+          heights[index] = height;
+          left -= 1;
+          if (left === 0) finish(() => resolve(heights));
+        }),
+      );
+      watch();
+      requestSignal?.addEventListener('abort', abort, { once: true });
+    });
+  }
+
   /**
    * Resolves ellipsoidal ground height for a batch of coordinates, in order.
    *
    * - Results already warm in the in-memory cache are returned without any
    *   network call.
    * - Remaining (deduplicated) coordinates are sent to `/api/terrain/heights`
-   *   in sequential chunks of <=64 points.
+   *   in sequential chunks of <=64 points. (Swedish fork: in the page's paced
+   *   queue, shared with every other caller; see REQUEST_GAP_MS.)
    * - If a chunk request fails (network error, non-ok HTTP, malformed body),
    *   every point in THAT chunk without a real height in the failure's
    *   `partial` falls back to geoid math
@@ -288,74 +634,72 @@ export function createTerrainHeights({
         resolvedThisCall.set(item.key, entry);
         continue;
       }
+      // Swedish fork: one coordinate the route refuses would fail the request
+      // it shares with others' points; it stays unresolved instead.
+      if (!routeTakes(item)) continue;
       if (seenKeys.has(item.key)) continue;
       seenKeys.add(item.key);
       uncached.push(item);
     }
 
-    // Resolve the network path in sequential <=CHUNK_SIZE chunks. Each chunk's
-    // failure is isolated to that chunk's points (geoid fallback), so a single
-    // bad chunk doesn't lose results for the rest of a large batch.
-    for (let i = 0; i < uncached.length; i += CHUNK_SIZE) {
-      const chunk = uncached.slice(i, i + CHUNK_SIZE);
-      try {
-        const resolved = await fetchChunk(chunk, requestSignal);
-        requestSignal?.throwIfAborted();
-        for (const item of chunk) {
-          const ellipsoid = resolved.get(item.key);
-          // Round 6: only a FINITE value may be cached as 'reearth'. A point
-          // the upstream response omitted used to cache {ellipsoid: undefined,
-          // source: 'reearth'} — permanently "warm" yet empty, so its floor
-          // read null forever and every later warm skipped it (ATL verify:
-          // one contact frozen at the geoid while its neighbors resolved).
-          // An omitted point now caches nothing and retries on the next warm.
-          if (Number.isFinite(ellipsoid)) {
-            const entry = { ellipsoid, source: 'reearth' };
-            resolvedThisCall.set(item.key, entry);
-            cacheStore(item.key, entry);
-          }
+    // Resolve the network path in <=CHUNK_SIZE requests. Each request's
+    // failure is isolated to that request's points (geoid fallback), so a
+    // single bad request doesn't lose results for the rest of a large batch.
+    // Swedish fork: through the page's paced queue, where a point another
+    // caller already asked for is waited for rather than asked again (see
+    // REQUEST_GAP_MS at the top). The queue caches what each answer brings.
+    const points = uncached.map(want);
+    const call = { points: points.filter((point) => !point.sent), next: 0 };
+    if (call.points.length) calls.push(call);
+    pump();
+    const heights = points.length
+      ? await waitFor(points, call, requestSignal)
+      : [];
+    requestSignal?.throwIfAborted();
+    const fallback = [];
+    uncached.forEach((item, index) => {
+      const ellipsoid = heights[index];
+      // Round 6: only a FINITE value may be cached as 'reearth'. A point
+      // the upstream response omitted used to cache {ellipsoid: undefined,
+      // source: 'reearth'} — permanently "warm" yet empty, so its floor
+      // read null forever and every later warm skipped it (ATL verify:
+      // one contact frozen at the geoid while its neighbors resolved).
+      // An omitted point (undefined) now caches nothing and retries on the
+      // next warm.
+      if (Number.isFinite(ellipsoid))
+        resolvedThisCall.set(item.key, { ellipsoid, source: 'reearth' });
+      else if (ellipsoid === null) fallback.push(item);
+    });
+    if (fallback.length) {
+      // Proxy down (or cold cache had nothing to serve-stale) — fall back to
+      // geoid math for the points of the failed request. A failure that still
+      // carries real heights (the proxy's `partial`, e.g. cached points
+      // during an upstream 429 pause) keeps them; only the rest use the
+      // geoid. `ensureGeoidReady()` is awaited lazily, only on the fallback
+      // path, so the common (proxy healthy) case never pays for the geoid
+      // grid's dynamic import. Swedish fork: also for the points still
+      // unanswered when the wait ran out (see `waitFor`).
+      await ensureGeoidReady();
+      requestSignal?.throwIfAborted();
+      for (const item of fallback) {
+        // Swedish fork: a real height that landed meanwhile is kept.
+        const landed = cache.get(item.key);
+        if (landed?.source === 'reearth') {
+          resolvedThisCall.set(item.key, landed);
+          continue;
         }
-      } catch (error) {
-        requestSignal?.throwIfAborted();
-        // Proxy down (or cold cache had nothing to serve-stale) — fall back to
-        // geoid math for the points in this chunk. A failure that still
-        // carries real heights (the proxy's `partial`, e.g. cached points
-        // during an upstream 429 pause) keeps them; only the rest use the
-        // geoid. `ensureGeoidReady()` is awaited lazily, only on the fallback
-        // path, so the common (proxy healthy) case never pays for the geoid
-        // grid's dynamic import.
-        const partial =
-          Array.isArray(error?.partial) && error.partial.length === chunk.length
-            ? error.partial
-            : [];
-        const fallback = [];
-        chunk.forEach((item, index) => {
-          const ellipsoid = partial[index]?.ellipsoid;
-          if (!Number.isFinite(ellipsoid)) {
-            fallback.push(item);
-            return;
-          }
-          const entry = { ellipsoid, source: 'reearth' };
-          resolvedThisCall.set(item.key, entry);
-          cacheStore(item.key, entry);
-        });
-        if (fallback.length === 0) continue;
-        await ensureGeoidReady();
-        requestSignal?.throwIfAborted();
-        for (const item of fallback) {
-          const ellipsoid = geoidFallback(
-            item.lat,
-            item.lon,
-            item.sourceOrthometricM,
-          );
-          const entry = {
-            ellipsoid,
-            source: 'geoid-fallback',
-            retryAt: Date.now() + GEOID_FALLBACK_COOLDOWN_MS,
-          };
-          resolvedThisCall.set(item.key, entry);
-          cacheStore(item.key, entry);
-        }
+        const ellipsoid = geoidFallback(
+          item.lat,
+          item.lon,
+          item.sourceOrthometricM,
+        );
+        const entry = {
+          ellipsoid,
+          source: 'geoid-fallback',
+          retryAt: Date.now() + GEOID_FALLBACK_COOLDOWN_MS,
+        };
+        resolvedThisCall.set(item.key, entry);
+        cacheStore(item.key, entry);
       }
     }
 
@@ -370,7 +714,25 @@ export function createTerrainHeights({
     });
   }
 
-  signal?.addEventListener('abort', () => cache.clear(), { once: true });
+  signal?.addEventListener(
+    'abort',
+    () => {
+      cache.clear();
+      // Swedish fork: nothing is sent once the page's lifetime is over; the
+      // callers' waits reject on the same signal.
+      if (pumpTimer !== null) clearTimer(pumpTimer);
+      pumpTimer = null;
+      calls = [];
+      unsentCount = 0;
+      waiting.clear();
+      if (flight) {
+        if (flight.timer !== null) clearTimer(flight.timer);
+        flight.timer = null;
+        flight.controller.abort();
+      }
+    },
+    { once: true },
+  );
   return {
     cachedEllipsoidalGround,
     cachedRealEllipsoidalGround,

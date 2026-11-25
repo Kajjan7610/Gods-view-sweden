@@ -25,8 +25,9 @@ export function createGroundFloor({ terrain, signal }) {
   //
   // Zero-network on the render path: reads are synchronous cache lookups;
   // `warmGroundFloor` batches the misses through resolveEllipsoidalGround
-  // (single-flight, fire-and-forget) exactly like flights.js's grounded-surface
-  // warm — results land for later polls/appends.
+  // (fire-and-forget; Swedish fork: in the terrain service's paced queue, a
+  // cell being asked for not asked twice) exactly like flights.js's
+  // grounded-surface warm — results land for later polls/appends.
 
   /** @constant {number} Metres added above the resolved floor so a clamped
    *  billboard/waypoint sits ON the surface instead of z-fighting it. */
@@ -634,39 +635,28 @@ export function createGroundFloor({ terrain, signal }) {
     }
   }
 
-  /** @type {boolean} Single-flight guard for the warm batch. */
-  let _floorBatchInFlight = false;
-  /** @type {Map<string, {lat: number, lon: number}>} Cells requested while a
-   *  batch was in flight — flushed as the NEXT batch the moment it completes.
-   *  Round 6: the old guard silently DROPPED contending calls (flights every
-   *  30 s, military every 15 s, trail backfills ad hoc), so arriving at a new
+  /** @type {Set<string>} Swedish fork: cells a warm has asked for that have
+   *  not settled yet; a warm of the same cell meanwhile skips it. Round 6:
+   *  contending warms used to be silently DROPPED (flights every 30 s,
+   *  military every 15 s, trail backfills ad hoc), so arriving at a new
    *  airport could take minutes of lost polls before a given cell resolved —
-   *  the owner's "you can't just go to a place and start inspecting it". */
-  const _pendingFloorCells = new Map();
-
-  /** Kicks the resolver for a cell map, chaining any cells queued meanwhile. */
-  function _resolveFloorCells(cells) {
-    _floorBatchInFlight = true;
-    resolveEllipsoidalGround([...cells.values()])
-      .catch(() => {
-        /* best-effort — unclamped this tick, floor lands later */
-      })
-      .finally(() => {
-        _floorBatchInFlight = false;
-        if (!signal?.aborted && _pendingFloorCells.size) {
-          const next = new Map(_pendingFloorCells);
-          _pendingFloorCells.clear();
-          _resolveFloorCells(next);
-        }
-      });
-  }
+   *  the owner's "you can't just go to a place and start inspecting it".
+   *  Nothing is dropped now: a cell is skipped only while it is being asked. */
+  const _warmingFloorCells = new Set();
 
   /**
    * Fire-and-forget batch warm of the coarse floor cells for the given points.
    * Dedupes to unique cells, skips already-warm ones, and never blocks or
-   * throws into the caller. Contending calls QUEUE (never drop): their cells
-   * ride the next batch as soon as the in-flight one completes. Results are
-   * picked up by later `cachedGroundFloor` reads.
+   * throws into the caller. Results are picked up by later `cachedGroundFloor`
+   * reads.
+   *
+   * Swedish fork: each warm goes straight to the terrain service's paced
+   * queue (services/terrainHeights.js), which keeps the page to its request
+   * pace, shares a cell another caller already asked for and gives every
+   * waiting call a share of each request. The single warm batch this module
+   * used to keep in flight (the rest held until it finished) made a small
+   * warm, the ridden vehicle's or the selected one's, wait for a whole large
+   * one: up to tens of seconds on a cold server.
    * @param {Array<{lat: number, lon: number}>} points
    */
   function warmGroundFloor(points) {
@@ -677,23 +667,26 @@ export function createGroundFloor({ terrain, signal }) {
       if (!Number.isFinite(p?.lat) || !Number.isFinite(p?.lon)) continue;
       const c = coarseFloorCoord(p.lat, p.lon);
       const key = `${c.lat},${c.lon}`;
-      if (cells.has(key) || _pendingFloorCells.has(key)) continue;
+      if (cells.has(key) || _warmingFloorCells.has(key)) continue;
       if (cachedRealEllipsoidalGround(c.lat, c.lon) != null) continue; // already warm
       cells.set(key, c);
     }
     if (!cells.size) return;
-    if (_floorBatchInFlight) {
-      for (const [key, c] of cells) _pendingFloorCells.set(key, c);
-      return;
-    }
-    _resolveFloorCells(cells);
+    for (const key of cells.keys()) _warmingFloorCells.add(key);
+    resolveEllipsoidalGround([...cells.values()])
+      .catch(() => {
+        /* best-effort — unclamped this tick, floor lands later */
+      })
+      .finally(() => {
+        for (const key of cells.keys()) _warmingFloorCells.delete(key);
+      });
   }
 
   signal?.addEventListener(
     'abort',
     () => {
       _meshCells.clear();
-      _pendingFloorCells.clear();
+      _warmingFloorCells.clear();
     },
     { once: true },
   );
