@@ -414,7 +414,7 @@ test('a frame stands a driver’s eye on the drawn vehicle, facing its drawn cou
   assert.ok(Math.abs(frame.longitude - 18.0649) < 1e-9);
   assert.equal(frame.heightM, 24.5);
   assert.equal(frame.headingDeg, 72, 'the drawn course, not the report’s');
-  assert.equal(frame.speedMps, 8, 'the speed of the motion drawn');
+  assert.equal(frame.speedMps, 9, 'the reported speed, as the card gives it');
   assert.equal(frame.anchor, 'exact');
   assert.equal(frame.stale, false);
   assert.deepEqual(frame.eye, {
@@ -456,10 +456,10 @@ test('a frame stands a driver’s eye on the drawn vehicle, facing its drawn cou
     transitRide(transitLayer(vehicle({ position: { groundHeightM: null } }))),
   );
   assert.equal(cold.heightM, null, 'no floor known: the Cockpit waits');
-  const reportedOnly = enter(
-    transitRide(transitLayer(vehicle({ motion: { derivedSpeedMps: null } }))),
+  const workedOut = enter(
+    transitRide(transitLayer(vehicle({ motion: { reportedSpeedMps: null } }))),
   );
-  assert.equal(reportedOnly.speedMps, 9);
+  assert.equal(workedOut.speedMps, 8, 'none reported: the motion drawn');
   const noSpeed = enter(
     transitRide(
       transitLayer(
@@ -551,10 +551,10 @@ test('the HUD says what is shown and how it is known', () => {
     tone: 'estimate',
   });
   assert.deepEqual(view.speed, {
-    value: 29,
+    value: 32,
     unit: 'km/h',
-    tag: 'COMPUTED',
-    tone: 'estimate',
+    tag: 'REPORTED',
+    tone: 'normal',
   });
   assert.deepEqual(
     view.readouts.map(({ id, label, value }) => [id, label, value]),
@@ -587,11 +587,11 @@ test('the HUD says what is shown and how it is known', () => {
     'SHOWN BEHIND REAL TIME · STRAIGHT LINE BETWEEN POSITION REPORTS',
     'no seconds when they are unknown',
   );
-  assert.deepEqual(read({ motion: { derivedSpeedMps: null } }).speed, {
-    value: 32,
+  assert.deepEqual(read({ motion: { reportedSpeedMps: null } }).speed, {
+    value: 29,
     unit: 'km/h',
-    tag: 'REPORTED',
-    tone: 'normal',
+    tag: 'COMPUTED',
+    tone: 'estimate',
   });
   assert.deepEqual(
     read({ motion: { derivedSpeedMps: null, reportedSpeedMps: null } }).speed,
@@ -662,6 +662,59 @@ test('the HUD says what is shown and how it is known', () => {
     'SHOWN 60 S BEHIND REAL TIME',
     'a train on its line glides along it, not straight',
   );
+});
+
+test('a waiting vehicle reads its reported speed, never a worked-out 0', (t) => {
+  /** The frame's speed and the HUD's, which must agree. */
+  const speedsOf = (ride) => {
+    const frame = enter(ride);
+    return [frame.speedMps, cockpitSubjectHudView(hudOf(ride)).speed];
+  };
+  const bus = (motion) => transitRide(transitLayer(vehicle({ motion })));
+  const waiting = { derivedSpeedMps: 0, phase: 'held', word: 'WAITING' };
+  // Held for its next report, playback works out 0: the report's 6 km/h.
+  assert.deepEqual(speedsOf(bus({ ...waiting, reportedSpeedMps: 1.67 })), [
+    1.67,
+    { value: 6, unit: 'km/h', tag: 'REPORTED', tone: 'normal' },
+  ]);
+  // None reported: worked out only while playback plays two reports.
+  for (const phase of ['held', 'buffering', 'paused', null])
+    assert.deepEqual(
+      speedsOf(bus({ ...waiting, phase, reportedSpeedMps: null })),
+      [null, { value: null, unit: 'km/h', tag: '', tone: 'muted' }],
+      String(phase),
+    );
+  // Playing across a break between two reports: the layer's word is
+  // WAITING, and the 0 worked out there is no speed either.
+  assert.deepEqual(
+    speedsOf(bus({ ...waiting, phase: 'playing', reportedSpeedMps: null })),
+    [null, { value: null, unit: 'km/h', tag: '', tone: 'muted' }],
+  );
+  const playing = { reportedSpeedMps: null, phase: 'playing' };
+  assert.deepEqual(
+    speedsOf(bus({ ...playing, derivedSpeedMps: 7, word: 'EN ROUTE' })),
+    [7, { value: 25, unit: 'km/h', tag: 'COMPUTED', tone: 'estimate' }],
+  );
+  // Two reports at one place: a 0 that was worked out.
+  assert.deepEqual(
+    speedsOf(bus({ ...playing, derivedSpeedMps: 0, word: 'STOPPED' })),
+    [0, { value: 0, unit: 'km/h', tag: 'COMPUTED', tone: 'estimate' }],
+  );
+  // A train the same.
+  assert.deepEqual(
+    speedsOf(
+      railRide(
+        railLayer(train({ motion: { ...waiting, reportedSpeedMps: 30 } })),
+      ),
+    ),
+    [30, { value: 108, unit: 'km/h', tag: 'REPORTED', tone: 'normal' }],
+  );
+
+  // As the driver's view showed it in Swedish: "ANGIVEN 6", not
+  // "BERÄKNAD 0".
+  inLocale(t, 'sv');
+  const [, speed] = speedsOf(bus({ ...waiting, reportedSpeedMps: 1.67 }));
+  assert.deepEqual([speed.value, speed.tag], [6, 'ANGIVEN']);
 });
 
 test('a bus drawn along its route shape says so, as an estimate, in English and Swedish', (t) => {
@@ -782,7 +835,8 @@ test('in Swedish the ride reads BUSS · SL and says the rest in Swedish', (t) =>
       transit: transitLayer(
         vehicle({
           stop: { stopId: '9022001012345001', status: 'IN_TRANSIT_TO' },
-          motion: { feedStale: true },
+          // No reported speed: the one worked out between reports.
+          motion: { feedStale: true, reportedSpeedMps: null },
         }),
       ),
       rail: railLayer(),
@@ -979,12 +1033,15 @@ test('every language’s words fit the Cockpit’s room for them', (t) => {
       fits(row.title, 48, `${locale} ${row.id} title`);
       fits(row.detail, 96, `${locale} ${row.id} detail`);
     }
-    // The worked-out speed's tag too.
+    // The worked-out speed's tag too: one with no reported speed.
     const trainRide = railRide(
-      railLayer(train({ motion: { derivedSpeedMps: 25 } })),
+      railLayer(
+        train({ motion: { derivedSpeedMps: 25, reportedSpeedMps: null } }),
+      ),
     );
     const trainFrame = enter(trainRide);
     const computed = trainRide.hud(trainFrame, CONTEXT);
+    assert.equal(computed.speed.tone, 'estimate', `${locale} worked out`);
     fits(computed.speed.tag, 8, `${locale} computed tag`);
     fits(computed.kicker, 48, `${locale} train kicker`);
   }

@@ -163,26 +163,31 @@ function sameValues(previous, next) {
 }
 
 /**
- * The speed the view moves at (m/s): worked out between the two reports
- * playback draws the vehicle between, which is the motion shown, else as the
- * newest report gives it (a report playback has not reached). Null when
- * neither is known. The snapshot's `speedSource` prefers the report, which
- * would put a speed the picture does not show beside it.
+ * The speed the frame and the HUD give (m/s): the newest report's, as the
+ * vehicle's card gives it (its tag says it was reported; the picture, shown
+ * behind real time, may not have reached it yet). With no reported speed,
+ * the one worked out between the two reports playback draws the vehicle
+ * between, but only while playback plays them: held for the next report,
+ * buffering, or playing across a break between two reports (the layer's
+ * word is then WAITING), it works out 0, which is no speed of the vehicle's
+ * (2026-11-25, a waiting bus read "BERÄKNAD 0 km/h" beside its card's
+ * 6 km/h). Null when neither is known: the HUD shows none.
  */
 function speedOf(motion) {
-  if (finite(motion?.derivedSpeedMps) && motion.derivedSpeedMps >= 0)
-    return motion.derivedSpeedMps;
-  return finite(motion?.reportedSpeedMps) && motion.reportedSpeedMps >= 0
-    ? motion.reportedSpeedMps
-    : null;
+  const source = speedSourceOf(motion);
+  if (source === 'reported') return motion.reportedSpeedMps;
+  return source === 'derived' ? motion.derivedSpeedMps : null;
 }
 
-/** Where speedOf's speed comes from: 'derived', 'reported' or null. */
+/** Where speedOf's speed comes from: 'reported', 'derived' or null. */
 function speedSourceOf(motion) {
-  if (finite(motion?.derivedSpeedMps) && motion.derivedSpeedMps >= 0)
-    return 'derived';
-  return finite(motion?.reportedSpeedMps) && motion.reportedSpeedMps >= 0
-    ? 'reported'
+  if (finite(motion?.reportedSpeedMps) && motion.reportedSpeedMps >= 0)
+    return 'reported';
+  return motion?.phase === 'playing' &&
+    motion.word !== 'WAITING' &&
+    finite(motion.derivedSpeedMps) &&
+    motion.derivedSpeedMps >= 0
+    ? 'derived'
     : null;
 }
 
