@@ -6169,6 +6169,15 @@
   "Dots are the wind turbines in Länsstyrelserna’s Vindbrukskollen register, built ones by default; the chips add planned, dismantled, rejected and no longer current ones. The status is the register’s own. Click a turbine for its card.": "النقاط هي توربينات الرياح في سجل Vindbrukskollen التابع للإدارات الإقليمية في السويد، والمشيّدة منها افتراضيًا؛ تضيف الأزرار المخطط لها والمفككة والمرفوضة وتلك التي لم تعد قائمة. الحالة هي حالة السجل نفسه. انقر على توربين لعرض بطاقته.",
   "Zoom in to see every turbine here.": "قرّب العرض لرؤية كل التوربينات هنا.",
   "{count} wind turbines in view · built {power} MW": "{count} توربين رياح في العرض · المشيّدة {power} ميغاواط",
+  "{count} wind turbines in view": "{count} توربين رياح في العرض",
+  "{count} built turbines without a stated power": {
+    "zero": "{count} توربين مشيّد بلا قدرة مذكورة",
+    "one": "توربين مشيّد واحد بلا قدرة مذكورة ({count})",
+    "two": "توربينان مشيّدان بلا قدرة مذكورة ({count})",
+    "few": "{count} توربينات مشيّدة بلا قدرة مذكورة",
+    "many": "{count} توربينًا مشيّدًا بلا قدرة مذكورة",
+    "other": "{count} توربين مشيّد بلا قدرة مذكورة"
+  },
   "Wind turbines need a view to show": "تحتاج توربينات الرياح إلى عرض لتظهر فيه",
   "Malformed wind turbine snapshot": "لقطة توربينات الرياح تالفة",
   "Bidding zone": "منطقة العطاءات",

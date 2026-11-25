@@ -5598,7 +5598,11 @@
   "Zoom in to see the wind turbines: they show below {height} km": "放大以查看风力发电机: 在 {height} 公里以下显示",
   "Dots are the wind turbines in Länsstyrelserna’s Vindbrukskollen register, built ones by default; the chips add planned, dismantled, rejected and no longer current ones. The status is the register’s own. Click a turbine for its card.": "圆点是瑞典各省政府 (Länsstyrelserna) 的 Vindbrukskollen 登记册中的风力发电机，默认显示已建的；按钮可加入规划中、已拆除、被驳回和不再有效的。状态以登记册为准。点击风机查看其卡片。",
   "Zoom in to see every turbine here.": "放大以查看此处所有风机。",
-  "{count} wind turbines in view · built {power} MW": "视图内 {count} 台风力发电机 · 已建 {power} MW",
+  "{count} wind turbines in view · built {power} MW": "视图内风力发电机 {count} 台 · 已建 {power} MW",
+  "{count} wind turbines in view": "视图内风力发电机 {count} 台",
+  "{count} built turbines without a stated power": {
+    "other": "已建风机中 {count} 台未注明功率"
+  },
   "Wind turbines need a view to show": "风力发电机需要一个视图才能显示",
   "Malformed wind turbine snapshot": "风力发电机快照格式错误",
   "Bidding zone": "竞价区",

@@ -5599,6 +5599,10 @@
   "Dots are the wind turbines in Länsstyrelserna’s Vindbrukskollen register, built ones by default; the chips add planned, dismantled, rejected and no longer current ones. The status is the register’s own. Click a turbine for its card.": "点はスウェーデンの県庁 (Länsstyrelserna) の登録簿 Vindbrukskollen にある風力発電機で、既定では建設済みのものです。ボタンで計画中、撤去済み、却下、対象外のものを追加できます。ステータスは登録簿のものです。風車をクリックするとカードが表示されます。",
   "Zoom in to see every turbine here.": "ズームインするとこの付近のすべての風車が表示されます。",
   "{count} wind turbines in view · built {power} MW": "表示中の風力発電機 {count} 基 · 建設済み {power} MW",
+  "{count} wind turbines in view": "表示中の風力発電機 {count} 基",
+  "{count} built turbines without a stated power": {
+    "other": "建設済みのうち {count} 基は出力の記載なし"
+  },
   "Wind turbines need a view to show": "風力発電機を表示するにはビューが必要です",
   "Malformed wind turbine snapshot": "風力発電機のスナップショットが不正です",
   "Bidding zone": "入札区域",

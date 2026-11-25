@@ -5941,6 +5941,13 @@
   "Dots are the wind turbines in Länsstyrelserna’s Vindbrukskollen register, built ones by default; the chips add planned, dismantled, rejected and no longer current ones. The status is the register’s own. Click a turbine for its card.": "Точки — ветряные турбины из реестра Vindbrukskollen губернских управлений Швеции, по умолчанию построенные; кнопки добавляют запланированные, демонтированные, отклонённые и уже неактуальные. Статус — тот, что указан в реестре. Нажмите на турбину, чтобы открыть её карточку.",
   "Zoom in to see every turbine here.": "Приблизьте карту, чтобы увидеть все турбины здесь.",
   "{count} wind turbines in view · built {power} MW": "Ветряных турбин в поле зрения: {count} · построенные {power} МВт",
+  "{count} wind turbines in view": "Ветряных турбин в поле зрения: {count}",
+  "{count} built turbines without a stated power": {
+    "one": "{count} построенная турбина без указанной мощности",
+    "few": "{count} построенные турбины без указанной мощности",
+    "many": "{count} построенных турбин без указанной мощности",
+    "other": "{count} построенной турбины без указанной мощности"
+  },
   "Wind turbines need a view to show": "Для ветряных турбин нужен вид карты",
   "Malformed wind turbine snapshot": "Некорректный снимок данных о ветряных турбинах",
   "Bidding zone": "Ценовая зона",

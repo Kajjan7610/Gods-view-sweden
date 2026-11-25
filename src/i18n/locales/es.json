@@ -5827,6 +5827,12 @@
   "Dots are the wind turbines in Länsstyrelserna’s Vindbrukskollen register, built ones by default; the chips add planned, dismantled, rejected and no longer current ones. The status is the register’s own. Click a turbine for its card.": "Los puntos son los aerogeneradores del registro Vindbrukskollen de las administraciones provinciales suecas, por defecto los construidos; los botones añaden los previstos, desmantelados, denegados y ya no vigentes. El estado es el del propio registro. Haz clic en un aerogenerador para ver su ficha.",
   "Zoom in to see every turbine here.": "Acerca el mapa para ver todos los aerogeneradores de aquí.",
   "{count} wind turbines in view · built {power} MW": "{count} aerogeneradores en la vista · construidos {power} MW",
+  "{count} wind turbines in view": "{count} aerogeneradores en la vista",
+  "{count} built turbines without a stated power": {
+    "one": "{count} aerogenerador construido sin potencia indicada",
+    "many": "{count} de aerogeneradores construidos sin potencia indicada",
+    "other": "{count} aerogeneradores construidos sin potencia indicada"
+  },
   "Wind turbines need a view to show": "Los aerogeneradores necesitan una vista para mostrarse",
   "Malformed wind turbine snapshot": "Instantánea de aerogeneradores mal formada",
   "Bidding zone": "Zona de oferta",

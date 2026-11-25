@@ -35,9 +35,9 @@ export function createWindTurbinesSource({
      * @param {{signal?: AbortSignal, bbox: number[], center: number[],
      *   limit?: number, kinds?: string[]}} query
      * @returns {Promise<{turbines: object[], total: number|null,
-     *   builtMW: number|null, counts: object, tooWide: boolean,
-     *   capped: boolean, stale: boolean, fetchedAt: number|null,
-     *   updated: string|null}>}
+     *   builtMW: number|null, builtPowerUnknown: number|null,
+     *   counts: object, tooWide: boolean, capped: boolean, stale: boolean,
+     *   fetchedAt: number|null, updated: string|null}>}
      */
     async getSnapshot({ signal, bbox, center, limit, kinds = ['built'] } = {}) {
       signal?.throwIfAborted();
@@ -64,6 +64,8 @@ export function createWindTurbinesSource({
         turbines: payload.turbines,
         total: num(payload.total),
         builtMW: num(payload.builtMW),
+        // Built turbines in view the register gives no rated power for.
+        builtPowerUnknown: num(payload.builtPowerUnknown),
         counts,
         tooWide: payload.tooWide === true,
         capped: payload.capped === true,

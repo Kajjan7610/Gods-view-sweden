@@ -5827,6 +5827,12 @@
   "Dots are the wind turbines in Länsstyrelserna’s Vindbrukskollen register, built ones by default; the chips add planned, dismantled, rejected and no longer current ones. The status is the register’s own. Click a turbine for its card.": "הנקודות הן טורבינות הרוח במרשם Vindbrukskollen של מנהלות המחוז בשוודיה, כברירת מחדל אלה שהוקמו; הכפתורים מוסיפים מתוכננות, שפורקו, שנדחו ושאינן רלוונטיות עוד. הסטטוס הוא של המרשם עצמו. לחץ על טורבינה כדי לראות את הכרטיס שלה.",
   "Zoom in to see every turbine here.": "התקרב כדי לראות כאן את כל הטורבינות.",
   "{count} wind turbines in view · built {power} MW": "{count} טורבינות רוח בתצוגה · שהוקמו {power} MW",
+  "{count} wind turbines in view": "{count} טורבינות רוח בתצוגה",
+  "{count} built turbines without a stated power": {
+    "one": "{count} טורבינה שהוקמה ללא הספק מוצהר",
+    "two": "{count} טורבינות שהוקמו ללא הספק מוצהר",
+    "other": "{count} טורבינות שהוקמו ללא הספק מוצהר"
+  },
   "Wind turbines need a view to show": "טורבינות הרוח זקוקות לתצוגה",
   "Malformed wind turbine snapshot": "תמונת מצב פגומה של טורבינות הרוח",
   "Bidding zone": "אזור מסחר",

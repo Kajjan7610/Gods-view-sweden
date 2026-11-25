@@ -5713,6 +5713,11 @@
   "Dots are the wind turbines in Länsstyrelserna’s Vindbrukskollen register, built ones by default; the chips add planned, dismantled, rejected and no longer current ones. The status is the register’s own. Click a turbine for its card.": "Die Punkte sind die Windenergieanlagen im Register Vindbrukskollen der schwedischen Provinzialregierungen, standardmäßig die errichteten; die Schaltflächen fügen geplante, rückgebaute, abgelehnte und nicht mehr aktuelle hinzu. Der Status ist der des Registers. Eine Anlage anklicken, um ihre Karte zu sehen.",
   "Zoom in to see every turbine here.": "Hineinzoomen, um alle Anlagen hier zu sehen.",
   "{count} wind turbines in view · built {power} MW": "{count} Windenergieanlagen in der Ansicht · errichtet {power} MW",
+  "{count} wind turbines in view": "{count} Windenergieanlagen in der Ansicht",
+  "{count} built turbines without a stated power": {
+    "one": "{count} errichtete Anlage ohne Leistungsangabe",
+    "other": "{count} errichtete Anlagen ohne Leistungsangabe"
+  },
   "Wind turbines need a view to show": "Windenergieanlagen brauchen eine Ansicht",
   "Malformed wind turbine snapshot": "Fehlerhafte Momentaufnahme der Windenergieanlagen",
   "Bidding zone": "Gebotszone",

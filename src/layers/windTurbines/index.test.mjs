@@ -186,7 +186,7 @@ test('built turbines are drawn by default, the view cut to its span', async () =
   assert.match(controls.legend[0].blurb, /Vindbrukskollen/);
   assert.equal(
     controls.info,
-    '1 wind turbines in view · built 6 MW · Snapshot Nov 20, 2026',
+    '1 wind turbines in view · built 5.6 MW · Snapshot Nov 20, 2026',
   );
   assert.equal(layer.getStats().count, 1);
   assert.equal(layer.getStats().lastUpdate, SNAPSHOT_AT);
@@ -207,7 +207,7 @@ test('the planned chip asks for the planned turbines too', async () => {
     controls.legend.map(({ label, count }) => `${label} ${count}`),
     ['Built turbines 1', 'Planned – not built 1'],
   );
-  assert.match(controls.info, /built 6 MW/, 'planned power is not summed');
+  assert.match(controls.info, /built 5\.6 MW/, 'planned power is not summed');
   const dot = items().find((item) => item.id.endsWith('-013'));
   assert.equal(dot.color, TURBINE_KIND.planned.color);
   assert.equal(dot.pixelSize, 6, 'no height given');

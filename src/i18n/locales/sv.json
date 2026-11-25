@@ -5713,6 +5713,11 @@
   "Dots are the wind turbines in Länsstyrelserna’s Vindbrukskollen register, built ones by default; the chips add planned, dismantled, rejected and no longer current ones. The status is the register’s own. Click a turbine for its card.": "Prickarna är vindkraftverken i länsstyrelsernas register Vindbrukskollen, de uppförda från början; knapparna lägger till planerade, nedmonterade, avslagna och inte längre aktuella. Statusen är registrets egen. Klicka på ett verk för dess kort.",
   "Zoom in to see every turbine here.": "Zooma in för att se alla verk här.",
   "{count} wind turbines in view · built {power} MW": "{count} vindkraftverk i vyn · uppförda {power} MW",
+  "{count} wind turbines in view": "{count} vindkraftverk i vyn",
+  "{count} built turbines without a stated power": {
+    "one": "{count} uppfört verk utan angiven effekt",
+    "other": "{count} uppförda verk utan angiven effekt"
+  },
   "Wind turbines need a view to show": "Vindkraftverken behöver en vy att visas i",
   "Malformed wind turbine snapshot": "Felaktig ögonblicksbild av vindkraftverken",
   "Bidding zone": "Elområde",

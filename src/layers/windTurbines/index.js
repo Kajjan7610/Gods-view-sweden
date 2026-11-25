@@ -1,4 +1,4 @@
-import { formatNumber, msg, onLocaleChange, t } from '../../i18n/index.js';
+import { formatNumber, msg, onLocaleChange, t, tn } from '../../i18n/index.js';
 import { fromDegrees, toLonLatH } from '../../geo/ellipsoid.js';
 import {
   canvasOf,
@@ -138,6 +138,7 @@ export function createWindTurbinesLayer({
   let _capped = false;
   let _total = null;
   let _builtMW = null;
+  let _builtPowerUnknown = null;
   let _counts = {};
   let _selectedId = null;
   let _offLocale = null;
@@ -331,6 +332,7 @@ export function createWindTurbinesLayer({
     _turbines = [];
     _total = null;
     _builtMW = null;
+    _builtPowerUnknown = null;
     _counts = {};
     _turbineById.clear();
     _ground.cancel();
@@ -372,6 +374,7 @@ export function createWindTurbinesLayer({
         : snapshot.turbines.map(expandTurbine).filter(Boolean);
       _total = snapshot.total;
       _builtMW = snapshot.builtMW;
+      _builtPowerUnknown = snapshot.builtPowerUnknown;
       _counts = snapshot.counts ?? {};
       _turbineById.clear();
       for (const row of _turbines) _turbineById.set(row.id, row);
@@ -406,6 +409,42 @@ export function createWindTurbinesLayer({
 
   const turbineLabel = (row) =>
     t('Wind turbine · {name}', { name: turbineName(row) });
+
+  /**
+   * The view's count and the rated power of its built turbines. The power is
+   * left out while no built turbine with a known power is in view (only
+   * planned ones, say), keeps two significant digits under 10 MW (a lone
+   * small turbine is 0.04 MW, not 0), and the built turbines the register
+   * gives no power for are counted rather than taken as 0 MW.
+   * @returns {string[]}
+   */
+  function viewCountParts() {
+    const count = formatNumber(_total ?? 0);
+    const parts = [
+      _builtMW > 0
+        ? t('{count} wind turbines in view · built {power} MW', {
+            count,
+            power: formatNumber(
+              _builtMW,
+              _builtMW < 10
+                ? { maximumSignificantDigits: 2 }
+                : { maximumFractionDigits: 0 },
+            ),
+          })
+        : t('{count} wind turbines in view', { count }),
+    ];
+    const unknown = _builtPowerUnknown ?? 0;
+    if (unknown > 0)
+      parts.push(
+        tn(
+          unknown,
+          '{count} built turbine without a stated power',
+          '{count} built turbines without a stated power',
+          { count: formatNumber(unknown) },
+        ),
+      );
+    return parts;
+  }
 
   const layer = {
     id: WIND_TURBINES_LAYER_ID,
@@ -535,16 +574,11 @@ export function createWindTurbinesLayer({
         ? formatRegisterDate(new Date(_lastUpdate).toISOString().slice(0, 10))
         : '';
       const parts = [
-        _total === null
-          ? ''
+        ...(_total === null
+          ? []
           : _capped
-            ? t('Zoom in to see every turbine here.')
-            : t('{count} wind turbines in view · built {power} MW', {
-                count: formatNumber(_total ?? 0),
-                power: formatNumber(_builtMW ?? 0, {
-                  maximumFractionDigits: 0,
-                }),
-              }),
+            ? [t('Zoom in to see every turbine here.')]
+            : viewCountParts()),
         snapshot ? t('Snapshot {date}', { date: snapshot }) : '',
       ].filter(Boolean);
       return { chips, legend, info: parts.join(' · ') };

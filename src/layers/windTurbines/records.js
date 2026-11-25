@@ -561,8 +561,10 @@ export const clipWindBox = (bbox, center) =>
 
 /**
  * The turbines in a view: how many of each kind, how many of the kinds
- * asked for, the rated power of the built ones only, and the nearest
- * `limit` of the kinds asked for to the centre, nearest first.
+ * asked for, the rated power of the built ones only, how many built ones
+ * the register gives no power for, and the nearest `limit` of the kinds
+ * asked for to the centre, nearest first. The power keeps the register's
+ * precision (a kilowatt): a view of small turbines is 0.04 MW, never 0.
  * @param {object[]} rows Unpacked turbines.
  * @param {{bbox: number[], center: number[], limit?: number,
  *   kinds?: string[]}} query
@@ -576,11 +578,15 @@ export function turbinesInView(
   const counts = Object.fromEntries(TURBINE_KINDS.map(({ id }) => [id, 0]));
   const inside = [];
   let builtMW = 0;
+  let builtPowerUnknown = 0;
   for (const row of rows) {
     const [lon, lat] = row.point;
     if (lon < west || lon > east || lat < south || lat > north) continue;
     counts[row.kind] += 1;
-    if (row.kind === 'built') builtMW += row.powerMW ?? 0;
+    if (row.kind === 'built') {
+      if (row.powerMW > 0) builtMW += row.powerMW;
+      else builtPowerUnknown += 1;
+    }
     if (wanted.has(row.kind)) inside.push(row);
   }
   const turbines = inside
@@ -590,7 +596,8 @@ export function turbinesInView(
     .map(({ row }) => row);
   return {
     total: inside.length,
-    builtMW: Math.round(builtMW * 10) / 10,
+    builtMW: Math.round(builtMW * 1000) / 1000,
+    builtPowerUnknown,
     counts,
     turbines,
   };

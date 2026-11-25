@@ -5827,6 +5827,12 @@
   "Dots are the wind turbines in Länsstyrelserna’s Vindbrukskollen register, built ones by default; the chips add planned, dismantled, rejected and no longer current ones. The status is the register’s own. Click a turbine for its card.": "I punti sono le turbine eoliche del registro Vindbrukskollen delle prefetture di contea svedesi, per impostazione predefinita quelle costruite; i pulsanti aggiungono quelle previste, smantellate, respinte e non più attuali. Lo stato è quello del registro. Fai clic su una turbina per la sua scheda.",
   "Zoom in to see every turbine here.": "Ingrandisci per vedere tutte le turbine qui.",
   "{count} wind turbines in view · built {power} MW": "{count} turbine eoliche nella vista · costruite {power} MW",
+  "{count} wind turbines in view": "{count} turbine eoliche nella vista",
+  "{count} built turbines without a stated power": {
+    "one": "{count} turbina costruita senza potenza indicata",
+    "many": "{count} di turbine costruite senza potenza indicata",
+    "other": "{count} turbine costruite senza potenza indicata"
+  },
   "Wind turbines need a view to show": "Le turbine eoliche hanno bisogno di una vista da mostrare",
   "Malformed wind turbine snapshot": "Istantanea delle turbine eoliche non valida",
   "Bidding zone": "Zona di offerta",

@@ -118,6 +118,7 @@ export function windTurbinesProxy({
       stale: false,
       total: view.total,
       builtMW: view.builtMW,
+      builtPowerUnknown: view.builtPowerUnknown,
       counts: view.counts,
       turbines: view.turbines.map(compactTurbine),
     });
