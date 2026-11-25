@@ -295,6 +295,29 @@
   }
 }
 
+/* Swedish fork: up to 900 px the HUD banner ran into the LIVE readout
+   opposite. The banner starts about 59 px in (the corner's 36 px and 4 px
+   padding, the 13 px bracket and a 6 px gap); the LIVE line ends as far in
+   from the right and is about 262 px wide with the word LIVE, up to about
+   300 px with a longer one (ОНЛАЙН, AO VIVO, ライブ). So the banner alone
+   keeps to 100vw - 440px, 100vw - 400px where the word is LIVE, about 20 px
+   clear of the readout, and wraps at its spaces, never inside a word
+   (keep-all keeps Japanese words whole). The summary below keeps its width. */
+@media (min-width: 721px) and (max-width: 900px) {
+  #intel-hud .hud-top-left .hud-classification {
+    max-width: calc(100vw - 440px);
+    white-space: normal;
+    word-break: keep-all;
+  }
+
+  html:is(:lang(sv), :lang(en), :lang(de), :lang(it))
+    #intel-hud
+    .hud-top-left
+    .hud-classification {
+    max-width: calc(100vw - 400px);
+  }
+}
+
 /*
  * Swedish fork: below 1180 px the original drops the globe actions to the
  * HUD's top rows (omnibar-dock.css), where they cover the Swedish HUD line.
