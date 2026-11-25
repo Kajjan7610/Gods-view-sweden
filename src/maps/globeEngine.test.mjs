@@ -549,3 +549,54 @@ test('an Esri no-imagery probe answered 503 is asked again, a 403 is not', async
     );
   }
 });
+
+// Swedish fork: where the keyed Esri service has no imagery it answers 404,
+// not a picture. Deep down that is a missing tile, drawn from its parent,
+// so a driver's view does not switch the map to OSM; a coarse 404, or any
+// other refusal, is still a failed tile, which falls back.
+test('an Esri 404 deep down is a missing tile; a coarse one or another refusal fails', async () => {
+  const fresh = await import('./globeEngine.js?esri-tile-404');
+  const spec = fresh.globeMapEngine.imagery.esri('test-key');
+  const at = (z, y, x) =>
+    spec.url.replace('{z}', z).replace('{y}', y).replace('{x}', x);
+  const signal = new AbortController().signal;
+  /**
+   * The tile at `level` as the renderer asks for it, answered `answer` (a
+   * status, or an error for no answer); the probe answered 404, as the
+   * keyed service answers it.
+   */
+  const tileAt = (level, answer, tile = { x: 7, y: 7, level }) =>
+    withFetch(
+      (url) =>
+        url.split('?')[0].endsWith('/tile/23/0/0')
+          ? bytesResponse([], 404)
+          : answer instanceof Error
+            ? answer
+            : bytesResponse([], answer),
+      () => spec.fetchTile({ tile, url: at(level, 7, 7), signal }),
+    );
+  for (const level of [21, 10])
+    assert.deepEqual(
+      await tileAt(level, 404),
+      { missing: true },
+      `level ${level}`,
+    );
+  for (const level of [9, 5])
+    await assert.rejects(
+      tileAt(level, 404),
+      (error) => error.statusCode === 404,
+      `a 404 at level ${level} is a broken endpoint`,
+    );
+  for (const status of [401, 403, 498, 429, 500, 503])
+    await assert.rejects(
+      tileAt(21, status),
+      (error) => error.statusCode === status,
+      `${status} at level 21`,
+    );
+  await assert.rejects(tileAt(21, new TypeError('offline')), /offline/);
+  // A tile of no known level fails as before.
+  await assert.rejects(
+    tileAt(21, 404, null),
+    (error) => error.statusCode === 404,
+  );
+});

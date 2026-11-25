@@ -22,10 +22,20 @@ const ESRI_MAX_LEVEL = 23;
  * A tile Esri has no imagery for: it answers every such tile with this one
  * "Map data not yet available" picture, the same bytes each time. Swedish
  * fork: the keyed service (ibasemaps-api) answers this tile with 404
- * instead, and then there is no picture to compare with.
+ * instead, and then there is no picture to compare with; it answers any
+ * tile it has no imagery for with 404 too (ESRI_MISSING_404_MIN_LEVEL).
  */
 const esriMissingTileUrl = (tileUrl) =>
   tileUrl.replace(/\/tile\/\d+\/\d+\/\d+/, '/tile/23/0/0');
+/**
+ * Swedish fork: the shallowest level whose 404 is a missing tile. At a
+ * driver's eye height Cesium asks for Esri's tiles down to level 23, and
+ * where the keyed service has no imagery its 404s were failed tiles: two
+ * of them switched the map to OSM for good (2026-11-25). Esri's coarser
+ * levels cover the whole world, so a 404 there is no gap in its imagery but
+ * a broken endpoint or path: a failed tile still, which falls back.
+ */
+const ESRI_MISSING_404_MIN_LEVEL = 10;
 const OSM_MAX_LEVEL = 19;
 const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_CREDIT = '© OpenStreetMap contributors';
@@ -79,13 +89,19 @@ const sameBytes = (a, b) =>
  * An Esri tile, fetched. Esri's "no imagery here" picture is a missing tile,
  * drawn from its parent, as Cesium's DiscardMissingTileImagePolicy would; a
  * refused tile is a failed one, which counts toward the Esri source's
- * fallback to OSM.
+ * fallback to OSM. Swedish fork: a 404 for a tile at
+ * ESRI_MISSING_404_MIN_LEVEL or deeper is the keyed service's word for no
+ * imagery there, so a missing tile too; a 404 at a coarser level, a 401,
+ * 403, 498, 429 or 5xx, or no answer, is a failed tile as before.
  */
-async function fetchEsriTile({ url, signal }) {
+async function fetchEsriTile({ tile, url, signal }) {
   const [response, missing] = await Promise.all([
     fetch(url, { signal }),
     esriMissingTile(url),
   ]);
+  // Swedish fork: no imagery there, drawn from the parent tile.
+  if (response.status === 404 && tile?.level >= ESRI_MISSING_404_MIN_LEVEL)
+    return { missing: true };
   if (!response.ok) {
     const error = new Error(`Esri tile answered ${response.status}`);
     error.statusCode = response.status;
