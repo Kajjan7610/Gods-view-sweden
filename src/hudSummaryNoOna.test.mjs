@@ -62,3 +62,13 @@ for (const [locale, sun] of [
     assert.doesNotMatch(line, /56°/, line);
   });
 }
+
+// Swedish fork: over Sweden the zone is Sweden's own clock at the HUD's world
+// time, UTC+2 in summer, not the longitude's UTC+1.
+test('over Stockholm in summer the summary names UTC+2', (t) => {
+  t.mock.timers.enable({ apis: ['Date'], now: Date.UTC(2026, 6, 15, 12) });
+  const hud = stockholmHud(t);
+  setLocale('sv');
+  const line = hud._composeSummary();
+  assert.match(line, /\| UTC\+2$/, line);
+});

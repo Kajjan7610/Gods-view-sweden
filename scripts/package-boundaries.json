@@ -4601,6 +4601,7 @@
       "src/firstRunExperience.js",
       "src/exclusiveSurfaces.js",
       "src/hud.js",
+      "src/geo/swedishTime.js",
       "src/hudLocality.js",
       "src/hudLocalityFormat.js",
       "src/hudPlaceLookup.js",

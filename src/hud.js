@@ -25,6 +25,7 @@ import { greatCircleKm } from './geoDistance.js';
 import { forward as toMGRS } from 'mgrs';
 import { CITY_POIS } from './cityPois.js';
 import { worldTimeFor } from './time/worldClock.js';
+import { swedishZoneTag } from './geo/swedishTime.js';
 
 // The HUD stamps its readouts with the world time; its sun is the sky's.
 const hudTime = worldTimeFor('hud');
@@ -866,9 +867,13 @@ export class IntelHUD {
     const nearest = this._nearestKnownPoint(m.latDeg, m.lonDeg);
     const band = this._viewBand(m.altM);
     const window = this._viewWindowKm(m.latDeg);
-    // Rough local timezone from longitude (15 deg per hour)
+    // Swedish fork: over Sweden its own clock (UTC+1, UTC+2 in summer) at
+    // the HUD's world time; elsewhere the original's rough local timezone
+    // from longitude (15 deg per hour).
     const utcOffset = Math.round(m.lonDeg / 15);
-    const localTag = `UTC${utcOffset >= 0 ? '+' : ''}${utcOffset}`;
+    const localTag =
+      swedishZoneTag(m.latDeg, m.lonDeg, hudTime()) ??
+      `UTC${utcOffset >= 0 ? '+' : ''}${utcOffset}`;
     // Same MSL datum as the corner ALT readout — the two are on screen
     // together, so they must never disagree. The view band above deliberately
     // keeps the ellipsoidal height: its thresholds were tuned against it.

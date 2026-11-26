@@ -492,6 +492,20 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-26 (Stockholm och Sveriges klocka)
+- Vyn över Stockholm hette "Stockholm urban area, Sverige" i kontextpanelen:
+  Wikidata-paketet har både tätorten (Q94385, 1,65 miljoner) och staden
+  Stockholm, och den större vann. En "X urban area" vars stad "X" finns i
+  samma land läses nu inte in (Stockholm och Oslo); vyn heter "Stockholm".
+- HUD:ens sammanfattning angav tidszonen från longituden och sa UTC+1 över
+  Sverige även på sommaren. Över Sverige anges nu Sveriges egen tid enligt
+  `Europe/Stockholm` vid HUD:ens världstid: UTC+1 på vintern, UTC+2 på
+  sommaren. Området följer landgränsen mot Finland längs Könkämä, Muonio
+  och Torne älv som Natural Earth 10m ritar den (allmän egendom; inom 2–3 km
+  från gränsen kan endera tiden visas) och går sedan i öppet vatten väster om Finland,
+  Åland och Baltikum; Norge och Danmark, som har samma tid, ingår. Utanför
+  står originalets uppskattning kvar.
+
 ### 2026-11-25 (elva fel från kontrollen efter sammanslagningen)
 Webbläsarkontrollen efter sammanslagningen hittade elva fel som fanns redan
 före den. Alla är rättade, granskade av oberoende granskare och provade.
