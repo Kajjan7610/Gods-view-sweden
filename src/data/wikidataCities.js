@@ -136,6 +136,33 @@ function countryNames(rows) {
   return names;
 }
 
+/**
+ * Swedish fork: the rows without an "<X> urban area" whose town "<X>" is in
+ * the pack for the same country. Wikidata keeps both, e.g. Stockholm's urban
+ * area (Q94385, 1.65 million) beside Stockholm (Q1754); the larger one won
+ * every "largest nearby" lookup, so a view over Stockholm was named
+ * "Stockholm urban area". Oslo is the same.
+ * @param {Array<Array>} rows
+ * @returns {Array<Array>}
+ */
+export function withoutUrbanAreaTwins(rows) {
+  const URBAN_AREA = /^(.*\S)\s+urban area$/i;
+  // The few urban areas first, so only their countries' names are folded.
+  const wanted = new Map();
+  for (const row of rows) {
+    const match = URBAN_AREA.exec(String(row[0] || ''));
+    if (match) wanted.set(row, `${row[4]}|${foldName(match[1])}`);
+  }
+  if (!wanted.size) return rows;
+  const countries = new Set([...wanted.keys()].map((row) => row[4]));
+  const towns = new Set();
+  for (const row of rows) {
+    if (countries.has(row[4]) && !wanted.has(row))
+      towns.add(`${row[4]}|${foldName(row[0])}`);
+  }
+  return rows.filter((row) => !towns.has(wanted.get(row)));
+}
+
 let loading = null;
 /** The indexed pack; a failed load is retried on the next call. */
 export function loadCities(fetchImpl = (...args) => globalThis.fetch(...args)) {
@@ -146,13 +173,16 @@ export function loadCities(fetchImpl = (...args) => globalThis.fetch(...args)) {
       if (!response.ok) throw new Error(`cities pack: HTTP ${response.status}`);
       return response.json();
     })
-    .then((pack) => ({
-      meta: pack.meta,
-      rows: pack.rows,
-      cells: indexCities(pack.rows),
-      names: indexNames(pack.rows),
-      countries: countryNames(pack.rows),
-    }))
+    .then((pack) => {
+      const rows = withoutUrbanAreaTwins(pack.rows);
+      return {
+        meta: pack.meta,
+        rows,
+        cells: indexCities(rows),
+        names: indexNames(rows),
+        countries: countryNames(rows),
+      };
+    })
     .catch((error) => {
       loading = null;
       throw error;
