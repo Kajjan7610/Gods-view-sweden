@@ -492,6 +492,21 @@ git merge origin/main
 
 ## Logg över justeringar
 
+### 2026-11-26 (cockpit utan påhittade rader, svenska namn i omloppsvyn)
+- Flygets cockpit visade "OPTISKT PLAN · 01" och "VISIRLÅS · AKTIVT" i
+  visirets hörn. Ingetdera betydde något. Hörnen visas nu bara på ett
+  fartygs brygga, där de säger var kursen kommer ifrån (AIS).
+- Omloppsvyns "JUST NU ÖVER" hade Natural Earths engelska namn ("LAPLAND,
+  FINLAND", "BALTIC SEA"). På svenska får ett urval svenska namn: hav och
+  oceaner (Östersjön, Bottniska viken, Öresund …), Finlands landskap med
+  sina officiella svenska namn (Lappland, Norra Österbotten …), stavningar
+  som tappat sina svenska bokstäver (Örebro, Vänersborg) och orter med
+  vedertaget svenskt namn (Köpenhamn, Helsingfors, Åbo, Neapel …). Ett
+  landskap får sitt svenska namn bara i sitt eget land. En ort får det även
+  sedd över en gräns (Köpenhamn från Malmö), utom när Natural Earth har
+  flera orter med samma namn: då bara i det egna landet, så Naples i
+  Florida förblir Naples. Namn utanför urvalet visas som förut.
+
 ### 2026-11-26 (Stockholm och Sveriges klocka)
 - Vyn över Stockholm hette "Stockholm urban area, Sverige" i kontextpanelen:
   Wikidata-paketet har både tätorten (Q94385, 1,65 miljoner) och staden

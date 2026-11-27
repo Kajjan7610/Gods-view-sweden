@@ -14,6 +14,11 @@ import {
   shownOwnerMark,
 } from '../../ownerFlag.js';
 import { useCockpitStore } from '../../stores/cockpit.js';
+import {
+  swedishRegionName,
+  swedishSeaName,
+  swedishTownName,
+} from '../../../data/swedishPlaceNames.js';
 import UiButton from '../../kit/UiButton.vue';
 import UiIcon from '../../kit/UiIcon.vue';
 
@@ -175,17 +180,26 @@ const placeText = computed(() => {
   // No feature holds the point (a gap at a simplified coastline): say
   // nothing rather than call land open ocean.
   if (!place) return '';
-  if (place.kind !== 'country') return place.name || '';
+  // Swedish fork: in Swedish a selection of seas, Finland's regions and
+  // towns are named in Swedish (swedishPlaceNames.js): a region only in
+  // its own country, a town also across a border when its name is its own.
+  const swedish = getLocale() === 'sv';
+  if (place.kind !== 'country')
+    return (swedish ? swedishSeaName(place.name) : place.name) || '';
   const country =
     (place.countryCode && regionName(place.countryCode, getLocale())) ||
     place.name ||
     '';
-  const region = place.division
-    ? t('{division}, {country}', { division: place.division, country })
+  const division = swedish
+    ? swedishRegionName(place.division, place.countryCode)
+    : place.division;
+  const near = swedish
+    ? swedishTownName(place.near, place.countryCode)
+    : place.near;
+  const region = division
+    ? t('{division}, {country}', { division, country })
     : country;
-  return place.near
-    ? t('{region} · near {place}', { region, place: place.near })
-    : region;
+  return near ? t('{region} · near {place}', { region, place: near }) : region;
 });
 
 // The owner's flag, or a text badge for an owner without one.

@@ -133,6 +133,7 @@
       "src/ui/views/panels/CockpitRadar.vue",
       "src/ui/views/panels/CockpitOrbital.vue",
       "src/ui/ownerFlag.js",
+      "src/data/swedishPlaceNames.js",
       "src/ui/ownerFlagSheet.js",
       "src/ui/cockpitPresentation.js",
       "src/data/headingDegrees.js",
