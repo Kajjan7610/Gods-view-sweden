@@ -178,8 +178,9 @@ const tickStyle = (tick) =>
         </svg>
         <small id="cockpit-route-direction-label">{{ direction.label }}</small>
       </div>
-      <div v-if="!generic" class="cockpit-visor-status cockpit-visor-status-left">{{ bridge ? t('BRIDGE WINDOW · FWD') : t('OPTICAL PLANE · 01') }}</div>
-      <div v-if="!generic" class="cockpit-visor-status cockpit-visor-status-right">{{ bridge ? (hud.trackSource === 'course' ? t('COURSE HOLD · AIS') : hud.trackSource === 'heading' ? t('HEADING HOLD · AIS') : t('NO HEADING · AIS')) : t('VISOR LOCK · ACTIVE') }}</div>
+      <!-- Swedish fork: the ship's bridge says where its heading comes from; an aircraft or orbit view shows no made-up optical plane or visor lock. -->
+      <div v-if="!generic && bridge" class="cockpit-visor-status cockpit-visor-status-left">{{ t('BRIDGE WINDOW · FWD') }}</div>
+      <div v-if="!generic && bridge" class="cockpit-visor-status cockpit-visor-status-right">{{ hud.trackSource === 'course' ? t('COURSE HOLD · AIS') : hud.trackSource === 'heading' ? t('HEADING HOLD · AIS') : t('NO HEADING · AIS') }}</div>
     </div>
     <div v-if="!orbital && !generic" id="cockpit-speed-rim" class="cockpit-altitude-rim cockpit-speed-rim" v-class-toggle="{ unavailable: hud.speedRim.unavailable }">
       <span class="cockpit-altitude-rim-label">{{ bridge ? t('SPEED OVER GROUND · KTS') : t('GROUND SPEED · KTS') }}</span>
